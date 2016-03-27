@@ -251,7 +251,6 @@
     <Content Include="x86\libeay32.dll" />
     <Content Include="x86\ssleay32.dll" />
     <None Include="Resources\icon.ico" />
-    <Content Include="TODO.txt" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5">
