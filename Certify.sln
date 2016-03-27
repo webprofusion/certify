@@ -1,0 +1,60 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Windows", "src\Certify.Windows.csproj", "{87BAA9CA-E0C9-4D3E-8971-55A30134C932}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lib", "Lib", "{B7142B57-B151-444E-8860-3731D5DAAEF6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ACMESharp", "..\..\ThirdParty\ACMESharp\ACMESharp\ACMESharp\ACMESharp.csproj", "{D551234B-0A8D-4DEE-8178-A81998DF0EDB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ACMESharp.POSH", "..\..\ThirdParty\ACMESharp\ACMESharp\ACMESharp.POSH\ACMESharp.POSH.csproj", "{2F8D5934-B5A7-4983-8051-1F25882C7C30}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ACMESharp.Vault", "..\..\ThirdParty\ACMESharp\ACMESharp\ACMESharp.Vault\ACMESharp.Vault.csproj", "{65B4C6E0-27A0-445C-ADAC-9D8308E2E4A6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ACMESharp.PKI.Providers.OpenSslLib32", "..\..\ThirdParty\ACMESharp\ACMESharp\ACMESharp.PKI.Providers.OpenSslLib32\ACMESharp.PKI.Providers.OpenSslLib32.csproj", "{2CE2E059-F228-4F88-8440-0413C1AF2E4C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ACMESharp.PKI.Providers.OpenSslLib64", "..\..\ThirdParty\ACMESharp\ACMESharp\ACMESharp.PKI.Providers.OpenSslLib64\ACMESharp.PKI.Providers.OpenSslLib64.csproj", "{98B532B3-805B-4D81-918E-5A76CC66D40D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{87BAA9CA-E0C9-4D3E-8971-55A30134C932}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87BAA9CA-E0C9-4D3E-8971-55A30134C932}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87BAA9CA-E0C9-4D3E-8971-55A30134C932}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87BAA9CA-E0C9-4D3E-8971-55A30134C932}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D551234B-0A8D-4DEE-8178-A81998DF0EDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D551234B-0A8D-4DEE-8178-A81998DF0EDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D551234B-0A8D-4DEE-8178-A81998DF0EDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D551234B-0A8D-4DEE-8178-A81998DF0EDB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F8D5934-B5A7-4983-8051-1F25882C7C30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F8D5934-B5A7-4983-8051-1F25882C7C30}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F8D5934-B5A7-4983-8051-1F25882C7C30}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F8D5934-B5A7-4983-8051-1F25882C7C30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65B4C6E0-27A0-445C-ADAC-9D8308E2E4A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65B4C6E0-27A0-445C-ADAC-9D8308E2E4A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65B4C6E0-27A0-445C-ADAC-9D8308E2E4A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65B4C6E0-27A0-445C-ADAC-9D8308E2E4A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2CE2E059-F228-4F88-8440-0413C1AF2E4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CE2E059-F228-4F88-8440-0413C1AF2E4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2CE2E059-F228-4F88-8440-0413C1AF2E4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CE2E059-F228-4F88-8440-0413C1AF2E4C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98B532B3-805B-4D81-918E-5A76CC66D40D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98B532B3-805B-4D81-918E-5A76CC66D40D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98B532B3-805B-4D81-918E-5A76CC66D40D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98B532B3-805B-4D81-918E-5A76CC66D40D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D551234B-0A8D-4DEE-8178-A81998DF0EDB} = {B7142B57-B151-444E-8860-3731D5DAAEF6}
+		{2F8D5934-B5A7-4983-8051-1F25882C7C30} = {B7142B57-B151-444E-8860-3731D5DAAEF6}
+		{65B4C6E0-27A0-445C-ADAC-9D8308E2E4A6} = {B7142B57-B151-444E-8860-3731D5DAAEF6}
+		{2CE2E059-F228-4F88-8440-0413C1AF2E4C} = {B7142B57-B151-444E-8860-3731D5DAAEF6}
+		{98B532B3-805B-4D81-918E-5A76CC66D40D} = {B7142B57-B151-444E-8860-3731D5DAAEF6}
+	EndGlobalSection
+EndGlobal
