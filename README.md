@@ -14,4 +14,5 @@ If you cannot provide a fix for the problem yourself please file an issue and de
 
 Build/run requirements:
   - Visual Studio 2015 Community Edition (or higher)
+  - A clone of ACMESharp [https://github.com/ebekker/ACMESharp] - you will need to update the referenced project paths in order to build.
   - IIS installed locally. For testing you will require a publicaly accessible IP mapped to the domain/subdomain you want to test with. The Let's Encrypt service will need to be able to access your test site remotely via http in order to complete authorisation challenges.
