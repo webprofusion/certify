@@ -336,7 +336,7 @@ namespace Certify
                         System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
                     }
 
-                    if (CheckURL("http://" + domain + "//" + wellknownContentPath + "//configcheck"))
+                    if (CheckURL("http://" + domain + "/" + wellknownContentPath + "/configcheck"))
                     {
                         extensionlessConfigOK = true;
                     }
@@ -348,7 +348,7 @@ namespace Certify
                         System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
                     }
 
-                    if (CheckURL("http://" + domain + "//" + wellknownContentPath + "configcheck"))
+                    if (CheckURL("http://" + domain + "/" + wellknownContentPath + "/configcheck"))
                     {
                         extensionlessConfigOK = true;
                     }
