@@ -312,6 +312,7 @@ namespace Certify
                     panelItemInfo.Controls.Clear();
                     var infoControl = new Forms.Controls.Details.CertificateDetails(this);
                     infoControl.Populate(i);
+                    infoControl.Dock = DockStyle.Fill;
                     panelItemInfo.Controls.Add(infoControl);
                 }
 

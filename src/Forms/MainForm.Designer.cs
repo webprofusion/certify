@@ -111,7 +111,7 @@
             this.contactRegistrationToolStripMenuItem,
             this.domainCertificateToolStripMenuItem});
             this.newToolStripMenuItem.Name = "newToolStripMenuItem";
-            this.newToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.newToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
             this.newToolStripMenuItem.Text = "New..";
             // 
             // contactRegistrationToolStripMenuItem
@@ -131,24 +131,24 @@
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(149, 6);
+            this.toolStripSeparator3.Size = new System.Drawing.Size(136, 6);
             // 
             // reloadVaultToolStripMenuItem
             // 
             this.reloadVaultToolStripMenuItem.Name = "reloadVaultToolStripMenuItem";
-            this.reloadVaultToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.reloadVaultToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
             this.reloadVaultToolStripMenuItem.Text = "Reload Vault";
             this.reloadVaultToolStripMenuItem.Click += new System.EventHandler(this.reloadVaultToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(136, 6);
             // 
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
             this.fileToolStripMenuItem.Text = "Exit";
             this.fileToolStripMenuItem.Click += new System.EventHandler(this.fileToolStripMenuItem_Click);
             // 
@@ -366,6 +366,9 @@
             // 
             // panelItemInfo
             // 
+            this.panelItemInfo.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.panelItemInfo.Controls.Add(this.lblGettingStarted);
             this.panelItemInfo.Location = new System.Drawing.Point(3, 78);
             this.panelItemInfo.Name = "panelItemInfo";

@@ -1,0 +1,11 @@
+renew/auto apply used cointelligence.co.uk cert
+export ddoes not set freindyl name to apetools 
+auto apply does not apply cert
+cert shows up twice in list (manual import?)
+
+SAN Support:
+
+Need to gather all unique domains to be included in cert (www.site.com, site.com, api.site.com etc)
+Each domain identifier needs to be validated as normal
+Then the SAN enabled certificate can be requested:
+ New-ACMECertificate dns1 -Generate -AlternativeIdentifierRefs dns2,dns3,dns4 -Alias multiNameCert
