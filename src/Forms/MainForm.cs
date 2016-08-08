@@ -547,5 +547,20 @@ namespace Certify
                 }
             }
         }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            PowershellManager manager = new PowershellManager(null,null);
+
+            if (!manager.IsValidVersion())
+            {
+ 
+                if (MessageBox.Show("The version of Powershell installed is not high enough, please install Powershell Version 3 or higher.", "Powershell Version Too Low", MessageBoxButtons.OK, MessageBoxIcon.Error) == DialogResult.OK)
+                {
+                    Application.Exit();
+                }
+            }
+
+        }
     }
 }
