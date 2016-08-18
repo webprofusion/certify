@@ -387,7 +387,27 @@ namespace Certify
 
         internal bool DeleteRegistrationInfo(Guid id)
         {
-            throw new NotImplementedException();
+            using (var vlt = ACMESharp.POSH.Util.VaultHelper.GetVault())
+            {
+                try
+                {
+                    vlt.OpenStorage(true);
+                    vaultConfig.Registrations.Remove(id);
+                    vlt.SaveVault(vaultConfig);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    // TODO: Logging of errors.
+                    System.Windows.Forms.MessageBox.Show(e.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                    return false;
+                }
+            }
+        }
+
+        public bool DeleteRegistrationInfo(string Id)
+        {
+            return false;
         }
 
         public void SubmitChallenge(string alias, string challengeType = "http-01")
@@ -515,11 +535,6 @@ namespace Certify
             return output;
         }
 
-        public bool DeleteRegistrationInfo(string Id)
-        {
-            return false;
-        }
-
         public string GetVaultPath()
         {
             using (var vlt = (LocalDiskVault)ACMESharp.POSH.Util.VaultHelper.GetVault())
@@ -560,15 +575,17 @@ namespace Certify
                 else
                 {
                     //find all orphaned identified
-
-                    foreach (var k in v.Identifiers.Keys)
+                    if (v.Identifiers != null)
                     {
-                        var identifier = v.Identifiers[k];
-
-                        var certs = v.Certificates.Values.Where(c => c.IdentifierRef == identifier.Id);
-                        if (!certs.Any())
+                        foreach (var k in v.Identifiers.Keys)
                         {
-                            toBeRemoved.Add(identifier.Id);
+                            var identifier = v.Identifiers[k];
+
+                            var certs = v.Certificates.Values.Where(c => c.IdentifierRef == identifier.Id);
+                            if (!certs.Any())
+                            {
+                                toBeRemoved.Add(identifier.Id);
+                            }
                         }
                     }
                 }
@@ -581,17 +598,21 @@ namespace Certify
 
                 //find and remove certificatess with no valid identifier in vault
                 toBeRemoved = new List<Guid>();
-                foreach (var c in v.Certificates)
-                {
-                    if (!v.Identifiers.ContainsKey(c.IdentifierRef))
-                    {
-                        toBeRemoved.Add(c.Id);
-                    }
-                }
 
-                foreach (var i in toBeRemoved)
+                if (v.Certificates != null)
                 {
-                    v.Certificates.Remove(i);
+                    foreach (var c in v.Certificates)
+                    {
+                        if (!v.Identifiers.ContainsKey(c.IdentifierRef))
+                        {
+                            toBeRemoved.Add(c.Id);
+                        }
+                    }
+
+                    foreach (var i in toBeRemoved)
+                    {
+                        v.Certificates.Remove(i);
+                    }
                 }
 
                 vlt.SaveVault(v);

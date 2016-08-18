@@ -515,35 +515,53 @@ namespace Certify
             VaultManager.CleanupVault();
             ReloadVault();
         }
-
+   
         private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //user has clicked delete in tree view context menu
+            // User has clicked delete in tree view context menu
             var node = treeView1.SelectedNode;
-            if (node.Tag is IdentifierInfo)
+
+            if (node != null)
             {
-                var i = (IdentifierInfo)node.Tag;
-                VaultManager.CleanupVault(i.Id);
-                ReloadVault();
-                return;
+                if (node.Tag is IdentifierInfo)
+                {
+                    var i = (IdentifierInfo)node.Tag;
+                    VaultManager.CleanupVault(i.Id);
+                    ReloadVault();
+                    return;
+                }
+                else
+                {
+                    DeleteVaultItem(node.Tag);
+                    ReloadVault();
+                    return;
+                }
             }
         }
 
         private void treeView1_MouseUp(object sender, MouseEventArgs e)
         {
+            // right click on treeview node
             if (e.Button == MouseButtons.Right)
             {
-                //right click on treeview node
-
                 // Point where the mouse is clicked.
                 Point p = new Point(e.X, e.Y);
 
                 // Get the node that the user has clicked.
                 TreeNode node = treeView1.GetNodeAt(p);
-                if (node.Tag is IdentifierInfo)
+
+                if (node != null)
                 {
-                    treeView1.SelectedNode = node;
-                    treeViewContextMenu.Show(treeView1, p);
+                    if (node.Tag is IdentifierInfo)
+                    {
+                        treeView1.SelectedNode = node;
+                        treeViewContextMenu.Show(treeView1, p);
+                    }
+                    else
+                    {
+                        treeView1.SelectedNode = node;
+                        treeViewContextMenu.Show(treeView1, p);
+                    }
                 }
             }
         }
