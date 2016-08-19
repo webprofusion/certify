@@ -299,5 +299,13 @@ namespace Certify
             }
             return powershellVersion;
         }
+
+        public bool IsValidVersion()
+        {
+            var version = GetPowershellVersion();
+
+            //If PS Version 1, 2 or doesn't exist then return false.
+            return !version.Equals(1) && !version.Equals(2) && !version.Equals(0);
+        }
     }
 }
