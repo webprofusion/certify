@@ -73,6 +73,8 @@ namespace Certify.Forms.Controls.Details
                 //update and create certificate
                 if (parentApp.VaultManager.RenewCertificate(item.IdentifierRef))
                 {
+					Populate(item); // update display with renewed info
+
                     MessageBox.Show("Renewal requested. Check certificate info for expiry. Auto Apply to update IIS certificate");
                 }
                 else
