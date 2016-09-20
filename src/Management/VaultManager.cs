@@ -444,18 +444,13 @@ namespace Certify
             {
                 powershellManager.UpdateCertificate(certRef);
 
-                if (!CertExists(domainAlias))
+                if (CertExists(domainAlias)) // if the cert exists after the update, export it
                 {
                     var certInfo = GetCertificate(certRef);
-
                     string certId = "=" + certInfo.Id.ToString();
-                    //ExportCertificate(certId);
 
-                    if (!CertExists(domainAlias))
-                    {
-                        //if we have our first cert files, lets export the pfx as well
-                        ExportCertificate(certId, pfxOnly: true);
-                    }
+                    // if we have our first cert files, lets export the pfx as well
+                    ExportCertificate(certId, pfxOnly: true);
                 }
             }
             catch (Exception exp)
