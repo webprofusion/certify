@@ -138,15 +138,17 @@ namespace Certify.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;?xml version = &quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-        /// &lt;configuration&gt;
-        ///     &lt;system.webServer&gt;
-        ///          &lt;staticContent&gt;
-        ///	        &lt;mimeMap fileExtension=&quot;.*&quot; mimeType=&quot;text/plain&quot; /&gt;
-        ///	        
-        ///   &lt;/staticContent&gt;
-        ///     &lt;/system.webServer&gt;
-        /// &lt;/configuration&gt;.
+        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+        ///
+        ///&lt;configuration&gt;
+        ///  &lt;system.webServer&gt;
+        ///    &lt;validation validateIntegratedModeConfiguration=&quot;false&quot; /&gt;
+        ///    &lt;staticContent&gt;
+        ///        &lt;mimeMap fileExtension=&quot;.&quot; mimeType=&quot;text/json&quot; /&gt;
+        ///    &lt;/staticContent&gt;
+        ///  &lt;handlers&gt;
+        ///      &lt;clear /&gt;
+        ///    &lt;add name=&quot;StaticFile&quot; path=&quot;*&quot; verb=&quot;*&quot; type=&quot;&quot; modules=&quot;StaticFileModule,DefaultDocumentModule,DirectoryListingModule&quot; scriptProcessor=&quot;&quot; resourceType=&quot;Either&quot; requireAccess=&quot;Read&quot; allowPathInfo=&quot;false&quot; preCondition=&quot;&quot; response [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string IISWebConfig {
             get {
@@ -155,14 +157,17 @@ namespace Certify.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;?xml version = &quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-        /// &lt;configuration&gt;
-        ///     &lt;system.webServer&gt;
-        ///          &lt;staticContent&gt;
-        ///	        &lt;mimeMap fileExtension=&quot;.&quot; mimeType=&quot;text/plain&quot; /&gt;
-        ///   &lt;/staticContent&gt;
-        ///     &lt;/system.webServer&gt;
-        /// &lt;/configuration&gt;.
+        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+        ///
+        ///&lt;configuration&gt;
+        ///  &lt;system.webServer&gt;
+        ///    &lt;validation validateIntegratedModeConfiguration=&quot;false&quot; /&gt;
+        ///    &lt;staticContent&gt;
+        ///        &lt;mimeMap fileExtension=&quot;.&quot; mimeType=&quot;text/json&quot; /&gt;
+        ///    &lt;/staticContent&gt;
+        ///  &lt;handlers&gt;
+        ///      &lt;clear /&gt;
+        ///    &lt;add name=&quot;StaticFile&quot; path=&quot;*&quot; verb=&quot;*&quot; type=&quot;&quot; modules=&quot;StaticFileModule,DefaultDocumentModule,DirectoryListingModule&quot; scriptProcessor=&quot;&quot; resourceType=&quot;Either&quot; requireAccess=&quot;Read&quot; allowPathInfo=&quot;false&quot; preCondition=&quot;&quot; response [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string IISWebConfigAlt {
             get {
