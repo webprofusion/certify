@@ -68,7 +68,6 @@ namespace Certify.Forms
                 SetupSelectedCertRequestControl(new CertRequestHTTPGeneric());
             }
         }
-
         private void SetupSelectedCertRequestControl(CertRequestBaseControl certControl)
         {
             certControl.VaultManager = this.vaultManager;
