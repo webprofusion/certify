@@ -2,21 +2,17 @@
 using ACMESharp.Vault.Providers;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 using System.Text;
 using System.Threading.Tasks;
+using ACMESharp;
+using Certify.Classes;
 
 namespace Certify
 {
-    public class APIResult
-    {
-        public bool IsOK { get; set; }
-        public string Message { get; set; }
-        public object Result { get; set; }
-    }
-
     public class PowershellManager
     {
         private PowerShell ps = null;
@@ -40,6 +36,26 @@ namespace Certify
             }
         }
 
+        public int GetPowershellVersion()
+        {
+            int powershellVersion = 0;
+            string regval = Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PowerShell\3\PowerShellEngine", "PowerShellVersion", null).ToString();
+            if (regval != null)
+            {
+                string[] ver = regval.Split('.');
+                powershellVersion = int.Parse(ver[0]);
+            }
+            return powershellVersion;
+        }
+
+        public bool IsValidVersion()
+        {
+            var version = GetPowershellVersion();
+
+            //If PS Version 1, 2 or doesn't exist then return false.
+            return !version.Equals(1) && !version.Equals(2) && !version.Equals(0);
+        }
+
         private void LogAction(string command, string result = null)
         {
             if (this.ActionLogs != null)
@@ -54,6 +70,8 @@ namespace Certify
             ps.Runspace.SessionStateProxy.Path.SetLocation(path);
         }
 
+        #region API 
+
         private APIResult InvokeCurrentPSCommand()
         {
             try
@@ -61,7 +79,7 @@ namespace Certify
                 var results = ps.Invoke();
                 return new APIResult { IsOK = true, Result = results };
             }
-            catch (ACMESharp.AcmeClient.AcmeWebException awExp)
+            catch (AcmeClient.AcmeWebException awExp)
             {
                 if (awExp.Response != null && awExp.Response.ProblemDetail != null)
                 {
@@ -120,7 +138,8 @@ namespace Certify
             cmd.AddParameter("Alias", alias);
             cmd.AddParameter("SkipEdit", true);
 
-            LogAction("Powershell: New-ACMEProviderConfig -WebServerProvider " + providerType + " -Alias " + alias + " -SkipEdit true");
+            LogAction("Powershell: New-ACMEProviderConfig -WebServerProvider " + providerType + " -Alias " + alias +
+                      " -SkipEdit true");
             return InvokeCurrentPSCommand();
         }
 
@@ -166,10 +185,11 @@ namespace Certify
 
             if (result.IsOK)
             {
-                var psResult = (System.Collections.ObjectModel.Collection<PSObject>)result.Result;
+                var psResult = (Collection<PSObject>)result.Result;
                 if (psResult.Any(r => r.BaseObject is CertificateInfo))
                 {
-                    var cert = (CertificateInfo)psResult.FirstOrDefault(r => r.BaseObject is CertificateInfo).BaseObject;
+                    var cert =
+                        (CertificateInfo)psResult.FirstOrDefault(r => r.BaseObject is CertificateInfo).BaseObject;
                     return cert;
                 }
             }
@@ -177,7 +197,7 @@ namespace Certify
             return null;
         }
 
-        public APIResult CompleteChallenge(string identifierRef, string challengeType = "http-01", bool regenerate = true)
+        public APIResult CompleteChallenge(string identifierRef, string challengeType = "http-01",  bool regenerate = true)
         {
             ps.Commands.Clear();
 
@@ -193,7 +213,8 @@ namespace Certify
                 cmd.AddParameter("Regenerate");
             }
 
-            LogAction("Powershell: Complete-ACMEChallenge -Ref " + identifierRef + " -ChallengeType " + challengeType + " -Handler manual " + (regenerate ? " -Regenerate" : ""));
+            LogAction("Powershell: Complete-ACMEChallenge -Ref " + identifierRef + " -ChallengeType " + challengeType +
+                      " -Handler manual " + (regenerate ? " -Regenerate" : ""));
 
             return InvokeCurrentPSCommand();
         }
@@ -223,7 +244,8 @@ namespace Certify
             cmd.AddParameter("Alias", certAlias);
             cmd.AddParameter("Generate");
 
-            LogAction("Powershell: New-ACMECertificate -Identifier " + identifierRef + " -Alias " + certAlias + " -Generate");
+            LogAction("Powershell: New-ACMECertificate -Identifier " + identifierRef + " -Alias " + certAlias +
+                      " -Generate");
 
             return InvokeCurrentPSCommand();
         }
@@ -257,7 +279,7 @@ namespace Certify
 
         public APIResult ExportCertificate(string certAlias, string vaultFolderPath, bool pfxOnly = false)
         {
-            
+
             string certKey = certAlias;
             if (certKey.StartsWith("=")) certKey = certKey.Replace("=", "");
             ps.Commands.Clear();
@@ -266,46 +288,37 @@ namespace Certify
             cmd.AddParameter("Ref", certAlias);
             if (!pfxOnly)
             {
-                cmd.AddParameter("ExportKeyPEM", vaultFolderPath + "\\"+ LocalDiskVault.KEYPM + "\\" + certKey + "-key.pem");
-                cmd.AddParameter("ExportCsrPEM", vaultFolderPath + "\\" + LocalDiskVault.CSRPM + "\\" + certKey + "-csr.pem");
-                cmd.AddParameter("ExportCertificatePEM", vaultFolderPath + "\\" + LocalDiskVault.CRTPM + "\\" + certKey + "-crt.pem");
-                cmd.AddParameter("ExportCertificateDER", vaultFolderPath + "\\" + LocalDiskVault.CRTDR + "\\" + certKey + "-crt.der");
+                cmd.AddParameter("ExportKeyPEM",
+                    vaultFolderPath + "\\" + LocalDiskVault.KEYPM + "\\" + certKey + "-key.pem");
+                cmd.AddParameter("ExportCsrPEM",
+                    vaultFolderPath + "\\" + LocalDiskVault.CSRPM + "\\" + certKey + "-csr.pem");
+                cmd.AddParameter("ExportCertificatePEM",
+                    vaultFolderPath + "\\" + LocalDiskVault.CRTPM + "\\" + certKey + "-crt.pem");
+                cmd.AddParameter("ExportCertificateDER",
+                    vaultFolderPath + "\\" + LocalDiskVault.CRTDR + "\\" + certKey + "-crt.der");
             }
             cmd.AddParameter("ExportPkcs12", vaultFolderPath + "\\" + LocalDiskVault.ASSET + "\\" + certKey + "-all.pfx");
             cmd.AddParameter("Overwrite");
 
             LogAction("Powershell: Get-ACMECertificate -Ref " + certAlias
-                + (!pfxOnly ?
-                " -ExportKeyPEM " + vaultFolderPath + "\\" + LocalDiskVault.KEYPM + "\\" + certKey + "-key.pem"
-                + " -ExportCsrPEM " + vaultFolderPath + "\\" + LocalDiskVault.CSRPM + "\\" + certKey + "-csr.pem"
-                + " -ExportCertificatePEM " + vaultFolderPath + "\\" + LocalDiskVault.CRTPM + "\\" + certKey + "-crt.pem"
-                + " -ExportCertificateDER " + vaultFolderPath + "\\" + LocalDiskVault.CRTDR + "\\" + certKey + "-csr.der"
-                : "")
-                + " -ExportPkcs12 " + vaultFolderPath + "\\" + LocalDiskVault.ASSET + "\\" + certKey + "-all.pfx"
-                + " -Overwrite"
+                      + (!pfxOnly
+                          ? " -ExportKeyPEM " + vaultFolderPath + "\\" + LocalDiskVault.KEYPM + "\\" + certKey +
+                            "-key.pem"
+                            + " -ExportCsrPEM " + vaultFolderPath + "\\" + LocalDiskVault.CSRPM + "\\" + certKey +
+                            "-csr.pem"
+                            + " -ExportCertificatePEM " + vaultFolderPath + "\\" + LocalDiskVault.CRTPM + "\\" + certKey +
+                            "-crt.pem"
+                            + " -ExportCertificateDER " + vaultFolderPath + "\\" + LocalDiskVault.CRTDR + "\\" + certKey +
+                            "-csr.der"
+                          : "")
+                      + " -ExportPkcs12 " + vaultFolderPath + "\\" + LocalDiskVault.ASSET + "\\" + certKey + "-all.pfx"
+                      + " -Overwrite"
                 );
 
             return InvokeCurrentPSCommand();
         }
 
-        public int GetPowershellVersion()
-        {
-            int powershellVersion = 0;
-            string regval = Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PowerShell\3\PowerShellEngine", "PowerShellVersion", null).ToString();
-            if (regval != null)
-            {
-                string[] ver = regval.Split('.');
-                powershellVersion = int.Parse(ver[0]);
-            }
-            return powershellVersion;
-        }
+        #endregion
 
-        public bool IsValidVersion()
-        {
-            var version = GetPowershellVersion();
-
-            //If PS Version 1, 2 or doesn't exist then return false.
-            return !version.Equals(1) && !version.Equals(2) && !version.Equals(0);
-        }
     }
 }

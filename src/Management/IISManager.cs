@@ -6,41 +6,17 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using Certify.Classes;
 
 namespace Certify.Management
 {
     /// <summary>
     /// Model to work with IIS site details.
     /// </summary>
-    public class SiteListItem
-    {
-        public string Description
-        {
-            get
-            {
-                return SiteName + " - " + Protocol + "://" + Host + ":" + Port;
-            }
-        }
-
-        public string SiteName
-        {
-            get; set;
-        }
-
-        public string Host
-        { get; set; }
-
-        public string PhysicalPath
-        { get; set; }
-
-        public bool IsHTTPS { get; set; }
-        public string Protocol { get; set; }
-        public int Port { get; set; }
-        public bool HasCertificate { get; set; }
-    }
 
     public class IISManager
     {
+        #region IIS 
         public Version GetIisVersion()
         {
             //http://stackoverflow.com/questions/446390/how-to-detect-iis-version-using-c
@@ -112,7 +88,9 @@ namespace Certify.Management
                 return iisManager.Sites.FirstOrDefault(s => s.Bindings.Any(b => b.Host == domain));
             }
         }
+        #endregion
 
+        #region Certificates
         public X509Certificate2 StoreCertificate(string host, string pfxFile)
         {
             var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
@@ -242,7 +220,9 @@ namespace Certify.Management
 
             //TODO: enable other SSL
         }
+        #endregion
 
+        #region Registry
         private RegistryKey GetRegistryBaseKey(RegistryHive hiveType)
         {
             if (Environment.Is64BitOperatingSystem)
@@ -306,5 +286,6 @@ namespace Certify.Management
             cipherKey.SetValue("Enabled", 0, RegistryValueKind.DWord);
             cipherKey.Close();
         }
+        #endregion
     }
 }
