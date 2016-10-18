@@ -190,7 +190,7 @@ This software uses the following Open Source software (or significant portions o
     &lt;/staticContent&gt;
   &lt;handlers&gt;
       &lt;clear /&gt;
-    &lt;add name="StaticFile" path="*" verb="*" type="" modules="StaticFileModule,DefaultDocumentModule,DirectoryListingModule" scriptProcessor="" resourceType="Either" requireAccess="Read" allowPathInfo="false" preCondition="" responseBufferLimit="4194304" /&gt;
+    &lt;add name="StaticFile" path=".*" verb="*" type="" modules="StaticFileModule,DefaultDocumentModule,DirectoryListingModule" scriptProcessor="" resourceType="Either" requireAccess="Read" allowPathInfo="false" preCondition="" responseBufferLimit="4194304" /&gt;
   &lt;/handlers&gt;
   &lt;/system.webServer&gt;
   &lt;system.web&gt;

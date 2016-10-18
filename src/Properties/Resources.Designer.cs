@@ -167,7 +167,7 @@ namespace Certify.Properties {
         ///    &lt;/staticContent&gt;
         ///  &lt;handlers&gt;
         ///      &lt;clear /&gt;
-        ///    &lt;add name=&quot;StaticFile&quot; path=&quot;*&quot; verb=&quot;*&quot; type=&quot;&quot; modules=&quot;StaticFileModule,DefaultDocumentModule,DirectoryListingModule&quot; scriptProcessor=&quot;&quot; resourceType=&quot;Either&quot; requireAccess=&quot;Read&quot; allowPathInfo=&quot;false&quot; preCondition=&quot;&quot; response [rest of string was truncated]&quot;;.
+        ///    &lt;add name=&quot;StaticFile&quot; path=&quot;.*&quot; verb=&quot;*&quot; type=&quot;&quot; modules=&quot;StaticFileModule,DefaultDocumentModule,DirectoryListingModule&quot; scriptProcessor=&quot;&quot; resourceType=&quot;Either&quot; requireAccess=&quot;Read&quot; allowPathInfo=&quot;false&quot; preCondition=&quot;&quot; respons [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string IISWebConfigAlt {
             get {
