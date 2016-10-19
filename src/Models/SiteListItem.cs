@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Certify.Classes
+namespace Certify.Models
 {
      public class SiteListItem
     {

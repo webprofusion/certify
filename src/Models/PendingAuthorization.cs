@@ -7,7 +7,7 @@ using Certify;
 using ACMESharp;
 using ACMESharp.Vault.Model;
 
-namespace Certify.Classes
+namespace Certify.Models
 {
     public class PendingAuthorization
     {

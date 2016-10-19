@@ -250,6 +250,13 @@ namespace Certify
 
             this.VaultManager = new VaultManager(Properties.Settings.Default.VaultPath, LocalDiskVault.VAULT);
 
+            if (!VaultManager.IsCompatiblePowershell())
+            {
+                MessageBox.Show("This application requires PowerShell version 4.0 or higher. You can update it using the latest Windows Management Framework download from Microsoft.", Properties.Resources.AppName);
+                Application.Exit();
+                return;
+            }
+
             if (Properties.Settings.Default.ShowBetaWarning)
             {
                 MessageBox.Show(Properties.Resources.BetaWarning, Properties.Resources.AppName);

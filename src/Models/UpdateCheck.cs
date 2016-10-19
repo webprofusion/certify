@@ -1,6 +1,6 @@
-using Certify.Classes;
+using Certify.Models;
 
-namespace Certify.Classes
+namespace Certify.Models
 {
     public class UpdateCheck
     {

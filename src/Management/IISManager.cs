@@ -6,7 +6,7 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
-using Certify.Classes;
+using Certify.Models;
 
 namespace Certify.Management
 {
@@ -110,12 +110,15 @@ namespace Certify.Management
 
             var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
             store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
-
-            // Going to remove certs with same friendly name
-            var certsToRemove = (from X509Certificate2 c in store.Certificates
-                                 where c.FriendlyName.StartsWith(hostPrefix) && c.GetCertHashString() != certificate.GetCertHashString()
-                                 select c).ToList();
-
+            var certsToRemove = new List<X509Certificate2>();
+            foreach (var c in store.Certificates)
+            {
+                if (c.FriendlyName.StartsWith(hostPrefix) && c.GetCertHashString() != certificate.GetCertHashString())
+                {
+                    //going to remove certs with same friendly name
+                    certsToRemove.Add(c);
+                }
+            }
             foreach (var oldCert in certsToRemove)
             {
                 try

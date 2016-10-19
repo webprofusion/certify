@@ -9,7 +9,7 @@ using System.Management.Automation.Runspaces;
 using System.Text;
 using System.Threading.Tasks;
 using ACMESharp;
-using Certify.Classes;
+using Certify.Models;
 
 namespace Certify
 {
@@ -138,8 +138,7 @@ namespace Certify
             cmd.AddParameter("Alias", alias);
             cmd.AddParameter("SkipEdit", true);
 
-            LogAction("Powershell: New-ACMEProviderConfig -WebServerProvider " + providerType + " -Alias " + alias +
-                      " -SkipEdit true");
+            LogAction("Powershell: New-ACMEProviderConfig -WebServerProvider " + providerType + " -Alias " + alias + " -SkipEdit true");
             return InvokeCurrentPSCommand();
         }
 
@@ -188,8 +187,7 @@ namespace Certify
                 var psResult = (Collection<PSObject>)result.Result;
                 if (psResult.Any(r => r.BaseObject is CertificateInfo))
                 {
-                    var cert =
-                        (CertificateInfo)psResult.FirstOrDefault(r => r.BaseObject is CertificateInfo).BaseObject;
+                    var cert = (CertificateInfo)psResult.FirstOrDefault(r => r.BaseObject is CertificateInfo).BaseObject;
                     return cert;
                 }
             }
@@ -213,8 +211,7 @@ namespace Certify
                 cmd.AddParameter("Regenerate");
             }
 
-            LogAction("Powershell: Complete-ACMEChallenge -Ref " + identifierRef + " -ChallengeType " + challengeType +
-                      " -Handler manual " + (regenerate ? " -Regenerate" : ""));
+            LogAction("Powershell: Complete-ACMEChallenge -Ref " + identifierRef + " -ChallengeType " + challengeType + " -Handler manual " + (regenerate ? " -Regenerate" : ""));
 
             return InvokeCurrentPSCommand();
         }
@@ -244,8 +241,7 @@ namespace Certify
             cmd.AddParameter("Alias", certAlias);
             cmd.AddParameter("Generate");
 
-            LogAction("Powershell: New-ACMECertificate -Identifier " + identifierRef + " -Alias " + certAlias +
-                      " -Generate");
+            LogAction("Powershell: New-ACMECertificate -Identifier " + identifierRef + " -Alias " + certAlias + " -Generate");
 
             return InvokeCurrentPSCommand();
         }
@@ -279,7 +275,7 @@ namespace Certify
 
         public APIResult ExportCertificate(string certAlias, string vaultFolderPath, bool pfxOnly = false)
         {
-
+            
             string certKey = certAlias;
             if (certKey.StartsWith("=")) certKey = certKey.Replace("=", "");
             ps.Commands.Clear();
@@ -288,35 +284,28 @@ namespace Certify
             cmd.AddParameter("Ref", certAlias);
             if (!pfxOnly)
             {
-                cmd.AddParameter("ExportKeyPEM",
-                    vaultFolderPath + "\\" + LocalDiskVault.KEYPM + "\\" + certKey + "-key.pem");
-                cmd.AddParameter("ExportCsrPEM",
-                    vaultFolderPath + "\\" + LocalDiskVault.CSRPM + "\\" + certKey + "-csr.pem");
-                cmd.AddParameter("ExportCertificatePEM",
-                    vaultFolderPath + "\\" + LocalDiskVault.CRTPM + "\\" + certKey + "-crt.pem");
-                cmd.AddParameter("ExportCertificateDER",
-                    vaultFolderPath + "\\" + LocalDiskVault.CRTDR + "\\" + certKey + "-crt.der");
+                cmd.AddParameter("ExportKeyPEM", vaultFolderPath + "\\"+ LocalDiskVault.KEYPM + "\\" + certKey + "-key.pem");
+                cmd.AddParameter("ExportCsrPEM", vaultFolderPath + "\\" + LocalDiskVault.CSRPM + "\\" + certKey + "-csr.pem");
+                cmd.AddParameter("ExportCertificatePEM", vaultFolderPath + "\\" + LocalDiskVault.CRTPM + "\\" + certKey + "-crt.pem");
+                cmd.AddParameter("ExportCertificateDER", vaultFolderPath + "\\" + LocalDiskVault.CRTDR + "\\" + certKey + "-crt.der");
             }
             cmd.AddParameter("ExportPkcs12", vaultFolderPath + "\\" + LocalDiskVault.ASSET + "\\" + certKey + "-all.pfx");
             cmd.AddParameter("Overwrite");
 
             LogAction("Powershell: Get-ACMECertificate -Ref " + certAlias
-                      + (!pfxOnly
-                          ? " -ExportKeyPEM " + vaultFolderPath + "\\" + LocalDiskVault.KEYPM + "\\" + certKey +
-                            "-key.pem"
-                            + " -ExportCsrPEM " + vaultFolderPath + "\\" + LocalDiskVault.CSRPM + "\\" + certKey +
-                            "-csr.pem"
-                            + " -ExportCertificatePEM " + vaultFolderPath + "\\" + LocalDiskVault.CRTPM + "\\" + certKey +
-                            "-crt.pem"
-                            + " -ExportCertificateDER " + vaultFolderPath + "\\" + LocalDiskVault.CRTDR + "\\" + certKey +
-                            "-csr.der"
-                          : "")
-                      + " -ExportPkcs12 " + vaultFolderPath + "\\" + LocalDiskVault.ASSET + "\\" + certKey + "-all.pfx"
-                      + " -Overwrite"
+                + (!pfxOnly ?
+                " -ExportKeyPEM " + vaultFolderPath + "\\" + LocalDiskVault.KEYPM + "\\" + certKey + "-key.pem"
+                + " -ExportCsrPEM " + vaultFolderPath + "\\" + LocalDiskVault.CSRPM + "\\" + certKey + "-csr.pem"
+                + " -ExportCertificatePEM " + vaultFolderPath + "\\" + LocalDiskVault.CRTPM + "\\" + certKey + "-crt.pem"
+                + " -ExportCertificateDER " + vaultFolderPath + "\\" + LocalDiskVault.CRTDR + "\\" + certKey + "-csr.der"
+                : "")
+                + " -ExportPkcs12 " + vaultFolderPath + "\\" + LocalDiskVault.ASSET + "\\" + certKey + "-all.pfx"
+                + " -Overwrite"
                 );
 
             return InvokeCurrentPSCommand();
         }
+
 
         #endregion
 

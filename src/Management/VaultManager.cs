@@ -1,4 +1,4 @@
-﻿using ACMESharp;
+using ACMESharp;
 using ACMESharp.POSH;
 using ACMESharp.POSH.Util;
 using ACMESharp.Util;
@@ -13,8 +13,8 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
-using Certify.Classes;
 using System.Threading.Tasks;
+using Certify.Models;
 
 namespace Certify
 {
@@ -24,13 +24,15 @@ namespace Certify
         private PowershellManager powershellManager;
         private string vaultFolderPath;
         private string vaultFilename;
+        public List<ActionLogItem> ActionLogs { get; }
         public string VaultFolderPath
         {
             get { return vaultFolderPath; }
         }
-        public List<ActionLogItem> ActionLogs { get; }
+
 
         #region Vault
+
         public bool InitVault(bool staging = true)
         {
             //System.IO.Directory.CreateDirectory(this.vaultFolderPath);
@@ -75,45 +77,6 @@ namespace Certify
             }*/
         }
 
-        public void ReloadVaultConfig()
-        {
-            this.vaultConfig = LoadVaultFromFile();
-        }
-
-        public string GetVaultPath()
-        {
-            using (var vlt = (LocalDiskVault)ACMESharp.POSH.Util.VaultHelper.GetVault())
-            {
-                this.vaultFolderPath = vlt.RootPath;
-            }
-            return this.vaultFolderPath;
-        }
-
-        public bool IsValidVaultPath(string vaultPathFolder)
-        {
-            string vaultFile = vaultPathFolder + "\\" + LocalDiskVault.VAULT;
-            if (File.Exists(vaultFile))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        public bool HasContacts()
-        {
-            if (this.vaultConfig.Registrations != null && this.vaultConfig.Registrations.Count > 0)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
         public VaultInfo LoadVaultFromFile()
         {
             using (var vlt = ACMESharp.POSH.Util.VaultHelper.GetVault())
@@ -147,53 +110,6 @@ namespace Certify
             if (vaultConfig != null)
             {
                 return vaultConfig;
-            }
-            else return null;
-        }
-
-        public List<IdentifierInfo> GetIdentifiers()
-        {
-            if (vaultConfig != null && vaultConfig.Identifiers != null)
-            {
-                return vaultConfig.Identifiers.Values.ToList();
-            }
-            else return null;
-        }
-
-        public IdentifierInfo GetIdentifier(string alias, bool reloadVaultConfig = false)
-        {
-            if (reloadVaultConfig)
-            {
-                ReloadVaultConfig();
-            }
-
-            var identifiers = GetIdentifiers();
-            if (identifiers != null)
-            {
-                //find best match for given alias/id
-                var result = identifiers.FirstOrDefault(i => i.Alias == alias);
-                if (result == null)
-                {
-                    result = identifiers.FirstOrDefault(i => i.Dns == alias);
-                }
-                if (result == null)
-                {
-                    result = identifiers.FirstOrDefault(i => i.Id.ToString() == alias);
-                }
-                return result;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public ProviderProfileInfo GetProviderConfig(string alias)
-        {
-            var vaultConfig = this.GetVaultConfig();
-            if (vaultConfig.ProviderProfiles != null)
-            {
-                return vaultConfig.ProviderProfiles.Values.FirstOrDefault(p => p.Alias == alias);
             }
             else return null;
         }
@@ -262,19 +178,102 @@ namespace Certify
             }
         }
 
+        public void ReloadVaultConfig()
+        {
+            this.vaultConfig = LoadVaultFromFile();
+        }
+
+        public bool IsValidVaultPath(string vaultPathFolder)
+        {
+            string vaultFile = vaultPathFolder + "\\" + LocalDiskVault.VAULT;
+            if (File.Exists(vaultFile))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public string GetVaultPath()
+        {
+            using (var vlt = (LocalDiskVault)ACMESharp.POSH.Util.VaultHelper.GetVault())
+            {
+                this.vaultFolderPath = vlt.RootPath;
+            }
+            return this.vaultFolderPath;
+        }
+
+        public bool HasContacts()
+        {
+            if (this.vaultConfig.Registrations != null && this.vaultConfig.Registrations.Count > 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public IdentifierInfo GetIdentifier(string alias, bool reloadVaultConfig = false)
+        {
+            if (reloadVaultConfig)
+            {
+                ReloadVaultConfig();
+            }
+
+            var identifiers = GetIdentifiers();
+            if (identifiers != null)
+            {
+                //find best match for given alias/id
+                var result = identifiers.FirstOrDefault(i => i.Alias == alias);
+                if (result == null)
+                {
+                    result = identifiers.FirstOrDefault(i => i.Dns == alias);
+                }
+                if (result == null)
+                {
+                    result = identifiers.FirstOrDefault(i => i.Id.ToString() == alias);
+                }
+                return result;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public List<IdentifierInfo> GetIdentifiers()
+        {
+            if (vaultConfig != null && vaultConfig.Identifiers != null)
+            {
+                return vaultConfig.Identifiers.Values.ToList();
+            }
+            else return null;
+        }
+        public ProviderProfileInfo GetProviderConfig(string alias)
+        {
+            var vaultConfig = this.GetVaultConfig();
+            if (vaultConfig.ProviderProfiles != null)
+            {
+                return vaultConfig.ProviderProfiles.Values.FirstOrDefault(p => p.Alias == alias);
+            }
+            else return null;
+        }
+
+
+
         #endregion
 
         #region Registration
+
         public void AddNewRegistration(string contacts)
         {
             powershellManager.NewRegistration(contacts);
 
             powershellManager.AcceptRegistrationTOS();
-        }
-
-        public bool DeleteRegistrationInfo(string Id)
-        {
-            return false;
         }
 
         internal bool DeleteRegistrationInfo(Guid id)
@@ -297,22 +296,49 @@ namespace Certify
             }
         }
 
+        public bool DeleteRegistrationInfo(string Id)
+        {
+            return false;
+        }
+
         #endregion
 
         #region Certificates
-        public CertificateInfo GetCertificate(string reference)
+
+        public bool CertExists(string domainAlias)
         {
-            //var cert = powershellManager.GetCertificateByRef(reference);
-            if (vaultConfig.Certificates != null)
+            var certRef = "cert_" + domainAlias;
+
+            if (vaultConfig.Certificates != null && vaultConfig.Certificates.Values.Any(c => c.Alias == certRef))
             {
-                var cert = vaultConfig.Certificates.Values.FirstOrDefault(c => c.Alias == reference);
-                if (cert == null)
-                {
-                    cert = vaultConfig.Certificates.Values.FirstOrDefault(c => c.Id.ToString() == reference);
-                }
-                return cert;
+                return true;
             }
-            return null;
+            else
+            {
+                return false;
+            }
+        }
+
+        public void UpdateAndExportCertificate(string domainAlias)
+        {
+            var certRef = "cert_" + domainAlias;
+            try
+            {
+                powershellManager.UpdateCertificate(certRef);
+
+                if (CertExists(domainAlias)) // if the cert exists after the update, export it
+                {
+                    var certInfo = GetCertificate(certRef);
+                    string certId = "=" + certInfo.Id.ToString();
+
+                    // if we have our first cert files, lets export the pfx as well
+                    ExportCertificate(certId, pfxOnly: true);
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.ToString());
+            }
         }
 
         public bool RenewCertificate(Guid identifierRef)
@@ -363,57 +389,6 @@ namespace Certify
             return certRef;
         }
 
-        public void ExportCertificate(string certRef, bool pfxOnly = false)
-        {
-            GetVaultPath();
-            if (!Directory.Exists(VaultFolderPath + "\\" + LocalDiskVault.ASSET))
-            {
-                Directory.CreateDirectory(VaultFolderPath + "\\" + LocalDiskVault.ASSET);
-            }
-            powershellManager.ExportCertificate(certRef, this.VaultFolderPath, pfxOnly);
-        }
-
-        public void UpdateAndExportCertificate(string domainAlias)
-        {
-            var certRef = "cert_" + domainAlias;
-            try
-            {
-                powershellManager.UpdateCertificate(certRef);
-
-                if (!CertExists(domainAlias))
-                {
-                    var certInfo = GetCertificate(certRef);
-
-                    string certId = "=" + certInfo.Id.ToString();
-                    //ExportCertificate(certId);
-
-                    if (!CertExists(domainAlias))
-                    {
-                        //if we have our first cert files, lets export the pfx as well
-                        ExportCertificate(certId, pfxOnly: true);
-                    }
-                }
-            }
-            catch (Exception exp)
-            {
-                System.Diagnostics.Debug.WriteLine(exp.ToString());
-            }
-        }
-
-        public bool CertExists(string domainAlias)
-        {
-            var certRef = "cert_" + domainAlias;
-
-            if (vaultConfig.Certificates != null && vaultConfig.Certificates.Values.Any(c => c.Alias == certRef))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
         public string GetCertificateFilePath(Guid id, string assetTypeFolder = LocalDiskVault.CRTDR)
         {
             GetVaultPath();
@@ -425,12 +400,29 @@ namespace Certify
             return null;
         }
 
-        #endregion
-
-        public string ComputeIdentifierAlias(string domain)
+        public CertificateInfo GetCertificate(string reference)
         {
-            var domainAlias = domain.Replace(".", "_");
-            return domain;
+            //var cert = powershellManager.GetCertificateByRef(reference);
+            if (vaultConfig.Certificates != null)
+            {
+                var cert = vaultConfig.Certificates.Values.FirstOrDefault(c => c.Alias == reference);
+                if (cert == null)
+                {
+                    cert = vaultConfig.Certificates.Values.FirstOrDefault(c => c.Id.ToString() == reference);
+                }
+                return cert;
+            }
+            return null;
+        }
+
+        public void ExportCertificate(string certRef, bool pfxOnly = false)
+        {
+            GetVaultPath();
+            if (!Directory.Exists(VaultFolderPath + "\\" + LocalDiskVault.ASSET))
+            {
+                Directory.CreateDirectory(VaultFolderPath + "\\" + LocalDiskVault.ASSET);
+            }
+            powershellManager.ExportCertificate(certRef, this.VaultFolderPath, pfxOnly);
         }
 
         public PendingAuthorization DomainInitAndRegistration(CertRequestConfig requestConfig, string identifierAlias)
@@ -518,6 +510,25 @@ namespace Certify
             }
         }
 
+
+        #endregion
+
+        public bool IsCompatiblePowershell()
+        {
+            int version = powershellManager.GetPowershellVersion();
+            if (version < 4)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public string ComputeIdentifierAlias(string domain)
+        {
+            var domainAlias = domain.Replace(".", "_");
+            return domain;
+        }
+
         private bool CheckURL(string url)
         {
             //check http request to test path works
@@ -567,16 +578,6 @@ namespace Certify
             return output;
         }
 
-        public bool IsCompatiblePowershell()
-        {
-            int version = powershellManager.GetPowershellVersion();
-            if (version < 4)
-            {
-                return false;
-            }
-            return true;
-        }
-
         public void PermissionTest()
         {
             if (IisSitePathProvider.IsAdministrator())
@@ -597,5 +598,6 @@ namespace Certify
             }
         }
 
+        
     }
 }
