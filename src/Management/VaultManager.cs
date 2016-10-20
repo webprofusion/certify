@@ -1,4 +1,4 @@
-﻿using ACMESharp;
+using ACMESharp;
 using ACMESharp.POSH;
 using ACMESharp.POSH.Util;
 using ACMESharp.Util;
@@ -14,40 +14,10 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Certify.Models;
 
 namespace Certify
 {
-    public class PendingAuthorization
-    {
-        public AuthorizeChallenge Challenge { get; set; }
-        public IdentifierInfo Identifier { get; set; }
-        public string TempFilePath { get; set; }
-        public bool ExtensionlessConfigCheckedOK { get; set; }
-    }
-
-    public class CertRequestConfig
-    {
-        public string Domain { get; set; }
-        public string WebsiteRootPath { get; set; }
-        public bool PerformChallengeFileCopy { get; set; }
-    }
-
-    public class ActionLogItem
-    {
-        public DateTime DateTime { get; set; }
-        public string Command { get; set; }
-
-        public string Result
-        {
-            get; set;
-        }
-
-        public override string ToString()
-        {
-            return "[" + DateTime.ToShortTimeString() + "] " + this.Command + (this.Result != null ? " : " + this.Result : "");
-        }
-    }
-
     public class VaultManager
     {
         private VaultInfo vaultConfig;
@@ -55,35 +25,31 @@ namespace Certify
         private string vaultFolderPath;
         private string vaultFilename;
         public List<ActionLogItem> ActionLogs { get; }
-
         public string VaultFolderPath
         {
             get { return vaultFolderPath; }
         }
 
-        public bool IsValidVaultPath(string vaultPathFolder)
-        {
-            string vaultFile = vaultPathFolder + "\\" + LocalDiskVault.VAULT;
-            if (File.Exists(vaultFile))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
 
-        public bool HasContacts()
+        #region Vault
+
+        public bool InitVault(bool staging = true)
         {
-            if (this.vaultConfig.Registrations != null && this.vaultConfig.Registrations.Count > 0)
+            //System.IO.Directory.CreateDirectory(this.vaultFolderPath);
+            //this.powershellManager.SetWorkingDirectory(this.vaultFolderPath);
+
+            string apiURI = InitializeVault.WELL_KNOWN_BASE_SERVICES[InitializeVault.WELL_KNOWN_LESTAGE];
+            if (!staging)
             {
-                return true;
+                //live api
+                apiURI = InitializeVault.WELL_KNOWN_BASE_SERVICES[InitializeVault.WELL_KNOWN_LE];
             }
-            else
-            {
-                return false;
-            }
+            powershellManager.InitializeVault(apiURI);
+
+            this.vaultFolderPath = GetVaultPath();
+            //create default manual http provider (challenge/response by placing answer in well known location on website for server to fetch);
+            //powershellManager.NewProviderConfig("Manual", "manualHttpProvider");
+            return true;
         }
 
         public VaultManager(string vaultFolderPath, string vaultFilename)
@@ -109,21 +75,6 @@ namespace Certify
             else
             {
             }*/
-        }
-
-        public bool IsCompatiblePowershell()
-        {
-            int version = powershellManager.GetPowershellVersion();
-            if (version < 4)
-            {
-                return false;
-            }
-            return true;
-        }
-
-        public void ReloadVaultConfig()
-        {
-            this.vaultConfig = LoadVaultFromFile();
         }
 
         public VaultInfo LoadVaultFromFile()
@@ -163,13 +114,107 @@ namespace Certify
             else return null;
         }
 
-        public List<IdentifierInfo> GetIdentifiers()
+        public void CleanupVault(Guid? identifierToRemove = null)
         {
-            if (vaultConfig != null && vaultConfig.Identifiers != null)
+            //remove duplicate identifiers etc
+
+            using (var vlt = ACMESharp.POSH.Util.VaultHelper.GetVault())
             {
-                return vaultConfig.Identifiers.Values.ToList();
+                vlt.OpenStorage();
+                var v = vlt.LoadVault();
+
+                List<Guid> toBeRemoved = new List<Guid>();
+                if (identifierToRemove != null)
+                {
+                    if (v.Identifiers.Keys.Any(i => i == (Guid)identifierToRemove))
+                    {
+                        toBeRemoved.Add((Guid)identifierToRemove);
+                    }
+                }
+                else
+                {
+                    //find all orphaned identified
+                    if (v.Identifiers != null)
+                    {
+                        foreach (var k in v.Identifiers.Keys)
+                        {
+                            var identifier = v.Identifiers[k];
+
+                            var certs = v.Certificates.Values.Where(c => c.IdentifierRef == identifier.Id);
+                            if (!certs.Any())
+                            {
+                                toBeRemoved.Add(identifier.Id);
+                            }
+                        }
+                    }
+                }
+
+                foreach (var i in toBeRemoved)
+                {
+                    v.Identifiers.Remove(i);
+                }
+                //
+
+                //find and remove certificatess with no valid identifier in vault
+                toBeRemoved = new List<Guid>();
+
+                if (v.Certificates != null)
+                {
+                    foreach (var c in v.Certificates)
+                    {
+                        if (!v.Identifiers.ContainsKey(c.IdentifierRef))
+                        {
+                            toBeRemoved.Add(c.Id);
+                        }
+                    }
+
+                    foreach (var i in toBeRemoved)
+                    {
+                        v.Certificates.Remove(i);
+                    }
+                }
+
+                vlt.SaveVault(v);
             }
-            else return null;
+        }
+
+        public void ReloadVaultConfig()
+        {
+            this.vaultConfig = LoadVaultFromFile();
+        }
+
+        public bool IsValidVaultPath(string vaultPathFolder)
+        {
+            string vaultFile = vaultPathFolder + "\\" + LocalDiskVault.VAULT;
+            if (File.Exists(vaultFile))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public string GetVaultPath()
+        {
+            using (var vlt = (LocalDiskVault)ACMESharp.POSH.Util.VaultHelper.GetVault())
+            {
+                this.vaultFolderPath = vlt.RootPath;
+            }
+            return this.vaultFolderPath;
+        }
+
+        public bool HasContacts()
+        {
+            if (this.vaultConfig.Registrations != null && this.vaultConfig.Registrations.Count > 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public IdentifierInfo GetIdentifier(string alias, bool reloadVaultConfig = false)
@@ -200,11 +245,159 @@ namespace Certify
             }
         }
 
+        public List<IdentifierInfo> GetIdentifiers()
+        {
+            if (vaultConfig != null && vaultConfig.Identifiers != null)
+            {
+                return vaultConfig.Identifiers.Values.ToList();
+            }
+            else return null;
+        }
+        public ProviderProfileInfo GetProviderConfig(string alias)
+        {
+            var vaultConfig = this.GetVaultConfig();
+            if (vaultConfig.ProviderProfiles != null)
+            {
+                return vaultConfig.ProviderProfiles.Values.FirstOrDefault(p => p.Alias == alias);
+            }
+            else return null;
+        }
+
+
+
+        #endregion
+
+        #region Registration
+
         public void AddNewRegistration(string contacts)
         {
             powershellManager.NewRegistration(contacts);
 
             powershellManager.AcceptRegistrationTOS();
+        }
+
+        internal bool DeleteRegistrationInfo(Guid id)
+        {
+            using (var vlt = ACMESharp.POSH.Util.VaultHelper.GetVault())
+            {
+                try
+                {
+                    vlt.OpenStorage(true);
+                    vaultConfig.Registrations.Remove(id);
+                    vlt.SaveVault(vaultConfig);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    // TODO: Logging of errors.
+                    System.Windows.Forms.MessageBox.Show(e.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                    return false;
+                }
+            }
+        }
+
+        public bool DeleteRegistrationInfo(string Id)
+        {
+            return false;
+        }
+
+        #endregion
+
+        #region Certificates
+
+        public bool CertExists(string domainAlias)
+        {
+            var certRef = "cert_" + domainAlias;
+
+            if (vaultConfig.Certificates != null && vaultConfig.Certificates.Values.Any(c => c.Alias == certRef))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public void UpdateAndExportCertificate(string domainAlias)
+        {
+            var certRef = "cert_" + domainAlias;
+            try
+            {
+                powershellManager.UpdateCertificate(certRef);
+
+                if (CertExists(domainAlias)) // if the cert exists after the update, export it
+                {
+                    var certInfo = GetCertificate(certRef);
+                    string certId = "=" + certInfo.Id.ToString();
+
+                    // if we have our first cert files, lets export the pfx as well
+                    ExportCertificate(certId, pfxOnly: true);
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.ToString());
+            }
+        }
+
+        public bool RenewCertificate(Guid identifierRef)
+        {
+            var identifier = vaultConfig.Identifiers[identifierRef];
+
+            try
+            {
+                this.CreateCertificate(identifier.Alias);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public string CreateCertificate(string domainAlias)
+        {
+            var certRef = "cert_" + domainAlias;
+            //New-ACMECertificate -Identifier dns1 -Alias cert1 -Generate
+            bool certExists = CertExists(domainAlias);
+
+            if (!certExists)
+            {
+                powershellManager.NewCertificate(domainAlias, certRef);
+            }
+            ReloadVaultConfig();
+
+            //return certRef;
+
+            try
+            {
+                var apiResult = powershellManager.SubmitCertificate(certRef, force: true);
+
+                //give LE time to generate cert before fetching fresh status info
+                Thread.Sleep(1000);
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.ToString());
+            }
+
+            ReloadVaultConfig();
+
+            UpdateAndExportCertificate(domainAlias);
+
+            return certRef;
+        }
+
+        public string GetCertificateFilePath(Guid id, string assetTypeFolder = LocalDiskVault.CRTDR)
+        {
+            GetVaultPath();
+            var cert = vaultConfig.Certificates[id];
+            if (cert != null)
+            {
+                return this.VaultFolderPath + "\\" + assetTypeFolder;
+            }
+            return null;
         }
 
         public CertificateInfo GetCertificate(string reference)
@@ -222,59 +415,14 @@ namespace Certify
             return null;
         }
 
-        public ProviderProfileInfo GetProviderConfig(string alias)
+        public void ExportCertificate(string certRef, bool pfxOnly = false)
         {
-            var vaultConfig = this.GetVaultConfig();
-            if (vaultConfig.ProviderProfiles != null)
+            GetVaultPath();
+            if (!Directory.Exists(VaultFolderPath + "\\" + LocalDiskVault.ASSET))
             {
-                return vaultConfig.ProviderProfiles.Values.FirstOrDefault(p => p.Alias == alias);
+                Directory.CreateDirectory(VaultFolderPath + "\\" + LocalDiskVault.ASSET);
             }
-            else return null;
-        }
-
-        public void PermissionTest()
-        {
-            if (IisSitePathProvider.IsAdministrator())
-            {
-                System.Diagnostics.Debug.WriteLine("User is administrator");
-
-                var iisPathProvider = new IisSitePathProvider();
-                iisPathProvider.WebSiteRoot = @"C:\inetpub\wwwroot\";
-                using (var fs = File.OpenRead(@"C:\temp\log.txt"))
-                {
-                    var fileURI = new System.Uri(iisPathProvider.WebSiteRoot + "/.temp/test/test123");
-                    iisPathProvider.UploadFile(fileURI, fs);
-                }
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("User is not administrator");
-            }
-        }
-
-        public bool InitVault(bool staging = true)
-        {
-            //System.IO.Directory.CreateDirectory(this.vaultFolderPath);
-            //this.powershellManager.SetWorkingDirectory(this.vaultFolderPath);
-
-            string apiURI = InitializeVault.WELL_KNOWN_BASE_SERVICES[InitializeVault.WELL_KNOWN_LESTAGE];
-            if (!staging)
-            {
-                //live api
-                apiURI = InitializeVault.WELL_KNOWN_BASE_SERVICES[InitializeVault.WELL_KNOWN_LE];
-            }
-            powershellManager.InitializeVault(apiURI);
-
-            this.vaultFolderPath = GetVaultPath();
-            //create default manual http provider (challenge/response by placing answer in well known location on website for server to fetch);
-            //powershellManager.NewProviderConfig("Manual", "manualHttpProvider");
-            return true;
-        }
-
-        public string ComputeIdentifierAlias(string domain)
-        {
-            var domainAlias = domain.Replace(".", "_");
-            return domain;
+            powershellManager.ExportCertificate(certRef, this.VaultFolderPath, pfxOnly);
         }
 
         public PendingAuthorization DomainInitAndRegistration(CertRequestConfig requestConfig, string identifierAlias)
@@ -362,6 +510,25 @@ namespace Certify
             }
         }
 
+
+        #endregion
+
+        public bool IsCompatiblePowershell()
+        {
+            int version = powershellManager.GetPowershellVersion();
+            if (version < 4)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public string ComputeIdentifierAlias(string domain)
+        {
+            var domainAlias = domain.Replace(".", "_");
+            return domain;
+        }
+
         private bool CheckURL(string url)
         {
             //check http request to test path works
@@ -385,31 +552,6 @@ namespace Certify
             }
         }
 
-        internal bool DeleteRegistrationInfo(Guid id)
-        {
-            using (var vlt = ACMESharp.POSH.Util.VaultHelper.GetVault())
-            {
-                try
-                {
-                    vlt.OpenStorage(true);
-                    vaultConfig.Registrations.Remove(id);
-                    vlt.SaveVault(vaultConfig);
-                    return true;
-                }
-                catch (Exception e)
-                {
-                    // TODO: Logging of errors.
-                    System.Windows.Forms.MessageBox.Show(e.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
-                    return false;
-                }
-            }
-        }
-
-        public bool DeleteRegistrationInfo(string Id)
-        {
-            return false;
-        }
-
         public void SubmitChallenge(string alias, string challengeType = "http-01")
         {
             //well known challenge all ready to be read by server
@@ -421,100 +563,6 @@ namespace Certify
         public void UpdateIdentifierStatus(string alias, string challengeType = "http-01")
         {
             powershellManager.UpdateIdentifier(alias, challengeType);
-        }
-
-        public bool CertExists(string domainAlias)
-        {
-            var certRef = "cert_" + domainAlias;
-
-            if (vaultConfig.Certificates != null && vaultConfig.Certificates.Values.Any(c => c.Alias == certRef))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        public void UpdateAndExportCertificate(string domainAlias)
-        {
-            var certRef = "cert_" + domainAlias;
-            try
-            {
-                powershellManager.UpdateCertificate(certRef);
-
-                if (CertExists(domainAlias)) // if the cert exists after the update, export it
-                {
-                    var certInfo = GetCertificate(certRef);
-                    string certId = "=" + certInfo.Id.ToString();
-
-                    // if we have our first cert files, lets export the pfx as well
-                    ExportCertificate(certId, pfxOnly: true);
-                }
-            }
-            catch (Exception exp)
-            {
-                System.Diagnostics.Debug.WriteLine(exp.ToString());
-            }
-        }
-
-        public bool RenewCertificate(Guid identifierRef)
-        {
-            var identifier = vaultConfig.Identifiers[identifierRef];
-
-            try
-            {
-                this.CreateCertificate(identifier.Alias);
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
-        public string CreateCertificate(string domainAlias)
-        {
-            var certRef = "cert_" + domainAlias;
-            //New-ACMECertificate -Identifier dns1 -Alias cert1 -Generate
-            bool certExists = CertExists(domainAlias);
-
-            if (!certExists)
-            {
-                powershellManager.NewCertificate(domainAlias, certRef);
-            }
-            ReloadVaultConfig();
-
-            //return certRef;
-
-            try
-            {
-                var apiResult = powershellManager.SubmitCertificate(certRef, force: true);
-
-                //give LE time to generate cert before fetching fresh status info
-                Thread.Sleep(1000);
-            }
-            catch (Exception exp)
-            {
-                System.Diagnostics.Debug.WriteLine(exp.ToString());
-            }
-
-            ReloadVaultConfig();
-
-            UpdateAndExportCertificate(domainAlias);
-
-            return certRef;
-        }
-
-        public void ExportCertificate(string certRef, bool pfxOnly = false)
-        {
-            GetVaultPath();
-            if (!Directory.Exists(VaultFolderPath + "\\" + LocalDiskVault.ASSET))
-            {
-                Directory.CreateDirectory(VaultFolderPath + "\\" + LocalDiskVault.ASSET);
-            }
-            powershellManager.ExportCertificate(certRef, this.VaultFolderPath, pfxOnly);
         }
 
         public string GetActionLogSummary()
@@ -530,88 +578,26 @@ namespace Certify
             return output;
         }
 
-        public string GetVaultPath()
+        public void PermissionTest()
         {
-            using (var vlt = (LocalDiskVault)ACMESharp.POSH.Util.VaultHelper.GetVault())
+            if (IisSitePathProvider.IsAdministrator())
             {
-                this.vaultFolderPath = vlt.RootPath;
+                System.Diagnostics.Debug.WriteLine("User is administrator");
+
+                var iisPathProvider = new IisSitePathProvider();
+                iisPathProvider.WebSiteRoot = @"C:\inetpub\wwwroot\";
+                using (var fs = File.OpenRead(@"C:\temp\log.txt"))
+                {
+                    var fileURI = new System.Uri(iisPathProvider.WebSiteRoot + "/.temp/test/test123");
+                    iisPathProvider.UploadFile(fileURI, fs);
+                }
             }
-            return this.vaultFolderPath;
-        }
-
-        public string GetCertificateFilePath(Guid id, string assetTypeFolder = LocalDiskVault.CRTDR)
-        {
-            GetVaultPath();
-            var cert = vaultConfig.Certificates[id];
-            if (cert != null)
+            else
             {
-                return this.VaultFolderPath + "\\" + assetTypeFolder;
-            }
-            return null;
-        }
-
-        public void CleanupVault(Guid? identifierToRemove = null)
-        {
-            //remove duplicate identifiers etc
-
-            using (var vlt = ACMESharp.POSH.Util.VaultHelper.GetVault())
-            {
-                vlt.OpenStorage();
-                var v = vlt.LoadVault();
-
-                List<Guid> toBeRemoved = new List<Guid>();
-                if (identifierToRemove != null)
-                {
-                    if (v.Identifiers.Keys.Any(i => i == (Guid)identifierToRemove))
-                    {
-                        toBeRemoved.Add((Guid)identifierToRemove);
-                    }
-                }
-                else
-                {
-                    //find all orphaned identified
-                    if (v.Identifiers != null)
-                    {
-                        foreach (var k in v.Identifiers.Keys)
-                        {
-                            var identifier = v.Identifiers[k];
-
-                            var certs = v.Certificates.Values.Where(c => c.IdentifierRef == identifier.Id);
-                            if (!certs.Any())
-                            {
-                                toBeRemoved.Add(identifier.Id);
-                            }
-                        }
-                    }
-                }
-
-                foreach (var i in toBeRemoved)
-                {
-                    v.Identifiers.Remove(i);
-                }
-                //
-
-                //find and remove certificatess with no valid identifier in vault
-                toBeRemoved = new List<Guid>();
-
-                if (v.Certificates != null)
-                {
-                    foreach (var c in v.Certificates)
-                    {
-                        if (!v.Identifiers.ContainsKey(c.IdentifierRef))
-                        {
-                            toBeRemoved.Add(c.Id);
-                        }
-                    }
-
-                    foreach (var i in toBeRemoved)
-                    {
-                        v.Certificates.Remove(i);
-                    }
-                }
-
-                vlt.SaveVault(v);
+                System.Diagnostics.Debug.WriteLine("User is not administrator");
             }
         }
+
+        
     }
 }

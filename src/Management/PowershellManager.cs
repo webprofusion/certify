@@ -2,21 +2,17 @@
 using ACMESharp.Vault.Providers;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 using System.Text;
 using System.Threading.Tasks;
+using ACMESharp;
+using Certify.Models;
 
 namespace Certify
 {
-    public class APIResult
-    {
-        public bool IsOK { get; set; }
-        public string Message { get; set; }
-        public object Result { get; set; }
-    }
-
     public class PowershellManager
     {
         private PowerShell ps = null;
@@ -40,6 +36,26 @@ namespace Certify
             }
         }
 
+        public int GetPowershellVersion()
+        {
+            int powershellVersion = 0;
+            string regval = Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PowerShell\3\PowerShellEngine", "PowerShellVersion", null).ToString();
+            if (regval != null)
+            {
+                string[] ver = regval.Split('.');
+                powershellVersion = int.Parse(ver[0]);
+            }
+            return powershellVersion;
+        }
+
+        public bool IsValidVersion()
+        {
+            var version = GetPowershellVersion();
+
+            //If PS Version 1, 2 or doesn't exist then return false.
+            return !version.Equals(1) && !version.Equals(2) && !version.Equals(0);
+        }
+
         private void LogAction(string command, string result = null)
         {
             if (this.ActionLogs != null)
@@ -54,6 +70,8 @@ namespace Certify
             ps.Runspace.SessionStateProxy.Path.SetLocation(path);
         }
 
+        #region API 
+
         private APIResult InvokeCurrentPSCommand()
         {
             try
@@ -61,7 +79,7 @@ namespace Certify
                 var results = ps.Invoke();
                 return new APIResult { IsOK = true, Result = results };
             }
-            catch (ACMESharp.AcmeClient.AcmeWebException awExp)
+            catch (AcmeClient.AcmeWebException awExp)
             {
                 if (awExp.Response != null && awExp.Response.ProblemDetail != null)
                 {
@@ -166,7 +184,7 @@ namespace Certify
 
             if (result.IsOK)
             {
-                var psResult = (System.Collections.ObjectModel.Collection<PSObject>)result.Result;
+                var psResult = (Collection<PSObject>)result.Result;
                 if (psResult.Any(r => r.BaseObject is CertificateInfo))
                 {
                     var cert = (CertificateInfo)psResult.FirstOrDefault(r => r.BaseObject is CertificateInfo).BaseObject;
@@ -177,7 +195,7 @@ namespace Certify
             return null;
         }
 
-        public APIResult CompleteChallenge(string identifierRef, string challengeType = "http-01", bool regenerate = true)
+        public APIResult CompleteChallenge(string identifierRef, string challengeType = "http-01",  bool regenerate = true)
         {
             ps.Commands.Clear();
 
@@ -288,24 +306,8 @@ namespace Certify
             return InvokeCurrentPSCommand();
         }
 
-        public int GetPowershellVersion()
-        {
-            int powershellVersion = 0;
-            string regval = Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PowerShell\3\PowerShellEngine", "PowerShellVersion", null).ToString();
-            if (regval != null)
-            {
-                string[] ver = regval.Split('.');
-                powershellVersion = int.Parse(ver[0]);
-            }
-            return powershellVersion;
-        }
 
-        public bool IsValidVersion()
-        {
-            var version = GetPowershellVersion();
+        #endregion
 
-            //If PS Version 1, 2 or doesn't exist then return false.
-            return !version.Equals(1) && !version.Equals(2) && !version.Equals(0);
-        }
     }
 }

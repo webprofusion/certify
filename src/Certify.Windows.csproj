@@ -113,6 +113,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Models\ActionLogItem.cs" />
+    <Compile Include="Models\ApiResult.cs" />
+    <Compile Include="Models\AppVersion.cs" />
+    <Compile Include="Models\CertRequestConfig.cs" />
+    <Compile Include="Models\PendingAuthorization.cs" />
+    <Compile Include="Models\SiteListItem.cs" />
+    <Compile Include="Models\UpdateMessage.cs" />
     <Compile Include="Forms\AboutDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -183,6 +190,7 @@
     <Compile Include="Management\CertificateManager.cs" />
     <Compile Include="Management\IISManager.cs" />
     <Compile Include="Management\PowershellManager.cs" />
+    <Compile Include="Models\UpdateCheck.cs" />
     <Compile Include="Management\Util.cs" />
     <Compile Include="Models\ExtendedVaultConfig.cs" />
     <Compile Include="Program.cs" />

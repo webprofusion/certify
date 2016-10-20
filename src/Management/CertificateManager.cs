@@ -11,7 +11,7 @@ namespace Certify.Management
     {
         public X509Certificate GetCertificate(string filename)
         {
-            X509Certificate cert = new X509Certificate();
+            var cert = new X509Certificate();
             cert.Import(filename);
             return cert;
         }
