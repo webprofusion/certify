@@ -23,7 +23,7 @@ namespace Certify
             this.ActionLogs = actionLogs;
 
             InitialSessionState initial = InitialSessionState.CreateDefault();
-            initial.ImportPSModule(new string[] { AppDomain.CurrentDomain.BaseDirectory + "\\ACMESharp.psd1" });
+            initial.ImportPSModule(new string[] { "ACMESharp" });
             Runspace runspace = RunspaceFactory.CreateRunspace(initial);
             runspace.Open();
 
