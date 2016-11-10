@@ -81,6 +81,42 @@
     <AssemblyOriginatorKeyFile>LetsEncryptManager_TemporaryKey.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ACMESharp, Version=0.8.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ACMESharp.0.8.1.214-EA\lib\net45\ACMESharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ACMESharp.PKI.Providers.OpenSslLib32, Version=0.8.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ACMESharp.PKI.Providers.OpenSslLib32.0.8.1.214-EA\lib\net45\ACMESharp.PKI.Providers.OpenSslLib32.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ACMESharp.PKI.Providers.OpenSslLib64, Version=0.8.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ACMESharp.PKI.Providers.OpenSslLib64.0.8.1.214-EA\lib\net45\ACMESharp.PKI.Providers.OpenSslLib64.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ACMESharp.POSH, Version=0.8.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ACMESharp.POSH.0.8.2.265-EA\lib\net45\ACMESharp.POSH.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ACMESharp.Vault, Version=0.8.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ACMESharp.Vault.0.8.0.263-EA\lib\net45\ACMESharp.Vault.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="AWSSDK.Core, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\packages\AWSSDK.Core.3.1.1.0\lib\net45\AWSSDK.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="AWSSDK.Route53, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\packages\AWSSDK.Route53.3.1.0.1\lib\net45\AWSSDK.Route53.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="AWSSDK.S3, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\packages\AWSSDK.S3.3.1.2.1\lib\net45\AWSSDK.S3.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="log4net, Version=1.2.13.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="ManagedOpenSsl, Version=0.6.1.0, Culture=neutral, processorArchitecture=x86">
       <HintPath>..\packages\ManagedOpenSsl32.0.6.1.3\lib\net20\ManagedOpenSsl.dll</HintPath>
       <Private>True</Private>
@@ -101,7 +137,10 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Management" />
-    <Reference Include="System.Management.Automation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+    <Reference Include="System.Management.Automation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Management.Automation.6.1.7601.17515\lib\net45\System.Management.Automation.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -271,28 +310,6 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\ThirdParty\ACMESharp\ACMESharp\ACMESharp.PKI.Providers.OpenSslLib32\ACMESharp.PKI.Providers.OpenSslLib32.csproj">
-      <Project>{2ce2e059-f228-4f88-8440-0413c1af2e4c}</Project>
-      <Name>ACMESharp.PKI.Providers.OpenSslLib32</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\ThirdParty\ACMESharp\ACMESharp\ACMESharp.PKI.Providers.OpenSslLib64\ACMESharp.PKI.Providers.OpenSslLib64.csproj">
-      <Project>{98b532b3-805b-4d81-918e-5a76cc66d40d}</Project>
-      <Name>ACMESharp.PKI.Providers.OpenSslLib64</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\ThirdParty\ACMESharp\ACMESharp\ACMESharp.POSH\ACMESharp.POSH.csproj">
-      <Project>{2f8d5934-b5a7-4983-8051-1f25882c7c30}</Project>
-      <Name>ACMESharp.POSH</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\ThirdParty\ACMESharp\ACMESharp\ACMESharp.Vault\ACMESharp.Vault.csproj">
-      <Project>{65b4c6e0-27a0-445c-adac-9d8308e2e4a6}</Project>
-      <Name>ACMESharp.Vault</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\ThirdParty\ACMESharp\ACMESharp\ACMESharp\ACMESharp.csproj">
-      <Project>{d551234b-0a8d-4dee-8178-a81998df0edb}</Project>
-      <Name>ACMESharp</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
