@@ -23,7 +23,7 @@ namespace Certify
             this.ActionLogs = actionLogs;
 
             InitialSessionState initial = InitialSessionState.CreateDefault();
-            initial.ImportPSModule(new string[] { AppDomain.CurrentDomain.BaseDirectory + "\\ACMESharp.psd1" });
+            initial.ImportPSModule(new string[] { "ACMESharp" });
             Runspace runspace = RunspaceFactory.CreateRunspace(initial);
             runspace.Open();
 
@@ -54,6 +54,21 @@ namespace Certify
 
             //If PS Version 1, 2 or doesn't exist then return false.
             return !version.Equals(1) && !version.Equals(2) && !version.Equals(0);
+        }
+
+        public bool IsAcmeSharpModuleInstalled()
+        {
+            ps.Commands.Clear();
+            var cmd = ps.Commands.AddCommand("Get-Module");
+            cmd.AddParameter("ListAvailable");
+            cmd.AddArgument("ACMESharp");
+
+            LogAction("Powershell: Get-Module -ListAvailable ACMESharp");
+
+            var res = InvokeCurrentPSCommand();
+
+            return res.IsOK && (res.Result as
+                    System.Collections.IEnumerable)?.OfType<object>().Count() > 0;
         }
 
         private void LogAction(string command, string result = null)

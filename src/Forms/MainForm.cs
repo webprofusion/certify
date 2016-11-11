@@ -572,13 +572,20 @@ namespace Certify
 
             if (!manager.IsValidVersion())
             {
- 
                 if (MessageBox.Show("The version of Powershell installed is not high enough, please install Powershell Version 3 or higher.", "Powershell Version Too Low", MessageBoxButtons.OK, MessageBoxIcon.Error) == DialogResult.OK)
                 {
                     Application.Exit();
                 }
             }
 
+            if (!manager.IsAcmeSharpModuleInstalled())
+            {
+                if (MessageBox.Show("The required PowerShell module 'ACMESharp' cannot be found.",
+                        "ACMESharp Missing", MessageBoxButtons.OK, MessageBoxIcon.Error) == DialogResult.OK)
+                {
+                    Application.Exit();
+                }
+            }
         }
     }
 }
