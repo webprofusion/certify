@@ -79,5 +79,17 @@ namespace Certify.Properties {
                 this["EnableAppTelematics"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowOnlyStartedWebsites {
+            get {
+                return ((bool)(this["ShowOnlyStartedWebsites"]));
+            }
+            set {
+                this["ShowOnlyStartedWebsites"] = value;
+            }
+        }
     }
 }

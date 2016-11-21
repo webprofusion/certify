@@ -35,12 +35,15 @@
             this.btnLockdown = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.chkAnalytics = new System.Windows.Forms.CheckBox();
+            this.chkShowOnlyStartedWebsites = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // btnSave
             // 
+            this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSave.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnSave.Location = new System.Drawing.Point(290, 120);
+            this.btnSave.Location = new System.Drawing.Point(296, 146);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(75, 23);
             this.btnSave.TabIndex = 0;
@@ -49,8 +52,10 @@
             // 
             // btnCancel
             // 
+            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(205, 120);
+            this.btnCancel.Location = new System.Drawing.Point(211, 146);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 1;
@@ -69,7 +74,9 @@
             // 
             // btnLockdown
             // 
-            this.btnLockdown.Location = new System.Drawing.Point(290, 64);
+            this.btnLockdown.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnLockdown.Location = new System.Drawing.Point(296, 90);
             this.btnLockdown.Name = "btnLockdown";
             this.btnLockdown.Size = new System.Drawing.Size(75, 23);
             this.btnLockdown.TabIndex = 5;
@@ -79,8 +86,10 @@
             // 
             // label1
             // 
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(35, 69);
+            this.label1.Location = new System.Drawing.Point(41, 95);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(245, 13);
             this.label1.TabIndex = 6;
@@ -97,11 +106,22 @@
             this.chkAnalytics.Text = "Send Usage Data and Crash Reports to Publisher";
             this.chkAnalytics.UseVisualStyleBackColor = true;
             // 
+            // chkShowOnlyStartedWebsites
+            // 
+            this.chkShowOnlyStartedWebsites.AutoSize = true;
+            this.chkShowOnlyStartedWebsites.Location = new System.Drawing.Point(38, 58);
+            this.chkShowOnlyStartedWebsites.Name = "chkShowOnlyStartedWebsites";
+            this.chkShowOnlyStartedWebsites.Size = new System.Drawing.Size(193, 17);
+            this.chkShowOnlyStartedWebsites.TabIndex = 8;
+            this.chkShowOnlyStartedWebsites.Text = "Show Only Webssites Started in IIS";
+            this.chkShowOnlyStartedWebsites.UseVisualStyleBackColor = true;
+            // 
             // Settings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(383, 155);
+            this.ClientSize = new System.Drawing.Size(383, 181);
+            this.Controls.Add(this.chkShowOnlyStartedWebsites);
             this.Controls.Add(this.chkAnalytics);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.btnLockdown);
@@ -124,5 +144,6 @@
         private System.Windows.Forms.Button btnLockdown;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.CheckBox chkAnalytics;
+        private System.Windows.Forms.CheckBox chkShowOnlyStartedWebsites;
     }
 }

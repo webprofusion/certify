@@ -19,12 +19,14 @@ namespace Certify.Forms
 
             chkAutoCheckForUpdates.Checked = Properties.Settings.Default.CheckForUpdatesAtStartup;
             chkAnalytics.Checked = Properties.Settings.Default.EnableAppTelematics;
+            chkShowOnlyStartedWebsites.Checked = Properties.Settings.Default.ShowOnlyStartedWebsites;
         }
 
         public void SaveSettings()
         {
             Properties.Settings.Default.CheckForUpdatesAtStartup = chkAutoCheckForUpdates.Checked;
             Properties.Settings.Default.EnableAppTelematics = chkAnalytics.Checked;
+            Properties.Settings.Default.ShowOnlyStartedWebsites = chkShowOnlyStartedWebsites.Checked;
 
             Properties.Settings.Default.Save();
         }
