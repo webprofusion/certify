@@ -17,6 +17,9 @@ namespace Certify.Management
     public class IISManager
     {
         #region IIS 
+
+        private readonly bool _showOnlyStartedWebsites = Properties.Settings.Default.ShowOnlyStartedWebsites;
+
         public Version GetIisVersion()
         {
             //http://stackoverflow.com/questions/446390/how-to-detect-iis-version-using-c
@@ -37,6 +40,13 @@ namespace Certify.Management
             }
         }
 
+        private IEnumerable<Site> GetSites(ServerManager iisManager)
+        {
+            return _showOnlyStartedWebsites
+                ? iisManager.Sites.Where(s => s.State == ObjectState.Started)
+                : iisManager.Sites;
+        }
+
         public List<SiteListItem> GetSiteList()
         {
             var result = new List<SiteListItem>();
@@ -44,26 +54,23 @@ namespace Certify.Management
             {
                 using (var iisManager = new ServerManager())
                 {
-                    foreach (var site in iisManager.Sites)
+                    foreach (var site in GetSites(iisManager))
                     {
                         foreach (var binding in site.Bindings.OrderByDescending(b => b?.EndPoint?.Port))
                         {
-                            if (!String.IsNullOrEmpty(binding.Host))
+                            if (string.IsNullOrEmpty(binding.Host)) continue;
+                            if (result.Any(r => r.Host == binding.Host)) continue;
+
+                            result.Add(new SiteListItem()
                             {
-                                if (!result.Any(r => r.Host == binding.Host))
-                                {
-                                    result.Add(new SiteListItem()
-                                    {
-                                        SiteName = site.Name,
-                                        Host = binding.Host,
-                                        PhysicalPath = site.Applications["/"].VirtualDirectories["/"].PhysicalPath,
-                                        Port = binding.EndPoint.Port,
-                                        IsHTTPS = binding.Protocol.ToLower() == "https",
-                                        Protocol = binding.Protocol,
-                                        HasCertificate = (binding.CertificateHash != null)
-                                    });
-                                }
-                            }
+                                SiteName = site.Name,
+                                Host = binding.Host,
+                                PhysicalPath = site.Applications["/"].VirtualDirectories["/"].PhysicalPath,
+                                Port = binding.EndPoint.Port,
+                                IsHTTPS = binding.Protocol.ToLower() == "https",
+                                Protocol = binding.Protocol,
+                                HasCertificate = (binding.CertificateHash != null)
+                            });
                         }
                     }
                 }
@@ -76,16 +83,17 @@ namespace Certify.Management
             return result.OrderBy(r => r.Description).ToList();
         }
 
+
         private Site GetSite(string siteName, ServerManager iisManager)
         {
-            return iisManager.Sites.FirstOrDefault(s => s.Name == siteName);
+            return GetSites(iisManager).FirstOrDefault(s => s.Name == siteName);
         }
 
         public Site GetSiteByDomain(string domain)
         {
             using (var iisManager = new ServerManager())
             {
-                return iisManager.Sites.FirstOrDefault(s => s.Bindings.Any(b => b.Host == domain));
+                return GetSites(iisManager).FirstOrDefault(s => s.Bindings.Any(b => b.Host == domain));
             }
         }
         #endregion

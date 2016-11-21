@@ -46,20 +46,18 @@ namespace Certify.Forms
         {
             if (lstRequestType.SelectedIndex == (int)CertControlType.IIS)
             {
-                if (lstRequestType.SelectedIndex == (int)CertControlType.IIS)
+                var iisManager = new IISManager();
+                var version = iisManager.GetIisVersion();
+                if (version.Major == 0)
                 {
-                    var iisManager = new IISManager();
-                    var version = iisManager.GetIisVersion();
-                    if (version.Major == 0)
-                    {
-                        //no iis
-                        MessageBox.Show("You do not have IIS Installed locally. Automated configuration will be unavailable.");
-                        lstRequestType.SelectedIndex = 1; //generic
-                    }
-                    else {
-                        //IIS selected, setup IIS cert request control
-                        SetupSelectedCertRequestControl(new CertRequestSettingsIIS());
-                    }
+                    //no iis
+                    MessageBox.Show("You do not have IIS Installed locally. Automated configuration will be unavailable.");
+                    lstRequestType.SelectedIndex = 1; //generic
+                }
+                else
+                {
+                    //IIS selected, setup IIS cert request control
+                    SetupSelectedCertRequestControl(new CertRequestSettingsIIS());
                 }
             }
 
