@@ -247,16 +247,24 @@ namespace Certify
             return InvokeCurrentPSCommand();
         }
 
-        public APIResult NewCertificate(string identifierRef, string certAlias)
+        public APIResult NewCertificate(string identifierRef, string certAlias, string[] subjectAlternativeNames =null)
         {
             ps.Commands.Clear();
 
             var cmd = ps.Commands.AddCommand("New-ACMECertificate");
             cmd.AddParameter("Identifier", identifierRef);
             cmd.AddParameter("Alias", certAlias);
+
+            string sanList = null;
+            if (subjectAlternativeNames!=null && subjectAlternativeNames.Length > 0)
+            {
+                sanList = string.Join(",", subjectAlternativeNames);
+                cmd.AddParameter("AlternativeIdentifierRefs", sanList);
+               
+            }
             cmd.AddParameter("Generate");
 
-            LogAction("Powershell: New-ACMECertificate -Identifier " + identifierRef + " -Alias " + certAlias + " -Generate");
+            LogAction("Powershell: New-ACMECertificate -Identifier " + identifierRef + " -Alias " + certAlias + " -Generate"+ (sanList!=null? " -AlternativeIdentifierRefs "+sanList:""));
 
             return InvokeCurrentPSCommand();
         }
