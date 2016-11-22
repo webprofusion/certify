@@ -1,6 +1,4 @@
-﻿using ACMESharp.Vault.Providers;
-using Certify.Management;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -11,6 +9,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ACMESharp.Vault.Providers;
+using Certify.Management;
 using Certify.Models;
 
 namespace Certify.Forms.Controls
@@ -122,7 +122,8 @@ namespace Certify.Forms.Controls
                                 certsApproved = true;
                             }
                         }
-                        else {
+                        else
+                        {
                             MessageBox.Show("The existing challenge for this identifier failed. We will need to create a new one.");
                             identifierAlias += "_" + Guid.NewGuid().ToString().Substring(0, 6);
                         }
@@ -136,7 +137,7 @@ namespace Certify.Forms.Controls
 
                 if (authorization != null)
                 {
-                    if (!authorization.ExtensionlessConfigCheckedOK)
+                    if (!chkSkipConfigCheck.Checked && !authorization.ExtensionlessConfigCheckedOK)
                     {
                         MessageBox.Show("Automated checks for extensionless content failed. Authorisations will not be able to complete. Change the web.config in <your site>\\.well-known\\acme-challenge and ensure you can browse to http://<your site>/.well-known/acme-challenge/configcheck before proceeding.");
                         return;
@@ -174,6 +175,8 @@ namespace Certify.Forms.Controls
                             if (challenge.Status == "invalid")
                             {
                                 MessageBox.Show("Challenge failed to complete. Check that http://" + config.Domain + "/" + challenge.ToString() + " path/file is present and accessible in your web browser. You may require extensionless file type mappings");
+                                CloseParentForm();
+                                return;
                             }
                         }
                     }
@@ -264,6 +267,11 @@ namespace Certify.Forms.Controls
                             {
                                 //all done
                                 MessageBox.Show("Certificate installed and SSL bindings updated for " + identifier.Dns, Properties.Resources.AppName);
+                                CloseParentForm();
+                                return;
+                            } else
+                            {
+                                MessageBox.Show("An error occurred installing the certificate. Certificate file may not be a valid.");
                                 CloseParentForm();
                                 return;
                             }
