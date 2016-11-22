@@ -39,11 +39,13 @@
             this.lstSites = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.btnRequestCertificate = new System.Windows.Forms.Button();
+            this.chkSkipConfigCheck = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.chkSkipConfigCheck);
             this.groupBox1.Controls.Add(this.progressBar1);
             this.groupBox1.Controls.Add(this.chkAutoBindings);
             this.groupBox1.Controls.Add(this.lblDomain);
@@ -56,14 +58,14 @@
             this.groupBox1.Controls.Add(this.btnRequestCertificate);
             this.groupBox1.Location = new System.Drawing.Point(3, 3);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(410, 187);
+            this.groupBox1.Size = new System.Drawing.Size(420, 212);
             this.groupBox1.TabIndex = 11;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "IIS Certificate Request";
             // 
             // progressBar1
             // 
-            this.progressBar1.Location = new System.Drawing.Point(15, 153);
+            this.progressBar1.Location = new System.Drawing.Point(16, 176);
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(152, 23);
             this.progressBar1.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
@@ -84,7 +86,7 @@
             // lblDomain
             // 
             this.lblDomain.AutoSize = true;
-            this.lblDomain.Location = new System.Drawing.Point(90, 123);
+            this.lblDomain.Location = new System.Drawing.Point(91, 146);
             this.lblDomain.Name = "lblDomain";
             this.lblDomain.Size = new System.Drawing.Size(77, 13);
             this.lblDomain.TabIndex = 20;
@@ -93,7 +95,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(12, 123);
+            this.label3.Location = new System.Drawing.Point(13, 146);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(43, 13);
             this.label3.TabIndex = 19;
@@ -102,7 +104,7 @@
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(188, 153);
+            this.btnCancel.Location = new System.Drawing.Point(189, 176);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(82, 23);
             this.btnCancel.TabIndex = 18;
@@ -113,7 +115,7 @@
             // lblWebsiteRoot
             // 
             this.lblWebsiteRoot.AutoSize = true;
-            this.lblWebsiteRoot.Location = new System.Drawing.Point(90, 101);
+            this.lblWebsiteRoot.Location = new System.Drawing.Point(91, 124);
             this.lblWebsiteRoot.Name = "lblWebsiteRoot";
             this.lblWebsiteRoot.Size = new System.Drawing.Size(77, 13);
             this.lblWebsiteRoot.TabIndex = 17;
@@ -122,7 +124,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 101);
+            this.label2.Location = new System.Drawing.Point(13, 124);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(72, 13);
             this.label2.TabIndex = 16;
@@ -149,7 +151,7 @@
             // 
             // btnRequestCertificate
             // 
-            this.btnRequestCertificate.Location = new System.Drawing.Point(276, 153);
+            this.btnRequestCertificate.Location = new System.Drawing.Point(277, 176);
             this.btnRequestCertificate.Name = "btnRequestCertificate";
             this.btnRequestCertificate.Size = new System.Drawing.Size(128, 23);
             this.btnRequestCertificate.TabIndex = 13;
@@ -157,13 +159,23 @@
             this.btnRequestCertificate.UseVisualStyleBackColor = true;
             this.btnRequestCertificate.Click += new System.EventHandler(this.btnRequestCertificate_Click);
             // 
+            // chkSkipConfigCheck
+            // 
+            this.chkSkipConfigCheck.AutoSize = true;
+            this.chkSkipConfigCheck.Location = new System.Drawing.Point(15, 94);
+            this.chkSkipConfigCheck.Name = "chkSkipConfigCheck";
+            this.chkSkipConfigCheck.Size = new System.Drawing.Size(223, 17);
+            this.chkSkipConfigCheck.TabIndex = 23;
+            this.chkSkipConfigCheck.Text = "Skip challenge response file config check";
+            this.chkSkipConfigCheck.UseVisualStyleBackColor = true;
+            // 
             // CertRequestSettingsIIS
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.groupBox1);
             this.Name = "CertRequestSettingsIIS";
-            this.Size = new System.Drawing.Size(423, 201);
+            this.Size = new System.Drawing.Size(430, 223);
             this.Load += new System.EventHandler(this.CertRequestSettingsIIS_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
@@ -184,5 +196,6 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.CheckBox chkAutoBindings;
         private System.Windows.Forms.ProgressBar progressBar1;
+        private System.Windows.Forms.CheckBox chkSkipConfigCheck;
     }
 }

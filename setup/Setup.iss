@@ -1,11 +1,9 @@
-; -- Example1.iss --
-; Demonstrates copying 3 files and creating an icon.
-
-; SEE THE DOCUMENTATION FOR DETAILS ON CREATING .ISS SCRIPT FILES!
+; -- Setup.iss --
+; Inno Setup Configuration for Certify Installer
 
 [Setup]
 AppName=Certify
-AppVersion=0.9.85
+AppVersion=0.9.90
 AppPublisher=Webprofusion Ltd
 AppPublisherURL=http://webprofusion.com
 AppUpdatesURL=http://certify.webprofusion.com/
