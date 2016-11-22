@@ -190,6 +190,11 @@ namespace Certify.Management
             var site = GetSiteByDomain(host);
             if (site != null)
             {
+                if (new System.IO.FileInfo(pfxPath).Length == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("InstallCertForDomain: Invalid PFX File");
+                    return false;
+                }
                 var storedCert = StoreCertificate(host, pfxPath);
                 if (storedCert != null)
                 {
