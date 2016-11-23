@@ -47,22 +47,26 @@ namespace Certify.Management
                 : iisManager.Sites;
         }
 
-        public List<SiteListItem> GetSiteList()
+        public List<SiteBindingItem> GetSiteList()
         {
-            var result = new List<SiteListItem>();
+            var result = new List<SiteBindingItem>();
             try
             {
                 using (var iisManager = new ServerManager())
                 {
-                    foreach (var site in GetSites(iisManager))
+                    var sites = GetSites(iisManager);
+            
+                    foreach (var site in sites)
                     {
+                        
                         foreach (var binding in site.Bindings.OrderByDescending(b => b?.EndPoint?.Port))
                         {
                             if (string.IsNullOrEmpty(binding.Host)) continue;
                             if (result.Any(r => r.Host == binding.Host)) continue;
 
-                            result.Add(new SiteListItem()
+                            result.Add(new SiteBindingItem()
                             {
+                                SiteId= site.Id.ToString(),
                                 SiteName = site.Name,
                                 Host = binding.Host,
                                 PhysicalPath = site.Applications["/"].VirtualDirectories["/"].PhysicalPath,

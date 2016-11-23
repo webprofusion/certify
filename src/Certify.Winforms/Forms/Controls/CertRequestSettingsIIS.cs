@@ -41,7 +41,7 @@ namespace Certify.Forms.Controls
 
         private void RefreshSelectedWebsite()
         {
-            var selectItem = (SiteListItem)lstSites.SelectedItem;
+            var selectItem = (SiteBindingItem)lstSites.SelectedItem;
             lblDomain.Text = selectItem.Host;
             lblWebsiteRoot.Text = selectItem.PhysicalPath;
         }
@@ -84,7 +84,7 @@ namespace Certify.Forms.Controls
             bool certsStored = false;
 
             CertRequestConfig config = new CertRequestConfig();
-            var selectItem = (SiteListItem)lstSites.SelectedItem;
+            var selectItem = (SiteBindingItem)lstSites.SelectedItem;
             config.Domain = selectItem.Host;
             config.PerformChallengeFileCopy = true;
             config.WebsiteRootPath = Environment.ExpandEnvironmentVariables(selectItem.PhysicalPath);

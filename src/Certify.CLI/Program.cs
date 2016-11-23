@@ -17,7 +17,8 @@ namespace Certify.CLI
                 ShowHelp();
 
                 var p = new Program();
-                p.ListIISSites();
+                p.PreviewAutoManage();
+                System.Console.ReadKey();
                 return 1;
             }
 
@@ -25,7 +26,7 @@ namespace Certify.CLI
         }
         static void ShowVersion()
         {
-            Console.ForegroundColor = ConsoleColor.DarkRed;
+            Console.ForegroundColor = ConsoleColor.Yellow;
             System.Console.WriteLine("Certify SSL Manager - CLI v1.0.0");
             Console.ForegroundColor = ConsoleColor.White;
             System.Console.WriteLine("For more information see https://certify.webprofusion.com");
@@ -35,25 +36,41 @@ namespace Certify.CLI
 
         static void ShowHelp()
         {
-            System.Console.WriteLine("-r --renew : renew certificates for all active sites");
+            System.Console.WriteLine("Usage: \n\n");
+            System.Console.WriteLine("-h --help : show this help information");
+            System.Console.WriteLine("-r --renew : renew certificates for all managed sites");
+            System.Console.WriteLine("-l --list : list managed sites");
+            System.Console.WriteLine("-p --preview : auto scan and preview proposed list of managed sites");
+            System.Console.WriteLine("\n\n");
         }
 
-        void ListIISSites()
+        /// <summary>
+        /// Auto scan and preview list of sites to manage
+        /// </summary>
+        void PreviewAutoManage()
         {
-            var iisManager = new IISManager();
-            var siteList = iisManager.GetSiteList();
+            var siteManager = new SiteManager();
+            var siteList = siteManager.Preview();
 
             if (siteList == null || siteList.Count == 0)
             {
-                System.Console.WriteLine("No IIS Sites configured or access denied.");
-            } else
+                System.Console.WriteLine("No Sites configured or access denied.");
+            }
+            else
             {
                 foreach (var s in siteList)
                 {
-                    System.Console.WriteLine(s.SiteName);
+                    Console.ForegroundColor = ConsoleColor.White;
+                    System.Console.WriteLine(s.SiteName + " (" + s.SiteType.ToString() + "): Create single certificate for: \n");
+
+                    Console.ResetColor();
+                    foreach (var b in s.SiteBindings)
+                    {
+                        System.Console.WriteLine("\t" + b.Hostname + " \n");
+                    }
                 }
+
             }
-            
         }
     }
 }
