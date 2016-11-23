@@ -1,19 +1,15 @@
-﻿using ACMESharp.Vault.Model;
-using ACMESharp.Vault.Providers;
-using Certify.Forms;
+﻿using Certify.Forms;
 using Certify.Management;
 using Microsoft.ApplicationInsights;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ACMESharp.Vault.Model;
+using ACMESharp.Vault.Providers;
 
 namespace Certify
 {
@@ -334,7 +330,7 @@ namespace Certify
                 var dialogResult = MessageBox.Show("Are you sure you wish to delete this item?", "Delete Vault Item", MessageBoxButtons.YesNo);
                 if (dialogResult == DialogResult.Yes)
                 {
-                    bool success = this.VaultManager.DeleteRegistrationInfo(((RegistrationInfo)item).Id);
+                    bool success = this.VaultManager.DeleteRegistrationInfo(((RegistrationInfo)item).Id.ToString());
                     return success;
                 }
             }
