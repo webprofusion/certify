@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Winforms", "src\Cer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Core", "src\Certify.Core\Certify.Core.csproj", "{87BAA9CA-E0C9-4D3E-8971-55A30134C932}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.CLI", "src\Certify.CLI\Certify.CLI.csproj", "{DA0CCD9F-8CBD-4471-93E0-53BCFB6CA25E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +27,10 @@ Global
 		{87BAA9CA-E0C9-4D3E-8971-55A30134C932}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87BAA9CA-E0C9-4D3E-8971-55A30134C932}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{87BAA9CA-E0C9-4D3E-8971-55A30134C932}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA0CCD9F-8CBD-4471-93E0-53BCFB6CA25E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA0CCD9F-8CBD-4471-93E0-53BCFB6CA25E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA0CCD9F-8CBD-4471-93E0-53BCFB6CA25E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA0CCD9F-8CBD-4471-93E0-53BCFB6CA25E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
