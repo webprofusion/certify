@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
@@ -15,6 +16,8 @@ namespace Certify
     {
         private PowerShell ps = null;
         private List<ActionLogItem> ActionLogs = null;
+
+        private readonly IdnMapping _idnMapping = new IdnMapping();
 
         public PowershellManager(string workingDirectory, List<ActionLogItem> actionLogs)
         {
@@ -158,6 +161,9 @@ namespace Certify
         public APIResult NewIdentifier(string dns, string alias, string label)
         {
             ps.Commands.Clear();
+
+            // ACME service requires international domain names in ascii mode
+            dns = _idnMapping.GetAscii(dns);
 
             var cmd = ps.Commands.AddCommand("New-ACMEIdentifier");
             cmd.AddParameter("Dns", dns);
