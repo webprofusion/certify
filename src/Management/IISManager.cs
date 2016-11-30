@@ -4,8 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
 using Certify.Models;
 
 namespace Certify.Management
@@ -16,7 +14,7 @@ namespace Certify.Management
 
     public class IISManager
     {
-        #region IIS 
+        #region IIS
 
         private readonly bool _showOnlyStartedWebsites = Properties.Settings.Default.ShowOnlyStartedWebsites;
 
@@ -173,7 +171,6 @@ namespace Certify.Management
                             }
                             catch (Exception)
                             {
-                                ; ;
                                 System.Diagnostics.Debug.WriteLine("Cannot apply SNI SSL Flag");
                             }
                         }
