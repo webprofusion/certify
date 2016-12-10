@@ -61,7 +61,7 @@ namespace Certify.CLI
                 foreach (var s in siteList)
                 {
                     Console.ForegroundColor = ConsoleColor.White;
-                    System.Console.WriteLine(s.SiteName + " (" + s.SiteType.ToString() + "): Create single certificate for: \n");
+                    System.Console.WriteLine(String.Format("{0} ({1}): Create single certificate for {2} bindings: \n", s.SiteName, s.SiteType.ToString(), s.SiteBindings.Count));
 
                     Console.ResetColor();
                     foreach (var b in s.SiteBindings)
@@ -71,6 +71,10 @@ namespace Certify.CLI
                 }
 
             }
+
+            siteManager.StoreSettings();
         }
+
+   
     }
 }

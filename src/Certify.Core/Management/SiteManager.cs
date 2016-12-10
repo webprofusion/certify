@@ -9,11 +9,40 @@ namespace Certify.Management
 {
     public class SiteManager
     {
+        private const string APPDATASUBFOLDER = "Certify";
+        private const string SITEMANAGERCONFIG= "sites.json";
         public bool IsLocalIISMode { get; set; } //TODO: driven by config
 
+        List<ManagedSite> managedSites { get; set; }
         public SiteManager()
         {
             IsLocalIISMode = true;
+            this.managedSites = this.Preview();
+        }
+
+        private string GetAppDataFolder()
+        {
+            var path= Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)+"\\"+APPDATASUBFOLDER;
+            if (!System.IO.Directory.Exists(path))
+            {
+                System.IO.Directory.CreateDirectory(path);
+            }
+            return path;
+        }
+
+        public void StoreSettings()
+        {
+            string appDataPath = GetAppDataFolder();
+            string siteManagerConfig = Newtonsoft.Json.JsonConvert.SerializeObject(this.managedSites);
+            System.IO.File.WriteAllText(appDataPath+"\\"+SITEMANAGERCONFIG, siteManagerConfig);
+
+        }
+        public void LoadSettings()
+        {
+            string appDataPath = GetAppDataFolder();
+            string configData = System.IO.File.ReadAllText(appDataPath +"\\"+ SITEMANAGERCONFIG);
+            this.managedSites = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ManagedSite>>(configData);
+            
         }
         /// <summary>
         /// For current configured environment, show preview of recommended site management (for local IIS, scan sites and recommend actions)

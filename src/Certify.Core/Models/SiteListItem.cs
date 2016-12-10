@@ -11,6 +11,14 @@ namespace Certify.Models
         LocalIIS = 1
     }
 
+    public enum PlannedActionType
+    {
+        NewCertificate,
+        ReplaceCertificate,
+        KeepCertificate,
+        Ignore
+    }
+
     public class ManagedSiteBinding
     {
         public string Hostname { get; set; }
@@ -22,6 +30,7 @@ namespace Certify.Models
         public string IP { get; set; }
         public bool UseSNI { get; set; }
         public string CertName { get; set; }
+        public PlannedActionType PlannedAction { get; set; }
     }
 
     public class ManagedSite
