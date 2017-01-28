@@ -2,10 +2,9 @@ using Microsoft.Web.Administration;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
 using Certify.Models;
 
 namespace Certify.Management
@@ -16,9 +15,10 @@ namespace Certify.Management
 
     public class IISManager
     {
-        #region IIS 
+        #region IIS
 
         private readonly bool _showOnlyStartedWebsites = Properties.Settings.Default.ShowOnlyStartedWebsites;
+        private readonly IdnMapping _idnMapping = new IdnMapping();
 
         public Version GetIisVersion()
         {
@@ -91,6 +91,8 @@ namespace Certify.Management
 
         public Site GetSiteByDomain(string domain)
         {
+            domain = _idnMapping.GetUnicode(domain);
+
             using (var iisManager = new ServerManager())
             {
                 return GetSites(iisManager).FirstOrDefault(s => s.Bindings.Any(b => b.Host == domain));
@@ -121,7 +123,7 @@ namespace Certify.Management
             var certsToRemove = new List<X509Certificate2>();
             foreach (var c in store.Certificates)
             {
-                if (c.FriendlyName.StartsWith(hostPrefix) && c.GetCertHashString() != certificate.GetCertHashString())
+                if (c.FriendlyName.StartsWith(hostPrefix, StringComparison.InvariantCulture) && c.GetCertHashString() != certificate.GetCertHashString())
                 {
                     //going to remove certs with same friendly name
                     certsToRemove.Add(c);
@@ -152,7 +154,9 @@ namespace Certify.Management
                 var siteToUpdate = iisManager.Sites.FirstOrDefault(s => s.Id == site.Id);
                 if (siteToUpdate != null)
                 {
-                    var existingBinding = (from b in siteToUpdate.Bindings where b.Host == host && b.Protocol == "https" select b).FirstOrDefault();
+                    string internationalHost = _idnMapping.GetUnicode(host);
+
+                    var existingBinding = (from b in siteToUpdate.Bindings where b.Host == internationalHost && b.Protocol == "https" select b).FirstOrDefault();
                     if (existingBinding != null)
                     {
                         // Update existing https Binding
@@ -163,7 +167,7 @@ namespace Certify.Management
                     {
                         //add new https binding at default port
 
-                        var iisBinding = siteToUpdate.Bindings.Add(":" + sslPort + ":" + host, certificate.GetCertHash(), store.Name);
+                        var iisBinding = siteToUpdate.Bindings.Add(":" + sslPort + ":" + internationalHost, certificate.GetCertHash(), store.Name);
                         iisBinding.Protocol = "https";
                         if (useSNI)
                         {
@@ -173,7 +177,6 @@ namespace Certify.Management
                             }
                             catch (Exception)
                             {
-                                ; ;
                                 System.Diagnostics.Debug.WriteLine("Cannot apply SNI SSL Flag");
                             }
                         }
