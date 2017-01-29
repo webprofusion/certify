@@ -246,6 +246,24 @@ namespace Certify
 
             this.VaultManager = new VaultManager(Properties.Settings.Default.VaultPath, LocalDiskVault.VAULT);
 
+            PowershellManager manager = this.VaultManager.PowershellManager;
+
+            if (!manager.IsValidVersion())
+            {
+                if (MessageBox.Show("The version of Powershell installed is not high enough, please install Powershell Version 3 or higher.", "Powershell Version Too Low", MessageBoxButtons.OK, MessageBoxIcon.Error) == DialogResult.OK)
+                {
+                    Application.Exit();
+                }
+            }
+
+            if (!manager.IsAcmeSharpModuleInstalled())
+            {
+                if (MessageBox.Show("The required PowerShell module 'ACMESharp' cannot be found.",
+                        "ACMESharp Missing", MessageBoxButtons.OK, MessageBoxIcon.Error) == DialogResult.OK)
+                {
+                    Application.Exit();
+                }
+            }
             if (!VaultManager.IsCompatiblePowershell())
             {
                 MessageBox.Show("This application requires PowerShell version 4.0 or higher. You can update it using the latest Windows Management Framework download from Microsoft.", Properties.Resources.AppName);
@@ -511,7 +529,7 @@ namespace Certify
             VaultManager.CleanupVault();
             ReloadVault();
         }
-   
+
         private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
         {
             // User has clicked delete in tree view context menu
@@ -564,24 +582,6 @@ namespace Certify
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            PowershellManager manager = new PowershellManager(null,null);
-
-            if (!manager.IsValidVersion())
-            {
-                if (MessageBox.Show("The version of Powershell installed is not high enough, please install Powershell Version 3 or higher.", "Powershell Version Too Low", MessageBoxButtons.OK, MessageBoxIcon.Error) == DialogResult.OK)
-                {
-                    Application.Exit();
-                }
-            }
-
-            if (!manager.IsAcmeSharpModuleInstalled())
-            {
-                if (MessageBox.Show("The required PowerShell module 'ACMESharp' cannot be found.",
-                        "ACMESharp Missing", MessageBoxButtons.OK, MessageBoxIcon.Error) == DialogResult.OK)
-                {
-                    Application.Exit();
-                }
-            }
         }
     }
 }
