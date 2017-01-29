@@ -1,11 +1,3 @@
-using ACMESharp;
-using ACMESharp.POSH;
-using ACMESharp.POSH.Util;
-using ACMESharp.Util;
-using ACMESharp.Vault.Model;
-using ACMESharp.Vault.Profile;
-using ACMESharp.Vault.Providers;
-using ACMESharp.WebServer;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,6 +6,14 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ACMESharp;
+using ACMESharp.POSH;
+using ACMESharp.POSH.Util;
+using ACMESharp.Util;
+using ACMESharp.Vault.Model;
+using ACMESharp.Vault.Profile;
+using ACMESharp.Vault.Providers;
+using ACMESharp.WebServer;
 using Certify.Models;
 
 namespace Certify
@@ -25,11 +25,19 @@ namespace Certify
         private string vaultFolderPath;
         private string vaultFilename;
         public List<ActionLogItem> ActionLogs { get; }
+
         public string VaultFolderPath
         {
             get { return vaultFolderPath; }
         }
 
+        public PowershellManager PowershellManager
+        {
+            get
+            {
+                return this.powershellManager;
+            }
+        }
 
         #region Vault
 
@@ -253,6 +261,7 @@ namespace Certify
             }
             else return null;
         }
+
         public ProviderProfileInfo GetProviderConfig(string alias)
         {
             var vaultConfig = this.GetVaultConfig();
@@ -263,9 +272,7 @@ namespace Certify
             else return null;
         }
 
-
-
-        #endregion
+        #endregion Vault
 
         #region Registration
 
@@ -301,7 +308,7 @@ namespace Certify
             return false;
         }
 
-        #endregion
+        #endregion Registration
 
         #region Certificates
 
@@ -510,8 +517,7 @@ namespace Certify
             }
         }
 
-
-        #endregion
+        #endregion Certificates
 
         public bool IsCompatiblePowershell()
         {
@@ -526,7 +532,8 @@ namespace Certify
         public string ComputeIdentifierAlias(string domain)
         {
             var domainAlias = domain.Replace(".", "_");
-            return domain;
+            domainAlias += DateTime.UtcNow.Ticks;
+            return domainAlias;
         }
 
         private bool CheckURL(string url)
@@ -597,7 +604,5 @@ namespace Certify
                 System.Diagnostics.Debug.WriteLine("User is not administrator");
             }
         }
-
-        
     }
 }
