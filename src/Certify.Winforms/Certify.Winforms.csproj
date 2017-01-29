@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{87BAA9CA-E0C9-4D3E-8971-55A30134C932}</ProjectGuid>
+    <ProjectGuid>{68549A2F-D083-4897-92B7-3C9F9C16BC91}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Certify</RootNamespace>
@@ -82,58 +82,18 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ACMESharp, Version=0.8.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ACMESharp.0.8.1.214-EA\lib\net45\ACMESharp.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="ACMESharp.PKI.Providers.OpenSslLib32, Version=0.8.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ACMESharp.PKI.Providers.OpenSslLib32.0.8.1.214-EA\lib\net45\ACMESharp.PKI.Providers.OpenSslLib32.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="ACMESharp.PKI.Providers.OpenSslLib64, Version=0.8.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ACMESharp.PKI.Providers.OpenSslLib64.0.8.1.214-EA\lib\net45\ACMESharp.PKI.Providers.OpenSslLib64.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="ACMESharp.POSH, Version=0.8.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ACMESharp.POSH.0.8.2.265-EA\lib\net45\ACMESharp.POSH.dll</HintPath>
+      <HintPath>..\..\packages\ACMESharp.0.8.1.214-EA\lib\net45\ACMESharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="ACMESharp.Vault, Version=0.8.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\ACMESharp.Vault.0.8.0.263-EA\lib\net45\ACMESharp.Vault.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="AWSSDK.Core, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
-      <HintPath>..\packages\AWSSDK.Core.3.1.1.0\lib\net45\AWSSDK.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="AWSSDK.Route53, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
-      <HintPath>..\packages\AWSSDK.Route53.3.1.0.1\lib\net45\AWSSDK.Route53.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="AWSSDK.S3, Version=3.1.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
-      <HintPath>..\packages\AWSSDK.S3.3.1.2.1\lib\net45\AWSSDK.S3.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="log4net, Version=1.2.13.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
-      <HintPath>..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="ManagedOpenSsl, Version=0.6.1.0, Culture=neutral, processorArchitecture=x86">
-      <HintPath>..\packages\ManagedOpenSsl32.0.6.1.3\lib\net20\ManagedOpenSsl.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="ManagedOpenSsl64, Version=0.6.1.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\ManagedOpenSsl64.0.6.1.3\lib\net20\ManagedOpenSsl64.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.ApplicationInsights, Version=1.2.3.490, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.ApplicationInsights.1.2.3\lib\net45\Microsoft.ApplicationInsights.dll</HintPath>
+    <Reference Include="Microsoft.ApplicationInsights, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.ApplicationInsights.2.2.0\lib\net45\Microsoft.ApplicationInsights.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Web.Administration, Version=7.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
-    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.8.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Management" />
@@ -152,13 +112,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Models\ActionLogItem.cs" />
-    <Compile Include="Models\ApiResult.cs" />
-    <Compile Include="Models\AppVersion.cs" />
-    <Compile Include="Models\CertRequestConfig.cs" />
-    <Compile Include="Models\PendingAuthorization.cs" />
-    <Compile Include="Models\SiteListItem.cs" />
-    <Compile Include="Models\UpdateMessage.cs" />
     <Compile Include="Forms\AboutDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -226,15 +179,8 @@
     <Compile Include="Forms\CertRequestDialog.Designer.cs">
       <DependentUpon>CertRequestDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="Management\CertificateManager.cs" />
-    <Compile Include="Management\IISManager.cs" />
-    <Compile Include="Management\PowershellManager.cs" />
-    <Compile Include="Models\UpdateCheck.cs" />
-    <Compile Include="Management\Util.cs" />
-    <Compile Include="Models\ExtendedVaultConfig.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Management\VaultManager.cs" />
     <Compile Include="Settings.cs" />
     <EmbeddedResource Include="Forms\AboutDialog.resx">
       <DependentUpon>AboutDialog.cs</DependentUpon>
@@ -293,18 +239,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="x64\libeay32.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="x64\ssleay32.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="x86\libeay32.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="x86\ssleay32.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <None Include="Resources\icon.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -318,6 +252,12 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Certify.Core\Certify.Core.csproj">
+      <Project>{87baa9ca-e0c9-4d3e-8971-55a30134c932}</Project>
+      <Name>Certify.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
