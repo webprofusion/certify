@@ -1,13 +1,15 @@
-﻿using System;
+﻿using ACMESharp.Vault.Model;
+using ACMESharp.Vault.Providers;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
+using System.Text;
+using System.Threading.Tasks;
 using ACMESharp;
-using ACMESharp.Vault.Model;
-using ACMESharp.Vault.Providers;
 using Certify.Models;
 
 namespace Certify
@@ -86,7 +88,7 @@ namespace Certify
             ps.Runspace.SessionStateProxy.Path.SetLocation(path);
         }
 
-        #region API
+        #region API 
 
         private APIResult InvokeCurrentPSCommand()
         {
@@ -214,7 +216,7 @@ namespace Certify
             return null;
         }
 
-        public APIResult CompleteChallenge(string identifierRef, string challengeType = "http-01", bool regenerate = true)
+        public APIResult CompleteChallenge(string identifierRef, string challengeType = "http-01",  bool regenerate = true)
         {
             ps.Commands.Clear();
 
@@ -264,7 +266,7 @@ namespace Certify
             {
                 sanList = string.Join(",", subjectAlternativeNames);
                 cmd.AddParameter("AlternativeIdentifierRefs", sanList);
-
+               
             }
             cmd.AddParameter("Generate");
 
@@ -302,6 +304,7 @@ namespace Certify
 
         public APIResult ExportCertificate(string certAlias, string vaultFolderPath, bool pfxOnly = false)
         {
+            
             string certKey = certAlias;
             if (certKey.StartsWith("=")) certKey = certKey.Replace("=", "");
             ps.Commands.Clear();
@@ -310,7 +313,7 @@ namespace Certify
             cmd.AddParameter("Ref", certAlias);
             if (!pfxOnly)
             {
-                cmd.AddParameter("ExportKeyPEM", vaultFolderPath + "\\" + LocalDiskVault.KEYPM + "\\" + certKey + "-key.pem");
+                cmd.AddParameter("ExportKeyPEM", vaultFolderPath + "\\"+ LocalDiskVault.KEYPM + "\\" + certKey + "-key.pem");
                 cmd.AddParameter("ExportCsrPEM", vaultFolderPath + "\\" + LocalDiskVault.CSRPM + "\\" + certKey + "-csr.pem");
                 cmd.AddParameter("ExportCertificatePEM", vaultFolderPath + "\\" + LocalDiskVault.CRTPM + "\\" + certKey + "-crt.pem");
                 cmd.AddParameter("ExportCertificateDER", vaultFolderPath + "\\" + LocalDiskVault.CRTDR + "\\" + certKey + "-crt.der");

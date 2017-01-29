@@ -5,7 +5,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Threading.Tasks;
 using Certify.Models;
+using System.Globalization;
 
 namespace Certify.Management
 {
@@ -47,22 +50,25 @@ namespace Certify.Management
                 : iisManager.Sites;
         }
 
-        public List<SiteListItem> GetSiteList()
+        public List<SiteBindingItem> GetSiteList()
         {
-            var result = new List<SiteListItem>();
+            var result = new List<SiteBindingItem>();
             try
             {
                 using (var iisManager = new ServerManager())
                 {
-                    foreach (var site in GetSites(iisManager))
+                    var sites = GetSites(iisManager);
+
+                    foreach (var site in sites)
                     {
                         foreach (var binding in site.Bindings.OrderByDescending(b => b?.EndPoint?.Port))
                         {
                             if (string.IsNullOrEmpty(binding.Host)) continue;
                             if (result.Any(r => r.Host == binding.Host)) continue;
 
-                            result.Add(new SiteListItem()
+                            result.Add(new SiteBindingItem()
                             {
+                                SiteId = site.Id.ToString(),
                                 SiteName = site.Name,
                                 Host = binding.Host,
                                 PhysicalPath = site.Applications["/"].VirtualDirectories["/"].PhysicalPath,
@@ -83,7 +89,6 @@ namespace Certify.Management
             return result.OrderBy(r => r.Description).ToList();
         }
 
-
         private Site GetSite(string siteName, ServerManager iisManager)
         {
             return GetSites(iisManager).FirstOrDefault(s => s.Name == siteName);
@@ -92,15 +97,16 @@ namespace Certify.Management
         public Site GetSiteByDomain(string domain)
         {
             domain = _idnMapping.GetUnicode(domain);
-
             using (var iisManager = new ServerManager())
             {
                 return GetSites(iisManager).FirstOrDefault(s => s.Bindings.Any(b => b.Host == domain));
             }
         }
-        #endregion
+
+        #endregion IIS
 
         #region Certificates
+
         public X509Certificate2 StoreCertificate(string host, string pfxFile)
         {
             var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
@@ -155,8 +161,8 @@ namespace Certify.Management
                 if (siteToUpdate != null)
                 {
                     string internationalHost = _idnMapping.GetUnicode(host);
-
                     var existingBinding = (from b in siteToUpdate.Bindings where b.Host == internationalHost && b.Protocol == "https" select b).FirstOrDefault();
+
                     if (existingBinding != null)
                     {
                         // Update existing https Binding
@@ -166,8 +172,8 @@ namespace Certify.Management
                     else
                     {
                         //add new https binding at default port
-
                         var iisBinding = siteToUpdate.Bindings.Add(":" + sslPort + ":" + internationalHost, certificate.GetCertHash(), store.Name);
+
                         iisBinding.Protocol = "https";
                         if (useSNI)
                         {
@@ -177,6 +183,7 @@ namespace Certify.Management
                             }
                             catch (Exception)
                             {
+                                ; ;
                                 System.Diagnostics.Debug.WriteLine("Cannot apply SNI SSL Flag");
                             }
                         }
@@ -236,9 +243,11 @@ namespace Certify.Management
 
             //TODO: enable other SSL
         }
-        #endregion
+
+        #endregion Certificates
 
         #region Registry
+
         private RegistryKey GetRegistryBaseKey(RegistryHive hiveType)
         {
             if (Environment.Is64BitOperatingSystem)
@@ -302,6 +311,7 @@ namespace Certify.Management
             cipherKey.SetValue("Enabled", 0, RegistryValueKind.DWord);
             cipherKey.Close();
         }
-        #endregion
+
+        #endregion Registry
     }
 }
