@@ -133,7 +133,7 @@ namespace Certify.Management
             {
                 try
                 {
-                    store.Certificates.Remove(oldCert);
+                    store.Remove(oldCert);
                 }
                 catch (Exception exp)
                 {
