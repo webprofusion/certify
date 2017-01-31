@@ -19,7 +19,7 @@ namespace Certify.Management
     {
         #region IIS
 
-        private readonly bool _showOnlyStartedWebsites = Properties.Settings.Default.ShowOnlyStartedWebsites;
+        // private readonly bool _showOnlyStartedWebsites = Properties.Settings.Default.ShowOnlyStartedWebsites;
         private readonly IdnMapping _idnMapping = new IdnMapping();
 
         public Version GetIisVersion()
@@ -42,21 +42,21 @@ namespace Certify.Management
             }
         }
 
-        private IEnumerable<Site> GetSites(ServerManager iisManager)
+        private IEnumerable<Site> GetSites(ServerManager iisManager, bool includeOnlyStartedSites)
         {
-            return _showOnlyStartedWebsites
+            return includeOnlyStartedSites
                 ? iisManager.Sites.Where(s => s.State == ObjectState.Started)
                 : iisManager.Sites;
         }
 
-        public List<SiteBindingItem> GetSiteList()
+        public List<SiteBindingItem> GetSiteList(bool includeOnlyStartedSites)
         {
             var result = new List<SiteBindingItem>();
             try
             {
                 using (var iisManager = new ServerManager())
                 {
-                    var sites = GetSites(iisManager);
+                    var sites = GetSites(iisManager, includeOnlyStartedSites);
 
                     foreach (var site in sites)
                     {
@@ -65,17 +65,7 @@ namespace Certify.Management
                             if (string.IsNullOrEmpty(binding.Host)) continue;
                             if (result.Any(r => r.Host == binding.Host)) continue;
 
-                            result.Add(new SiteBindingItem()
-                            {
-                                SiteId = site.Id.ToString(),
-                                SiteName = site.Name,
-                                Host = binding.Host,
-                                PhysicalPath = site.Applications["/"].VirtualDirectories["/"].PhysicalPath,
-                                Port = binding.EndPoint.Port,
-                                IsHTTPS = binding.Protocol.ToLower() == "https",
-                                Protocol = binding.Protocol,
-                                HasCertificate = (binding.CertificateHash != null)
-                            });
+                            result.Add(GetSiteBinding(site, binding));
                         }
                     }
                 }
@@ -88,18 +78,62 @@ namespace Certify.Management
             return result.OrderBy(r => r.Description).ToList();
         }
 
+        private SiteBindingItem GetSiteBinding(Site site, Binding binding)
+        {
+            return new SiteBindingItem()
+            {
+                SiteId = site.Id.ToString(),
+                SiteName = site.Name,
+                Host = binding.Host,
+                PhysicalPath = site.Applications["/"].VirtualDirectories["/"].PhysicalPath,
+                Port = binding.EndPoint.Port,
+                IsHTTPS = binding.Protocol.ToLower() == "https",
+                Protocol = binding.Protocol,
+                HasCertificate = (binding.CertificateHash != null)
+            };
+        }
+
         private Site GetSite(string siteName, ServerManager iisManager)
         {
-            return GetSites(iisManager).FirstOrDefault(s => s.Name == siteName);
+            return GetSites(iisManager, false).FirstOrDefault(s => s.Name == siteName);
         }
 
         public Site GetSiteByDomain(string domain)
         {
-            domain = _idnMapping.GetUnicode(domain);
+            //domain = _idnMapping.GetUnicode(domain);
+            var asciiDomain = _idnMapping.GetAscii(domain);
             using (var iisManager = new ServerManager())
             {
-                return GetSites(iisManager).FirstOrDefault(s => s.Bindings.Any(b => b.Host == domain));
+                var sites = GetSites(iisManager, false).ToList();
+                foreach (var s in sites)
+                {
+                    foreach (var b in s.Bindings)
+                    {
+                        if (b.Host.Equals(domain, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            return s;
+                        }
+                    }
+                }
             }
+            return null;
+        }
+
+        public SiteBindingItem GetSiteBindingByDomain(string domain)
+        {
+            var site = GetSiteByDomain(domain);
+            if (site != null)
+            {
+                foreach (var binding in site.Bindings.OrderByDescending(b => b?.EndPoint?.Port))
+                {
+                    if (binding.Host.Equals(domain, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return GetSiteBinding(site, binding);
+                    }
+                }
+            }
+            //no match
+            return null;
         }
 
         #endregion IIS

@@ -88,7 +88,7 @@ namespace Certify
             ps.Runspace.SessionStateProxy.Path.SetLocation(path);
         }
 
-        #region API 
+        #region API
 
         private APIResult InvokeCurrentPSCommand()
         {
@@ -216,7 +216,7 @@ namespace Certify
             return null;
         }
 
-        public APIResult CompleteChallenge(string identifierRef, string challengeType = "http-01",  bool regenerate = true)
+        public APIResult CompleteChallenge(string identifierRef, string challengeType = "http-01", bool regenerate = true)
         {
             ps.Commands.Clear();
 
@@ -253,7 +253,7 @@ namespace Certify
             return InvokeCurrentPSCommand();
         }
 
-        public APIResult NewCertificate(string identifierRef, string certAlias, string[] subjectAlternativeNames = null)
+        public APIResult NewCertificate(string identifierRef, string certAlias, string[] subjectAlternativeNameIdentifiers = null)
         {
             ps.Commands.Clear();
 
@@ -262,11 +262,10 @@ namespace Certify
             cmd.AddParameter("Alias", certAlias);
 
             string sanList = null;
-            if (subjectAlternativeNames != null && subjectAlternativeNames.Length > 0)
+            if (subjectAlternativeNameIdentifiers != null && subjectAlternativeNameIdentifiers.Length > 0)
             {
-                sanList = string.Join(",", subjectAlternativeNames);
+                sanList = string.Join(",", subjectAlternativeNameIdentifiers);
                 cmd.AddParameter("AlternativeIdentifierRefs", sanList);
-               
             }
             cmd.AddParameter("Generate");
 
@@ -275,13 +274,13 @@ namespace Certify
             return InvokeCurrentPSCommand();
         }
 
-        public APIResult SubmitCertificate(string certAlias, bool force = true)
+        public APIResult SubmitCertificate(string certAlias)
         {
             ps.Commands.Clear();
 
             var cmd = ps.Commands.AddCommand("Submit-ACMECertificate");
             cmd.AddParameter("Ref", certAlias);
-            cmd.AddParameter("Force", force);
+            //  cmd.AddParameter("Force", force);
             var results = ps.Invoke();
 
             LogAction("Powershell: Submit-ACMECertificate -Ref " + certAlias);
@@ -304,7 +303,6 @@ namespace Certify
 
         public APIResult ExportCertificate(string certAlias, string vaultFolderPath, bool pfxOnly = false)
         {
-            
             string certKey = certAlias;
             if (certKey.StartsWith("=")) certKey = certKey.Replace("=", "");
             ps.Commands.Clear();
@@ -313,7 +311,7 @@ namespace Certify
             cmd.AddParameter("Ref", certAlias);
             if (!pfxOnly)
             {
-                cmd.AddParameter("ExportKeyPEM", vaultFolderPath + "\\"+ LocalDiskVault.KEYPM + "\\" + certKey + "-key.pem");
+                cmd.AddParameter("ExportKeyPEM", vaultFolderPath + "\\" + LocalDiskVault.KEYPM + "\\" + certKey + "-key.pem");
                 cmd.AddParameter("ExportCsrPEM", vaultFolderPath + "\\" + LocalDiskVault.CSRPM + "\\" + certKey + "-csr.pem");
                 cmd.AddParameter("ExportCertificatePEM", vaultFolderPath + "\\" + LocalDiskVault.CRTPM + "\\" + certKey + "-crt.pem");
                 cmd.AddParameter("ExportCertificateDER", vaultFolderPath + "\\" + LocalDiskVault.CRTDR + "\\" + certKey + "-crt.der");
@@ -335,8 +333,6 @@ namespace Certify
             return InvokeCurrentPSCommand();
         }
 
-
-        #endregion
-
+        #endregion API
     }
 }

@@ -10,10 +10,11 @@ namespace Certify.Management
     public class SiteManager
     {
         private const string APPDATASUBFOLDER = "Certify";
-        private const string SITEMANAGERCONFIG= "sites.json";
+        private const string SITEMANAGERCONFIG = "sites.json";
         public bool IsLocalIISMode { get; set; } //TODO: driven by config
 
-        List<ManagedSite> managedSites { get; set; }
+        private List<ManagedSite> managedSites { get; set; }
+
         public SiteManager()
         {
             IsLocalIISMode = true;
@@ -22,7 +23,7 @@ namespace Certify.Management
 
         private string GetAppDataFolder()
         {
-            var path= Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)+"\\"+APPDATASUBFOLDER;
+            var path = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\" + APPDATASUBFOLDER;
             if (!System.IO.Directory.Exists(path))
             {
                 System.IO.Directory.CreateDirectory(path);
@@ -34,16 +35,16 @@ namespace Certify.Management
         {
             string appDataPath = GetAppDataFolder();
             string siteManagerConfig = Newtonsoft.Json.JsonConvert.SerializeObject(this.managedSites);
-            System.IO.File.WriteAllText(appDataPath+"\\"+SITEMANAGERCONFIG, siteManagerConfig);
-
+            System.IO.File.WriteAllText(appDataPath + "\\" + SITEMANAGERCONFIG, siteManagerConfig);
         }
+
         public void LoadSettings()
         {
             string appDataPath = GetAppDataFolder();
-            string configData = System.IO.File.ReadAllText(appDataPath +"\\"+ SITEMANAGERCONFIG);
+            string configData = System.IO.File.ReadAllText(appDataPath + "\\" + SITEMANAGERCONFIG);
             this.managedSites = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ManagedSite>>(configData);
-            
         }
+
         /// <summary>
         /// For current configured environment, show preview of recommended site management (for local IIS, scan sites and recommend actions)
         /// </summary>
@@ -56,10 +57,9 @@ namespace Certify.Management
             {
                 try
                 {
-                    var iisSites = new IISManager().GetSiteList().OrderBy(s => s.SiteId).ThenBy(s => s.Host);
+                    var iisSites = new IISManager().GetSiteList(includeOnlyStartedSites: true).OrderBy(s => s.SiteId).ThenBy(s => s.Host);
 
                     var siteIds = iisSites.GroupBy(x => x.SiteId);
-
 
                     foreach (var s in siteIds)
                     {
@@ -69,7 +69,7 @@ namespace Certify.Management
                         managedSite.SiteName = iisSites.First(i => i.SiteId == s.Key).SiteName;
                         managedSite.SiteBindings = new List<ManagedSiteBinding>();
 
-                        foreach(var binding in s)
+                        foreach (var binding in s)
                         {
                             var managedBinding = new ManagedSiteBinding { Hostname = binding.Host, IP = binding.IP, Port = binding.Port, UseSNI = true, CertName = "Certify_" + binding.Host };
                             managedSite.SiteBindings.Add(managedBinding);

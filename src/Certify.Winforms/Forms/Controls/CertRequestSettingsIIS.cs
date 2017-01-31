@@ -25,7 +25,7 @@ namespace Certify.Forms.Controls
         private void PopulateWebsitesFromIIS()
         {
             var iisManager = new IISManager();
-            var siteList = iisManager.GetSiteList();
+            var siteList = iisManager.GetSiteList(includeOnlyStartedSites: true);
             this.lstSites.Items.Clear();
             this.lstSites.DisplayMember = "Description";
             foreach (var s in siteList)
@@ -96,7 +96,7 @@ namespace Certify.Forms.Controls
 
             //try alias or DNS name before creating a new identifier
             var identifier = VaultManager.GetIdentifier(identifierAlias);
-            if (identifier == null) identifier = VaultManager.GetIdentifier(config.Domain);
+            //if (identifier == null) identifier = VaultManager.GetIdentifier(config.Domain);
 
             if (identifier != null)
             {
@@ -133,7 +133,7 @@ namespace Certify.Forms.Controls
 
             if (!certsApproved)
             {
-                var authorization = VaultManager.DomainInitAndRegistration(config, identifierAlias);
+                var authorization = VaultManager.BeginRegistrationAndValidation(config, identifierAlias);
 
                 if (authorization != null)
                 {
@@ -207,10 +207,11 @@ namespace Certify.Forms.Controls
             if (certInfo != null && certInfo.CrtDerFile == null)
             {
                 //failed to get cert first time, try again
-                certRef = VaultManager.CreateCertificate(identifierAlias);
-                VaultManager.UpdateIdentifierStatus(identifierAlias);
+                Thread.Sleep(2000);
 
-                certInfo = VaultManager.GetCertificate(certRef);
+                VaultManager.PowershellManager.UpdateCertificate(certRef);
+
+                certInfo = VaultManager.GetCertificate(certRef, reloadVaultConfig: true);
             }
 
             //txtOutput.Text = "To complete this request copy the file " + CurrentAuthorization.TempFilePath + " to the following location under your website root (note: no file extension): " + CurrentAuthorization.Challenge.ChallengeAnswer.Key;
@@ -238,7 +239,7 @@ namespace Certify.Forms.Controls
                 if (certInfo != null)
                 {
                     string certFolderPath = VaultManager.GetCertificateFilePath(certInfo.Id, LocalDiskVault.ASSET);
-                    string pfxFile = certInfo.Id.ToString() + "-all.pfx";
+                    string pfxFile = certRef + "-all.pfx";
                     string pfxPath = Path.Combine(certFolderPath, pfxFile);
 
                     if (!System.IO.Directory.Exists(certFolderPath))
@@ -247,8 +248,8 @@ namespace Certify.Forms.Controls
                     }
                     if (!File.Exists(pfxPath))
                     {
-                        //hmm, no pfx, try to create pfx again TODO: shouldn't need this
-                        VaultManager.ExportCertificate("=" + certInfo.Id.ToString(), pfxOnly: true);
+                        //export pfx
+                        VaultManager.ExportCertificate(certRef, pfxOnly: true);
                     }
 
                     if (File.Exists(pfxPath))
@@ -269,7 +270,8 @@ namespace Certify.Forms.Controls
                                 MessageBox.Show("Certificate installed and SSL bindings updated for " + identifier.Dns, Properties.Resources.AppName);
                                 CloseParentForm();
                                 return;
-                            } else
+                            }
+                            else
                             {
                                 MessageBox.Show("An error occurred installing the certificate. Certificate file may not be a valid.");
                                 CloseParentForm();

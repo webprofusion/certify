@@ -326,21 +326,17 @@ namespace Certify
             }
         }
 
-        public void UpdateAndExportCertificate(string domainAlias)
+        public void UpdateAndExportCertificate(string certAlias)
         {
-            var certRef = "cert_" + domainAlias;
             try
             {
-                powershellManager.UpdateCertificate(certRef);
+                powershellManager.UpdateCertificate(certAlias);
+                ReloadVaultConfig();
 
-                if (CertExists(domainAlias)) // if the cert exists after the update, export it
-                {
-                    var certInfo = GetCertificate(certRef);
-                    string certId = "=" + certInfo.Id.ToString();
+                var certInfo = GetCertificate(certAlias);
 
-                    // if we have our first cert files, lets export the pfx as well
-                    ExportCertificate(certId, pfxOnly: true);
-                }
+                // if we have our first cert files, lets export the pfx as well
+                ExportCertificate(certAlias, pfxOnly: true);
             }
             catch (Exception exp)
             {
@@ -367,19 +363,16 @@ namespace Certify
         {
             var certRef = "cert_" + domainAlias;
             //New-ACMECertificate -Identifier dns1 -Alias cert1 -Generate
-            bool certExists = CertExists(domainAlias);
 
-            if (!certExists)
-            {
-                powershellManager.NewCertificate(domainAlias, certRef);
-            }
+            powershellManager.NewCertificate(domainAlias, certRef);
+
             ReloadVaultConfig();
 
             //return certRef;
 
             try
             {
-                var apiResult = powershellManager.SubmitCertificate(certRef, force: true);
+                var apiResult = powershellManager.SubmitCertificate(certRef);
 
                 //give LE time to generate cert before fetching fresh status info
                 Thread.Sleep(1000);
@@ -391,7 +384,7 @@ namespace Certify
 
             ReloadVaultConfig();
 
-            UpdateAndExportCertificate(domainAlias);
+            UpdateAndExportCertificate(certRef);
 
             return certRef;
         }
@@ -407,8 +400,13 @@ namespace Certify
             return null;
         }
 
-        public CertificateInfo GetCertificate(string reference)
+        public CertificateInfo GetCertificate(string reference, bool reloadVaultConfig = false)
         {
+            if (reloadVaultConfig)
+            {
+                this.ReloadVaultConfig();
+            }
+
             //var cert = powershellManager.GetCertificateByRef(reference);
             if (vaultConfig.Certificates != null)
             {
@@ -432,7 +430,7 @@ namespace Certify
             powershellManager.ExportCertificate(certRef, this.VaultFolderPath, pfxOnly);
         }
 
-        public PendingAuthorization DomainInitAndRegistration(CertRequestConfig requestConfig, string identifierAlias)
+        public PendingAuthorization BeginRegistrationAndValidation(CertRequestConfig requestConfig, string identifierAlias)
         {
             /*
             //need to manipulate file created above to set file path or request key sshould be written too.
@@ -532,7 +530,7 @@ namespace Certify
         public string ComputeIdentifierAlias(string domain)
         {
             var domainAlias = domain.Replace(".", "_");
-            domainAlias += DateTime.UtcNow.Ticks;
+            domainAlias += long.Parse(DateTime.UtcNow.ToString("yyyyMMddHHmmss"));
             return domainAlias;
         }
 
