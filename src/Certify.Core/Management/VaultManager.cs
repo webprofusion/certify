@@ -329,18 +329,22 @@ namespace Certify
                 try
                 {
                     vlt.OpenStorage(true);
-                    var idsToRemove = vaultConfig.Identifiers.Values.Where(i => i.Dns == dns);
-                    List<Guid> removing = new List<Guid>();
-                    foreach (var identifier in idsToRemove)
+                    if (vaultConfig.Identifiers != null)
                     {
-                        removing.Add(identifier.Id);
-                    }
-                    foreach (var identifier in removing)
-                    {
-                        vaultConfig.Identifiers.Remove(identifier);
+                        var idsToRemove = vaultConfig.Identifiers.Values.Where(i => i.Dns == dns);
+                        List<Guid> removing = new List<Guid>();
+                        foreach (var identifier in idsToRemove)
+                        {
+                            removing.Add(identifier.Id);
+                        }
+                        foreach (var identifier in removing)
+                        {
+                            vaultConfig.Identifiers.Remove(identifier);
+                        }
+
+                        vlt.SaveVault(vaultConfig);
                     }
 
-                    vlt.SaveVault(vaultConfig);
                     return true;
                 }
                 catch (Exception e)
