@@ -20,13 +20,24 @@ namespace Certify.CLI
                 ShowHelp();
 
                 var p = new Program();
-                //p.PreviewAutoManage();
-                p.PerformCertRequestAndIISBinding("test.domain.com");
+                p.PreviewAutoManage();
+                //p.PerformCertRequestAndIISBinding("test.domain.com");
+                //p.PerformVaultCleanup();
                 System.Console.ReadKey();
                 return 1;
             }
 
             return 0;
+        }
+
+        private void PerformVaultCleanup()
+        {
+            var vaultManager = new VaultManager(Properties.Settings.Default.VaultPath, LocalDiskVault.VAULT);
+
+            //init vault if not already created
+            vaultManager.InitVault(staging: true);
+
+            vaultManager.CleanupVault();
         }
 
         private static void ShowVersion()
@@ -99,7 +110,7 @@ namespace Certify.CLI
 
             var vaultManager = new VaultManager(Properties.Settings.Default.VaultPath, LocalDiskVault.VAULT);
 
-            //init vault of not already created
+            //init vault if not already created
             vaultManager.InitVault(staging: true);
 
             var certifyManager = vaultManager.PowershellManager;

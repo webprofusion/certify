@@ -95,10 +95,10 @@ namespace Certify.Forms.Controls
             var identifierAlias = VaultManager.ComputeIdentifierAlias(config.Domain);
 
             //try alias or DNS name before creating a new identifier
-            var identifier = VaultManager.GetIdentifier(identifierAlias);
+            var identifier = VaultManager.GetIdentifier(identifierAlias); //REMOVE, this will always be null
             //if (identifier == null) identifier = VaultManager.GetIdentifier(config.Domain);
 
-            if (identifier != null)
+            /*if (identifier != null)
             {
                 //domain already exists in vault
                 //check if has pending authorization challenges
@@ -129,7 +129,7 @@ namespace Certify.Forms.Controls
                         }
                     }
                 }
-            }
+            }*/
 
             if (!certsApproved)
             {

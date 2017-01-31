@@ -122,7 +122,7 @@ namespace Certify
             else return null;
         }
 
-        public void CleanupVault(Guid? identifierToRemove = null)
+        public void CleanupVault(Guid? identifierToRemove = null, bool includeDupeIdentifierRemoval = false)
         {
             //remove duplicate identifiers etc
 
@@ -163,14 +163,18 @@ namespace Certify
                 }
                 //
 
-                //find and remove certificatess with no valid identifier in vault
+                //find and remove certificates with no valid identifier in vault or with empty settings
                 toBeRemoved = new List<Guid>();
 
                 if (v.Certificates != null)
                 {
                     foreach (var c in v.Certificates)
                     {
-                        if (!v.Identifiers.ContainsKey(c.IdentifierRef))
+                        if (
+                            String.IsNullOrEmpty(c.IssuerSerialNumber) //no valid issuer serial
+                            ||
+                            !v.Identifiers.ContainsKey(c.IdentifierRef) //no existing Identifier
+                            )
                         {
                             toBeRemoved.Add(c.Id);
                         }
@@ -181,6 +185,21 @@ namespace Certify
                         v.Certificates.Remove(i);
                     }
                 }
+
+                /*if (includeDupeIdentifierRemoval)
+                {
+                    //remove identifiers where the dns occurs more than once
+                    foreach (var i in v.Identifiers)
+                    {
+                        var count = v.Identifiers.Values.Where(l => l.Dns == i.Dns).Count();
+                        if (count > 1)
+                        {
+                            //identify most recent Identifier (based on assigned, non-expired cert), delete all the others
+
+                            toBeRemoved.Add(i.Id);
+                        }
+                    }
+                }*/
 
                 vlt.SaveVault(v);
             }
@@ -291,6 +310,36 @@ namespace Certify
                 {
                     vlt.OpenStorage(true);
                     vaultConfig.Registrations.Remove(id);
+                    vlt.SaveVault(vaultConfig);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    // TODO: Logging of errors.
+                    System.Windows.Forms.MessageBox.Show(e.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                    return false;
+                }
+            }
+        }
+
+        internal bool DeleteIdentifierByDNS(string dns)
+        {
+            using (var vlt = ACMESharp.POSH.Util.VaultHelper.GetVault())
+            {
+                try
+                {
+                    vlt.OpenStorage(true);
+                    var idsToRemove = vaultConfig.Identifiers.Values.Where(i => i.Dns == dns);
+                    List<Guid> removing = new List<Guid>();
+                    foreach (var identifier in idsToRemove)
+                    {
+                        removing.Add(identifier.Id);
+                    }
+                    foreach (var identifier in removing)
+                    {
+                        vaultConfig.Identifiers.Remove(identifier);
+                    }
+
                     vlt.SaveVault(vaultConfig);
                     return true;
                 }
@@ -428,6 +477,8 @@ namespace Certify
 
             if (GetIdentifier(identifierAlias) == null)
             {
+                //if an identifier exists for the same dns in vault, remove it to avoid confusion
+                this.DeleteIdentifierByDNS(domain);
                 var result = powershellManager.NewIdentifier(domain, identifierAlias, "Identifier:" + domain);
                 if (!result.IsOK) return null;
             }
