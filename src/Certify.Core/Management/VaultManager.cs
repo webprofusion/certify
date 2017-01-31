@@ -486,9 +486,8 @@ namespace Certify
                 var result = powershellManager.NewIdentifier(domain, identifierAlias, "Identifier:" + domain);
                 if (!result.IsOK) return null;
             }
-            ReloadVaultConfig();
 
-            var identifier = this.GetIdentifier(identifierAlias);
+            var identifier = this.GetIdentifier(identifierAlias, reloadVaultConfig: true);
 
             /*
             //config file now has a temp path to write to, begin challenge (writes to temp file with challenge content)
@@ -571,6 +570,14 @@ namespace Certify
         {
             var domainAlias = domain.Replace(".", "_");
             domainAlias += long.Parse(DateTime.UtcNow.ToString("yyyyMMddHHmmss"));
+
+            // Check if the first character in the domain is a digit, e.g. 1and1.com
+            // Per ACMESharp spec, alias cannot begin with a digit.
+            if (char.IsDigit(domainAlias[0]))
+            {
+                domainAlias = "alias_" + domainAlias;
+            }
+
             return domainAlias;
         }
 
