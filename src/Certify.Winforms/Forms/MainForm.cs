@@ -73,6 +73,7 @@ namespace Certify
                 this.treeView1.Nodes.Clear();
             }
 
+            CertificateManager certManager = new CertificateManager();
             // start off by adding a base treeview node
             TreeNode mainNode = new TreeNode();
 
@@ -111,6 +112,31 @@ namespace Certify
                                 certNode.ImageIndex = (int)ImageList.Cert;
                                 certNode.SelectedImageIndex = certNode.ImageIndex;
 
+                                //get info from get if possible, use that to style the parent node (expiry warning)
+
+                                string certPath = VaultManager.GetCertificateFilePath(c.Id);
+                                string crtDerFilePath = certPath + "\\" + c.CrtDerFile;
+
+                                if (File.Exists(crtDerFilePath))
+                                {
+                                    var cert = certManager.GetCertificate(crtDerFilePath);
+
+                                    DateTime expiryDate = DateTime.Parse(cert.GetExpirationDateString());
+                                    TimeSpan timeLeft = expiryDate - DateTime.Now;
+                                    node.Text += " (" + timeLeft.Days + " days remaining)";
+                                    if (timeLeft.Days < 30)
+                                    {
+                                        node.ForeColor = Color.Orange;
+                                    }
+                                    if (timeLeft.Days < 7)
+                                    {
+                                        node.ForeColor = Color.Red;
+                                    }
+                                }
+                                else
+                                {
+                                    node.ForeColor = Color.Gray;
+                                }
                                 node.Nodes.Add(certNode);
                             }
                         }
@@ -258,7 +284,7 @@ namespace Certify
 
             if (!manager.IsAcmeSharpModuleInstalled())
             {
-                if (MessageBox.Show("The required PowerShell module 'ACMESharp' cannot be found.",
+                if (MessageBox.Show("The required PowerShell module 'ACMESharp' cannot be found. Please see https://www.powershellgallery.com/packages/ACMESharp/ or install from PowerShell command line as Administrator using: 'Install-Module -Name ACMESharp'",
                         "ACMESharp Missing", MessageBoxButtons.OK, MessageBoxIcon.Error) == DialogResult.OK)
                 {
                     Application.Exit();
