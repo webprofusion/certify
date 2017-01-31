@@ -140,6 +140,7 @@ namespace Certify.Forms.Controls
                     if (!chkSkipConfigCheck.Checked && !authorization.ExtensionlessConfigCheckedOK)
                     {
                         MessageBox.Show("Automated checks for extensionless content failed. Authorisations will not be able to complete. Change the web.config in <your site>\\.well-known\\acme-challenge and ensure you can browse to http://<your site>/.well-known/acme-challenge/configcheck before proceeding.");
+                        CloseParentForm();
                         return;
                     }
                     //at this point we can either get the user to manually copy the file to web site folder structure

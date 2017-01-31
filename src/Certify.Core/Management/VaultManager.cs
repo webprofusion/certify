@@ -329,18 +329,22 @@ namespace Certify
                 try
                 {
                     vlt.OpenStorage(true);
-                    var idsToRemove = vaultConfig.Identifiers.Values.Where(i => i.Dns == dns);
-                    List<Guid> removing = new List<Guid>();
-                    foreach (var identifier in idsToRemove)
+                    if (vaultConfig.Identifiers != null)
                     {
-                        removing.Add(identifier.Id);
-                    }
-                    foreach (var identifier in removing)
-                    {
-                        vaultConfig.Identifiers.Remove(identifier);
+                        var idsToRemove = vaultConfig.Identifiers.Values.Where(i => i.Dns == dns);
+                        List<Guid> removing = new List<Guid>();
+                        foreach (var identifier in idsToRemove)
+                        {
+                            removing.Add(identifier.Id);
+                        }
+                        foreach (var identifier in removing)
+                        {
+                            vaultConfig.Identifiers.Remove(identifier);
+                        }
+
+                        vlt.SaveVault(vaultConfig);
                     }
 
-                    vlt.SaveVault(vaultConfig);
                     return true;
                 }
                 catch (Exception e)
@@ -482,9 +486,8 @@ namespace Certify
                 var result = powershellManager.NewIdentifier(domain, identifierAlias, "Identifier:" + domain);
                 if (!result.IsOK) return null;
             }
-            ReloadVaultConfig();
 
-            var identifier = this.GetIdentifier(identifierAlias);
+            var identifier = this.GetIdentifier(identifierAlias, reloadVaultConfig: true);
 
             /*
             //config file now has a temp path to write to, begin challenge (writes to temp file with challenge content)
@@ -567,6 +570,14 @@ namespace Certify
         {
             var domainAlias = domain.Replace(".", "_");
             domainAlias += long.Parse(DateTime.UtcNow.ToString("yyyyMMddHHmmss"));
+
+            // Check if the first character in the domain is a digit, e.g. 1and1.com
+            // Per ACMESharp spec, alias cannot begin with a digit.
+            if (char.IsDigit(domainAlias[0]))
+            {
+                domainAlias = "alias_" + domainAlias;
+            }
+
             return domainAlias;
         }
 
