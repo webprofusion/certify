@@ -42,9 +42,7 @@
             this.lblSubject = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.lblDaysRemaining = new System.Windows.Forms.Label();
-            this.btnRenew = new System.Windows.Forms.Button();
-            this.btnExport = new System.Windows.Forms.Button();
-            this.btnApply = new System.Windows.Forms.Button();
+            this.label8 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // label1
@@ -173,46 +171,21 @@
             this.lblDaysRemaining.TabIndex = 13;
             this.lblDaysRemaining.Text = "(none)";
             // 
-            // btnRenew
+            // label8
             // 
-            this.btnRenew.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnRenew.Location = new System.Drawing.Point(110, 126);
-            this.btnRenew.Name = "btnRenew";
-            this.btnRenew.Size = new System.Drawing.Size(75, 23);
-            this.btnRenew.TabIndex = 14;
-            this.btnRenew.Text = "Renew";
-            this.btnRenew.UseVisualStyleBackColor = true;
-            this.btnRenew.Click += new System.EventHandler(this.btnRenew_Click);
-            // 
-            // btnExport
-            // 
-            this.btnExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnExport.Location = new System.Drawing.Point(191, 126);
-            this.btnExport.Name = "btnExport";
-            this.btnExport.Size = new System.Drawing.Size(75, 23);
-            this.btnExport.TabIndex = 15;
-            this.btnExport.Text = "Export";
-            this.btnExport.UseVisualStyleBackColor = true;
-            this.btnExport.Click += new System.EventHandler(this.button1_Click);
-            // 
-            // btnApply
-            // 
-            this.btnApply.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnApply.Location = new System.Drawing.Point(272, 126);
-            this.btnApply.Name = "btnApply";
-            this.btnApply.Size = new System.Drawing.Size(75, 23);
-            this.btnApply.TabIndex = 16;
-            this.btnApply.Text = "Auto Apply";
-            this.btnApply.UseVisualStyleBackColor = true;
-            this.btnApply.Click += new System.EventHandler(this.btnApply_Click);
+            this.label8.AutoSize = true;
+            this.label8.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label8.Location = new System.Drawing.Point(17, 138);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(340, 13);
+            this.label8.TabIndex = 14;
+            this.label8.Text = "Note: To renew this certificate now, select New Certificate";
             // 
             // CertificateDetails
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.btnApply);
-            this.Controls.Add(this.btnExport);
-            this.Controls.Add(this.btnRenew);
+            this.Controls.Add(this.label8);
             this.Controls.Add(this.lblDaysRemaining);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.lblSubject);
@@ -228,7 +201,7 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Name = "CertificateDetails";
-            this.Size = new System.Drawing.Size(359, 152);
+            this.Size = new System.Drawing.Size(365, 176);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -250,8 +223,6 @@
         private System.Windows.Forms.Label lblSubject;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Label lblDaysRemaining;
-        private System.Windows.Forms.Button btnRenew;
-        private System.Windows.Forms.Button btnExport;
-        private System.Windows.Forms.Button btnApply;
+        private System.Windows.Forms.Label label8;
     }
 }

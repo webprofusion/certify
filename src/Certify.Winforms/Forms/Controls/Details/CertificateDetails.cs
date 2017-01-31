@@ -71,7 +71,8 @@ namespace Certify.Forms.Controls.Details
             {
                 this.Cursor = Cursors.WaitCursor;
                 //update and create certificate
-                if (parentApp.VaultManager.RenewCertificate(item.IdentifierRef))
+                //renew cert: parentApp.VaultManager.RenewCertificate(item.IdentifierRef)
+                /*if ()
                 {
                     Populate(item); // update display with renewed info
 
@@ -80,7 +81,7 @@ namespace Certify.Forms.Controls.Details
                 else
                 {
                     MessageBox.Show("Could not process renewal.");
-                }
+                }*/
                 this.Cursor = Cursors.Default;
             }
         }

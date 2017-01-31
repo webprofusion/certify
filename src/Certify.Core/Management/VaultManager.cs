@@ -344,21 +344,6 @@ namespace Certify
             }
         }
 
-        public bool RenewCertificate(Guid identifierRef)
-        {
-            var identifier = vaultConfig.Identifiers[identifierRef];
-
-            try
-            {
-                this.CreateCertificate(identifier.Alias);
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
         public string CreateCertificate(string domainAlias)
         {
             var certRef = "cert_" + domainAlias;
