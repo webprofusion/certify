@@ -23,7 +23,7 @@ namespace Certify
 
             if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
             {
-                MessageBox.Show("Sorry, you need to run " + Properties.Resources.AppName + " as Administrator to allow files to be copied to protected IIS folders (wwwroot etc).");
+                MessageBox.Show("Sorry, you need to run " + Properties.Resources.AppName + " as an administrator in order to allow files to be copied to protected IIS folders (wwwroot, etc).");
                 Application.Exit();
                 return;
             };

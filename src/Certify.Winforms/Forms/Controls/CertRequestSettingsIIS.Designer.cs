@@ -80,7 +80,7 @@
             this.chkAutoBindings.Name = "chkAutoBindings";
             this.chkAutoBindings.Size = new System.Drawing.Size(233, 17);
             this.chkAutoBindings.TabIndex = 21;
-            this.chkAutoBindings.Text = "Auto Create/Update IIS Bindings (uses SNI)";
+            this.chkAutoBindings.Text = "Auto create/update IIS bindings (uses SNI)";
             this.chkAutoBindings.UseVisualStyleBackColor = true;
             // 
             // lblDomain

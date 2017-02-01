@@ -69,7 +69,7 @@ namespace Certify.Forms
             }
             else
             {
-                MessageBox.Show("You need to agree to the latest LetsEncrypt.org terms and conditions.");
+                MessageBox.Show("You need to agree to the latest LetsEncrypt.org Subscriber Agreement.");
                 this.DialogResult = DialogResult.None;
             }
         }

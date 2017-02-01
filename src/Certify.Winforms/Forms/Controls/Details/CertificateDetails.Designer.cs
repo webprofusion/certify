@@ -179,7 +179,7 @@
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(340, 13);
             this.label8.TabIndex = 14;
-            this.label8.Text = "Note: To renew this certificate now, select New Certificate";
+            this.label8.Text = "Note: To renew this certificate now, select New Certificate.";
             // 
             // CertificateDetails
             // 

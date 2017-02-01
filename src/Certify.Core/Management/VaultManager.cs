@@ -634,7 +634,7 @@ namespace Certify
         {
             if (IisSitePathProvider.IsAdministrator())
             {
-                System.Diagnostics.Debug.WriteLine("User is administrator");
+                System.Diagnostics.Debug.WriteLine("User is an administrator");
 
                 var iisPathProvider = new IisSitePathProvider();
                 iisPathProvider.WebSiteRoot = @"C:\inetpub\wwwroot\";
@@ -646,7 +646,7 @@ namespace Certify
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("User is not administrator");
+                System.Diagnostics.Debug.WriteLine("User is not an administrator");
             }
         }
     }

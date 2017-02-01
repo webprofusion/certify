@@ -114,7 +114,7 @@ namespace Certify.Forms.Controls.Details
                 }
             }
 
-            MessageBox.Show("Could not match cert identifier to site.");
+            MessageBox.Show("Could not match certificate identifier to site.");
         }
     }
 }
