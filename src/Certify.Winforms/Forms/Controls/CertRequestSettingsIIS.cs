@@ -66,7 +66,7 @@ namespace Certify.Forms.Controls
         {
             if (lstSites.SelectedItem == null)
             {
-                MessageBox.Show("No IIS Site Selected");
+                MessageBox.Show("No IIS site selected");
                 return;
             }
 
@@ -139,7 +139,7 @@ namespace Certify.Forms.Controls
                 {
                     if (!chkSkipConfigCheck.Checked && !authorization.ExtensionlessConfigCheckedOK)
                     {
-                        MessageBox.Show("Automated checks for extensionless content failed. Authorisations will not be able to complete. Change the web.config in <your site>\\.well-known\\acme-challenge and ensure you can browse to http://<your site>/.well-known/acme-challenge/configcheck before proceeding.");
+                        MessageBox.Show("Automated checks for extensionless content failed. Authorizations will not be able to complete. Change the web.config in <your site>\\.well-known\\acme-challenge and ensure you can browse to http://<your site>/.well-known/acme-challenge/configcheck before proceeding.");
                         CloseParentForm();
                         return;
                     }
@@ -175,7 +175,7 @@ namespace Certify.Forms.Controls
                         {
                             if (challenge.Status == "invalid")
                             {
-                                MessageBox.Show("Challenge failed to complete. Check that http://" + config.Domain + "/" + challenge.ToString() + " path/file is present and accessible in your web browser. You may require extensionless file type mappings");
+                                MessageBox.Show("Challenge failed to complete. Check that http://" + config.Domain + "/" + challenge.ToString() + " path/file is present and accessible in your web browser. You may require extensionless file type mappings.");
                                 CloseParentForm();
                                 return;
                             }
@@ -274,7 +274,7 @@ namespace Certify.Forms.Controls
                             }
                             else
                             {
-                                MessageBox.Show("An error occurred installing the certificate. Certificate file may not be a valid.");
+                                MessageBox.Show("An error occurred installing the certificate. Certificate file may not be valid.");
                                 CloseParentForm();
                                 return;
                             }
@@ -297,7 +297,7 @@ namespace Certify.Forms.Controls
                     }
                     else
                     {
-                        MessageBox.Show("Failed to generate PFX file for Certificate.", Properties.Resources.AppName);
+                        MessageBox.Show("Failed to generate PFX file for the certificate.", Properties.Resources.AppName);
                         CloseParentForm();
                         return;
                     }
@@ -305,7 +305,7 @@ namespace Certify.Forms.Controls
                 else
                 {
                     //cert was null
-                    MessageBox.Show("Certification was not successful. Certificate not valid or not yet authorized.", Properties.Resources.AppName);
+                    MessageBox.Show("Certificate generation was not successful. Certificate not valid or not yet authorized.", Properties.Resources.AppName);
                     CloseParentForm();
                     return;
                 }
@@ -338,7 +338,7 @@ namespace Certify.Forms.Controls
 
             if (lstSites.Items.Count == 0)
             {
-                MessageBox.Show("You have no applicable IIS Sites configured. Setup a website in IIS or use a Generic Request.");
+                MessageBox.Show("You have no applicable IIS sites configured. Setup a website in IIS or use a Generic Request.");
             }
         }
     }

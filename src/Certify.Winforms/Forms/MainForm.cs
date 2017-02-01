@@ -276,7 +276,7 @@ namespace Certify
 
             if (!manager.IsValidVersion())
             {
-                if (MessageBox.Show("The version of Powershell installed is not high enough, please install Powershell Version 3 or higher.", "Powershell Version Too Low", MessageBoxButtons.OK, MessageBoxIcon.Error) == DialogResult.OK)
+                if (MessageBox.Show("The version of Powershell installed is not high enough. Please install PowerShell version 3.0 or higher.", "PowerShell Version Too Low", MessageBoxButtons.OK, MessageBoxIcon.Error) == DialogResult.OK)
                 {
                     Application.Exit();
                 }
@@ -284,7 +284,7 @@ namespace Certify
 
             if (!manager.IsAcmeSharpModuleInstalled())
             {
-                if (MessageBox.Show("The required PowerShell module 'ACMESharp' cannot be found. Please see https://www.powershellgallery.com/packages/ACMESharp/ or install from PowerShell command line as Administrator using: 'Install-Module -Name ACMESharp'",
+                if (MessageBox.Show("The required PowerShell module 'ACMESharp' cannot be found. Please see https://www.powershellgallery.com/packages/ACMESharp/ or install from PowerShell command line as an administrator using: 'Install-Module -Name ACMESharp'",
                         "ACMESharp Missing", MessageBoxButtons.OK, MessageBoxIcon.Error) == DialogResult.OK)
                 {
                     Application.Exit();
@@ -322,7 +322,7 @@ namespace Certify
             if (vaultInfo != null && vaultInfo.Registrations == null)
             {
                 //got an existing vault. If no contact registrations setup, prompt to add one
-                var promptResult = MessageBox.Show("No certificate contact registrations have been setup. Add a new contact now? ", "Create New Contact?", MessageBoxButtons.YesNo);
+                var promptResult = MessageBox.Show("No certificate contact registrations have been setup. Would you like to add a new contact now? ", "Create New Contact?", MessageBoxButtons.YesNo);
 
                 if (promptResult == DialogResult.Yes)
                 {
@@ -433,11 +433,11 @@ namespace Certify
 
         private bool LocateOrCreateVault(bool useDefaultCreationPath = true)
         {
-            var promptResult = MessageBox.Show("Do you want to create a new vault? Choose No to browse to an existing Vault folder.", "Change Vault", MessageBoxButtons.YesNoCancel);
+            var promptResult = MessageBox.Show("Do you want to create a new vault? Choose 'No' to browse to an existing vault folder.", "Change Vault", MessageBoxButtons.YesNoCancel);
 
             if (promptResult == DialogResult.Yes)
             {
-                var useProductionPrompt = MessageBox.Show("Do you want to use the Live LetsEncrypt.org API? Choose No to use the staging (test) API for this vault.", Properties.Resources.AppName, MessageBoxButtons.YesNo);
+                var useProductionPrompt = MessageBox.Show("Do you want to use the live LetsEncrypt.org API? Choose 'No' to use the staging (test) API for this vault.", Properties.Resources.AppName, MessageBoxButtons.YesNo);
 
                 bool useStagingAPI = false;
                 if (useProductionPrompt == DialogResult.No)
@@ -497,7 +497,7 @@ namespace Certify
                     }
                     else
                     {
-                        MessageBox.Show("The selected folder is not a valid Vault.");
+                        MessageBox.Show("The selected folder is not a valid vault.");
                         return false;
                     }
                 }

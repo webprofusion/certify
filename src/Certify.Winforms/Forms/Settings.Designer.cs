@@ -69,7 +69,7 @@
             this.chkAutoCheckForUpdates.Name = "chkAutoCheckForUpdates";
             this.chkAutoCheckForUpdates.Size = new System.Drawing.Size(183, 17);
             this.chkAutoCheckForUpdates.TabIndex = 4;
-            this.chkAutoCheckForUpdates.Text = "Automatically Check For Updates";
+            this.chkAutoCheckForUpdates.Text = "Automatically check for updates";
             this.chkAutoCheckForUpdates.UseVisualStyleBackColor = true;
             // 
             // btnLockdown
@@ -103,7 +103,7 @@
             this.chkAnalytics.Name = "chkAnalytics";
             this.chkAnalytics.Size = new System.Drawing.Size(260, 17);
             this.chkAnalytics.TabIndex = 7;
-            this.chkAnalytics.Text = "Send Usage Data and Crash Reports to Publisher";
+            this.chkAnalytics.Text = "Send usage data and crash reports to publisher";
             this.chkAnalytics.UseVisualStyleBackColor = true;
             // 
             // chkShowOnlyStartedWebsites
@@ -113,7 +113,7 @@
             this.chkShowOnlyStartedWebsites.Name = "chkShowOnlyStartedWebsites";
             this.chkShowOnlyStartedWebsites.Size = new System.Drawing.Size(193, 17);
             this.chkShowOnlyStartedWebsites.TabIndex = 8;
-            this.chkShowOnlyStartedWebsites.Text = "Show Only Webssites Started in IIS";
+            this.chkShowOnlyStartedWebsites.Text = "Show only websites started in IIS";
             this.chkShowOnlyStartedWebsites.UseVisualStyleBackColor = true;
             // 
             // Settings

@@ -114,7 +114,7 @@
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(79, 13);
             this.label8.TabIndex = 7;
-            this.label8.Text = "Registration Uri";
+            this.label8.Text = "Registration URI";
             // 
             // lblAlias
             // 

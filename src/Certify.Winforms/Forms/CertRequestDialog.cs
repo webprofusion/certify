@@ -51,7 +51,7 @@ namespace Certify.Forms
                 if (version.Major == 0)
                 {
                     //no iis
-                    MessageBox.Show("You do not have IIS Installed locally. Automated configuration will be unavailable.");
+                    MessageBox.Show("You do not have IIS installed locally. Automated configuration will be unavailable.");
                     lstRequestType.SelectedIndex = 1; //generic
                 }
                 else

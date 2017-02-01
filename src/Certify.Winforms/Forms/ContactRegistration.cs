@@ -18,7 +18,8 @@ namespace Certify.Forms
         public ContactRegistration()
         {
             InitializeComponent();
-            btnCreateContact.Enabled = true;
+            btnCreateContact.Enabled = false;
+            txtContacts.Select(); // set focus on text box
         }
 
         public ContactRegistration(VaultManager vaultManager) : this()
@@ -69,13 +70,25 @@ namespace Certify.Forms
             }
             else
             {
-                MessageBox.Show("You need to agree to the latest LetsEncrypt.org terms and conditions.");
+                MessageBox.Show("You need to agree to the latest LetsEncrypt.org Subscriber Agreement.");
                 this.DialogResult = DialogResult.None;
             }
         }
 
         private void label1_Click(object sender, EventArgs e)
         {
+        }
+
+        private void chkAgreeTandCs_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkAgreeTandCs.Checked)
+            {
+                btnCreateContact.Enabled = true;
+            }
+            else
+            {
+                btnCreateContact.Enabled = false;
+            }
         }
     }
 }
