@@ -17,7 +17,7 @@ Time spent on developing Certify is extremely limited. If you have a bug or feat
    2. Make your changes 
    3. Submit a pull request, detailing the problem being solved and testing steps/evidence
    
-If you cannot provide a fix for the problem yourself, please file an issue and describe the fault in great detail with exact steps to reproduce. General issues which cannot be easily reproduced are likely to be ignored, sorry!
+If you cannot provide a fix for the problem yourself, please file an issue and describe the fault with steps to reproduce. General issues which cannot be easily reproduced are likely to be ignored, sorry!
 
 ----------
 
