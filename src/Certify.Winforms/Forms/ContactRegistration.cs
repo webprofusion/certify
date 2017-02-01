@@ -18,7 +18,8 @@ namespace Certify.Forms
         public ContactRegistration()
         {
             InitializeComponent();
-            btnCreateContact.Enabled = true;
+            btnCreateContact.Enabled = false;
+            txtContacts.Select(); // set focus on text box
         }
 
         public ContactRegistration(VaultManager vaultManager) : this()
@@ -76,6 +77,18 @@ namespace Certify.Forms
 
         private void label1_Click(object sender, EventArgs e)
         {
+        }
+
+        private void chkAgreeTandCs_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkAgreeTandCs.Checked)
+            {
+                btnCreateContact.Enabled = true;
+            }
+            else
+            {
+                btnCreateContact.Enabled = false;
+            }
         }
     }
 }

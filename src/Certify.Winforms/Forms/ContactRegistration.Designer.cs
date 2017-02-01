@@ -94,6 +94,7 @@
             this.chkAgreeTandCs.TabIndex = 5;
             this.chkAgreeTandCs.Text = "Yes, I Agree";
             this.chkAgreeTandCs.UseVisualStyleBackColor = true;
+            this.chkAgreeTandCs.CheckedChanged += new System.EventHandler(this.chkAgreeTandCs_CheckedChanged);
             // 
             // label2
             // 
