@@ -143,43 +143,51 @@ namespace Certify.Forms.Controls
                         CloseParentForm();
                         return;
                     }
-                    //at this point we can either get the user to manually copy the file to web site folder structure
-                    //if file has already been copied we can go ahead and ask the server to verify it
-
-                    //ask server to check our challenge answer is present and correct
-                    VaultManager.SubmitChallenge(authorization.Identifier.Alias);
-
-                    //give LE time to check our challenge answer stored on our server
-                    Thread.Sleep(2000);
-
-                    VaultManager.UpdateIdentifierStatus(authorization.Identifier.Alias);
-                    VaultManager.ReloadVaultConfig();
-
-                    //check status of the challenge
-                    var updatedIdentifier = VaultManager.GetIdentifier(authorization.Identifier.Alias);
-
-                    var challenge = updatedIdentifier.Authorization.Challenges.FirstOrDefault(c => c.Type == "http-01");
-
-                    //if all OK, we will be ready to fetch our certificate
-                    if (challenge?.Status == "valid")
+                    if (authorization.Identifier.Authorization.IsPending())
                     {
-                        certsApproved = true;
-                    }
-                    else
-                    {
-                        if (challenge != null)
+                        //at this point we can either get the user to manually copy the file to web site folder structure
+                        //if file has already been copied we can go ahead and ask the server to verify it
+
+                        //ask server to check our challenge answer is present and correct
+                        VaultManager.SubmitChallenge(authorization.Identifier.Alias);
+
+                        //give LE time to check our challenge answer stored on our server
+                        Thread.Sleep(2000);
+
+                        VaultManager.UpdateIdentifierStatus(authorization.Identifier.Alias);
+                        VaultManager.ReloadVaultConfig();
+
+                        //check status of the challenge
+                        var updatedIdentifier = VaultManager.GetIdentifier(authorization.Identifier.Alias);
+
+                        var challenge = updatedIdentifier.Authorization.Challenges.FirstOrDefault(c => c.Type == "http-01");
+
+                        //if all OK, we will be ready to fetch our certificate
+                        if (challenge?.Status == "valid")
                         {
-                            MessageBox.Show("Challenge not yet completed. Check that http://" + config.Domain + "/" + challenge.ToString() + " path/file is present and accessible in your web browser.");
+                            certsApproved = true;
                         }
                         else
                         {
-                            if (challenge.Status == "invalid")
+                            if (challenge != null)
                             {
-                                MessageBox.Show("Challenge failed to complete. Check that http://" + config.Domain + "/" + challenge.ToString() + " path/file is present and accessible in your web browser. You may require extensionless file type mappings.");
-                                CloseParentForm();
-                                return;
+                                MessageBox.Show("Challenge not yet completed. Check that http://" + config.Domain + "/" + challenge.ToString() + " path/file is present and accessible in your web browser.");
+                            }
+                            else
+                            {
+                                if (challenge.Status == "invalid")
+                                {
+                                    MessageBox.Show("Challenge failed to complete. Check that http://" + config.Domain + "/" + challenge.ToString() + " path/file is present and accessible in your web browser. You may require extensionless file type mappings.");
+                                    CloseParentForm();
+                                    return;
+                                }
                             }
                         }
+                    }
+                    else
+                    {
+                        //already valid, challenge not required
+                        certsApproved = true;
                     }
                 }
                 else
@@ -192,6 +200,9 @@ namespace Certify.Forms.Controls
             string certRef = null;
             //if (certsApproved)
             {
+                var v = VaultManager.GetVaultConfig();
+                v.PkiTool = "BouncyCastle"; //"OpenSSL-LIB";
+
                 certRef = VaultManager.CreateCertificate(identifierAlias);
                 VaultManager.UpdateIdentifierStatus(identifierAlias);
                 identifier = VaultManager.GetIdentifier(identifierAlias, true);
@@ -278,7 +289,7 @@ namespace Certify.Forms.Controls
                                 CloseParentForm();
                                 return;
                             }
-
+                            /*
                             if (chkAutoBindings.Checked)
                             {
                                 //auto store and create site bindings
@@ -292,7 +303,7 @@ namespace Certify.Forms.Controls
                                 MessageBox.Show("Your certificate has been imported and is ready for you to configure IIS bindings.", Properties.Resources.AppName);
                                 CloseParentForm();
                                 return;
-                            }
+                            }*/
                         }
                     }
                     else

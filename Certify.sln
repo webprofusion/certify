@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.25914.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{B92D2D90-CB9F-4ED7-BA98-EA3E1E4F8C56}"
 	ProjectSection(SolutionItems) = preProject
@@ -12,6 +12,16 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Core", "src\Certify.Core\Certify.Core.csproj", "{87BAA9CA-E0C9-4D3E-8971-55A30134C932}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.CLI", "src\Certify.CLI\Certify.CLI.csproj", "{DA0CCD9F-8CBD-4471-93E0-53BCFB6CA25E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ACMESharp", "ACMESharp", "{B79FDD1F-064E-48A2-9D94-C69947CF7EB4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ACMESharp", "src\lib\ACMESharp\ACMESharp\ACMESharp\ACMESharp.csproj", "{D551234B-0A8D-4DEE-8178-A81998DF0EDB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ACMESharp.Vault", "src\lib\ACMESharp\ACMESharp\ACMESharp.Vault\ACMESharp.Vault.csproj", "{65B4C6E0-27A0-445C-ADAC-9D8308E2E4A6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ACMESharp.POSH", "src\lib\ACMESharp\ACMESharp\ACMESharp.POSH\ACMESharp.POSH.csproj", "{2F8D5934-B5A7-4983-8051-1F25882C7C30}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ACMESharp.PKI.Providers.BouncyCastle", "src\lib\ACMESharp\ACMESharp\ACMESharp.PKI.Providers.BouncyCastle\ACMESharp.PKI.Providers.BouncyCastle.csproj", "{473BFF7D-C7F0-471D-B7A3-19AD9ADFDBA9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,8 +41,30 @@ Global
 		{DA0CCD9F-8CBD-4471-93E0-53BCFB6CA25E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DA0CCD9F-8CBD-4471-93E0-53BCFB6CA25E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA0CCD9F-8CBD-4471-93E0-53BCFB6CA25E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D551234B-0A8D-4DEE-8178-A81998DF0EDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D551234B-0A8D-4DEE-8178-A81998DF0EDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D551234B-0A8D-4DEE-8178-A81998DF0EDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D551234B-0A8D-4DEE-8178-A81998DF0EDB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65B4C6E0-27A0-445C-ADAC-9D8308E2E4A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65B4C6E0-27A0-445C-ADAC-9D8308E2E4A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65B4C6E0-27A0-445C-ADAC-9D8308E2E4A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65B4C6E0-27A0-445C-ADAC-9D8308E2E4A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F8D5934-B5A7-4983-8051-1F25882C7C30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F8D5934-B5A7-4983-8051-1F25882C7C30}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F8D5934-B5A7-4983-8051-1F25882C7C30}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F8D5934-B5A7-4983-8051-1F25882C7C30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{473BFF7D-C7F0-471D-B7A3-19AD9ADFDBA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{473BFF7D-C7F0-471D-B7A3-19AD9ADFDBA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{473BFF7D-C7F0-471D-B7A3-19AD9ADFDBA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{473BFF7D-C7F0-471D-B7A3-19AD9ADFDBA9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D551234B-0A8D-4DEE-8178-A81998DF0EDB} = {B79FDD1F-064E-48A2-9D94-C69947CF7EB4}
+		{65B4C6E0-27A0-445C-ADAC-9D8308E2E4A6} = {B79FDD1F-064E-48A2-9D94-C69947CF7EB4}
+		{2F8D5934-B5A7-4983-8051-1F25882C7C30} = {B79FDD1F-064E-48A2-9D94-C69947CF7EB4}
+		{473BFF7D-C7F0-471D-B7A3-19AD9ADFDBA9} = {B79FDD1F-064E-48A2-9D94-C69947CF7EB4}
 	EndGlobalSection
 EndGlobal

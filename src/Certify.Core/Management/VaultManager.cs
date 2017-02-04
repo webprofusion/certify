@@ -43,9 +43,6 @@ namespace Certify
 
         public bool InitVault(bool staging = true)
         {
-            //System.IO.Directory.CreateDirectory(this.vaultFolderPath);
-            //this.powershellManager.SetWorkingDirectory(this.vaultFolderPath);
-
             string apiURI = InitializeVault.WELL_KNOWN_BASE_SERVICES[InitializeVault.WELL_KNOWN_LESTAGE];
             if (!staging)
             {
@@ -55,6 +52,7 @@ namespace Certify
             powershellManager.InitializeVault(apiURI);
 
             this.vaultFolderPath = GetVaultPath();
+
             //create default manual http provider (challenge/response by placing answer in well known location on website for server to fetch);
             //powershellManager.NewProviderConfig("Manual", "manualHttpProvider");
             return true;
@@ -74,15 +72,10 @@ namespace Certify
             this.InitVault(staging: false);
 #endif
             ReloadVaultConfig();
-            /*
-            if (System.IO.Directory.Exists(vaultFolderPath))
-            {
-                this.ReloadVaultConfig();
-                powershellManager = new PowershellManager(vaultFolderPath, this.ActionLogs);
-            }
-            else
-            {
-            }*/
+
+            //register default PKI provider
+            //ACMESharp.PKI.CertificateProvider.RegisterProvider<ACMESharp.PKI.Providers.OpenSslLibProvider>();
+            ACMESharp.PKI.CertificateProvider.RegisterProvider<ACMESharp.PKI.Providers.BouncyCastleProvider>();
         }
 
         public VaultInfo LoadVaultFromFile()
@@ -93,24 +86,6 @@ namespace Certify
                 var v = vlt.LoadVault();
                 return v;
             }
-            /*LocalDiskVault.EntityMeta<VaultConfig> vaultDetails = null;
-            if (File.Exists(path))
-            {
-                using (var s = new FileStream(path, FileMode.Open))
-                {
-                    vaultDetails = JsonHelper.Load<FileVaultProvider.EntityMeta<VaultConfig>>(s);
-                }
-            }
-
-            if (vaultDetails != null)
-            {
-                return vaultDetails.Entity;
-            }
-            else
-            {
-                return null;
-            }
-            */
         }
 
         public VaultInfo GetVaultConfig()
@@ -400,13 +375,10 @@ namespace Certify
         public string CreateCertificate(string domainAlias)
         {
             var certRef = "cert_" + domainAlias;
-            //New-ACMECertificate -Identifier dns1 -Alias cert1 -Generate
 
             powershellManager.NewCertificate(domainAlias, certRef);
 
             ReloadVaultConfig();
-
-            //return certRef;
 
             try
             {
@@ -445,7 +417,6 @@ namespace Certify
                 this.ReloadVaultConfig();
             }
 
-            //var cert = powershellManager.GetCertificateByRef(reference);
             if (vaultConfig.Certificates != null)
             {
                 var cert = vaultConfig.Certificates.Values.FirstOrDefault(c => c.Alias == reference);
@@ -470,14 +441,7 @@ namespace Certify
 
         public PendingAuthorization BeginRegistrationAndValidation(CertRequestConfig requestConfig, string identifierAlias)
         {
-            /*
-            //need to manipulate file created above to set file path or request key sshould be written too.
-
-            */
-            //perform domain cert requests
-
             string domain = requestConfig.Domain;
-            // powershellManager.SetWorkingDirectory(this.vaultFolderPath);
 
             if (GetIdentifier(identifierAlias) == null)
             {
@@ -492,65 +456,75 @@ namespace Certify
             /*
             //config file now has a temp path to write to, begin challenge (writes to temp file with challenge content)
             */
-            var ccrResult = powershellManager.CompleteChallenge(identifier.Alias, regenerate: true);
-
-            if (ccrResult.IsOK)
+            if (identifier.Authorization.IsPending())
             {
-                bool extensionlessConfigOK = false;
-                //get challenge info
-                ReloadVaultConfig();
-                identifier = GetIdentifier(identifierAlias);
-                var challengeInfo = identifier.Challenges.FirstOrDefault(c => c.Value.Type == "http-01").Value;
+                var ccrResult = powershellManager.CompleteChallenge(identifier.Alias, regenerate: true);
 
-                //if copying the file for the user, attempt that now
-                if (challengeInfo != null && requestConfig.PerformChallengeFileCopy)
+                if (ccrResult.IsOK)
                 {
-                    var httpChallenge = (ACMESharp.ACME.HttpChallenge)challengeInfo.Challenge;
-                    //copy temp file to path challenge expects in web folder
-                    var destFile = Path.Combine(requestConfig.WebsiteRootPath, httpChallenge.FilePath);
-                    var destPath = Path.GetDirectoryName(destFile);
-                    if (!Directory.Exists(destPath))
+                    bool extensionlessConfigOK = false;
+                    //get challenge info
+                    ReloadVaultConfig();
+                    identifier = GetIdentifier(identifierAlias);
+                    var challengeInfo = identifier.Challenges.FirstOrDefault(c => c.Value.Type == "http-01").Value;
+
+                    //if copying the file for the user, attempt that now
+                    if (challengeInfo != null && requestConfig.PerformChallengeFileCopy)
                     {
-                        Directory.CreateDirectory(destPath);
+                        var httpChallenge = (ACMESharp.ACME.HttpChallenge)challengeInfo.Challenge;
+                        //copy temp file to path challenge expects in web folder
+                        var destFile = Path.Combine(requestConfig.WebsiteRootPath, httpChallenge.FilePath);
+                        var destPath = Path.GetDirectoryName(destFile);
+                        if (!Directory.Exists(destPath))
+                        {
+                            Directory.CreateDirectory(destPath);
+                        }
+
+                        //copy challenge response to web folder /.well-known/acme-challenge
+                        System.IO.File.WriteAllText(destFile, httpChallenge.FileContent);
+
+                        var wellknownContentPath = httpChallenge.FilePath.Substring(0, httpChallenge.FilePath.LastIndexOf("/"));
+                        var testFilePath = Path.Combine(requestConfig.WebsiteRootPath, wellknownContentPath + "//configcheck");
+                        System.IO.File.WriteAllText(testFilePath, "Extensionless File Config Test - OK");
+
+                        //create a web.config for extensionless files, then test it (make a request for the extensionless configcheck file over http)
+                        string webConfigContent = Properties.Resources.IISWebConfig;
+                        if (!File.Exists(destPath + "\\web.config"))
+                        {
+                            System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
+                        }
+
+                        if (CheckURL("http://" + domain + "/" + wellknownContentPath + "/configcheck"))
+                        {
+                            extensionlessConfigOK = true;
+                        }
+
+                        if (!extensionlessConfigOK)
+                        {
+                            //if first attempt at config failed, try an alternative config
+                            webConfigContent = Properties.Resources.IISWebConfigAlt;
+
+                            System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
+                        }
+
+                        if (CheckURL("http://" + domain + "/" + wellknownContentPath + "/configcheck"))
+                        {
+                            //ready to complete challenge
+                            extensionlessConfigOK = true;
+                        }
                     }
 
-                    //copy challenge response to web folder /.well-known/acme-challenge
-                    System.IO.File.WriteAllText(destFile, httpChallenge.FileContent);
-
-                    var wellknownContentPath = httpChallenge.FilePath.Substring(0, httpChallenge.FilePath.LastIndexOf("/"));
-                    var testFilePath = Path.Combine(requestConfig.WebsiteRootPath, wellknownContentPath + "//configcheck");
-                    System.IO.File.WriteAllText(testFilePath, "Extensionless File Config Test - OK");
-
-                    //create a web.config for extensionless files
-                    string webConfigContent = Properties.Resources.IISWebConfig;
-                    if (!File.Exists(destPath + "\\web.config"))
-                    {
-                        System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
-                    }
-
-                    if (CheckURL("http://" + domain + "/" + wellknownContentPath + "/configcheck"))
-                    {
-                        extensionlessConfigOK = true;
-                    }
-
-                    if (!extensionlessConfigOK)
-                    {
-                        webConfigContent = Properties.Resources.IISWebConfigAlt;
-
-                        System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
-                    }
-
-                    if (CheckURL("http://" + domain + "/" + wellknownContentPath + "/configcheck"))
-                    {
-                        extensionlessConfigOK = true;
-                    }
-                    //ready to complete challenge
+                    return new PendingAuthorization() { Challenge = challengeInfo, Identifier = identifier, TempFilePath = "", ExtensionlessConfigCheckedOK = extensionlessConfigOK };
                 }
-                return new PendingAuthorization() { Challenge = challengeInfo, Identifier = identifier, TempFilePath = "", ExtensionlessConfigCheckedOK = extensionlessConfigOK };
+                else
+                {
+                    return null;
+                }
             }
             else
             {
-                return null;
+                //identifier is already valid (previously authorized)
+                return new PendingAuthorization() { Challenge = null, Identifier = identifier, TempFilePath = "", ExtensionlessConfigCheckedOK = false };
             }
         }
 

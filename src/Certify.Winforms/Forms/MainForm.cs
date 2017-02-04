@@ -145,6 +145,7 @@ namespace Certify
                 }
 
                 mainNode.Nodes.Add(domainsNode);
+                domainsNode.Expand();
             }
 
             if (vaultConfig.Registrations != null)
@@ -167,12 +168,20 @@ namespace Certify
                 }
 
                 mainNode.Nodes.Add(contactsNode);
+
+                contactsNode.Expand();
             }
 
             if (mainNode.Nodes.Count == 0)
             {
                 mainNode.Nodes.Add("(Empty)");
             }
+            else
+            {
+                mainNode.Expand();
+            }
+
+            // this.treeView1.ExpandAll();
         }
 
         private void ReloadVault()
@@ -196,32 +205,6 @@ namespace Certify
                 }
             }
         }
-
-        public void DataGridShowIdentifiers()
-        {
-            var identifiers = VaultManager.GetIdentifiers();
-
-            if (identifiers != null)
-            {
-                //refresh
-                /*this.SetupGridViewForIdentifiers();
-
-                var list = new BindingList<IdentifierInfo>(identifiers);
-                var source = new BindingSource(list, null);
-                this.dataGridView1.DataSource = source;
-                */
-            }
-        }
-
-        /*private void SetupGridViewForIdentifiers()
-        {
-            this.dataGridView1.DataSource = null;
-            this.dataGridView1.AutoGenerateColumns = false;
-
-            dataGridView1.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Alias", Name = "Alias" });
-            dataGridView1.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Label", Name = "Label" });
-            dataGridView1.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Dns", Name = "Dns" });
-        }*/
 
         private void ShowCertificateRequestDialog()
         {
@@ -274,22 +257,15 @@ namespace Certify
 
             PowershellManager manager = this.VaultManager.PowershellManager;
 
-            if (!manager.IsValidVersion())
-            {
-                if (MessageBox.Show("The version of Powershell installed is not high enough. Please install PowerShell version 3.0 or higher.", "PowerShell Version Too Low", MessageBoxButtons.OK, MessageBoxIcon.Error) == DialogResult.OK)
-                {
-                    Application.Exit();
-                }
-            }
-
-            if (!manager.IsAcmeSharpModuleInstalled())
+            /*if (!manager.IsAcmeSharpModuleInstalled())
             {
                 if (MessageBox.Show("The required PowerShell module 'ACMESharp' cannot be found. Please see https://www.powershellgallery.com/packages/ACMESharp/ or install from PowerShell command line as an administrator using: 'Install-Module -Name ACMESharp'",
                         "ACMESharp Missing", MessageBoxButtons.OK, MessageBoxIcon.Error) == DialogResult.OK)
                 {
-                    Application.Exit();
+                    // Application.Exit();
                 }
-            }
+            }*/
+
             if (!VaultManager.IsCompatiblePowershell())
             {
                 MessageBox.Show("This application requires PowerShell version 4.0 or higher. You can update it using the latest Windows Management Framework download from Microsoft.", Properties.Resources.AppName);
@@ -299,25 +275,10 @@ namespace Certify
 
             if (Properties.Settings.Default.ShowBetaWarning)
             {
-                MessageBox.Show(Properties.Resources.BetaWarning, Properties.Resources.AppName);
+                this.lblGettingStarted.Text += "\r\n\r\n" + Properties.Resources.BetaWarning;
             }
 
-            /*if (this.VaultManager.IsValidVaultPath(Properties.Settings.Default.VaultPath))
-            {
-                this.ReloadVault();
-            }*/
             var vaultInfo = VaultManager.GetVaultConfig();
-            /*if (vaultInfo == null)
-            {
-                LocateOrCreateVault(useDefaultCreationPath: false);
-
-                vaultInfo = VaultManager.GetVaultConfig();
-            }
-            else
-            {
-                lblGettingStarted.Text = Properties.Resources.GettingStartedExistingVault;
-            }
-            */
 
             if (vaultInfo != null && vaultInfo.Registrations == null)
             {

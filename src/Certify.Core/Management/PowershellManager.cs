@@ -26,13 +26,42 @@ namespace Certify
             this.ActionLogs = actionLogs;
 
             InitialSessionState initial = InitialSessionState.CreateDefault();
-            initial.ImportPSModule(new string[] { "ACMESharp" });
-            Runspace runspace = RunspaceFactory.CreateRunspace(initial);
-            runspace.Open();
+            string appDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            initial.ImportPSModule(new string[] { appDirectory + "ACMESharp.psd1", appDirectory + "ACMESharp-Providers\\ACMESharp-Providers.psd1" });
+            Runspace runspace = null;
+            try
+            {
+                //attempt to start PowerShell with ACMESharp module loaded, if execution policy is restricted this will fail
+                runspace = RunspaceFactory.CreateRunspace(initial);
+                runspace.Open();
+                ps = PowerShell.Create();
+                ps.Runspace = runspace;
+            }
+            catch (CmdletInvocationException exp)
+            {
+                //elevate execution policy and attempt to load ACMESharp Module again
+                //allow remote signed scripts to run (required for module loading)
+                runspace = RunspaceFactory.CreateRunspace(InitialSessionState.CreateDefault());
+                runspace.Open();
+                ps = PowerShell.Create();
+                ps.Runspace = runspace;
 
-            ps = PowerShell.Create();
-            ps.Runspace = runspace;
+                var cmd = ps.AddCommand("Set-ExecutionPolicy");
+                cmd.AddParameter("ExecutionPolicy", "RemoteSigned");
+                cmd.AddParameter("Force");
+                cmd.AddParameter("Scope", "Process");
 
+                var res = InvokeCurrentPSCommand();
+
+                ps.Commands.Clear();
+                ps.AddCommand("Import-Module").AddArgument(appDirectory + "ACMESharp");
+                ps.Invoke();
+            }
+
+            /*if (!IsAcmeSharpModuleInstalled())
+            {
+                System.Diagnostics.Debug.WriteLine("No ACMESharp Available");
+            }*/
             if (System.IO.Directory.Exists(workingDirectory))
             {
                 SetWorkingDirectory(workingDirectory);
@@ -294,6 +323,7 @@ namespace Certify
 
             var cmd = ps.Commands.AddCommand("Update-ACMECertificate");
             cmd.AddParameter("Ref", certAlias);
+
             var results = ps.Invoke();
 
             LogAction("Powershell: Update-ACMECertificate -Ref " + certAlias);

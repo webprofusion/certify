@@ -89,7 +89,7 @@
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(671, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(784, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -225,7 +225,7 @@
             this.toolStripButtonNewCertificate});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(671, 39);
+            this.toolStrip1.Size = new System.Drawing.Size(784, 39);
             this.toolStrip1.TabIndex = 11;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -257,7 +257,7 @@
             this.tabControl1.Location = new System.Drawing.Point(0, 63);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(671, 267);
+            this.tabControl1.Size = new System.Drawing.Size(784, 498);
             this.tabControl1.TabIndex = 12;
             // 
             // tabPage1
@@ -266,7 +266,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(663, 241);
+            this.tabPage1.Size = new System.Drawing.Size(776, 472);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Vault";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -287,8 +287,8 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.groupBoxVaultInfo);
             this.splitContainer1.Panel2.Controls.Add(this.panelItemInfo);
-            this.splitContainer1.Size = new System.Drawing.Size(655, 232);
-            this.splitContainer1.SplitterDistance = 194;
+            this.splitContainer1.Size = new System.Drawing.Size(768, 463);
+            this.splitContainer1.SplitterDistance = 227;
             this.splitContainer1.TabIndex = 15;
             // 
             // treeView1
@@ -299,7 +299,7 @@
             this.treeView1.Location = new System.Drawing.Point(0, 0);
             this.treeView1.Name = "treeView1";
             this.treeView1.SelectedImageIndex = 0;
-            this.treeView1.Size = new System.Drawing.Size(194, 232);
+            this.treeView1.Size = new System.Drawing.Size(227, 463);
             this.treeView1.TabIndex = 13;
             this.treeView1.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView1_AfterSelect);
             this.treeView1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.treeView1_MouseUp);
@@ -323,7 +323,7 @@
             this.groupBoxVaultInfo.Controls.Add(this.label1);
             this.groupBoxVaultInfo.Location = new System.Drawing.Point(3, 3);
             this.groupBoxVaultInfo.Name = "groupBoxVaultInfo";
-            this.groupBoxVaultInfo.Size = new System.Drawing.Size(453, 69);
+            this.groupBoxVaultInfo.Size = new System.Drawing.Size(533, 69);
             this.groupBoxVaultInfo.TabIndex = 16;
             this.groupBoxVaultInfo.TabStop = false;
             this.groupBoxVaultInfo.Text = "Vault Info";
@@ -372,7 +372,7 @@
             this.panelItemInfo.Controls.Add(this.lblGettingStarted);
             this.panelItemInfo.Location = new System.Drawing.Point(3, 78);
             this.panelItemInfo.Name = "panelItemInfo";
-            this.panelItemInfo.Size = new System.Drawing.Size(456, 149);
+            this.panelItemInfo.Size = new System.Drawing.Size(536, 380);
             this.panelItemInfo.TabIndex = 15;
             // 
             // lblGettingStarted
@@ -425,7 +425,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Window;
-            this.ClientSize = new System.Drawing.Size(671, 330);
+            this.ClientSize = new System.Drawing.Size(784, 561);
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.menuStrip1);
@@ -434,6 +434,7 @@
             this.MinimumSize = new System.Drawing.Size(680, 300);
             this.Name = "MainForm";
             this.Text = "Certify";
+            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.Shown += new System.EventHandler(this.MainForm_Shown);
