@@ -94,110 +94,74 @@ namespace Certify.Forms.Controls
             //check if domain already has an associated identifier
             var identifierAlias = VaultManager.ComputeIdentifierAlias(config.Domain);
 
-            //try alias or DNS name before creating a new identifier
-            var identifier = VaultManager.GetIdentifier(identifierAlias); //REMOVE, this will always be null
-            //if (identifier == null) identifier = VaultManager.GetIdentifier(config.Domain);
+            //begin authorixation process (register identifier, request authorization if not already given)
+            var authorization = VaultManager.BeginRegistrationAndValidation(config, identifierAlias);
 
-            /*if (identifier != null)
+            if (authorization != null)
             {
-                //domain already exists in vault
-                //check if has pending authorization challenges
-                if (identifier.Authorization != null && identifier.Authorization.Challenges != null)
+                if (authorization.Identifier.Authorization.IsPending())
                 {
-                    var challenge = identifier.Authorization.Challenges.FirstOrDefault(c => c.Type == "http-01");
-                    if (challenge != null)
-                    {
-                        if (challenge.Status != "invalid")
-                        {
-                            //update challenge status
-                            MessageBox.Show("An existing challenge was already in progress, status will now be updated. " + challenge.Token);
-                            VaultManager.UpdateIdentifierStatus(identifierAlias);
-
-                            identifier = VaultManager.GetIdentifier(identifierAlias
-                                , true);
-
-                            challenge = identifier.Authorization.Challenges.FirstOrDefault(c => c.Type == "http-01");
-                            if (challenge.Status == "valid")
-                            {
-                                certsApproved = true;
-                            }
-                        }
-                        else
-                        {
-                            MessageBox.Show("The existing challenge for this identifier failed. We will need to create a new one.");
-                            identifierAlias += "_" + Guid.NewGuid().ToString().Substring(0, 6);
-                        }
-                    }
-                }
-            }*/
-
-            if (!certsApproved)
-            {
-                var authorization = VaultManager.BeginRegistrationAndValidation(config, identifierAlias);
-
-                if (authorization != null)
-                {
+                    //if we attempted extensionless config checks, report any errors
                     if (!chkSkipConfigCheck.Checked && !authorization.ExtensionlessConfigCheckedOK)
                     {
                         MessageBox.Show("Automated checks for extensionless content failed. Authorizations will not be able to complete. Change the web.config in <your site>\\.well-known\\acme-challenge and ensure you can browse to http://<your site>/.well-known/acme-challenge/configcheck before proceeding.");
                         CloseParentForm();
                         return;
                     }
-                    if (authorization.Identifier.Authorization.IsPending())
+
+                    //at this point we can either get the user to manually copy the file to web site folder structure
+                    //if file has already been copied we can go ahead and ask the server to verify it
+
+                    //ask server to check our challenge answer is present and correct
+                    VaultManager.SubmitChallenge(authorization.Identifier.Alias);
+
+                    //give LE time to check our challenge answer stored on our server
+                    Thread.Sleep(2000);
+
+                    VaultManager.UpdateIdentifierStatus(authorization.Identifier.Alias);
+                    VaultManager.ReloadVaultConfig();
+
+                    //check status of the challenge
+                    var updatedIdentifier = VaultManager.GetIdentifier(authorization.Identifier.Alias);
+
+                    var challenge = updatedIdentifier.Authorization.Challenges.FirstOrDefault(c => c.Type == "http-01");
+
+                    //if all OK, we will be ready to fetch our certificate
+                    if (challenge?.Status == "valid")
                     {
-                        //at this point we can either get the user to manually copy the file to web site folder structure
-                        //if file has already been copied we can go ahead and ask the server to verify it
-
-                        //ask server to check our challenge answer is present and correct
-                        VaultManager.SubmitChallenge(authorization.Identifier.Alias);
-
-                        //give LE time to check our challenge answer stored on our server
-                        Thread.Sleep(2000);
-
-                        VaultManager.UpdateIdentifierStatus(authorization.Identifier.Alias);
-                        VaultManager.ReloadVaultConfig();
-
-                        //check status of the challenge
-                        var updatedIdentifier = VaultManager.GetIdentifier(authorization.Identifier.Alias);
-
-                        var challenge = updatedIdentifier.Authorization.Challenges.FirstOrDefault(c => c.Type == "http-01");
-
-                        //if all OK, we will be ready to fetch our certificate
-                        if (challenge?.Status == "valid")
-                        {
-                            certsApproved = true;
-                        }
-                        else
-                        {
-                            if (challenge != null)
-                            {
-                                MessageBox.Show("Challenge not yet completed. Check that http://" + config.Domain + "/" + challenge.ToString() + " path/file is present and accessible in your web browser.");
-                            }
-                            else
-                            {
-                                if (challenge.Status == "invalid")
-                                {
-                                    MessageBox.Show("Challenge failed to complete. Check that http://" + config.Domain + "/" + challenge.ToString() + " path/file is present and accessible in your web browser. You may require extensionless file type mappings.");
-                                    CloseParentForm();
-                                    return;
-                                }
-                            }
-                        }
+                        certsApproved = true;
                     }
                     else
                     {
-                        //already valid, challenge not required
-                        certsApproved = true;
+                        if (challenge != null)
+                        {
+                            MessageBox.Show("Challenge not yet completed. Check that http://" + config.Domain + "/" + challenge.ToString() + " path/file is present and accessible in your web browser.");
+                        }
+                        else
+                        {
+                            if (challenge.Status == "invalid")
+                            {
+                                MessageBox.Show("Challenge failed to complete. Check that http://" + config.Domain + "/" + challenge.ToString() + " path/file is present and accessible in your web browser. You may require extensionless file type mappings.");
+                                CloseParentForm();
+                                return;
+                            }
+                        }
                     }
                 }
                 else
                 {
-                    MessageBox.Show("Could not begin authorization. Check Logs. Ensure the domain being authorized is whitelisted with LetsEncrypt service.");
+                    //already valid, challenge not required
+                    certsApproved = true;
                 }
+            }
+            else
+            {
+                MessageBox.Show("Could not begin authorization. Check Logs. Ensure the domain being authorized is whitelisted with LetsEncrypt service.");
             }
 
             //create certs for current authorization
             string certRef = null;
+            var identifier = authorization.Identifier;
             //if (certsApproved)
             {
                 var v = VaultManager.GetVaultConfig();

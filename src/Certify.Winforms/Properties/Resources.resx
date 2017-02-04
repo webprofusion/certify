@@ -150,7 +150,7 @@ This software uses the following Open Source software (or significant portions o
     <value>Get Started: Browse the Vault on the left to see current certificate information.</value>
   </data>
   <data name="ReleaseDate" xml:space="preserve">
-    <value>20170131.Alpha11</value>
+    <value>20170204.Alpha12</value>
   </data>
   <data name="BetaWarning" xml:space="preserve">
     <value>Warning: This software is a pre-release version for testing and feedback purposes. You should expect bugs. Do not rely on this software for important production sites.</value>

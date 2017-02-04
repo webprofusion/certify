@@ -3,10 +3,10 @@
 
 [Setup]
 AppName=Certify
-AppVersion=0.9.91
+AppVersion=0.9.92
 AppPublisher=Webprofusion Ltd
-AppPublisherURL=http://webprofusion.com
-AppUpdatesURL=http://certify.webprofusion.com/
+AppPublisherURL=https://webprofusion.com
+AppUpdatesURL=https://certify.webprofusion.com/
 DefaultDirName={pf}\Certify
 DefaultGroupName=Certify
 UninstallDisplayIcon={app}\Certify.exe
@@ -22,8 +22,9 @@ Type: files; Name: "{app}\ACME*.dll"
 
 [Files]
 Source: "..\src\Certify.WinForms\bin\Release\*"; DestDir: "{app}"; Excludes: "*.pdb,*.*xml, *.vshost.*"
-Source: "..\src\Certify.WinForms\bin\Release\x86\*"; DestDir: "{app}\x86\"; Excludes: "*.pdb,*.*xml, *.vshost.*"
-Source: "..\src\Certify.WinForms\bin\Release\x64\*"; DestDir: "{app}\x64\"; Excludes: "*.pdb,*.*xml, *.vshost.*"
+Source: "..\src\Certify.WinForms\bin\Release\ACMESharp-Providers\*"; DestDir: "{app}\ACMESharp-Providers\"; Excludes: "*.pdb,*.*xml, *.vshost.*"
+;Source: "..\src\Certify.WinForms\bin\Release\x86\*"; DestDir: "{app}\x86\"; Excludes: "*.pdb,*.*xml, *.vshost.*"
+;Source: "..\src\Certify.WinForms\bin\Release\x64\*"; DestDir: "{app}\x64\"; Excludes: "*.pdb,*.*xml, *.vshost.*"
 
 ;Source: "Readme.txt"; DestDir: "{app}"; Flags: isreadme
 
