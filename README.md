@@ -4,6 +4,8 @@ Home page for downloads and info : [http://certify.webprofusion.com/](http://cer
 
 Certify is an SSL Certificate Manager GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/), allowing you to generate and install free SSL certificates (with a 90 day expiry). Certify is a wrapper for the [ACMESharp PowerShell](https://github.com/ebekker/ACMESharp) scripts.
 
+![Certify Screenshot](https://certify.webprofusion.com/Content/images/screen2.png)
+
 
 ----------
 
@@ -15,7 +17,7 @@ Time spent on developing Certify is extremely limited. If you have a bug or feat
    2. Make your changes 
    3. Submit a pull request, detailing the problem being solved and testing steps/evidence
    
-If you cannot provide a fix for the problem yourself, please file an issue and describe the fault in great detail with exact steps to reproduce. General issues which cannot be easily reproduced are likely to be ignored, sorry!
+If you cannot provide a fix for the problem yourself, please file an issue and describe the fault with steps to reproduce. General issues which cannot be easily reproduced are likely to be ignored, sorry!
 
 ----------
 
