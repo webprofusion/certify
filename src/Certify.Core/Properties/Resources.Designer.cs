@@ -22,7 +22,7 @@ namespace Certify.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace Certify.Properties {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Certify.Properties.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace Certify.Properties {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace Certify.Properties {
         /// <summary>
         ///   Looks up a localized string similar to 63154103-66ba-4636-8c6b-7081084daa0e.
         /// </summary>
-        internal static string AIInstrumentationKey {
+        public static string AIInstrumentationKey {
             get {
                 return ResourceManager.GetString("AIInstrumentationKey", resourceCulture);
             }
@@ -72,7 +72,7 @@ namespace Certify.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Certify (Alpha Version).
         /// </summary>
-        internal static string AppName {
+        public static string AppName {
             get {
                 return ResourceManager.GetString("AppName", resourceCulture);
             }
@@ -81,7 +81,7 @@ namespace Certify.Properties {
         /// <summary>
         ///   Looks up a localized string similar to http://certify.webprofusion.com/downloads/version.json.
         /// </summary>
-        internal static string AppUpdateCheckURI {
+        public static string AppUpdateCheckURI {
             get {
                 return ResourceManager.GetString("AppUpdateCheckURI", resourceCulture);
             }
@@ -90,7 +90,7 @@ namespace Certify.Properties {
         /// <summary>
         ///   Looks up a localized string similar to http://certify.webprofusion.com.
         /// </summary>
-        internal static string AppWebsiteURL {
+        public static string AppWebsiteURL {
             get {
                 return ResourceManager.GetString("AppWebsiteURL", resourceCulture);
             }
@@ -99,7 +99,7 @@ namespace Certify.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Warning: This software is a pre-release version for testing and feedback purposes. You should expect bugs. Do not rely on this software for important production sites..
         /// </summary>
-        internal static string BetaWarning {
+        public static string BetaWarning {
             get {
                 return ResourceManager.GetString("BetaWarning", resourceCulture);
             }
@@ -112,7 +112,7 @@ namespace Certify.Properties {
         ///
         ///This software uses the following Open Source software (or significant portions [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string Credits {
+        public static string Credits {
             get {
                 return ResourceManager.GetString("Credits", resourceCulture);
             }
@@ -121,7 +121,7 @@ namespace Certify.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Get Started: Browse the Vault on the left to see current certificate information..
         /// </summary>
-        internal static string GettingStartedExistingVault {
+        public static string GettingStartedExistingVault {
             get {
                 return ResourceManager.GetString("GettingStartedExistingVault", resourceCulture);
             }
@@ -130,7 +130,7 @@ namespace Certify.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
-        internal static System.Drawing.Icon icon {
+        public static System.Drawing.Icon icon {
             get {
                 object obj = ResourceManager.GetObject("icon", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
@@ -150,9 +150,32 @@ namespace Certify.Properties {
         ///      &lt;clear /&gt;
         ///    &lt;add name=&quot;StaticFile&quot; path=&quot;*&quot; verb=&quot;*&quot; type=&quot;&quot; modules=&quot;StaticFileModule,DefaultDocumentModule,DirectoryListingModule&quot; scriptProcessor=&quot;&quot; resourceType=&quot;Either&quot; requireAccess=&quot;Read&quot; allowPathInfo=&quot;false&quot; preCondition=&quot;&quot; response [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string IISWebConfig {
+        public static string IISWebConfig {
             get {
                 return ResourceManager.GetString("IISWebConfig", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+        ///
+        ///&lt;configuration&gt;
+        ///  &lt;system.webServer&gt;
+        ///    &lt;validation validateIntegratedModeConfiguration=&quot;false&quot; /&gt;
+        ///    &lt;staticContent&gt;
+        ///      &lt;mimeMap fileExtension=&quot;.&quot; mimeType=&quot;text/json&quot; /&gt;
+        ///    &lt;/staticContent&gt;
+        ///  &lt;/system.webServer&gt;
+        ///  &lt;system.web&gt;
+        ///    &lt;authorization&gt;
+        ///      &lt;allow users=&quot;*&quot; /&gt;
+        ///    &lt;/authorization&gt;
+        ///  &lt;/system.web&gt;
+        ///&lt;/configuration&gt;.
+        /// </summary>
+        public static string IISWebConfigAlt {
+            get {
+                return ResourceManager.GetString("IISWebConfigAlt", resourceCulture);
             }
         }
         
@@ -169,25 +192,25 @@ namespace Certify.Properties {
         ///      &lt;clear /&gt;
         ///    &lt;add name=&quot;StaticFile&quot; path=&quot;*&quot; verb=&quot;*&quot; type=&quot;&quot; modules=&quot;StaticFileModule,DefaultDocumentModule,DirectoryListingModule&quot; scriptProcessor=&quot;&quot; resourceType=&quot;Either&quot; requireAccess=&quot;Read&quot; allowPathInfo=&quot;false&quot; preCondition=&quot;&quot; respons [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string IISWebConfigAlt {
+        public static string IISWebConfigAlt2 {
             get {
-                return ResourceManager.GetString("IISWebConfigAlt", resourceCulture);
+                return ResourceManager.GetString("IISWebConfigAlt2", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Certify - SSL Certificate Manager (Alpha Version).
         /// </summary>
-        internal static string LongAppName {
+        public static string LongAppName {
             get {
                 return ResourceManager.GetString("LongAppName", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 20170204.Alpha12.
+        ///   Looks up a localized string similar to 20170205.Alpha13.
         /// </summary>
-        internal static string ReleaseDate {
+        public static string ReleaseDate {
             get {
                 return ResourceManager.GetString("ReleaseDate", resourceCulture);
             }
@@ -196,7 +219,7 @@ namespace Certify.Properties {
         /// <summary>
         ///   Looks up a localized string similar to You are using the latest version..
         /// </summary>
-        internal static string UpdateCheckLatestVersion {
+        public static string UpdateCheckLatestVersion {
             get {
                 return ResourceManager.GetString("UpdateCheckLatestVersion", resourceCulture);
             }
