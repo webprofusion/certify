@@ -3,7 +3,7 @@
 
 [Setup]
 AppName=Certify
-AppVersion=0.9.93
+AppVersion=0.9.94
 AppPublisher=Webprofusion Ltd
 AppPublisherURL=https://webprofusion.com
 AppUpdatesURL=https://certify.webprofusion.com/

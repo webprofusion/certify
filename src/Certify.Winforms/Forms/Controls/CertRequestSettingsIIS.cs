@@ -25,7 +25,7 @@ namespace Certify.Forms.Controls
         private void PopulateWebsitesFromIIS()
         {
             var iisManager = new IISManager();
-            var siteList = iisManager.GetSiteList(includeOnlyStartedSites: true);
+            var siteList = iisManager.GetSiteList(includeOnlyStartedSites: false);
             this.lstSites.Items.Clear();
             this.lstSites.DisplayMember = "Description";
             foreach (var s in siteList)
