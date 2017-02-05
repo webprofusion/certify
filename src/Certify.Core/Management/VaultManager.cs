@@ -78,6 +78,14 @@ namespace Certify
             ACMESharp.PKI.CertificateProvider.RegisterProvider<ACMESharp.PKI.Providers.BouncyCastleProvider>();
         }
 
+        private void LogAction(string command, string result = null)
+        {
+            if (this.ActionLogs != null)
+            {
+                this.ActionLogs.Add(new ActionLogItem { Command = command, Result = result, DateTime = DateTime.Now });
+            }
+        }
+
         public VaultInfo LoadVaultFromFile()
         {
             using (var vlt = ACMESharp.POSH.Util.VaultHelper.GetVault())
@@ -463,6 +471,8 @@ namespace Certify
                 if (ccrResult.IsOK)
                 {
                     bool extensionlessConfigOK = false;
+                    bool checkViaProxy = true;
+
                     //get challenge info
                     ReloadVaultConfig();
                     identifier = GetIdentifier(identifierAlias);
@@ -472,6 +482,9 @@ namespace Certify
                     if (challengeInfo != null && requestConfig.PerformChallengeFileCopy)
                     {
                         var httpChallenge = (ACMESharp.ACME.HttpChallenge)challengeInfo.Challenge;
+                        this.LogAction("Preparing challenge response for LetsEncrypt server to check at: " + httpChallenge.FileUrl);
+                        this.LogAction("If the challenge response file is not accessible at this exact URL the validation will fail and a certificate will not be issued.");
+
                         //copy temp file to path challenge expects in web folder
                         var destFile = Path.Combine(requestConfig.WebsiteRootPath, httpChallenge.FilePath);
                         var destPath = Path.GetDirectoryName(destFile);
@@ -489,28 +502,54 @@ namespace Certify
 
                         //create a web.config for extensionless files, then test it (make a request for the extensionless configcheck file over http)
                         string webConfigContent = Properties.Resources.IISWebConfig;
+
                         if (!File.Exists(destPath + "\\web.config"))
                         {
+                            //no existing config, attempt auto config and perform test
                             System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
+                            if (requestConfig.PerformExtensionlessConfigChecks)
+                            {
+                                if (CheckURL("http://" + domain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
+                                {
+                                    extensionlessConfigOK = true;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            //web config already exists, don't overwrite it, just test it
+
+                            if (requestConfig.PerformExtensionlessConfigChecks)
+                            {
+                                if (CheckURL("http://" + domain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
+                                {
+                                    extensionlessConfigOK = true;
+                                }
+                                if (!extensionlessConfigOK && requestConfig.PerformExtensionlessAutoConfig)
+                                {
+                                    //didn't work, try our default config
+                                    System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
+
+                                    if (CheckURL("http://" + domain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
+                                    {
+                                        extensionlessConfigOK = true;
+                                    }
+                                }
+                            }
                         }
 
-                        if (CheckURL("http://" + domain + "/" + wellknownContentPath + "/configcheck"))
+                        if (!extensionlessConfigOK && requestConfig.PerformExtensionlessAutoConfig)
                         {
-                            extensionlessConfigOK = true;
-                        }
-
-                        if (!extensionlessConfigOK)
-                        {
-                            //if first attempt at config failed, try an alternative config
+                            //if first attempt(s) at config failed, try an alternative config
                             webConfigContent = Properties.Resources.IISWebConfigAlt;
 
                             System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
-                        }
 
-                        if (CheckURL("http://" + domain + "/" + wellknownContentPath + "/configcheck"))
-                        {
-                            //ready to complete challenge
-                            extensionlessConfigOK = true;
+                            if (CheckURL("http://" + domain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
+                            {
+                                //ready to complete challenge
+                                extensionlessConfigOK = true;
+                            }
                         }
                     }
 
@@ -555,27 +594,64 @@ namespace Certify
             return domainAlias;
         }
 
-        private bool CheckURL(string url)
+        private bool CheckURL(string url, bool useProxyAPI)
         {
+            var checkUrl = url + "";
+            if (useProxyAPI)
+            {
+                url = "https://certify.webprofusion.com/api/testurlaccess?url=" + url;
+            }
             //check http request to test path works
+            bool checkSuccess = false;
             try
             {
                 WebRequest request = WebRequest.Create(url);
                 var response = (HttpWebResponse)request.GetResponse();
-                if ((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
+
+                //if checking via proxy, examine result
+                if (useProxyAPI)
                 {
-                    return true;
+                    if ((int)response.StatusCode >= 200)
+                    {
+                        var encoding = ASCIIEncoding.UTF8;
+                        using (var reader = new System.IO.StreamReader(response.GetResponseStream(), encoding))
+                        {
+                            string jsonText = reader.ReadToEnd();
+                            this.LogAction("URL Check Result: " + jsonText);
+                            var result = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.API.URLCheckResult>(jsonText);
+                            if (result.IsAccessible == true)
+                            {
+                                checkSuccess = true;
+                            }
+                            else
+                            {
+                                checkSuccess = false;
+                            }
+                        }
+                    }
                 }
                 else
                 {
-                    return false;
+                    //not checking via proxy, base result on status code
+                    if ((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
+                    {
+                        checkSuccess = true;
+                    }
+                }
+
+                if (checkSuccess == false && useProxyAPI == true)
+                {
+                    //request failed using proxy api, request again using local http
+                    checkSuccess = CheckURL(checkUrl, false);
                 }
             }
             catch (Exception)
             {
                 System.Diagnostics.Debug.WriteLine("Failed to check url for access");
-                return false;
+                checkSuccess = false;
             }
+
+            return checkSuccess;
         }
 
         public void SubmitChallenge(string alias, string challengeType = "http-01")

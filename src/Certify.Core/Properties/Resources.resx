@@ -150,7 +150,7 @@ This software uses the following Open Source software (or significant portions o
     <value>Get Started: Browse the Vault on the left to see current certificate information.</value>
   </data>
   <data name="ReleaseDate" xml:space="preserve">
-    <value>20170204.Alpha12</value>
+    <value>20170205.Alpha13</value>
   </data>
   <data name="BetaWarning" xml:space="preserve">
     <value>Warning: This software is a pre-release version for testing and feedback purposes. You should expect bugs. Do not rely on this software for important production sites.</value>
@@ -180,6 +180,23 @@ This software uses the following Open Source software (or significant portions o
     <value>63154103-66ba-4636-8c6b-7081084daa0e</value>
   </data>
   <data name="IISWebConfigAlt" xml:space="preserve">
+    <value>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;configuration&gt;
+  &lt;system.webServer&gt;
+    &lt;validation validateIntegratedModeConfiguration="false" /&gt;
+    &lt;staticContent&gt;
+      &lt;mimeMap fileExtension="." mimeType="text/json" /&gt;
+    &lt;/staticContent&gt;
+  &lt;/system.webServer&gt;
+  &lt;system.web&gt;
+    &lt;authorization&gt;
+      &lt;allow users="*" /&gt;
+    &lt;/authorization&gt;
+  &lt;/system.web&gt;
+&lt;/configuration&gt;</value>
+  </data>
+  <data name="IISWebConfigAlt2" xml:space="preserve">
     <value>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 
 &lt;configuration&gt;
