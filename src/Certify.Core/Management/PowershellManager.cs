@@ -68,24 +68,23 @@ namespace Certify
             }
         }
 
-        public int GetPowershellVersion()
+        public static int GetPowershellVersion()
         {
-            int powershellVersion = 0;
-            string regval = Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PowerShell\3\PowerShellEngine", "PowerShellVersion", null).ToString();
-            if (regval != null)
+            try
             {
-                string[] ver = regval.Split('.');
-                powershellVersion = int.Parse(ver[0]);
+                int powershellVersion = 0;
+                string regval = Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PowerShell\3\PowerShellEngine", "PowerShellVersion", null).ToString();
+                if (regval != null)
+                {
+                    string[] ver = regval.Split('.');
+                    powershellVersion = int.Parse(ver[0]);
+                }
+                return powershellVersion;
+            } catch( Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.ToString());
+                return 0;
             }
-            return powershellVersion;
-        }
-
-        public bool IsValidVersion()
-        {
-            var version = GetPowershellVersion();
-
-            //If PS Version 1, 2 or doesn't exist then return false.
-            return !version.Equals(1) && !version.Equals(2) && !version.Equals(0);
         }
 
         public bool IsAcmeSharpModuleInstalled()
@@ -119,7 +118,7 @@ namespace Certify
 
         #region API
 
-        private APIResult InvokeCurrentPSCommand()
+        private APIResult InvokeCurrentPSCommand(bool discardErrors=false)
         {
             try
             {
@@ -137,7 +136,12 @@ namespace Certify
             }
             catch (Exception exp)
             {
-                LogAction("[Error]: " + exp.ToString());
+                if (!discardErrors)
+                {
+
+
+                    LogAction("[Error]: " + exp.ToString());
+                }
 
                 return new APIResult { IsOK = false, Message = exp.ToString(), Result = exp };
             }
@@ -152,7 +156,7 @@ namespace Certify
 
             LogAction("Powershell: Initialize-ACMEVault -BaseURI " + baseURI);
 
-            return InvokeCurrentPSCommand();
+            return InvokeCurrentPSCommand(discardErrors:true);
         }
 
         public APIResult NewRegistration(string contacts)

@@ -569,16 +569,6 @@ namespace Certify
 
         #endregion Certificates
 
-        public bool IsCompatiblePowershell()
-        {
-            int version = powershellManager.GetPowershellVersion();
-            if (version < 4)
-            {
-                return false;
-            }
-            return true;
-        }
-
         public string ComputeIdentifierAlias(string domain)
         {
             return "ident" + Guid.NewGuid().ToString().Substring(0, 8).Replace("-", "");

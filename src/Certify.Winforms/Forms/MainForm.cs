@@ -253,6 +253,15 @@ namespace Certify
             InitAI();
             TrackPageView(nameof(MainForm));
 
+            var powershellVersion = PowershellManager.GetPowershellVersion();
+            if (powershellVersion < 4)
+            {
+                MessageBox.Show("This application requires PowerShell version 4.0 or higher. You can update it using the latest Windows Management Framework download from Microsoft.", Properties.Resources.AppName);
+
+                Application.Exit();
+                return;
+            }
+
             this.VaultManager = new VaultManager(Properties.Settings.Default.VaultPath, LocalDiskVault.VAULT);
 
             PowershellManager manager = this.VaultManager.PowershellManager;
@@ -265,13 +274,6 @@ namespace Certify
                     // Application.Exit();
                 }
             }*/
-
-            if (!VaultManager.IsCompatiblePowershell())
-            {
-                MessageBox.Show("This application requires PowerShell version 4.0 or higher. You can update it using the latest Windows Management Framework download from Microsoft.", Properties.Resources.AppName);
-                Application.Exit();
-                return;
-            }
 
             if (Properties.Settings.Default.ShowBetaWarning)
             {
