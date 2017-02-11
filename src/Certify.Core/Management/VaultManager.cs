@@ -569,19 +569,10 @@ namespace Certify
 
         #endregion Certificates
 
-        public bool IsCompatiblePowershell()
-        {
-            int version = powershellManager.GetPowershellVersion();
-            if (version < 4)
-            {
-                return false;
-            }
-            return true;
-        }
-
         public string ComputeIdentifierAlias(string domain)
         {
-            var domainAlias = domain.Replace(".", "_");
+            return "ident" + Guid.NewGuid().ToString().Substring(0, 8).Replace("-", "");
+            /*var domainAlias = domain.Replace(".", "_");
             domainAlias += long.Parse(DateTime.UtcNow.ToString("yyyyMMddHHmmss"));
 
             // Check if the first character in the domain is a digit, e.g. 1and1.com
@@ -591,7 +582,7 @@ namespace Certify
                 domainAlias = "alias_" + domainAlias;
             }
 
-            return domainAlias;
+            return domainAlias;*/
         }
 
         private bool CheckURL(string url, bool useProxyAPI)
