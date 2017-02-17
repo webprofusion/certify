@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,6 +30,8 @@ namespace Certify.CLI
 
             return 0;
         }
+
+        private readonly IdnMapping _idnMapping = new IdnMapping();
 
         private void PerformVaultCleanup()
         {
@@ -91,6 +94,9 @@ namespace Certify.CLI
 
         private bool PerformCertRequestAndIISBinding(string certDomain)
         {
+            // ACME service requires international domain names in ascii mode
+            certDomain = _idnMapping.GetAscii(certDomain);
+
             //create cert and binding it
 
             //Typical command sequence for a new certificate
