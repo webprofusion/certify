@@ -3,7 +3,6 @@ using ACMESharp.Vault.Providers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
@@ -18,8 +17,6 @@ namespace Certify
     {
         private PowerShell ps = null;
         private List<ActionLogItem> ActionLogs = null;
-
-        private readonly IdnMapping _idnMapping = new IdnMapping();
 
         public PowershellManager(string workingDirectory, List<ActionLogItem> actionLogs)
         {
@@ -80,7 +77,8 @@ namespace Certify
                     powershellVersion = int.Parse(ver[0]);
                 }
                 return powershellVersion;
-            } catch( Exception exp)
+            }
+            catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.ToString());
                 return 0;
@@ -118,7 +116,7 @@ namespace Certify
 
         #region API
 
-        private APIResult InvokeCurrentPSCommand(bool discardErrors=false)
+        private APIResult InvokeCurrentPSCommand(bool discardErrors = false)
         {
             try
             {
@@ -156,7 +154,7 @@ namespace Certify
 
             LogAction("Powershell: Initialize-ACMEVault -BaseURI " + baseURI);
 
-            return InvokeCurrentPSCommand(discardErrors:true);
+            return InvokeCurrentPSCommand(discardErrors: true);
         }
 
         public APIResult NewRegistration(string contacts)
@@ -196,9 +194,6 @@ namespace Certify
         public APIResult NewIdentifier(string dns, string alias, string label)
         {
             ps.Commands.Clear();
-
-            // ACME service requires international domain names in ascii mode
-            dns = _idnMapping.GetAscii(dns);
 
             var cmd = ps.Commands.AddCommand("New-ACMEIdentifier");
             cmd.AddParameter("Dns", dns);

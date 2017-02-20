@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using ACMESharp.Vault.Providers;
 using Certify.Management;
@@ -17,6 +12,8 @@ namespace Certify.Forms.Controls
 {
     public partial class CertRequestSettingsIIS : CertRequestBaseControl
     {
+        private readonly IdnMapping _idnMapping = new IdnMapping();
+
         public CertRequestSettingsIIS()
         {
             InitializeComponent();
@@ -85,7 +82,7 @@ namespace Certify.Forms.Controls
 
             CertRequestConfig config = new CertRequestConfig();
             var selectItem = (SiteBindingItem)lstSites.SelectedItem;
-            config.Domain = selectItem.Host;
+            config.Domain = _idnMapping.GetAscii(selectItem.Host); // ACME service requires international domain names in ascii mode
             config.PerformChallengeFileCopy = true;
             config.PerformExtensionlessConfigChecks = !chkSkipConfigCheck.Checked;
             config.PerformExtensionlessAutoConfig = true;
