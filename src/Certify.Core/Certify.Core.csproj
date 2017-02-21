@@ -109,6 +109,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Management\ACMEVaultManager.cs" />
     <Compile Include="Management\SiteManager.cs" />
     <Compile Include="Models\ActionLogItem.cs" />
     <Compile Include="Models\APIResponses.cs" />

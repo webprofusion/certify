@@ -17,9 +17,13 @@ namespace Certify.Forms.Controls
 {
     public partial class CertRequestSettingsIIS : CertRequestBaseControl
     {
+        private SiteManager siteManager;
         public CertRequestSettingsIIS()
         {
             InitializeComponent();
+
+            siteManager = new SiteManager(); //registry of sites we manage certificate requests for
+            siteManager.LoadSettings();
         }
 
         private void PopulateWebsitesFromIIS()
@@ -83,18 +87,31 @@ namespace Certify.Forms.Controls
             bool certsApproved = false;
             bool certsStored = false;
 
+          
             CertRequestConfig config = new CertRequestConfig();
-            var selectItem = (SiteBindingItem)lstSites.SelectedItem;
-            config.Domain = selectItem.Host;
+            var siteInfo = (SiteBindingItem)lstSites.SelectedItem;
+            config.Domain = siteInfo.Host;
             config.PerformChallengeFileCopy = true;
             config.PerformExtensionlessConfigChecks = !chkSkipConfigCheck.Checked;
             config.PerformExtensionlessAutoConfig = true;
-            config.WebsiteRootPath = Environment.ExpandEnvironmentVariables(selectItem.PhysicalPath);
+            config.WebsiteRootPath = Environment.ExpandEnvironmentVariables(siteInfo.PhysicalPath);
+
+            //determine if this site has an existing entry in Managed Sites, if so use that, otherwise start a new one
+            ManagedSite managedSite = siteManager.GetManagedSite(siteInfo.SiteId);
+            if (managedSite == null)
+            {
+                managedSite = new ManagedSite();
+                managedSite.SiteId = siteInfo.SiteId;
+                managedSite.IncludeInAutoRenew = chkIncludeInAutoRenew.Checked;
+            
+            }
 
             var vaultConfig = VaultManager.GetVaultConfig();
 
             //check if domain already has an associated identifier
             var identifierAlias = VaultManager.ComputeIdentifierAlias(config.Domain);
+
+            managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestStarted, Message = "Attempting Certificate Request (IIS)" });
 
             //begin authorixation process (register identifier, request authorization if not already given)
             var authorization = VaultManager.BeginRegistrationAndValidation(config, identifierAlias);
@@ -106,6 +123,9 @@ namespace Certify.Forms.Controls
                     //if we attempted extensionless config checks, report any errors
                     if (!chkSkipConfigCheck.Checked && !authorization.ExtensionlessConfigCheckedOK)
                     {
+                        managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertficateRequestFailed, Message = "Failed prerequisite configuration (IIS)" });
+                        siteManager.StoreSettings();
+
                         MessageBox.Show("Automated checks for extensionless content failed. Authorizations will not be able to complete. Change the web.config in <your site>\\.well-known\\acme-challenge and ensure you can browse to http://<your site>/.well-known/acme-challenge/configcheck before proceeding.");
                         CloseParentForm();
                         return;
@@ -143,6 +163,9 @@ namespace Certify.Forms.Controls
                         {
                             if (challenge.Status == "invalid")
                             {
+                                managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertficateRequestFailed, Message = "Failed prerequisite configuration (IIS)" });
+                                siteManager.StoreSettings();
+
                                 MessageBox.Show("Challenge failed to complete. Check that http://" + config.Domain + "/" + challenge.ToString() + " path/file is present and accessible in your web browser. You may require extensionless file type mappings.");
                                 CloseParentForm();
                                 return;
@@ -159,6 +182,8 @@ namespace Certify.Forms.Controls
             else
             {
                 MessageBox.Show("Could not begin authorization. Check Logs. Ensure the domain being authorized is whitelisted with LetsEncrypt service.");
+                managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertficateRequestFailed, Message = "Failed prerequisite configuration (IIS)" });
+                siteManager.StoreSettings();
             }
 
             //create certs for current authorization
@@ -245,6 +270,9 @@ namespace Certify.Forms.Controls
                             if (iisManager.InstallCertForDomain(identifier.Dns, pfxPath, cleanupCertStore: true, skipBindings: !chkAutoBindings.Checked))
                             {
                                 //all done
+                                managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestSuccessful, Message = "Completed certificate request and automated bindings update (IIS)" });
+                                siteManager.StoreSettings();
+
                                 MessageBox.Show("Certificate installed and SSL bindings updated for " + identifier.Dns, Properties.Resources.AppName);
                                 CloseParentForm();
                                 return;

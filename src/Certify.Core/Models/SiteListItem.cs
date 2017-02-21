@@ -33,14 +33,34 @@ namespace Certify.Models
         public PlannedActionType PlannedAction { get; set; }
     }
 
+    public enum LogItemType{
+        CertificateRequestStarted=50,
+        CertificateRequestSuccessful=100,
+        CertficateRequestFailed=101,
+        CertficateRequestAttentionRequired=110
+    }
+    public class ManagedSiteLogItem
+    {
+        public DateTime EventDate { get; set; }
+        public string Message { get; set; }
+        public LogItemType LogItemType { get; set; }
+    }
     public class ManagedSite
     {
         public string SiteId { get; set; }
         public string SiteName { get; set; }
         public string Server { get; set; }
+        public bool IncludeInAutoRenew { get; set; }
 
         public ManagedSiteType SiteType { get; set; }
         public List<ManagedSiteBinding> SiteBindings { get; set; }
+        public List<ManagedSiteLogItem> Logs { get; set; }
+
+        public void AppendLog(ManagedSiteLogItem logItem)
+        {
+            if (this.Logs == null) this.Logs = new List<ManagedSiteLogItem>();
+            this.Logs.Add(logItem);
+        }
     }
 
     public class SiteBindingItem

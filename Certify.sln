@@ -1,9 +1,10 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26206.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{B92D2D90-CB9F-4ED7-BA98-EA3E1E4F8C56}"
 	ProjectSection(SolutionItems) = preProject
+		CertificateProcess.md = CertificateProcess.md
 		README.md = README.md
 	EndProjectSection
 EndProject
