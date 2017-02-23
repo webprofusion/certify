@@ -100,8 +100,7 @@ namespace Certify.Management
 
         public Site GetSiteByDomain(string domain)
         {
-            //domain = _idnMapping.GetUnicode(domain);
-            var asciiDomain = _idnMapping.GetAscii(domain);
+            domain = _idnMapping.GetUnicode(domain);
             using (var iisManager = new ServerManager())
             {
                 var sites = GetSites(iisManager, false).ToList();
@@ -121,6 +120,8 @@ namespace Certify.Management
 
         public SiteBindingItem GetSiteBindingByDomain(string domain)
         {
+            domain = _idnMapping.GetUnicode(domain);
+
             var site = GetSiteByDomain(domain);
             if (site != null)
             {
