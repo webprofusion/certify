@@ -20,8 +20,7 @@ namespace Certify.CLI
                 ShowHelp();
 
                 var p = new Program();
-                p.PreviewAutoManage();
-                //p.PerformCertRequestAndIISBinding("test.domain.com");
+                //p.PreviewAutoManage();
                 //p.PerformVaultCleanup();
                 System.Console.ReadKey();
                 return 1;
@@ -89,7 +88,12 @@ namespace Certify.CLI
             siteManager.StoreSettings();
         }
 
-        private bool PerformCertRequestAndIISBinding(string certDomain)
+        private void PerformAutoRenew()
+        {
+            //go through list of items configured for auto renew, perform renewal and report the result
+        }
+
+        private bool PerformCertRequestAndIISBinding(string certDomain, string[] alternativeNames)
         {
             //create cert and binding it
 
@@ -108,16 +112,6 @@ namespace Certify.CLI
             // Update-ACMEIdentifier -Ref test7_examplesite_co_uk636213616564101276
             // Get-ACMECertificate -Ref = ac22dbfe - b75f - 4cac-9247-b40c1d9bf9eb -ExportPkcs12 C:\ProgramData\ACMESharp\sysVault\99-ASSET\ac22dbfe-b75f-4cac-9247-b40c1d9bf9eb-all.pfx -Overwrite
 
-            var vaultManager = new VaultManager(Properties.Settings.Default.VaultPath, LocalDiskVault.VAULT);
-
-            //init vault if not already created
-            vaultManager.InitVault(staging: true);
-
-            var certifyManager = vaultManager.PowershellManager;
-
-            //domain alias is used as an ID in both the vault and the LE server, it's specific to one authorization attempt and cannot be reused for renewal
-
-            var domainIdentifierAlias = vaultManager.ComputeIdentifierAlias(certDomain);
             //get info on existing IIS site we want to create/update SSL binding for
             IISManager iisManager = new IISManager();
             var iisSite = iisManager.GetSiteBindingByDomain(certDomain);
@@ -128,91 +122,40 @@ namespace Certify.CLI
                 WebsiteRootPath = Environment.ExpandEnvironmentVariables(iisSite.PhysicalPath)
             };
 
+            var certifyManager = new VaultManager(Properties.Settings.Default.VaultPath, LocalDiskVault.VAULT);
+            certifyManager.usePowershell = false;
+
+            //init vault if not already created
+            certifyManager.InitVault(staging: true);
+
+            //domain alias is used as an ID in both the vault and the LE server, it's specific to one authorization attempt and cannot be reused for renewal
+            var domainIdentifierAlias = certifyManager.ComputeIdentifierAlias(certDomain);
+
             //NOTE: to support a SAN certificate (multiple alternative domains on one site) the domain validation steps need to be repeat for each name:
 
             //register identifier with LE, get http challenge spec back
             //create challenge response answer file under site .well-known, auto configure web.config for extenstionless content, mark challenge prep completed
-            var authState = vaultManager.BeginRegistrationAndValidation(certConfig, domainIdentifierAlias);
+            var authState = certifyManager.BeginRegistrationAndValidation(certConfig, domainIdentifierAlias);
 
             //ask LE to check our answer to their authorization challenge (http), LE will then attempt to fetch our answer, if all accessible and correct (authorized) LE will then allow us to request a certificate
-            certifyManager.SubmitChallenge(domainIdentifierAlias, "http-01");
-
-            //
-            certifyManager.UpdateIdentifier(domainIdentifierAlias);
-            var identiferStatus = vaultManager.GetIdentifier(domainIdentifierAlias, true);
-            var attempts = 0;
-            var maxAttempts = 3;
-
-            while (identiferStatus.Authorization.Status == "pending" && attempts < maxAttempts)
+            if (authState.Identifier.Authorization.IsPending())
             {
-                System.Threading.Thread.Sleep(2000); //wait a couple of seconds before checking again
-                certifyManager.UpdateIdentifier(domainIdentifierAlias);
-                identiferStatus = vaultManager.GetIdentifier(domainIdentifierAlias, true);
-                attempts++;
+                //prepare IIS with answer for the LE challenege
+                certifyManager.PerformIISAutomatedChallengeResponse(certConfig, authState);
+
+                //ask LE to validate our challenge response
+                certifyManager.SubmitChallenge(domainIdentifierAlias, "http-01");
             }
 
-            if (identiferStatus.Authorization.Status != "valid")
+            //now check if LE has validated our challenge answer
+            bool validated = certifyManager.CompleteIdentifierValidationProcess(domainIdentifierAlias);
+
+            if (validated)
             {
-                //still pending or failed
-                System.Diagnostics.Debug.WriteLine("LE Authorization problem: " + identiferStatus.Authorization.Status);
-                return false;
-            }
-            else
-            {
-                //all good, we can request a certificate
-                //if authorizing a SAN we would need to repeat the above until all domains are valid, then we can request cert
-                var certAlias = "cert_" + domainIdentifierAlias;
-
-                //register cert placeholder in vault
-                certifyManager.NewCertificate(domainIdentifierAlias, certAlias, subjectAlternativeNameIdentifiers: null);
-
-                //ask LE to issue a certificate for our domain(s)
-                certifyManager.SubmitCertificate(certAlias);
-
-                //LE may now have issued a certificate, this process may not be immediate
-                var certDetails = vaultManager.GetCertificate(certAlias, reloadVaultConfig: true);
-                attempts = 0;
-                //cert not issued yet, wait and try again
-                while ((certDetails == null || String.IsNullOrEmpty(certDetails.IssuerSerialNumber)) && attempts < maxAttempts)
+                var certRequestResult = certifyManager.PerformCertificateRequestProcess(domainIdentifierAlias);
+                if (certRequestResult.IsSuccess)
                 {
-                    System.Threading.Thread.Sleep(2000); //wait a couple of seconds before checking again
-                    certifyManager.UpdateCertificate(certAlias);
-                    certDetails = vaultManager.GetCertificate(certAlias, reloadVaultConfig: true);
-                    attempts++;
-                }
-
-                if (certDetails != null && !String.IsNullOrEmpty(certDetails.IssuerSerialNumber))
-                {
-                    //we have an issued certificate, we can go ahead and install it as required
-                    System.Diagnostics.Debug.WriteLine("Received certificate issued by LE." + JsonConvert.SerializeObject(certDetails));
-
-                    //if using cert in IIS, we need to export the certificate PFX file, install it as a certificate and setup the site binding to map to this cert
-                    string certFolderPath = vaultManager.GetCertificateFilePath(certDetails.Id, LocalDiskVault.ASSET);
-                    string pfxFile = certAlias + "-all.pfx";
-                    string pfxPath = System.IO.Path.Combine(certFolderPath, pfxFile);
-
-                    //create folder to export PFX to, if required
-                    if (!System.IO.Directory.Exists(certFolderPath))
-                    {
-                        System.IO.Directory.CreateDirectory(certFolderPath);
-                    }
-
-                    //if file already exists we want to delet the old one
-                    if (System.IO.File.Exists(pfxPath))
-                    {
-                        //delete existing PFX (if any)
-                        System.IO.File.Delete(pfxPath);
-                    }
-
-                    //export the PFX file
-                    vaultManager.ExportCertificate(certAlias, pfxOnly: true);
-
-                    if (!System.IO.File.Exists(pfxPath))
-                    {
-                        System.Diagnostics.Debug.WriteLine("Failed to export PFX. " + pfxPath);
-                        return false;
-                    }
-
+                    string pfxPath = certRequestResult.Result.ToString();
                     //Install certificate into certificate store and bind to IIS site
                     //TODO, match by site id?
                     if (iisManager.InstallCertForDomain(certDomain, pfxPath, cleanupCertStore: true, skipBindings: false))
@@ -229,9 +172,14 @@ namespace Certify.CLI
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine("LE did not issue a valid certificate in the time allowed." + JsonConvert.SerializeObject(certDetails));
+                    System.Diagnostics.Debug.WriteLine("LE did not issue a valid certificate in the time allowed.");
                     return false;
                 }
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("Validation of the required challenges did not complete successfully.");
+                return false;
             }
         }
     }

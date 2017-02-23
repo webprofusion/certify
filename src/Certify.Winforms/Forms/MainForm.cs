@@ -25,6 +25,7 @@ namespace Certify
     {
         internal VaultManager VaultManager = null;
         private TelemetryClient tc = null;
+        private bool requirePowershell = false;
 
         public MainForm()
         {
@@ -253,27 +254,19 @@ namespace Certify
             InitAI();
             TrackPageView(nameof(MainForm));
 
-            var powershellVersion = PowershellManager.GetPowershellVersion();
-            if (powershellVersion < 4)
+            if (this.requirePowershell)
             {
-                MessageBox.Show("This application requires PowerShell version 4.0 or higher. You can update it using the latest Windows Management Framework download from Microsoft.", Properties.Resources.AppName);
+                var powershellVersion = PowershellManager.GetPowershellVersion();
+                if (powershellVersion < 4)
+                {
+                    MessageBox.Show("This application requires PowerShell version 4.0 or higher. You can update it using the latest Windows Management Framework download from Microsoft.", Properties.Resources.AppName);
 
-                Application.Exit();
-                return;
+                    Application.Exit();
+                    return;
+                }
             }
 
             this.VaultManager = new VaultManager(Properties.Settings.Default.VaultPath, LocalDiskVault.VAULT);
-
-            PowershellManager manager = this.VaultManager.PowershellManager;
-
-            /*if (!manager.IsAcmeSharpModuleInstalled())
-            {
-                if (MessageBox.Show("The required PowerShell module 'ACMESharp' cannot be found. Please see https://www.powershellgallery.com/packages/ACMESharp/ or install from PowerShell command line as an administrator using: 'Install-Module -Name ACMESharp'",
-                        "ACMESharp Missing", MessageBoxButtons.OK, MessageBoxIcon.Error) == DialogResult.OK)
-                {
-                    // Application.Exit();
-                }
-            }*/
 
             if (Properties.Settings.Default.ShowBetaWarning)
             {
@@ -337,7 +330,7 @@ namespace Certify
                 var dialogResult = MessageBox.Show("Are you sure you wish to delete this item?", "Delete Vault Item", MessageBoxButtons.YesNo);
                 if (dialogResult == DialogResult.Yes)
                 {
-                    bool success = this.VaultManager.DeleteRegistrationInfo(((RegistrationInfo)item).Id.ToString());
+                    bool success = this.VaultManager.DeleteRegistrationInfo(((RegistrationInfo)item).Id);
                     return success;
                 }
             }

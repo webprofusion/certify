@@ -37,7 +37,7 @@ namespace Certify
                 ps = PowerShell.Create();
                 ps.Runspace = runspace;
             }
-            catch (CmdletInvocationException exp)
+            catch (CmdletInvocationException)
             {
                 //elevate execution policy and attempt to load ACMESharp Module again
                 //allow remote signed scripts to run (required for module loading)
@@ -80,7 +80,8 @@ namespace Certify
                     powershellVersion = int.Parse(ver[0]);
                 }
                 return powershellVersion;
-            } catch( Exception exp)
+            }
+            catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.ToString());
                 return 0;
@@ -118,7 +119,7 @@ namespace Certify
 
         #region API
 
-        private APIResult InvokeCurrentPSCommand(bool discardErrors=false)
+        private APIResult InvokeCurrentPSCommand(bool discardErrors = false)
         {
             try
             {
@@ -138,8 +139,6 @@ namespace Certify
             {
                 if (!discardErrors)
                 {
-
-
                     LogAction("[Error]: " + exp.ToString());
                 }
 
@@ -156,7 +155,7 @@ namespace Certify
 
             LogAction("Powershell: Initialize-ACMEVault -BaseURI " + baseURI);
 
-            return InvokeCurrentPSCommand(discardErrors:true);
+            return InvokeCurrentPSCommand(discardErrors: true);
         }
 
         public APIResult NewRegistration(string contacts)

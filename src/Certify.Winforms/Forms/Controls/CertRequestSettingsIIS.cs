@@ -18,6 +18,7 @@ namespace Certify.Forms.Controls
     public partial class CertRequestSettingsIIS : CertRequestBaseControl
     {
         private SiteManager siteManager;
+
         public CertRequestSettingsIIS()
         {
             InitializeComponent();
@@ -74,20 +75,11 @@ namespace Certify.Forms.Controls
                 return;
             }
 
-            if (VaultManager == null)
-            {
-                MessageBox.Show("Vault Manager is null. Please report this problem.");
-            }
-
             //prevent further clicks on request button
             btnRequestCertificate.Enabled = false;
             ShowProgressBar();
             this.Cursor = Cursors.WaitCursor;
 
-            bool certsApproved = false;
-            bool certsStored = false;
-
-          
             CertRequestConfig config = new CertRequestConfig();
             var siteInfo = (SiteBindingItem)lstSites.SelectedItem;
             config.Domain = siteInfo.Host;
@@ -103,7 +95,6 @@ namespace Certify.Forms.Controls
                 managedSite = new ManagedSite();
                 managedSite.SiteId = siteInfo.SiteId;
                 managedSite.IncludeInAutoRenew = chkIncludeInAutoRenew.Checked;
-            
             }
 
             var vaultConfig = VaultManager.GetVaultConfig();
@@ -120,6 +111,10 @@ namespace Certify.Forms.Controls
             {
                 if (authorization.Identifier.Authorization.IsPending())
                 {
+                    //ask LE to check our answer to their authorization challenge (http), LE will then attempt to fetch our answer, if all accessible and correct (authorized) LE will then allow us to request a certificate
+                    //prepare IIS with answer for the LE challenege
+                    authorization = VaultManager.PerformIISAutomatedChallengeResponse(config, authorization);
+
                     //if we attempted extensionless config checks, report any errors
                     if (!chkSkipConfigCheck.Checked && !authorization.ExtensionlessConfigCheckedOK)
                     {
@@ -131,149 +126,26 @@ namespace Certify.Forms.Controls
                         return;
                     }
 
-                    //at this point we can either get the user to manually copy the file to web site folder structure
-                    //if file has already been copied we can go ahead and ask the server to verify it
+                    //ask LE to validate our challenge response
+                    VaultManager.SubmitChallenge(identifierAlias, "http-01");
 
-                    //ask server to check our challenge answer is present and correct
-                    VaultManager.SubmitChallenge(authorization.Identifier.Alias);
-
-                    //give LE time to check our challenge answer stored on our server
-                    Thread.Sleep(2000);
-
-                    VaultManager.UpdateIdentifierStatus(authorization.Identifier.Alias);
-                    VaultManager.ReloadVaultConfig();
-
-                    //check status of the challenge
-                    var updatedIdentifier = VaultManager.GetIdentifier(authorization.Identifier.Alias);
-
-                    var challenge = updatedIdentifier.Authorization.Challenges.FirstOrDefault(c => c.Type == "http-01");
-
-                    //if all OK, we will be ready to fetch our certificate
-                    if (challenge?.Status == "valid")
+                    bool identifierValidated = VaultManager.CompleteIdentifierValidationProcess(authorization.Identifier.Alias);
+                    if (identifierValidated)
                     {
-                        certsApproved = true;
-                    }
-                    else
-                    {
-                        if (challenge != null)
+                        var certRequestResult = VaultManager.PerformCertificateRequestProcess(authorization.Identifier.Alias);
+                        if (certRequestResult.IsSuccess)
                         {
-                            MessageBox.Show("Challenge not yet completed. Check that http://" + config.Domain + "/" + challenge.ToString() + " path/file is present and accessible in your web browser.");
-                        }
-                        else
-                        {
-                            if (challenge.Status == "invalid")
-                            {
-                                managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertficateRequestFailed, Message = "Failed prerequisite configuration (IIS)" });
-                                siteManager.StoreSettings();
+                            string pfxPath = certRequestResult.Result.ToString();
 
-                                MessageBox.Show("Challenge failed to complete. Check that http://" + config.Domain + "/" + challenge.ToString() + " path/file is present and accessible in your web browser. You may require extensionless file type mappings.");
-                                CloseParentForm();
-                                return;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    //already valid, challenge not required
-                    certsApproved = true;
-                }
-            }
-            else
-            {
-                MessageBox.Show("Could not begin authorization. Check Logs. Ensure the domain being authorized is whitelisted with LetsEncrypt service.");
-                managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertficateRequestFailed, Message = "Failed prerequisite configuration (IIS)" });
-                siteManager.StoreSettings();
-            }
-
-            //create certs for current authorization
-            string certRef = null;
-            var identifier = authorization.Identifier;
-            //if (certsApproved)
-            {
-                var v = VaultManager.GetVaultConfig();
-                v.PkiTool = "BouncyCastle"; //"OpenSSL-LIB";
-
-                certRef = VaultManager.CreateCertificate(identifierAlias);
-                VaultManager.UpdateIdentifierStatus(identifierAlias);
-                identifier = VaultManager.GetIdentifier(identifierAlias, true);
-
-                VaultManager.ReloadVaultConfig();
-                if (VaultManager.CertExists(identifierAlias))
-                {
-                    certsStored = true;
-                }
-            }
-
-            //auto setup/install
-            var certInfo = VaultManager.GetCertificate(certRef);
-            if (certInfo != null && certInfo.CrtDerFile == null)
-            {
-                //failed to get cert first time, try again
-                Thread.Sleep(2000);
-
-                VaultManager.PowershellManager.UpdateCertificate(certRef);
-
-                certInfo = VaultManager.GetCertificate(certRef, reloadVaultConfig: true);
-            }
-
-            //txtOutput.Text = "To complete this request copy the file " + CurrentAuthorization.TempFilePath + " to the following location under your website root (note: no file extension): " + CurrentAuthorization.Challenge.ChallengeAnswer.Key;
-            //ReloadVault();
-
-            this.Cursor = Cursors.Default;
-
-            if (!certsStored)
-            {
-                if (certsApproved)
-                {
-                    MessageBox.Show("Certificates approved but not yet stored in vault. Try again later.");
-                    CloseParentForm();
-                    return;
-                }
-                else
-                {
-                    MessageBox.Show("Certificates not approved yet. Authorization challenge may have failed. Try again later.");
-                    CloseParentForm();
-                    return;
-                }
-            }
-            else
-            {
-                if (certInfo != null)
-                {
-                    string certFolderPath = VaultManager.GetCertificateFilePath(certInfo.Id, LocalDiskVault.ASSET);
-                    string pfxFile = certRef + "-all.pfx";
-                    string pfxPath = Path.Combine(certFolderPath, pfxFile);
-
-                    if (!System.IO.Directory.Exists(certFolderPath))
-                    {
-                        System.IO.Directory.CreateDirectory(certFolderPath);
-                    }
-                    if (!File.Exists(pfxPath))
-                    {
-                        //export pfx
-                        VaultManager.ExportCertificate(certRef, pfxOnly: true);
-                    }
-
-                    if (File.Exists(pfxPath))
-                    {
-                        //VaultManager.UpdateIdentifierStatus(certInfo.IdentifierRef);
-                        //identifier = VaultManager.GetIdentifier(certInfo.IdentifierRef, true);
-
-                        IISManager iisManager = new IISManager();
-                        if (identifier == null || identifier.Dns == null)
-                        {
-                            MessageBox.Show("Error: identifier/dns is null. Cannot match domain for binding");
-                        }
-                        else
-                        {
-                            if (iisManager.InstallCertForDomain(identifier.Dns, pfxPath, cleanupCertStore: true, skipBindings: !chkAutoBindings.Checked))
+                            var iisManager = new IISManager();
+                            //Install certificate into certificate store and bind to IIS site
+                            if (iisManager.InstallCertForDomain(config.Domain, pfxPath, cleanupCertStore: true, skipBindings: !chkAutoBindings.Checked))
                             {
                                 //all done
                                 managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestSuccessful, Message = "Completed certificate request and automated bindings update (IIS)" });
                                 siteManager.StoreSettings();
 
-                                MessageBox.Show("Certificate installed and SSL bindings updated for " + identifier.Dns, Properties.Resources.AppName);
+                                MessageBox.Show("Certificate installed and SSL bindings updated for " + config.Domain, Properties.Resources.AppName);
                                 CloseParentForm();
                                 return;
                             }
@@ -283,38 +155,29 @@ namespace Certify.Forms.Controls
                                 CloseParentForm();
                                 return;
                             }
-                            /*
-                            if (chkAutoBindings.Checked)
-                            {
-                                //auto store and create site bindings
-                                MessageBox.Show("Your certificate has been imported and SSL bindings updated for " + config.Domain, Properties.Resources.AppName);
-                                CloseParentForm();
-                                return;
-                            }
-                            else
-                            {
-                                //auto store cert
-                                MessageBox.Show("Your certificate has been imported and is ready for you to configure IIS bindings.", Properties.Resources.AppName);
-                                CloseParentForm();
-                                return;
-                            }*/
+                        }
+                        else
+                        {
+                            MessageBox.Show("LE did not issue a valid certificate in the time allowed.");
+                            CloseParentForm();
+                            return;
                         }
                     }
                     else
                     {
-                        MessageBox.Show("Failed to generate PFX file for the certificate.", Properties.Resources.AppName);
+                        MessageBox.Show("Validation of the required challenges did not complete successfully.");
                         CloseParentForm();
                         return;
                     }
                 }
                 else
                 {
-                    //cert was null
-                    MessageBox.Show("Certificate generation was not successful. Certificate not valid or not yet authorized.", Properties.Resources.AppName);
-                    CloseParentForm();
-                    return;
+                    MessageBox.Show("Could not begin authorization. Check Logs. Ensure the domain being authorized is whitelisted with LetsEncrypt service.");
+                    managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertficateRequestFailed, Message = "Failed prerequisite configuration (IIS)" });
+                    siteManager.StoreSettings();
                 }
             }
+            this.Cursor = Cursors.Default;
         }
 
         private void lstSites_SelectedIndexChanged(object sender, EventArgs e)
