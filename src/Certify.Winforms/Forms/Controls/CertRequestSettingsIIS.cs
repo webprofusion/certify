@@ -77,8 +77,9 @@ namespace Certify.Forms.Controls
             this.Cursor = Cursors.WaitCursor;
 
             CertRequestConfig config = new CertRequestConfig();
-            var selectItem = (SiteBindingItem)lstSites.SelectedItem;
-            config.Domain = _idnMapping.GetAscii(selectItem.Host); // ACME service requires international domain names in ascii mode
+            var siteInfo = (SiteBindingItem)lstSites.SelectedItem;
+
+            config.Domain = _idnMapping.GetAscii(siteInfo.Host); // ACME service requires international domain names in ascii mode
             config.PerformChallengeFileCopy = true;
             config.PerformExtensionlessConfigChecks = !chkSkipConfigCheck.Checked;
             config.PerformExtensionlessAutoConfig = true;

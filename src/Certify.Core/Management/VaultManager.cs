@@ -16,6 +16,7 @@ using ACMESharp.Vault.Providers;
 using ACMESharp.WebServer;
 using Certify.Models;
 using Newtonsoft.Json;
+using System.Globalization;
 
 namespace Certify
 {
@@ -33,6 +34,8 @@ namespace Certify
         internal string vaultFolderPath;
         private string vaultFilename;
         public List<ActionLogItem> ActionLogs { get; }
+
+        private readonly IdnMapping idnMapping = new IdnMapping();
 
         public bool usePowershell { get; set; } = false;
 
@@ -741,15 +744,17 @@ namespace Certify
                 //if an identifier exists for the same dns in vault, remove it to avoid confusion
                 this.DeleteIdentifierByDNS(domain);
 
+                // ACME service requires international domain names in ascii mode
+
                 if (usePowershell)
                 {
-                    var result = powershellManager.NewIdentifier(domain, identifierAlias, "Identifier:" + domain);
+                    var result = powershellManager.NewIdentifier(idnMapping.GetAscii(domain), identifierAlias, "Identifier:" + domain);
                     if (!result.IsOK) return null;
                 }
                 else
                 {
                     var cmd = new ACMESharp.POSH.NewIdentifier();
-                    cmd.Dns = domain;
+                    cmd.Dns = idnMapping.GetAscii(domain);
                     cmd.Alias = identifierAlias;
                     cmd.Label = "Identifier:" + domain;
 
