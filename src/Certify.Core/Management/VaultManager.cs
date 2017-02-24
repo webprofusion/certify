@@ -735,9 +735,10 @@ namespace Certify
 
         #region ACME Workflow Steps
 
-        public PendingAuthorization BeginRegistrationAndValidation(CertRequestConfig requestConfig, string identifierAlias, string challengeType = "http-01")
+        public PendingAuthorization BeginRegistrationAndValidation(CertRequestConfig requestConfig, string identifierAlias, string challengeType = "http-01", string domain = null)
         {
-            string domain = requestConfig.Domain;
+            //if no alternative domain specified, use the primary domains as the subject
+            if (domain == null) domain = requestConfig.PrimaryDomain;
 
             if (GetIdentifier(identifierAlias) == null)
             {
@@ -772,9 +773,6 @@ namespace Certify
 
             var identifier = this.GetIdentifier(identifierAlias, reloadVaultConfig: true);
 
-            /*
-            //config file now has a temp path to write to, begin challenge (writes to temp file with challenge content)
-            */
             if (identifier.Authorization.IsPending())
             {
                 bool ccrResultOK = false;
@@ -846,7 +844,7 @@ namespace Certify
                     System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
                     if (requestConfig.PerformExtensionlessConfigChecks)
                     {
-                        if (CheckURL("http://" + requestConfig.Domain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
+                        if (CheckURL("http://" + requestConfig.PrimaryDomain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
                         {
                             extensionlessConfigOK = true;
                         }
@@ -858,7 +856,7 @@ namespace Certify
 
                     if (requestConfig.PerformExtensionlessConfigChecks)
                     {
-                        if (CheckURL("http://" + requestConfig.Domain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
+                        if (CheckURL("http://" + requestConfig.PrimaryDomain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
                         {
                             extensionlessConfigOK = true;
                         }
@@ -867,7 +865,7 @@ namespace Certify
                             //didn't work, try our default config
                             System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
 
-                            if (CheckURL("http://" + requestConfig.Domain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
+                            if (CheckURL("http://" + requestConfig.PrimaryDomain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
                             {
                                 extensionlessConfigOK = true;
                             }
@@ -882,7 +880,7 @@ namespace Certify
 
                     System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
 
-                    if (CheckURL("http://" + requestConfig.Domain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
+                    if (CheckURL("http://" + requestConfig.PrimaryDomain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
                     {
                         //ready to complete challenge
                         extensionlessConfigOK = true;
@@ -923,17 +921,17 @@ namespace Certify
             }
         }
 
-        public ProcessStepResult PerformCertificateRequestProcess(string domainIdentifierAlias)
+        public ProcessStepResult PerformCertificateRequestProcess(string domainIdentifierRef, string[] alternativeIdentifierRefs)
         {
             //
 
             //all good, we can request a certificate
             //if authorizing a SAN we would need to repeat the above until all domains are valid, then we can request cert
-            var certAlias = "cert_" + domainIdentifierAlias;
+            var certAlias = "cert_" + domainIdentifierRef;
 
             //register cert placeholder in vault
 
-            this.NewCertificate(domainIdentifierAlias, certAlias, subjectAlternativeNameIdentifiers: null);
+            this.NewCertificate(domainIdentifierRef, certAlias, subjectAlternativeNameIdentifiers: alternativeIdentifierRefs);
 
             //ask LE to issue a certificate for our domain(s)
             //if this step fails we should quit and try again later

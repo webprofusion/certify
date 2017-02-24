@@ -123,7 +123,7 @@ namespace Certify.CLI
             var iisSite = iisManager.GetSiteBindingByDomain(certDomain);
             var certConfig = new CertRequestConfig()
             {
-                Domain = certDomain,
+                PrimaryDomain = certDomain,
                 PerformChallengeFileCopy = true,
                 WebsiteRootPath = Environment.ExpandEnvironmentVariables(iisSite.PhysicalPath)
             };
@@ -158,7 +158,7 @@ namespace Certify.CLI
 
             if (validated)
             {
-                var certRequestResult = certifyManager.PerformCertificateRequestProcess(domainIdentifierAlias);
+                var certRequestResult = certifyManager.PerformCertificateRequestProcess(domainIdentifierAlias, alternativeIdentifierRefs: null);
                 if (certRequestResult.IsSuccess)
                 {
                     string pfxPath = certRequestResult.Result.ToString();

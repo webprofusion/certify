@@ -64,7 +64,7 @@ namespace Certify.Management
             {
                 try
                 {
-                    var iisSites = new IISManager().GetSiteList(includeOnlyStartedSites: true).OrderBy(s => s.SiteId).ThenBy(s => s.Host);
+                    var iisSites = new IISManager().GetSiteBindingList(includeOnlyStartedSites: true).OrderBy(s => s.SiteId).ThenBy(s => s.Host);
 
                     var siteIds = iisSites.GroupBy(x => x.SiteId);
 

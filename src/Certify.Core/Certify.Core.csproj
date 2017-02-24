@@ -118,6 +118,7 @@
     <Compile Include="Models\ApiResult.cs" />
     <Compile Include="Models\AppVersion.cs" />
     <Compile Include="Models\CertRequestConfig.cs" />
+    <Compile Include="Models\DomainSelection.cs" />
     <Compile Include="Models\PendingAuthorization.cs" />
     <Compile Include="Models\SiteListItem.cs" />
     <Compile Include="Models\UpdateMessage.cs" />

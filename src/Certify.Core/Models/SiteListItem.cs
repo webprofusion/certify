@@ -28,23 +28,37 @@ namespace Certify.Models
         /// IP is either * (all unassigned) or a specific IP
         /// </summary>
         public string IP { get; set; }
+
         public bool UseSNI { get; set; }
         public string CertName { get; set; }
         public PlannedActionType PlannedAction { get; set; }
+
+        /// <summary>
+        /// The primary domain is the main domain listed on the certificate
+        /// </summary>
+        public bool IsPrimaryCertificateDomain { get; set; }
+
+        /// <summary>
+        /// For SAN certificates, indicate if this name is an alternative name to be associated with a primary domain certificate
+        /// </summary>
+        public bool IsSubjectAlternativeName { get; set; }
     }
 
-    public enum LogItemType{
-        CertificateRequestStarted=50,
-        CertificateRequestSuccessful=100,
-        CertficateRequestFailed=101,
-        CertficateRequestAttentionRequired=110
+    public enum LogItemType
+    {
+        CertificateRequestStarted = 50,
+        CertificateRequestSuccessful = 100,
+        CertficateRequestFailed = 101,
+        CertficateRequestAttentionRequired = 110
     }
+
     public class ManagedSiteLogItem
     {
         public DateTime EventDate { get; set; }
         public string Message { get; set; }
         public LogItemType LogItemType { get; set; }
     }
+
     public class ManagedSite
     {
         public string SiteId { get; set; }
@@ -55,6 +69,8 @@ namespace Certify.Models
         public ManagedSiteType SiteType { get; set; }
         public List<ManagedSiteBinding> SiteBindings { get; set; }
         public List<ManagedSiteLogItem> Logs { get; set; }
+        public List<DomainOption> DomainOptions { get; set; }
+        public CertRequestConfig RequestConfig { get; set; }
 
         public void AppendLog(ManagedSiteLogItem logItem)
         {

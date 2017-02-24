@@ -42,14 +42,46 @@ namespace Certify.Management
             }
         }
 
-        private IEnumerable<Site> GetSites(ServerManager iisManager, bool includeOnlyStartedSites)
+        public IEnumerable<Site> GetSites(ServerManager iisManager, bool includeOnlyStartedSites)
         {
             return includeOnlyStartedSites
                 ? iisManager.Sites.Where(s => s.State == ObjectState.Started)
                 : iisManager.Sites;
         }
 
-        public List<SiteBindingItem> GetSiteList(bool includeOnlyStartedSites)
+        /// <summary>
+        /// Return list of sites (non-specific bindings)
+        /// </summary>
+        /// <param name="includeOnlyStartedSites"></param>
+        /// <returns></returns>
+        public List<SiteBindingItem> GetPrimarySites(bool includeOnlyStartedSites)
+        {
+            var result = new List<SiteBindingItem>();
+            try
+            {
+                using (var iisManager = new ServerManager())
+                {
+                    var sites = GetSites(iisManager, includeOnlyStartedSites);
+
+                    foreach (var site in sites)
+                    {
+                        var b = new SiteBindingItem()
+                        {
+                            SiteId = site.Id.ToString(),
+                            SiteName = site.Name,
+
+                            PhysicalPath = site.Applications["/"].VirtualDirectories["/"].PhysicalPath,
+                        };
+                        result.Add(b);
+                    }
+                }
+            }
+            catch (Exception) { }
+
+            return result;
+        }
+
+        public List<SiteBindingItem> GetSiteBindingList(bool includeOnlyStartedSites)
         {
             var result = new List<SiteBindingItem>();
             try

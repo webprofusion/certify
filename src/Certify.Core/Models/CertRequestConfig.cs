@@ -8,7 +8,8 @@ namespace Certify.Models
 {
     public class CertRequestConfig
     {
-        public string Domain { get; set; }
+        public string PrimaryDomain { get; set; }
+        public string[] SubjectAlternativeNames { get; set; }
         public string WebsiteRootPath { get; set; }
         public bool PerformChallengeFileCopy { get; set; }
 
