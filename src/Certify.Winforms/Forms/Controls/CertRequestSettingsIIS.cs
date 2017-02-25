@@ -93,7 +93,7 @@ namespace Certify.Forms.Controls
             btnRequestCertificate.Enabled = true;
         }
 
-        private void btnRequestCertificate_Click(object sender, EventArgs e)
+        private async void btnRequestCertificate_Click(object sender, EventArgs e)
         {
             if (lstSites.SelectedItem == null)
             {
@@ -116,7 +116,7 @@ namespace Certify.Forms.Controls
             if (this.domains.Count(d => d.IsSelected) > 1)
             {
                 //apply remaining selected domains as subject alternative names
-                config.SubjectAlternativeNames = 
+                config.SubjectAlternativeNames =
                     this.domains.Where(dm => dm.Domain != primaryDomain.Domain && dm.IsSelected == true)
                     .Select(i => i.Domain)
                     .ToArray();
@@ -144,113 +144,11 @@ namespace Certify.Forms.Controls
             managedSite.DomainOptions = this.domains;
             managedSite.RequestConfig = config;
 
-            //primary domain and each subject alternative name must now be registered as an identifier with LE and validated
-
-            List<string> allDomains = new List<string>();
-            allDomains.Add(config.PrimaryDomain);
-            if (config.SubjectAlternativeNames != null) allDomains.AddRange(config.SubjectAlternativeNames);
-            bool allIdentifiersValidated = true;
-
-            List<PendingAuthorization> identifierAuthorizations = new List<PendingAuthorization>();
-
-            foreach (var domain in allDomains)
-            {
-                //check if domain already has an associated identifier
-                var identifierAlias = VaultManager.ComputeIdentifierAlias(domain);
-
-                managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestStarted, Message = "Attempting Certificate Request (IIS)" });
-
-                //begin authorixation process (register identifier, request authorization if not already given)
-                var authorization = VaultManager.BeginRegistrationAndValidation(config, identifierAlias, challengeType: "http-01", domain: domain);
-
-                if (authorization != null)
-                {
-                    if (authorization.Identifier.Authorization.IsPending())
-                    {
-                        //ask LE to check our answer to their authorization challenge (http), LE will then attempt to fetch our answer, if all accessible and correct (authorized) LE will then allow us to request a certificate
-                        //prepare IIS with answer for the LE challenege
-                        authorization = VaultManager.PerformIISAutomatedChallengeResponse(config, authorization);
-
-                        //if we attempted extensionless config checks, report any errors
-                        if (!chkSkipConfigCheck.Checked && !authorization.ExtensionlessConfigCheckedOK)
-                        {
-                            managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertficateRequestFailed, Message = "Failed prerequisite configuration (IIS)" });
-                            siteManager.StoreSettings();
-
-                            //MessageBox.Show("Automated checks for extensionless content failed. Authorizations will not be able to complete. Change the web.config in <your site>\\.well-known\\acme-challenge and ensure you can browse to http://<your site>/.well-known/acme-challenge/configcheck before proceeding.");
-                            //CloseParentForm();
-                            return;
-                        }
-                        else
-                        {
-                            //ask LE to validate our challenge response
-                            VaultManager.SubmitChallenge(identifierAlias, "http-01");
-
-                            bool identifierValidated = VaultManager.CompleteIdentifierValidationProcess(authorization.Identifier.Alias);
-
-                            if (!identifierValidated)
-                            {
-                                allIdentifiersValidated = false;
-                            }
-                            else
-                            {
-                                identifierAuthorizations.Add(authorization);
-                            }
-                        }
-                    }
-                }
-            }
+            //perform the certificate validations and request process
+            var certifyManager = new CertifyManager();
+            await certifyManager.PerformCertificateRequest(VaultManager, siteManager, managedSite);
 
             this.Cursor = Cursors.Default;
-
-            if (allIdentifiersValidated)
-            {
-                string primaryDnsIdentifier = identifierAuthorizations.First().Identifier.Alias;
-                string[] alternativeDnsIdentifiers = identifierAuthorizations.Where(i => i.Identifier.Alias != primaryDnsIdentifier).Select(i => i.Identifier.Alias).ToArray();
-
-                var certRequestResult = VaultManager.PerformCertificateRequestProcess(primaryDnsIdentifier, alternativeDnsIdentifiers);
-                if (certRequestResult.IsSuccess)
-                {
-                    string pfxPath = certRequestResult.Result.ToString();
-
-                    //Install certificate into certificate store and bind to IIS site
-                    if (iisManager.InstallCertForDomain(config.PrimaryDomain, pfxPath, cleanupCertStore: true, skipBindings: !chkAutoBindings.Checked))
-                    {
-                        //all done
-                        managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestSuccessful, Message = "Completed certificate request and automated bindings update (IIS)" });
-                        siteManager.StoreSettings();
-
-                        MessageBox.Show("Certificate installed and SSL bindings updated for " + config.PrimaryDomain, Properties.Resources.AppName);
-                        CloseParentForm();
-                        return;
-                    }
-                    else
-                    {
-                        MessageBox.Show("An error occurred installing the certificate. Certificate file may not be valid.");
-                        CloseParentForm();
-                        return;
-                    }
-                }
-                else
-                {
-                    MessageBox.Show("LE did not issue a valid certificate in the time allowed.");
-                    CloseParentForm();
-                    return;
-                }
-            }
-            else
-            {
-                MessageBox.Show("Validation of the required challenges did not complete successfully.");
-                CloseParentForm();
-                return;
-            }
-            /*else
-                 {
-                 MessageBox.Show("Could not begin authorization. Check Logs. Ensure the domain being authorized is whitelisted with LetsEncrypt service.");
-                 managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertficateRequestFailed, Message = "Failed prerequisite configuration (IIS)" });
-
-                 siteManager.StoreSettings();
-             }*/
         }
 
         private void lstSites_SelectedIndexChanged(object sender, EventArgs e)

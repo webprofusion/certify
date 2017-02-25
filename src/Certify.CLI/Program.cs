@@ -91,9 +91,24 @@ namespace Certify.CLI
             siteManager.StoreSettings();
         }
 
-        private void PerformAutoRenew()
+        private async Task<System.Collections.Generic.List<CertificateRequestResult>> PerformAutoRenew()
         {
             //go through list of items configured for auto renew, perform renewal and report the result
+            var certifyManager = new CertifyManager();
+            var siteManager = new SiteManager();
+            siteManager.LoadSettings();
+
+            var vaultManager = new VaultManager(Properties.Settings.Default.VaultPath, LocalDiskVault.VAULT);
+
+            var sites = siteManager.GetManagedSites();
+
+            var results = new List<CertificateRequestResult>();
+
+            foreach (var s in sites.Where(s => s.IncludeInAutoRenew == true))
+            {
+                results.Add(await certifyManager.PerformCertificateRequest(vaultManager, siteManager, s));
+            }
+            return results;
         }
 
         private bool PerformCertRequestAndIISBinding(string certDomain, string[] alternativeNames)
@@ -129,7 +144,7 @@ namespace Certify.CLI
             };
 
             var certifyManager = new VaultManager(Properties.Settings.Default.VaultPath, LocalDiskVault.VAULT);
-            certifyManager.usePowershell = false;
+            certifyManager.UsePowershell = false;
 
             //init vault if not already created
             certifyManager.InitVault(staging: true);

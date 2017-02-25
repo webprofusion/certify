@@ -73,7 +73,7 @@
             // lnkPublisherWebsite
             // 
             this.lnkPublisherWebsite.AutoSize = true;
-            this.lnkPublisherWebsite.Location = new System.Drawing.Point(202, 70);
+            this.lnkPublisherWebsite.Location = new System.Drawing.Point(226, 70);
             this.lnkPublisherWebsite.Name = "lnkPublisherWebsite";
             this.lnkPublisherWebsite.Size = new System.Drawing.Size(55, 13);
             this.lnkPublisherWebsite.TabIndex = 3;

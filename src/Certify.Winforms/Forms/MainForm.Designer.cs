@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
@@ -52,33 +51,18 @@
             this.toolStripButtonNewContact = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonNewCertificate = new System.Windows.Forms.ToolStripButton();
             this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.treeView1 = new System.Windows.Forms.TreeView();
-            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
-            this.groupBoxVaultInfo = new System.Windows.Forms.GroupBox();
-            this.lblAPIBaseURI = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.lblVaultLocation = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
-            this.panelItemInfo = new System.Windows.Forms.Panel();
-            this.lblGettingStarted = new System.Windows.Forms.Label();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.tabPageManagedSites = new System.Windows.Forms.TabPage();
+            this.managedSites1 = new Certify.Forms.Controls.ManagedSites();
+            this.tabPageVault = new System.Windows.Forms.TabPage();
+            this.tabPageLog = new System.Windows.Forms.TabPage();
             this.txtOutput = new System.Windows.Forms.TextBox();
-            this.treeViewContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.vaultExplorer1 = new Certify.Forms.Controls.VaultExplorer();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.tabControl1.SuspendLayout();
-            this.tabPage1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
-            this.groupBoxVaultInfo.SuspendLayout();
-            this.panelItemInfo.SuspendLayout();
-            this.tabPage2.SuspendLayout();
-            this.treeViewContextMenu.SuspendLayout();
+            this.tabPageManagedSites.SuspendLayout();
+            this.tabPageVault.SuspendLayout();
+            this.tabPageLog.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -251,8 +235,9 @@
             // 
             // tabControl1
             // 
-            this.tabControl1.Controls.Add(this.tabPage1);
-            this.tabControl1.Controls.Add(this.tabPage2);
+            this.tabControl1.Controls.Add(this.tabPageManagedSites);
+            this.tabControl1.Controls.Add(this.tabPageVault);
+            this.tabControl1.Controls.Add(this.tabPageLog);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Location = new System.Drawing.Point(0, 63);
             this.tabControl1.Name = "tabControl1";
@@ -260,141 +245,46 @@
             this.tabControl1.Size = new System.Drawing.Size(784, 498);
             this.tabControl1.TabIndex = 12;
             // 
-            // tabPage1
+            // tabPageManagedSites
             // 
-            this.tabPage1.Controls.Add(this.splitContainer1);
-            this.tabPage1.Location = new System.Drawing.Point(4, 22);
-            this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(776, 472);
-            this.tabPage1.TabIndex = 0;
-            this.tabPage1.Text = "Vault";
-            this.tabPage1.UseVisualStyleBackColor = true;
+            this.tabPageManagedSites.Controls.Add(this.managedSites1);
+            this.tabPageManagedSites.Location = new System.Drawing.Point(4, 22);
+            this.tabPageManagedSites.Name = "tabPageManagedSites";
+            this.tabPageManagedSites.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageManagedSites.Size = new System.Drawing.Size(776, 472);
+            this.tabPageManagedSites.TabIndex = 2;
+            this.tabPageManagedSites.Text = "Managed Sites";
+            this.tabPageManagedSites.UseVisualStyleBackColor = true;
             // 
-            // splitContainer1
+            // managedSites1
             // 
-            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.splitContainer1.Location = new System.Drawing.Point(6, 6);
-            this.splitContainer1.Name = "splitContainer1";
+            this.managedSites1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.managedSites1.Location = new System.Drawing.Point(3, 3);
+            this.managedSites1.Name = "managedSites1";
+            this.managedSites1.Size = new System.Drawing.Size(770, 466);
+            this.managedSites1.TabIndex = 0;
             // 
-            // splitContainer1.Panel1
+            // tabPageVault
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.treeView1);
+            this.tabPageVault.Controls.Add(this.vaultExplorer1);
+            this.tabPageVault.Location = new System.Drawing.Point(4, 22);
+            this.tabPageVault.Name = "tabPageVault";
+            this.tabPageVault.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageVault.Size = new System.Drawing.Size(776, 472);
+            this.tabPageVault.TabIndex = 0;
+            this.tabPageVault.Text = "Vault";
+            this.tabPageVault.UseVisualStyleBackColor = true;
             // 
-            // splitContainer1.Panel2
+            // tabPageLog
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.groupBoxVaultInfo);
-            this.splitContainer1.Panel2.Controls.Add(this.panelItemInfo);
-            this.splitContainer1.Size = new System.Drawing.Size(768, 463);
-            this.splitContainer1.SplitterDistance = 227;
-            this.splitContainer1.TabIndex = 15;
-            // 
-            // treeView1
-            // 
-            this.treeView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.treeView1.ImageIndex = 0;
-            this.treeView1.ImageList = this.imageList1;
-            this.treeView1.Location = new System.Drawing.Point(0, 0);
-            this.treeView1.Name = "treeView1";
-            this.treeView1.SelectedImageIndex = 0;
-            this.treeView1.Size = new System.Drawing.Size(227, 463);
-            this.treeView1.TabIndex = 13;
-            this.treeView1.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView1_AfterSelect);
-            this.treeView1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.treeView1_MouseUp);
-            // 
-            // imageList1
-            // 
-            this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
-            this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
-            this.imageList1.Images.SetKeyName(0, "fa-lock_16_0_303030_none.png");
-            this.imageList1.Images.SetKeyName(1, "fa-globe_16_0_303030_none.png");
-            this.imageList1.Images.SetKeyName(2, "fa-certificate_16_0_303030_none.png");
-            this.imageList1.Images.SetKeyName(3, "fa-user_16_0_303030_none.png");
-            // 
-            // groupBoxVaultInfo
-            // 
-            this.groupBoxVaultInfo.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBoxVaultInfo.Controls.Add(this.lblAPIBaseURI);
-            this.groupBoxVaultInfo.Controls.Add(this.label2);
-            this.groupBoxVaultInfo.Controls.Add(this.lblVaultLocation);
-            this.groupBoxVaultInfo.Controls.Add(this.label1);
-            this.groupBoxVaultInfo.Location = new System.Drawing.Point(3, 3);
-            this.groupBoxVaultInfo.Name = "groupBoxVaultInfo";
-            this.groupBoxVaultInfo.Size = new System.Drawing.Size(533, 69);
-            this.groupBoxVaultInfo.TabIndex = 16;
-            this.groupBoxVaultInfo.TabStop = false;
-            this.groupBoxVaultInfo.Text = "Vault Info";
-            // 
-            // lblAPIBaseURI
-            // 
-            this.lblAPIBaseURI.AutoSize = true;
-            this.lblAPIBaseURI.Location = new System.Drawing.Point(120, 42);
-            this.lblAPIBaseURI.Name = "lblAPIBaseURI";
-            this.lblAPIBaseURI.Size = new System.Drawing.Size(37, 13);
-            this.lblAPIBaseURI.TabIndex = 3;
-            this.lblAPIBaseURI.Text = "(none)";
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(36, 42);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(73, 13);
-            this.label2.TabIndex = 2;
-            this.label2.Text = "API Base URI";
-            // 
-            // lblVaultLocation
-            // 
-            this.lblVaultLocation.AutoSize = true;
-            this.lblVaultLocation.Location = new System.Drawing.Point(120, 20);
-            this.lblVaultLocation.Name = "lblVaultLocation";
-            this.lblVaultLocation.Size = new System.Drawing.Size(37, 13);
-            this.lblVaultLocation.TabIndex = 1;
-            this.lblVaultLocation.Text = "(none)";
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(36, 20);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(78, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "Vault Location:";
-            // 
-            // panelItemInfo
-            // 
-            this.panelItemInfo.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelItemInfo.Controls.Add(this.lblGettingStarted);
-            this.panelItemInfo.Location = new System.Drawing.Point(3, 78);
-            this.panelItemInfo.Name = "panelItemInfo";
-            this.panelItemInfo.Size = new System.Drawing.Size(536, 380);
-            this.panelItemInfo.TabIndex = 15;
-            // 
-            // lblGettingStarted
-            // 
-            this.lblGettingStarted.AutoSize = true;
-            this.lblGettingStarted.Location = new System.Drawing.Point(3, 45);
-            this.lblGettingStarted.Name = "lblGettingStarted";
-            this.lblGettingStarted.Size = new System.Drawing.Size(371, 13);
-            this.lblGettingStarted.TabIndex = 0;
-            this.lblGettingStarted.Text = "Get Started: Browse the Vault on the left to see current certificate information." +
-    "";
-            // 
-            // tabPage2
-            // 
-            this.tabPage2.Controls.Add(this.txtOutput);
-            this.tabPage2.Location = new System.Drawing.Point(4, 22);
-            this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(663, 241);
-            this.tabPage2.TabIndex = 1;
-            this.tabPage2.Text = "Log";
-            this.tabPage2.UseVisualStyleBackColor = true;
+            this.tabPageLog.Controls.Add(this.txtOutput);
+            this.tabPageLog.Location = new System.Drawing.Point(4, 22);
+            this.tabPageLog.Name = "tabPageLog";
+            this.tabPageLog.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageLog.Size = new System.Drawing.Size(776, 472);
+            this.tabPageLog.TabIndex = 1;
+            this.tabPageLog.Text = "Log";
+            this.tabPageLog.UseVisualStyleBackColor = true;
             // 
             // txtOutput
             // 
@@ -403,22 +293,16 @@
             this.txtOutput.Multiline = true;
             this.txtOutput.Name = "txtOutput";
             this.txtOutput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtOutput.Size = new System.Drawing.Size(657, 235);
+            this.txtOutput.Size = new System.Drawing.Size(770, 466);
             this.txtOutput.TabIndex = 14;
             // 
-            // treeViewContextMenu
+            // vaultExplorer1
             // 
-            this.treeViewContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.deleteToolStripMenuItem});
-            this.treeViewContextMenu.Name = "treeViewContextMenu";
-            this.treeViewContextMenu.Size = new System.Drawing.Size(108, 26);
-            // 
-            // deleteToolStripMenuItem
-            // 
-            this.deleteToolStripMenuItem.Name = "deleteToolStripMenuItem";
-            this.deleteToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
-            this.deleteToolStripMenuItem.Text = "Delete";
-            this.deleteToolStripMenuItem.Click += new System.EventHandler(this.deleteToolStripMenuItem_Click);
+            this.vaultExplorer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.vaultExplorer1.Location = new System.Drawing.Point(3, 3);
+            this.vaultExplorer1.Name = "vaultExplorer1";
+            this.vaultExplorer1.Size = new System.Drawing.Size(770, 466);
+            this.vaultExplorer1.TabIndex = 0;
             // 
             // MainForm
             // 
@@ -443,18 +327,10 @@
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.tabControl1.ResumeLayout(false);
-            this.tabPage1.ResumeLayout(false);
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
-            this.groupBoxVaultInfo.ResumeLayout(false);
-            this.groupBoxVaultInfo.PerformLayout();
-            this.panelItemInfo.ResumeLayout(false);
-            this.panelItemInfo.PerformLayout();
-            this.tabPage2.ResumeLayout(false);
-            this.tabPage2.PerformLayout();
-            this.treeViewContextMenu.ResumeLayout(false);
+            this.tabPageManagedSites.ResumeLayout(false);
+            this.tabPageVault.ResumeLayout(false);
+            this.tabPageLog.ResumeLayout(false);
+            this.tabPageLog.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -481,24 +357,15 @@
         private System.Windows.Forms.ToolStripMenuItem websiteToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
         private System.Windows.Forms.TabControl tabControl1;
-        private System.Windows.Forms.TabPage tabPage1;
-        private System.Windows.Forms.TabPage tabPage2;
+        private System.Windows.Forms.TabPage tabPageVault;
+        private System.Windows.Forms.TabPage tabPageLog;
         private System.Windows.Forms.TextBox txtOutput;
-        private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.TreeView treeView1;
-        private System.Windows.Forms.Panel panelItemInfo;
-        private System.Windows.Forms.Label lblGettingStarted;
         private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
-        private System.Windows.Forms.ImageList imageList1;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label lblVaultLocation;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label lblAPIBaseURI;
-        private System.Windows.Forms.GroupBox groupBoxVaultInfo;
         private System.Windows.Forms.ToolStripMenuItem cleanupVaultToolStripMenuItem;
-        private System.Windows.Forms.ContextMenuStrip treeViewContextMenu;
-        private System.Windows.Forms.ToolStripMenuItem deleteToolStripMenuItem;
+        private System.Windows.Forms.TabPage tabPageManagedSites;
+        private Forms.Controls.ManagedSites managedSites1;
+        private Forms.Controls.VaultExplorer vaultExplorer1;
     }
 }
 

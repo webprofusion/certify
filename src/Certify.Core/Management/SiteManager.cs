@@ -93,9 +93,15 @@ namespace Certify.Management
             return sites;
         }
 
-        public ManagedSite GetManagedSite(string siteId, string domain=null)
+        public ManagedSite GetManagedSite(string siteId, string domain = null)
         {
-            var site = this.managedSites.FirstOrDefault(s => (siteId!=null && s.SiteId == siteId) || (domain!=null && s.SiteBindings.Any(bind=>bind.Hostname==domain)));
+            var site = this.managedSites.FirstOrDefault(s => (siteId != null && s.SiteId == siteId) || (domain != null && s.SiteBindings.Any(bind => bind.Hostname == domain)));
+            return site;
+        }
+
+        public List<ManagedSite> GetManagedSites()
+        {
+            var site = this.managedSites;
             return site;
         }
     }

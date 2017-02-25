@@ -79,7 +79,7 @@ namespace Certify.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to http://certify.webprofusion.com/downloads/version.json.
+        ///   Looks up a localized string similar to https://certify.webprofusion.com/downloads/version.json.
         /// </summary>
         public static string AppUpdateCheckURI {
             get {
@@ -88,7 +88,7 @@ namespace Certify.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to http://certify.webprofusion.com.
+        ///   Looks up a localized string similar to https://certify.webprofusion.com.
         /// </summary>
         public static string AppWebsiteURL {
             get {

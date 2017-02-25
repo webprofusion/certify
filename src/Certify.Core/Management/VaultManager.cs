@@ -37,7 +37,7 @@ namespace Certify
 
         private readonly IdnMapping idnMapping = new IdnMapping();
 
-        public bool usePowershell { get; set; } = false;
+        public bool UsePowershell { get; set; } = false;
 
         public string VaultFolderPath
         {
@@ -52,7 +52,7 @@ namespace Certify
             this.vaultFilename = vaultFilename;
 
             this.ActionLogs = new List<ActionLogItem>();
-            if (usePowershell)
+            if (UsePowershell)
             {
                 powershellManager = new PowershellManager(vaultFolderPath, this.ActionLogs);
             }
@@ -88,7 +88,7 @@ namespace Certify
 
             if (!vaultExists)
             {
-                if (usePowershell)
+                if (UsePowershell)
                 {
                     powershellManager.InitializeVault(apiURI);
                 }
@@ -239,20 +239,6 @@ namespace Certify
             }
         }
 
-        public void UpdateIdentifier(string domainIdentifierAlias)
-        {
-            if (usePowershell)
-            {
-                powershellManager.UpdateIdentifier(domainIdentifierAlias);
-            }
-            else
-            {
-                var cmd = new ACMESharp.POSH.UpdateIdentifier();
-                cmd.IdentifierRef = domainIdentifierAlias;
-                cmd.ExecuteCommand();
-            }
-        }
-
         public string GetVaultPath()
         {
             using (var vlt = (LocalDiskVault)ACMESharp.POSH.Util.VaultHelper.GetVault())
@@ -262,15 +248,19 @@ namespace Certify
             return this.vaultFolderPath;
         }
 
-        public bool HasContacts()
+        #endregion Vault
+
+        public void UpdateIdentifier(string domainIdentifierAlias)
         {
-            if (this.vaultConfig.Registrations != null && this.vaultConfig.Registrations.Count > 0)
+            if (UsePowershell)
             {
-                return true;
+                powershellManager.UpdateIdentifier(domainIdentifierAlias);
             }
             else
             {
-                return false;
+                var cmd = new ACMESharp.POSH.UpdateIdentifier();
+                cmd.IdentifierRef = domainIdentifierAlias;
+                cmd.ExecuteCommand();
             }
         }
 
@@ -304,7 +294,7 @@ namespace Certify
 
         public APIResult SubmitCertificate(string certAlias)
         {
-            if (usePowershell)
+            if (UsePowershell)
             {
                 return powershellManager.SubmitCertificate(certAlias);
             }
@@ -327,7 +317,7 @@ namespace Certify
 
         public APIResult NewCertificate(string domainIdentifierAlias, string certAlias, string[] subjectAlternativeNameIdentifiers)
         {
-            if (usePowershell)
+            if (UsePowershell)
             {
                 return powershellManager.NewCertificate(domainIdentifierAlias, certAlias, subjectAlternativeNameIdentifiers);
             }
@@ -370,13 +360,23 @@ namespace Certify
             else return null;
         }
 
-        #endregion Vault
+        #region Vault Operations
 
-        #region Registration
+        public bool HasContacts()
+        {
+            if (this.vaultConfig.Registrations != null && this.vaultConfig.Registrations.Count > 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
 
         public void AddNewRegistrationAndAcceptTOS(string contact)
         {
-            if (usePowershell)
+            if (UsePowershell)
             {
                 powershellManager.NewRegistration(contact);
 
@@ -448,9 +448,26 @@ namespace Certify
             }
         }
 
-        #endregion Registration
+        public string ComputeIdentifierAlias(string domain)
+        {
+            return "ident" + Guid.NewGuid().ToString().Substring(0, 8).Replace("-", "");
+        }
 
-        #region Certificates
+        public void SubmitChallenge(string alias, string challengeType = "http-01")
+        {
+            //well known challenge all ready to be read by server
+            if (UsePowershell)
+            {
+                powershellManager.SubmitChallenge(alias, challengeType);
+            }
+            else
+            {
+                var cmd = new ACMESharp.POSH.SubmitChallenge();
+                cmd.IdentifierRef = alias;
+                cmd.ChallengeType = challengeType;
+                cmd.ExecuteCommand();
+            }
+        }
 
         public bool CertExists(string domainAlias)
         {
@@ -466,39 +483,11 @@ namespace Certify
             }
         }
 
-        public void UpdateAndExportCertificate(string certAlias)
-        {
-            try
-            {
-                if (usePowershell)
-                {
-                    powershellManager.UpdateCertificate(certAlias);
-                }
-                else
-                {
-                    var cmd = new ACMESharp.POSH.UpdateCertificate();
-                    cmd.CertificateRef = certAlias;
-                    cmd.ExecuteCommand();
-                }
-
-                ReloadVaultConfig();
-
-                var certInfo = GetCertificate(certAlias);
-
-                // if we have our first cert files, lets export the pfx as well
-                ExportCertificate(certAlias, pfxOnly: true);
-            }
-            catch (Exception exp)
-            {
-                System.Diagnostics.Debug.WriteLine(exp.ToString());
-            }
-        }
-
         public string CreateAndSubmitCertificate(string domainAlias)
         {
             var certRef = "cert_" + domainAlias;
 
-            if (usePowershell)
+            if (UsePowershell)
             {
                 powershellManager.NewCertificate(domainAlias, certRef);
             }
@@ -531,17 +520,6 @@ namespace Certify
             return certRef;
         }
 
-        public string GetCertificateFilePath(Guid id, string assetTypeFolder = LocalDiskVault.CRTDR)
-        {
-            GetVaultPath();
-            var cert = vaultConfig.Certificates[id];
-            if (cert != null)
-            {
-                return this.VaultFolderPath + "\\" + assetTypeFolder;
-            }
-            return null;
-        }
-
         public CertificateInfo GetCertificate(string reference, bool reloadVaultConfig = false)
         {
             if (reloadVaultConfig)
@@ -561,6 +539,59 @@ namespace Certify
             return null;
         }
 
+        public void UpdateCertificate(string certRef)
+        {
+            if (UsePowershell)
+            {
+                powershellManager.UpdateCertificate(certRef);
+            }
+            else
+            {
+                var cmd = new ACMESharp.POSH.UpdateCertificate();
+                cmd.CertificateRef = certRef;
+                cmd.ExecuteCommand();
+            }
+        }
+
+        public void UpdateAndExportCertificate(string certAlias)
+        {
+            try
+            {
+                if (UsePowershell)
+                {
+                    powershellManager.UpdateCertificate(certAlias);
+                }
+                else
+                {
+                    var cmd = new ACMESharp.POSH.UpdateCertificate();
+                    cmd.CertificateRef = certAlias;
+                    cmd.ExecuteCommand();
+                }
+
+                ReloadVaultConfig();
+
+                var certInfo = GetCertificate(certAlias);
+
+                // if we have our first cert files, lets export the pfx as well
+                ExportCertificate(certAlias, pfxOnly: true);
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.ToString());
+            }
+        }
+
+        public string GetCertificateFilePath(Guid id, string assetTypeFolder = LocalDiskVault.CRTDR)
+        {
+            GetVaultPath();
+            var cert = vaultConfig.Certificates[id];
+            if (cert != null)
+            {
+                return this.VaultFolderPath + "\\" + assetTypeFolder;
+            }
+            return null;
+        }
+
         public void ExportCertificate(string certRef, bool pfxOnly = false)
         {
             GetVaultPath();
@@ -569,7 +600,7 @@ namespace Certify
                 Directory.CreateDirectory(VaultFolderPath + "\\" + LocalDiskVault.ASSET);
             }
 
-            if (usePowershell)
+            if (UsePowershell)
             {
                 powershellManager.ExportCertificate(certRef, this.VaultFolderPath, pfxOnly);
             }
@@ -592,146 +623,7 @@ namespace Certify
             }
         }
 
-        #endregion Certificates
-
-        public string ComputeIdentifierAlias(string domain)
-        {
-            return "ident" + Guid.NewGuid().ToString().Substring(0, 8).Replace("-", "");
-            /*var domainAlias = domain.Replace(".", "_");
-            domainAlias += long.Parse(DateTime.UtcNow.ToString("yyyyMMddHHmmss"));
-
-            // Check if the first character in the domain is a digit, e.g. 1and1.com
-            // Per ACMESharp spec, alias cannot begin with a digit.
-            if (char.IsDigit(domainAlias[0]))
-            {
-                domainAlias = "alias_" + domainAlias;
-            }
-
-            return domainAlias;*/
-        }
-
-        private bool CheckURL(string url, bool useProxyAPI)
-        {
-            var checkUrl = url + "";
-            if (useProxyAPI)
-            {
-                url = "https://certify.webprofusion.com/api/testurlaccess?url=" + url;
-            }
-            //check http request to test path works
-            bool checkSuccess = false;
-            try
-            {
-                WebRequest request = WebRequest.Create(url);
-                var response = (HttpWebResponse)request.GetResponse();
-
-                //if checking via proxy, examine result
-                if (useProxyAPI)
-                {
-                    if ((int)response.StatusCode >= 200)
-                    {
-                        var encoding = ASCIIEncoding.UTF8;
-                        using (var reader = new System.IO.StreamReader(response.GetResponseStream(), encoding))
-                        {
-                            string jsonText = reader.ReadToEnd();
-                            this.LogAction("URL Check Result: " + jsonText);
-                            var result = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.API.URLCheckResult>(jsonText);
-                            if (result.IsAccessible == true)
-                            {
-                                checkSuccess = true;
-                            }
-                            else
-                            {
-                                checkSuccess = false;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    //not checking via proxy, base result on status code
-                    if ((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
-                    {
-                        checkSuccess = true;
-                    }
-                }
-
-                if (checkSuccess == false && useProxyAPI == true)
-                {
-                    //request failed using proxy api, request again using local http
-                    checkSuccess = CheckURL(checkUrl, false);
-                }
-            }
-            catch (Exception)
-            {
-                System.Diagnostics.Debug.WriteLine("Failed to check url for access");
-                checkSuccess = false;
-            }
-
-            return checkSuccess;
-        }
-
-        public void SubmitChallenge(string alias, string challengeType = "http-01")
-        {
-            //well known challenge all ready to be read by server
-            if (usePowershell)
-            {
-                powershellManager.SubmitChallenge(alias, challengeType);
-            }
-            else
-            {
-                var cmd = new ACMESharp.POSH.SubmitChallenge();
-                cmd.IdentifierRef = alias;
-                cmd.ChallengeType = challengeType;
-                cmd.ExecuteCommand();
-            }
-        }
-
-        public void UpdateCertificate(string certRef)
-        {
-            if (usePowershell)
-            {
-                powershellManager.UpdateCertificate(certRef);
-            }
-            else
-            {
-                var cmd = new ACMESharp.POSH.UpdateCertificate();
-                cmd.CertificateRef = certRef;
-                cmd.ExecuteCommand();
-            }
-        }
-
-        public string GetActionLogSummary()
-        {
-            string output = "";
-            if (this.ActionLogs != null)
-            {
-                foreach (var a in this.ActionLogs)
-                {
-                    output += a.ToString() + "\r\n";
-                }
-            }
-            return output;
-        }
-
-        public void PermissionTest()
-        {
-            if (IisSitePathProvider.IsAdministrator())
-            {
-                System.Diagnostics.Debug.WriteLine("User is an administrator");
-
-                var iisPathProvider = new IisSitePathProvider();
-                iisPathProvider.WebSiteRoot = @"C:\inetpub\wwwroot\";
-                using (var fs = File.OpenRead(@"C:\temp\log.txt"))
-                {
-                    var fileURI = new System.Uri(iisPathProvider.WebSiteRoot + "/.temp/test/test123");
-                    iisPathProvider.UploadFile(fileURI, fs);
-                }
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("User is not an administrator");
-            }
-        }
+        #endregion Vault Operations
 
         #region ACME Workflow Steps
 
@@ -747,7 +639,7 @@ namespace Certify
 
                 // ACME service requires international domain names in ascii mode
 
-                if (usePowershell)
+                if (UsePowershell)
                 {
                     var result = powershellManager.NewIdentifier(idnMapping.GetAscii(domain), identifierAlias, "Identifier:" + domain);
                     if (!result.IsOK) return null;
@@ -776,7 +668,7 @@ namespace Certify
             if (identifier.Authorization.IsPending())
             {
                 bool ccrResultOK = false;
-                if (usePowershell)
+                if (UsePowershell)
                 {
                     var result = powershellManager.CompleteChallenge(identifier.Alias, challengeType, regenerate: true);
                     ccrResultOK = result.IsOK;
@@ -993,5 +885,82 @@ namespace Certify
         }
 
         #endregion ACME Workflow Steps
+
+        #region Utils
+
+        public string GetActionLogSummary()
+        {
+            string output = "";
+            if (this.ActionLogs != null)
+            {
+                foreach (var a in this.ActionLogs)
+                {
+                    output += a.ToString() + "\r\n";
+                }
+            }
+            return output;
+        }
+
+        private bool CheckURL(string url, bool useProxyAPI)
+        {
+            var checkUrl = url + "";
+            if (useProxyAPI)
+            {
+                url = "https://certify.webprofusion.com/api/testurlaccess?url=" + url;
+            }
+            //check http request to test path works
+            bool checkSuccess = false;
+            try
+            {
+                WebRequest request = WebRequest.Create(url);
+                var response = (HttpWebResponse)request.GetResponse();
+
+                //if checking via proxy, examine result
+                if (useProxyAPI)
+                {
+                    if ((int)response.StatusCode >= 200)
+                    {
+                        var encoding = ASCIIEncoding.UTF8;
+                        using (var reader = new System.IO.StreamReader(response.GetResponseStream(), encoding))
+                        {
+                            string jsonText = reader.ReadToEnd();
+                            this.LogAction("URL Check Result: " + jsonText);
+                            var result = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.API.URLCheckResult>(jsonText);
+                            if (result.IsAccessible == true)
+                            {
+                                checkSuccess = true;
+                            }
+                            else
+                            {
+                                checkSuccess = false;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    //not checking via proxy, base result on status code
+                    if ((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
+                    {
+                        checkSuccess = true;
+                    }
+                }
+
+                if (checkSuccess == false && useProxyAPI == true)
+                {
+                    //request failed using proxy api, request again using local http
+                    checkSuccess = CheckURL(checkUrl, false);
+                }
+            }
+            catch (Exception)
+            {
+                System.Diagnostics.Debug.WriteLine("Failed to check url for access");
+                checkSuccess = false;
+            }
+
+            return checkSuccess;
+        }
+
+        #endregion Utils
     }
 }

@@ -15,5 +15,7 @@ namespace Certify.Models
 
         public bool PerformExtensionlessConfigChecks { get; set; }
         public bool PerformExtensionlessAutoConfig { get; set; }
+        public bool PerformAutomatedCertBinding { get; set; }
+        public string ChallengeType { get; set; }
     }
 }
