@@ -7,17 +7,24 @@ using Certify.Models;
 
 namespace Certify.Management
 {
+    /// <summary>
+    /// SiteManager encapsulates settings and operations on the list of Sites we manage certificates for using Certify and is additional to the ACMESharp Vault. These could be Local IIS, Manually Configured, DNS driven etc
+    /// </summary>
     public class SiteManager
     {
         private const string APPDATASUBFOLDER = "Certify";
         private const string SITEMANAGERCONFIG = "sites.json";
-        public bool IsLocalIISMode { get; set; } //TODO: driven by config
+
+        /// <summary>
+        /// If true, one or more of our managed sites are hosted within a Local IIS server on the same machine
+        /// </summary>
+        public bool EnableLocalIISMode { get; set; } //TODO: driven by config
 
         private List<ManagedSite> managedSites { get; set; }
 
         public SiteManager()
         {
-            IsLocalIISMode = true;
+            EnableLocalIISMode = true;
             this.managedSites = this.Preview();
         }
 
@@ -53,11 +60,11 @@ namespace Certify.Management
         {
             List<ManagedSite> sites = new List<ManagedSite>();
 
-            if (IsLocalIISMode)
+            if (EnableLocalIISMode)
             {
                 try
                 {
-                    var iisSites = new IISManager().GetSiteList(includeOnlyStartedSites: true).OrderBy(s => s.SiteId).ThenBy(s => s.Host);
+                    var iisSites = new IISManager().GetSiteBindingList(includeOnlyStartedSites: true).OrderBy(s => s.SiteId).ThenBy(s => s.Host);
 
                     var siteIds = iisSites.GroupBy(x => x.SiteId);
 
@@ -84,6 +91,18 @@ namespace Certify.Management
                 }
             }
             return sites;
+        }
+
+        public ManagedSite GetManagedSite(string siteId, string domain = null)
+        {
+            var site = this.managedSites.FirstOrDefault(s => (siteId != null && s.SiteId == siteId) || (domain != null && s.SiteBindings.Any(bind => bind.Hostname == domain)));
+            return site;
+        }
+
+        public List<ManagedSite> GetManagedSites()
+        {
+            var site = this.managedSites;
+            return site;
         }
     }
 }

@@ -34,7 +34,7 @@ namespace Certify.Forms.Controls.Details
             lnkUri.Text = info.Registration.RegistrationUri;
         }
 
-        private void btnDelete_Click(object sender, EventArgs e)
+        /*private void btnDelete_Click(object sender, EventArgs e)
         {
             if (this.registrationInfo != null)
             {
@@ -44,6 +44,6 @@ namespace Certify.Forms.Controls.Details
                     this.Hide();
                 }
             }
-        }
+        }*/
     }
 }

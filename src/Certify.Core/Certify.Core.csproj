@@ -112,12 +112,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Management\CertifyManager.cs" />
     <Compile Include="Management\SiteManager.cs" />
     <Compile Include="Models\ActionLogItem.cs" />
     <Compile Include="Models\APIResponses.cs" />
     <Compile Include="Models\ApiResult.cs" />
     <Compile Include="Models\AppVersion.cs" />
+    <Compile Include="Models\CertificateRequestResult.cs" />
     <Compile Include="Models\CertRequestConfig.cs" />
+    <Compile Include="Models\DomainOption.cs" />
     <Compile Include="Models\PendingAuthorization.cs" />
     <Compile Include="Models\SiteListItem.cs" />
     <Compile Include="Models\UpdateMessage.cs" />

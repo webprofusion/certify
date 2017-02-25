@@ -34,7 +34,7 @@ namespace Certify
                 ps = PowerShell.Create();
                 ps.Runspace = runspace;
             }
-            catch (CmdletInvocationException exp)
+            catch (CmdletInvocationException)
             {
                 //elevate execution policy and attempt to load ACMESharp Module again
                 //allow remote signed scripts to run (required for module loading)
@@ -136,8 +136,6 @@ namespace Certify
             {
                 if (!discardErrors)
                 {
-
-
                     LogAction("[Error]: " + exp.ToString());
                 }
 
