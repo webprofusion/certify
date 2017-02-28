@@ -64,7 +64,7 @@ namespace Certify.Forms
 
                     btnCreateContact.Enabled = false;
                     this.Cursor = Cursors.WaitCursor;
-                    vaultManager.AddNewRegistration("mailto:" + txtContacts.Text);
+                    vaultManager.AddNewRegistrationAndAcceptTOS("mailto:" + txtContacts.Text);
                     this.Cursor = Cursors.Default;
                 }
             }

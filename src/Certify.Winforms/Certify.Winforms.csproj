@@ -156,6 +156,18 @@
     <Compile Include="Forms\Controls\Details\SimpleDetails.Designer.cs">
       <DependentUpon>SimpleDetails.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\Controls\ManagedSites.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\Controls\ManagedSites.Designer.cs">
+      <DependentUpon>ManagedSites.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Controls\VaultExplorer.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\Controls\VaultExplorer.Designer.cs">
+      <DependentUpon>VaultExplorer.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\Settings.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -196,6 +208,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\Controls\Details\SimpleDetails.resx">
       <DependentUpon>SimpleDetails.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Controls\ManagedSites.resx">
+      <DependentUpon>ManagedSites.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Controls\VaultExplorer.resx">
+      <DependentUpon>VaultExplorer.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\Settings.resx">
       <DependentUpon>Settings.cs</DependentUpon>

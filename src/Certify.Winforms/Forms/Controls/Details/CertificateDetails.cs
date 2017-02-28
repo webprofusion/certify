@@ -45,6 +45,26 @@ namespace Certify.Forms.Controls.Details
                     lblIssuer.Text = cert.Issuer;
                     lblSubject.Text = cert.Subject;
 
+                    foreach (System.Security.Cryptography.X509Certificates.X509Extension extension in cert.Extensions)
+                    {
+                        if (extension.Oid.FriendlyName == "Subject Alternative Name")
+                        {
+                            var asndata = new System.Security.Cryptography.AsnEncodedData(extension.Oid, extension.RawData);
+                            txtSAN.Text = asndata.Format(true);
+                        }
+                    }
+
+                    /*
+                     * //http://stackoverflow.com/questions/16698307/how-do-you-parse-the-subject-alternate-names-from-an-x509certificate2
+                     foreach (System.Security.Cryptography.X509Certificates.X509Extension extension in cert.Extensions)
+                     {
+                         // Create an AsnEncodedData object using the extensions information.
+                         System.Security.Cryptography.AsnEncodedData asndata = new System.Security.Cryptography.AsnEncodedData(extension.Oid, extension.RawData);
+                         Console.WriteLine("Extension type: {0}", extension.Oid.FriendlyName);
+                         Console.WriteLine("Oid value: {0}", asndata.Oid.Value);
+                         Console.WriteLine("Raw data length: {0} {1}", asndata.RawData.Length, Environment.NewLine);
+                         Console.WriteLine);
+                     }*/
                     DateTime expiryDate = DateTime.Parse(cert.GetExpirationDateString());
                     TimeSpan timeLeft = expiryDate - DateTime.Now;
                     lblDaysRemaining.Text = timeLeft.Days.ToString();

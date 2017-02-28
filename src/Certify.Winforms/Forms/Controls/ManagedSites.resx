@@ -117,104 +117,31 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AppName" xml:space="preserve">
-    <value>Certify (Alpha Version)</value>
-  </data>
-  <data name="Credits" xml:space="preserve">
-    <value>The Software is provided "as is" without warranty of any kind, either express or implied, including without limitation any implied warranties of condition, uninterrupted use, merchantability, fitness for a particular purpose, or non-infringement.
-
-Use of the LetsEncrypt.org service for free SSL certificates is subject to the LetsEncrypt.org terms of service. This software is not affiliated with or endorsed by LetsEncrypt.org
-
-This software uses the following Open Source software (or significant portions of):
-- ACMESharp by Eugene Bekker (https://github.com/ebekker/ACMESharp) Licensed under the MPL V 2.0
-- Some icons from Font Awesome by Dave Gandy - http://fontawesome.io 
-- OpenSSL (https://github.com/openssl-net/openssl-net)</value>
-  </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\icon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="LongAppName" xml:space="preserve">
-    <value>Certify - SSL Certificate Manager (Alpha Version)</value>
-  </data>
-  <data name="UpdateCheckLatestVersion" xml:space="preserve">
-    <value>You are using the latest version.</value>
-  </data>
-  <data name="AppUpdateCheckURI" xml:space="preserve">
-    <value>https://certify.webprofusion.com/downloads/version.json</value>
-  </data>
-  <data name="AppWebsiteURL" xml:space="preserve">
-    <value>https://certify.webprofusion.com</value>
-  </data>
-  <data name="GettingStartedExistingVault" xml:space="preserve">
-    <value>Get Started: Browse the Vault on the left to see current certificate information.</value>
-  </data>
-  <data name="ReleaseDate" xml:space="preserve">
-    <value>20170205.Alpha13</value>
-  </data>
-  <data name="BetaWarning" xml:space="preserve">
-    <value>Warning: This software is a pre-release version for testing and feedback purposes. You should expect bugs. Do not rely on this software for important production sites.</value>
-  </data>
-  <data name="IISWebConfig" xml:space="preserve">
-    <value>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-
-&lt;configuration&gt;
-  &lt;system.webServer&gt;
-    &lt;validation validateIntegratedModeConfiguration="false" /&gt;
-    &lt;staticContent&gt;
-        &lt;mimeMap fileExtension="." mimeType="text/json" /&gt;
-    &lt;/staticContent&gt;
-  &lt;handlers&gt;
-      &lt;clear /&gt;
-    &lt;add name="StaticFile" path="*" verb="*" type="" modules="StaticFileModule,DefaultDocumentModule,DirectoryListingModule" scriptProcessor="" resourceType="Either" requireAccess="Read" allowPathInfo="false" preCondition="" responseBufferLimit="4194304" /&gt;
-  &lt;/handlers&gt;
-  &lt;/system.webServer&gt;
-  &lt;system.web&gt;
-    &lt;authorization&gt;
-      &lt;allow users="*" /&gt;
-    &lt;/authorization&gt;
-  &lt;/system.web&gt;
-&lt;/configuration&gt;</value>
-  </data>
-  <data name="AIInstrumentationKey" xml:space="preserve">
-    <value>63154103-66ba-4636-8c6b-7081084daa0e</value>
-  </data>
-  <data name="IISWebConfigAlt" xml:space="preserve">
-    <value>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-
-&lt;configuration&gt;
-  &lt;system.webServer&gt;
-    &lt;validation validateIntegratedModeConfiguration="false" /&gt;
-    &lt;staticContent&gt;
-      &lt;mimeMap fileExtension="." mimeType="text/json" /&gt;
-    &lt;/staticContent&gt;
-  &lt;/system.webServer&gt;
-  &lt;system.web&gt;
-    &lt;authorization&gt;
-      &lt;allow users="*" /&gt;
-    &lt;/authorization&gt;
-  &lt;/system.web&gt;
-&lt;/configuration&gt;</value>
-  </data>
-  <data name="IISWebConfigAlt2" xml:space="preserve">
-    <value>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-
-&lt;configuration&gt;
-  &lt;system.webServer&gt;
-    &lt;validation validateIntegratedModeConfiguration="false" /&gt;
-    &lt;staticContent&gt;
-        &lt;mimeMap fileExtension=".*" mimeType="text/json" /&gt;
-    &lt;/staticContent&gt;
-  &lt;handlers&gt;
-      &lt;clear /&gt;
-    &lt;add name="StaticFile" path="*" verb="*" type="" modules="StaticFileModule,DefaultDocumentModule,DirectoryListingModule" scriptProcessor="" resourceType="Either" requireAccess="Read" allowPathInfo="false" preCondition="" responseBufferLimit="4194304" /&gt;
-  &lt;/handlers&gt;
-  &lt;/system.webServer&gt;
-  &lt;system.web&gt;
-    &lt;authorization&gt;
-      &lt;allow users="*" /&gt;
-    &lt;/authorization&gt;
-  &lt;/system.web&gt;
-&lt;/configuration&gt;</value>
+  <metadata name="imageList1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="imageList1.ImageStream" mimetype="application/x-microsoft.net.object.binary.base64">
+    <value>
+        AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
+        LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
+        ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAADo
+        AwAAAk1TRnQBSQFMAwEBAAEoAQABKAEAARABAAEQAQAE/wERAQAI/wFCAU0BNgcAATYDAAEoAwABQAMA
+        ARADAAEBAQABEAYAAQgYAAH/AX8BvQF3AfcBWgESAT4BTAEhAQsBGQHPATEBtgFSAXsBbwH/AX9sAAH4
+        AV4B6gEUAeoBFAHqARQB6gEUAeoBFAFbAWsBWgFnAQoBGQFtASkB/wF/ZgAB/wF/AbYBUgHqARQB6gEU
+        AeoBFAHqARQB6gEUAeoBFAE5AWMCAAHfAXsBtgFSAfABNQH/AX9kAAE5AWMB6gEUAeoBFAHqARQB6gEU
+        AeoBFAHqARQB6gEUAXsBbwQAAZ0BcwEKARkBbQEpAf8Bf2AAAf8BfwGvATEB6gEUAeoBFAHqARQB6gEU
+        ASsBHQGVAU4BvQF3AfEBOQG2AVIB8AE1AeoBFAHqARQB6gEUAXsBb2AAAb0BdwHqARQB6gEUAeoBFAHq
+        ARQB0AE1Af8BfwHeAXsBGAFfAeoBFAHqARQB6gEUAeoBFAHqARQB6gEUAbYBUmAAAXQBSgHqARQB6gEU
+        AeoBFAERAToBvQF3AgABUwFGASsBHQHxATkB6gEUAeoBFAHqARQB6gEUAeoBFAHPATFgAAFMASEB6gEU
+        AeoBFAHqARQB3gF7BgAB/wF/AfcBWgHqARQB6gEUAeoBFAHqARQB6gEUASsBHWAAAY4BLQHqARQB6gEU
+        ATkBYwoAAf8BfwEsAR0B6gEUAeoBFAHqARQB6gEUAUwBIWAAAfgBXgHqARQB6gEUAd4BewwAAf8BfwGN
+        ASkB6gEUAeoBFAHqARQBEgE+YAAB3wF7AQoBFQEKARkB3gF7CgAB/wF/AgABvQF3AZUBTgHqARQB6gEU
+        AfcBWmIAAVMBRgG2AVIKAAH/AX8BfAFvAgAB/wF/AVsBawHqARQB6gEUAb4Bd2IAAb0BdwHqARQBewFv
+        BgABnQFzASsBHQF0AUoBnAFzAXQBSgHqARQB6gEUARgBXwH/AX9kAAG+AXcB6gEUAfgBWgH/AX8B/wF/
+        Af8BfwHeAXcBEgE+AeoBFAHqARQB6gEUAbYBVmoAAb0BdwFTAUYBbQEpAQoBGQHxATkBCgEZASsBHQHq
+        ARQBrwExAToBZwH/AX9uAAH/AX8B+AFeAa4BLQFMASEBlQFOAb0BdwH/AX9oAAFCAU0BPgcAAT4DAAEo
+        AwABQAMAARADAAEBAQABAQUAAYAXAAP/AQAB4AEHBgAB4AEDBgABgAEhBgABgAEwFgABAgcAAQcHAAEP
+        AYAGAAEPAcAGAAEPAaAGAAGfASAGAAGOBwABwAEDBgAB4AEDBgAB+AEPBgAL
+</value>
   </data>
 </root>
