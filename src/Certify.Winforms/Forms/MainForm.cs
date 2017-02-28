@@ -69,7 +69,9 @@ namespace Certify
 
         private void ReloadVault()
         {
+            //TODO: make VaultManager an app-wide singleton
             VaultManager.ReloadVaultConfig();
+            this.vaultExplorer1.ReloadVault();
         }
 
         private void ShowCertificateRequestDialog()
@@ -329,6 +331,33 @@ namespace Certify
         }
 
         private void MainForm_Load(object sender, EventArgs e)
+        {
+        }
+
+        private void toolStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+        }
+
+        private async void toolStripButtonRenewAll_Click(object sender, EventArgs e)
+        {
+            //check if there are any managed sites to renewal, if so offer to renew them
+
+            var certifyManager = new CertifyManager();
+            if (certifyManager.HasManagedSites)
+            {
+                if (MessageBox.Show("Perform renewal requests for all managed sites now?", "Renew All Certificates", MessageBoxButtons.OKCancel) == DialogResult.OK)
+                {
+                    //TODO: background worker
+                    var results = await certifyManager.PerformRenewalAllManagedSites(false);
+                }
+            }
+            else
+            {
+                MessageBox.Show("You have no managed sites saved. These are created when you complete a New Certificate request.");
+            }
+        }
+
+        private void managedSites1_Load(object sender, EventArgs e)
         {
         }
     }

@@ -50,13 +50,15 @@
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButtonNewContact = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonNewCertificate = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripButtonRenewAll = new System.Windows.Forms.ToolStripButton();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPageManagedSites = new System.Windows.Forms.TabPage();
             this.managedSites1 = new Certify.Forms.Controls.ManagedSites();
             this.tabPageVault = new System.Windows.Forms.TabPage();
+            this.vaultExplorer1 = new Certify.Forms.Controls.VaultExplorer();
             this.tabPageLog = new System.Windows.Forms.TabPage();
             this.txtOutput = new System.Windows.Forms.TextBox();
-            this.vaultExplorer1 = new Certify.Forms.Controls.VaultExplorer();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.tabControl1.SuspendLayout();
@@ -206,12 +208,15 @@
             // 
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripButtonNewContact,
-            this.toolStripButtonNewCertificate});
+            this.toolStripButtonNewCertificate,
+            this.toolStripSeparator5,
+            this.toolStripButtonRenewAll});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(784, 39);
             this.toolStrip1.TabIndex = 11;
             this.toolStrip1.Text = "toolStrip1";
+            this.toolStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.toolStrip1_ItemClicked);
             // 
             // toolStripButtonNewContact
             // 
@@ -232,6 +237,20 @@
             this.toolStripButtonNewCertificate.Size = new System.Drawing.Size(124, 36);
             this.toolStripButtonNewCertificate.Text = "New Certificate";
             this.toolStripButtonNewCertificate.Click += new System.EventHandler(this.toolStripButtonNewCertificate_Click);
+            // 
+            // toolStripSeparator5
+            // 
+            this.toolStripSeparator5.Name = "toolStripSeparator5";
+            this.toolStripSeparator5.Size = new System.Drawing.Size(6, 39);
+            // 
+            // toolStripButtonRenewAll
+            // 
+            this.toolStripButtonRenewAll.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonRenewAll.Image")));
+            this.toolStripButtonRenewAll.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonRenewAll.Name = "toolStripButtonRenewAll";
+            this.toolStripButtonRenewAll.Size = new System.Drawing.Size(79, 36);
+            this.toolStripButtonRenewAll.Text = "Renew All";
+            this.toolStripButtonRenewAll.Click += new System.EventHandler(this.toolStripButtonRenewAll_Click);
             // 
             // tabControl1
             // 
@@ -263,6 +282,7 @@
             this.managedSites1.Name = "managedSites1";
             this.managedSites1.Size = new System.Drawing.Size(770, 466);
             this.managedSites1.TabIndex = 0;
+            this.managedSites1.Load += new System.EventHandler(this.managedSites1_Load);
             // 
             // tabPageVault
             // 
@@ -274,6 +294,14 @@
             this.tabPageVault.TabIndex = 0;
             this.tabPageVault.Text = "Vault";
             this.tabPageVault.UseVisualStyleBackColor = true;
+            // 
+            // vaultExplorer1
+            // 
+            this.vaultExplorer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.vaultExplorer1.Location = new System.Drawing.Point(3, 3);
+            this.vaultExplorer1.Name = "vaultExplorer1";
+            this.vaultExplorer1.Size = new System.Drawing.Size(770, 466);
+            this.vaultExplorer1.TabIndex = 0;
             // 
             // tabPageLog
             // 
@@ -295,14 +323,6 @@
             this.txtOutput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.txtOutput.Size = new System.Drawing.Size(770, 466);
             this.txtOutput.TabIndex = 14;
-            // 
-            // vaultExplorer1
-            // 
-            this.vaultExplorer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.vaultExplorer1.Location = new System.Drawing.Point(3, 3);
-            this.vaultExplorer1.Name = "vaultExplorer1";
-            this.vaultExplorer1.Size = new System.Drawing.Size(770, 466);
-            this.vaultExplorer1.TabIndex = 0;
             // 
             // MainForm
             // 
@@ -366,6 +386,8 @@
         private System.Windows.Forms.TabPage tabPageManagedSites;
         private Forms.Controls.ManagedSites managedSites1;
         private Forms.Controls.VaultExplorer vaultExplorer1;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
+        private System.Windows.Forms.ToolStripButton toolStripButtonRenewAll;
     }
 }
 

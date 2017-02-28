@@ -42,7 +42,8 @@
             this.lblSubject = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.lblDaysRemaining = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.txtSAN = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // label1
@@ -171,21 +172,29 @@
             this.lblDaysRemaining.TabIndex = 13;
             this.lblDaysRemaining.Text = "(none)";
             // 
-            // label8
+            // label10
             // 
-            this.label8.AutoSize = true;
-            this.label8.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label8.Location = new System.Drawing.Point(17, 138);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(340, 13);
-            this.label8.TabIndex = 14;
-            this.label8.Text = "Note: To renew this certificate now, select New Certificate.";
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(17, 133);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(132, 13);
+            this.label10.TabIndex = 15;
+            this.label10.Text = "Subject Alternative Names";
+            // 
+            // txtSAN
+            // 
+            this.txtSAN.Location = new System.Drawing.Point(20, 149);
+            this.txtSAN.Multiline = true;
+            this.txtSAN.Name = "txtSAN";
+            this.txtSAN.Size = new System.Drawing.Size(359, 60);
+            this.txtSAN.TabIndex = 17;
             // 
             // CertificateDetails
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.label8);
+            this.Controls.Add(this.txtSAN);
+            this.Controls.Add(this.label10);
             this.Controls.Add(this.lblDaysRemaining);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.lblSubject);
@@ -201,7 +210,7 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Name = "CertificateDetails";
-            this.Size = new System.Drawing.Size(365, 176);
+            this.Size = new System.Drawing.Size(402, 254);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -223,6 +232,7 @@
         private System.Windows.Forms.Label lblSubject;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Label lblDaysRemaining;
-        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.TextBox txtSAN;
     }
 }

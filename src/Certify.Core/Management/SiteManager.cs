@@ -25,7 +25,7 @@ namespace Certify.Management
         public SiteManager()
         {
             EnableLocalIISMode = true;
-            this.managedSites = this.Preview();
+            this.managedSites = new List<ManagedSite>(); // this.Preview();
         }
 
         private string GetAppDataFolder()
@@ -103,6 +103,20 @@ namespace Certify.Management
         {
             var site = this.managedSites;
             return site;
+        }
+
+        public void UpdatedManagedSite(ManagedSite managedSite)
+        {
+            this.LoadSettings();
+
+            var existingSite = this.managedSites.FirstOrDefault(s => s.SiteId == managedSite.SiteId);
+            if (existingSite != null)
+            {
+                this.managedSites.Remove(existingSite);
+            }
+
+            this.managedSites.Add(managedSite);
+            this.StoreSettings();
         }
     }
 }

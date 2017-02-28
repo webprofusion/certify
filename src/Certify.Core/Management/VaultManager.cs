@@ -264,7 +264,7 @@ namespace Certify
             }
         }
 
-        public IdentifierInfo GetIdentifier(string alias, bool reloadVaultConfig = false)
+        public IdentifierInfo GetIdentifier(string aliasOrDNS, bool reloadVaultConfig = false)
         {
             if (reloadVaultConfig)
             {
@@ -275,14 +275,14 @@ namespace Certify
             if (identifiers != null)
             {
                 //find best match for given alias/id
-                var result = identifiers.FirstOrDefault(i => i.Alias == alias);
+                var result = identifiers.FirstOrDefault(i => i.Alias == aliasOrDNS);
                 if (result == null)
                 {
-                    result = identifiers.FirstOrDefault(i => i.Dns == alias);
+                    result = identifiers.FirstOrDefault(i => i.Dns == aliasOrDNS);
                 }
                 if (result == null)
                 {
-                    result = identifiers.FirstOrDefault(i => i.Id.ToString() == alias);
+                    result = identifiers.FirstOrDefault(i => i.Id.ToString() == aliasOrDNS);
                 }
                 return result;
             }

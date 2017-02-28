@@ -9,7 +9,33 @@ namespace Certify.Management
 {
     public class CertifyManager
     {
-        public async Task<CertificateRequestResult> PerformCertificateRequest(VaultManager vaultManager, SiteManager siteManager, ManagedSite managedSite)
+        private SiteManager siteManager = null;
+
+        public CertifyManager()
+        {
+            siteManager = new SiteManager();
+            siteManager.LoadSettings();
+        }
+
+        /// <summary>
+        /// Check if we have one or more managed sites setup
+        /// </summary>
+        public bool HasManagedSites
+        {
+            get
+            {
+                if (siteManager.GetManagedSites().Count > 0)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
+        public async Task<CertificateRequestResult> PerformCertificateRequest(VaultManager vaultManager, ManagedSite managedSite)
         {
             //primary domain and each subject alternative name must now be registered as an identifier with LE and validated
 
@@ -26,15 +52,35 @@ namespace Certify.Management
 
             foreach (var domain in allDomains)
             {
-                //check if domain already has an associated identifier
                 var identifierAlias = vaultManager.ComputeIdentifierAlias(domain);
+
+                //check if this domain already has an associated identifier registerd with LetsEncrypt which hasn't expired yet
+
+                var existingIdentifier = vaultManager.GetIdentifier(domain.Trim().ToLower());
+                bool identifierAlreadyValid = false;
+                if (existingIdentifier != null
+                    && existingIdentifier.Authorization != null
+                    && (existingIdentifier.Authorization.Status == "valid" || existingIdentifier.Authorization.Status == "pending")
+                    && existingIdentifier.Authorization.Expires > DateTime.Now.AddDays(1))
+                {
+                    //we have an existing validated identifier, reuse that for this certificate request
+                    identifierAlias = existingIdentifier.Alias;
+
+                    if (existingIdentifier.Authorization.Status == "valid")
+                    {
+                        identifierAlreadyValid = true;
+                    }
+
+                    // managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestStarted, Message = "Attempting Certificate Request: " + managedSite.SiteType });
+                    System.Diagnostics.Debug.WriteLine("Reusing existing valid non-expired identifier for the domain " + domain);
+                }
 
                 managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestStarted, Message = "Attempting Certificate Request: " + managedSite.SiteType });
 
-                //begin authorixation process (register identifier, request authorization if not already given)
+                //begin authorization process (register identifier, request authorization if not already given)
                 var authorization = vaultManager.BeginRegistrationAndValidation(config, identifierAlias, challengeType: config.ChallengeType, domain: domain);
 
-                if (authorization != null)
+                if (authorization != null && !identifierAlreadyValid)
                 {
                     if (authorization.Identifier.Authorization.IsPending())
                     {
@@ -69,6 +115,14 @@ namespace Certify.Management
                                 }
                             }
                         }
+                    }
+                }
+                else
+                {
+                    if (identifierAlreadyValid)
+                    {
+                        //we have previously validated this identifier and it has not yet expired, so we can just reuse it in our cert request
+                        identifierAuthorizations.Add(new PendingAuthorization { Identifier = existingIdentifier });
                     }
                 }
             }
@@ -115,6 +169,31 @@ namespace Certify.Management
             {
                 return new CertificateRequestResult { IsSuccess = false, ErrorMessage = "Validation of the required challenges did not complete successfully. Please ensure all domains to be referenced in the Certificate can be used to access this site without redirection. " };
             }
+        }
+
+        public async Task<List<CertificateRequestResult>> PerformRenewalAllManagedSites(bool autoRenewalOnly = true)
+        {
+            siteManager.LoadSettings();
+
+            var vaultManager = new VaultManager(Properties.Settings.Default.VaultPath, ACMESharp.Vault.Providers.LocalDiskVault.VAULT);
+
+            IEnumerable<ManagedSite> sites = siteManager.GetManagedSites();
+
+            var results = new List<CertificateRequestResult>();
+
+            if (autoRenewalOnly)
+            {
+                sites = sites.Where(s => s.IncludeInAutoRenew == true);
+            }
+
+            foreach (var s in sites.Where(s => s.IncludeInAutoRenew == true))
+            {
+                results.Add(await this.PerformCertificateRequest(vaultManager, s));
+            }
+
+            siteManager.StoreSettings();
+
+            return results;
         }
     }
 }

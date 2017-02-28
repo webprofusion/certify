@@ -145,7 +145,7 @@ namespace Certify.Forms.Controls
             // this.treeView1.ExpandAll();
         }
 
-        private void ReloadVault()
+        public void ReloadVault()
         {
             this.VaultManager = ((MainForm)this.Parent.FindForm()).VaultManager;
             VaultManager.ReloadVaultConfig();
@@ -276,7 +276,7 @@ namespace Certify.Forms.Controls
         private void VaultExplorer_Load(object sender, EventArgs e)
         {
             //this.ReloadVault();
-            if (LicenseManager.UsageMode == LicenseUsageMode.Runtime)
+            if (!this.DesignMode)
             {
                 this.ReloadVault();
             }
@@ -284,7 +284,6 @@ namespace Certify.Forms.Controls
 
         private void groupBoxVaultInfo_Enter(object sender, EventArgs e)
         {
-
         }
     }
 }

@@ -85,7 +85,14 @@ namespace Certify.Models
         {
             get
             {
-                return SiteName + " - " + Protocol + "://" + Host + ":" + Port;
+                if (Host != null)
+                {
+                    return SiteName + " - " + Protocol + "://" + Host + ":" + Port;
+                }
+                else
+                {
+                    return SiteName;
+                }
             }
         }
 

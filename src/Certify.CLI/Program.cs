@@ -95,19 +95,7 @@ namespace Certify.CLI
         {
             //go through list of items configured for auto renew, perform renewal and report the result
             var certifyManager = new CertifyManager();
-            var siteManager = new SiteManager();
-            siteManager.LoadSettings();
-
-            var vaultManager = new VaultManager(Properties.Settings.Default.VaultPath, LocalDiskVault.VAULT);
-
-            var sites = siteManager.GetManagedSites();
-
-            var results = new List<CertificateRequestResult>();
-
-            foreach (var s in sites.Where(s => s.IncludeInAutoRenew == true))
-            {
-                results.Add(await certifyManager.PerformCertificateRequest(vaultManager, siteManager, s));
-            }
+            var results = await certifyManager.PerformRenewalAllManagedSites();
             return results;
         }
 
