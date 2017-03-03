@@ -63,6 +63,7 @@ namespace Certify.Forms.Controls
             if (!this.DesignMode)
             {
                 this.RefreshManagedSitesList();
+                this.certRequestSettingsIIS1.Visible = false;
             }
         }
 
@@ -79,7 +80,7 @@ namespace Certify.Forms.Controls
                 if (selectedNode.Tag != null)
                 {
                     var site = siteManager.GetManagedSite(selectedNode.Tag.ToString());
-                    if (site.RequestConfig != null && site.RequestConfig.PrimaryDomain != null)
+                    //  if (site.RequestConfig != null && site.RequestConfig.PrimaryDomain != null)
                     {
                         this.selectedSite = site;
                         this.PopulateSiteDetails(site);
@@ -88,9 +89,15 @@ namespace Certify.Forms.Controls
             }
         }
 
+        internal void ReloadManagedSites()
+        {
+            this.RefreshManagedSitesList();
+        }
+
         private void PopulateSiteDetails(ManagedSite site)
         {
             this.certRequestSettingsIIS1.LoadManagedSite(site);
+            this.certRequestSettingsIIS1.Visible = true;
         }
 
         private async void button1_Click(object sender, EventArgs e)
@@ -109,6 +116,39 @@ namespace Certify.Forms.Controls
                 else
                 {
                     MessageBox.Show("Certificate request completed.");
+                }
+            }
+        }
+
+        private void listView1_MouseUp(object sender, MouseEventArgs e)
+        {
+            //check for right click
+        }
+
+        private void toolStripMenuItemDelete_Click(object sender, EventArgs e)
+        {
+            //delete option selected
+
+            // User has clicked delete in tree view context menu
+            if (this.listView1.SelectedItems != null && this.listView1.SelectedItems.Count > 0)
+            {
+                var node = this.listView1.SelectedItems[0];//.SelectedNode;
+
+                if (node != null)
+                {
+                    var site = siteManager.GetManagedSite(node.Tag.ToString());
+                    if (site != null)
+                    {
+                        if (MessageBox.Show("Are you sure you want to delete the Certify settings for the managed site '" + site.SiteName + "'?", "Confirm Delete", MessageBoxButtons.YesNoCancel) == DialogResult.Yes)
+                        {
+                            //delete site
+                            this.siteManager.DeleteManagedSite(site);
+
+                            //refresh managed sites list
+                            this.ReloadManagedSites();
+                            this.certRequestSettingsIIS1.Visible = false;
+                        }
+                    }
                 }
             }
         }

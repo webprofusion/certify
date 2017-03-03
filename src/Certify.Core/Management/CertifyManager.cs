@@ -37,6 +37,12 @@ namespace Certify.Management
 
         public async Task<CertificateRequestResult> PerformCertificateRequest(VaultManager vaultManager, ManagedSite managedSite)
         {
+            if (vaultManager==null)
+            {
+
+                vaultManager = new VaultManager(Properties.Settings.Default.VaultPath, ACMESharp.Vault.Providers.LocalDiskVault.VAULT);
+
+            }
             //primary domain and each subject alternative name must now be registered as an identifier with LE and validated
 
             var config = managedSite.RequestConfig;

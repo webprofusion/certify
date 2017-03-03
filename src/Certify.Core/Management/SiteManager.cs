@@ -41,7 +41,7 @@ namespace Certify.Management
         public void StoreSettings()
         {
             string appDataPath = GetAppDataFolder();
-            string siteManagerConfig = Newtonsoft.Json.JsonConvert.SerializeObject(this.managedSites);
+            string siteManagerConfig = Newtonsoft.Json.JsonConvert.SerializeObject(this.managedSites, Newtonsoft.Json.Formatting.Indented);
             System.IO.File.WriteAllText(appDataPath + "\\" + SITEMANAGERCONFIG, siteManagerConfig);
         }
 
@@ -74,12 +74,14 @@ namespace Certify.Management
                         managedSite.SiteType = ManagedSiteType.LocalIIS;
                         managedSite.Server = "localhost";
                         managedSite.SiteName = iisSites.First(i => i.SiteId == s.Key).SiteName;
-                        managedSite.SiteBindings = new List<ManagedSiteBinding>();
+
+                        //TODO: replace sute binding with domain options
+                        //managedSite.SiteBindings = new List<ManagedSiteBinding>();
 
                         foreach (var binding in s)
                         {
                             var managedBinding = new ManagedSiteBinding { Hostname = binding.Host, IP = binding.IP, Port = binding.Port, UseSNI = true, CertName = "Certify_" + binding.Host };
-                            managedSite.SiteBindings.Add(managedBinding);
+                            // managedSite.SiteBindings.Add(managedBinding);
                         }
                         sites.Add(managedSite);
                     }
@@ -95,7 +97,7 @@ namespace Certify.Management
 
         public ManagedSite GetManagedSite(string siteId, string domain = null)
         {
-            var site = this.managedSites.FirstOrDefault(s => (siteId != null && s.SiteId == siteId) || (domain != null && s.SiteBindings.Any(bind => bind.Hostname == domain)));
+            var site = this.managedSites.FirstOrDefault(s => (siteId != null && s.SiteId == siteId) || (domain != null && s.DomainOptions.Any(bind => bind.Domain == domain)));
             return site;
         }
 
@@ -116,6 +118,18 @@ namespace Certify.Management
             }
 
             this.managedSites.Add(managedSite);
+            this.StoreSettings();
+        }
+
+        public void DeleteManagedSite(ManagedSite site)
+        {
+            this.LoadSettings();
+
+            var existingSite = this.managedSites.FirstOrDefault(s => s.SiteId == site.SiteId);
+            if (existingSite != null)
+            {
+                this.managedSites.Remove(existingSite);
+            }
             this.StoreSettings();
         }
     }

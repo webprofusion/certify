@@ -77,14 +77,14 @@ namespace Certify.CLI
             {
                 foreach (var s in siteList)
                 {
-                    Console.ForegroundColor = ConsoleColor.White;
-                    System.Console.WriteLine(String.Format("{0} ({1}): Create single certificate for {2} bindings: \n", s.SiteName, s.SiteType.ToString(), s.SiteBindings.Count));
+                    /* Console.ForegroundColor = ConsoleColor.White;
+                     System.Console.WriteLine(String.Format("{0} ({1}): Create single certificate for {2} bindings: \n", s.SiteName, s.SiteType.ToString(), s.SiteBindings.Count));
 
-                    Console.ResetColor();
-                    foreach (var b in s.SiteBindings)
-                    {
-                        System.Console.WriteLine("\t" + b.Hostname + " \n");
-                    }
+                     Console.ResetColor();
+                     foreach (var b in s.SiteBindings)
+                     {
+                         System.Console.WriteLine("\t" + b.Hostname + " \n");
+                     }*/
                 }
             }
 

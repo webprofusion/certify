@@ -67,8 +67,10 @@ namespace Certify.Models
         public bool IncludeInAutoRenew { get; set; }
 
         public ManagedSiteType SiteType { get; set; }
-        public List<ManagedSiteBinding> SiteBindings { get; set; }
+
+        // public List<ManagedSiteBinding> SiteBindings { get; set; }
         public List<ManagedSiteLogItem> Logs { get; set; }
+
         public List<DomainOption> DomainOptions { get; set; }
         public CertRequestConfig RequestConfig { get; set; }
 

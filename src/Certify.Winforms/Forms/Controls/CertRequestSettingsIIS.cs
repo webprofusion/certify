@@ -24,7 +24,7 @@ namespace Certify.Forms.Controls
         /// <summary>
         /// If true, all IIS websites are shown, otherwise only a single site is selected
         /// </summary>
-        public bool IsNewCertMode { get; set; }
+        public bool IsNewManagedSiteMode { get; set; }
 
         private ManagedSite _selectedManagedSite { get; set; }
 
@@ -35,15 +35,16 @@ namespace Certify.Forms.Controls
             siteManager = new SiteManager(); //registry of sites we manage certificate requests for
             siteManager.LoadSettings();
 
-            IsNewCertMode = true;
+            IsNewManagedSiteMode = false;
         }
 
         public void LoadManagedSite(ManagedSite site)
         {
+            this.IsNewManagedSiteMode = false;
             this._selectedManagedSite = site;
 
             //use options form saved site to populate current site settings
-            PopulateSiteDomainList(site.SiteId, site);
+            PopulateManagedSiteSettings(site.SiteId, site);
 
             this.lstSites.Visible = false;
         }
@@ -75,11 +76,19 @@ namespace Certify.Forms.Controls
 
             //if we have already saved settings for this site, load them again
             var existingSite = siteManager.GetManagedSite(selectItem.SiteId);
-            this.PopulateSiteDomainList(selectItem.SiteId, existingSite);
+            this.PopulateManagedSiteSettings(selectItem.SiteId, existingSite);
         }
 
-        private void PopulateSiteDomainList(string siteId, ManagedSite managedSite = null)
+        private void PopulateManagedSiteSettings(string siteId, ManagedSite managedSite = null)
         {
+            //set defaults first
+            this.chkSkipConfigCheck.Checked = false;
+            this.chkAutoBindings.Checked = true;
+            this.chkEnableNotifications.Checked = true;
+            this.chkIncludeInAutoRenew.Checked = true;
+            //this.txtManagedSiteName.Text = "";
+            this.chkListSAN.Items.Clear();
+
             //for the given selected web site, allow the user to choose which domains to combine into one certificate
             var allSites = iisManager.GetSiteBindingList(false);
             this.domains = new List<DomainOption>();
@@ -97,11 +106,22 @@ namespace Certify.Forms.Controls
                 //carry over settings from saved managed site
                 txtManagedSiteName.Text = managedSite.SiteName;
 
+                chkIncludeInAutoRenew.Checked = managedSite.IncludeInAutoRenew;
+                if (managedSite.RequestConfig != null)
+                {
+                    chkSkipConfigCheck.Checked = !managedSite.RequestConfig.PerformExtensionlessConfigChecks;
+                    chkAutoBindings.Checked = managedSite.RequestConfig.PerformAutomatedCertBinding;
+                    chkEnableNotifications.Checked = managedSite.RequestConfig.EnableFailureNotifications;
+                }
+
                 foreach (var d in domains)
                 {
                     var opt = managedSite.DomainOptions.FirstOrDefault(o => o.Domain == d.Domain);
-                    d.IsPrimaryDomain = opt.IsPrimaryDomain;
-                    d.IsSelected = opt.IsSelected;
+                    if (opt != null)
+                    {
+                        d.IsPrimaryDomain = opt.IsPrimaryDomain;
+                        d.IsSelected = opt.IsSelected;
+                    }
                 }
             }
 
@@ -198,12 +218,26 @@ namespace Certify.Forms.Controls
             if (this.DesignMode) return;
 
             btnRequestCertificate.Enabled = true;
-            PopulateWebsitesFromIIS();
+
             HideProgressBar();
 
-            if (lstSites.Items.Count == 0)
+            if (IsNewManagedSiteMode)
             {
-                MessageBox.Show("You have no applicable IIS sites configured. Setup a website in IIS or use a Generic Request.");
+                btnCancel.Visible = true;
+                //allow user to pick a site from IIS
+                PopulateWebsitesFromIIS();
+
+                if (lstSites.Items.Count == 0)
+                {
+                    MessageBox.Show("You have no applicable IIS sites configured. Setup a website in IIS or use a Generic Request.");
+                }
+                else
+                {
+                }
+            }
+            else
+            {
+                btnCancel.Visible = false;
             }
         }
 
@@ -272,9 +306,19 @@ namespace Certify.Forms.Controls
             var s = GetUpdatedManagedSiteSettings();
             siteManager.UpdatedManagedSite(s);
 
-            MessageBox.Show("Managed Site settings saved.");
+            //refresh parent app list of managed sites
+            this.NotifyParentAppManagedSiteChanges();
 
-            //TODO: refresh parent app list of managed sites
+            MessageBox.Show("Managed Site settings saved.", "Settings Saved");
+        }
+
+        private void NotifyParentAppManagedSiteChanges()
+        {
+            var parentForm = this.FindForm();
+            if (parentForm is MainForm)
+            {
+                ((MainForm)parentForm).RefreshManagedSites();
+            }
         }
 
         /// <summary>
