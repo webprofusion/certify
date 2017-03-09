@@ -78,7 +78,7 @@ namespace Certify.Management
             }
             catch (Exception) { }
 
-            return result;
+            return result.OrderBy(s => s.SiteName).ToList();
         }
 
         public List<SiteBindingItem> GetSiteBindingList(bool includeOnlyStartedSites)

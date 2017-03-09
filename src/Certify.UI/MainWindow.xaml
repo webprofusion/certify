@@ -1,0 +1,68 @@
+﻿<Controls:MetroWindow
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+                      xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
+        xmlns:local="clr-namespace:Certify.UI"
+        xmlns:Controls1="clr-namespace:Certify.UI.Controls" x:Class="Certify.UI.MainWindow"
+        mc:Ignorable="d"
+        Title="Certify" Height="537" Width="713">
+
+    <StackPanel>
+        <Menu>
+            <MenuItem Header="_File">
+                <MenuItem Header="_New..">
+                    <MenuItem Header="Contact _Registration" />
+                    <MenuItem Header="_Certificate" />
+                </MenuItem>
+
+                <Separator />
+                <MenuItem Header="_Exit" />
+            </MenuItem>
+            <MenuItem Header="_Options">
+                <MenuItem Header="_Settings" />
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="_Support" />
+                <MenuItem Header="Check For _Updates" />
+                <MenuItem Header="_About" />
+            </MenuItem>
+        </Menu>
+        <ToolBarTray Height="43" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5">
+
+            <ToolBar HorizontalAlignment="Left" Height="46" VerticalAlignment="Top" Width="447" Margin="0,0,-423,-33">
+                <Button Height="32" Margin="0,0,0,5">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="Assets/Images/Icons/font-awesome_4-7-0_user-plus_32_0_000000_none.png" />
+                        <TextBlock Margin="3,0,0,0" VerticalAlignment="Center"><Run Text="New Contact" /></TextBlock>
+                    </StackPanel>
+                </Button>
+                <Separator />
+                <Button Height="32" Margin="0,0,0,5">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="Assets/Images/Icons/font-awesome_4-7-0_globe_32_0_000000_none.png" />
+                        <TextBlock Margin="3,0,0,0" VerticalAlignment="Center"><Run Text="New Certificate" /></TextBlock>
+                    </StackPanel>
+                </Button>
+                <Button Height="32" Margin="0,0,0,5">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="Assets/Images/Icons/font-awesome_4-7-0_refresh_32_0_000000_none.png" />
+                        <TextBlock Margin="3,0,0,0" VerticalAlignment="Center"><Run Text="Renew All" /></TextBlock>
+                    </StackPanel>
+                </Button>
+            </ToolBar>
+        </ToolBarTray>
+
+        <dragablz:TabablzControl Margin="8" Height="Auto">
+
+            <TabItem Header="Managed Certificates" IsSelected="True">
+                <Controls1:ManagedSites />
+            </TabItem>
+            <TabItem Header="Vault">
+                <TextBlock><Run Text="Vault" /></TextBlock>
+            </TabItem>
+        </dragablz:TabablzControl>
+    </StackPanel>
+</Controls:MetroWindow>
