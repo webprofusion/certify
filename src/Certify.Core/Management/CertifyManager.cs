@@ -9,11 +9,11 @@ namespace Certify.Management
 {
     public class CertifyManager
     {
-        private SiteManager siteManager = null;
+        private ItemManager siteManager = null;
 
         public CertifyManager()
         {
-            siteManager = new SiteManager();
+            siteManager = new ItemManager();
             siteManager.LoadSettings();
         }
 
@@ -84,7 +84,7 @@ namespace Certify.Management
                     System.Diagnostics.Debug.WriteLine("Reusing existing valid non-expired identifier for the domain " + domain);
                 }
 
-                managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestStarted, Message = "Attempting Certificate Request: " + managedSite.SiteType });
+                managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestStarted, Message = "Attempting Certificate Request: " + managedSite.ItemType });
 
                 //begin authorization process (register identifier, request authorization if not already given)
                 var authorization = vaultManager.BeginRegistrationAndValidation(config, identifierAlias, challengeType: config.ChallengeType, domain: domain);
@@ -93,16 +93,16 @@ namespace Certify.Management
                 {
                     if (authorization.Identifier.Authorization.IsPending())
                     {
-                        if (managedSite.SiteType == ManagedSiteType.LocalIIS)
+                        if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS)
                         {
                             //ask LE to check our answer to their authorization challenge (http), LE will then attempt to fetch our answer, if all accessible and correct (authorized) LE will then allow us to request a certificate
                             //prepare IIS with answer for the LE challenege
                             authorization = vaultManager.PerformIISAutomatedChallengeResponse(config, authorization);
 
                             //if we attempted extensionless config checks, report any errors
-                            if (config.PerformExtensionlessAutoConfig && !authorization.ExtensionlessConfigCheckedOK)
+                            if (config.PerformAutoConfig && !authorization.ExtensionlessConfigCheckedOK)
                             {
-                                managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertficateRequestFailed, Message = "Failed prerequisite configuration (" + managedSite.SiteType + ")" });
+                                managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertficateRequestFailed, Message = "Failed prerequisite configuration (" + managedSite.ItemType + ")" });
                                 siteManager.StoreSettings();
 
                                 return new CertificateRequestResult { IsSuccess = false, ErrorMessage = "Automated checks for extensionless content failed. Authorizations will not be able to complete.Change the web.config in <your site>\\.well-known\\acme-challenge and ensure you can browse to http://<your site>/.well-known/acme-challenge/configcheck before proceeding." };
@@ -146,7 +146,7 @@ namespace Certify.Management
                 {
                     string pfxPath = certRequestResult.Result.ToString();
 
-                    if (managedSite.SiteType == ManagedSiteType.LocalIIS && config.PerformAutomatedCertBinding)
+                    if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS && config.PerformAutomatedCertBinding)
                     {
                         var iisManager = new IISManager();
 

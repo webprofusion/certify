@@ -66,7 +66,7 @@ namespace Certify.CLI
         /// </summary>
         private void PreviewAutoManage()
         {
-            var siteManager = new SiteManager();
+            var siteManager = new ItemManager();
             var siteList = siteManager.Preview();
 
             if (siteList == null || siteList.Count == 0)

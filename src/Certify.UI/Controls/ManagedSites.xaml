@@ -8,8 +8,8 @@
              xmlns:Models="clr-namespace:Certify.UI.Models" xmlns:System="clr-namespace:System;assembly=mscorlib" x:Class="Certify.UI.Controls.ManagedSites"
              mc:Ignorable="d"
              d:DesignHeight="300" Width="809.302">
-    <Grid>
-        <ListView Height="261" Margin="20,0,29,19" VerticalAlignment="Bottom" ItemsSource="{Binding AppViewModel.ManagedSites}">
+    <DockPanel>
+        <ListView Height="261" Margin="0,0,0,19" VerticalAlignment="Bottom" ItemsSource="{Binding AppViewModel.ManagedSites}" Width="261">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <WrapPanel>
@@ -29,5 +29,6 @@
                 <Models:AppModel />
             </ListView.DataContext>
         </ListView>
-    </Grid>
+        <StackPanel Height="300" VerticalAlignment="Top" Width="516" />
+    </DockPanel>
 </UserControl>

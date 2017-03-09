@@ -14,7 +14,7 @@ namespace Certify.Forms.Controls
     public partial class CertRequestSettingsIIS : CertRequestBaseControl
     {
         private readonly IdnMapping _idnMapping = new IdnMapping();
-        private SiteManager siteManager;
+        private ItemManager siteManager;
         private IISManager iisManager = new IISManager();
 
         private BindingSource domainListBindingSource = new BindingSource();
@@ -32,7 +32,7 @@ namespace Certify.Forms.Controls
         {
             InitializeComponent();
 
-            siteManager = new SiteManager(); //registry of sites we manage certificate requests for
+            siteManager = new ItemManager(); //registry of sites we manage certificate requests for
             siteManager.LoadSettings();
 
             IsNewManagedSiteMode = false;
@@ -44,7 +44,7 @@ namespace Certify.Forms.Controls
             this._selectedManagedSite = site;
 
             //use options form saved site to populate current site settings
-            PopulateManagedSiteSettings(site.SiteId, site);
+            PopulateManagedSiteSettings(site.Id, site);
 
             this.lstSites.Visible = false;
         }
@@ -104,7 +104,7 @@ namespace Certify.Forms.Controls
             if (managedSite != null && managedSite.DomainOptions != null)
             {
                 //carry over settings from saved managed site
-                txtManagedSiteName.Text = managedSite.SiteName;
+                txtManagedSiteName.Text = managedSite.Name;
 
                 chkIncludeInAutoRenew.Checked = managedSite.IncludeInAutoRenew;
                 if (managedSite.RequestConfig != null)
@@ -346,7 +346,7 @@ namespace Certify.Forms.Controls
 
             config.PerformChallengeFileCopy = true;
             config.PerformExtensionlessConfigChecks = !chkSkipConfigCheck.Checked;
-            config.PerformExtensionlessAutoConfig = true;
+            config.PerformAutoConfig = true;
 
             config.EnableFailureNotifications = chkEnableNotifications.Checked;
 
@@ -359,7 +359,8 @@ namespace Certify.Forms.Controls
 
                 var siteInfo = (SiteBindingItem)lstSites.SelectedItem;
 
-                managedSite.SiteId = siteInfo.SiteId;
+                managedSite.Id = Guid.NewGuid().ToString() + ":" + siteInfo.SiteId;
+                managedSite.GroupId = siteInfo.SiteId;
                 managedSite.IncludeInAutoRenew = chkIncludeInAutoRenew.Checked;
                 config.WebsiteRootPath = Environment.ExpandEnvironmentVariables(siteInfo.PhysicalPath);
             }
@@ -368,8 +369,8 @@ namespace Certify.Forms.Controls
                 managedSite.IncludeInAutoRenew = chkIncludeInAutoRenew.Checked;
             }
 
-            managedSite.SiteType = ManagedSiteType.LocalIIS;
-            managedSite.SiteName = txtManagedSiteName.Text;
+            managedSite.ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS;
+            managedSite.Name = txtManagedSiteName.Text;
 
             //store domain options settings and request config for this site so we can replay for automated renewal
             managedSite.DomainOptions = this.domains;

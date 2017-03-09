@@ -752,7 +752,7 @@ namespace Certify
                         {
                             extensionlessConfigOK = true;
                         }
-                        if (!extensionlessConfigOK && requestConfig.PerformExtensionlessAutoConfig)
+                        if (!extensionlessConfigOK && requestConfig.PerformAutoConfig)
                         {
                             //didn't work, try our default config
                             System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
@@ -765,7 +765,7 @@ namespace Certify
                     }
                 }
 
-                if (!extensionlessConfigOK && requestConfig.PerformExtensionlessAutoConfig)
+                if (!extensionlessConfigOK && requestConfig.PerformAutoConfig)
                 {
                     //if first attempt(s) at config failed, try an alternative config
                     webConfigContent = Properties.Resources.IISWebConfigAlt;

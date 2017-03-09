@@ -14,14 +14,14 @@ namespace Certify.Forms.Controls
 {
     public partial class ManagedSites : UserControl
     {
-        private SiteManager siteManager;
+        private ItemManager siteManager;
         private ManagedSite selectedSite;
 
         public ManagedSites()
         {
             InitializeComponent();
 
-            siteManager = new SiteManager();
+            siteManager = new ItemManager();
         }
 
         private MainForm GetParentMainForm()
@@ -43,8 +43,8 @@ namespace Certify.Forms.Controls
 
             foreach (var s in sites)
             {
-                var siteNode = new ListViewItem(s.SiteName);
-                siteNode.Tag = s.SiteId;
+                var siteNode = new ListViewItem(s.Name);
+                siteNode.Tag = s.Id;
                 siteNode.ImageIndex = 0;
                 this.listView1.Items.Add(siteNode);
                 if (s.IncludeInAutoRenew)
@@ -139,7 +139,7 @@ namespace Certify.Forms.Controls
                     var site = siteManager.GetManagedSite(node.Tag.ToString());
                     if (site != null)
                     {
-                        if (MessageBox.Show("Are you sure you want to delete the Certify settings for the managed site '" + site.SiteName + "'?", "Confirm Delete", MessageBoxButtons.YesNoCancel) == DialogResult.Yes)
+                        if (MessageBox.Show("Are you sure you want to delete the Certify settings for the managed item '" + site.Name + "'?", "Confirm Delete", MessageBoxButtons.YesNoCancel) == DialogResult.Yes)
                         {
                             //delete site
                             this.siteManager.DeleteManagedSite(site);

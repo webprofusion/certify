@@ -10,10 +10,10 @@ namespace Certify.Management
     /// <summary>
     /// SiteManager encapsulates settings and operations on the list of Sites we manage certificates for using Certify and is additional to the ACMESharp Vault. These could be Local IIS, Manually Configured, DNS driven etc
     /// </summary>
-    public class SiteManager
+    public class ItemManager
     {
         private const string APPDATASUBFOLDER = "Certify";
-        private const string SITEMANAGERCONFIG = "sites.json";
+        private const string ITEMMANAGERCONFIG = "config.json";
 
         /// <summary>
         /// If true, one or more of our managed sites are hosted within a Local IIS server on the same machine
@@ -22,7 +22,7 @@ namespace Certify.Management
 
         private List<ManagedSite> managedSites { get; set; }
 
-        public SiteManager()
+        public ItemManager()
         {
             EnableLocalIISMode = true;
             this.managedSites = new List<ManagedSite>(); // this.Preview();
@@ -42,13 +42,13 @@ namespace Certify.Management
         {
             string appDataPath = GetAppDataFolder();
             string siteManagerConfig = Newtonsoft.Json.JsonConvert.SerializeObject(this.managedSites, Newtonsoft.Json.Formatting.Indented);
-            System.IO.File.WriteAllText(appDataPath + "\\" + SITEMANAGERCONFIG, siteManagerConfig);
+            System.IO.File.WriteAllText(appDataPath + "\\" + ITEMMANAGERCONFIG, siteManagerConfig);
         }
 
         public void LoadSettings()
         {
             string appDataPath = GetAppDataFolder();
-            string configData = System.IO.File.ReadAllText(appDataPath + "\\" + SITEMANAGERCONFIG);
+            string configData = System.IO.File.ReadAllText(appDataPath + "\\" + ITEMMANAGERCONFIG);
             this.managedSites = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ManagedSite>>(configData);
         }
 
@@ -70,10 +70,10 @@ namespace Certify.Management
 
                     foreach (var s in siteIds)
                     {
-                        ManagedSite managedSite = new ManagedSite { SiteId = s.Key };
-                        managedSite.SiteType = ManagedSiteType.LocalIIS;
-                        managedSite.Server = "localhost";
-                        managedSite.SiteName = iisSites.First(i => i.SiteId == s.Key).SiteName;
+                        ManagedSite managedSite = new ManagedSite { Id = s.Key };
+                        managedSite.ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS;
+                        managedSite.TargetHost = "localhost";
+                        managedSite.Name = iisSites.First(i => i.SiteId == s.Key).SiteName;
 
                         //TODO: replace sute binding with domain options
                         //managedSite.SiteBindings = new List<ManagedSiteBinding>();
@@ -97,7 +97,7 @@ namespace Certify.Management
 
         public ManagedSite GetManagedSite(string siteId, string domain = null)
         {
-            var site = this.managedSites.FirstOrDefault(s => (siteId != null && s.SiteId == siteId) || (domain != null && s.DomainOptions.Any(bind => bind.Domain == domain)));
+            var site = this.managedSites.FirstOrDefault(s => (siteId != null && s.Id == siteId) || (domain != null && s.DomainOptions.Any(bind => bind.Domain == domain)));
             return site;
         }
 
@@ -111,7 +111,7 @@ namespace Certify.Management
         {
             this.LoadSettings();
 
-            var existingSite = this.managedSites.FirstOrDefault(s => s.SiteId == managedSite.SiteId);
+            var existingSite = this.managedSites.FirstOrDefault(s => s.Id == managedSite.Id);
             if (existingSite != null)
             {
                 this.managedSites.Remove(existingSite);
@@ -125,7 +125,7 @@ namespace Certify.Management
         {
             this.LoadSettings();
 
-            var existingSite = this.managedSites.FirstOrDefault(s => s.SiteId == site.SiteId);
+            var existingSite = this.managedSites.FirstOrDefault(s => s.Id == site.Id);
             if (existingSite != null)
             {
                 this.managedSites.Remove(existingSite);
