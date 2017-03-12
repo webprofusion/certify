@@ -1,15 +1,73 @@
-﻿<UserControl x:Class="Certify.UI.Controls.ManagedItemSettings"
+﻿<UserControl
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
              xmlns:local="clr-namespace:Certify.UI.Controls"
+             xmlns:Models="clr-namespace:Certify.UI.Models" x:Class="Certify.UI.Controls.ManagedItemSettings"
              mc:Ignorable="d"
-             d:DesignHeight="300" d:DesignWidth="300">
-    <Grid>
-        <Grid Margin="0,0,0,200" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
-            <Label Content="Name" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top" />
-            <Label x:Name="ItemName" Content="Name" HorizontalAlignment="Left" Margin="51,10,0,0" VerticalAlignment="Top" />
-        </Grid>
-    </Grid>
+             d:DesignHeight="300" Width="542.667">
+
+    <StackPanel Orientation="Vertical" d:DataContext="{d:DesignData /SampleData/AppModelSampleData.xaml}">
+
+        <StackPanel Orientation="Vertical">
+            <StackPanel Orientation="Vertical">
+                <Label Content="{Binding AppViewModel.SelectedItem.Name}" Margin="8,0,0,0" FontSize="18" Foreground="{DynamicResource AccentColorBrush}" />
+            </StackPanel>
+            <dragablz:TabablzControl Margin="8" Height="Auto" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
+
+                <TabItem Header="Options" IsSelected="True">
+
+                    <StackPanel Margin="0,16,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Label Width="131" Content="Name:" />
+                            <TextBox Text="{Binding AppViewModel.SelectedItem.Name}" Width="225" />
+                        </StackPanel>
+                        <StackPanel Orientation="Vertical" Margin="128,8,0,0">
+                            <CheckBox Content="Enable Auto Renewal" IsChecked="{Binding AppViewModel.SelectedItem.IncludeInAutoRenew}" />
+                            <CheckBox Content="Notify Primary Contact On Renewal Failure" IsChecked="{Binding AppViewModel.SelectedItem.EnableFailureNotifications}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,16,0,16">
+                            <TextBlock TextWrapping="WrapWithOverflow" Foreground="{DynamicResource AccentColorBrush2}" Width="500">
+The following domains will be included as a single certificate request. The Lets Encrypt service must be able to access all of theses sites via HTTP (port 80) for the certification process to work.
+                            </TextBlock>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal">
+                            <Label>Primary Subject Name:</Label>
+                            <ComboBox ItemsSource="{Binding AppViewModel.SelectedItem.DomainOptions}" DisplayMemberPath="Domain" Width="225" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label>Included Subject Alternative Names:</Label>
+                        </StackPanel>
+
+                        <ListView ItemsSource="{Binding AppViewModel.SelectedItem.DomainOptions}"  SelectionMode="Single" MaxHeight="150" BorderBrush="{DynamicResource IdealForegroundDisabledBrush}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Domain}" IsChecked="{Binding IsSelected }" Margin="0,5,0,0" />
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </TabItem>
+                <TabItem Header="Advanced" IsSelected="True">
+                    <StackPanel Margin="0,16,0,0">
+                        <StackPanel Orientation="Vertical">
+                            <CheckBox Content="Auto create/update IIS bindings (uses SNI)" IsChecked="{Binding AppViewModel.SelectedItem.RequestConfig.PerformAutomatedCertBinding}" />
+                            <CheckBox Content="Perform challenge response file config check" IsChecked="{Binding AppViewModel.SelectedItem.RequestConfig.PerformExtensionlessConfigChecks}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Width="131" Content="Bind to Specific IP:" />
+                            <TextBox Text="{Binding AppViewModel.SelectedItem.RequestConfig.BindingIPAddress}" Width="225" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Width="131" Content="Bind to Specific Port:" />
+                            <TextBox Text="{Binding AppViewModel.SelectedItem.RequestConfig.BindingPort}" Width="225" />
+                        </StackPanel>
+                    </StackPanel>
+                </TabItem>
+            </dragablz:TabablzControl>
+        </StackPanel>
+    </StackPanel>
 </UserControl>

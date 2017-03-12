@@ -24,5 +24,24 @@ namespace Certify.UI
         {
             InitializeComponent();
         }
+
+        private void Button_NewCertificate(object sender, RoutedEventArgs e)
+        {
+            //present new certificate dialog
+        }
+
+        private void Button_NewContact(object sender, RoutedEventArgs e)
+        {
+            //present new contact dialog
+        }
+
+        private void Button_RenewAll(object sender, RoutedEventArgs e)
+        {
+            //present new renew all confirmation
+        }
+
+        private void MenuItem_ShowAbout(object sender, RoutedEventArgs e)
+        {
+        }
     }
 }

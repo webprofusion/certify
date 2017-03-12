@@ -378,5 +378,10 @@ namespace Certify.Forms.Controls
 
             return managedSite;
         }
+
+        private void label4_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

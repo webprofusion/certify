@@ -6,12 +6,16 @@
         xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
                       xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
         xmlns:local="clr-namespace:Certify.UI"
-        xmlns:Controls1="clr-namespace:Certify.UI.Controls" x:Class="Certify.UI.MainWindow"
-        mc:Ignorable="d"
-        Title="Certify" Height="537" Width="713">
+        xmlns:Controls1="clr-namespace:Certify.UI.Controls"
+    xmlns:fa="http://schemas.fontawesome.io/icons/" x:Class="Certify.UI.MainWindow"
 
-    <StackPanel>
-        <Menu>
+                   GlowBrush="{DynamicResource AccentColorBrush}"
+                   BorderThickness="1"
+        mc:Ignorable="d"
+        Title="Certify" Height="668" Width="1120">
+
+    <DockPanel LastChildFill="True">
+        <Menu DockPanel.Dock="Top" VerticalAlignment="Top">
             <MenuItem Header="_File">
                 <MenuItem Header="_New..">
                     <MenuItem Header="Contact _Registration" />
@@ -27,42 +31,39 @@
             <MenuItem Header="_Help">
                 <MenuItem Header="_Support" />
                 <MenuItem Header="Check For _Updates" />
-                <MenuItem Header="_About" />
+                <MenuItem Header="_About" Click="MenuItem_ShowAbout" />
             </MenuItem>
         </Menu>
-        <ToolBarTray Height="43" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5">
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" VerticalAlignment="Top" Margin="8,0,0,0">
+            <Button Height="32" Margin="0,0,0,5" Click="Button_NewContact">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Flag" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <TextBlock Margin="6,0" VerticalAlignment="Center"><Run Text="New Contact" /></TextBlock>
+                </StackPanel>
+            </Button>
 
-            <ToolBar HorizontalAlignment="Left" Height="46" VerticalAlignment="Top" Width="447" Margin="0,0,-423,-33">
-                <Button Height="32" Margin="0,0,0,5">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="Assets/Images/Icons/font-awesome_4-7-0_user-plus_32_0_000000_none.png" />
-                        <TextBlock Margin="3,0,0,0" VerticalAlignment="Center"><Run Text="New Contact" /></TextBlock>
-                    </StackPanel>
-                </Button>
-                <Separator />
-                <Button Height="32" Margin="0,0,0,5">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="Assets/Images/Icons/font-awesome_4-7-0_globe_32_0_000000_none.png" />
-                        <TextBlock Margin="3,0,0,0" VerticalAlignment="Center"><Run Text="New Certificate" /></TextBlock>
-                    </StackPanel>
-                </Button>
-                <Button Height="32" Margin="0,0,0,5">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="Assets/Images/Icons/font-awesome_4-7-0_refresh_32_0_000000_none.png" />
-                        <TextBlock Margin="3,0,0,0" VerticalAlignment="Center"><Run Text="Renew All" /></TextBlock>
-                    </StackPanel>
-                </Button>
-            </ToolBar>
-        </ToolBarTray>
+            <Button Height="32" Margin="8,0,0,5" Click="Button_NewCertificate">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Globe" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="New Certificate" /></TextBlock>
+                </StackPanel>
+            </Button>
+            <Button Height="32" Margin="8,0,0,5" Click="Button_RenewAll">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Refresh" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Renew All" /></TextBlock>
+                </StackPanel>
+            </Button>
+        </StackPanel>
 
-        <dragablz:TabablzControl Margin="8" Height="Auto">
+        <dragablz:TabablzControl DockPanel.Dock="Bottom" Margin="8,8,8,0">
 
             <TabItem Header="Managed Certificates" IsSelected="True">
-                <Controls1:ManagedSites />
+                <Controls1:ManagedSites Width="Auto" Height="Auto" />
             </TabItem>
             <TabItem Header="Vault">
                 <TextBlock><Run Text="Vault" /></TextBlock>
             </TabItem>
         </dragablz:TabablzControl>
-    </StackPanel>
+    </DockPanel>
 </Controls:MetroWindow>

@@ -21,13 +21,9 @@ namespace Certify.UI.Controls
     /// </summary>
     public partial class ManagedItemSettings : UserControl
     {
-        internal ManagedSite Item { get; set; }
-
         public ManagedItemSettings()
         {
             InitializeComponent();
-            Item = new ManagedSite();
-            Item.Name = "Test Site";
         }
     }
 }

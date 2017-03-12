@@ -32,5 +32,21 @@ namespace Certify.UI.Controls
         {
             InitializeComponent();
         }
+
+        private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems.Count > 0)
+            {
+                ViewModel.SelectedItem = (Certify.Models.ManagedSite)e.AddedItems[0];
+            }
+        }
+
+        private void ListView_TouchDown(object sender, TouchEventArgs e)
+        {
+        }
+
+        private void ManagedItemSettings_Loaded(object sender, RoutedEventArgs e)
+        {
+        }
     }
 }

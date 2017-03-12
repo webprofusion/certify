@@ -19,6 +19,7 @@ namespace Certify.UI
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            /*
             // get the current app style (theme and accent) from the application
             // you can then use the current theme and custom accent instead set a new theme
             Tuple<AppTheme, Accent> appStyle = ThemeManager.DetectAppStyle(Application.Current);
@@ -27,7 +28,7 @@ namespace Certify.UI
             ThemeManager.ChangeAppStyle(Application.Current,
                                         ThemeManager.GetAccent("Green"),
                                         ThemeManager.GetAppTheme("BaseLight")); // or appStyle.Item1
-
+*/
             base.OnStartup(e);
 
             this.AppViewModel = new AppModel();

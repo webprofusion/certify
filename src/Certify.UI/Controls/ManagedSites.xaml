@@ -5,30 +5,30 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
              xmlns:local="clr-namespace:Certify.UI.Controls"
-             xmlns:Models="clr-namespace:Certify.UI.Models" xmlns:System="clr-namespace:System;assembly=mscorlib" x:Class="Certify.UI.Controls.ManagedSites"
-             mc:Ignorable="d"
-             d:DesignHeight="300" Width="809.302">
-    <DockPanel>
-        <ListView Height="261" Margin="0,0,0,19" VerticalAlignment="Bottom" ItemsSource="{Binding AppViewModel.ManagedSites}" Width="261">
+             xmlns:Models="clr-namespace:Certify.UI.Models" xmlns:System="clr-namespace:System;assembly=mscorlib"
+    xmlns:fa="http://schemas.fontawesome.io/icons/" x:Class="Certify.UI.Controls.ManagedSites"
+             mc:Ignorable="d" Width="970" Height="333">
+
+    <UserControl.DataContext>
+        <Models:AppModel />
+    </UserControl.DataContext>
+    <DockPanel d:DataContext="{d:DesignData /SampleData/AppModelSampleData.xaml}" Margin="0,8,0,0">
+        <ListView ItemsSource="{Binding AppViewModel.ManagedSites}" SelectionChanged="ListView_SelectionChanged" TouchDown="ListView_TouchDown" DataContext="{Binding}" SelectionMode="Single" Width="240" BorderBrush="{DynamicResource WindowTitleColorBrush}" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <WrapPanel>
-                        <TextBlock Text="Name: " />
-                        <TextBlock Text="{Binding SiteName}" FontWeight="Bold" />
-                        <TextBlock Text=", " />
-                        <TextBlock Text="Id: " />
-                        <TextBlock Text="{Binding SiteId}" FontWeight="Bold" />
-                        <TextBlock Text=" (" />
-                        <TextBlock Text="{Binding SiteType}" TextDecorations="Underline" Foreground="Blue" Cursor="Hand" />
-                        <TextBlock Text=")" />
-                    </WrapPanel>
+                    <StackPanel Orientation="Vertical" Margin="0,8,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:FontAwesome Icon="Globe" Foreground="{DynamicResource IdealForegroundDisabledBrush}" Margin="0,0,8,0" />
+                            <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,8,0" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding ItemType}" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" Margin="16,0,0,0" />
+                    </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>
-
-            <ListView.DataContext>
-                <Models:AppModel />
-            </ListView.DataContext>
         </ListView>
-        <StackPanel Height="300" VerticalAlignment="Top" Width="516" />
+        <StackPanel VerticalAlignment="Top" DockPanel.Dock="Right">
+            <local:ManagedItemSettings  Width="Auto" BorderBrush="{DynamicResource WindowTitleColorBrush}" Loaded="ManagedItemSettings_Loaded" />
+        </StackPanel>
     </DockPanel>
 </UserControl>

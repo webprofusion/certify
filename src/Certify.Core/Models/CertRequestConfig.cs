@@ -24,6 +24,16 @@ namespace Certify.Models
         public string WebsiteRootPath { get; set; }
 
         /// <summary>
+        /// If required, a specific IP address to bind to when creating/updating this binding
+        /// </summary>
+        public string BindingIPAddress { get; set; }
+
+        /// <summary>
+        /// Optional specific port to bind SSL to. Defaults to 443.
+        /// </summary>
+        public string BindingPort { get; set; }
+
+        /// <summary>
         /// If true, this request requires a challenge file copy as part of the web applications content, usually to /.well-known/acme-challenge/
         /// </summary>
         public bool PerformChallengeFileCopy { get; set; }

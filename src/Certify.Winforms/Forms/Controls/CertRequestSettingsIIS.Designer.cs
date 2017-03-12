@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.txtManagedSiteName = new System.Windows.Forms.TextBox();
             this.btnSave = new System.Windows.Forms.Button();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
@@ -49,8 +51,6 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.lstSites = new System.Windows.Forms.ComboBox();
             this.btnRequestCertificate = new System.Windows.Forms.Button();
-            this.txtManagedSiteName = new System.Windows.Forms.TextBox();
-            this.label6 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -77,6 +77,22 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "IIS Certificate Request";
             this.groupBox1.Enter += new System.EventHandler(this.groupBox1_Enter);
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(16, 49);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(35, 13);
+            this.label6.TabIndex = 41;
+            this.label6.Text = "Name";
+            // 
+            // txtManagedSiteName
+            // 
+            this.txtManagedSiteName.Location = new System.Drawing.Point(57, 46);
+            this.txtManagedSiteName.Name = "txtManagedSiteName";
+            this.txtManagedSiteName.Size = new System.Drawing.Size(473, 20);
+            this.txtManagedSiteName.TabIndex = 40;
             // 
             // btnSave
             // 
@@ -203,6 +219,7 @@
             this.label4.Size = new System.Drawing.Size(333, 13);
             this.label4.TabIndex = 27;
             this.label4.Text = "The following domains will be included as a single certificate request. ";
+            this.label4.Click += new System.EventHandler(this.label4_Click);
             // 
             // tabPage2
             // 
@@ -213,7 +230,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(549, 237);
+            this.tabPage2.Size = new System.Drawing.Size(621, 218);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Advanced";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -299,22 +316,6 @@
             this.btnRequestCertificate.Text = "Request Certificate";
             this.btnRequestCertificate.UseVisualStyleBackColor = true;
             this.btnRequestCertificate.Click += new System.EventHandler(this.btnRequestCertificate_Click);
-            // 
-            // txtManagedSiteName
-            // 
-            this.txtManagedSiteName.Location = new System.Drawing.Point(57, 46);
-            this.txtManagedSiteName.Name = "txtManagedSiteName";
-            this.txtManagedSiteName.Size = new System.Drawing.Size(473, 20);
-            this.txtManagedSiteName.TabIndex = 40;
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(16, 49);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(35, 13);
-            this.label6.TabIndex = 41;
-            this.label6.Text = "Name";
             // 
             // CertRequestSettingsIIS
             // 
