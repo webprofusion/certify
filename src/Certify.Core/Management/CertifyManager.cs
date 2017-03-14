@@ -40,6 +40,17 @@ namespace Certify.Management
             return this.siteManager.GetManagedSites();
         }
 
+        public void SetManagedSites(List<ManagedSite> managedSites)
+        {
+            this.siteManager.UpdatedManagedSites(managedSites);
+        }
+
+        public void SaveManagedSites(List<ManagedSite> managedSites)
+        {
+            this.siteManager.UpdatedManagedSites(managedSites);
+            this.siteManager.StoreSettings();
+        }
+
         public async Task<CertificateRequestResult> PerformCertificateRequest(VaultManager vaultManager, ManagedSite managedSite)
         {
             if (vaultManager == null)
@@ -84,7 +95,7 @@ namespace Certify.Management
                     System.Diagnostics.Debug.WriteLine("Reusing existing valid non-expired identifier for the domain " + domain);
                 }
 
-                managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestStarted, Message = "Attempting Certificate Request: " + managedSite.ItemType });
+                ManagedSiteLog.AppendLog(managedSite.Id, new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestStarted, Message = "Attempting Certificate Request: " + managedSite.ItemType });
 
                 //begin authorization process (register identifier, request authorization if not already given)
                 var authorization = vaultManager.BeginRegistrationAndValidation(config, identifierAlias, challengeType: config.ChallengeType, domain: domain);
@@ -102,7 +113,7 @@ namespace Certify.Management
                             //if we attempted extensionless config checks, report any errors
                             if (config.PerformAutoConfig && !authorization.ExtensionlessConfigCheckedOK)
                             {
-                                managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertficateRequestFailed, Message = "Failed prerequisite configuration (" + managedSite.ItemType + ")" });
+                                ManagedSiteLog.AppendLog(managedSite.Id, new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertficateRequestFailed, Message = "Failed prerequisite configuration (" + managedSite.ItemType + ")" });
                                 siteManager.StoreSettings();
 
                                 return new CertificateRequestResult { IsSuccess = false, ErrorMessage = "Automated checks for extensionless content failed. Authorizations will not be able to complete.Change the web.config in <your site>\\.well-known\\acme-challenge and ensure you can browse to http://<your site>/.well-known/acme-challenge/configcheck before proceeding." };
@@ -154,7 +165,7 @@ namespace Certify.Management
                         if (iisManager.InstallCertForDomain(config.PrimaryDomain, pfxPath, cleanupCertStore: true, skipBindings: !config.PerformAutomatedCertBinding))
                         {
                             //all done
-                            managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestSuccessful, Message = "Completed certificate request and automated bindings update (IIS)" });
+                            ManagedSiteLog.AppendLog(managedSite.Id, new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestSuccessful, Message = "Completed certificate request and automated bindings update (IIS)" });
                             siteManager.StoreSettings();
 
                             return new CertificateRequestResult { IsSuccess = true, ErrorMessage = "Certificate installed and SSL bindings updated for " + config.PrimaryDomain };

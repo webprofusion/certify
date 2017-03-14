@@ -10,19 +10,28 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace Certify.UI.Pages
+namespace Certify.UI.Windows
 {
     /// <summary>
-    /// Interaction logic for MainPage.xaml
+    /// Interaction logic for EditContactDialog.xaml
     /// </summary>
-    public partial class MainPage : Page
+    public partial class EditContactDialog
     {
-        public MainPage()
+        public EditContactDialog()
         {
             InitializeComponent();
+        }
+
+        private void Cancel_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void Save_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Not implemented");
         }
     }
 }

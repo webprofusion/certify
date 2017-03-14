@@ -1,0 +1,46 @@
+﻿<UserControl x:Class="Certify.UI.Controls.AboutControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Certify.UI.Controls"
+             mc:Ignorable="d"
+             d:DesignHeight="300" d:DesignWidth="300">
+    <Grid Margin="0,0,-75,0">
+        <TextBlock HorizontalAlignment="Left" Margin="15,91,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="24" Text="Certify (Beta) V2.0.20170313" RenderTransformOrigin="0.5,0.5" Height="35" Foreground="{DynamicResource WindowTitleColorBrush}" FontWeight="Bold" Width="230" FontFamily="Freestyle Script">
+            <TextBlock.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform />
+                    <SkewTransform />
+                    <RotateTransform Angle="30.543" />
+                    <TranslateTransform />
+                </TransformGroup>
+            </TextBlock.RenderTransform>
+            <TextBlock.Effect>
+                <DropShadowEffect BlurRadius="7" ShadowDepth="0" Opacity="0.99" Color="#FFA7E5EC" />
+            </TextBlock.Effect>
+        </TextBlock>
+        <TextBlock HorizontalAlignment="Left" Margin="15,91,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="24" Text="Certify (Beta) V2.0.20170313" RenderTransformOrigin="0.5,0.5" Height="35" Foreground="{DynamicResource WindowTitleColorBrush}" FontWeight="Bold" Width="230" FontFamily="Freestyle Script">
+            <TextBlock.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform />
+                    <SkewTransform />
+                    <RotateTransform Angle="30.543" />
+                    <TranslateTransform />
+                </TransformGroup>
+            </TextBlock.RenderTransform>
+            <TextBlock.Effect>
+                <DropShadowEffect BlurRadius="7" ShadowDepth="0" Opacity="0.99" Color="#FFA7E5EC" />
+            </TextBlock.Effect>
+        </TextBlock>
+        <TextBlock HorizontalAlignment="Left" Margin="12,166,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="20" RenderTransformOrigin="0.5,0.5" Height="74" Foreground="Red" FontWeight="Bold" Width="288" FontFamily="Stencil">
+            <TextBlock.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform />
+                    <SkewTransform />
+                    <RotateTransform Angle="-0.576" />
+                    <TranslateTransform />
+                </TransformGroup>
+            </TextBlock.RenderTransform><Run Text="Danger: Work In Progress" /><LineBreak /><Run /></TextBlock>
+    </Grid>
+</UserControl>

@@ -4,37 +4,18 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
-                      xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
+        xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
         xmlns:local="clr-namespace:Certify.UI"
         xmlns:Controls1="clr-namespace:Certify.UI.Controls"
-    xmlns:fa="http://schemas.fontawesome.io/icons/" x:Class="Certify.UI.MainWindow"
-
-                   GlowBrush="{DynamicResource AccentColorBrush}"
-                   BorderThickness="1"
+        xmlns:fa="http://schemas.fontawesome.io/icons/" x:Class="Certify.UI.MainWindow"
+        GlowBrush="{DynamicResource AccentColorBrush}"
+        BorderThickness="1"
         mc:Ignorable="d"
         Title="Certify" Height="668" Width="1120">
 
     <DockPanel LastChildFill="True">
-        <Menu DockPanel.Dock="Top" VerticalAlignment="Top">
-            <MenuItem Header="_File">
-                <MenuItem Header="_New..">
-                    <MenuItem Header="Contact _Registration" />
-                    <MenuItem Header="_Certificate" />
-                </MenuItem>
 
-                <Separator />
-                <MenuItem Header="_Exit" />
-            </MenuItem>
-            <MenuItem Header="_Options">
-                <MenuItem Header="_Settings" />
-            </MenuItem>
-            <MenuItem Header="_Help">
-                <MenuItem Header="_Support" />
-                <MenuItem Header="Check For _Updates" />
-                <MenuItem Header="_About" Click="MenuItem_ShowAbout" />
-            </MenuItem>
-        </Menu>
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" VerticalAlignment="Top" Margin="8,0,0,0">
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" VerticalAlignment="Top" Margin="8,16,0,0">
             <Button Height="32" Margin="0,0,0,5" Click="Button_NewContact">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome Icon="Flag" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
@@ -56,13 +37,22 @@
             </Button>
         </StackPanel>
 
-        <dragablz:TabablzControl DockPanel.Dock="Bottom" Margin="8,8,8,0">
+        <dragablz:TabablzControl x:Name="MainTabControl" DockPanel.Dock="Bottom" Margin="8,8,8,0">
 
             <TabItem Header="Managed Certificates" IsSelected="True">
                 <Controls1:ManagedSites Width="Auto" Height="Auto" />
             </TabItem>
             <TabItem Header="Vault">
-                <TextBlock><Run Text="Vault" /></TextBlock>
+                <Controls1:VaultExplorer />
+            </TabItem>
+            <TabItem Header="In Progress">
+                <Controls1:ProgressMonitor />
+            </TabItem>
+            <TabItem Header="Settings">
+                <Controls1:Settings />
+            </TabItem>
+            <TabItem Header="About">
+                <Controls1:AboutControl />
             </TabItem>
         </dragablz:TabablzControl>
     </DockPanel>

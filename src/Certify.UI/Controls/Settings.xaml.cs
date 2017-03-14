@@ -13,14 +13,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace Certify.UI.Pages
+namespace Certify.UI.Controls
 {
     /// <summary>
-    /// Interaction logic for SettingsPage.xaml
+    /// Interaction logic for Settings.xaml
     /// </summary>
-    public partial class SettingsPage : Page
+    public partial class Settings : UserControl
     {
-        public SettingsPage()
+        public Settings()
         {
             InitializeComponent();
         }

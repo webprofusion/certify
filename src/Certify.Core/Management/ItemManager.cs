@@ -38,6 +38,12 @@ namespace Certify.Management
             return path;
         }
 
+        internal void UpdatedManagedSites(List<ManagedSite> managedSites)
+        {
+            this.managedSites = managedSites;
+            this.StoreSettings();
+        }
+
         public void StoreSettings()
         {
             string appDataPath = GetAppDataFolder();
@@ -48,8 +54,21 @@ namespace Certify.Management
         public void LoadSettings()
         {
             string appDataPath = GetAppDataFolder();
-            string configData = System.IO.File.ReadAllText(appDataPath + "\\" + ITEMMANAGERCONFIG);
-            this.managedSites = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ManagedSite>>(configData);
+            var path = appDataPath + "\\" + ITEMMANAGERCONFIG;
+            if (System.IO.File.Exists(path))
+            {
+                string configData = System.IO.File.ReadAllText(path);
+                this.managedSites = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ManagedSite>>(configData);
+            }
+            else
+            {
+                this.managedSites = new List<ManagedSite>();
+            }
+
+            foreach (var s in this.managedSites)
+            {
+                s.IsChanged = false;
+            }
         }
 
         /// <summary>
@@ -103,8 +122,8 @@ namespace Certify.Management
 
         public List<ManagedSite> GetManagedSites()
         {
-            var site = this.managedSites;
-            return site;
+            this.LoadSettings();
+            return this.managedSites;
         }
 
         public void UpdatedManagedSite(ManagedSite managedSite)

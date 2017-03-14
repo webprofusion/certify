@@ -27,6 +27,7 @@ If you cannot provide a fix for the problem yourself, please file an issue and d
 > -  A local instance of IIS installed.
 > - To build the current release version use the release branch: https://github.com/webprofusion/certify/tree/release, master is the current work in progress and may not be in a usable state.
 > - To build Certify, first build the submodule for ACMESharp under /src/lib/ACMESharp - this will restore the required nuget packages.
+> - Certify needs to run as Administrator, otherwise it cannot access IIS, write to the IIS website root paths or manage the windows certificate store.
 
 > **Note:**  For testing you will require a publicly accessible IP mapped to the domain/subdomain you want to test with. The Let's Encrypt service will need to be able to access your test site remotely via HTTP in order to complete authorisation challenges.
 

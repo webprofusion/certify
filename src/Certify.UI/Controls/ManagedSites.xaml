@@ -13,7 +13,7 @@
         <Models:AppModel />
     </UserControl.DataContext>
     <DockPanel d:DataContext="{d:DesignData /SampleData/AppModelSampleData.xaml}" Margin="0,8,0,0">
-        <ListView ItemsSource="{Binding AppViewModel.ManagedSites}" SelectionChanged="ListView_SelectionChanged" TouchDown="ListView_TouchDown" DataContext="{Binding}" SelectionMode="Single" Width="240" BorderBrush="{DynamicResource WindowTitleColorBrush}" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+        <ListView ItemsSource="{Binding AppViewModel.ManagedSites}" SelectionChanged="ListView_SelectionChanged" TouchDown="ListView_TouchDown" DataContext="{Binding}" SelectionMode="Single" Width="240" BorderBrush="{DynamicResource IdealForegroundDisabledBrush}" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Vertical" Margin="0,8,0,0">

@@ -15,18 +15,30 @@
             <StackPanel Orientation="Vertical">
                 <Label Content="{Binding AppViewModel.SelectedItem.Name}" Margin="8,0,0,0" FontSize="18" Foreground="{DynamicResource AccentColorBrush}" />
             </StackPanel>
+
+            <StackPanel Orientation="Horizontal">
+
+                <Button IsEnabled="{Binding AppViewModel.SelectedItem.IsChanged}" Click="Button_Save" Margin="8,0,0,0" HorizontalAlignment="Left">Save Changes</Button>
+                <Button IsEnabled="{Binding AppViewModel.SelectedItem.IsChanged}" Click="Button_DiscardChanges" Margin="8,0,0,0" HorizontalAlignment="Left">Discard Changes</Button>
+                <Button Click="Button_Delete" Margin="8,0,0,0" HorizontalAlignment="Left">Delete</Button>
+                <Button Click="Button_RequestCertificate" Margin="16,0,0,0" HorizontalContentAlignment="Right" Content="Request Certificate" />
+            </StackPanel>
             <dragablz:TabablzControl Margin="8" Height="Auto" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
 
                 <TabItem Header="Options" IsSelected="True">
 
                     <StackPanel Margin="0,16,0,0">
+                        <StackPanel Orientation="Horizontal" IsEnabled="{Binding AppViewModel.IsWebsiteSelectable}">
+                            <Label Width="136" Content="Select IIS Site:" />
+                            <ComboBox ItemsSource="{Binding AppViewModel.WebSiteList}" SelectedItem="{Binding AppViewModel.SelectedWebSite}"  DisplayMemberPath="SiteName" Width="225" SelectionChanged="Website_SelectionChanged" />
+                        </StackPanel>
                         <StackPanel Orientation="Horizontal">
-                            <Label Width="131" Content="Name:" />
+                            <Label Width="136" Content="Name:" />
                             <TextBox Text="{Binding AppViewModel.SelectedItem.Name}" Width="225" />
                         </StackPanel>
-                        <StackPanel Orientation="Vertical" Margin="128,8,0,0">
+                        <StackPanel Orientation="Vertical" Margin="136,8,0,0">
                             <CheckBox Content="Enable Auto Renewal" IsChecked="{Binding AppViewModel.SelectedItem.IncludeInAutoRenew}" />
-                            <CheckBox Content="Notify Primary Contact On Renewal Failure" IsChecked="{Binding AppViewModel.SelectedItem.EnableFailureNotifications}" />
+                            <CheckBox Content="Notify Primary Contact On Renewal Failure" IsChecked="{Binding AppViewModel.SelectedItem.RequestConfig.EnableFailureNotifications}" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,16,0,16">
                             <TextBlock TextWrapping="WrapWithOverflow" Foreground="{DynamicResource AccentColorBrush2}" Width="500">
@@ -35,8 +47,8 @@ The following domains will be included as a single certificate request. The Lets
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal">
-                            <Label>Primary Subject Name:</Label>
-                            <ComboBox ItemsSource="{Binding AppViewModel.SelectedItem.DomainOptions}" DisplayMemberPath="Domain" Width="225" />
+                            <Label Width="136">Primary Subject Name:</Label>
+                            <ComboBox ItemsSource="{Binding AppViewModel.SelectedItem.DomainOptions}"  SelectedItem="{Binding Path=AppViewModel.PrimarySubjectDomain}" DisplayMemberPath="Domain" Width="225" SelectionChanged="PrimaryDomain_SelectionChanged" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <Label>Included Subject Alternative Names:</Label>
@@ -45,7 +57,7 @@ The following domains will be included as a single certificate request. The Lets
                         <ListView ItemsSource="{Binding AppViewModel.SelectedItem.DomainOptions}"  SelectionMode="Single" MaxHeight="150" BorderBrush="{DynamicResource IdealForegroundDisabledBrush}">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
-                                    <CheckBox Content="{Binding Domain}" IsChecked="{Binding IsSelected }" Margin="0,5,0,0" />
+                                    <CheckBox Content="{Binding Domain}" IsChecked="{Binding IsSelected }" Margin="0,5,0,0" Unchecked="SANDomain_Toggled" Checked="SANDomain_Toggled" />
                                 </DataTemplate>
                             </ListView.ItemTemplate>
                         </ListView>
@@ -54,16 +66,21 @@ The following domains will be included as a single certificate request. The Lets
                 <TabItem Header="Advanced" IsSelected="True">
                     <StackPanel Margin="0,16,0,0">
                         <StackPanel Orientation="Vertical">
-                            <CheckBox Content="Auto create/update IIS bindings (uses SNI)" IsChecked="{Binding AppViewModel.SelectedItem.RequestConfig.PerformAutomatedCertBinding}" />
-                            <CheckBox Content="Perform challenge response file config check" IsChecked="{Binding AppViewModel.SelectedItem.RequestConfig.PerformExtensionlessConfigChecks}" />
+
+                            <RadioButton IsChecked="{Binding AppViewModel.SelectedItem.RequestConfig.PerformAutomatedCertBinding}" GroupName="BindingType">Auto create/update IIS bindings (uses SNI)</RadioButton>
+                            <RadioButton IsChecked="{Binding AppViewModel.SelectedItem.RequestConfig.PerformAutomatedCertBinding}" GroupName="BindingType">Use specific IP/Port bindings</RadioButton>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal" IsEnabled="False">
+
                             <Label Width="131" Content="Bind to Specific IP:" />
                             <TextBox Text="{Binding AppViewModel.SelectedItem.RequestConfig.BindingIPAddress}" Width="225" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <Label Width="131" Content="Bind to Specific Port:" />
                             <TextBox Text="{Binding AppViewModel.SelectedItem.RequestConfig.BindingPort}" Width="225" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox Content="Perform challenge response config checks" IsChecked="{Binding AppViewModel.SelectedItem.RequestConfig.PerformExtensionlessConfigChecks}" />
                         </StackPanel>
                     </StackPanel>
                 </TabItem>

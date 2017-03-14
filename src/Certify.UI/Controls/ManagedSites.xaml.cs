@@ -37,7 +37,15 @@ namespace Certify.UI.Controls
         {
             if (e.AddedItems.Count > 0)
             {
-                ViewModel.SelectedItem = (Certify.Models.ManagedSite)e.AddedItems[0];
+                if (ViewModel.SelectedItem != null && ViewModel.SelectedItem.IsChanged && ViewModel.SelectedItem.Id != null)
+                {
+                    //user needs to save or discard changes before changing selection
+                    MessageBox.Show("You have unsaved changes. Save or Discard your changes before proceeding.");
+                }
+                else
+                {
+                    ViewModel.SelectedItem = (Certify.Models.ManagedSite)e.AddedItems[0];
+                }
             }
         }
 

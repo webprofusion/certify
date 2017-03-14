@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Certify.UI.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,6 +21,13 @@ namespace Certify.UI
     /// </summary>
     public partial class MainWindow
     {
+        private enum PrimaryTabs
+        {
+            ManagedItems = 0,
+            Vault = 1,
+            CurrentProgress = 2
+        }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -27,21 +35,31 @@ namespace Certify.UI
 
         private void Button_NewCertificate(object sender, RoutedEventArgs e)
         {
-            //present new certificate dialog
+            //present new managed item (certificate request) UI
+
+            //select tab Managed Items
+            this.MainTabControl.TabIndex = (int)PrimaryTabs.ManagedItems;
+            AppModel.AppViewModel.SelectedItem = new Certify.Models.ManagedSite { Name = "New Managed Certificate" };
         }
 
         private void Button_NewContact(object sender, RoutedEventArgs e)
         {
             //present new contact dialog
+            var d = new Windows.EditContactDialog();
+            d.Owner = this;
+            d.ShowDialog();
         }
 
         private void Button_RenewAll(object sender, RoutedEventArgs e)
         {
             //present new renew all confirmation
-        }
-
-        private void MenuItem_ShowAbout(object sender, RoutedEventArgs e)
-        {
+            if (MessageBox.Show("This will renew certificates for all auto-renewed items. Proceed?", "Renew All", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            {
+                this.MainTabControl.TabIndex = (int)PrimaryTabs.CurrentProgress;
+                // TODO: this is a long running process so we need to run renewals process in the background and present UI to (optionally) show progress.
+                // We should prevent starting the renewals process if it is currently in progress.
+                var results = Models.AppModel.AppViewModel.RenewAll();
+            }
         }
     }
 }

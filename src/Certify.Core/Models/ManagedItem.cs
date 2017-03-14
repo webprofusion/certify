@@ -1,5 +1,7 @@
-﻿using System;
+﻿using PropertyChanged;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,8 +37,26 @@ namespace Certify.Models
         Ignore
     }
 
-    public class ManagedItem
+    [ImplementPropertyChanged]
+    public class ManagedItem : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public void OnPropertyChanged(string propertyName, object before, object after)
+        {
+            //Perform property validation
+            var propertyChanged = PropertyChanged;
+            if (propertyChanged != null)
+            {
+                propertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
+        /// <summary>
+        /// True if a property has been changed on the model since IsChanged was last set to false
+        /// </summary>
+        public bool IsChanged { get; set; }
+
         /// <summary>
         /// Unique ID for this managed item
         /// </summary>
@@ -63,8 +83,35 @@ namespace Certify.Models
         public ManagedItemType ItemType { get; set; }
     }
 
-    public class ManagedSite : ManagedItem
+    public class ManagedSiteLog
     {
+        public ManagedSiteLog()
+        {
+            this.Logs = new List<ManagedSiteLogItem>();
+        }
+
+        /// <summary>
+        /// Log of recent actions/results for this item
+        /// </summary>
+        public List<ManagedSiteLogItem> Logs { get; set; }
+
+        public static void AppendLog(string managedItemId, ManagedSiteLogItem logItem)
+        {
+            //TODO: log to per site log
+            //if (this.Logs == null) this.Logs = new List<ManagedSiteLogItem>();
+            //this.Logs.Add(logItem);
+        }
+    }
+
+    [ImplementPropertyChanged]
+    public class ManagedSite : ManagedItem, INotifyPropertyChanged
+    {
+        public ManagedSite()
+        {
+            this.DomainOptions = new List<DomainOption>();
+            this.RequestConfig = new CertRequestConfig();
+        }
+
         /// <summary>
         /// If true, the auto renewal process will include this item in attempted renewal operations if applicable
         /// </summary>
@@ -84,17 +131,6 @@ namespace Certify.Models
         /// Configuration options for this request
         /// </summary>
         public CertRequestConfig RequestConfig { get; set; }
-
-        /// <summary>
-        /// Log of recent actions/results for this item
-        /// </summary>
-        public List<ManagedSiteLogItem> Logs { get; set; }
-
-        public void AppendLog(ManagedSiteLogItem logItem)
-        {
-            if (this.Logs == null) this.Logs = new List<ManagedSiteLogItem>();
-            this.Logs.Add(logItem);
-        }
     }
 
     //TODO: may deprecate, was mainly for preview of setup wizard
@@ -123,7 +159,7 @@ namespace Certify.Models
         public bool IsSubjectAlternativeName { get; set; }
     }
 
-    //TODO: deprecated, remove
+    //TODO: deprecate and remove
     public class SiteBindingItem
     {
         public string Description

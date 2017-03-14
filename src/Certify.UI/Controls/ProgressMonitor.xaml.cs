@@ -13,14 +13,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace Certify.UI.Pages
+namespace Certify.UI.Controls
 {
     /// <summary>
-    /// Interaction logic for AboutPage.xaml
+    /// Interaction logic for ProgressMonitor.xaml
     /// </summary>
-    public partial class AboutPage : Page
+    public partial class ProgressMonitor : UserControl
     {
-        public AboutPage()
+        public ProgressMonitor()
         {
             InitializeComponent();
         }
