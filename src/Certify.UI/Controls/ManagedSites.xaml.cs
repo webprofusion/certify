@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Certify.UI.ViewModel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,11 +21,11 @@ namespace Certify.UI.Controls
     /// </summary>
     public partial class ManagedSites
     {
-        public Models.AppModel ViewModel
+        public ViewModel.AppModel ViewModel
         {
             get
             {
-                return Models.AppModel.AppViewModel;
+                return new ViewModelLocator().Main;
             }
         }
 

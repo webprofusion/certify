@@ -1,6 +1,7 @@
 ﻿using PropertyChanged;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,8 +9,22 @@ using System.Threading.Tasks;
 namespace Certify.Models
 {
     [ImplementPropertyChanged]
-    public class CertRequestConfig
+    public class CertRequestConfig : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public bool IsChanged { get; set; }
+
+        public void OnPropertyChanged(string propertyName, object before, object after)
+        {
+            //Perform property validation
+            var propertyChanged = PropertyChanged;
+            if (propertyChanged != null)
+            {
+                propertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
         /// <summary>
         /// Primary subject domain for our SSL Cert request
         /// </summary>

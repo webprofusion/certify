@@ -9,8 +9,12 @@ using System.Threading.Tasks;
 namespace Certify.Models
 {
     [ImplementPropertyChanged]
-    public class DomainOption
+    public class DomainOption : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public bool IsChanged { get; set; }
+
         /// <summary>
         /// Domain name we are managing
         /// </summary>

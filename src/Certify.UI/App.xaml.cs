@@ -1,4 +1,4 @@
-﻿using Certify.UI.Models;
+﻿using Certify.UI.ViewModel;
 using MahApps.Metro;
 using System;
 using System.Collections.Generic;
@@ -15,8 +15,6 @@ namespace Certify.UI
     /// </summary>
     public partial class App : Application
     {
-        public AppModel AppViewModel { get; set; }
-
         protected override void OnStartup(StartupEventArgs e)
         {
             /*
@@ -30,9 +28,6 @@ namespace Certify.UI
                                         ThemeManager.GetAppTheme("BaseLight")); // or appStyle.Item1
 */
             base.OnStartup(e);
-
-            this.AppViewModel = new AppModel();
-            this.AppViewModel.LoadSettings();
         }
     }
 }

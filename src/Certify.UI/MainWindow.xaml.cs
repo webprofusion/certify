@@ -1,4 +1,4 @@
-﻿using Certify.UI.Models;
+﻿using Certify.UI.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,6 +31,9 @@ namespace Certify.UI
         public MainWindow()
         {
             InitializeComponent();
+
+            var appViewModel = new ViewModelLocator().Main;
+            appViewModel.LoadSettings();
         }
 
         private void Button_NewCertificate(object sender, RoutedEventArgs e)
@@ -58,7 +61,7 @@ namespace Certify.UI
                 this.MainTabControl.TabIndex = (int)PrimaryTabs.CurrentProgress;
                 // TODO: this is a long running process so we need to run renewals process in the background and present UI to (optionally) show progress.
                 // We should prevent starting the renewals process if it is currently in progress.
-                var results = Models.AppModel.AppViewModel.RenewAll();
+                var results = ViewModel.AppModel.AppViewModel.RenewAll();
             }
         }
     }

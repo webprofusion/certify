@@ -1,5 +1,6 @@
 ﻿using Certify.Management;
 using Certify.Models;
+using Certify.UI.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -23,11 +24,11 @@ namespace Certify.UI.Controls
     /// </summary>
     public partial class ManagedItemSettings : UserControl
     {
-        public Models.AppModel ViewModel
+        public AppModel ViewModel
         {
             get
             {
-                return Models.AppModel.AppViewModel;
+                return GalaSoft.MvvmLight.Ioc.SimpleIoc.Default.GetInstance<AppModel>();
             }
         }
 
@@ -40,13 +41,30 @@ namespace Certify.UI.Controls
         {
             if (ViewModel.SelectedItem.IsChanged)
             {
+                if (ViewModel.SelectedItem.Id == null && ViewModel.SelectedWebSite == null)
+                {
+                    MessageBox.Show("Select the website to create a certificate for.");
+                    return;
+                }
+
+                if (String.IsNullOrEmpty(ViewModel.SelectedItem.Name))
+                {
+                    MessageBox.Show("A name is required for this item.");
+                    return;
+                }
+
+                if (ViewModel.PrimarySubjectDomain == null)
+                {
+                    MessageBox.Show("A Primary Domain must be selected");
+                    return;
+                }
                 //save changes
 
                 //creating new managed item
                 ViewModel.SelectedItem = GetUpdatedManagedSiteSettings();
                 ViewModel.AddOrUpdateManagedSite(ViewModel.SelectedItem);
 
-                ViewModel.SelectedItem.IsChanged = false;
+                ViewModel.MarkAllChangesCompleted();
             }
             else
             {
@@ -68,14 +86,13 @@ namespace Certify.UI.Controls
                 ViewModel.LoadSettings();
                 ViewModel.SelectedItem = ViewModel.ManagedSites.FirstOrDefault(m => m.Id == currentSiteId);
             }
+
+            ViewModel.MarkAllChangesCompleted();
         }
 
         private void ReturnToDefaultManagedItemView()
         {
-            if (ViewModel.ManagedSites.Any())
-            {
-                ViewModel.SelectedItem = ViewModel.ManagedSites[0];
-            }
+            ViewModel.SelectFirstOrDefaultItem();
         }
 
         private void Button_RequestCertificate(object sender, RoutedEventArgs e)
@@ -223,16 +240,16 @@ namespace Certify.UI.Controls
         public object Convert(object value, Type targetType, object parameter,
             System.Globalization.CultureInfo culture)
         {
-            if (targetType != typeof(bool))
+            if (targetType != typeof(bool?) && targetType != typeof(bool))
                 throw new InvalidOperationException("The target must be a boolean");
-
+            if (value == null) return false;
             return !(bool)value;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter,
             System.Globalization.CultureInfo culture)
         {
-            throw new NotSupportedException();
+            return Convert(value, targetType, parameter, culture);
         }
 
         #endregion IValueConverter Members

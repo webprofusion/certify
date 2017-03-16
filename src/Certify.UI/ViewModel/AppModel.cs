@@ -1,14 +1,17 @@
 ﻿using Certify.Management;
 using Certify.Models;
+using GalaSoft.MvvmLight.Command;
 using PropertyChanged;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
-namespace Certify.UI.Models
+namespace Certify.UI.ViewModel
 {
     [ImplementPropertyChanged]
     public class AppModel : INotifyPropertyChanged
@@ -17,7 +20,7 @@ namespace Certify.UI.Models
         {
             get
             {
-                return ((Certify.UI.App)Certify.UI.App.Current).AppViewModel;
+                return new ViewModelLocator().Main;
             }
         }
 
@@ -37,9 +40,24 @@ namespace Certify.UI.Models
 
         #region properties
 
-        public List<Certify.Models.ManagedSite> ManagedSites { get; set; }
+        public ObservableCollection<Certify.Models.ManagedSite> ManagedSites { get; set; }
 
         public Certify.Models.ManagedSite SelectedItem { get; set; }
+
+        public bool SelectedItemHasChanges
+        {
+            get
+            {
+                if (this.SelectedItem != null)
+                {
+                    if (this.SelectedItem.IsChanged || this.SelectedItem.RequestConfig.IsChanged || this.SelectedItem.DomainOptions.Any(d => d.IsChanged))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
 
         public bool ShowOnlyStartedSites { get; set; } = false;
 
@@ -51,6 +69,21 @@ namespace Certify.UI.Models
                 var iisManager = new IISManager();
                 return iisManager.GetPrimarySites(ShowOnlyStartedSites);
             }
+        }
+
+        /// <summary>
+        /// Reset all IsChanged flags for the Selected Item
+        /// </summary>
+        internal void MarkAllChangesCompleted()
+        {
+            SelectedItem.IsChanged = false;
+            SelectedItem.RequestConfig.IsChanged = false;
+            SelectedItem.DomainOptions.ForEach(d => d.IsChanged = false);
+        }
+
+        internal void SelectFirstOrDefaultItem()
+        {
+            SelectedItem = ManagedSites.FirstOrDefault();
         }
 
         public SiteBindingItem SelectedWebSite
@@ -105,6 +138,29 @@ namespace Certify.UI.Models
             }
         }
 
+        public bool IsItemSelected
+        {
+            get
+            {
+                return (this.SelectedItem != null);
+            }
+        }
+
+        public bool IsSelectedItemValid
+        {
+            get
+            {
+                if (this.SelectedItem != null && this.SelectedItem.Id != null && this.SelectedItem.IsChanged == false)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
         #endregion properties
 
         #region methods
@@ -116,7 +172,7 @@ namespace Certify.UI.Models
 
         public void LoadSettings()
         {
-            this.ManagedSites = certifyManager.GetManagedSites();
+            this.ManagedSites = new ObservableCollection<ManagedSite>(certifyManager.GetManagedSites());
 
             if (this.ManagedSites.Any())
             {
@@ -125,9 +181,9 @@ namespace Certify.UI.Models
             }
         }
 
-        public void SaveSettings()
+        public void SaveSettings(object param)
         {
-            certifyManager.SaveManagedSites(this.ManagedSites);
+            certifyManager.SaveManagedSites(this.ManagedSites.ToList());
         }
 
         public async Task<List<Certify.Models.CertificateRequestResult>> RenewAll()
@@ -150,7 +206,7 @@ namespace Certify.UI.Models
             this.ManagedSites.Add(item);
 
             //save settings
-            certifyManager.SaveManagedSites(this.ManagedSites);
+            certifyManager.SaveManagedSites(this.ManagedSites.ToList());
 
             return item;
         }
@@ -167,9 +223,16 @@ namespace Certify.UI.Models
             }
 
             //save settings
-            certifyManager.SaveManagedSites(this.ManagedSites);
+            certifyManager.SaveManagedSites(this.ManagedSites.ToList());
         }
 
         #endregion methods
+
+        #region commands
+
+        //public ICommand SaveAllCommand => new RelayCommand(SaveSettings);
+        //public ICommand AddOrUpdateManagedSiteCommand => new RelayCommand(AddOrUpdateManagedSiteCommand);
+
+        #endregion commands
     }
 }
