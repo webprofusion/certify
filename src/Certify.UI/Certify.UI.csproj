@@ -148,6 +148,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ViewModel\AppModel.cs" />
+    <Compile Include="ViewModel\RelayCommand.cs" />
     <Compile Include="Windows\EditContactDialog.xaml.cs">
       <DependentUpon>EditContactDialog.xaml</DependentUpon>
     </Compile>
