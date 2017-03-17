@@ -9,22 +9,8 @@ using System.Threading.Tasks;
 namespace Certify.Models
 {
     [ImplementPropertyChanged]
-    public class CertRequestConfig : INotifyPropertyChanged
+    public class CertRequestConfig : BindableBase
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public bool IsChanged { get; set; }
-
-        public void OnPropertyChanged(string propertyName, object before, object after)
-        {
-            //Perform property validation
-            var propertyChanged = PropertyChanged;
-            if (propertyChanged != null)
-            {
-                propertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
-
         /// <summary>
         /// Primary subject domain for our SSL Cert request
         /// </summary>

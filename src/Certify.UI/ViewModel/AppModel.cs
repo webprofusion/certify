@@ -1,6 +1,5 @@
 ﻿using Certify.Management;
 using Certify.Models;
-using GalaSoft.MvvmLight.Command;
 using PropertyChanged;
 using System;
 using System.Collections.Generic;
@@ -14,35 +13,27 @@ using System.Windows.Input;
 namespace Certify.UI.ViewModel
 {
     [ImplementPropertyChanged]
-    public class AppModel : INotifyPropertyChanged
+    public class AppModel : BindableBase
     {
-        public static AppModel AppViewModel
-        {
-            get
-            {
-                return new ViewModelLocator().Main;
-            }
-        }
+        public static AppModel AppViewModel { get; } = new AppModel();
 
         private CertifyManager certifyManager = null;
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public void OnPropertyChanged(string propertyName, object before, object after)
-        {
-            //Perform property validation
-            var propertyChanged = PropertyChanged;
-            if (propertyChanged != null)
-            {
-                propertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
 
         #region properties
 
         public ObservableCollection<Certify.Models.ManagedSite> ManagedSites { get; set; }
 
-        public Certify.Models.ManagedSite SelectedItem { get; set; }
+        private Certify.Models.ManagedSite _selectedItem;
+
+        public Certify.Models.ManagedSite SelectedItem
+        {
+            get { return _selectedItem; }
+            set
+            {
+                _selectedItem = value;
+                RaisePropertyChanged(nameof(SelectedItem));
+            }
+        }
 
         public bool SelectedItemHasChanges
         {
@@ -50,7 +41,7 @@ namespace Certify.UI.ViewModel
             {
                 if (this.SelectedItem != null)
                 {
-                    if (this.SelectedItem.IsChanged || this.SelectedItem.RequestConfig.IsChanged || this.SelectedItem.DomainOptions.Any(d => d.IsChanged))
+                    if (this.SelectedItem.IsChanged || (this.SelectedItem.RequestConfig != null && this.SelectedItem.RequestConfig.IsChanged) || (this.SelectedItem.DomainOptions != null && this.SelectedItem.DomainOptions.Any(d => d.IsChanged)))
                     {
                         return true;
                     }
@@ -79,6 +70,8 @@ namespace Certify.UI.ViewModel
             SelectedItem.IsChanged = false;
             SelectedItem.RequestConfig.IsChanged = false;
             SelectedItem.DomainOptions.ForEach(d => d.IsChanged = false);
+
+            RaisePropertyChanged(nameof(SelectedItemHasChanges));
         }
 
         internal void SelectFirstOrDefaultItem()
@@ -177,7 +170,7 @@ namespace Certify.UI.ViewModel
             if (this.ManagedSites.Any())
             {
                 //preselect the first managed site
-                this.SelectedItem = this.ManagedSites[0];
+                //  this.SelectedItem = this.ManagedSites[0];
             }
         }
 

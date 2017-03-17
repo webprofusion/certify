@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
              xmlns:local="clr-namespace:Certify.UI.Controls"
-             xmlns:Models="clr-namespace:Certify.UI.ViewModel" x:Class="Certify.UI.Controls.ManagedItemSettings"
+             x:Class="Certify.UI.Controls.ManagedItemSettings"
              mc:Ignorable="d"
              d:DesignHeight="300" Width="542.667">
 
@@ -16,14 +16,14 @@
         </StackPanel.Resources>
         <StackPanel Orientation="Vertical">
             <StackPanel Orientation="Vertical">
-                <Label Content="{Binding AppViewModel.SelectedItem.Name}" Margin="8,0,0,0" FontSize="22" Foreground="{DynamicResource AccentColorBrush}" />
+                <Label Content="{Binding SelectedItem.Name}" Margin="8,0,0,0" FontSize="22" Foreground="{DynamicResource AccentColorBrush}" />
             </StackPanel>
             <StackPanel Orientation="Horizontal">
 
-                <Button IsEnabled="{Binding AppViewModel.SelectedItemHasChanges}" Click="Button_Save" Margin="8,0,0,0" HorizontalAlignment="Left">Save Changes</Button>
-                <Button IsEnabled="{Binding AppViewModel.SelectedItemHasChanges}" Click="Button_DiscardChanges" Margin="8,0,0,0" HorizontalAlignment="Left">Discard Changes</Button>
+                <Button IsEnabled="{Binding SelectedItem.IsChanged}" Click="Button_Save" Margin="8,0,0,0" HorizontalAlignment="Left">Save Changes</Button>
+                <Button IsEnabled="{Binding SelectedItem.IsChanged}" Click="Button_DiscardChanges" Margin="8,0,0,0" HorizontalAlignment="Left">Discard Changes</Button>
                 <Button Click="Button_Delete" Margin="8,0,0,0" HorizontalAlignment="Left">Delete</Button>
-                <Button IsEnabled="{Binding AppViewModel.IsSelectedItemValid}" Click="Button_RequestCertificate" Margin="16,0,0,0" HorizontalContentAlignment="Right" Content="Request Certificate" />
+                <Button IsEnabled="{Binding IsSelectedItemValid}" Click="Button_RequestCertificate" Margin="16,0,0,0" HorizontalContentAlignment="Right" Content="Request Certificate" />
             </StackPanel>
 
             <dragablz:TabablzControl Margin="8" Height="Auto" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
@@ -31,17 +31,17 @@
                 <TabItem Header="Options" IsSelected="True">
 
                     <StackPanel Margin="0,16,0,0">
-                        <StackPanel Orientation="Horizontal" Visibility="{Binding AppViewModel.IsWebsiteSelectable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                        <StackPanel Orientation="Horizontal" Visibility="{Binding IsWebsiteSelectable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
                             <Label Width="136" Content="Select IIS Site:" />
-                            <ComboBox ItemsSource="{Binding AppViewModel.WebSiteList}" SelectedItem="{Binding AppViewModel.SelectedWebSite}"  DisplayMemberPath="SiteName" Width="225" SelectionChanged="Website_SelectionChanged" />
+                            <ComboBox ItemsSource="{Binding WebSiteList}" SelectedItem="{Binding SelectedWebSite}"  DisplayMemberPath="SiteName" Width="225" SelectionChanged="Website_SelectionChanged" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <Label Width="136" Content="Name:" />
-                            <TextBox Text="{Binding AppViewModel.SelectedItem.Name}" Width="225" />
+                            <TextBox Text="{Binding SelectedItem.Name}" Width="225" />
                         </StackPanel>
                         <StackPanel Orientation="Vertical" Margin="136,8,0,0">
-                            <CheckBox Content="Enable Auto Renewal" IsChecked="{Binding AppViewModel.SelectedItem.IncludeInAutoRenew}" />
-                            <CheckBox Content="Notify Primary Contact On Renewal Failure" IsChecked="{Binding AppViewModel.SelectedItem.RequestConfig.EnableFailureNotifications}" />
+                            <CheckBox Content="Enable Auto Renewal" IsChecked="{Binding SelectedItem.IncludeInAutoRenew}" />
+                            <CheckBox Content="Notify Primary Contact On Renewal Failure" IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,16,0,16">
                             <TextBlock TextWrapping="WrapWithOverflow" Foreground="{DynamicResource AccentColorBrush2}" Width="500">
@@ -51,13 +51,13 @@ The following domains will be included as a single certificate request. The Lets
 
                         <StackPanel Orientation="Horizontal">
                             <Label Width="136">Primary Domain Name:</Label>
-                            <ComboBox ItemsSource="{Binding AppViewModel.SelectedItem.DomainOptions}"  SelectedItem="{Binding Path=AppViewModel.PrimarySubjectDomain}" DisplayMemberPath="Domain" Width="225" SelectionChanged="PrimaryDomain_SelectionChanged" />
+                            <ComboBox ItemsSource="{Binding SelectedItem.DomainOptions}"  SelectedItem="{Binding PrimarySubjectDomain}" DisplayMemberPath="Domain" Width="225" SelectionChanged="PrimaryDomain_SelectionChanged" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                             <Label>Include Alternative Subject/Domain Names:</Label>
                         </StackPanel>
 
-                        <ListView ItemsSource="{Binding AppViewModel.SelectedItem.DomainOptions}"  SelectionMode="Single" MaxHeight="150" BorderBrush="{DynamicResource IdealForegroundDisabledBrush}">
+                        <ListView ItemsSource="{Binding SelectedItem.DomainOptions}"  SelectionMode="Single" MaxHeight="150" BorderBrush="{DynamicResource IdealForegroundDisabledBrush}">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
                                     <CheckBox Content="{Binding Domain}" IsChecked="{Binding IsSelected }" Margin="0,5,0,0" Unchecked="SANDomain_Toggled" Checked="SANDomain_Toggled" />
@@ -69,22 +69,22 @@ The following domains will be included as a single certificate request. The Lets
                 <TabItem Header="Advanced" IsSelected="True">
                     <StackPanel Margin="0,16,0,0">
                         <StackPanel Orientation="Vertical">
-                            <CheckBox Content="Perform challenge response config checks" IsChecked="{Binding AppViewModel.SelectedItem.RequestConfig.PerformExtensionlessConfigChecks}" />
-                            <CheckBox Content="Perform web application auto config" IsChecked="{Binding AppViewModel.SelectedItem.RequestConfig.PerformAutoConfig}" />
+                            <CheckBox Content="Perform challenge response config checks" IsChecked="{Binding SelectedItem.RequestConfig.PerformExtensionlessConfigChecks}" />
+                            <CheckBox Content="Perform web application auto config" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutoConfig}" />
                         </StackPanel>
                         <StackPanel Orientation="Vertical" Margin="0,16,0,0">
 
-                            <RadioButton IsChecked="{Binding AppViewModel.SelectedItem.RequestConfig.PerformAutomatedCertBinding}" GroupName="BindingType">Auto create/update IIS bindings (uses SNI)</RadioButton>
-                            <RadioButton  IsChecked="{Binding AppViewModel.SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType">Use specific IP/Port bindings</RadioButton>
+                            <RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" GroupName="BindingType">Auto create/update IIS bindings (uses SNI)</RadioButton>
+                            <RadioButton  IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType">Use specific IP/Port bindings</RadioButton>
                         </StackPanel>
-                        <StackPanel Orientation="Vertical" IsEnabled="{Binding AppViewModel.SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" Margin="16,8,0,0">
+                        <StackPanel Orientation="Vertical" IsEnabled="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" Margin="16,8,0,0">
                             <StackPanel Orientation="Horizontal">
                                 <Label Width="131" Content="Bind to Specific IP:" />
-                                <TextBox Text="{Binding AppViewModel.SelectedItem.RequestConfig.BindingIPAddress}" Width="225" />
+                                <TextBox Text="{Binding SelectedItem.RequestConfig.BindingIPAddress}" Width="225" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <Label Width="131" Content="Bind to Specific Port:" />
-                                <TextBox Text="{Binding AppViewModel.SelectedItem.RequestConfig.BindingPort}" Width="225" />
+                                <TextBox Text="{Binding SelectedItem.RequestConfig.BindingPort}" Width="225" />
                             </StackPanel>
                         </StackPanel>
                     </StackPanel>

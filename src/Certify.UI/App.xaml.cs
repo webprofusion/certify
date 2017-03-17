@@ -1,5 +1,4 @@
-﻿using Certify.UI.ViewModel;
-using MahApps.Metro;
+﻿using MahApps.Metro;
 using System;
 using System.Collections.Generic;
 using System.Configuration;

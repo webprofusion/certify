@@ -1,5 +1,4 @@
-﻿using Certify.UI.ViewModel;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,12 +27,20 @@ namespace Certify.UI
             CurrentProgress = 2
         }
 
+        protected Certify.UI.ViewModel.AppModel MainViewModel
+        {
+            get
+            {
+                return UI.ViewModel.AppModel.AppViewModel;
+            }
+        }
+
         public MainWindow()
         {
             InitializeComponent();
 
-            var appViewModel = new ViewModelLocator().Main;
-            appViewModel.LoadSettings();
+            MainViewModel.LoadSettings();
+            // MainViewModel.SelectedItem = MainViewModel.ManagedSites[0];
         }
 
         private void Button_NewCertificate(object sender, RoutedEventArgs e)
@@ -42,7 +49,7 @@ namespace Certify.UI
 
             //select tab Managed Items
             this.MainTabControl.TabIndex = (int)PrimaryTabs.ManagedItems;
-            AppModel.AppViewModel.SelectedItem = new Certify.Models.ManagedSite { Name = "New Managed Certificate" };
+            MainViewModel.SelectedItem = new Certify.Models.ManagedSite { Name = "New Managed Certificate" };
         }
 
         private void Button_NewContact(object sender, RoutedEventArgs e)
@@ -61,7 +68,7 @@ namespace Certify.UI
                 this.MainTabControl.TabIndex = (int)PrimaryTabs.CurrentProgress;
                 // TODO: this is a long running process so we need to run renewals process in the background and present UI to (optionally) show progress.
                 // We should prevent starting the renewals process if it is currently in progress.
-                var results = ViewModel.AppModel.AppViewModel.RenewAll();
+                var results = MainViewModel.RenewAll();
             }
         }
     }

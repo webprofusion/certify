@@ -5,18 +5,15 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
              xmlns:local="clr-namespace:Certify.UI.Controls"
-             xmlns:Models="clr-namespace:Certify.UI.ViewModel" xmlns:System="clr-namespace:System;assembly=mscorlib"
+              xmlns:System="clr-namespace:System;assembly=mscorlib"
     xmlns:fa="http://schemas.fontawesome.io/icons/" x:Class="Certify.UI.Controls.ManagedSites"
              mc:Ignorable="d" Width="970" Height="333">
 
-    <UserControl.DataContext>
-        <Models:AppModel />
-    </UserControl.DataContext>
-    <DockPanel d:DataContext="{d:DesignData /SampleData/AppModelSampleData.xaml}" Margin="0,8,0,10">
+    <DockPanel  Margin="0,8,0,10">
         <DockPanel.Resources>
             <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
         </DockPanel.Resources>
-        <ListView ItemsSource="{Binding AppViewModel.ManagedSites}" SelectionChanged="ListView_SelectionChanged" TouchDown="ListView_TouchDown" DataContext="{Binding}" SelectionMode="Single" Width="240" BorderBrush="{DynamicResource IdealForegroundDisabledBrush}" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+        <ListView ItemsSource="{Binding ManagedSites}" SelectionChanged="ListView_SelectionChanged" TouchDown="ListView_TouchDown"  SelectionMode="Single" Width="240" BorderBrush="{DynamicResource IdealForegroundDisabledBrush}" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Vertical" Margin="0,8,0,0">
@@ -31,7 +28,8 @@
             </ListView.ItemTemplate>
         </ListView>
         <StackPanel VerticalAlignment="Top" DockPanel.Dock="Right">
-            <local:ManagedItemSettings Visibility="{Binding AppViewModel.IsItemSelected, Converter={StaticResource BoolToVisConverter}}"  Width="Auto" BorderBrush="{DynamicResource WindowTitleColorBrush}" Loaded="ManagedItemSettings_Loaded" />
+            <Button Click="Button_Click" />
+            <local:ManagedItemSettings Visibility="{Binding IsItemSelected, Converter={StaticResource BoolToVisConverter}}"  Width="Auto" BorderBrush="{DynamicResource WindowTitleColorBrush}" Loaded="ManagedItemSettings_Loaded" />
         </StackPanel>
     </DockPanel>
 </UserControl>

@@ -1,5 +1,4 @@
-﻿using Certify.UI.ViewModel;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,31 +20,33 @@ namespace Certify.UI.Controls
     /// </summary>
     public partial class ManagedSites
     {
-        public ViewModel.AppModel ViewModel
+        protected Certify.UI.ViewModel.AppModel MainViewModel
         {
             get
             {
-                return new ViewModelLocator().Main;
+                return ViewModel.AppModel.AppViewModel;
             }
         }
 
         public ManagedSites()
         {
             InitializeComponent();
+            this.DataContext = MainViewModel;
         }
 
         private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (e.AddedItems.Count > 0)
             {
-                if (ViewModel.SelectedItem != null && ViewModel.SelectedItem.IsChanged && ViewModel.SelectedItem.Id != null)
+                if (MainViewModel.SelectedItem != null && MainViewModel.SelectedItemHasChanges && MainViewModel.SelectedItem.Id != null)
                 {
                     //user needs to save or discard changes before changing selection
                     MessageBox.Show("You have unsaved changes. Save or Discard your changes before proceeding.");
                 }
                 else
                 {
-                    ViewModel.SelectedItem = (Certify.Models.ManagedSite)e.AddedItems[0];
+                    MainViewModel.SelectedItem = (Certify.Models.ManagedSite)e.AddedItems[0];
+                    MainViewModel.MarkAllChangesCompleted();
                 }
             }
         }
@@ -56,6 +57,14 @@ namespace Certify.UI.Controls
 
         private void ManagedItemSettings_Loaded(object sender, RoutedEventArgs e)
         {
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            if (MainViewModel.ManagedSites != null && MainViewModel.ManagedSites.Any())
+            {
+                // this.MainViewModel.ManagedSites[0].Name = DateTime.Now.ToShortDateString();
+            }
         }
     }
 }

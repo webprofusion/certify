@@ -37,9 +37,32 @@ namespace Certify.Models
         Ignore
     }
 
-    [ImplementPropertyChanged]
-    public class ManagedItem : INotifyPropertyChanged
+    public class ManagedSiteLog
     {
+        public ManagedSiteLog()
+        {
+            this.Logs = new List<ManagedSiteLogItem>();
+        }
+
+        /// <summary>
+        /// Log of recent actions/results for this item
+        /// </summary>
+        public List<ManagedSiteLogItem> Logs { get; set; }
+
+        public static void AppendLog(string managedItemId, ManagedSiteLogItem logItem)
+        {
+            //TODO: log to per site log
+            //if (this.Logs == null) this.Logs = new List<ManagedSiteLogItem>();
+            //this.Logs.Add(logItem);
+        }
+    }
+
+    [ImplementPropertyChanged]
+    public class BindableBase : INotifyPropertyChanged
+    {
+        /// <summary>
+        /// change notification provide by fody on compile, not that subclasses shouldn't inherit
+        /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
         public void OnPropertyChanged(string propertyName, object before, object after)
@@ -52,11 +75,19 @@ namespace Certify.Models
             }
         }
 
+        public void RaisePropertyChanged(string prop)
+        {
+            if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs(prop));
+        }
+
         /// <summary>
         /// True if a property has been changed on the model since IsChanged was last set to false
         /// </summary>
         public bool IsChanged { get; set; }
+    }
 
+    public class ManagedItem : BindableBase
+    {
         /// <summary>
         /// Unique ID for this managed item
         /// </summary>
@@ -83,33 +114,20 @@ namespace Certify.Models
         public ManagedItemType ItemType { get; set; }
     }
 
-    public class ManagedSiteLog
-    {
-        public ManagedSiteLog()
-        {
-            this.Logs = new List<ManagedSiteLogItem>();
-        }
-
-        /// <summary>
-        /// Log of recent actions/results for this item
-        /// </summary>
-        public List<ManagedSiteLogItem> Logs { get; set; }
-
-        public static void AppendLog(string managedItemId, ManagedSiteLogItem logItem)
-        {
-            //TODO: log to per site log
-            //if (this.Logs == null) this.Logs = new List<ManagedSiteLogItem>();
-            //this.Logs.Add(logItem);
-        }
-    }
-
-    [ImplementPropertyChanged]
-    public class ManagedSite : ManagedItem, INotifyPropertyChanged
+    public class ManagedSite : ManagedItem
     {
         public ManagedSite()
         {
             this.DomainOptions = new List<DomainOption>();
             this.RequestConfig = new CertRequestConfig();
+
+            this.RequestConfig.PropertyChanged += RequestConfig_PropertyChanged;
+        }
+
+        private void RequestConfig_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            //when RequestConfig IsChanged also mark ManagedItem as changed
+            if (RequestConfig.IsChanged) IsChanged = true;
         }
 
         /// <summary>

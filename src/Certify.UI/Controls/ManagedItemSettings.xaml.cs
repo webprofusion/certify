@@ -1,6 +1,5 @@
 ﻿using Certify.Management;
 using Certify.Models;
-using Certify.UI.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -24,11 +23,11 @@ namespace Certify.UI.Controls
     /// </summary>
     public partial class ManagedItemSettings : UserControl
     {
-        public AppModel ViewModel
+        protected Certify.UI.ViewModel.AppModel MainViewModel
         {
             get
             {
-                return GalaSoft.MvvmLight.Ioc.SimpleIoc.Default.GetInstance<AppModel>();
+                return UI.ViewModel.AppModel.AppViewModel;
             }
         }
 
@@ -39,21 +38,21 @@ namespace Certify.UI.Controls
 
         private void Button_Save(object sender, RoutedEventArgs e)
         {
-            if (ViewModel.SelectedItem.IsChanged)
+            if (this.MainViewModel.SelectedItemHasChanges)
             {
-                if (ViewModel.SelectedItem.Id == null && ViewModel.SelectedWebSite == null)
+                if (MainViewModel.SelectedItem.Id == null && MainViewModel.SelectedWebSite == null)
                 {
                     MessageBox.Show("Select the website to create a certificate for.");
                     return;
                 }
 
-                if (String.IsNullOrEmpty(ViewModel.SelectedItem.Name))
+                if (String.IsNullOrEmpty(MainViewModel.SelectedItem.Name))
                 {
                     MessageBox.Show("A name is required for this item.");
                     return;
                 }
 
-                if (ViewModel.PrimarySubjectDomain == null)
+                if (MainViewModel.PrimarySubjectDomain == null)
                 {
                     MessageBox.Show("A Primary Domain must be selected");
                     return;
@@ -61,10 +60,10 @@ namespace Certify.UI.Controls
                 //save changes
 
                 //creating new managed item
-                ViewModel.SelectedItem = GetUpdatedManagedSiteSettings();
-                ViewModel.AddOrUpdateManagedSite(ViewModel.SelectedItem);
+                MainViewModel.SelectedItem = GetUpdatedManagedSiteSettings();
+                MainViewModel.AddOrUpdateManagedSite(MainViewModel.SelectedItem);
 
-                ViewModel.MarkAllChangesCompleted();
+                MainViewModel.MarkAllChangesCompleted();
             }
             else
             {
@@ -75,33 +74,34 @@ namespace Certify.UI.Controls
         private void Button_DiscardChanges(object sender, RoutedEventArgs e)
         {
             //if new item, discard and select first item in managed sites
-            if (ViewModel.SelectedItem.Id == null)
+            if (MainViewModel.SelectedItem.Id == null)
             {
                 ReturnToDefaultManagedItemView();
             }
             else
             {
                 //reload settings for managed sites, discard changes
-                var currentSiteId = ViewModel.SelectedItem.Id;
-                ViewModel.LoadSettings();
-                ViewModel.SelectedItem = ViewModel.ManagedSites.FirstOrDefault(m => m.Id == currentSiteId);
+                var currentSiteId = MainViewModel.SelectedItem.Id;
+                MainViewModel.LoadSettings();
+                MainViewModel.SelectedItem = MainViewModel.ManagedSites.FirstOrDefault(m => m.Id == currentSiteId);
             }
 
-            ViewModel.MarkAllChangesCompleted();
+            MainViewModel.MarkAllChangesCompleted();
         }
 
         private void ReturnToDefaultManagedItemView()
         {
-            ViewModel.SelectFirstOrDefaultItem();
+            MainViewModel.SelectFirstOrDefaultItem();
         }
 
         private void Button_RequestCertificate(object sender, RoutedEventArgs e)
         {
+            MainViewModel.SelectedItem.IsChanged = true;
         }
 
         private void Button_Delete(object sender, RoutedEventArgs e)
         {
-            if (this.ViewModel.SelectedItem.Id == null)
+            if (this.MainViewModel.SelectedItem.Id == null)
             {
                 //item not saved, discard
                 ReturnToDefaultManagedItemView();
@@ -110,7 +110,7 @@ namespace Certify.UI.Controls
             {
                 if (MessageBox.Show("Are you sure you want to delete this item? Deleting the item will not affect IIS settings etc.", "Confirm Delete", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
                 {
-                    this.ViewModel.DeleteManagedSite(this.ViewModel.SelectedItem);
+                    this.MainViewModel.DeleteManagedSite(this.MainViewModel.SelectedItem);
                     ReturnToDefaultManagedItemView();
                 }
             }
@@ -118,9 +118,9 @@ namespace Certify.UI.Controls
 
         private void Website_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (this.ViewModel.SelectedWebSite != null)
+            if (this.MainViewModel.SelectedWebSite != null)
             {
-                PopulateManagedSiteSettings(this.ViewModel.SelectedWebSite.SiteId);
+                PopulateManagedSiteSettings(this.MainViewModel.SelectedWebSite.SiteId);
             }
         }
 
@@ -130,7 +130,7 @@ namespace Certify.UI.Controls
 
         private void SANDomain_Toggled(object sender, RoutedEventArgs e)
         {
-            this.ViewModel.SelectedItem.IsChanged = true;
+            this.MainViewModel.SelectedItem.IsChanged = true;
         }
 
         /// <summary>
@@ -139,7 +139,7 @@ namespace Certify.UI.Controls
         /// <returns></returns>
         private ManagedSite GetUpdatedManagedSiteSettings()
         {
-            var item = ViewModel.SelectedItem;
+            var item = MainViewModel.SelectedItem;
             CertRequestConfig config = new CertRequestConfig();
 
             // RefreshDomainOptionSettingsFromUI();
@@ -165,9 +165,9 @@ namespace Certify.UI.Controls
 
             //determine if this site has an existing entry in Managed Sites, if so use that, otherwise start a new one
 
-            if (ViewModel.SelectedItem.Id == null)
+            if (MainViewModel.SelectedItem.Id == null)
             {
-                var siteInfo = ViewModel.SelectedWebSite;
+                var siteInfo = MainViewModel.SelectedWebSite;
                 //if siteInfo null we need to go back and select a site
 
                 item.Id = Guid.NewGuid().ToString() + ":" + siteInfo.SiteId;
@@ -187,8 +187,8 @@ namespace Certify.UI.Controls
 
         private void PopulateManagedSiteSettings(string siteId)
         {
-            var managedSite = this.ViewModel.SelectedItem;
-            managedSite.Name = this.ViewModel.SelectedWebSite.SiteName;
+            var managedSite = this.MainViewModel.SelectedItem;
+            managedSite.Name = this.MainViewModel.SelectedWebSite.SiteName;
 
             //TODO: if this site would be a duplicate need to increment the site name
 
@@ -222,6 +222,8 @@ namespace Certify.UI.Controls
                 }
 
                 managedSite.DomainOptions = domains;
+
+                //MainViewModel.EnsureNotifyPropertyChange(nameof(MainViewModel.PrimarySubjectDomain));
             }
             else
             {
