@@ -60,10 +60,7 @@ namespace Certify.UI.Controls
                 //save changes
 
                 //creating new managed item
-                MainViewModel.SelectedItem = GetUpdatedManagedSiteSettings();
-                MainViewModel.AddOrUpdateManagedSite(MainViewModel.SelectedItem);
-
-                MainViewModel.MarkAllChangesCompleted();
+                MainViewModel.SaveManagedItemChanges();
             }
             else
             {
@@ -118,9 +115,13 @@ namespace Certify.UI.Controls
 
         private void Website_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (this.MainViewModel.SelectedWebSite != null)
+            if (MainViewModel.SelectedWebSite != null)
             {
-                PopulateManagedSiteSettings(this.MainViewModel.SelectedWebSite.SiteId);
+                string siteId = MainViewModel.SelectedWebSite.SiteId;
+                if (MainViewModel.PopulateManagedSiteSettingsCommand.CanExecute(siteId))
+                {
+                    MainViewModel.PopulateManagedSiteSettingsCommand.Execute(siteId);
+                }
             }
         }
 
@@ -131,106 +132,6 @@ namespace Certify.UI.Controls
         private void SANDomain_Toggled(object sender, RoutedEventArgs e)
         {
             this.MainViewModel.SelectedItem.IsChanged = true;
-        }
-
-        /// <summary>
-        /// For the given set of options get a new CertRequestConfig to store
-        /// </summary>
-        /// <returns></returns>
-        private ManagedSite GetUpdatedManagedSiteSettings()
-        {
-            var item = MainViewModel.SelectedItem;
-            CertRequestConfig config = new CertRequestConfig();
-
-            // RefreshDomainOptionSettingsFromUI();
-            var primaryDomain = item.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain == true);
-
-            //if no primary domain need to go back and select one
-            if (primaryDomain == null) throw new ArgumentException("Primary subject domain must be set.");
-
-            IdnMapping _idnMapping = new IdnMapping();
-            config.PrimaryDomain = _idnMapping.GetAscii(primaryDomain.Domain); // ACME service requires international domain names in ascii mode
-
-            //apply remaining selected domains as subject alternative names
-            config.SubjectAlternativeNames =
-                item.DomainOptions.Where(dm => dm.Domain != primaryDomain.Domain && dm.IsSelected == true)
-                .Select(i => i.Domain)
-                .ToArray();
-
-            //config.PerformChallengeFileCopy = true;
-            //config.PerformExtensionlessConfigChecks = !chkSkipConfigCheck.Checked;
-            config.PerformAutoConfig = true;
-
-            // config.EnableFailureNotifications = chkEnableNotifications.Checked;
-
-            //determine if this site has an existing entry in Managed Sites, if so use that, otherwise start a new one
-
-            if (MainViewModel.SelectedItem.Id == null)
-            {
-                var siteInfo = MainViewModel.SelectedWebSite;
-                //if siteInfo null we need to go back and select a site
-
-                item.Id = Guid.NewGuid().ToString() + ":" + siteInfo.SiteId;
-                item.GroupId = siteInfo.SiteId;
-
-                config.WebsiteRootPath = Environment.ExpandEnvironmentVariables(siteInfo.PhysicalPath);
-            }
-
-            item.ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS;
-
-            //store domain options settings and request config for this site so we can replay for automated renewal
-            // managedSite.DomainOptions = this.domains;
-            //managedSite.RequestConfig = config;
-
-            return item;
-        }
-
-        private void PopulateManagedSiteSettings(string siteId)
-        {
-            var managedSite = this.MainViewModel.SelectedItem;
-            managedSite.Name = this.MainViewModel.SelectedWebSite.SiteName;
-
-            //TODO: if this site would be a duplicate need to increment the site name
-
-            //set defaults first
-            managedSite.RequestConfig.PerformExtensionlessConfigChecks = true;
-            managedSite.RequestConfig.PerformAutomatedCertBinding = true;
-            managedSite.RequestConfig.PerformAutoConfig = true;
-            managedSite.RequestConfig.EnableFailureNotifications = true;
-            managedSite.RequestConfig.ChallengeType = "http-01";
-            managedSite.IncludeInAutoRenew = true;
-            managedSite.DomainOptions = new List<DomainOption>();
-
-            //for the given selected web site, allow the user to choose which domains to combine into one certificate
-            var allSites = new IISManager().GetSiteBindingList(false);
-            var domains = new List<DomainOption>();
-            foreach (var d in allSites)
-            {
-                if (d.SiteId == siteId)
-                {
-                    DomainOption opt = new DomainOption { Domain = d.Host, IsPrimaryDomain = false, IsSelected = true };
-                    domains.Add(opt);
-                }
-            }
-
-            if (domains.Any())
-            {
-                //mark first domain as primary, if we have no other settings
-                if (!domains.Any(d => d.IsPrimaryDomain == true))
-                {
-                    domains[0].IsPrimaryDomain = true;
-                }
-
-                managedSite.DomainOptions = domains;
-
-                //MainViewModel.EnsureNotifyPropertyChange(nameof(MainViewModel.PrimarySubjectDomain));
-            }
-            else
-            {
-                MessageBox.Show("The selected site has no domain bindings setup. Configure the domains first using Edit Bindings in IIS.", "Website Bindings");
-            }
-
-            //TODO: load settings from previously saved managed site?
         }
     }
 

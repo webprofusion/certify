@@ -28,7 +28,7 @@
             </ListView.ItemTemplate>
         </ListView>
         <StackPanel VerticalAlignment="Top" DockPanel.Dock="Right">
-            <Button Click="Button_Click" />
+
             <local:ManagedItemSettings Visibility="{Binding IsItemSelected, Converter={StaticResource BoolToVisConverter}}"  Width="Auto" BorderBrush="{DynamicResource WindowTitleColorBrush}" Loaded="ManagedItemSettings_Loaded" />
         </StackPanel>
     </DockPanel>
