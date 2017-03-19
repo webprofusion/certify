@@ -6,12 +6,15 @@
              xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
              xmlns:local="clr-namespace:Certify.UI.Controls"
               xmlns:System="clr-namespace:System;assembly=mscorlib"
-    xmlns:fa="http://schemas.fontawesome.io/icons/" x:Class="Certify.UI.Controls.ManagedSites"
-             mc:Ignorable="d" Width="970" Height="333">
+    xmlns:fa="http://schemas.fontawesome.io/icons/"
+    xmlns:utils="clr-namespace:Certify.UI.Utils" x:Class="Certify.UI.Controls.ManagedSites"
+             mc:Ignorable="d" Width="970" Height="455">
 
     <DockPanel  Margin="0,8,0,10">
         <DockPanel.Resources>
             <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+
+            <utils:EnumConverter x:Key="EnumConverter" />
         </DockPanel.Resources>
         <ListView ItemsSource="{Binding ManagedSites}" SelectionChanged="ListView_SelectionChanged" TouchDown="ListView_TouchDown"  SelectionMode="Single" Width="240" BorderBrush="{DynamicResource IdealForegroundDisabledBrush}" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
             <ListView.ItemTemplate>
@@ -22,7 +25,7 @@
                             <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,8,0" Foreground="{DynamicResource AccentColorBrush3}" />
                         </StackPanel>
 
-                        <TextBlock Text="{Binding ItemType}" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" Margin="16,0,0,0" />
+                        <TextBlock Text="{Binding Path=ItemType, Converter={StaticResource EnumConverter}}" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" Margin="16,0,0,0" FontSize="10" />
                     </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>
@@ -30,6 +33,10 @@
         <StackPanel VerticalAlignment="Top" DockPanel.Dock="Right">
 
             <local:ManagedItemSettings Visibility="{Binding IsItemSelected, Converter={StaticResource BoolToVisConverter}}"  Width="Auto" BorderBrush="{DynamicResource WindowTitleColorBrush}" Loaded="ManagedItemSettings_Loaded" />
+            <StackPanel VerticalAlignment="Top" Visibility="{Binding IsNoItemSelected, Converter={StaticResource BoolToVisConverter}}">
+                <TextBlock TextWrapping="Wrap" FontSize="21.333" Margin="0,16"><Run Text="Welcome to Certify" /></TextBlock>
+                <TextBlock TextWrapping="Wrap"><Run Text="Certify provides free SSL Certificates via the Let's Encrypt service (https://letsencrypt.org)." /><LineBreak /><Run /><Run /><LineBreak /><Run Text="Select a Managed Site or select New Certificate to begin." /><Run Text="&#x9;" /><LineBreak /><Run /><LineBreak /><Run /><LineBreak /><Run /><LineBreak /><Run /></TextBlock>
+            </StackPanel>
         </StackPanel>
     </DockPanel>
 </UserControl>

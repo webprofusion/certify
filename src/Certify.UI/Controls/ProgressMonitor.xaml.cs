@@ -20,9 +20,18 @@ namespace Certify.UI.Controls
     /// </summary>
     public partial class ProgressMonitor : UserControl
     {
+        protected Certify.UI.ViewModel.AppModel MainViewModel
+        {
+            get
+            {
+                return UI.ViewModel.AppModel.AppViewModel;
+            }
+        }
+
         public ProgressMonitor()
         {
             InitializeComponent();
+            this.DataContext = MainViewModel;
         }
     }
 }

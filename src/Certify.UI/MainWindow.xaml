@@ -11,7 +11,7 @@
         GlowBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1"
         mc:Ignorable="d"
-        Title="Certify" Height="668" Width="1120">
+        Title="Certify - SSL Certificate Manager" TitleCaps="False" Height="668" Width="1120" WindowStyle="ToolWindow">
 
     <DockPanel LastChildFill="True">
 
@@ -37,9 +37,9 @@
             </Button>
         </StackPanel>
 
-        <dragablz:TabablzControl x:Name="MainTabControl" DockPanel.Dock="Bottom" Margin="8,8,8,0">
+        <dragablz:TabablzControl x:Name="MainTabControl" DockPanel.Dock="Bottom" Margin="8,8,8,0" SelectedIndex="{Binding MainUITabIndex}">
 
-            <TabItem Header="Managed Certificates" IsSelected="True">
+            <TabItem Header="Managed Sites" IsSelected="True">
                 <Controls1:ManagedSites Width="Auto" Height="Auto" />
             </TabItem>
             <TabItem Header="Vault">

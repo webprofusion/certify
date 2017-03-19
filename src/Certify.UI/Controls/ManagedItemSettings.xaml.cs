@@ -93,7 +93,26 @@ namespace Certify.UI.Controls
 
         private void Button_RequestCertificate(object sender, RoutedEventArgs e)
         {
-            MainViewModel.SelectedItem.IsChanged = true;
+            if (MainViewModel.SelectedItem != null)
+            {
+                if (MainViewModel.SelectedItem.IsChanged)
+                {
+                    //save changes
+                    MainViewModel.SaveManagedItemChanges();
+                }
+
+                //begin request
+                MainViewModel.MainUITabIndex = (int)MainWindow.PrimaryUITabs.CurrentProgress;
+
+                if (MainViewModel.BeginCertificateRequestCommand.CanExecute((MainViewModel.SelectedItem.Id)))
+                {
+                    Application.Current.Dispatcher.BeginInvoke(new Action(
+    () =>
+    {
+        MainViewModel.BeginCertificateRequestCommand.Execute(MainViewModel.SelectedItem.Id);
+    }));
+                }
+            }
         }
 
         private void Button_Delete(object sender, RoutedEventArgs e)
@@ -127,11 +146,30 @@ namespace Certify.UI.Controls
 
         private void PrimaryDomain_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            /*if (e.AddedItems.Count > 0)
+            {
+                var primaryDomain = (DomainOption)e.AddedItems[0];
+                foreach (var d in MainViewModel.SelectedItem.DomainOptions)
+                {
+                    if (d.Domain == primaryDomain.Domain)
+                    {
+                        d.IsPrimaryDomain = true;
+                    }
+                    else
+                    {
+                        d.IsPrimaryDomain = false;
+                    }
+                }
+            }*/
         }
 
         private void SANDomain_Toggled(object sender, RoutedEventArgs e)
         {
             this.MainViewModel.SelectedItem.IsChanged = true;
+        }
+
+        private void TabablzControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
         }
     }
 

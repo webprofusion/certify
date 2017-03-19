@@ -14,6 +14,14 @@ namespace Certify.UI
     /// </summary>
     public partial class App : Application
     {
+        protected Certify.UI.ViewModel.AppModel MainViewModel
+        {
+            get
+            {
+                return UI.ViewModel.AppModel.AppViewModel;
+            }
+        }
+
         protected override void OnStartup(StartupEventArgs e)
         {
             /*
@@ -27,6 +35,8 @@ namespace Certify.UI
                                         ThemeManager.GetAppTheme("BaseLight")); // or appStyle.Item1
 */
             base.OnStartup(e);
+
+            MainViewModel.LoadSettings();
         }
     }
 }

@@ -19,7 +19,7 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// Provide single static instance of model for all consumers
         /// </summary>
-        public static AppModel AppViewModel { get; } = new AppModel();
+        public static AppModel AppViewModel = new AppModel();
 
         private CertifyManager certifyManager = null;
 
@@ -30,17 +30,7 @@ namespace Certify.UI.ViewModel
         /// </summary>
         public ObservableCollection<Certify.Models.ManagedSite> ManagedSites { get; set; }
 
-        private Certify.Models.ManagedSite _selectedItem;
-
         public Certify.Models.ManagedSite SelectedItem { get; set; }
-        /* {
-             get { return _selectedItem; }
-             set
-             {
-                 _selectedItem = value;
-                 RaisePropertyChanged(nameof(SelectedItem));
-             }
-         }*/
 
         public bool SelectedItemHasChanges
         {
@@ -123,8 +113,11 @@ namespace Certify.UI.ViewModel
             {
                 if (SelectedItem != null)
                 {
-                    var primary = SelectedItem.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain = true);
-                    if (primary != null) return primary;
+                    var primary = SelectedItem.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain == true);
+                    if (primary != null)
+                    {
+                        return primary;
+                    }
                 }
 
                 return null;
@@ -172,6 +165,14 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        public bool IsNoItemSelected
+        {
+            get
+            {
+                return (this.SelectedItem == null);
+            }
+        }
+
         public bool IsSelectedItemValid
         {
             get
@@ -189,6 +190,19 @@ namespace Certify.UI.ViewModel
 
         public string ValidationError { get; set; }
 
+        public int MainUITabIndex { get; set; }
+
+        [DependsOn(nameof(ProgressResults))]
+        public bool HasRequestsInProgress
+        {
+            get
+            {
+                return (ProgressResults != null && ProgressResults.Any());
+            }
+        }
+
+        public ObservableCollection<RequestProgressState> ProgressResults { get; set; }
+
         #endregion properties
 
         #region methods
@@ -196,17 +210,23 @@ namespace Certify.UI.ViewModel
         public AppModel()
         {
             certifyManager = new CertifyManager();
+
+            ProgressResults = new ObservableCollection<RequestProgressState>();
         }
 
         public void LoadSettings()
         {
             this.ManagedSites = new ObservableCollection<ManagedSite>(certifyManager.GetManagedSites());
 
-            if (this.ManagedSites.Any())
+            /*if (this.ManagedSites.Any())
             {
                 //preselect the first managed site
                 //  this.SelectedItem = this.ManagedSites[0];
-            }
+
+                //test state
+                BeginTrackingProgress(new RequestProgressState { CurrentState = RequestState.InProgress, IsStarted = true, Message = "Registering Domain Identifier", ManagedItem = ManagedSites[0] });
+                BeginTrackingProgress(new RequestProgressState { CurrentState = RequestState.Error, IsStarted = true, Message = "Rate Limited", ManagedItem = ManagedSites[0] });
+            }*/
         }
 
         public void SaveSettings(object param)
@@ -214,10 +234,24 @@ namespace Certify.UI.ViewModel
             certifyManager.SaveManagedSites(this.ManagedSites.ToList());
         }
 
-        public async Task<List<Certify.Models.CertificateRequestResult>> RenewAll()
+        public async void RenewAll(bool autoRenewalsOnly)
         {
-            var results = await certifyManager.PerformRenewalAllManagedSites(false);
-            return results;
+            Dictionary<string, Progress<RequestProgressState>> itemTrackers = new Dictionary<string, Progress<RequestProgressState>>();
+            foreach (var s in ManagedSites)
+            {
+                if ((autoRenewalsOnly && s.IncludeInAutoRenew) || !autoRenewalsOnly)
+                {
+                    var progressState = new RequestProgressState { ManagedItem = s };
+                    itemTrackers.Add(s.Id, new Progress<RequestProgressState>(progressState.ProgressReport));
+
+                    //begin monitoring progress
+                    BeginTrackingProgress(progressState);
+                }
+            }
+
+            var results = await certifyManager.PerformRenewalAllManagedSites(autoRenewalsOnly, itemTrackers);
+            //TODO: store results in log
+            //return results;
         }
 
         public ManagedItem AddOrUpdateManagedSite(ManagedSite item)
@@ -277,7 +311,7 @@ namespace Certify.UI.ViewModel
         private ManagedSite GetUpdatedManagedSiteSettings()
         {
             var item = SelectedItem;
-            CertRequestConfig config = new CertRequestConfig();
+            var config = item.RequestConfig;
 
             // RefreshDomainOptionSettingsFromUI();
             var primaryDomain = item.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain == true);
@@ -290,7 +324,7 @@ namespace Certify.UI.ViewModel
 
             //apply remaining selected domains as subject alternative names
             config.SubjectAlternativeNames =
-                item.DomainOptions.Where(dm => dm.Domain != primaryDomain.Domain && dm.IsSelected == true)
+                item.DomainOptions.Where(dm => dm.IsSelected == true)
                 .Select(i => i.Domain)
                 .ToArray();
 
@@ -316,7 +350,7 @@ namespace Certify.UI.ViewModel
             item.ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS;
 
             //store domain options settings and request config for this site so we can replay for automated renewal
-            // managedSite.DomainOptions = this.domains;
+
             //managedSite.RequestConfig = config;
 
             return item;
@@ -372,6 +406,39 @@ namespace Certify.UI.ViewModel
             //TODO: load settings from previously saved managed site?
         }
 
+        public async void BeginCertificateRequest(string managedItemId)
+        {
+            //begin request process
+            var managedSite = ManagedSites.FirstOrDefault(s => s.Id == managedItemId);
+
+            if (managedSite != null)
+            {
+                MainUITabIndex = (int)MainWindow.PrimaryUITabs.CurrentProgress;
+
+                //add request to observable list of progress state
+                RequestProgressState progressState = new RequestProgressState();
+                progressState.ManagedItem = managedSite;
+
+                //begin monitoring progress
+                BeginTrackingProgress(progressState);
+
+                var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
+                await certifyManager.PerformCertificateRequest(null, managedSite, progressIndicator);
+            }
+        }
+
+        private void BeginTrackingProgress(RequestProgressState state)
+        {
+            var existing = ProgressResults.FirstOrDefault(p => p.ManagedItem.Id == state.ManagedItem.Id);
+            if (existing != null)
+            {
+                ProgressResults.Remove(existing);
+            }
+            ProgressResults.Add(state);
+
+            RaisePropertyChanged(nameof(HasRequestsInProgress));
+        }
+
         #endregion methods
 
         #region commands
@@ -379,6 +446,8 @@ namespace Certify.UI.ViewModel
         public ICommand SANSelectAllCommand => new RelayCommand<object>(SANSelectAll);
         public ICommand SANSelectNoneCommand => new RelayCommand<object>(SANSelectNone);
         public ICommand PopulateManagedSiteSettingsCommand => new RelayCommand<string>(PopulateManagedSiteSettings);
+        public ICommand BeginCertificateRequestCommand => new RelayCommand<string>(BeginCertificateRequest);
+        public ICommand RenewAllCommand => new RelayCommand<bool>(RenewAll);
 
         #endregion commands
     }

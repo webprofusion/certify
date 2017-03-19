@@ -25,7 +25,10 @@ namespace Certify.Models
 
     public enum ManagedItemType
     {
+        [Description("Local IIS, SSL Certificate via Let's Encrypt")]
         SSL_LetsEncrypt_LocalIIS = 1,
+
+        [Description("Manual SSL Certificate via Let's Encrypt")]
         SSL_LetsEncrypt_Manual = 2
     }
 
@@ -68,16 +71,12 @@ namespace Certify.Models
         public void OnPropertyChanged(string propertyName, object before, object after)
         {
             //Perform property validation
-            var propertyChanged = PropertyChanged;
-            if (propertyChanged != null)
-            {
-                propertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         public void RaisePropertyChanged(string prop)
         {
-            if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs(prop));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
 
         /// <summary>

@@ -121,7 +121,6 @@
     <Compile Include="Controls\AboutControl.xaml.cs">
       <DependentUpon>AboutControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\BaseUseControl.cs" />
     <Compile Include="Controls\ManagedItemSettings.xaml.cs">
       <DependentUpon>ManagedItemSettings.xaml</DependentUpon>
     </Compile>
@@ -147,6 +146,8 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Utils\EnumConverter.cs" />
+    <Compile Include="Utils\OptionalBooleanToVisibilityConverter.cs" />
     <Compile Include="ViewModel\AppModel.cs" />
     <Compile Include="ViewModel\RelayCommand.cs" />
     <Compile Include="Windows\EditContactDialog.xaml.cs">

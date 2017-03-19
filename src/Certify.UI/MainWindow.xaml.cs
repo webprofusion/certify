@@ -20,7 +20,7 @@ namespace Certify.UI
     /// </summary>
     public partial class MainWindow
     {
-        private enum PrimaryTabs
+        public enum PrimaryUITabs
         {
             ManagedItems = 0,
             Vault = 1,
@@ -39,7 +39,7 @@ namespace Certify.UI
         {
             InitializeComponent();
 
-            MainViewModel.LoadSettings();
+            this.DataContext = MainViewModel;
             // MainViewModel.SelectedItem = MainViewModel.ManagedSites[0];
         }
 
@@ -48,15 +48,14 @@ namespace Certify.UI
             //present new managed item (certificate request) UI
 
             //select tab Managed Items
-            this.MainTabControl.TabIndex = (int)PrimaryTabs.ManagedItems;
+            this.MainTabControl.TabIndex = (int)PrimaryUITabs.ManagedItems;
             MainViewModel.SelectedItem = new Certify.Models.ManagedSite { Name = "New Managed Certificate" };
         }
 
         private void Button_NewContact(object sender, RoutedEventArgs e)
         {
             //present new contact dialog
-            var d = new Windows.EditContactDialog();
-            d.Owner = this;
+            var d = new Windows.EditContactDialog { Owner = this };
             d.ShowDialog();
         }
 
@@ -65,10 +64,15 @@ namespace Certify.UI
             //present new renew all confirmation
             if (MessageBox.Show("This will renew certificates for all auto-renewed items. Proceed?", "Renew All", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
-                this.MainTabControl.TabIndex = (int)PrimaryTabs.CurrentProgress;
-                // TODO: this is a long running process so we need to run renewals process in the background and present UI to (optionally) show progress.
-                // We should prevent starting the renewals process if it is currently in progress.
-                var results = MainViewModel.RenewAll();
+                MainViewModel.MainUITabIndex = (int)PrimaryUITabs.CurrentProgress;
+
+                bool autoRenewalsOnly = true;
+                // renewals is a long running process so we need to run renewals process in the background and present UI to show progress.
+                // TODO: We should prevent starting the renewals process if it is currently in progress.
+                if (MainViewModel.RenewAllCommand.CanExecute(autoRenewalsOnly))
+                {
+                    MainViewModel.RenewAllCommand.Execute(autoRenewalsOnly);
+                }
             }
         }
     }

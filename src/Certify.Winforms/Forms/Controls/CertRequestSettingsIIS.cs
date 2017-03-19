@@ -187,7 +187,7 @@ namespace Certify.Forms.Controls
 
             if (!result.IsSuccess)
             {
-                MessageBox.Show(result.ErrorMessage);
+                MessageBox.Show(result.Message);
             }
             else
             {

@@ -13,19 +13,19 @@ namespace Certify.Management
     public class ItemManager
     {
         private const string APPDATASUBFOLDER = "Certify";
-        private const string ITEMMANAGERCONFIG = "config.json";
+        private const string ITEMMANAGERCONFIG = "manageditems.json";
 
         /// <summary>
         /// If true, one or more of our managed sites are hosted within a Local IIS server on the same machine
         /// </summary>
         public bool EnableLocalIISMode { get; set; } //TODO: driven by config
 
-        private List<ManagedSite> managedSites { get; set; }
+        private List<ManagedSite> ManagedSites { get; set; }
 
         public ItemManager()
         {
             EnableLocalIISMode = true;
-            this.managedSites = new List<ManagedSite>(); // this.Preview();
+            this.ManagedSites = new List<ManagedSite>(); // this.Preview();
         }
 
         private string GetAppDataFolder()
@@ -40,14 +40,14 @@ namespace Certify.Management
 
         internal void UpdatedManagedSites(List<ManagedSite> managedSites)
         {
-            this.managedSites = managedSites;
+            this.ManagedSites = managedSites;
             this.StoreSettings();
         }
 
         public void StoreSettings()
         {
             string appDataPath = GetAppDataFolder();
-            string siteManagerConfig = Newtonsoft.Json.JsonConvert.SerializeObject(this.managedSites, Newtonsoft.Json.Formatting.Indented);
+            string siteManagerConfig = Newtonsoft.Json.JsonConvert.SerializeObject(this.ManagedSites, Newtonsoft.Json.Formatting.Indented);
             System.IO.File.WriteAllText(appDataPath + "\\" + ITEMMANAGERCONFIG, siteManagerConfig);
         }
 
@@ -58,14 +58,14 @@ namespace Certify.Management
             if (System.IO.File.Exists(path))
             {
                 string configData = System.IO.File.ReadAllText(path);
-                this.managedSites = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ManagedSite>>(configData);
+                this.ManagedSites = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ManagedSite>>(configData);
             }
             else
             {
-                this.managedSites = new List<ManagedSite>();
+                this.ManagedSites = new List<ManagedSite>();
             }
 
-            foreach (var s in this.managedSites)
+            foreach (var s in this.ManagedSites)
             {
                 s.IsChanged = false;
             }
@@ -116,27 +116,27 @@ namespace Certify.Management
 
         public ManagedSite GetManagedSite(string siteId, string domain = null)
         {
-            var site = this.managedSites.FirstOrDefault(s => (siteId != null && s.Id == siteId) || (domain != null && s.DomainOptions.Any(bind => bind.Domain == domain)));
+            var site = this.ManagedSites.FirstOrDefault(s => (siteId != null && s.Id == siteId) || (domain != null && s.DomainOptions.Any(bind => bind.Domain == domain)));
             return site;
         }
 
         public List<ManagedSite> GetManagedSites()
         {
             this.LoadSettings();
-            return this.managedSites;
+            return this.ManagedSites;
         }
 
         public void UpdatedManagedSite(ManagedSite managedSite)
         {
             this.LoadSettings();
 
-            var existingSite = this.managedSites.FirstOrDefault(s => s.Id == managedSite.Id);
+            var existingSite = this.ManagedSites.FirstOrDefault(s => s.Id == managedSite.Id);
             if (existingSite != null)
             {
-                this.managedSites.Remove(existingSite);
+                this.ManagedSites.Remove(existingSite);
             }
 
-            this.managedSites.Add(managedSite);
+            this.ManagedSites.Add(managedSite);
             this.StoreSettings();
         }
 
@@ -144,10 +144,10 @@ namespace Certify.Management
         {
             this.LoadSettings();
 
-            var existingSite = this.managedSites.FirstOrDefault(s => s.Id == site.Id);
+            var existingSite = this.ManagedSites.FirstOrDefault(s => s.Id == site.Id);
             if (existingSite != null)
             {
-                this.managedSites.Remove(existingSite);
+                this.ManagedSites.Remove(existingSite);
             }
             this.StoreSettings();
         }
