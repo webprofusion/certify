@@ -512,7 +512,7 @@ namespace Certify
                 this.DeleteIdentifierByDNS(domain);
 
                 // ACME service requires international domain names in ascii mode
-                ACMESharpUtils.NewIdentifier(identifierAlias, idnMapping.GetAscii(domain), "Identifier:" + domain);
+                ACMESharpUtils.NewIdentifier(identifierAlias, idnMapping.GetAscii(domain));
             }
 
             var identifier = this.GetIdentifier(identifierAlias, reloadVaultConfig: true);

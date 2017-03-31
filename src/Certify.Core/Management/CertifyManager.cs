@@ -109,7 +109,7 @@ namespace Certify.Management
 
             List<PendingAuthorization> identifierAuthorizations = new List<PendingAuthorization>();
 
-            foreach (var domain in allDomains)
+            foreach (var domain in allDomains.Distinct())
             {
                 var identifierAlias = vaultManager.ComputeIdentifierAlias(domain);
 

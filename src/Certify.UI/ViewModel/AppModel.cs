@@ -75,6 +75,8 @@ namespace Certify.UI.ViewModel
             AddOrUpdateManagedSite(SelectedItem);
 
             MarkAllChangesCompleted();
+
+            RaisePropertyChanged(nameof(IsSelectedItemValid));
         }
 
         public List<IPAddress> HostIPAddresses
@@ -394,6 +396,7 @@ namespace Certify.UI.ViewModel
 
             //set defaults first
             managedSite.RequestConfig.PerformExtensionlessConfigChecks = true;
+            managedSite.RequestConfig.PerformChallengeFileCopy = true;
             managedSite.RequestConfig.PerformAutomatedCertBinding = true;
             managedSite.RequestConfig.PerformAutoConfig = true;
             managedSite.RequestConfig.EnableFailureNotifications = true;
