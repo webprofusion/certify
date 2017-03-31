@@ -7,7 +7,7 @@
     <ProjectGuid>{DA0CCD9F-8CBD-4471-93E0-53BCFB6CA25E}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>Certify.CLI</RootNamespace>
-    <AssemblyName>Certify.CLI</AssemblyName>
+    <AssemblyName>Certify</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

@@ -239,8 +239,8 @@ namespace Certify.UI.ViewModel
 
             if (!this.ManagedSites.Any())
             {
-                //if we have a vault, preview import
-                PreviewImport(sanMergeMode:true);
+                //if we have a vault, preview import. //TODO: make this async and only perform after UI has shown
+                PreviewImport(sanMergeMode: true);
 
                 //if we have no vault, start a new one
 

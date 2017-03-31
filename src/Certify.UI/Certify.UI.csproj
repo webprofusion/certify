@@ -196,6 +196,10 @@
     <Resource Include="Assets\Images\Icons\readme.txt.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Certify.CLI\Certify.CLI.csproj">
+      <Project>{da0ccd9f-8cbd-4471-93e0-53bcfb6ca25e}</Project>
+      <Name>Certify.CLI</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Certify.Core\Certify.Core.csproj">
       <Project>{87baa9ca-e0c9-4d3e-8971-55a30134c932}</Project>
       <Name>Certify.Core</Name>

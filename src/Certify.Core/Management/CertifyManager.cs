@@ -1,4 +1,5 @@
 ﻿using Certify.Models;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,10 @@ namespace Certify.Management
     public class CertifyManager
     {
         private ItemManager siteManager = null;
+
+        private const string SCHEDULED_TASK_NAME = "Certify Maintenance Task";
+        private const string SCHEDULED_TASK_EXE = "certify.exe";
+        private const string SCHEDULED_TASK_ARGS = "renew";
 
         public CertifyManager()
         {
@@ -391,6 +396,34 @@ namespace Certify.Management
 
                 return results;
             }
+        }
+
+        public bool CreateWindowsScheduledTask(string userId = null, string pwd = null)
+        {
+            // https://taskscheduler.codeplex.com/documentation
+
+            try
+            {
+                var cliPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, SCHEDULED_TASK_EXE);
+
+                Microsoft.Win32.TaskScheduler.TaskService.Instance.AddTask(
+                    SCHEDULED_TASK_NAME,
+                    new Microsoft.Win32.TaskScheduler.DailyTrigger { DaysInterval = 2 },
+                    new Microsoft.Win32.TaskScheduler.ExecAction(cliPath, SCHEDULED_TASK_ARGS)
+                    );
+
+                return true;
+            }
+            catch (Exception)
+            {
+                //failed to create task
+                return false;
+            }
+        }
+
+        public void DeleteWindowsScheduledTask()
+        {
+            Microsoft.Win32.TaskScheduler.TaskService.Instance.RootFolder.DeleteTask(SCHEDULED_TASK_NAME, exceptionOnNotExists: false);
         }
     }
 }
