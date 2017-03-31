@@ -118,6 +118,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ACMESharpCompat\ACMESharpUtils.cs" />
+    <Compile Include="ACMESharpCompat\ClientHelper.cs" />
+    <Compile Include="ACMESharpCompat\PkiHelper.cs" />
     <Compile Include="Management\CertifyManager.cs" />
     <Compile Include="Management\ItemManager.cs" />
     <Compile Include="Models\ActionLogItem.cs" />
@@ -188,6 +191,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="ACMESharpCompat\readme.txt" />
     <Content Include="FodyWeavers.xml">
       <SubType>Designer</SubType>
     </Content>
