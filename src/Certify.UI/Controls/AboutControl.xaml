@@ -4,43 +4,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:Certify.UI.Controls"
-             mc:Ignorable="d"
-             d:DesignHeight="300" d:DesignWidth="300">
-    <Grid Margin="0,0,-75,0">
-        <TextBlock HorizontalAlignment="Left" Margin="15,91,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="24" Text="Certify (Beta) V2.0.20170313" RenderTransformOrigin="0.5,0.5" Height="35" Foreground="{DynamicResource WindowTitleColorBrush}" FontWeight="Bold" Width="230" FontFamily="Freestyle Script">
-            <TextBlock.RenderTransform>
-                <TransformGroup>
-                    <ScaleTransform />
-                    <SkewTransform />
-                    <RotateTransform Angle="30.543" />
-                    <TranslateTransform />
-                </TransformGroup>
-            </TextBlock.RenderTransform>
-            <TextBlock.Effect>
-                <DropShadowEffect BlurRadius="7" ShadowDepth="0" Opacity="0.99" Color="#FFA7E5EC" />
-            </TextBlock.Effect>
-        </TextBlock>
-        <TextBlock HorizontalAlignment="Left" Margin="15,91,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="24" Text="Certify (Beta) V2.0.20170313" RenderTransformOrigin="0.5,0.5" Height="35" Foreground="{DynamicResource WindowTitleColorBrush}" FontWeight="Bold" Width="230" FontFamily="Freestyle Script">
-            <TextBlock.RenderTransform>
-                <TransformGroup>
-                    <ScaleTransform />
-                    <SkewTransform />
-                    <RotateTransform Angle="30.543" />
-                    <TranslateTransform />
-                </TransformGroup>
-            </TextBlock.RenderTransform>
-            <TextBlock.Effect>
-                <DropShadowEffect BlurRadius="7" ShadowDepth="0" Opacity="0.99" Color="#FFA7E5EC" />
-            </TextBlock.Effect>
-        </TextBlock>
-        <TextBlock HorizontalAlignment="Left" Margin="12,166,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="20" RenderTransformOrigin="0.5,0.5" Height="74" Foreground="Red" FontWeight="Bold" Width="288" FontFamily="Stencil">
-            <TextBlock.RenderTransform>
-                <TransformGroup>
-                    <ScaleTransform />
-                    <SkewTransform />
-                    <RotateTransform Angle="-0.576" />
-                    <TranslateTransform />
-                </TransformGroup>
-            </TextBlock.RenderTransform><Run Text="Danger: Work In Progress" /><LineBreak /><Run /></TextBlock>
+             mc:Ignorable="d" Height="308" Width="619">
+    <Grid Margin="0,0,0,10" HorizontalAlignment="Left" Width="429">
+        <TextBlock x:Name="lblAppVersion" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="24" RenderTransformOrigin="0.5,0.5" Height="35" Width="335"><Run Text="Certify (Beta) V2.0.201703" /><Run Text="27" /></TextBlock>
+        <TextBlock x:Name="lblLicenseType" HorizontalAlignment="Left" Margin="10,50,0,0" TextWrapping="Wrap" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5" Height="35" Width="335" Text="Non-commercial license" FontWeight="Bold" />
+        <TextBlock x:Name="lblLicenseDetails" Margin="10,72,20,0" TextWrapping="Wrap" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5" Height="63"><Run Text="This version is free for non-commercial use or evaluation. If you are using this application and you represent an incorporated entity" /><Run Text=" please purchase a license."/></TextBlock>
+        <TextBlock x:Name="lblLicenseDetails_Copy" Margin="10,155,20,0" TextWrapping="Wrap" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5" Height="35"><Run Text="Certify SSL Manager is Copyright Webprofusion Pty Ltd 2017" /><LineBreak /><Run Text="https://certify.webprofusion.com" /><LineBreak /><Run /></TextBlock>
+        <TextBox HorizontalAlignment="Left" Margin="10,195,0,10" TextWrapping="Wrap" Text="Certify makes use of the following Open Source components:&#xD;&#xA;- ACMESharp&#xD;&#xA;- Newtonsoft Json.Net&#xD;&#xA;- Dragablz&#xD;&#xA;- Fontawesome.WPF&#xD;&#xA;- MahApps.Metro&#xD;&#xA;- MaterialDesignThemes.Wpf&#xD;&#xA;&#xD;&#xA;" Width="415" />
+        <Button Content="Check for Updates.." HorizontalAlignment="Left" Margin="449,15,-181,0" VerticalAlignment="Top" Width="161"/>
+        <Button Content="Register" HorizontalAlignment="Left" Margin="449,64,-181,0" VerticalAlignment="Top" Width="161"/>
     </Grid>
 </UserControl>

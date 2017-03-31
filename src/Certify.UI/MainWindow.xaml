@@ -11,7 +11,7 @@
         GlowBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1"
         mc:Ignorable="d"
-        Title="Certify - SSL Certificate Manager" TitleCaps="False" Height="668" Width="1120" WindowStyle="ToolWindow">
+        Title="Certify - SSL Certificate Manager" TitleCaps="False" Height="668" Width="1120" WindowStyle="ToolWindow" Loaded="MetroWindow_Loaded" ContentRendered="MetroWindow_ContentRendered">
 
     <DockPanel LastChildFill="True">
 
@@ -37,7 +37,7 @@
             </Button>
         </StackPanel>
 
-        <dragablz:TabablzControl x:Name="MainTabControl" DockPanel.Dock="Bottom" Margin="8,8,8,0" SelectedIndex="{Binding MainUITabIndex}">
+        <dragablz:TabablzControl x:Name="MainTabControl" DockPanel.Dock="Bottom" Margin="8,8,8,0" SelectedIndex="{Binding MainUITabIndex}" HorizontalContentAlignment="Left" VerticalContentAlignment="Top" VerticalAlignment="Top">
 
             <TabItem Header="Managed Sites" IsSelected="True">
                 <Controls1:ManagedSites Width="Auto" Height="Auto" />
@@ -46,13 +46,13 @@
                 <Controls1:VaultExplorer />
             </TabItem>
             <TabItem Header="In Progress">
-                <Controls1:ProgressMonitor />
+                <Controls1:ProgressMonitor Width="Auto" />
             </TabItem>
             <TabItem Header="Settings">
                 <Controls1:Settings />
             </TabItem>
-            <TabItem Header="About">
-                <Controls1:AboutControl />
+            <TabItem Header="About" VerticalContentAlignment="Stretch" HorizontalAlignment="Left" HorizontalContentAlignment="Left">
+                <Controls1:AboutControl Width="Auto" Height="Auto" />
             </TabItem>
         </dragablz:TabablzControl>
     </DockPanel>

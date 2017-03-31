@@ -178,10 +178,6 @@
       <Project>{473bff7d-c7f0-471d-b7a3-19ad9adfdba9}</Project>
       <Name>ACMESharp.PKI.Providers.BouncyCastle</Name>
     </ProjectReference>
-    <ProjectReference Include="..\lib\ACMESharp\ACMESharp\ACMESharp.POSH\ACMESharp.POSH.csproj">
-      <Project>{2f8d5934-b5a7-4983-8051-1f25882c7c30}</Project>
-      <Name>ACMESharp.POSH</Name>
-    </ProjectReference>
     <ProjectReference Include="..\lib\ACMESharp\ACMESharp\ACMESharp.Vault\ACMESharp.Vault.csproj">
       <Project>{65b4c6e0-27a0-445c-adac-9d8308e2e4a6}</Project>
       <Name>ACMESharp.Vault</Name>

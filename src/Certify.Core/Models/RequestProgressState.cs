@@ -8,7 +8,7 @@ namespace Certify.Models
 {
     public enum RequestState
     {
-        InProgress,
+        Running,
         Error,
         Success
     }
@@ -16,7 +16,7 @@ namespace Certify.Models
     public class RequestProgressState : BindableBase
     {
         public ManagedItem ManagedItem { get; set; }
-        public bool IsRunning;
+        public bool IsRunning { get; set; }
 
         public RequestState CurrentState { get; set; }
 
@@ -35,18 +35,17 @@ namespace Certify.Models
 
         public void ProgressReport(RequestProgressState state)
         {
-            this.IsRunning = state.IsRunning;
             this.CurrentState = state.CurrentState;
             this.Message = state.Message;
             this.Result = state.Result;
 
-            if (CurrentState != RequestState.InProgress)
+            if (CurrentState != RequestState.Running)
             {
-                IsRunning = false;
+                if (IsRunning != false) IsRunning = false;
             }
             else
             {
-                IsRunning = true;
+                if (IsRunning != true) IsRunning = true;
             }
 
 #if DEBUG

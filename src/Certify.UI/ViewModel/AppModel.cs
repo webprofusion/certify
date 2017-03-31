@@ -30,6 +30,16 @@ namespace Certify.UI.ViewModel
         /// </summary>
         public ObservableCollection<Certify.Models.ManagedSite> ManagedSites { get; set; }
 
+        /// <summary>
+        /// If set, there are one or more vault items available to be imported as managed sites
+        /// </summary>
+        public ObservableCollection<Certify.Models.ManagedSite> ImportedManagedSites { get; set; }
+
+        /// <summary>
+        /// If true, import from vault/iis scan will merge multi domain sites into one managed site
+        /// </summary>
+        public bool IsImportSANMergeMode { get; set; }
+
         public Certify.Models.ManagedSite SelectedItem { get; set; }
 
         public bool SelectedItemHasChanges
@@ -214,10 +224,28 @@ namespace Certify.UI.ViewModel
             ProgressResults = new ObservableCollection<RequestProgressState>();
         }
 
+        public void PreviewImport(bool sanMergeMode)
+        {
+            AppViewModel.IsImportSANMergeMode = sanMergeMode;
+            //we have no managed sites, offer to import them from vault if we have one
+            var importedSites = certifyManager.ImportManagedSitesFromVault(sanMergeMode);
+            ImportedManagedSites = new ObservableCollection<ManagedSite>(importedSites);
+        }
+
         public void LoadSettings()
         {
             this.ManagedSites = new ObservableCollection<ManagedSite>(certifyManager.GetManagedSites());
+            this.ImportedManagedSites = new ObservableCollection<ManagedSite>();
 
+            if (!this.ManagedSites.Any())
+            {
+                //if we have a vault, preview import
+                PreviewImport(sanMergeMode:true);
+
+                //if we have no vault, start a new one
+
+                //if we have no registered contacts in the vault then prompt to register a contact
+            }
             /*if (this.ManagedSites.Any())
             {
                 //preselect the first managed site

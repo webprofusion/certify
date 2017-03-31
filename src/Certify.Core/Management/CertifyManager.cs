@@ -62,12 +62,15 @@ namespace Certify.Management
         {
             return await Task<CertificateRequestResult>.Run<CertificateRequestResult>(() =>
             {
-                for (var i = 0; i < 100; i++)
+                for (var i = 0; i < 6; i++)
                 {
-                    if (progress != null) progress.Report(new RequestProgressState { IsRunning = true, CurrentState = RequestState.InProgress, Message = "Step " + i });
-                    System.Threading.Thread.Sleep(60);
-                }
+                    if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Running, Message = "Step " + i });
 
+                    var time = new Random().Next(2000);
+                    System.Threading.Thread.Sleep(time);
+                }
+                if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Success, Message = "Finish" });
+                System.Threading.Thread.Sleep(500);
                 return new CertificateRequestResult { };
             });
         }
@@ -82,7 +85,7 @@ namespace Certify.Management
             }
             //primary domain and each subject alternative name must now be registered as an identifier with LE and validated
 
-            if (progress != null) progress.Report(new RequestProgressState { IsRunning = true, CurrentState = RequestState.InProgress, Message = "Registering Domain Identifiers" });
+            if (progress != null) progress.Report(new RequestProgressState { IsRunning = true, CurrentState = RequestState.Running, Message = "Registering Domain Identifiers" });
 
             await Task.Delay(200); //allow UI update
 
@@ -165,7 +168,7 @@ namespace Certify.Management
                             }
                             else
                             {
-                                if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.InProgress, Message = "Requesting Validation from Lets Encrypt: " + domain });
+                                if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Running, Message = "Requesting Validation from Lets Encrypt: " + domain });
 
                                 //ask LE to validate our challenge response
                                 vaultManager.SubmitChallenge(identifierAlias, config.ChallengeType);
@@ -180,7 +183,7 @@ namespace Certify.Management
                                 }
                                 else
                                 {
-                                    if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.InProgress, Message = "Domain validation completed: " + domain });
+                                    if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Running, Message = "Domain validation completed: " + domain });
 
                                     identifierAuthorizations.Add(authorization);
                                 }
@@ -203,7 +206,7 @@ namespace Certify.Management
                 string primaryDnsIdentifier = identifierAuthorizations.First().Identifier.Alias;
                 string[] alternativeDnsIdentifiers = identifierAuthorizations.Where(i => i.Identifier.Alias != primaryDnsIdentifier).Select(i => i.Identifier.Alias).ToArray();
 
-                if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.InProgress, Message = "Requesting Certificate via Lets Encrypt" });
+                if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Running, Message = "Requesting Certificate via Lets Encrypt" });
                 await Task.Delay(200); //allow UI update
 
                 var certRequestResult = vaultManager.PerformCertificateRequestProcess(primaryDnsIdentifier, alternativeDnsIdentifiers);
@@ -215,7 +218,7 @@ namespace Certify.Management
 
                     if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS && config.PerformAutomatedCertBinding)
                     {
-                        if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.InProgress, Message = "Performing Automated Certificate Binding" });
+                        if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Running, Message = "Performing Automated Certificate Binding" });
                         await Task.Delay(200); //allow UI update
 
                         var iisManager = new IISManager();
@@ -254,11 +257,91 @@ namespace Certify.Management
             //});
         }
 
+        public List<ManagedSite> ImportManagedSitesFromVault(bool mergeSitesAsSan = false)
+        {
+            var sites = new List<ManagedSite>();
+
+            //get dns identifiers from vault
+            var vaultManager = new VaultManager(Properties.Settings.Default.VaultPath, ACMESharp.Vault.Providers.LocalDiskVault.VAULT);
+            var iisManager = new IISManager();
+
+            var identifiers = vaultManager.GetIdentifiers();
+            var iisSites = iisManager.GetSiteBindingList(includeOnlyStartedSites: false);
+            foreach (var identifier in identifiers)
+            {
+                //identify IIS site related to this identifier (if any)
+                var iisSite = iisSites.FirstOrDefault(d => d.Host == identifier.Dns);
+                var site = new ManagedSite
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    GroupId = iisSite?.SiteId,
+                    Name = identifier.Dns + (iisSite != null ? " : " + iisSite.SiteName : ""),
+                    IncludeInAutoRenew = true,
+                    Comments = "Imported from vault",
+                    ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS,
+                    TargetHost = "localhost",
+                    RequestConfig = new CertRequestConfig
+                    {
+                        BindingIPAddress = iisSite?.IP,
+                        BindingPort = iisSite?.Port.ToString(),
+                        ChallengeType = "http-01",
+                        EnableFailureNotifications = true,
+                        PerformAutoConfig = true,
+                        PerformAutomatedCertBinding = true,
+                        PerformChallengeFileCopy = true,
+                        PerformExtensionlessConfigChecks = true,
+                        PrimaryDomain = identifier.Dns,
+                        SubjectAlternativeNames = new string[] { identifier.Dns },
+                        WebsiteRootPath = iisSite?.PhysicalPath
+                    },
+                    DomainOptions = new List<DomainOption>() { new DomainOption { Domain = identifier.Dns, IsPrimaryDomain = true, IsSelected = true } }
+                };
+
+                sites.Add(site);
+            }
+
+            if (mergeSitesAsSan)
+            {
+                foreach (var s in sites)
+                {
+                    //merge sites with same group (iis site etc) and different primary domain
+                    if (sites.Any(m => m.GroupId != null && m.GroupId == s.GroupId && m.RequestConfig.PrimaryDomain != s.RequestConfig.PrimaryDomain))
+                    {
+                        //existing site to merge into
+                        //add san for dns
+                        var mergedSite = sites.FirstOrDefault(m =>
+                        m.GroupId != null && m.GroupId == s.GroupId
+                        && m.RequestConfig.PrimaryDomain != s.RequestConfig.PrimaryDomain
+                        && m.RequestConfig.PrimaryDomain != null
+                        );
+                        if (mergedSite != null)
+                        {
+                            mergedSite.DomainOptions.Add(new DomainOption { Domain = s.RequestConfig.PrimaryDomain, IsPrimaryDomain = false, IsSelected = true });
+
+                            //use shortest version of domain name as site name
+                            if (mergedSite.RequestConfig.PrimaryDomain.Contains(s.RequestConfig.PrimaryDomain))
+                            {
+                                mergedSite.Name = mergedSite.Name.Replace(mergedSite.RequestConfig.PrimaryDomain, s.RequestConfig.PrimaryDomain);
+                            }
+
+                            //flag spare site config to be discar
+                            s.RequestConfig.PrimaryDomain = null;
+                        }
+                    }
+                }
+
+                //discard sites which have been merged into other sites
+                sites.RemoveAll(s => s.RequestConfig.PrimaryDomain == null);
+            }
+            return sites;
+        }
+
         public async Task<List<CertificateRequestResult>> PerformRenewalAllManagedSites(bool autoRenewalOnly = true, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null)
         {
             await Task.Delay(200); //allow UI to update
             //currently the vault won't let us run parallel requests due to file locks
             bool performRequestsInParallel = false;
+            bool testModeOnly = true;
 
             siteManager.LoadSettings();
 
@@ -280,7 +363,15 @@ namespace Certify.Management
                 {
                     tracker = progressTrackers[s.Id];
                 }
-                renewalTasks.Add(this.PerformCertificateRequest(null, s, tracker));
+                if (testModeOnly)
+                {
+                    //simulated request for UI testing
+                    renewalTasks.Add(this.PerformDummyCertificateRequest(null, s, tracker));
+                }
+                else
+                {
+                    renewalTasks.Add(this.PerformCertificateRequest(null, s, tracker));
+                }
             }
 
             if (performRequestsInParallel)

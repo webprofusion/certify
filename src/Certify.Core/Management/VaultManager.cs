@@ -7,8 +7,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ACMESharp;
-using ACMESharp.POSH;
-using ACMESharp.POSH.Util;
 using ACMESharp.Util;
 using ACMESharp.Vault.Model;
 using ACMESharp.Vault.Profile;
@@ -17,6 +15,13 @@ using ACMESharp.WebServer;
 using Certify.Models;
 using Newtonsoft.Json;
 using System.Globalization;
+using System.Collections.ObjectModel;
+using ACMESharp.Vault.Util;
+using ACMESharp.Vault;
+using ACMESharp.PKI;
+using ACMESharp.PKI.RSA;
+using ACMESharp.JOSE;
+using Certify.ACMESharpCompat;
 
 namespace Certify
 {
@@ -33,6 +38,7 @@ namespace Certify
         private PowershellManager powershellManager;
         internal string vaultFolderPath;
         private string vaultFilename;
+        private string vaultProfile = null;
         public List<ActionLogItem> ActionLogs { get; }
 
         private readonly IdnMapping idnMapping = new IdnMapping();
@@ -71,15 +77,15 @@ namespace Certify
 
         public bool InitVault(bool staging = true)
         {
-            string apiURI = InitializeVault.WELL_KNOWN_BASE_SERVICES[InitializeVault.WELL_KNOWN_LESTAGE];
+            string apiURI = ACMESharpUtils.WELL_KNOWN_BASE_SERVICES[ACMESharpUtils.WELL_KNOWN_LESTAGE];
             if (!staging)
             {
                 //live api
-                apiURI = InitializeVault.WELL_KNOWN_BASE_SERVICES[InitializeVault.WELL_KNOWN_LE];
+                apiURI = ACMESharpUtils.WELL_KNOWN_BASE_SERVICES[ACMESharpUtils.WELL_KNOWN_LE];
             }
 
             bool vaultExists = false;
-            using (var vlt = ACMESharp.POSH.Util.VaultHelper.GetVault())
+            using (var vlt = ACMESharpUtils.GetVault(this.vaultProfile))
             {
                 vlt.OpenStorage(true);
                 var v = vlt.LoadVault(false);
@@ -94,9 +100,27 @@ namespace Certify
                 }
                 else
                 {
-                    var cmd = new ACMESharp.POSH.InitializeVault();
-                    cmd.BaseUri = apiURI;
-                    cmd.ExecuteCommand();
+                    var baseUri = apiURI;
+                    if (string.IsNullOrEmpty(baseUri))
+                    {
+
+                        throw new InvalidOperationException("either a base service or URI is required");
+                    }
+
+                    using (var vlt = ACMESharpUtils.GetVault(this.vaultProfile))
+                    {
+                        this.LogAction("InitVault", "Creating Vault");
+                     
+                        vlt.InitStorage();
+                        var v = new VaultInfo
+                        {
+                            Id = EntityHelper.NewId(),
+                            BaseUri = baseUri,
+                            ServerDirectory = new AcmeServerDirectory()
+                        };
+
+                        vlt.SaveVault(v);
+                    }
                 }
             }
             else
@@ -106,8 +130,6 @@ namespace Certify
 
             this.vaultFolderPath = GetVaultPath();
 
-            //create default manual http provider (challenge/response by placing answer in well known location on website for server to fetch);
-            //powershellManager.NewProviderConfig("Manual", "manualHttpProvider");
             return true;
         }
 
@@ -121,7 +143,7 @@ namespace Certify
 
         public VaultInfo LoadVaultFromFile()
         {
-            using (var vlt = ACMESharp.POSH.Util.VaultHelper.GetVault())
+            using (var vlt = ACMESharpUtils.GetVault(this.vaultProfile))
             {
                 vlt.OpenStorage(true);
                 var v = vlt.LoadVault();
@@ -142,7 +164,7 @@ namespace Certify
         {
             //remove duplicate identifiers etc
 
-            using (var vlt = ACMESharp.POSH.Util.VaultHelper.GetVault())
+            using (var vlt = ACMESharpUtils.GetVault(this.vaultProfile))
             {
                 vlt.OpenStorage();
                 var v = vlt.LoadVault();
@@ -241,7 +263,7 @@ namespace Certify
 
         public string GetVaultPath()
         {
-            using (var vlt = (LocalDiskVault)ACMESharp.POSH.Util.VaultHelper.GetVault())
+            using (var vlt = (LocalDiskVault)ACMESharpUtils.GetVault(this.vaultProfile))
             {
                 this.vaultFolderPath = vlt.RootPath;
             }
@@ -258,9 +280,8 @@ namespace Certify
             }
             else
             {
-                var cmd = new ACMESharp.POSH.UpdateIdentifier();
-                cmd.IdentifierRef = domainIdentifierAlias;
-                cmd.ExecuteCommand();
+                ACMESharpUtils.UpdateIdentifier(domainIdentifierAlias);
+                
             }
         }
 
@@ -300,17 +321,16 @@ namespace Certify
             }
             else
             {
-                var cmd = new ACMESharp.POSH.SubmitCertificate();
-                cmd.CertificateRef = certAlias;
-
+               
                 try
                 {
-                    cmd.ExecuteCommand();
-                    return new APIResult { IsOK = true, Result = cmd.CommandResult };
+                    var result = ACMESharpUtils.SubmitCertificate(certAlias);
+                   
+                    return new APIResult { IsOK = true, Result = result};
                 }
                 catch (Exception exp)
                 {
-                    return new APIResult { IsOK = false, Message = exp.ToString(), Result = cmd.CommandResult };
+                    return new APIResult { IsOK = false, Message = exp.ToString(), Result = exp };
                 }
             }
         }
@@ -323,20 +343,19 @@ namespace Certify
             }
             else
             {
-                var cmd = new ACMESharp.POSH.NewCertificate();
-                cmd.IdentifierRef = domainIdentifierAlias;
-                cmd.Alias = certAlias;
-                if (subjectAlternativeNameIdentifiers != null) cmd.AlternativeIdentifierRefs = subjectAlternativeNameIdentifiers;
-                cmd.Generate = new System.Management.Automation.SwitchParameter(true);
+                
+                //if (subjectAlternativeNameIdentifiers != null) cmd.AlternativeIdentifierRefs = subjectAlternativeNameIdentifiers;
+               // cmd.Generate = new System.Management.Automation.SwitchParameter(true);
 
                 try
                 {
-                    cmd.ExecuteCommand();
-                    return new APIResult { IsOK = true, Result = cmd.CommandResult };
+                   var result =  ACMESharpUtils.NewCertificate(certAlias, domainIdentifierAlias, subjectAlternativeNameIdentifiers);
+
+                    return new APIResult { IsOK = true, Result = result };
                 }
                 catch (Exception exp)
                 {
-                    return new APIResult { IsOK = false, Message = exp.ToString(), Result = cmd.CommandResult };
+                    return new APIResult { IsOK = false, Message = exp.ToString(), Result = exp };
                 }
             }
         }
@@ -384,19 +403,23 @@ namespace Certify
             }
             else
             {
-                var cmd = new ACMESharp.POSH.NewRegistration();
-                cmd.Contacts = new string[] { contact };
-                cmd.ExecuteCommand();
+                ACMESharpUtils.NewRegistration(contact);
 
-                var tosCmd = new ACMESharp.POSH.UpdateRegistration();
-                tosCmd.AcceptTos = new System.Management.Automation.SwitchParameter(true);
-                tosCmd.ExecuteCommand();
+                ACMESharpUtils.RegistrationAcceptTOS();
+
+               // var cmd = new ACMESharp.POSH.NewRegistration();
+                //cmd.Contacts = new string[] { contact };
+                //cmd.ExecuteCommand();
+
+               // var tosCmd = new ACMESharp.POSH.UpdateRegistration();
+                //tosCmd.AcceptTos = new System.Management.Automation.SwitchParameter(true);
+               // tosCmd.ExecuteCommand();
             }
         }
 
         public bool DeleteRegistrationInfo(Guid id)
         {
-            using (var vlt = ACMESharp.POSH.Util.VaultHelper.GetVault())
+            using (var vlt = ACMESharpUtils.GetVault(this.vaultProfile))
             {
                 try
                 {
@@ -416,7 +439,7 @@ namespace Certify
 
         internal bool DeleteIdentifierByDNS(string dns)
         {
-            using (var vlt = ACMESharp.POSH.Util.VaultHelper.GetVault())
+            using (var vlt = ACMESharpUtils.GetVault())
             {
                 try
                 {
@@ -646,7 +669,8 @@ namespace Certify
                 }
                 else
                 {
-                    var cmd = new ACMESharp.POSH.NewIdentifier();
+                    ACMESharpUtils.NewIdentifier(identifierAlias, domain, "Identifier:" + domain);
+                    /*var cmd = new ACMESharp.POSH.NewIdentifier();
                     cmd.Dns = idnMapping.GetAscii(domain);
                     cmd.Alias = identifierAlias;
                     cmd.Label = "Identifier:" + domain;
@@ -659,7 +683,7 @@ namespace Certify
                     {
                         this.LogAction("NewIdentifier", exp.ToString());
                         return null;
-                    }
+                    }*/
                 }
             }
 

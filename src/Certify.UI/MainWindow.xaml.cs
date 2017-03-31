@@ -75,5 +75,22 @@ namespace Certify.UI
                 }
             }
         }
+
+        private void MetroWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            //check for any startup actions required such as vault import
+
+            if (MainViewModel.ImportedManagedSites.Any())
+            {
+                //show import ui
+                Task.Delay(100);
+                var d = new Windows.ImportManagedSites { Owner = this };
+                d.ShowDialog();
+            }
+        }
+
+        private void MetroWindow_ContentRendered(object sender, EventArgs e)
+        {
+        }
     }
 }

@@ -123,6 +123,9 @@ namespace Certify.Management
         public List<ManagedSite> GetManagedSites()
         {
             this.LoadSettings();
+
+            if (this.ManagedSites == null) this.ManagedSites = new List<ManagedSite>();
+
             return this.ManagedSites;
         }
 
