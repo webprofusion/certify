@@ -52,19 +52,17 @@
             this.toolStripButtonNewCertificate = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButtonRenewAll = new System.Windows.Forms.ToolStripButton();
-            this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.tabPageManagedSites = new System.Windows.Forms.TabPage();
-            this.managedSites1 = new Certify.Forms.Controls.ManagedSites();
+            this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
             this.tabPageVault = new System.Windows.Forms.TabPage();
             this.vaultExplorer1 = new Certify.Forms.Controls.VaultExplorer();
-            this.tabPageLog = new System.Windows.Forms.TabPage();
-            this.txtOutput = new System.Windows.Forms.TextBox();
+            this.tabPageManagedCertificates = new System.Windows.Forms.TabPage();
+            this.managedSites1 = new Certify.Forms.Controls.ManagedSites();
+            this.tabControl1 = new System.Windows.Forms.TabControl();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
-            this.tabControl1.SuspendLayout();
-            this.tabPageManagedSites.SuspendLayout();
             this.tabPageVault.SuspendLayout();
-            this.tabPageLog.SuspendLayout();
+            this.tabPageManagedCertificates.SuspendLayout();
+            this.tabControl1.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -97,7 +95,7 @@
             this.contactRegistrationToolStripMenuItem,
             this.domainCertificateToolStripMenuItem});
             this.newToolStripMenuItem.Name = "newToolStripMenuItem";
-            this.newToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
+            this.newToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
             this.newToolStripMenuItem.Text = "New..";
             // 
             // contactRegistrationToolStripMenuItem
@@ -117,24 +115,24 @@
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(136, 6);
+            this.toolStripSeparator3.Size = new System.Drawing.Size(152, 6);
             // 
             // reloadVaultToolStripMenuItem
             // 
             this.reloadVaultToolStripMenuItem.Name = "reloadVaultToolStripMenuItem";
-            this.reloadVaultToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
-            this.reloadVaultToolStripMenuItem.Text = "Reload Vault";
+            this.reloadVaultToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
+            this.reloadVaultToolStripMenuItem.Text = "Reload Settings";
             this.reloadVaultToolStripMenuItem.Click += new System.EventHandler(this.reloadVaultToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(136, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(152, 6);
             // 
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
             this.fileToolStripMenuItem.Text = "Exit";
             this.fileToolStripMenuItem.Click += new System.EventHandler(this.fileToolStripMenuItem_Click);
             // 
@@ -208,8 +206,9 @@
             // 
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripButtonNewContact,
-            this.toolStripButtonNewCertificate,
             this.toolStripSeparator5,
+            this.toolStripButtonNewCertificate,
+            this.toolStripSeparator6,
             this.toolStripButtonRenewAll});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
@@ -252,37 +251,10 @@
             this.toolStripButtonRenewAll.Text = "Renew All";
             this.toolStripButtonRenewAll.Click += new System.EventHandler(this.toolStripButtonRenewAll_Click);
             // 
-            // tabControl1
+            // toolStripSeparator6
             // 
-            this.tabControl1.Controls.Add(this.tabPageManagedSites);
-            this.tabControl1.Controls.Add(this.tabPageVault);
-            this.tabControl1.Controls.Add(this.tabPageLog);
-            this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabControl1.Location = new System.Drawing.Point(0, 63);
-            this.tabControl1.Name = "tabControl1";
-            this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(784, 498);
-            this.tabControl1.TabIndex = 12;
-            // 
-            // tabPageManagedSites
-            // 
-            this.tabPageManagedSites.Controls.Add(this.managedSites1);
-            this.tabPageManagedSites.Location = new System.Drawing.Point(4, 22);
-            this.tabPageManagedSites.Name = "tabPageManagedSites";
-            this.tabPageManagedSites.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageManagedSites.Size = new System.Drawing.Size(776, 472);
-            this.tabPageManagedSites.TabIndex = 2;
-            this.tabPageManagedSites.Text = "Managed Sites";
-            this.tabPageManagedSites.UseVisualStyleBackColor = true;
-            // 
-            // managedSites1
-            // 
-            this.managedSites1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.managedSites1.Location = new System.Drawing.Point(3, 3);
-            this.managedSites1.Name = "managedSites1";
-            this.managedSites1.Size = new System.Drawing.Size(770, 466);
-            this.managedSites1.TabIndex = 0;
-            this.managedSites1.Load += new System.EventHandler(this.managedSites1_Load);
+            this.toolStripSeparator6.Name = "toolStripSeparator6";
+            this.toolStripSeparator6.Size = new System.Drawing.Size(6, 39);
             // 
             // tabPageVault
             // 
@@ -303,26 +275,36 @@
             this.vaultExplorer1.Size = new System.Drawing.Size(770, 466);
             this.vaultExplorer1.TabIndex = 0;
             // 
-            // tabPageLog
+            // tabPageManagedCertificates
             // 
-            this.tabPageLog.Controls.Add(this.txtOutput);
-            this.tabPageLog.Location = new System.Drawing.Point(4, 22);
-            this.tabPageLog.Name = "tabPageLog";
-            this.tabPageLog.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageLog.Size = new System.Drawing.Size(776, 472);
-            this.tabPageLog.TabIndex = 1;
-            this.tabPageLog.Text = "Log";
-            this.tabPageLog.UseVisualStyleBackColor = true;
+            this.tabPageManagedCertificates.Controls.Add(this.managedSites1);
+            this.tabPageManagedCertificates.Location = new System.Drawing.Point(4, 22);
+            this.tabPageManagedCertificates.Name = "tabPageManagedCertificates";
+            this.tabPageManagedCertificates.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageManagedCertificates.Size = new System.Drawing.Size(776, 472);
+            this.tabPageManagedCertificates.TabIndex = 2;
+            this.tabPageManagedCertificates.Text = "Managed Certificates";
+            this.tabPageManagedCertificates.UseVisualStyleBackColor = true;
             // 
-            // txtOutput
+            // managedSites1
             // 
-            this.txtOutput.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtOutput.Location = new System.Drawing.Point(3, 3);
-            this.txtOutput.Multiline = true;
-            this.txtOutput.Name = "txtOutput";
-            this.txtOutput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtOutput.Size = new System.Drawing.Size(770, 466);
-            this.txtOutput.TabIndex = 14;
+            this.managedSites1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.managedSites1.Location = new System.Drawing.Point(3, 3);
+            this.managedSites1.Name = "managedSites1";
+            this.managedSites1.Size = new System.Drawing.Size(770, 466);
+            this.managedSites1.TabIndex = 0;
+            this.managedSites1.Load += new System.EventHandler(this.managedSites1_Load);
+            // 
+            // tabControl1
+            // 
+            this.tabControl1.Controls.Add(this.tabPageManagedCertificates);
+            this.tabControl1.Controls.Add(this.tabPageVault);
+            this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabControl1.Location = new System.Drawing.Point(0, 63);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            this.tabControl1.Size = new System.Drawing.Size(784, 498);
+            this.tabControl1.TabIndex = 12;
             // 
             // MainForm
             // 
@@ -346,11 +328,9 @@
             this.menuStrip1.PerformLayout();
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
-            this.tabControl1.ResumeLayout(false);
-            this.tabPageManagedSites.ResumeLayout(false);
             this.tabPageVault.ResumeLayout(false);
-            this.tabPageLog.ResumeLayout(false);
-            this.tabPageLog.PerformLayout();
+            this.tabPageManagedCertificates.ResumeLayout(false);
+            this.tabControl1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -376,18 +356,17 @@
         private System.Windows.Forms.ToolStripButton toolStripButtonNewCertificate;
         private System.Windows.Forms.ToolStripMenuItem websiteToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
-        private System.Windows.Forms.TabControl tabControl1;
-        private System.Windows.Forms.TabPage tabPageVault;
-        private System.Windows.Forms.TabPage tabPageLog;
-        private System.Windows.Forms.TextBox txtOutput;
         private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem cleanupVaultToolStripMenuItem;
-        private System.Windows.Forms.TabPage tabPageManagedSites;
-        private Forms.Controls.ManagedSites managedSites1;
-        private Forms.Controls.VaultExplorer vaultExplorer1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
         private System.Windows.Forms.ToolStripButton toolStripButtonRenewAll;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
+        private System.Windows.Forms.TabPage tabPageVault;
+        private Forms.Controls.VaultExplorer vaultExplorer1;
+        private System.Windows.Forms.TabPage tabPageManagedCertificates;
+        private Forms.Controls.ManagedSites managedSites1;
+        private System.Windows.Forms.TabControl tabControl1;
     }
 }
 

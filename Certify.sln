@@ -24,6 +24,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ACMESharp.POSH", "src\lib\A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ACMESharp.PKI.Providers.BouncyCastle", "src\lib\ACMESharp\ACMESharp\ACMESharp.PKI.Providers.BouncyCastle\ACMESharp.PKI.Providers.BouncyCastle.csproj", "{473BFF7D-C7F0-471D-B7A3-19AD9ADFDBA9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.UI", "src\Certify.UI\Certify.UI.csproj", "{C4957629-D567-4934-A193-37B325E7398F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,6 +60,10 @@ Global
 		{473BFF7D-C7F0-471D-B7A3-19AD9ADFDBA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{473BFF7D-C7F0-471D-B7A3-19AD9ADFDBA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{473BFF7D-C7F0-471D-B7A3-19AD9ADFDBA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4957629-D567-4934-A193-37B325E7398F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4957629-D567-4934-A193-37B325E7398F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4957629-D567-4934-A193-37B325E7398F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4957629-D567-4934-A193-37B325E7398F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

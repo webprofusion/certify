@@ -57,7 +57,9 @@ namespace Certify.Forms
                 else
                 {
                     //IIS selected, setup IIS cert request control
-                    SetupSelectedCertRequestControl(new CertRequestSettingsIIS());
+                    var iisRequestControl = new CertRequestSettingsIIS();
+                    iisRequestControl.IsNewManagedSiteMode = true;
+                    SetupSelectedCertRequestControl(iisRequestControl);
                 }
             }
 
@@ -66,6 +68,7 @@ namespace Certify.Forms
                 SetupSelectedCertRequestControl(new CertRequestHTTPGeneric());
             }
         }
+
         private void SetupSelectedCertRequestControl(CertRequestBaseControl certControl)
         {
             certControl.VaultManager = this.vaultManager;

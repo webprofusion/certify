@@ -1,0 +1,43 @@
+﻿<UserControl x:Class="Certify.UI.Controls.ProgressMonitor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Certify.UI.Controls"
+               xmlns:fa="http://schemas.fontawesome.io/icons/"
+             xmlns:utils="clr-namespace:Certify.UI.Utils"
+             mc:Ignorable="d"
+             d:DesignHeight="300" Width="555">
+    <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top">
+        <StackPanel.Resources>
+            <utils:OptionalBooleanToVisibilityConverter
+        x:Key="InverseBooleanToVisibilityConverter"
+        True="Collapsed"
+        False="Visible" />
+            <utils:OptionalBooleanToVisibilityConverter
+        x:Key="BooleanToVisibilityConverter"
+        True="Visible"
+        False="Hidden" />
+            <local:InverseBooleanConverter x:Key="InvBoolConverter" />
+            <local:StateToColorConverter x:Key="StateToColorConverter" />
+        </StackPanel.Resources>
+        <Label Content="There are no requests currently in progress."  Visibility="{Binding HasRequestsInProgress, Converter={StaticResource InverseBooleanToVisibilityConverter}}"  HorizontalAlignment="Left" Margin="25,20,0,0" VerticalAlignment="Top" Foreground="{DynamicResource IdealForegroundDisabledBrush}" />
+
+        <ListView ItemsSource="{Binding ProgressResults}"  SelectionMode="Single" BorderBrush="{DynamicResource IdealForegroundDisabledBrush}" Background="{DynamicResource AccentColorBrush4}" MinWidth="200" MinHeight="100">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Vertical" Margin="0,8,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:FontAwesome Icon="Globe" Foreground="{DynamicResource IdealForegroundDisabledBrush}" Margin="0,0,8,0" />
+                            <TextBlock Text="{Binding ManagedItem.Name}" Width="200" FontWeight="Bold" Margin="0,0,8,0" Foreground="{DynamicResource AccentColorBrush3}" />
+                            <ProgressBar IsIndeterminate="True" Width="200" Visibility="{Binding IsRunning, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                            <TextBlock Text="{Binding CurrentState}" Width="200" Foreground="{Binding CurrentState, Converter={StaticResource StateToColorConverter}}" Margin="16,0,0,0" />
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" Margin="16,0,0,0" FontSize="10" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </StackPanel>
+</UserControl>

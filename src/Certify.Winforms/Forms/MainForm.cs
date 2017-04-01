@@ -72,6 +72,13 @@ namespace Certify
             //TODO: make VaultManager an app-wide singleton
             VaultManager.ReloadVaultConfig();
             this.vaultExplorer1.ReloadVault();
+
+            this.RefreshManagedSites();
+        }
+
+        internal void RefreshManagedSites()
+        {
+            this.managedSites1.ReloadManagedSites();
         }
 
         private void ShowCertificateRequestDialog()

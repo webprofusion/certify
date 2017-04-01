@@ -9,7 +9,7 @@ namespace Certify.Models
     public class CertificateRequestResult
     {
         public bool IsSuccess { get; set; }
-        public string ErrorMessage { get; set; }
+        public string Message { get; set; }
         public object Result { get; set; }
     }
 }
