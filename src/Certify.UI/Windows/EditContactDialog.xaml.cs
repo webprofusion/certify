@@ -73,6 +73,7 @@ namespace Certify.UI.Windows
 
             if (Item.AgreedToTermsAndConditions)
             {
+                Cursor = Cursors.Wait;
                 if (MainViewModel.AddContactCommand.CanExecute((Item)))
                 {
                     Application.Current.Dispatcher.BeginInvoke(new Action(
@@ -81,12 +82,13 @@ namespace Certify.UI.Windows
                             MainViewModel.AddContactCommand.Execute(Item);
                         }));
 
+                    Cursor = Cursors.Arrow;
                     this.Close();
                 }
-                else
-                {
-                    MessageBox.Show("You need to agree to the latest LetsEncrypt.org Subscriber Agreement.");
-                }
+            }
+            else
+            {
+                MessageBox.Show("You need to agree to the latest LetsEncrypt.org Subscriber Agreement.");
             }
         }
     }
