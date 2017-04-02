@@ -48,7 +48,11 @@ namespace Certify.Management
         {
             string appDataPath = GetAppDataFolder();
             string siteManagerConfig = Newtonsoft.Json.JsonConvert.SerializeObject(this.ManagedSites, Newtonsoft.Json.Formatting.Indented);
-            System.IO.File.WriteAllText(appDataPath + "\\" + ITEMMANAGERCONFIG, siteManagerConfig);
+
+            lock (ITEMMANAGERCONFIG)
+            {
+                System.IO.File.WriteAllText(appDataPath + "\\" + ITEMMANAGERCONFIG, siteManagerConfig);
+            }
         }
 
         public void LoadSettings()
@@ -57,8 +61,11 @@ namespace Certify.Management
             var path = appDataPath + "\\" + ITEMMANAGERCONFIG;
             if (System.IO.File.Exists(path))
             {
-                string configData = System.IO.File.ReadAllText(path);
-                this.ManagedSites = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ManagedSite>>(configData);
+                lock (ITEMMANAGERCONFIG)
+                {
+                    string configData = System.IO.File.ReadAllText(path);
+                    this.ManagedSites = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ManagedSite>>(configData);
+                }
             }
             else
             {

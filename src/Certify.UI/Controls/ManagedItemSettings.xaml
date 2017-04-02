@@ -20,7 +20,7 @@
                 <Label Content="{Binding SelectedItem.Name}" Margin="8,0,0,6" FontSize="22" Foreground="{DynamicResource AccentColorBrush}" />
                 <Label Content="{Binding ValidationError}" Margin="8,0,0,0" Foreground="#DDD30E0E" />
             </StackPanel>
-            <StackPanel Orientation="Horizontal">
+            <StackPanel Orientation="Horizontal" Height="32">
 
                 <Button  IsEnabled="{Binding SelectedItem.IsChanged}" Click="Button_Save" Margin="8,0,0,0">
                     <StackPanel Orientation="Horizontal">

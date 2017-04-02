@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 
 namespace Certify
 {
@@ -29,6 +30,8 @@ namespace Certify
         private string vaultFilename;
         private string vaultProfile = null;
         public List<ActionLogItem> ActionLogs { get; }
+
+        internal const string VAULT_LOCK = "CertifyVault";
 
         private readonly IdnMapping idnMapping = new IdnMapping();
 
@@ -68,11 +71,14 @@ namespace Certify
             }
 
             bool vaultExists = false;
-            using (var vlt = ACMESharpUtils.GetVault(this.vaultProfile))
+            lock (VAULT_LOCK)
             {
-                vlt.OpenStorage(true);
-                var v = vlt.LoadVault(false);
-                if (v != null) vaultExists = true;
+                using (var vlt = ACMESharpUtils.GetVault(this.vaultProfile))
+                {
+                    vlt.OpenStorage(true);
+                    var v = vlt.LoadVault(false);
+                    if (v != null) vaultExists = true;
+                }
             }
 
             if (!vaultExists)
@@ -83,20 +89,23 @@ namespace Certify
                     throw new InvalidOperationException("either a base service or URI is required");
                 }
 
-                using (var vlt = ACMESharpUtils.GetVault(this.vaultProfile))
+                lock (VAULT_LOCK)
                 {
-                    this.LogAction("InitVault", "Creating Vault");
-
-                    vlt.OpenStorage(initOrOpen: true);
-
-                    var v = new VaultInfo
+                    using (var vlt = ACMESharpUtils.GetVault(this.vaultProfile))
                     {
-                        Id = EntityHelper.NewId(),
-                        BaseUri = baseUri,
-                        ServerDirectory = new AcmeServerDirectory()
-                    };
+                        this.LogAction("InitVault", "Creating Vault");
 
-                    vlt.SaveVault(v);
+                        vlt.OpenStorage(initOrOpen: true);
+
+                        var v = new VaultInfo
+                        {
+                            Id = EntityHelper.NewId(),
+                            BaseUri = baseUri,
+                            ServerDirectory = new AcmeServerDirectory()
+                        };
+
+                        vlt.SaveVault(v);
+                    }
                 }
             }
             else
@@ -109,6 +118,12 @@ namespace Certify
             return true;
         }
 
+        internal string GetACMEBaseURI()
+        {
+            var vaultConfig = GetVaultConfig();
+            return vaultConfig.BaseUri;
+        }
+
         private void LogAction(string command, string result = null)
         {
             if (this.ActionLogs != null)
@@ -119,11 +134,14 @@ namespace Certify
 
         public VaultInfo LoadVaultFromFile()
         {
-            using (var vlt = ACMESharpUtils.GetVault(this.vaultProfile))
+            lock (VAULT_LOCK)
             {
-                vlt.OpenStorage(true);
-                var v = vlt.LoadVault();
-                return v;
+                using (var vlt = ACMESharpUtils.GetVault(this.vaultProfile))
+                {
+                    vlt.OpenStorage(true);
+                    var v = vlt.LoadVault();
+                    return v;
+                }
             }
         }
 
@@ -140,82 +158,85 @@ namespace Certify
         {
             //remove duplicate identifiers etc
 
-            using (var vlt = ACMESharpUtils.GetVault(this.vaultProfile))
+            lock (VAULT_LOCK)
             {
-                vlt.OpenStorage();
-                var v = vlt.LoadVault();
+                using (var vlt = ACMESharpUtils.GetVault(this.vaultProfile))
+                {
+                    vlt.OpenStorage();
+                    var v = vlt.LoadVault();
 
-                List<Guid> toBeRemoved = new List<Guid>();
-                if (identifierToRemove != null)
-                {
-                    if (v.Identifiers.Keys.Any(i => i == (Guid)identifierToRemove))
+                    List<Guid> toBeRemoved = new List<Guid>();
+                    if (identifierToRemove != null)
                     {
-                        toBeRemoved.Add((Guid)identifierToRemove);
-                    }
-                }
-                else
-                {
-                    //find all orphaned identified
-                    if (v.Identifiers != null)
-                    {
-                        foreach (var k in v.Identifiers.Keys)
+                        if (v.Identifiers.Keys.Any(i => i == (Guid)identifierToRemove))
                         {
-                            var identifier = v.Identifiers[k];
-
-                            var certs = v.Certificates.Values.Where(c => c.IdentifierRef == identifier.Id);
-                            if (!certs.Any())
-                            {
-                                toBeRemoved.Add(identifier.Id);
-                            }
+                            toBeRemoved.Add((Guid)identifierToRemove);
                         }
                     }
-                }
-
-                foreach (var i in toBeRemoved)
-                {
-                    v.Identifiers.Remove(i);
-                }
-                //
-
-                //find and remove certificates with no valid identifier in vault or with empty settings
-                toBeRemoved = new List<Guid>();
-
-                if (v.Certificates != null)
-                {
-                    foreach (var c in v.Certificates)
+                    else
                     {
-                        if (
-                            String.IsNullOrEmpty(c.IssuerSerialNumber) //no valid issuer serial
-                            ||
-                            !v.Identifiers.ContainsKey(c.IdentifierRef) //no existing Identifier
-                            )
+                        //find all orphaned identified
+                        if (v.Identifiers != null)
                         {
-                            toBeRemoved.Add(c.Id);
+                            foreach (var k in v.Identifiers.Keys)
+                            {
+                                var identifier = v.Identifiers[k];
+
+                                var certs = v.Certificates.Values.Where(c => c.IdentifierRef == identifier.Id);
+                                if (!certs.Any())
+                                {
+                                    toBeRemoved.Add(identifier.Id);
+                                }
+                            }
                         }
                     }
 
                     foreach (var i in toBeRemoved)
                     {
-                        v.Certificates.Remove(i);
+                        v.Identifiers.Remove(i);
                     }
-                }
+                    //
 
-                /*if (includeDupeIdentifierRemoval)
-                {
-                    //remove identifiers where the dns occurs more than once
-                    foreach (var i in v.Identifiers)
+                    //find and remove certificates with no valid identifier in vault or with empty settings
+                    toBeRemoved = new List<Guid>();
+
+                    if (v.Certificates != null)
                     {
-                        var count = v.Identifiers.Values.Where(l => l.Dns == i.Dns).Count();
-                        if (count > 1)
+                        foreach (var c in v.Certificates)
                         {
-                            //identify most recent Identifier (based on assigned, non-expired cert), delete all the others
+                            if (
+                                String.IsNullOrEmpty(c.IssuerSerialNumber) //no valid issuer serial
+                                ||
+                                !v.Identifiers.ContainsKey(c.IdentifierRef) //no existing Identifier
+                                )
+                            {
+                                toBeRemoved.Add(c.Id);
+                            }
+                        }
 
-                            toBeRemoved.Add(i.Id);
+                        foreach (var i in toBeRemoved)
+                        {
+                            v.Certificates.Remove(i);
                         }
                     }
-                }*/
 
-                vlt.SaveVault(v);
+                    /*if (includeDupeIdentifierRemoval)
+                    {
+                        //remove identifiers where the dns occurs more than once
+                        foreach (var i in v.Identifiers)
+                        {
+                            var count = v.Identifiers.Values.Where(l => l.Dns == i.Dns).Count();
+                            if (count > 1)
+                            {
+                                //identify most recent Identifier (based on assigned, non-expired cert), delete all the others
+
+                                toBeRemoved.Add(i.Id);
+                            }
+                        }
+                    }*/
+
+                    vlt.SaveVault(v);
+                }
             }
         }
 
@@ -250,8 +271,13 @@ namespace Certify
 
         #region Vault Operations
 
-        public bool HasContacts()
+        public bool HasContacts(bool loadConfig = false)
         {
+            if (loadConfig)
+            {
+                ReloadVaultConfig();
+            }
+
             if (this.vaultConfig.Registrations != null && this.vaultConfig.Registrations.Count > 0)
             {
                 return true;
@@ -329,7 +355,15 @@ namespace Certify
             }
             catch (Exception exp)
             {
-                return new APIResult { IsOK = false, Message = exp.ToString(), Result = exp };
+                if (exp is ACMESharp.AcmeClient.AcmeWebException)
+                {
+                    var aex = (ACMESharp.AcmeClient.AcmeWebException)exp;
+                    return new APIResult { IsOK = false, Message = aex.Message, Result = aex };
+                }
+                else
+                {
+                    return new APIResult { IsOK = false, Message = exp.Message, Result = exp };
+                }
             }
         }
 
@@ -396,18 +430,21 @@ namespace Certify
         {
             using (var vlt = ACMESharpUtils.GetVault(this.vaultProfile))
             {
-                try
+                lock (VAULT_LOCK)
                 {
-                    vlt.OpenStorage(true);
-                    vaultConfig.Registrations.Remove(id);
-                    vlt.SaveVault(vaultConfig);
-                    return true;
-                }
-                catch (Exception e)
-                {
-                    // TODO: Logging of errors.
-                    System.Windows.Forms.MessageBox.Show(e.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
-                    return false;
+                    try
+                    {
+                        vlt.OpenStorage(true);
+                        vaultConfig.Registrations.Remove(id);
+                        vlt.SaveVault(vaultConfig);
+                        return true;
+                    }
+                    catch (Exception e)
+                    {
+                        // TODO: Logging of errors.
+                        System.Windows.Forms.MessageBox.Show(e.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                        return false;
+                    }
                 }
             }
         }
@@ -418,21 +455,24 @@ namespace Certify
             {
                 try
                 {
-                    vlt.OpenStorage(true);
-                    if (vaultConfig.Identifiers != null)
+                    lock (VAULT_LOCK)
                     {
-                        var idsToRemove = vaultConfig.Identifiers.Values.Where(i => i.Dns == dns);
-                        List<Guid> removing = new List<Guid>();
-                        foreach (var identifier in idsToRemove)
+                        vlt.OpenStorage(true);
+                        if (vaultConfig.Identifiers != null)
                         {
-                            removing.Add(identifier.Id);
-                        }
-                        foreach (var identifier in removing)
-                        {
-                            vaultConfig.Identifiers.Remove(identifier);
-                        }
+                            var idsToRemove = vaultConfig.Identifiers.Values.Where(i => i.Dns == dns);
+                            List<Guid> removing = new List<Guid>();
+                            foreach (var identifier in idsToRemove)
+                            {
+                                removing.Add(identifier.Id);
+                            }
+                            foreach (var identifier in removing)
+                            {
+                                vaultConfig.Identifiers.Remove(identifier);
+                            }
 
-                        vlt.SaveVault(vaultConfig);
+                            vlt.SaveVault(vaultConfig);
+                        }
                     }
 
                     return true;
@@ -663,64 +703,71 @@ namespace Certify
 
             //register cert placeholder in vault
 
-            this.NewCertificate(domainIdentifierRef, certAlias, subjectAlternativeNameIdentifiers: alternativeIdentifierRefs);
+            var certRegResult = this.NewCertificate(domainIdentifierRef, certAlias, subjectAlternativeNameIdentifiers: alternativeIdentifierRefs);
 
             //ask LE to issue a certificate for our domain(s)
             //if this step fails we should quit and try again later
-            this.SubmitCertificate(certAlias);
+            var certRequestResult = this.SubmitCertificate(certAlias);
 
-            //LE may now have issued a certificate, this process may not be immediate
-            var certDetails = this.GetCertificate(certAlias, reloadVaultConfig: true);
-            var attempts = 0;
-            var maxAttempts = 3;
-
-            //cert not issued yet, wait and try again
-            while ((certDetails == null || String.IsNullOrEmpty(certDetails.IssuerSerialNumber)) && attempts < maxAttempts)
+            if (certRequestResult.IsOK)
             {
-                System.Threading.Thread.Sleep(2000); //wait a couple of seconds before checking again
-                this.UpdateCertificate(certAlias);
-                certDetails = this.GetCertificate(certAlias, reloadVaultConfig: true);
-                attempts++;
-            }
+                //LE may now have issued a certificate, this process may not be immediate
+                var certDetails = this.GetCertificate(certAlias, reloadVaultConfig: true);
+                var attempts = 0;
+                var maxAttempts = 3;
 
-            if (certDetails != null && !String.IsNullOrEmpty(certDetails.IssuerSerialNumber))
-            {
-                //we have an issued certificate, we can go ahead and install it as required
-                System.Diagnostics.Debug.WriteLine("Received certificate issued by LE." + JsonConvert.SerializeObject(certDetails));
-
-                //if using cert in IIS, we need to export the certificate PFX file, install it as a certificate and setup the site binding to map to this cert
-                string certFolderPath = this.GetCertificateFilePath(certDetails.Id, LocalDiskVault.ASSET);
-                string pfxFile = certAlias + "-all.pfx";
-                string pfxPath = System.IO.Path.Combine(certFolderPath, pfxFile);
-
-                //create folder to export PFX to, if required
-                if (!System.IO.Directory.Exists(certFolderPath))
+                //cert not issued yet, wait and try again
+                while ((certDetails == null || String.IsNullOrEmpty(certDetails.IssuerSerialNumber)) && attempts < maxAttempts)
                 {
-                    System.IO.Directory.CreateDirectory(certFolderPath);
+                    System.Threading.Thread.Sleep(2000); //wait a couple of seconds before checking again
+                    this.UpdateCertificate(certAlias);
+                    certDetails = this.GetCertificate(certAlias, reloadVaultConfig: true);
+                    attempts++;
                 }
 
-                //if file already exists we want to delet the old one
-                if (System.IO.File.Exists(pfxPath))
+                if (certDetails != null && !String.IsNullOrEmpty(certDetails.IssuerSerialNumber))
                 {
-                    //delete existing PFX (if any)
-                    System.IO.File.Delete(pfxPath);
-                }
+                    //we have an issued certificate, we can go ahead and install it as required
+                    System.Diagnostics.Debug.WriteLine("Received certificate issued by LE." + JsonConvert.SerializeObject(certDetails));
 
-                //export the PFX file
-                this.ExportCertificate(certAlias, pfxOnly: true);
+                    //if using cert in IIS, we need to export the certificate PFX file, install it as a certificate and setup the site binding to map to this cert
+                    string certFolderPath = this.GetCertificateFilePath(certDetails.Id, LocalDiskVault.ASSET);
+                    string pfxFile = certAlias + "-all.pfx";
+                    string pfxPath = System.IO.Path.Combine(certFolderPath, pfxFile);
 
-                if (!System.IO.File.Exists(pfxPath))
-                {
-                    return new ProcessStepResult { IsSuccess = false, ErrorMessage = "Failed to export PFX. " + pfxPath, Result = pfxPath };
+                    //create folder to export PFX to, if required
+                    if (!System.IO.Directory.Exists(certFolderPath))
+                    {
+                        System.IO.Directory.CreateDirectory(certFolderPath);
+                    }
+
+                    //if file already exists we want to delet the old one
+                    if (System.IO.File.Exists(pfxPath))
+                    {
+                        //delete existing PFX (if any)
+                        System.IO.File.Delete(pfxPath);
+                    }
+
+                    //export the PFX file
+                    this.ExportCertificate(certAlias, pfxOnly: true);
+
+                    if (!System.IO.File.Exists(pfxPath))
+                    {
+                        return new ProcessStepResult { IsSuccess = false, ErrorMessage = "Failed to export PFX. " + pfxPath, Result = pfxPath };
+                    }
+                    else
+                    {
+                        return new ProcessStepResult { IsSuccess = true, Result = pfxPath };
+                    }
                 }
                 else
                 {
-                    return new ProcessStepResult { IsSuccess = true, Result = pfxPath };
+                    return new ProcessStepResult { IsSuccess = false, ErrorMessage = "Failed to get new certificate from LetsEncrypt." };
                 }
             }
             else
             {
-                return new ProcessStepResult { IsSuccess = false, ErrorMessage = "Failed to get new certificate from LetsEncrypt." };
+                return new ProcessStepResult { IsSuccess = false, ErrorMessage = "Failed to get new certificate from LetsEncrypt :: " + certRequestResult.Message };
             }
         }
 

@@ -20,10 +20,29 @@ namespace Certify.CLI
                 ShowHelp();
 
                 var p = new Program();
+                p.ShowACMEInfo();
                 //p.PreviewAutoManage();
                 //p.PerformVaultCleanup();
                 //System.Console.ReadKey();
                 return 1;
+            }
+            else
+            {
+                var p = new Program();
+
+                ShowVersion();
+
+                p.ShowACMEInfo();
+
+                if (args.Contains("renew", StringComparer.InvariantCultureIgnoreCase))
+                {
+                    //renew all
+                    var t = p.PerformAutoRenew();
+                    t.ConfigureAwait(true);
+
+                    t.Wait();
+                }
+                //System.Console.ReadKey();
             }
 
             return 0;
@@ -50,14 +69,30 @@ namespace Certify.CLI
             System.Console.WriteLine("");
         }
 
+        private void ShowACMEInfo()
+        {
+            var certifyManager = new CertifyManager();
+            string vaultInfo = certifyManager.GetVaultSummary();
+            string acmeInfo = certifyManager.GetAcmeSummary();
+
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            System.Console.WriteLine("Let's Encrypt ACME API: " + acmeInfo);
+            System.Console.WriteLine("ACMESharp Vault: " + vaultInfo);
+
+            System.Console.WriteLine("");
+            Console.ForegroundColor = ConsoleColor.White;
+        }
+
         private static void ShowHelp()
         {
-            System.Console.WriteLine("Usage: \n\n");
-            System.Console.WriteLine("-h --help : show this help information");
-            System.Console.WriteLine("-r --renew : renew certificates for all managed sites");
-            System.Console.WriteLine("-l --list : list managed sites");
-            System.Console.WriteLine("-p --preview : auto scan and preview proposed list of managed sites");
-            System.Console.WriteLine("\n\n");
+            Console.ForegroundColor = ConsoleColor.White;
+            System.Console.WriteLine("Usage: certify <command> \n");
+            System.Console.WriteLine("certify renew : renew certificates for all auto renewed managed sites");
+            // System.Console.WriteLine("help : show this help information");
+
+            // System.Console.WriteLine("-l --list : list managed sites");
+            //  System.Console.WriteLine("-p --preview : auto scan and preview proposed list of managed sites");
+            System.Console.WriteLine("\n");
         }
 
         /// <summary>
@@ -92,9 +127,44 @@ namespace Certify.CLI
 
         private async Task<System.Collections.Generic.List<CertificateRequestResult>> PerformAutoRenew()
         {
+            Console.ForegroundColor = ConsoleColor.White;
+            System.Console.WriteLine("\nPerforming Auto Renewals..\n");
+
             //go through list of items configured for auto renew, perform renewal and report the result
             var certifyManager = new CertifyManager();
-            var results = await certifyManager.PerformRenewalAllManagedSites();
+            var results = await certifyManager.PerformRenewalAllManagedSites(autoRenewalOnly: true);
+
+            foreach (var r in results)
+            {
+                if (r.ManagedItem != null)
+                {
+                    if (r.IsSuccess)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        System.Console.WriteLine(r.ManagedItem.Name);
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.DarkYellow;
+                        System.Console.WriteLine(r.ManagedItem.Name);
+
+                        if (r.Message != null)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            System.Console.WriteLine(r.Message);
+                        }
+                    }
+                }
+            }
+            Console.ForegroundColor = ConsoleColor.White;
+
+            System.Console.WriteLine("Completed:" + results.Where(r => r.IsSuccess == true).Count());
+            if (results.Any(r => r.IsSuccess == false))
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                System.Console.WriteLine("Failed:" + results.Where(r => r.IsSuccess == false).Count());
+                Console.ForegroundColor = ConsoleColor.White;
+            }
             return results;
         }
 

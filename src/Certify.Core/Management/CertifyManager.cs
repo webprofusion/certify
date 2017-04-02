@@ -15,6 +15,7 @@ namespace Certify.Management
         private const string SCHEDULED_TASK_NAME = "Certify Maintenance Task";
         private const string SCHEDULED_TASK_EXE = "certify.exe";
         private const string SCHEDULED_TASK_ARGS = "renew";
+        private const int RENEWAL_THRESHOLD_DAYS = 7;
 
         public CertifyManager()
         {
@@ -40,6 +41,11 @@ namespace Certify.Management
             }
         }
 
+        private VaultManager GetVaultManager()
+        {
+            return new VaultManager(Properties.Settings.Default.VaultPath, ACMESharp.Vault.Providers.LocalDiskVault.VAULT);
+        }
+
         public List<ManagedSite> GetManagedSites()
         {
             return this.siteManager.GetManagedSites();
@@ -54,6 +60,12 @@ namespace Certify.Management
         {
             this.siteManager.UpdatedManagedSites(managedSites);
             this.siteManager.StoreSettings();
+        }
+
+        public bool HasRegisteredContacts()
+        {
+            var vaultManager = GetVaultManager();
+            return vaultManager.HasContacts(true);
         }
 
         /// <summary>
@@ -80,186 +92,233 @@ namespace Certify.Management
             });
         }
 
+        public void AddRegisteredContact(ContactRegistration reg)
+        {
+            var vaultManager = GetVaultManager();
+            vaultManager.AddNewRegistrationAndAcceptTOS(reg.EmailAddress);
+        }
+
+        public string GetAcmeSummary()
+        {
+            var vaultManager = GetVaultManager();
+            return vaultManager.GetACMEBaseURI();
+        }
+
+        public string GetVaultSummary()
+        {
+            var vaultManager = GetVaultManager();
+            return vaultManager.GetVaultPath();
+        }
+
         public async Task<CertificateRequestResult> PerformCertificateRequest(VaultManager vaultManager, ManagedSite managedSite, IProgress<RequestProgressState> progress = null)
         {
-            //return await Task.Run(async () =>
-            //{
-            if (vaultManager == null)
+            try
             {
-                vaultManager = new VaultManager(Properties.Settings.Default.VaultPath, ACMESharp.Vault.Providers.LocalDiskVault.VAULT);
-            }
-            //primary domain and each subject alternative name must now be registered as an identifier with LE and validated
+                bool enableIdentifierReuse = false;
+                //return await Task.Run(async () =>
+                //{
+                if (vaultManager == null)
+                {
+                    vaultManager = GetVaultManager();
+                }
+                //primary domain and each subject alternative name must now be registered as an identifier with LE and validated
 
-            if (progress != null) progress.Report(new RequestProgressState { IsRunning = true, CurrentState = RequestState.Running, Message = "Registering Domain Identifiers" });
+                if (progress != null) progress.Report(new RequestProgressState { IsRunning = true, CurrentState = RequestState.Running, Message = "Registering Domain Identifiers" });
 
-            await Task.Delay(200); //allow UI update
+                await Task.Delay(200); //allow UI update
 
-            var config = managedSite.RequestConfig;
+                var config = managedSite.RequestConfig;
 
-            List<string> allDomains = new List<string>
+                List<string> allDomains = new List<string>
             {
                 config.PrimaryDomain
             };
 
-            if (config.SubjectAlternativeNames != null) allDomains.AddRange(config.SubjectAlternativeNames);
+                if (config.SubjectAlternativeNames != null) allDomains.AddRange(config.SubjectAlternativeNames);
 
-            bool allIdentifiersValidated = true;
+                bool allIdentifiersValidated = true;
 
-            if (config.ChallengeType == null) config.ChallengeType = "http-01";
+                if (config.ChallengeType == null) config.ChallengeType = "http-01";
 
-            List<PendingAuthorization> identifierAuthorizations = new List<PendingAuthorization>();
+                List<PendingAuthorization> identifierAuthorizations = new List<PendingAuthorization>();
+                var distinctDomains = allDomains.Distinct();
 
-            foreach (var domain in allDomains.Distinct())
-            {
-                var identifierAlias = vaultManager.ComputeIdentifierAlias(domain);
-
-                //check if this domain already has an associated identifier registerd with LetsEncrypt which hasn't expired yet
-                await Task.Delay(200); //allow UI update
-
-                var existingIdentifier = vaultManager.GetIdentifier(domain.Trim().ToLower());
-                bool identifierAlreadyValid = false;
-                if (existingIdentifier != null
-                    && existingIdentifier.Authorization != null
-                    && (existingIdentifier.Authorization.Status == "valid" || existingIdentifier.Authorization.Status == "pending")
-                    && existingIdentifier.Authorization.Expires > DateTime.Now.AddDays(1))
+                foreach (var domain in distinctDomains)
                 {
-                    //we have an existing validated identifier, reuse that for this certificate request
-                    identifierAlias = existingIdentifier.Alias;
+                    var identifierAlias = vaultManager.ComputeIdentifierAlias(domain);
 
-                    if (existingIdentifier.Authorization.Status == "valid")
+                    //check if this domain already has an associated identifier registerd with LetsEncrypt which hasn't expired yet
+                    await Task.Delay(200); //allow UI update
+
+                    ACMESharp.Vault.Model.IdentifierInfo existingIdentifier = null;
+
+                    if (enableIdentifierReuse)
                     {
-                        identifierAlreadyValid = true;
+                        vaultManager.GetIdentifier(domain.Trim().ToLower());
                     }
 
-                    // managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestStarted, Message = "Attempting Certificate Request: " + managedSite.SiteType });
-                    System.Diagnostics.Debug.WriteLine("Reusing existing valid non-expired identifier for the domain " + domain);
+                    bool identifierAlreadyValid = false;
+                    if (existingIdentifier != null
+                        && existingIdentifier.Authorization != null
+                        && (existingIdentifier.Authorization.Status == "valid" || existingIdentifier.Authorization.Status == "pending")
+                        && existingIdentifier.Authorization.Expires > DateTime.Now.AddDays(1))
+                    {
+                        //we have an existing validated identifier, reuse that for this certificate request
+                        identifierAlias = existingIdentifier.Alias;
+
+                        if (existingIdentifier.Authorization.Status == "valid")
+                        {
+                            identifierAlreadyValid = true;
+                        }
+
+                        // managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestStarted, Message = "Attempting Certificate Request: " + managedSite.SiteType });
+                        System.Diagnostics.Debug.WriteLine("Reusing existing valid non-expired identifier for the domain " + domain);
+                    }
+
+                    ManagedSiteLog.AppendLog(managedSite.Id, new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestStarted, Message = "Attempting Certificate Request: " + managedSite.ItemType });
+
+                    //begin authorization process (register identifier, request authorization if not already given)
+                    if (progress != null) progress.Report(new RequestProgressState { Message = "Registering and Validating " + domain });
+
+                    //TODO: make operations async and yeild IO of vault
+                    /*var authorization = await Task.Run(() =>
+                    {
+                        return vaultManager.BeginRegistrationAndValidation(config, identifierAlias, challengeType: config.ChallengeType, domain: domain);
+                    });*/
+
+                    var authorization = vaultManager.BeginRegistrationAndValidation(config, identifierAlias, challengeType: config.ChallengeType, domain: domain);
+
+                    if (authorization != null && !identifierAlreadyValid)
+                    {
+                        if (authorization.Identifier.Authorization.IsPending())
+                        {
+                            if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS)
+                            {
+                                if (progress != null) progress.Report(new RequestProgressState { Message = "Performing Challenge Response via IIS: " + domain });
+
+                                //ask LE to check our answer to their authorization challenge (http), LE will then attempt to fetch our answer, if all accessible and correct (authorized) LE will then allow us to request a certificate
+                                //prepare IIS with answer for the LE challenege
+                                authorization = vaultManager.PerformIISAutomatedChallengeResponse(config, authorization);
+
+                                //if we attempted extensionless config checks, report any errors
+                                if (config.PerformAutoConfig && !authorization.ExtensionlessConfigCheckedOK)
+                                {
+                                    ManagedSiteLog.AppendLog(managedSite.Id, new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertficateRequestFailed, Message = "Failed prerequisite configuration (" + managedSite.ItemType + ")" });
+                                    siteManager.StoreSettings();
+
+                                    var result = new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = "Automated configuration checks failed. Authorizations will not be able to complete.\nCheck you have http bindings for your site and ensure you can browse to http://" + domain + "/.well-known/acme-challenge/configcheck before proceeding." };
+                                    if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Error, Message = result.Message, Result = result });
+
+                                    return result;
+                                }
+                                else
+                                {
+                                    if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Running, Message = "Requesting Validation from Lets Encrypt: " + domain });
+
+                                    //ask LE to validate our challenge response
+                                    vaultManager.SubmitChallenge(identifierAlias, config.ChallengeType);
+
+                                    bool identifierValidated = vaultManager.CompleteIdentifierValidationProcess(authorization.Identifier.Alias);
+
+                                    if (!identifierValidated)
+                                    {
+                                        if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Error, Message = "Domain validation failed: " + domain });
+
+                                        allIdentifiersValidated = false;
+                                    }
+                                    else
+                                    {
+                                        if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Running, Message = "Domain validation completed: " + domain });
+
+                                        identifierAuthorizations.Add(authorization);
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (authorization.Identifier.Authorization.Status == "valid")
+                            {
+                                identifierAuthorizations.Add(new PendingAuthorization { Identifier = authorization.Identifier });
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (identifierAlreadyValid)
+                        {
+                            //we have previously validated this identifier and it has not yet expired, so we can just reuse it in our cert request
+                            identifierAuthorizations.Add(new PendingAuthorization { Identifier = existingIdentifier });
+                        }
+                    }
                 }
 
-                ManagedSiteLog.AppendLog(managedSite.Id, new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestStarted, Message = "Attempting Certificate Request: " + managedSite.ItemType });
-
-                //begin authorization process (register identifier, request authorization if not already given)
-                if (progress != null) progress.Report(new RequestProgressState { Message = "Registering and Validating " + domain });
-
-                //TODO: make operations async and yeild IO of vault
-                /*var authorization = await Task.Run(() =>
+                //check if all identifiers validates
+                if (identifierAuthorizations.Count == distinctDomains.Count())
                 {
-                    return vaultManager.BeginRegistrationAndValidation(config, identifierAlias, challengeType: config.ChallengeType, domain: domain);
-                });*/
+                    allIdentifiersValidated = true;
+                }
 
-                var authorization = vaultManager.BeginRegistrationAndValidation(config, identifierAlias, challengeType: config.ChallengeType, domain: domain);
-
-                if (authorization != null && !identifierAlreadyValid)
+                if (allIdentifiersValidated)
                 {
-                    if (authorization.Identifier.Authorization.IsPending())
+                    string primaryDnsIdentifier = identifierAuthorizations.First().Identifier.Alias;
+                    string[] alternativeDnsIdentifiers = identifierAuthorizations.Where(i => i.Identifier.Alias != primaryDnsIdentifier).Select(i => i.Identifier.Alias).ToArray();
+
+                    if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Running, Message = "Requesting Certificate via Lets Encrypt" });
+                    await Task.Delay(200); //allow UI update
+
+                    var certRequestResult = vaultManager.PerformCertificateRequestProcess(primaryDnsIdentifier, alternativeDnsIdentifiers);
+                    if (certRequestResult.IsSuccess)
                     {
-                        if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS)
+                        if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Success, Message = "Completed Certificate Request." });
+
+                        string pfxPath = certRequestResult.Result.ToString();
+
+                        if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS && config.PerformAutomatedCertBinding)
                         {
-                            if (progress != null) progress.Report(new RequestProgressState { Message = "Performing Challenge Response via IIS: " + domain });
+                            if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Running, Message = "Performing Automated Certificate Binding" });
+                            await Task.Delay(200); //allow UI update
 
-                            //ask LE to check our answer to their authorization challenge (http), LE will then attempt to fetch our answer, if all accessible and correct (authorized) LE will then allow us to request a certificate
-                            //prepare IIS with answer for the LE challenege
-                            authorization = vaultManager.PerformIISAutomatedChallengeResponse(config, authorization);
+                            var iisManager = new IISManager();
 
-                            //if we attempted extensionless config checks, report any errors
-                            if (config.PerformAutoConfig && !authorization.ExtensionlessConfigCheckedOK)
+                            //Install certificate into certificate store and bind to IIS site
+                            if (iisManager.InstallCertForDomain(config.PrimaryDomain, pfxPath, cleanupCertStore: true, skipBindings: !config.PerformAutomatedCertBinding))
                             {
-                                ManagedSiteLog.AppendLog(managedSite.Id, new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertficateRequestFailed, Message = "Failed prerequisite configuration (" + managedSite.ItemType + ")" });
+                                //all done
+                                ManagedSiteLog.AppendLog(managedSite.Id, new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestSuccessful, Message = "Completed certificate request and automated bindings update (IIS)" });
                                 siteManager.StoreSettings();
 
-                                var result = new CertificateRequestResult { IsSuccess = false, Message = "Automated configuration checks failed. Authorizations will not be able to complete.\nCheck you have http bindings for your site and ensure you can browse to http://" + domain + "/.well-known/acme-challenge/configcheck before proceeding." };
-                                if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Error, Message = result.Message, Result = result });
+                                var result = new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = true, Message = "Certificate installed and SSL bindings updated for " + config.PrimaryDomain };
+                                if (progress != null) progress.Report(new RequestProgressState { IsRunning = false, CurrentState = RequestState.Success, Message = result.Message });
 
                                 return result;
                             }
                             else
                             {
-                                if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Running, Message = "Requesting Validation from Lets Encrypt: " + domain });
-
-                                //ask LE to validate our challenge response
-                                vaultManager.SubmitChallenge(identifierAlias, config.ChallengeType);
-
-                                bool identifierValidated = vaultManager.CompleteIdentifierValidationProcess(authorization.Identifier.Alias);
-
-                                if (!identifierValidated)
-                                {
-                                    if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Error, Message = "Domain validation failed: " + domain });
-
-                                    allIdentifiersValidated = false;
-                                }
-                                else
-                                {
-                                    if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Running, Message = "Domain validation completed: " + domain });
-
-                                    identifierAuthorizations.Add(authorization);
-                                }
+                                return new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = "An error occurred installing the certificate. Certificate file may not be valid: " + pfxPath };
                             }
-                        }
-                    }
-                }
-                else
-                {
-                    if (identifierAlreadyValid)
-                    {
-                        //we have previously validated this identifier and it has not yet expired, so we can just reuse it in our cert request
-                        identifierAuthorizations.Add(new PendingAuthorization { Identifier = existingIdentifier });
-                    }
-                }
-            }
-
-            if (allIdentifiersValidated)
-            {
-                string primaryDnsIdentifier = identifierAuthorizations.First().Identifier.Alias;
-                string[] alternativeDnsIdentifiers = identifierAuthorizations.Where(i => i.Identifier.Alias != primaryDnsIdentifier).Select(i => i.Identifier.Alias).ToArray();
-
-                if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Running, Message = "Requesting Certificate via Lets Encrypt" });
-                await Task.Delay(200); //allow UI update
-
-                var certRequestResult = vaultManager.PerformCertificateRequestProcess(primaryDnsIdentifier, alternativeDnsIdentifiers);
-                if (certRequestResult.IsSuccess)
-                {
-                    if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Success, Message = "Completed Certificate Request." });
-
-                    string pfxPath = certRequestResult.Result.ToString();
-
-                    if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS && config.PerformAutomatedCertBinding)
-                    {
-                        if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Running, Message = "Performing Automated Certificate Binding" });
-                        await Task.Delay(200); //allow UI update
-
-                        var iisManager = new IISManager();
-
-                        //Install certificate into certificate store and bind to IIS site
-                        if (iisManager.InstallCertForDomain(config.PrimaryDomain, pfxPath, cleanupCertStore: true, skipBindings: !config.PerformAutomatedCertBinding))
-                        {
-                            //all done
-                            ManagedSiteLog.AppendLog(managedSite.Id, new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestSuccessful, Message = "Completed certificate request and automated bindings update (IIS)" });
-                            siteManager.StoreSettings();
-
-                            var result = new CertificateRequestResult { IsSuccess = true, Message = "Certificate installed and SSL bindings updated for " + config.PrimaryDomain };
-                            if (progress != null) progress.Report(new RequestProgressState { IsRunning = false, CurrentState = RequestState.Success, Message = result.Message });
-
-                            return result;
                         }
                         else
                         {
-                            return new CertificateRequestResult { IsSuccess = false, Message = "An error occurred installing the certificate. Certificate file may not be valid: " + pfxPath };
+                            return new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = true, Message = "Certificate created ready for manual binding: " + pfxPath };
                         }
                     }
                     else
                     {
-                        return new CertificateRequestResult { IsSuccess = true, Message = "Certificate created ready for manual binding: " + pfxPath };
+                        return new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = "The Let's Encrypt service did not issue a valid certificate in the time allowed. " + (certRequestResult.ErrorMessage ?? "") };
                     }
                 }
                 else
                 {
-                    return new CertificateRequestResult { IsSuccess = false, Message = "The Let's Encrypt service did not issue a valid certificate in the time allowed. " + (certRequestResult.ErrorMessage ?? "") };
+                    return new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = "Validation of the required challenges did not complete successfully. Please ensure all domains to be referenced in the Certificate can be used to access this site without redirection. " };
                 }
+                //});
             }
-            else
+            catch (Exception exp)
             {
-                return new CertificateRequestResult { IsSuccess = false, Message = "Validation of the required challenges did not complete successfully. Please ensure all domains to be referenced in the Certificate can be used to access this site without redirection. " };
+                System.Diagnostics.Debug.WriteLine(exp.ToString());
+                return new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = managedSite.Name + ": Request failed - " + exp.Message };
             }
-            //});
         }
 
         public List<ManagedSite> ImportManagedSitesFromVault(bool mergeSitesAsSan = false)
@@ -344,19 +403,26 @@ namespace Certify.Management
         public async Task<List<CertificateRequestResult>> PerformRenewalAllManagedSites(bool autoRenewalOnly = true, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null)
         {
             await Task.Delay(200); //allow UI to update
-            //currently the vault won't let us run parallel requests due to file locks
-            bool performRequestsInParallel = false;
-            bool testModeOnly = true;
+                                   //currently the vault won't let us run parallel requests due to file locks
+            bool performRequestsInParallel = true;
+            bool testModeOnly = false;
 
             siteManager.LoadSettings();
-
-            //var vaultManager = new VaultManager(Properties.Settings.Default.VaultPath, ACMESharp.Vault.Providers.LocalDiskVault.VAULT);
 
             IEnumerable<ManagedSite> sites = siteManager.GetManagedSites();
 
             if (autoRenewalOnly)
             {
                 sites = sites.Where(s => s.IncludeInAutoRenew == true);
+            }
+
+            //check site list and examine current certificates. If certificate is less than 7 days old, don't attempt to renew it
+            var sitesToRenew = new List<ManagedSite>();
+            foreach (var s in sites)
+            {
+                //get certificate details for current site
+
+                //if its older than the renewal threshold, we'll attempt to renew it
             }
 
             var renewalTasks = new List<Task<CertificateRequestResult>>();

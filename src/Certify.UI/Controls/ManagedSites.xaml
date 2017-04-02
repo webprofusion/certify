@@ -16,12 +16,12 @@
 
             <utils:EnumConverter x:Key="EnumConverter" />
         </DockPanel.Resources>
-        <ListView ItemsSource="{Binding ManagedSites}" SelectionChanged="ListView_SelectionChanged" TouchDown="ListView_TouchDown"  SelectionMode="Single" Width="305" BorderBrush="{DynamicResource IdealForegroundDisabledBrush}" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+        <ListView ItemsSource="{Binding ManagedSites}" SelectionChanged="ListView_SelectionChanged" TouchDown="ListView_TouchDown"  SelectionMode="Single" Width="305" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Vertical" Margin="0,8,0,0">
                         <StackPanel Orientation="Horizontal">
-                            <fa:FontAwesome Icon="Globe" Foreground="{DynamicResource IdealForegroundDisabledBrush}" Margin="0,0,8,0" />
+                            <fa:FontAwesome Icon="Globe" Margin="0,0,8,0" />
                             <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,8,0" Foreground="{DynamicResource AccentColorBrush3}" />
                         </StackPanel>
 

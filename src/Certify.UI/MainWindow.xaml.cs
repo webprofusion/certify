@@ -40,7 +40,6 @@ namespace Certify.UI
             InitializeComponent();
 
             this.DataContext = MainViewModel;
-            // MainViewModel.SelectedItem = MainViewModel.ManagedSites[0];
         }
 
         private void Button_NewCertificate(object sender, RoutedEventArgs e)
@@ -87,10 +86,20 @@ namespace Certify.UI
                 var d = new Windows.ImportManagedSites { Owner = this };
                 d.ShowDialog();
             }
+            else
+            {
+            }
         }
 
         private void MetroWindow_ContentRendered(object sender, EventArgs e)
         {
+            if (!MainViewModel.HasRegisteredContacts)
+            {
+                //start by registering
+                MessageBox.Show("Get started by registering a new contact, then you can start requesting certificates.");
+                var d = new Windows.EditContactDialog { Owner = this };
+                d.ShowDialog();
+            }
         }
     }
 }
