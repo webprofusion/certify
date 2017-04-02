@@ -1,20 +1,23 @@
-﻿<Controls:MetroWindow x:Class="Certify.UI.Windows.EditContactDialog"
+﻿<Controls:MetroWindow
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
               xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         xmlns:local="clr-namespace:Certify.UI.Windows"
+        xmlns:Models="clr-namespace:Certify.Models;assembly=Certify.Core" x:Class="Certify.UI.Windows.EditContactDialog"
         mc:Ignorable="d"
         GlowBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1"
         Title="New Contact" Height="297" Width="514" WindowStartupLocation="CenterOwner">
     <Grid>
+
         <TextBlock HorizontalAlignment="Left" Margin="12,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="472" Foreground="{DynamicResource AccentColorBrush}" ><Run Text="To use Certify and the " /><Run Text="free " /><Run Text="Lets Encrypt service to acquire SSL certificate" /><Run Text="s" /><Run Text=" you must first register as a contact. The email address provided " /><Run Text="may" /><Run Text=" used to notify you of upcoming certificate renewals if required." /></TextBlock>
         <Label Content="Email Address" HorizontalAlignment="Left" Margin="11,97,0,0" VerticalAlignment="Top" />
-        <TextBox HorizontalAlignment="Left" Height="23" Margin="100,97,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120" />
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="100,97,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="362" Text="{Binding EmailAddress}">
+        </TextBox>
         <TextBlock Margin="12,128,32,0" TextWrapping="Wrap" Text="Do you agree to the LetsEncrypt.org Subscriber Agreement? Refer to their website for full details before proceeding. https://letsencrypt.org/repository/" VerticalAlignment="Top" Foreground="{DynamicResource AccentColorBrush}" />
-        <CheckBox Content="Yes, I Agree" HorizontalAlignment="Left" Margin="12,172,0,0" VerticalAlignment="Top" />
+        <CheckBox Content="Yes, I Agree" HorizontalAlignment="Left" Margin="12,172,0,0" VerticalAlignment="Top" IsChecked="{Binding AgreedToTermsAndConditions}" />
         <Button x:Name="Save" Content="Register Contact" Margin="310,205,10,0" VerticalAlignment="Top" Click="Save_Click" />
         <Button x:Name="Cancel" Content="Cancel" HorizontalAlignment="Left" Margin="12,205,0,0" VerticalAlignment="Top" Width="135" Click="Cancel_Click" />
     </Grid>

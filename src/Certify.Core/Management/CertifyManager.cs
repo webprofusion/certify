@@ -95,7 +95,7 @@ namespace Certify.Management
         public void AddRegisteredContact(ContactRegistration reg)
         {
             var vaultManager = GetVaultManager();
-            vaultManager.AddNewRegistrationAndAcceptTOS(reg.EmailAddress);
+            vaultManager.AddNewRegistrationAndAcceptTOS("mailto:" + reg.EmailAddress);
         }
 
         public string GetAcmeSummary()

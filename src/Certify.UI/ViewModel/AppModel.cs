@@ -40,6 +40,14 @@ namespace Certify.UI.ViewModel
         /// </summary>
         public bool IsImportSANMergeMode { get; set; }
 
+        public bool HasRegisteredContacts
+        {
+            get
+            {
+                return certifyManager.HasRegisteredContacts();
+            }
+        }
+
         public Certify.Models.ManagedSite SelectedItem { get; set; }
 
         public bool SelectedItemHasChanges
@@ -77,6 +85,12 @@ namespace Certify.UI.ViewModel
             MarkAllChangesCompleted();
 
             RaisePropertyChanged(nameof(IsSelectedItemValid));
+        }
+
+        internal void AddContactRegistration(ContactRegistration reg)
+        {
+            certifyManager.AddRegisteredContact(reg);
+            RaisePropertyChanged(nameof(HasRegisteredContacts));
         }
 
         public List<IPAddress> HostIPAddresses
@@ -454,7 +468,21 @@ namespace Certify.UI.ViewModel
                 BeginTrackingProgress(progressState);
 
                 var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
-                await certifyManager.PerformCertificateRequest(null, managedSite, progressIndicator);
+                var result = await certifyManager.PerformCertificateRequest(null, managedSite, progressIndicator);
+
+                if (progressIndicator != null)
+                {
+                    var progress = (IProgress<RequestProgressState>)progressIndicator;
+
+                    if (result.IsSuccess)
+                    {
+                        progress.Report(new RequestProgressState { CurrentState = RequestState.Success, Message = result.Message });
+                    }
+                    else
+                    {
+                        progress.Report(new RequestProgressState { CurrentState = RequestState.Error, Message = result.Message });
+                    }
+                }
             }
         }
 
@@ -476,6 +504,9 @@ namespace Certify.UI.ViewModel
 
         public ICommand SANSelectAllCommand => new RelayCommand<object>(SANSelectAll);
         public ICommand SANSelectNoneCommand => new RelayCommand<object>(SANSelectNone);
+
+        public ICommand AddContactCommand => new RelayCommand<ContactRegistration>(AddContactRegistration);
+
         public ICommand PopulateManagedSiteSettingsCommand => new RelayCommand<string>(PopulateManagedSiteSettings);
         public ICommand BeginCertificateRequestCommand => new RelayCommand<string>(BeginCertificateRequest);
         public ICommand RenewAllCommand => new RelayCommand<bool>(RenewAll);
