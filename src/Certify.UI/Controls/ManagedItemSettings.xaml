@@ -7,8 +7,7 @@
              xmlns:local="clr-namespace:Certify.UI.Controls"
     xmlns:fa="http://schemas.fontawesome.io/icons/"
     x:Class="Certify.UI.Controls.ManagedItemSettings"
-             mc:Ignorable="d"
-             d:DesignHeight="300" Width="542.667">
+             mc:Ignorable="d" Width="535.442" Height="353.672">
 
     <StackPanel Orientation="Vertical">
         <StackPanel.Resources>
@@ -51,7 +50,7 @@
                 </Button>
             </StackPanel>
 
-            <dragablz:TabablzControl Margin="8" Height="Auto" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" SelectionChanged="TabablzControl_SelectionChanged">
+            <dragablz:TabablzControl Margin="8" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" SelectionChanged="TabablzControl_SelectionChanged">
 
                 <TabItem Header="Options" IsSelected="True">
 
@@ -68,8 +67,8 @@
                             <CheckBox Content="Enable Auto Renewal" IsChecked="{Binding SelectedItem.IncludeInAutoRenew}" />
                             <CheckBox Content="Notify Primary Contact On Renewal Failure" IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" />
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,16,0,16">
-                            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource AccentColorBrush2}" HorizontalAlignment="Left">
+                        <StackPanel Orientation="Horizontal" Margin="0,16,0,16" HorizontalAlignment="Left">
+                            <TextBlock TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="500" Margin="8,0,0,0">
 The following domains will be included as a single certificate request. The Lets Encrypt service must be able to access all of theses sites via HTTP (port 80) for the certification process to work.
                             </TextBlock>
                         </StackPanel>
@@ -95,16 +94,16 @@ The following domains will be included as a single certificate request. The Lets
                 </TabItem>
                 <TabItem Header="Advanced" IsSelected="True">
                     <StackPanel Margin="0,16,0,0">
-                        <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Vertical" Margin="8,0,0,0">
                             <CheckBox Content="Perform challenge response config checks" IsChecked="{Binding SelectedItem.RequestConfig.PerformExtensionlessConfigChecks}" />
                             <CheckBox Content="Perform web application auto config" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutoConfig}" />
                         </StackPanel>
-                        <StackPanel Orientation="Vertical" Margin="0,16,0,0">
+                        <StackPanel Orientation="Vertical" Margin="8,16,0,0">
 
                             <RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" GroupName="BindingType">Auto create/update IIS bindings (uses SNI)</RadioButton>
                             <RadioButton  IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType">Use specific IP/Port bindings</RadioButton>
                         </StackPanel>
-                        <StackPanel Orientation="Vertical" IsEnabled="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" Margin="16,8,0,0">
+                        <StackPanel Orientation="Vertical" IsEnabled="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" Margin="32,8,0,0">
                             <StackPanel Orientation="Horizontal">
                                 <Label Width="131" Content="Bind to Specific IP:" />
 

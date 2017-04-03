@@ -51,13 +51,6 @@ namespace Certify.UI
             MainViewModel.SelectedItem = new Certify.Models.ManagedSite { Name = "New Managed Certificate" };
         }
 
-        private void Button_NewContact(object sender, RoutedEventArgs e)
-        {
-            //present new contact dialog
-            var d = new Windows.EditContactDialog { Owner = this };
-            d.ShowDialog();
-        }
-
         private void Button_RenewAll(object sender, RoutedEventArgs e)
         {
             //present new renew all confirmation

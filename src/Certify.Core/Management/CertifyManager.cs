@@ -51,6 +51,48 @@ namespace Certify.Management
             return this.siteManager.GetManagedSites();
         }
 
+        public List<RegistrationItem> GetRegistrations()
+        {
+            var vault = GetVaultManager();
+            var reg = vault.GetRegistrations(reloadVaultConfig: true);
+            var list = new List<RegistrationItem>();
+
+            foreach (var r in reg)
+            {
+                list.Add(new RegistrationItem { Id = r.Id.ToString(), Name = r.Registration.Contacts.First(), Contacts = r.Registration.Contacts });
+            }
+
+            return list;
+        }
+
+        public List<IdentifierItem> GetIdentifiers()
+        {
+            var vault = GetVaultManager();
+            var reg = vault.GetIdentifiers(reloadVaultConfig: true);
+            var list = new List<IdentifierItem>();
+
+            foreach (var r in reg)
+            {
+                list.Add(new IdentifierItem { Id = r.Id.ToString(), Name = r.Dns, Dns = r.Dns, Status = r.Authorization?.Status });
+            }
+
+            return list;
+        }
+
+        public List<CertificateItem> GetCertificates()
+        {
+            var vault = GetVaultManager();
+            var certs = vault.GetCertificates(reloadVaultConfig: true);
+            var list = new List<CertificateItem>();
+
+            foreach (var i in certs)
+            {
+                list.Add(new CertificateItem { Id = i.Id.ToString(), Name = i.IdentifierDns });
+            }
+
+            return list;
+        }
+
         public void SetManagedSites(List<ManagedSite> managedSites)
         {
             this.siteManager.UpdatedManagedSites(managedSites);

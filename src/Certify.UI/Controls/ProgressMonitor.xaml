@@ -6,8 +6,7 @@
              xmlns:local="clr-namespace:Certify.UI.Controls"
                xmlns:fa="http://schemas.fontawesome.io/icons/"
              xmlns:utils="clr-namespace:Certify.UI.Utils"
-             mc:Ignorable="d"
-             d:DesignHeight="300" Width="555">
+             mc:Ignorable="d">
     <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top">
         <StackPanel.Resources>
             <utils:OptionalBooleanToVisibilityConverter

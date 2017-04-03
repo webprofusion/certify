@@ -20,9 +20,30 @@ namespace Certify.UI.Controls
     /// </summary>
     public partial class Settings : UserControl
     {
+        protected Certify.UI.ViewModel.AppModel MainViewModel
+        {
+            get
+            {
+                return ViewModel.AppModel.AppViewModel;
+            }
+        }
+
         public Settings()
         {
             InitializeComponent();
+            this.DataContext = MainViewModel;
+
+            MainViewModel.LoadVaultTree();
+        }
+
+        private void Button_NewContact(object sender, RoutedEventArgs e)
+        {
+            //present new contact dialog
+            var d = new Windows.EditContactDialog
+            {
+                Owner = Window.GetWindow(this)
+            };
+            d.ShowDialog();
         }
     }
 }

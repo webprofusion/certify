@@ -35,6 +35,59 @@ namespace Certify.UI.ViewModel
         /// </summary>
         public ObservableCollection<Certify.Models.ManagedSite> ImportedManagedSites { get; set; }
 
+        internal void LoadVaultTree()
+        {
+            List<VaultItem> tree = new List<VaultItem>();
+
+            // populate registrations
+            var registration = new VaultItem { Name = "Registrations" };
+            registration.Children = new List<VaultItem>();
+
+            var reg = certifyManager.GetRegistrations();
+            foreach (var r in reg)
+            {
+                r.ItemType = "registration";
+                registration.Children.Add(r);
+            }
+
+            this.PrimaryContactEmail = registration.Children.FirstOrDefault()?.Name;
+
+            tree.Add(registration);
+
+            // populate identifiers
+            var identifiers = new VaultItem { Name = "Identifiers" };
+            identifiers.Children = new List<VaultItem>();
+
+            var ids = certifyManager.GetIdentifiers();
+            foreach (var i in ids)
+            {
+                i.ItemType = "identifier";
+                identifiers.Children.Add(i);
+            }
+
+            tree.Add(identifiers);
+
+            // populate identifiers
+            var certs = new VaultItem { Name = "Certificates" };
+            certs.Children = new List<VaultItem>();
+
+            var certlist = certifyManager.GetCertificates();
+            foreach (var i in ids)
+            {
+                i.ItemType = "certificate";
+                certs.Children.Add(i);
+            }
+
+            tree.Add(certs);
+
+            VaultTree = tree;
+
+            this.ACMESummary = certifyManager.GetAcmeSummary();
+            this.VaultSummary = certifyManager.GetVaultSummary();
+
+            RaisePropertyChanged(nameof(VaultTree));
+        }
+
         /// <summary>
         /// If true, import from vault/iis scan will merge multi domain sites into one managed site
         /// </summary>
@@ -228,6 +281,16 @@ namespace Certify.UI.ViewModel
         }
 
         public ObservableCollection<RequestProgressState> ProgressResults { get; set; }
+
+        public List<VaultItem> VaultTree { get; set; }
+
+        [DependsOn(nameof(VaultTree))]
+        public string ACMESummary { get; set; }
+
+        [DependsOn(nameof(VaultTree))]
+        public string VaultSummary { get; set; }
+
+        public string PrimaryContactEmail { get; set; }
 
         #endregion properties
 

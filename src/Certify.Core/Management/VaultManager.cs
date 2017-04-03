@@ -61,6 +61,23 @@ namespace Certify
             ACMESharp.PKI.CertificateProvider.RegisterProvider<ACMESharp.PKI.Providers.BouncyCastleProvider>();
         }
 
+        internal List<RegistrationInfo> GetRegistrations(bool reloadVaultConfig)
+        {
+            if (reloadVaultConfig)
+            {
+                ReloadVaultConfig();
+            }
+
+            if (vaultConfig != null && vaultConfig.Registrations != null)
+            {
+                return vaultConfig.Registrations.Values.ToList();
+            }
+            else
+            {
+                return new List<RegistrationInfo>();
+            }
+        }
+
         public bool InitVault(bool staging = true)
         {
             string apiURI = ACMESharpUtils.WELL_KNOWN_BASE_SERVICES[ACMESharpUtils.WELL_KNOWN_LESTAGE];
@@ -514,8 +531,13 @@ namespace Certify
             }
         }
 
-        public List<IdentifierInfo> GetIdentifiers()
+        public List<IdentifierInfo> GetIdentifiers(bool reloadVaultConfig = false)
         {
+            if (reloadVaultConfig)
+            {
+                ReloadVaultConfig();
+            }
+
             if (vaultConfig != null && vaultConfig.Identifiers != null)
             {
                 return vaultConfig.Identifiers.Values.ToList();
@@ -523,6 +545,23 @@ namespace Certify
             else
             {
                 return new List<IdentifierInfo>();
+            }
+        }
+
+        public List<CertificateInfo> GetCertificates(bool reloadVaultConfig = false)
+        {
+            if (reloadVaultConfig)
+            {
+                ReloadVaultConfig();
+            }
+
+            if (vaultConfig != null && vaultConfig.Identifiers != null)
+            {
+                return vaultConfig.Certificates.Values.ToList();
+            }
+            else
+            {
+                return new List<CertificateInfo>();
             }
         }
 

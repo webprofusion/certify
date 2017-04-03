@@ -3,7 +3,7 @@
 
 [Setup]
 AppName=Certify
-AppVersion=0.9.96
+AppVersion=2.0.0
 AppPublisher=Webprofusion Ltd
 AppPublisherURL=https://webprofusion.com
 AppUpdatesURL=https://certify.webprofusion.com/
@@ -16,18 +16,17 @@ OutputBaseFilename=CertifySetup
 ; OutputDir=userdocs:Inno Setup Examples Output
 
 [InstallDelete]
-Type: files; Name: "{app}\ManagedOpenSsl.dll"
-Type: files; Name: "{app}\ManagedOpenSsl64.dll"
-Type: files; Name: "{app}\ACME*.dll"
+Type: files; Name: "{app}\*.dll"
+Type: files; Name: "{app}\*.exe"
 
 [Files]
-Source: "..\src\Certify.WinForms\bin\Release\*"; DestDir: "{app}"; Excludes: "*.pdb,*.*xml, *.vshost.*"
-Source: "..\src\Certify.WinForms\bin\Release\ACMESharp-Providers\*"; DestDir: "{app}\ACMESharp-Providers\"; Excludes: "*.pdb,*.*xml, *.vshost.*"
+Source: "..\src\Certify.UI\bin\Release\*"; DestDir: "{app}"; Excludes: "*.pdb,*.*xml, *.vshost.*"
+;Source: "..\src\Certify.UI\bin\Release\ACMESharp-Providers\*"; DestDir: "{app}\ACMESharp-Providers\"; Excludes: "*.pdb,*.*xml, *.vshost.*"
 ;Source: "..\src\Certify.WinForms\bin\Release\x86\*"; DestDir: "{app}\x86\"; Excludes: "*.pdb,*.*xml, *.vshost.*"
 ;Source: "..\src\Certify.WinForms\bin\Release\x64\*"; DestDir: "{app}\x64\"; Excludes: "*.pdb,*.*xml, *.vshost.*"
 
 ;Source: "Readme.txt"; DestDir: "{app}"; Flags: isreadme
 
 [Icons]
-Name: "{group}\Certify"; Filename: "{app}\Certify.exe"
+Name: "{group}\Certify"; Filename: "{app}\Certify.UI.exe"
 
