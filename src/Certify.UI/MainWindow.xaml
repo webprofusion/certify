@@ -16,12 +16,6 @@
     <DockPanel LastChildFill="True">
 
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" VerticalAlignment="Top" Margin="8,16,0,0">
-            <Button Height="32" Margin="0,0,0,5" Click="Button_NewContact">
-                <StackPanel Orientation="Horizontal">
-                    <fa:ImageAwesome Icon="Flag" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
-                    <TextBlock Margin="6,0" VerticalAlignment="Center"><Run Text="New Contact" /></TextBlock>
-                </StackPanel>
-            </Button>
 
             <Button Height="32" Margin="8,0,0,5" Click="Button_NewCertificate">
                 <StackPanel Orientation="Horizontal">
@@ -37,7 +31,7 @@
             </Button>
         </StackPanel>
 
-        <dragablz:TabablzControl x:Name="MainTabControl" DockPanel.Dock="Bottom" Margin="8,8,8,0" SelectedIndex="{Binding MainUITabIndex}" HorizontalContentAlignment="Left" VerticalContentAlignment="Top" VerticalAlignment="Top">
+        <dragablz:TabablzControl x:Name="MainTabControl" DockPanel.Dock="Bottom" Margin="8,8,8,0" SelectedIndex="{Binding MainUITabIndex}" HorizontalContentAlignment="Left" VerticalContentAlignment="Top" Height="566">
 
             <TabItem Header="Managed Sites" IsSelected="True">
                 <Controls1:ManagedSites Width="Auto" Height="Auto" />
@@ -48,8 +42,8 @@
             <TabItem Header="In Progress">
                 <Controls1:ProgressMonitor Width="Auto" />
             </TabItem>
-            <TabItem Header="Settings">
-                <Controls1:Settings />
+            <TabItem Header="Settings" VerticalContentAlignment="Stretch" HorizontalAlignment="Left" HorizontalContentAlignment="Left">
+                <Controls1:Settings  Width="Auto" Height="Auto" />
             </TabItem>
             <TabItem Header="About" VerticalContentAlignment="Stretch" HorizontalAlignment="Left" HorizontalContentAlignment="Left">
                 <Controls1:AboutControl Width="Auto" Height="Auto" />
