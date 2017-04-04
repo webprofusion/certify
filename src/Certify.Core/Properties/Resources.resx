@@ -123,7 +123,7 @@
   <data name="Credits" xml:space="preserve">
     <value>The Software is provided "as is" without warranty of any kind, either express or implied, including without limitation any implied warranties of condition, uninterrupted use, merchantability, fitness for a particular purpose, or non-infringement.
 
-Use of the LetsEncrypt.org service for free SSL certificates is subject to the LetsEncrypt.org terms of service. This software is not affiliated with or endorsed by LetsEncrypt.org
+Use of the LetsEncrypt.org service for free SSL/TLS certificates is subject to the LetsEncrypt.org terms of service. This software is not affiliated with or endorsed by LetsEncrypt.org
 
 This software uses the following Open Source software (or significant portions of):
 - ACMESharp by Eugene Bekker (https://github.com/ebekker/ACMESharp) Licensed under the MPL V 2.0
@@ -135,7 +135,7 @@ This software uses the following Open Source software (or significant portions o
     <value>..\Resources\icon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="LongAppName" xml:space="preserve">
-    <value>Certify - SSL Certificate Manager (Alpha Version)</value>
+    <value>Certify - SSL/TLS Certificate Manager (Alpha Version)</value>
   </data>
   <data name="UpdateCheckLatestVersion" xml:space="preserve">
     <value>You are using the latest version.</value>
@@ -148,9 +148,6 @@ This software uses the following Open Source software (or significant portions o
   </data>
   <data name="GettingStartedExistingVault" xml:space="preserve">
     <value>Get Started: Browse the Vault on the left to see current certificate information.</value>
-  </data>
-  <data name="ReleaseDate" xml:space="preserve">
-    <value>20170205.Alpha13</value>
   </data>
   <data name="BetaWarning" xml:space="preserve">
     <value>Warning: This software is a pre-release version for testing and feedback purposes. You should expect bugs. Do not rely on this software for important production sites.</value>

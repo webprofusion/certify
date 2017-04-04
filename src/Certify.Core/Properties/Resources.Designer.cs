@@ -108,9 +108,9 @@ namespace Certify.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The Software is provided &quot;as is&quot; without warranty of any kind, either express or implied, including without limitation any implied warranties of condition, uninterrupted use, merchantability, fitness for a particular purpose, or non-infringement.
         ///
-        ///Use of the LetsEncrypt.org service for free SSL certificates is subject to the LetsEncrypt.org terms of service. This software is not affiliated with or endorsed by LetsEncrypt.org
+        ///Use of the LetsEncrypt.org service for free SSL/TLS certificates is subject to the LetsEncrypt.org terms of service. This software is not affiliated with or endorsed by LetsEncrypt.org
         ///
-        ///This software uses the following Open Source software (or significant portions [rest of string was truncated]&quot;;.
+        ///This software uses the following Open Source software (or significant port [rest of string was truncated]&quot;;.
         /// </summary>
         public static string Credits {
             get {
@@ -199,20 +199,11 @@ namespace Certify.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Certify - SSL Certificate Manager (Alpha Version).
+        ///   Looks up a localized string similar to Certify - SSL/TLS Certificate Manager (Alpha Version).
         /// </summary>
         public static string LongAppName {
             get {
                 return ResourceManager.GetString("LongAppName", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 20170205.Alpha13.
-        /// </summary>
-        public static string ReleaseDate {
-            get {
-                return ResourceManager.GetString("ReleaseDate", resourceCulture);
             }
         }
         

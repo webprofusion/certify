@@ -647,7 +647,7 @@ namespace Certify
                 System.IO.File.WriteAllText(testFilePath, "Extensionless File Config Test - OK");
 
                 //create a web.config for extensionless files, then test it (make a request for the extensionless configcheck file over http)
-                string webConfigContent = Properties.Resources.IISWebConfig;
+                string webConfigContent = Core.Properties.Resources.IISWebConfig;
 
                 if (!File.Exists(destPath + "\\web.config"))
                 {

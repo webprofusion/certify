@@ -117,8 +117,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ACMESharpCompat\ACMESharpUtils.cs" />
-    <Compile Include="ACMESharpCompat\ClientHelper.cs" />
-    <Compile Include="ACMESharpCompat\PkiHelper.cs" />
+    <Compile Include="ACMESharpCompat\Helpers.cs" />
     <Compile Include="Management\CertifyManager.cs" />
     <Compile Include="Management\ItemManager.cs" />
     <Compile Include="Models\ActionLogItem.cs" />
@@ -141,6 +140,8 @@
     <Compile Include="Models\VaultItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Management\VaultManager.cs" />
+    <Compile Include="Resources.cs" />
+    <Compile Include="Settings.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
