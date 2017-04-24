@@ -179,7 +179,8 @@ namespace Certify.Management
             store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
             //TODO: remove old cert?
             var certificate = new X509Certificate2(pfxFile, "", X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
-            certificate.FriendlyName = host + " - " + DateTime.Today.ToShortDateString();
+            certificate.GetExpirationDateString();
+            certificate.FriendlyName = host + " [Certify] - " + certificate.GetEffectiveDateString() + " to " + certificate.GetExpirationDateString();
 
             store.Add(certificate);
             store.Close();
@@ -188,6 +189,8 @@ namespace Certify.Management
 
         public void CleanupCertificateDuplicates(X509Certificate2 certificate, string hostPrefix)
         {
+            bool requireCertifySpecificCerts = false;
+
             if (certificate.FriendlyName.Length < 10) return;
 
             var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
@@ -195,10 +198,21 @@ namespace Certify.Management
             var certsToRemove = new List<X509Certificate2>();
             foreach (var c in store.Certificates)
             {
-                if (c.FriendlyName.StartsWith(hostPrefix, StringComparison.InvariantCulture) && c.GetCertHashString() != certificate.GetCertHashString())
+                if (requireCertifySpecificCerts)
                 {
-                    //going to remove certs with same friendly name
-                    certsToRemove.Add(c);
+                    if (c.FriendlyName.StartsWith(hostPrefix, StringComparison.InvariantCulture) && c.GetCertHashString() != certificate.GetCertHashString())
+                    {
+                        //going to remove certs with same friendly name
+                        certsToRemove.Add(c);
+                    }
+                }
+                else
+                {
+                    if (c.FriendlyName.StartsWith(hostPrefix, StringComparison.InvariantCulture) && c.GetCertHashString() != certificate.GetCertHashString())
+                    {
+                        //going to remove certs with same friendly name
+                        certsToRemove.Add(c);
+                    }
                 }
             }
             foreach (var oldCert in certsToRemove)
@@ -217,7 +231,73 @@ namespace Certify.Management
             store.Close();
         }
 
-        public void InstallCertificateforBinding(Site site, X509Certificate2 certificate, string host, int sslPort = 443, bool useSNI = true)
+        /// <summary>
+        /// Creates or updates the htttps bindinds associated with the dns names in the current request config, using the requested port/ips or autobinding
+        /// </summary>
+        /// <param name="requestConfig"></param>
+        /// <param name="pfxPath"></param>
+        /// <param name="cleanupCertStore"></param>
+        /// <returns></returns>
+        internal bool InstallCertForRequest(CertRequestConfig requestConfig, string pfxPath, bool cleanupCertStore)
+        {
+            if (new System.IO.FileInfo(pfxPath).Length == 0)
+            {
+                throw new ArgumentException("InstallCertForRequest: Invalid PFX File");
+            }
+
+            //store cert against primary domain
+            var storedCert = StoreCertificate(requestConfig.PrimaryDomain, pfxPath);
+
+            if (storedCert != null)
+            {
+                List<string> dnsHosts = new List<string> { requestConfig.PrimaryDomain };
+                if (requestConfig.SubjectAlternativeNames != null) dnsHosts.AddRange(requestConfig.SubjectAlternativeNames);
+                dnsHosts = dnsHosts.Distinct().ToList();
+
+                foreach (var hostname in dnsHosts)
+                {
+                    //match dns host to IIS site
+                    var site = GetSiteByDomain(hostname);
+                    if (site != null)
+                    {
+                        //create/update binding and associate new cert
+                        if (!requestConfig.PerformAutomatedCertBinding)
+                        {
+                            //create auto binding and use SNI
+                            InstallCertificateforBinding(site, storedCert, hostname);
+                        }
+                        else
+                        {
+                            //TODO: make use SNI optional in request config.
+                            InstallCertificateforBinding(site, storedCert, hostname, sslPort: !String.IsNullOrEmpty(requestConfig.BindingPort) ? int.Parse(requestConfig.BindingPort) : 443, useSNI: true, ipAddress: requestConfig.BindingIPAddress);
+                        }
+                    }
+                }
+
+                if (cleanupCertStore)
+                {
+                    //remove old certs for this primary domain
+                    CleanupCertificateDuplicates(storedCert, requestConfig.PrimaryDomain);
+                }
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// creates or updates the https binding for the dns host name specified, assigning the given certificate selected from the certificate store
+        /// </summary>
+        /// <param name="site"></param>
+        /// <param name="certificate"></param>
+        /// <param name="host"></param>
+        /// <param name="sslPort"></param>
+        /// <param name="useSNI"></param>
+        /// <param name="ipAddress"></param>
+        public void InstallCertificateforBinding(Site site, X509Certificate2 certificate, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null)
         {
             var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
             store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
@@ -237,8 +317,10 @@ namespace Certify.Management
                     }
                     else
                     {
-                        //add new https binding at default port
-                        var iisBinding = siteToUpdate.Bindings.Add(":" + sslPort + ":" + internationalHost, certificate.GetCertHash(), store.Name);
+                        //add new https binding at default port "<ip>:port:hostDnsName";
+                        string bindingSpec = (ipAddress != null ? ipAddress : "") +
+                            ":" + sslPort + ":" + internationalHost;
+                        var iisBinding = siteToUpdate.Bindings.Add(bindingSpec, certificate.GetCertHash(), store.Name);
 
                         iisBinding.Protocol = "https";
                         if (useSNI)
@@ -261,9 +343,10 @@ namespace Certify.Management
             }
         }
 
-        public bool InstallCertForDomain(string host, string pfxPath, bool cleanupCertStore = true, bool skipBindings = false)
+        public bool InstallCertForDomain(string hostDnsName, string pfxPath, bool cleanupCertStore = true, bool skipBindings = false)
         {
-            var site = GetSiteByDomain(host);
+            //gets the IIS site associated with this dns host name (or first, if multiple defined)
+            var site = GetSiteByDomain(hostDnsName);
             if (site != null)
             {
                 if (new System.IO.FileInfo(pfxPath).Length == 0)
@@ -271,16 +354,16 @@ namespace Certify.Management
                     System.Diagnostics.Debug.WriteLine("InstallCertForDomain: Invalid PFX File");
                     return false;
                 }
-                var storedCert = StoreCertificate(host, pfxPath);
+                var storedCert = StoreCertificate(hostDnsName, pfxPath);
                 if (storedCert != null)
                 {
                     if (!skipBindings)
                     {
-                        InstallCertificateforBinding(site, storedCert, host);
+                        InstallCertificateforBinding(site, storedCert, hostDnsName);
                     }
                     if (cleanupCertStore)
                     {
-                        CleanupCertificateDuplicates(storedCert, host);
+                        CleanupCertificateDuplicates(storedCert, hostDnsName);
                     }
 
                     return true;
