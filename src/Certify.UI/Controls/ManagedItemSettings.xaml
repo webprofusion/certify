@@ -6,117 +6,121 @@
              xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
              xmlns:local="clr-namespace:Certify.UI.Controls"
     xmlns:fa="http://schemas.fontawesome.io/icons/"
+    xmlns:Custom="http://metro.mahapps.com/winfx/xaml/controls"
     x:Class="Certify.UI.Controls.ManagedItemSettings"
-             mc:Ignorable="d" Width="535.442" Height="353.672">
+             mc:Ignorable="d" Width="697.442" Height="425.672">
 
-    <StackPanel Orientation="Vertical">
-        <StackPanel.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="38"></RowDefinition>
+            <RowDefinition Height="32"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid.Resources>
             <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
             <local:InverseBooleanConverter x:Key="InvBoolConverter" />
-        </StackPanel.Resources>
-        <StackPanel Orientation="Vertical">
-            <StackPanel Orientation="Vertical">
-                <Label Content="{Binding SelectedItem.Name}" Margin="8,0,0,6" FontSize="22" Foreground="{DynamicResource AccentColorBrush}" />
-                <Label Content="{Binding ValidationError}" Margin="8,0,0,0" Foreground="#DDD30E0E" />
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Height="32">
-
-                <Button  IsEnabled="{Binding SelectedItem.IsChanged}" Click="Button_Save" Margin="8,0,0,0">
-                    <StackPanel Orientation="Horizontal">
-                        <fa:ImageAwesome Icon="Save" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
-                        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Save" /></TextBlock>
-                    </StackPanel>
-                </Button>
-
-                <Button  IsEnabled="{Binding SelectedItem.IsChanged}" Click="Button_DiscardChanges" Margin="8,0,0,0">
-                    <StackPanel Orientation="Horizontal">
-                        <fa:ImageAwesome Icon="Undo" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
-                        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Discard Changes" /></TextBlock>
-                    </StackPanel>
-                </Button>
-
-                <Button Click="Button_Delete" Margin="8,0,0,0">
-                    <StackPanel Orientation="Horizontal">
-                        <fa:ImageAwesome Icon="Trash" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
-                        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Delete" /></TextBlock>
-                    </StackPanel>
-                </Button>
-
-                <Button IsEnabled="{Binding IsSelectedItemValid}" Click="Button_RequestCertificate" Margin="16,0,0,0">
-                    <StackPanel Orientation="Horizontal">
-                        <fa:ImageAwesome Icon="Play" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
-                        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Request Certificate" /></TextBlock>
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-
-            <dragablz:TabablzControl Margin="8" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" SelectionChanged="TabablzControl_SelectionChanged">
-
-                <TabItem Header="Options" IsSelected="True">
-
-                    <StackPanel Margin="0,16,0,0">
-                        <StackPanel Orientation="Horizontal" Visibility="{Binding IsWebsiteSelectable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
-                            <Label Width="136" Content="Select IIS Site:" />
-                            <ComboBox ItemsSource="{Binding WebSiteList}" SelectedItem="{Binding SelectedWebSite}"  DisplayMemberPath="SiteName" Width="225" SelectionChanged="Website_SelectionChanged" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <Label Width="136" Content="Name:" />
-                            <TextBox Text="{Binding SelectedItem.Name}" Width="225" />
-                        </StackPanel>
-                        <StackPanel Orientation="Vertical" Margin="136,8,0,0">
-                            <CheckBox Content="Enable Auto Renewal" IsChecked="{Binding SelectedItem.IncludeInAutoRenew}" />
-                            <CheckBox Content="Notify Primary Contact On Renewal Failure" IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,16,0,16" HorizontalAlignment="Left">
-                            <TextBlock TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="500" Margin="8,0,0,0">
-The following domains will be included as a single certificate request. The Lets Encrypt service must be able to access all of theses sites via HTTP (port 80) for the certification process to work.
-                            </TextBlock>
-                        </StackPanel>
-
-                        <StackPanel Orientation="Horizontal">
-                            <Label Width="136">Primary Domain Name:</Label>
-                            <ComboBox ItemsSource="{Binding SelectedItem.DomainOptions}"  SelectedItem="{Binding PrimarySubjectDomain}" DisplayMemberPath="Domain" Width="225" SelectionChanged="PrimaryDomain_SelectionChanged" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                            <Label>Include Alternative Subject/Domain Names:</Label>
-                            <Button Content="Select All" Command="{Binding Path= SANSelectAllCommand}" Margin="16,0,0,0" />
-                            <Button Content="Select None" Command="{Binding Path= SANSelectNoneCommand}" Margin="8,0,0,0" />
-                        </StackPanel>
-
-                        <ListView ItemsSource="{Binding SelectedItem.DomainOptions}"  SelectionMode="Single" MaxHeight="150" BorderBrush="{DynamicResource IdealForegroundDisabledBrush}">
-                            <ListView.ItemTemplate>
-                                <DataTemplate>
-                                    <CheckBox Content="{Binding Domain}" IsChecked="{Binding IsSelected }" Margin="0,5,0,0" Unchecked="SANDomain_Toggled" Checked="SANDomain_Toggled" />
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
-                    </StackPanel>
-                </TabItem>
-                <TabItem Header="Advanced" IsSelected="True">
-                    <StackPanel Margin="0,16,0,0">
-                        <StackPanel Orientation="Vertical" Margin="8,0,0,0">
-                            <CheckBox Content="Perform challenge response config checks" IsChecked="{Binding SelectedItem.RequestConfig.PerformExtensionlessConfigChecks}" />
-                            <CheckBox Content="Perform web application auto config" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutoConfig}" />
-                        </StackPanel>
-                        <StackPanel Orientation="Vertical" Margin="8,16,0,0">
-
-                            <RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" GroupName="BindingType">Auto create/update IIS bindings (uses SNI)</RadioButton>
-                            <RadioButton  IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType">Use specific IP/Port bindings</RadioButton>
-                        </StackPanel>
-                        <StackPanel Orientation="Vertical" IsEnabled="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" Margin="32,8,0,0">
-                            <StackPanel Orientation="Horizontal">
-                                <Label Width="131" Content="Bind to Specific IP:" />
-
-                                <ComboBox ItemsSource="{Binding HostIPAddresses}" SelectedItem="{Binding SelectedItem.RequestConfig.BindingIPAddress}" Width="225" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal">
-                                <Label Width="131" Content="Bind to Specific Port:" />
-                                <TextBox Text="{Binding SelectedItem.RequestConfig.BindingPort}" Width="225" />
-                            </StackPanel>
-                        </StackPanel>
-                    </StackPanel>
-                </TabItem>
-            </dragablz:TabablzControl>
+        </Grid.Resources>
+        <StackPanel Orientation="Vertical" Grid.Row="0">
+            <Label Content="{Binding SelectedItem.Name}" Margin="8,0,0,8" FontSize="22" Foreground="{DynamicResource AccentColorBrush}" />
+            <Label Content="{Binding ValidationError}" Margin="8,0,0,0" Foreground="#DDD30E0E" />
         </StackPanel>
-    </StackPanel>
+        <StackPanel Orientation="Horizontal" Height="32" Grid.Row="1">
+
+            <Button  IsEnabled="{Binding SelectedItem.IsChanged}" Click="Button_Save" Margin="8,0,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Save" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Save" /></TextBlock>
+                </StackPanel>
+            </Button>
+
+            <Button  IsEnabled="{Binding SelectedItem.IsChanged}" Click="Button_DiscardChanges" Margin="8,0,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Undo" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Discard Changes" /></TextBlock>
+                </StackPanel>
+            </Button>
+
+            <Button Click="Button_Delete" Margin="8,0,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Trash" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Delete" /></TextBlock>
+                </StackPanel>
+            </Button>
+
+            <Button IsEnabled="{Binding IsSelectedItemValid}" Click="Button_RequestCertificate" Margin="16,0,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Play" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Request Certificate" /></TextBlock>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        <dragablz:TabablzControl Margin="8" Grid.Row="2" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" SelectionChanged="TabablzControl_SelectionChanged">
+
+            <TabItem Header="Options" IsSelected="True">
+
+                <StackPanel Margin="0,16,0,0">
+                    <StackPanel Orientation="Horizontal" Visibility="{Binding IsWebsiteSelectable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                        <Label Width="136" Content="Select IIS Site:" />
+                        <ComboBox ItemsSource="{Binding WebSiteList}" SelectedItem="{Binding SelectedWebSite}"  DisplayMemberPath="SiteName" Width="225" SelectionChanged="Website_SelectionChanged" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Width="136" Content="Name:" />
+                        <TextBox Text="{Binding SelectedItem.Name}" Width="225" />
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" Margin="136,8,0,0">
+                        <CheckBox Content="Enable Auto Renewal" IsChecked="{Binding SelectedItem.IncludeInAutoRenew}" />
+                        <CheckBox Content="Notify Primary Contact On Renewal Failure" IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,16,0,16" HorizontalAlignment="Left">
+                        <TextBlock TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="500" Margin="8,0,0,0"><Run Text="The following domains will be included as a single certificate request. The Lets Encrypt service must be able to access all of theses sites via HTTP (port 80) for the certification process to work." /></TextBlock>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Label Width="136" Content="Primary Domain Name:" />
+                        <ComboBox ItemsSource="{Binding SelectedItem.DomainOptions}"  SelectedItem="{Binding PrimarySubjectDomain}" DisplayMemberPath="Domain" Width="225" SelectionChanged="PrimaryDomain_SelectionChanged" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Label Content="Include Alternative Subject/Domain Names:" />
+                        <Button Content="Select All" Command="{Binding SANSelectAllCommand}" Margin="16,0,0,0" />
+                        <Button Content="Select None" Command="{Binding SANSelectNoneCommand}" Margin="8,0,0,0" />
+                    </StackPanel>
+
+                    <ListView ItemsSource="{Binding SelectedItem.DomainOptions}"  SelectionMode="Single" MaxHeight="150">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox Content="{Binding Domain}" IsChecked="{Binding IsSelected}" Margin="0,5,0,0" Unchecked="SANDomain_Toggled" Checked="SANDomain_Toggled" />
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="Advanced" IsSelected="True">
+                <StackPanel Margin="0,16,0,0">
+
+                    <StackPanel Orientation="Vertical" Margin="8,0,0,0">
+                        <CheckBox Content="Perform challenge response config checks" IsChecked="{Binding SelectedItem.RequestConfig.PerformExtensionlessConfigChecks}" />
+                        <CheckBox Content="Perform web application auto config" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutoConfig}" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Vertical" Margin="8,16,0,0">
+                        <RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" GroupName="BindingType" Content="Auto create/update IIS bindings (uses SNI)" />
+                        <RadioButton  IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType" Content="Use specific IP/Port bindings" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Vertical" IsEnabled="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" Margin="32,8,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Label Width="131" Content="Bind to Specific IP:" />
+
+                            <ComboBox ItemsSource="{Binding HostIPAddresses}" SelectedItem="{Binding SelectedItem.RequestConfig.BindingIPAddress}" Width="225" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Width="131" Content="Bind to Specific Port:" />
+                            <TextBox Text="{Binding SelectedItem.RequestConfig.BindingPort}" Width="225" />
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </TabItem>
+        </dragablz:TabablzControl>
+    </Grid>
 </UserControl>

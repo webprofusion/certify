@@ -31,7 +31,11 @@ namespace Certify.UI.Controls
         public ManagedSites()
         {
             InitializeComponent();
-            this.DataContext = MainViewModel;
+
+            if (!System.ComponentModel.DesignerProperties.GetIsInDesignMode(this))
+            {
+                this.DataContext = MainViewModel;
+            }
         }
 
         private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
