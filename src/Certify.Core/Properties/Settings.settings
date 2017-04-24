@@ -3,13 +3,13 @@
   <Profiles />
   <Settings>
     <Setting Name="VaultPath" Type="System.String" Scope="User">
-      <Value Profile="(Default)">C:\CertifyVault</Value>
+      <Value Profile="(Default)">C:\ProgramData\ACMESharp</Value>
     </Setting>
     <Setting Name="CheckForUpdatesAtStartup" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="DefaultVaultPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\CertifyVault</Value>
+      <Value Profile="(Default)">C:\ProgramData\ACMESharp</Value>
     </Setting>
     <Setting Name="ShowBetaWarning" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>

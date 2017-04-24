@@ -18,7 +18,7 @@
                 </StackPanel>
             </Button>
         </StackPanel>
-        <StackPanel Orientation="Vertical" Margin="0,0,10,0">
+        <StackPanel Orientation="Vertical" Margin="8,0,10,0">
             <CheckBox x:Name="CheckForUpdatesCheckbox" Content="Check for updates automatically" />
             <CheckBox x:Name="EnableTelematicsCheckbox" Content="Enable app telematics" />
             <CheckBox x:Name="EnableProxyAPICheckbox" Content="Enable proxy API for domain config checks" />
