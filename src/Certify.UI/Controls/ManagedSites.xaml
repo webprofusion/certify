@@ -31,6 +31,7 @@
                         </StackPanel>
 
                         <TextBlock Text="{Binding Path=ItemType, Converter={StaticResource EnumConverter}}" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" Margin="16,0,0,0" FontSize="10" />
+                        <TextBlock Text="{Binding Path=DateExpiry}"  Margin="16,0,0,0" FontSize="10" />
                     </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>
@@ -44,12 +45,9 @@
             <StackPanel Grid.Row="0" Visibility="{Binding IsNoItemSelected, Converter={StaticResource BoolToVisConverter}}" Margin="16,0,0,0" Height="auto">
                 <StackPanel Margin="16,8" Background="#FF267CC3" Height="auto">
 
-
                     <TextBlock TextWrapping="Wrap" FontSize="36" Margin="16,16,0,16" Foreground="White" FontFamily="Segoe UI Light"><Run Text="Welcome to Certify" /></TextBlock>
                     <TextBlock TextWrapping="Wrap" Margin="16,0,0,0" FontSize="14" Foreground="#FFF7F7F7" FontFamily="Segoe UI Light"><Run Text="Certify provides free SSL Certificates via the Let's Encrypt service (https://letsencrypt.org)." /><LineBreak /><Run /><Run /><LineBreak /><Run Text="Select a Managed Site or select New Certificate to begin." /><Run Text="&#x9;" /><LineBreak /><Run /><LineBreak /><Run /><LineBreak /><Run /><LineBreak /><Run /></TextBlock>
-
                 </StackPanel>
-
             </StackPanel>
         </Grid>
     </Grid>

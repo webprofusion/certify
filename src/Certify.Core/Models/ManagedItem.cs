@@ -10,6 +10,9 @@ namespace Certify.Models
 {
     public enum LogItemType
     {
+        GeneralInfo = 1,
+        GeneralWarning = 10,
+        GeneralError = 20,
         CertificateRequestStarted = 50,
         CertificateRequestSuccessful = 100,
         CertficateRequestFailed = 101,
@@ -111,6 +114,13 @@ namespace Certify.Models
         /// Specific type of item we are managing, affects the renewal/rewuest operations required
         /// </summary>
         public ManagedItemType ItemType { get; set; }
+
+        public DateTime? DateStart { get; set; }
+        public DateTime? DateExpiry { get; set; }
+        public DateTime? DateRenewed { get; set; }
+
+        public string CertificateId { get; set; }
+        public string CertificatePath { get; set; }
     }
 
     public class ManagedSite : ManagedItem
