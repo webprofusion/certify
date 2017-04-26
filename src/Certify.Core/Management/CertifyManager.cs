@@ -15,7 +15,11 @@ namespace Certify.Management
         private const string SCHEDULED_TASK_NAME = "Certify Maintenance Task";
         private const string SCHEDULED_TASK_EXE = "certify.exe";
         private const string SCHEDULED_TASK_ARGS = "renew";
+#if DEBUG
+        private const int RENEWAL_THRESHOLD_DAYS = 0;
+#else
         private const int RENEWAL_THRESHOLD_DAYS = 7;
+#endif
 
         public CertifyManager()
         {
