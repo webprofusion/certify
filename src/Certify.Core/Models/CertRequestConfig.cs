@@ -37,6 +37,11 @@ namespace Certify.Models
         public string BindingPort { get; set; }
 
         /// <summary>
+        /// Optionally use SNI when creating bindings (the default us to PerformAutomatedCertBinding, which also uses SNI)
+        /// </summary>
+        public bool? BindingUseSNI { get; set; }
+
+        /// <summary>
         /// If true, this request requires a challenge file copy as part of the web applications content, usually to /.well-known/acme-challenge/
         /// </summary>
         public bool PerformChallengeFileCopy { get; set; }

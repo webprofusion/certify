@@ -2,9 +2,28 @@
 using System.IO;
 using ACMESharp.JOSE;
 using ACMESharp.Vault.Model;
+using ACMESharp.PKI;
+
+/*
+ * Port of supporting utls for powershell methods from ACMESharp.POSH: https://github.com/ebekker/ACMESharp
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
 
 namespace ACMESharp.POSH.Util
 {
+    public static class PkiHelper
+    {
+        public static IPkiTool GetPkiTool(string name)
+        {
+            return string.IsNullOrEmpty(name)
+                //? CertificateProvider.GetProvider()
+                //: CertificateProvider.GetProvider(name);
+                ? PkiToolExtManager.GetPkiTool()
+                : PkiToolExtManager.GetPkiTool(name);
+        }
+    }
+
     public static class ClientHelper
     {
         public static AcmeClient GetClient(VaultInfo Config)

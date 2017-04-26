@@ -39,7 +39,10 @@ namespace Certify.UI
         {
             InitializeComponent();
 
-            this.DataContext = MainViewModel;
+            if (!System.ComponentModel.DesignerProperties.GetIsInDesignMode(this))
+            {
+                this.DataContext = MainViewModel;
+            }
         }
 
         private void Button_NewCertificate(object sender, RoutedEventArgs e)
@@ -68,6 +71,13 @@ namespace Certify.UI
             }
         }
 
+        private void Button_ScheduledTaskConfig(object sender, RoutedEventArgs e)
+        {
+            //show UI to update auto renewal task
+            var d = new Windows.ScheduledTaskConfig { Owner = this };
+            d.ShowDialog();
+        }
+
         private void MetroWindow_Loaded(object sender, RoutedEventArgs e)
         {
             //check for any startup actions required such as vault import
@@ -78,9 +88,6 @@ namespace Certify.UI
                 Task.Delay(100);
                 var d = new Windows.ImportManagedSites { Owner = this };
                 d.ShowDialog();
-            }
-            else
-            {
             }
         }
 

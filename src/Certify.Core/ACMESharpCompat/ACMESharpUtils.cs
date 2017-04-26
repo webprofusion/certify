@@ -22,6 +22,12 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+/*
+ * Port of powershell methods from ACMESharp.POSH: https://github.com/ebekker/ACMESharp
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
 namespace Certify.ACMESharpCompat
 {
     /// <summary>

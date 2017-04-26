@@ -1,4 +1,6 @@
-﻿using PropertyChanged;
+﻿using Certify.Management;
+using PropertyChanged;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -10,6 +12,9 @@ namespace Certify.Models
 {
     public enum LogItemType
     {
+        GeneralInfo = 1,
+        GeneralWarning = 10,
+        GeneralError = 20,
         CertificateRequestStarted = 50,
         CertificateRequestSuccessful = 100,
         CertficateRequestFailed = 101,
@@ -54,6 +59,20 @@ namespace Certify.Models
 
         public static void AppendLog(string managedItemId, ManagedSiteLogItem logItem)
         {
+            //FIXME:
+
+            var logPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\" + ItemManager.APPDATASUBFOLDER + "\\log_" + managedItemId.Replace(':', '_') + ".txt";
+
+            var log = new LoggerConfiguration()
+                .WriteTo.File(logPath, shared: true)
+                .CreateLogger();
+
+            var logLevel = Serilog.Events.LogEventLevel.Information;
+            if (logItem.LogItemType == LogItemType.CertficateRequestFailed) logLevel = Serilog.Events.LogEventLevel.Error;
+            if (logItem.LogItemType == LogItemType.GeneralError) logLevel = Serilog.Events.LogEventLevel.Error;
+            if (logItem.LogItemType == LogItemType.GeneralWarning) logLevel = Serilog.Events.LogEventLevel.Warning;
+
+            log.Write(logLevel, logItem.Message);
             //TODO: log to per site log
             //if (this.Logs == null) this.Logs = new List<ManagedSiteLogItem>();
             //this.Logs.Add(logItem);
@@ -111,6 +130,13 @@ namespace Certify.Models
         /// Specific type of item we are managing, affects the renewal/rewuest operations required
         /// </summary>
         public ManagedItemType ItemType { get; set; }
+
+        public DateTime? DateStart { get; set; }
+        public DateTime? DateExpiry { get; set; }
+        public DateTime? DateRenewed { get; set; }
+
+        public string CertificateId { get; set; }
+        public string CertificatePath { get; set; }
     }
 
     public class ManagedSite : ManagedItem

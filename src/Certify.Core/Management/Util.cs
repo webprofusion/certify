@@ -10,6 +10,11 @@ namespace Certify.Management
 {
     public class Util
     {
+        public async Task<UpdateCheck> CheckForUpdates(Version appVersion)
+        {
+            return await this.CheckForUpdates(appVersion.ToString());
+        }
+
         public async Task<UpdateCheck> CheckForUpdates(string appVersion)
         {
             /* AppVersion v1 = new AppVersion { Major = 1, Minor = 0, Patch = 1 };
@@ -44,6 +49,5 @@ namespace Certify.Management
                 return null;
             }
         }
-
     }
 }
