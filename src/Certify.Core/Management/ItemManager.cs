@@ -12,8 +12,8 @@ namespace Certify.Management
     /// </summary>
     public class ItemManager
     {
-        private const string APPDATASUBFOLDER = "Certify";
-        private const string ITEMMANAGERCONFIG = "manageditems.json";
+        public const string APPDATASUBFOLDER = "Certify";
+        public const string ITEMMANAGERCONFIG = "manageditems.json";
 
         /// <summary>
         /// If true, one or more of our managed sites are hosted within a Local IIS server on the same machine
