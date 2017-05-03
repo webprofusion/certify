@@ -9,7 +9,7 @@
         mc:Ignorable="d"
         GlowBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1"
-        Title="New Contact" Height="297" Width="514" WindowStartupLocation="CenterOwner">
+        Title="New Contact" Height="297" Width="514" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner">
     <Grid>
 
         <TextBlock HorizontalAlignment="Left" Margin="12,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="472" Foreground="{DynamicResource AccentColorBrush}" ><Run Text="To use Certify and the " /><Run Text="free " /><Run Text="Lets Encrypt service to acquire SSL certificate" /><Run Text="s" /><Run Text=" you must first register as a contact. The email address provided " /><Run Text="may" /><Run Text=" used to notify you of upcoming certificate renewals if required." /></TextBlock>

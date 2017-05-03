@@ -42,10 +42,10 @@ namespace Certify.UI.Controls
 
         private async void UpdateCheck_Click(object sender, RoutedEventArgs e)
         {
-            PerformCheckForUpdates(silent: false);
+            await PerformCheckForUpdates(silent: false);
         }
 
-        private async void PerformCheckForUpdates(bool silent)
+        private async Task PerformCheckForUpdates(bool silent)
         {
             var v = GetAppVersion();
             var updateCheck = await new Util().CheckForUpdates(v);
@@ -71,6 +71,9 @@ namespace Certify.UI.Controls
             }
         }
 
-     
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://certify.webprofusion.com/register");
+        }
     }
 }

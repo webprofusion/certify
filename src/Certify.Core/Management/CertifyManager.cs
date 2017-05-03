@@ -162,6 +162,8 @@ namespace Certify.Management
             {
                 try
                 {
+                    ManagedSiteLog.AppendLog(managedSite.Id, new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.GeneralInfo, Message = "Beginning Certificate Request Process: " + managedSite.Name });
+
                     bool enableIdentifierReuse = false;
 
                     if (vaultManager == null)
@@ -176,10 +178,7 @@ namespace Certify.Management
 
                     var config = managedSite.RequestConfig;
 
-                    List<string> allDomains = new List<string>
-            {
-                config.PrimaryDomain
-            };
+                    List<string> allDomains = new List<string> { config.PrimaryDomain };
 
                     if (config.SubjectAlternativeNames != null) allDomains.AddRange(config.SubjectAlternativeNames);
 
@@ -195,13 +194,13 @@ namespace Certify.Management
                         var identifierAlias = vaultManager.ComputeIdentifierAlias(domain);
 
                         //check if this domain already has an associated identifier registerd with LetsEncrypt which hasn't expired yet
-                        await Task.Delay(200); //allow UI update
+                        //await Task.Delay(200); //allow UI update
 
                         ACMESharp.Vault.Model.IdentifierInfo existingIdentifier = null;
 
                         if (enableIdentifierReuse)
                         {
-                            vaultManager.GetIdentifier(domain.Trim().ToLower());
+                            existingIdentifier = vaultManager.GetIdentifier(domain.Trim().ToLower());
                         }
 
                         bool identifierAlreadyValid = false;
@@ -222,7 +221,7 @@ namespace Certify.Management
                             System.Diagnostics.Debug.WriteLine("Reusing existing valid non-expired identifier for the domain " + domain);
                         }
 
-                        ManagedSiteLog.AppendLog(managedSite.Id, new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestStarted, Message = "Attempting Certificate Request: " + managedSite.ItemType });
+                        ManagedSiteLog.AppendLog(managedSite.Id, new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestStarted, Message = "Attempting Domain Validation: " + domain });
 
                         //begin authorization process (register identifier, request authorization if not already given)
                         if (progress != null) progress.Report(new RequestProgressState { Message = "Registering and Validating " + domain });
@@ -235,7 +234,7 @@ namespace Certify.Management
 
                         var authorization = vaultManager.BeginRegistrationAndValidation(config, identifierAlias, challengeType: config.ChallengeType, domain: domain);
 
-                        if (authorization != null && !identifierAlreadyValid)
+                        if (authorization != null && authorization.Identifier != null && !identifierAlreadyValid)
                         {
                             if (authorization.Identifier.Authorization.IsPending())
                             {
@@ -312,7 +311,7 @@ namespace Certify.Management
                         string[] alternativeDnsIdentifiers = identifierAuthorizations.Where(i => i.Identifier.Alias != primaryDnsIdentifier).Select(i => i.Identifier.Alias).ToArray();
 
                         if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Running, Message = "Requesting Certificate via Lets Encrypt" });
-                        await Task.Delay(200); //allow UI update
+                        //await Task.Delay(200); //allow UI update
 
                         var certRequestResult = vaultManager.PerformCertificateRequestProcess(primaryDnsIdentifier, alternativeDnsIdentifiers);
                         if (certRequestResult.IsSuccess)
@@ -324,7 +323,7 @@ namespace Certify.Management
                             if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS && config.PerformAutomatedCertBinding)
                             {
                                 if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Running, Message = "Performing Automated Certificate Binding" });
-                                await Task.Delay(200); //allow UI update
+                                //await Task.Delay(200); //allow UI update
 
                                 var iisManager = new IISManager();
 
@@ -483,7 +482,7 @@ namespace Certify.Management
         {
             await Task.Delay(200); //allow UI to update
                                    //currently the vault won't let us run parallel requests due to file locks
-            bool performRequestsInParallel = true;
+            bool performRequestsInParallel = false;
             bool testModeOnly = false;
 
             siteManager.LoadSettings();
@@ -520,6 +519,17 @@ namespace Certify.Management
                     {
                         renewalTasks.Add(this.PerformCertificateRequest(null, s, tracker));
                     }
+                }
+                else
+                {
+                    if (progressTrackers != null)
+                    {
+                        //send progress back to report skip
+                        var progress = (IProgress<RequestProgressState>)progressTrackers[s.Id];
+                        if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Success, Message = "Skipping Renewal, existing certificate still OK." });
+                    }
+
+                    ManagedSiteLog.AppendLog(s.Id, new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.GeneralInfo, Message = "Skipping Renewal, existing certificate still OK: " + s.Name });
                 }
             }
 

@@ -23,4 +23,5 @@ Source: "..\src\Certify.UI\bin\Release\*"; DestDir: "{app}"; Excludes: "*.pdb,*.
 
 [Icons]
 Name: "{group}\Certify"; Filename: "{app}\Certify.UI.exe"
+Name: "{commondesktop}\Certify"; Filename: "{app}\Certify.UI.exe"
 
