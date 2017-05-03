@@ -259,7 +259,10 @@ namespace Certify
 
         public void ReloadVaultConfig()
         {
-            this.vaultConfig = LoadVaultFromFile();
+            lock (VAULT_LOCK)
+            {
+                this.vaultConfig = LoadVaultFromFile();
+            }
         }
 
         public bool IsValidVaultPath(string vaultPathFolder)
@@ -459,7 +462,7 @@ namespace Certify
                     catch (Exception e)
                     {
                         // TODO: Logging of errors.
-                        System.Windows.Forms.MessageBox.Show(e.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                        System.Diagnostics.Debug.WriteLine(e.Message);
                         return false;
                     }
                 }
@@ -497,7 +500,7 @@ namespace Certify
                 catch (Exception e)
                 {
                     // TODO: Logging of errors.
-                    System.Windows.Forms.MessageBox.Show(e.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                    System.Diagnostics.Debug.WriteLine(e.Message);
                     return false;
                 }
             }
@@ -510,24 +513,27 @@ namespace Certify
                 ReloadVaultConfig();
             }
 
-            var identifiers = GetIdentifiers();
-            if (identifiers != null)
+            lock (VAULT_LOCK)
             {
-                //find best match for given alias/id
-                var result = identifiers.FirstOrDefault(i => i.Alias == aliasOrDNS);
-                if (result == null)
+                var identifiers = GetIdentifiers();
+                if (identifiers != null)
                 {
-                    result = identifiers.FirstOrDefault(i => i.Dns == aliasOrDNS);
+                    //find best match for given alias/id
+                    var result = identifiers.FirstOrDefault(i => i.Alias == aliasOrDNS);
+                    if (result == null)
+                    {
+                        result = identifiers.FirstOrDefault(i => i.Dns == aliasOrDNS);
+                    }
+                    if (result == null)
+                    {
+                        result = identifiers.FirstOrDefault(i => i.Id.ToString() == aliasOrDNS);
+                    }
+                    return result;
                 }
-                if (result == null)
+                else
                 {
-                    result = identifiers.FirstOrDefault(i => i.Id.ToString() == aliasOrDNS);
+                    return null;
                 }
-                return result;
-            }
-            else
-            {
-                return null;
             }
         }
 
@@ -585,24 +591,20 @@ namespace Certify
             //if no alternative domain specified, use the primary domains as the subject
             if (domain == null) domain = requestConfig.PrimaryDomain;
 
-            if (GetIdentifier(identifierAlias) == null)
-            {
-                //if an identifier exists for the same dns in vault, remove it to avoid confusion
-                this.DeleteIdentifierByDNS(domain);
+            // if (GetIdentifier(identifierAlias) == null)
 
-                // ACME service requires international domain names in ascii mode
-                ACMESharpUtils.NewIdentifier(identifierAlias, idnMapping.GetAscii(domain));
-            }
+            //if an identifier exists for the same dns in vault, remove it to avoid confusion
+            this.DeleteIdentifierByDNS(domain);
+
+            // ACME service requires international domain names in ascii mode, regiser the new identifier with Lets Encrypt
+            var authState = ACMESharpUtils.NewIdentifier(identifierAlias, idnMapping.GetAscii(domain));
 
             var identifier = this.GetIdentifier(identifierAlias, reloadVaultConfig: true);
 
-            if (identifier.Authorization.IsPending())
+            //FIXME: when validating subsequent SAN names in parallel request mode, the identifier is null?
+            if (identifier != null && identifier.Authorization != null && identifier.Authorization.IsPending())
             {
-                bool ccrResultOK = false;
-
                 ACMESharpUtils.CompleteChallenge(identifier.Alias, challengeType, Handler: "manual", Regenerate: true, Repeat: true);
-
-                ccrResultOK = true;
 
                 //get challenge info
                 ReloadVaultConfig();
@@ -614,7 +616,7 @@ namespace Certify
             }
             else
             {
-                //identifier is already valid (previously authorized)
+                //identifier is null or already valid (previously authorized)
                 return new PendingAuthorization() { Challenge = null, Identifier = identifier, TempFilePath = "", ExtensionlessConfigCheckedOK = false };
             }
         }
