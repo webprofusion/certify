@@ -13,8 +13,9 @@
     <Grid>
         <Grid.Resources>
             <utils:OptionalBooleanToVisibilityConverter x:Key="BoolToVisConverter" True="Visible" False="Collapsed" />
-
             <utils:EnumConverter x:Key="EnumConverter" />
+            <utils:ExpiryDateConverter x:Key="ExpiryDateConverter" />
+            <utils:ExpiryDateColourConverter x:Key="ExpiryDateColourConverter" />
         </Grid.Resources>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="240"></ColumnDefinition>
@@ -27,11 +28,11 @@
                     <StackPanel Orientation="Vertical" Margin="0,8,0,0">
                         <StackPanel Orientation="Horizontal">
                             <fa:FontAwesome Icon="Globe" Margin="0,0,8,0" />
-                            <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,8,0" Foreground="{DynamicResource AccentColorBrush3}" />
+                            <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,8,0" Foreground="{DynamicResource {x:Static SystemColors.ActiveCaptionTextBrushKey} }" />
                         </StackPanel>
 
                         <TextBlock Text="{Binding Path=ItemType, Converter={StaticResource EnumConverter}}" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" Margin="16,0,0,0" FontSize="10" />
-                        <TextBlock Text="{Binding Path=DateExpiry}"  Margin="16,0,0,0" FontSize="10" />
+                        <TextBlock Text="{Binding Path=DateExpiry, Converter={StaticResource ExpiryDateConverter}}"  Foreground="{Binding Path=DateExpiry, Converter={StaticResource ExpiryDateColourConverter}}"  Margin="16,0,0,0" FontSize="10" />
                     </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>
