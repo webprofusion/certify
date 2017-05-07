@@ -13,25 +13,26 @@
     <Grid>
         <Grid.Resources>
             <utils:OptionalBooleanToVisibilityConverter x:Key="BoolToVisConverter" True="Visible" False="Collapsed" />
-
             <utils:EnumConverter x:Key="EnumConverter" />
+            <utils:ExpiryDateConverter x:Key="ExpiryDateConverter" />
+            <utils:ExpiryDateColourConverter x:Key="ExpiryDateColourConverter" />
         </Grid.Resources>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="240"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
 
-        <ListView Grid.Column="0" ItemsSource="{Binding ManagedSites}" SelectionChanged="ListView_SelectionChanged" TouchDown="ListView_TouchDown"  SelectionMode="Single" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+        <ListView Grid.Column="0" ItemsSource="{Binding ManagedSites}" SelectionChanged="ListView_SelectionChanged" TouchDown="ListView_TouchDown"  SelectionMode="Single" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" BorderBrush="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Vertical" Margin="0,8,0,0">
                         <StackPanel Orientation="Horizontal">
                             <fa:FontAwesome Icon="Globe" Margin="0,0,8,0" />
-                            <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,8,0" Foreground="{DynamicResource AccentColorBrush3}" />
+                            <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,8,0" Foreground="{DynamicResource {x:Static SystemColors.ActiveCaptionTextBrushKey} }" />
                         </StackPanel>
 
                         <TextBlock Text="{Binding Path=ItemType, Converter={StaticResource EnumConverter}}" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" Margin="16,0,0,0" FontSize="10" />
-                        <TextBlock Text="{Binding Path=DateExpiry}"  Margin="16,0,0,0" FontSize="10" />
+                        <TextBlock Text="{Binding Path=DateExpiry, Converter={StaticResource ExpiryDateConverter}}"  Foreground="{Binding Path=DateExpiry, Converter={StaticResource ExpiryDateColourConverter}}"  Margin="16,0,0,0" FontSize="10" />
                     </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>
@@ -42,11 +43,11 @@
             </Grid.RowDefinitions>
             <local:ManagedItemSettings Grid.Row="0" Visibility="{Binding IsItemSelected, Converter={StaticResource BoolToVisConverter}}"  Width="Auto" BorderBrush="{DynamicResource WindowTitleColorBrush}" Loaded="ManagedItemSettings_Loaded" Margin="0,10,0,0" Height="Auto" />
 
-            <StackPanel Grid.Row="0" Visibility="{Binding IsNoItemSelected, Converter={StaticResource BoolToVisConverter}}" Margin="16,0,0,0" Height="auto">
-                <StackPanel Margin="16,8" Background="#FF267CC3" Height="auto">
+            <StackPanel Grid.Row="0" Visibility="{Binding IsNoItemSelected, Converter={StaticResource BoolToVisConverter}}" Margin="16,0,0,0" Height="Auto">
+                <StackPanel Margin="16,8"  Height="Auto" MinHeight="300" Background="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}">
 
-                    <TextBlock TextWrapping="Wrap" FontSize="36" Margin="16,16,0,16" Foreground="White" FontFamily="Segoe UI Light"><Run Text="Welcome to Certify" /></TextBlock>
-                    <TextBlock TextWrapping="Wrap" Margin="16,0,0,0" FontSize="14" Foreground="#FFF7F7F7" FontFamily="Segoe UI Light"><Run Text="Certify provides free SSL Certificates via the Let's Encrypt service (https://letsencrypt.org)." /><LineBreak /><Run /><Run /><LineBreak /><Run Text="Select a Managed Site or select New Certificate to begin." /><Run Text="&#x9;" /><LineBreak /><Run /><LineBreak /><Run /><LineBreak /><Run /><LineBreak /><Run /></TextBlock>
+                    <TextBlock TextWrapping="Wrap" FontSize="36" Margin="16,16,0,16" Foreground="White" FontFamily="Segoe UI Light"><Run Text="Certify the Web" /></TextBlock>
+                    <TextBlock TextWrapping="Wrap" Margin="16,0,0,0" FontSize="14" Foreground="#FFF7F7F7" FontFamily="Segoe UI Light"><Run Text="Free SSL Certificates provided via the Let's Encrypt service (https://letsencrypt.org)." /><LineBreak /><Run /><Run /><LineBreak /><Run Text="Select a Managed Site or select New Certificate to begin." /><Run Text="&#x9;" /></TextBlock>
                 </StackPanel>
             </StackPanel>
         </Grid>

@@ -11,7 +11,7 @@
         GlowBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1"
         mc:Ignorable="d"
-        Title="Certify - SSL Certificate Manager" WindowTransitionsEnabled="False" TitleCaps="False" Height="668" Width="1120" WindowStyle="ToolWindow" Loaded="MetroWindow_Loaded" ContentRendered="MetroWindow_ContentRendered">
+        Title="Certify the web - SSL Certificate Management" WindowTransitionsEnabled="False" TitleCaps="False" Height="668" Width="1120" WindowStyle="ToolWindow" Loaded="MetroWindow_Loaded" ContentRendered="MetroWindow_ContentRendered">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -40,8 +40,8 @@
             </Button>
         </StackPanel>
 
-        <dragablz:TabablzControl x:Name="MainTabControl" Grid.Row="1" Margin="8,8,8,8
-                                 " SelectedIndex="{Binding MainUITabIndex}" HorizontalContentAlignment="Left" VerticalContentAlignment="Stretch" Height="auto">
+        <dragablz:TabablzControl x:Name="MainTabControl" Grid.Row="1" Margin="8,8,8,8" BorderThickness="0"
+                                 SelectedIndex="{Binding MainUITabIndex}" HorizontalContentAlignment="Left" VerticalContentAlignment="Stretch" Height="auto">
 
             <TabItem Header="Managed Sites" IsSelected="True">
                 <Controls1:ManagedSites Width="Auto" Height="Auto" />

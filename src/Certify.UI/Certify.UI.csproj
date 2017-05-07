@@ -95,6 +95,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Utils\ExpiryDateConverter.cs" />
     <Compile Include="Windows\ImportManagedSites.xaml.cs">
       <DependentUpon>ImportManagedSites.xaml</DependentUpon>
     </Compile>

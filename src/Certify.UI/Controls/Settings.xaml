@@ -19,9 +19,9 @@
             </Button>
         </StackPanel>
         <StackPanel Orientation="Vertical" Margin="8,0,10,0">
-            <CheckBox x:Name="CheckForUpdatesCheckbox" Content="Check for updates automatically" />
-            <CheckBox x:Name="EnableTelematicsCheckbox" Content="Enable app telematics" />
-            <CheckBox x:Name="EnableProxyAPICheckbox" Content="Enable proxy API for domain config checks" />
+            <CheckBox x:Name="CheckForUpdatesCheckbox" Content="Check for updates automatically" Checked="SettingsUpdated" Unchecked="SettingsUpdated" />
+            <CheckBox x:Name="EnableTelematicsCheckbox" Content="Enable app telematics" Unchecked="SettingsUpdated" Checked="SettingsUpdated" />
+            <CheckBox x:Name="EnableProxyAPICheckbox" Content="Enable proxy API for domain config checks" Unchecked="SettingsUpdated" Checked="SettingsUpdated" />
         </StackPanel>
     </StackPanel>
 </UserControl>

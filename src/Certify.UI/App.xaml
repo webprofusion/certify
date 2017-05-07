@@ -6,26 +6,20 @@
     xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
     StartupUri="MainWindow.xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" d1p1:Ignorable="d"
+     xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
     xmlns:d1p1="http://schemas.openxmlformats.org/markup-compatibility/2006">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!-- MahApps.Metro resource dictionaries. Make sure that all file names are Case Sensitive! -->
-                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml">
-                </ResourceDictionary>
-                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml">
-                </ResourceDictionary>
-                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Colors.xaml">
-                </ResourceDictionary>
-                <!-- Accent and AppTheme setting -->
-                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Accents/BaseLight.xaml">
-                </ResourceDictionary>
-                <!-- Material Design -->
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Colors.xaml" />
 
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Accents/BaseLight.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Accents/Steel.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            <!-- MahApps Brushes -->
-           
-           
+            <Style TargetType="{x:Type Controls:WindowButtonCommands}"
+                   BasedOn="{StaticResource MahApps.Metro.Styles.WindowButtonCommands.Win10}" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
