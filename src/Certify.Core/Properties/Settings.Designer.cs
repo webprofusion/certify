@@ -91,5 +91,17 @@ namespace Certify.Properties {
                 this["ShowOnlyStartedWebsites"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool EnableValidationProxyAPI {
+            get {
+                return ((bool)(this["EnableValidationProxyAPI"]));
+            }
+            set {
+                this["EnableValidationProxyAPI"] = value;
+            }
+        }
     }
 }
