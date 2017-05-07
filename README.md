@@ -1,4 +1,4 @@
-# Certify the Web
+# Certify
 
 Home page for downloads and info : [https://certifytheweb.com/](https://certifytheweb.com/)
 
