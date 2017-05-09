@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models;
 using Newtonsoft.Json;
+using Microsoft.ApplicationInsights;
 
 namespace Certify.CLI
 {
@@ -49,6 +50,24 @@ namespace Certify.CLI
         }
 
         private readonly IdnMapping _idnMapping = new IdnMapping();
+        private TelemetryClient tc = null;
+
+        private void InitTelematics()
+        {
+            if (Certify.Properties.Settings.Default.EnableAppTelematics)
+            {
+                tc = new TelemetryClient();
+                tc.Context.InstrumentationKey = Certify.Properties.Resources.AIInstrumentationKey;
+                tc.InstrumentationKey = Certify.Properties.Resources.AIInstrumentationKey;
+
+                // Set session data:
+
+                tc.Context.Session.Id = Guid.NewGuid().ToString();
+                tc.Context.Component.Version = new Certify.Management.Util().GetAppVersion().ToString();
+                tc.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
+                tc.TrackEvent("StartCLI");
+            }
+        }
 
         private void PerformVaultCleanup()
         {
@@ -65,7 +84,7 @@ namespace Certify.CLI
             Console.ForegroundColor = ConsoleColor.Yellow;
             System.Console.WriteLine("Certify SSL Manager - CLI v1.0.0");
             Console.ForegroundColor = ConsoleColor.White;
-            System.Console.WriteLine("For more information see https://certify.webprofusion.com");
+            System.Console.WriteLine("For more information see " + Certify.Properties.Resources.AppWebsiteURL);
             System.Console.WriteLine("");
         }
 
@@ -127,6 +146,12 @@ namespace Certify.CLI
 
         private async Task<System.Collections.Generic.List<CertificateRequestResult>> PerformAutoRenew()
         {
+            if (tc == null) InitTelematics();
+            if (tc != null)
+            {
+                tc.TrackEvent("CLI_BeginAutoRenew");
+            }
+
             Console.ForegroundColor = ConsoleColor.White;
             System.Console.WriteLine("\nPerforming Auto Renewals..\n");
 
@@ -260,6 +285,15 @@ namespace Certify.CLI
              }*/
 
             return false;
+        }
+
+        private void InitTelemetry()
+        {
+            if (Certify.Properties.Settings.Default.EnableAppTelematics)
+            {
+                tc = new Certify.Management.Util().InitTelemetry();
+                tc.TrackEvent("Start");
+            }
         }
     }
 }

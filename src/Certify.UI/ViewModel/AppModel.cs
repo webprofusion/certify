@@ -292,6 +292,13 @@ namespace Certify.UI.ViewModel
 
         public string PrimaryContactEmail { get; set; }
 
+        public bool IsUpdateAvailable { get; set; }
+
+        /// <summary>
+        /// If an update is available this will contain more info about the new update
+        /// </summary>
+        public UpdateCheck UpdateCheckResult { get; set; }
+
         #endregion properties
 
         #region methods

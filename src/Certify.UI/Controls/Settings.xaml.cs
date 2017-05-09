@@ -28,6 +28,8 @@ namespace Certify.UI.Controls
             }
         }
 
+        private bool settingsInitialised = false;
+
         public Settings()
         {
             InitializeComponent();
@@ -37,6 +39,8 @@ namespace Certify.UI.Controls
             this.CheckForUpdatesCheckbox.IsChecked = Certify.Properties.Settings.Default.CheckForUpdatesAtStartup;
             this.EnableTelematicsCheckbox.IsChecked = Certify.Properties.Settings.Default.EnableAppTelematics;
             this.EnableProxyAPICheckbox.IsChecked = Certify.Properties.Settings.Default.EnableValidationProxyAPI;
+
+            settingsInitialised = true;
         }
 
         private void Button_NewContact(object sender, RoutedEventArgs e)
@@ -51,13 +55,16 @@ namespace Certify.UI.Controls
 
         private void SettingsUpdated(object sender, RoutedEventArgs e)
         {
-            ///capture settings
-            Certify.Properties.Settings.Default.CheckForUpdatesAtStartup = (this.CheckForUpdatesCheckbox.IsChecked == true);
-            Certify.Properties.Settings.Default.EnableAppTelematics = (this.EnableTelematicsCheckbox.IsChecked == true);
-            Certify.Properties.Settings.Default.EnableValidationProxyAPI = (this.EnableProxyAPICheckbox.IsChecked == true);
-            ///
-            //save
-            Certify.Properties.Settings.Default.Save();
+            if (settingsInitialised)
+            {
+                ///capture settings
+                Certify.Properties.Settings.Default.CheckForUpdatesAtStartup = (this.CheckForUpdatesCheckbox.IsChecked == true);
+                Certify.Properties.Settings.Default.EnableAppTelematics = (this.EnableTelematicsCheckbox.IsChecked == true);
+                Certify.Properties.Settings.Default.EnableValidationProxyAPI = (this.EnableProxyAPICheckbox.IsChecked == true);
+                ///
+                //save
+                Certify.Properties.Settings.Default.Save();
+            }
         }
     }
 }

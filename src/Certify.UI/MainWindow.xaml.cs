@@ -23,8 +23,8 @@ namespace Certify.UI
         public enum PrimaryUITabs
         {
             ManagedItems = 0,
-            Vault = 1,
-            CurrentProgress = 2
+
+            CurrentProgress = 1
         }
 
         protected Certify.UI.ViewModel.AppModel MainViewModel
@@ -50,7 +50,8 @@ namespace Certify.UI
             //present new managed item (certificate request) UI
 
             //select tab Managed Items
-            this.MainTabControl.TabIndex = (int)PrimaryUITabs.ManagedItems;
+            MainViewModel.MainUITabIndex = (int)PrimaryUITabs.ManagedItems;
+
             MainViewModel.SelectedItem = new Certify.Models.ManagedSite { Name = "New Managed Certificate" };
         }
 
@@ -99,6 +100,19 @@ namespace Certify.UI
                 MessageBox.Show("Get started by registering a new contact, then you can start requesting certificates.");
                 var d = new Windows.EditContactDialog { Owner = this };
                 d.ShowDialog();
+            }
+        }
+
+        private void ButtonUpdateAvailable_Click(object sender, RoutedEventArgs e)
+        {
+            if (MainViewModel.UpdateCheckResult != null)
+            {
+                var gotoDownload = MessageBox.Show(MainViewModel.UpdateCheckResult.Message.Body + "\r\nVisit download page now?", Core.Properties.Resources.AppName, MessageBoxButton.YesNo);
+                if (gotoDownload == MessageBoxResult.Yes)
+                {
+                    System.Diagnostics.ProcessStartInfo sInfo = new System.Diagnostics.ProcessStartInfo(MainViewModel.UpdateCheckResult.Message.DownloadPageURL);
+                    System.Diagnostics.Process.Start(sInfo);
+                }
             }
         }
     }

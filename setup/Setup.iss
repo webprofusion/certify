@@ -3,16 +3,18 @@
 
 [Setup]
 AppName=Certify
-AppVersion=2.0.1
+AppVersion=2.0.3
+VersionInfoVersion=2.0.3
 AppPublisher=Webprofusion Pty Ltd
 AppPublisherURL=https://webprofusion.com
-AppUpdatesURL=https://certify.webprofusion.com/
+AppUpdatesURL=https://certifythweb.com/
 DefaultDirName={pf}\Certify
 DefaultGroupName=Certify
-UninstallDisplayIcon={app}\Certify.exe
+UninstallDisplayIcon={app}\Certify.UI.exe
 Compression=lzma2
 SolidCompression=yes
 OutputBaseFilename=CertifySetup
+SetupIconFile=icon.ico
 
 [InstallDelete]
 Type: files; Name: "{app}\*.dll"

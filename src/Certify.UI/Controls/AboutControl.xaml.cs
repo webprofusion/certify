@@ -30,14 +30,7 @@ namespace Certify.UI.Controls
 
         private void PopulateAppInfo()
         {
-            this.lblAppVersion.Text = Core.Properties.Resources.AppName + " " + GetAppVersion();
-        }
-
-        private Version GetAppVersion()
-        {
-            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            var v = assembly.GetName().Version;
-            return v;
+            this.lblAppVersion.Text = Core.Properties.Resources.AppName + " " + new Certify.Management.Util().GetAppVersion();
         }
 
         private async void UpdateCheck_Click(object sender, RoutedEventArgs e)
@@ -47,8 +40,7 @@ namespace Certify.UI.Controls
 
         private async Task PerformCheckForUpdates(bool silent)
         {
-            var v = GetAppVersion();
-            var updateCheck = await new Util().CheckForUpdates(v);
+            var updateCheck = await new Util().CheckForUpdates();
 
             if (updateCheck != null)
             {

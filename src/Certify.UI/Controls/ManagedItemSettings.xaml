@@ -21,7 +21,7 @@
             <local:InverseBooleanConverter x:Key="InvBoolConverter" />
         </Grid.Resources>
         <StackPanel Orientation="Vertical" Grid.Row="0">
-            <Label Content="{Binding SelectedItem.Name}" Margin="8,0,0,8" FontSize="22" Foreground="{DynamicResource AccentColorBrush}" />
+            <Label Content="{Binding SelectedItem.Name}" Margin="8,0,0,2" FontSize="24" Foreground="{DynamicResource {x:Static SystemColors.ActiveCaptionTextBrushKey}}" FontFamily="Segoe UI Semilight" />
             <Label Content="{Binding ValidationError}" Margin="8,0,0,0" Foreground="#DDD30E0E" />
         </StackPanel>
         <StackPanel Orientation="Horizontal" Height="32" Grid.Row="1">
@@ -117,6 +117,10 @@
                         <StackPanel Orientation="Horizontal">
                             <Label Width="131" Content="Bind to Specific Port:" />
                             <TextBox Text="{Binding SelectedItem.RequestConfig.BindingPort}" Width="225" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Width="131" Content="Use SNI (Server 2012 onwards):" />
+                            <CheckBox IsChecked="{Binding SelectedItem.RequestConfig.BindingUseSNI}"></CheckBox>
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>
