@@ -1,10 +1,10 @@
-# Certify
+# Certify SSL Manager
 
 Home page for downloads and info : [https://certifytheweb.com/](https://certifytheweb.com/)
 
 The SSL Certificate Management GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/), allowing you to generate and install free SSL certificates (with a 90 day expiry).
 
-![App Screenshot](https://certify.webprofusion.com/Content/images/screen2.png)
+![App Screenshot](https://certify.webprofusion.com/Content/images/screen3.png)
 
 
 ----------
