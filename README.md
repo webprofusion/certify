@@ -4,6 +4,11 @@ Home page for downloads and info : [https://certifytheweb.com/](https://certifyt
 
 The SSL Certificate Management GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/), allowing you to generate and install free SSL certificates (with a 90 day expiry).
 
+Features:
+- Easy certificate requests & automated SSL bindings
+- Auto renewal
+- SAN support (multi-domain certificates)
+
 ![App Screenshot](https://certify.webprofusion.com/Content/images/screen3.png)
 
 
