@@ -169,9 +169,12 @@ namespace Certify.UI.ViewModel
         /// </summary>
         internal void MarkAllChangesCompleted()
         {
-            SelectedItem.IsChanged = false;
-            SelectedItem.RequestConfig.IsChanged = false;
-            SelectedItem.DomainOptions.ForEach(d => d.IsChanged = false);
+            if (SelectedItem != null)
+            {
+                SelectedItem.IsChanged = false;
+                SelectedItem.RequestConfig.IsChanged = false;
+                SelectedItem.DomainOptions.ForEach(d => d.IsChanged = false);
+            }
 
             RaisePropertyChanged(nameof(SelectedItemHasChanges));
         }
@@ -489,7 +492,7 @@ namespace Certify.UI.ViewModel
             managedSite.DomainOptions = new List<DomainOption>();
 
             //for the given selected web site, allow the user to choose which domains to combine into one certificate
-            var allSites = new IISManager().GetSiteBindingList(false);
+            var allSites = new IISManager().GetSiteBindingList(false, siteId);
             var domains = new List<DomainOption>();
             foreach (var d in allSites)
             {
@@ -519,6 +522,7 @@ namespace Certify.UI.ViewModel
             }
 
             //TODO: load settings from previously saved managed site?
+            RaisePropertyChanged(nameof(PrimarySubjectDomain));
         }
 
         public async void BeginCertificateRequest(string managedItemId)
