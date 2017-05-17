@@ -81,7 +81,7 @@ namespace Certify.Management
             return result.OrderBy(s => s.SiteName).ToList();
         }
 
-        public List<SiteBindingItem> GetSiteBindingList(bool includeOnlyStartedSites)
+        public List<SiteBindingItem> GetSiteBindingList(bool includeOnlyStartedSites, string siteId = null)
         {
             var result = new List<SiteBindingItem>();
             try
@@ -90,6 +90,7 @@ namespace Certify.Management
                 {
                     var sites = GetSites(iisManager, includeOnlyStartedSites);
 
+                    if (siteId != null) sites = sites.Where(s => s.Id.ToString() == siteId);
                     foreach (var site in sites)
                     {
                         foreach (var binding in site.Bindings.OrderByDescending(b => b?.EndPoint?.Port))
