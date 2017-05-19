@@ -22,6 +22,7 @@ Type: files; Name: "{app}\*.exe"
 
 [Files]
 Source: "..\src\Certify.UI\bin\Release\*"; DestDir: "{app}"; Excludes: "*.pdb,*.*xml, *.vshost.*"
+Source: "..\src\Certify.UI\bin\Release\Plugins\*"; DestDir: "{app}\Plugins"; Excludes: "*.pdb,*.*xml, *.vshost.*"
 
 [Icons]
 Name: "{group}\Certify"; Filename: "{app}\Certify.UI.exe"
