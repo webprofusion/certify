@@ -6,12 +6,18 @@ using System.Text;
 using System.Threading.Tasks;
 using Certify.Models;
 using Microsoft.ApplicationInsights;
+using System.Net;
 
 namespace Certify.Management
 {
     public class Util
     {
         public const string APPDATASUBFOLDER = "Certify";
+
+        public static void SetSupportedTLSVersions()
+        {
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+        }
 
         public static string GetAppDataFolder()
         {

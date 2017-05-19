@@ -148,7 +148,14 @@ namespace Certify.UI.ViewModel
 
         internal void AddContactRegistration(ContactRegistration reg)
         {
-            certifyManager.AddRegisteredContact(reg);
+            if (certifyManager.AddRegisteredContact(reg))
+            {
+                //if we now have more than one contact, remove the old one
+                certifyManager.RemoveExtraContacts(reg.EmailAddress);
+
+                //refresh content from vault
+                LoadVaultTree();
+            }
             RaisePropertyChanged(nameof(HasRegisteredContacts));
         }
 

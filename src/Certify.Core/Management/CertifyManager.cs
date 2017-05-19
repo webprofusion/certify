@@ -23,6 +23,8 @@ namespace Certify.Management
 
         public CertifyManager()
         {
+            Certify.Management.Util.SetSupportedTLSVersions();
+
             siteManager = new ItemManager();
             siteManager.LoadSettings();
         }
@@ -138,10 +140,28 @@ namespace Certify.Management
             });
         }
 
-        public void AddRegisteredContact(ContactRegistration reg)
+        public bool AddRegisteredContact(ContactRegistration reg)
         {
             var vaultManager = GetVaultManager();
-            vaultManager.AddNewRegistrationAndAcceptTOS("mailto:" + reg.EmailAddress);
+            return vaultManager.AddNewRegistrationAndAcceptTOS("mailto:" + reg.EmailAddress);
+        }
+
+        /// <summary>
+        /// Remove other contacts which don't match the email address given
+        /// </summary>
+        /// <param name="email"></param>
+        /// <returns></returns>
+        public void RemoveExtraContacts(string email)
+        {
+            var vaultManager = GetVaultManager();
+            var regList = vaultManager.GetRegistrations(true).ToList();
+            foreach (var reg in regList)
+            {
+                if (!reg.Registration.Contacts.Contains("mailto:" + email))
+                {
+                    vaultManager.DeleteRegistrationInfo(reg.Id);
+                }
+            }
         }
 
         public string GetAcmeSummary()
