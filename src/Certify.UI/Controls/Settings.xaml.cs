@@ -40,6 +40,7 @@ namespace Certify.UI.Controls
             this.EnableTelematicsCheckbox.IsChecked = Certify.Properties.Settings.Default.EnableAppTelematics;
             this.EnableProxyAPICheckbox.IsChecked = Certify.Properties.Settings.Default.EnableValidationProxyAPI;
 
+            MainViewModel.LoadVaultTree();
             settingsInitialised = true;
         }
 
