@@ -70,7 +70,7 @@ namespace Certify.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Certify the web (alpha version).
+        ///   Looks up a localized string similar to Certify SSL Manager (beta).
         /// </summary>
         public static string AppName {
             get {
@@ -199,7 +199,7 @@ namespace Certify.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Certify the web - SSL/TLS Certificate Manager (Alpha Version).
+        ///   Looks up a localized string similar to Certify SSL/TLS Certificate Manager (Beta Version).
         /// </summary>
         public static string LongAppName {
             get {

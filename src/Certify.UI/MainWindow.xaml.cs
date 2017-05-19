@@ -48,6 +48,11 @@ namespace Certify.UI
         private void Button_NewCertificate(object sender, RoutedEventArgs e)
         {
             //present new managed item (certificate request) UI
+            if (!MainViewModel.IsRegisteredVersion && MainViewModel.ManagedSites != null && MainViewModel.ManagedSites.Count >= 5)
+            {
+                MessageBox.Show("You are using the trial version of this app. Please purchase a registration key to upgrade. See the Register option on the About tab.");
+                return;
+            }
 
             //select tab Managed Items
             MainViewModel.MainUITabIndex = (int)PrimaryUITabs.ManagedItems;
@@ -89,6 +94,11 @@ namespace Certify.UI
                 Task.Delay(100);
                 var d = new Windows.ImportManagedSites { Owner = this };
                 d.ShowDialog();
+            }
+
+            if (!MainViewModel.IsRegisteredVersion)
+            {
+                this.Title += " [Free Trial Version]";
             }
         }
 

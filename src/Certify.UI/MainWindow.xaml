@@ -11,7 +11,7 @@
         GlowBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1"
         mc:Ignorable="d"
-        Title="Certify the web - SSL Certificate Management" WindowTransitionsEnabled="False" TitleCaps="False" Height="668" Width="1120" WindowStyle="ToolWindow" Loaded="MetroWindow_Loaded" ContentRendered="MetroWindow_ContentRendered">
+        Title="Certify SSL Certificate Management" WindowTransitionsEnabled="False" TitleCaps="False" Height="668" Width="1120" WindowStyle="ToolWindow" Loaded="MetroWindow_Loaded" ContentRendered="MetroWindow_ContentRendered">
     <Controls:MetroWindow.Resources>
 
         <ResourceDictionary>

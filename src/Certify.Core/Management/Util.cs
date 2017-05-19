@@ -11,6 +11,18 @@ namespace Certify.Management
 {
     public class Util
     {
+        public const string APPDATASUBFOLDER = "Certify";
+
+        public static string GetAppDataFolder()
+        {
+            var path = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\" + APPDATASUBFOLDER;
+            if (!System.IO.Directory.Exists(path))
+            {
+                System.IO.Directory.CreateDirectory(path);
+            }
+            return path;
+        }
+
         public TelemetryClient InitTelemetry()
         {
             var tc = new TelemetryClient();
