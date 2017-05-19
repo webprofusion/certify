@@ -19,9 +19,21 @@ namespace Certify.UI.Windows
     /// </summary>
     public partial class ScheduledTaskConfig
     {
+        public bool TaskConfigured { get; set; } = false;
+
         public ScheduledTaskConfig()
         {
             InitializeComponent();
+            //check if scheduled task already configured
+
+            var certifyManager = new Certify.Management.CertifyManager();
+            TaskConfigured = certifyManager.IsWindowsScheduledTaskPresent();
+
+            if (TaskConfigured)
+            {
+                AutoRenewPrompt.Text = "The auto renewal task is already configured. If required you can change the admin user account used to execute the task.";
+                AutoRenewPrompt.Foreground = Brushes.DarkGreen;
+            }
         }
 
         private void OK_Click(object sender, RoutedEventArgs e)
