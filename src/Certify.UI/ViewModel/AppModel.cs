@@ -21,7 +21,11 @@ namespace Certify.UI.ViewModel
         /// </summary>
         public static AppModel AppViewModel = new AppModel();
 
+        public const int ProductTypeId = 1;
+
         private CertifyManager certifyManager = null;
+
+        public PluginManager PluginManager { get; set; }
 
         #region properties
 
@@ -102,6 +106,8 @@ namespace Certify.UI.ViewModel
         }
 
         public Certify.Models.ManagedSite SelectedItem { get; set; }
+
+        public bool IsRegisteredVersion { get; set; }
 
         public bool SelectedItemHasChanges
         {

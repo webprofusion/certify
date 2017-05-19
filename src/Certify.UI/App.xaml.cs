@@ -41,6 +41,20 @@ namespace Certify.UI
 
             MainViewModel.LoadSettings();
 
+            //check version capabilities
+            MainViewModel.PluginManager = new Management.PluginManager();
+
+            MainViewModel.PluginManager.LoadPlugins();
+
+            var licensingManager = MainViewModel.PluginManager.LicensingManager;
+            if (licensingManager != null)
+            {
+                if (licensingManager.IsInstallRegistered(ViewModel.AppModel.ProductTypeId, Certify.Management.Util.GetAppDataFolder()))
+                {
+                    MainViewModel.IsRegisteredVersion = true;
+                }
+            }
+
             //check for updates and report result to view model
             Task.Run(async () =>
             {
