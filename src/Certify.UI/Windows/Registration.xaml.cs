@@ -65,6 +65,7 @@ namespace Certify.UI.Windows
                             {
                                 ViewModel.AppModel.AppViewModel.IsRegisteredVersion = true;
                                 MessageBox.Show(installRegistration.Message);
+
                                 this.Close();
                             }
                         }
@@ -82,6 +83,10 @@ namespace Certify.UI.Windows
                 {
                     MessageBox.Show("There was a problem trying to validate your license key. Please try again or contact support.");
                 }
+            }
+            else
+            {
+                MessageBox.Show("There was a problem beginning the license validation process.");
             }
         }
 

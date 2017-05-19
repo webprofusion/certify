@@ -89,6 +89,14 @@ namespace Certify.UI.Controls
         {
             var d = new Windows.Registration { Owner = Window.GetWindow(this) };
             d.ShowDialog();
+
+            d.Unloaded += ApplyRegistration_Completed;
+        }
+
+        private void ApplyRegistration_Completed(object sender, EventArgs e)
+        {
+            //refresh registration status TODO: main window title
+            PopulateAppInfo();
         }
 
         private void Help_Click(object sender, RoutedEventArgs e)
