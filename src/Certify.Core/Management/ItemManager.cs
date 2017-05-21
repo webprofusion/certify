@@ -12,7 +12,6 @@ namespace Certify.Management
     /// </summary>
     public class ItemManager
     {
-        public const string APPDATASUBFOLDER = "Certify";
         public const string ITEMMANAGERCONFIG = "manageditems.json";
 
         /// <summary>
@@ -28,16 +27,6 @@ namespace Certify.Management
             this.ManagedSites = new List<ManagedSite>(); // this.Preview();
         }
 
-        private string GetAppDataFolder()
-        {
-            var path = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\" + APPDATASUBFOLDER;
-            if (!System.IO.Directory.Exists(path))
-            {
-                System.IO.Directory.CreateDirectory(path);
-            }
-            return path;
-        }
-
         internal void UpdatedManagedSites(List<ManagedSite> managedSites)
         {
             this.ManagedSites = managedSites;
@@ -46,7 +35,7 @@ namespace Certify.Management
 
         public void StoreSettings()
         {
-            string appDataPath = GetAppDataFolder();
+            string appDataPath = Util.GetAppDataFolder();
             string siteManagerConfig = Newtonsoft.Json.JsonConvert.SerializeObject(this.ManagedSites, Newtonsoft.Json.Formatting.Indented);
 
             lock (ITEMMANAGERCONFIG)
@@ -57,7 +46,7 @@ namespace Certify.Management
 
         public void LoadSettings()
         {
-            string appDataPath = GetAppDataFolder();
+            string appDataPath = Util.GetAppDataFolder();
             var path = appDataPath + "\\" + ITEMMANAGERCONFIG;
             if (System.IO.File.Exists(path))
             {

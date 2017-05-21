@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AppName" xml:space="preserve">
-    <value>Certify (Alpha Version)</value>
+    <value>Certify SSL Manager (beta)</value>
   </data>
   <data name="Credits" xml:space="preserve">
     <value>The Software is provided "as is" without warranty of any kind, either express or implied, including without limitation any implied warranties of condition, uninterrupted use, merchantability, fitness for a particular purpose, or non-infringement.
@@ -135,16 +135,16 @@ This software uses the following Open Source software (or significant portions o
     <value>..\Resources\icon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="LongAppName" xml:space="preserve">
-    <value>Certify - SSL/TLS Certificate Manager (Alpha Version)</value>
+    <value>Certify SSL/TLS Certificate Manager (Beta Version)</value>
   </data>
   <data name="UpdateCheckLatestVersion" xml:space="preserve">
     <value>You are using the latest version.</value>
   </data>
   <data name="AppUpdateCheckURI" xml:space="preserve">
-    <value>https://certify.webprofusion.com/downloads/version.json</value>
+    <value>https://certifytheweb.com/downloads/version.json</value>
   </data>
   <data name="AppWebsiteURL" xml:space="preserve">
-    <value>https://certify.webprofusion.com</value>
+    <value>https://certifytheweb.com</value>
   </data>
   <data name="GettingStartedExistingVault" xml:space="preserve">
     <value>Get Started: Browse the Vault on the left to see current certificate information.</value>

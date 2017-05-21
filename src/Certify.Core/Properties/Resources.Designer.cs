@@ -70,7 +70,7 @@ namespace Certify.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Certify (Alpha Version).
+        ///   Looks up a localized string similar to Certify SSL Manager (beta).
         /// </summary>
         public static string AppName {
             get {
@@ -79,7 +79,7 @@ namespace Certify.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://certify.webprofusion.com/downloads/version.json.
+        ///   Looks up a localized string similar to https://certifytheweb.com/downloads/version.json.
         /// </summary>
         public static string AppUpdateCheckURI {
             get {
@@ -88,7 +88,7 @@ namespace Certify.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://certify.webprofusion.com.
+        ///   Looks up a localized string similar to https://certifytheweb.com.
         /// </summary>
         public static string AppWebsiteURL {
             get {
@@ -199,7 +199,7 @@ namespace Certify.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Certify - SSL/TLS Certificate Manager (Alpha Version).
+        ///   Looks up a localized string similar to Certify SSL/TLS Certificate Manager (Beta Version).
         /// </summary>
         public static string LongAppName {
             get {

@@ -21,7 +21,11 @@ namespace Certify.UI.ViewModel
         /// </summary>
         public static AppModel AppViewModel = new AppModel();
 
+        public const int ProductTypeId = 1;
+
         private CertifyManager certifyManager = null;
+
+        public PluginManager PluginManager { get; set; }
 
         #region properties
 
@@ -103,6 +107,8 @@ namespace Certify.UI.ViewModel
 
         public Certify.Models.ManagedSite SelectedItem { get; set; }
 
+        public bool IsRegisteredVersion { get; set; }
+
         public bool SelectedItemHasChanges
         {
             get
@@ -142,7 +148,14 @@ namespace Certify.UI.ViewModel
 
         internal void AddContactRegistration(ContactRegistration reg)
         {
-            certifyManager.AddRegisteredContact(reg);
+            if (certifyManager.AddRegisteredContact(reg))
+            {
+                //if we now have more than one contact, remove the old one
+                certifyManager.RemoveExtraContacts(reg.EmailAddress);
+
+                //refresh content from vault
+                LoadVaultTree();
+            }
             RaisePropertyChanged(nameof(HasRegisteredContacts));
         }
 
@@ -169,9 +182,12 @@ namespace Certify.UI.ViewModel
         /// </summary>
         internal void MarkAllChangesCompleted()
         {
-            SelectedItem.IsChanged = false;
-            SelectedItem.RequestConfig.IsChanged = false;
-            SelectedItem.DomainOptions.ForEach(d => d.IsChanged = false);
+            if (SelectedItem != null)
+            {
+                SelectedItem.IsChanged = false;
+                SelectedItem.RequestConfig.IsChanged = false;
+                SelectedItem.DomainOptions.ForEach(d => d.IsChanged = false);
+            }
 
             RaisePropertyChanged(nameof(SelectedItemHasChanges));
         }
@@ -291,6 +307,13 @@ namespace Certify.UI.ViewModel
         public string VaultSummary { get; set; }
 
         public string PrimaryContactEmail { get; set; }
+
+        public bool IsUpdateAvailable { get; set; }
+
+        /// <summary>
+        /// If an update is available this will contain more info about the new update
+        /// </summary>
+        public UpdateCheck UpdateCheckResult { get; set; }
 
         #endregion properties
 
@@ -482,7 +505,7 @@ namespace Certify.UI.ViewModel
             managedSite.DomainOptions = new List<DomainOption>();
 
             //for the given selected web site, allow the user to choose which domains to combine into one certificate
-            var allSites = new IISManager().GetSiteBindingList(false);
+            var allSites = new IISManager().GetSiteBindingList(false, siteId);
             var domains = new List<DomainOption>();
             foreach (var d in allSites)
             {
@@ -512,6 +535,7 @@ namespace Certify.UI.ViewModel
             }
 
             //TODO: load settings from previously saved managed site?
+            RaisePropertyChanged(nameof(PrimarySubjectDomain));
         }
 
         public async void BeginCertificateRequest(string managedItemId)

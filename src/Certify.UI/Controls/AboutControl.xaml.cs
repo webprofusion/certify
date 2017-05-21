@@ -21,6 +21,14 @@ namespace Certify.UI.Controls
     /// </summary>
     public partial class AboutControl : UserControl
     {
+        protected Certify.UI.ViewModel.AppModel MainViewModel
+        {
+            get
+            {
+                return ViewModel.AppModel.AppViewModel;
+            }
+        }
+
         public AboutControl()
         {
             InitializeComponent();
@@ -30,14 +38,16 @@ namespace Certify.UI.Controls
 
         private void PopulateAppInfo()
         {
-            this.lblAppVersion.Text = Core.Properties.Resources.AppName + " " + GetAppVersion();
-        }
+            this.lblAppVersion.Text = Core.Properties.Resources.AppName + " " + new Certify.Management.Util().GetAppVersion();
 
-        private Version GetAppVersion()
-        {
-            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            var v = assembly.GetName().Version;
-            return v;
+            if (this.MainViewModel.IsRegisteredVersion)
+            {
+                this.Register.IsEnabled = false;
+                this.ValidateKey.IsEnabled = false;
+
+                this.lblRegistrationType.Text = "Registered Version";
+                this.lblRegistrationDetails.Text = "";
+            }
         }
 
         private async void UpdateCheck_Click(object sender, RoutedEventArgs e)
@@ -47,8 +57,7 @@ namespace Certify.UI.Controls
 
         private async Task PerformCheckForUpdates(bool silent)
         {
-            var v = GetAppVersion();
-            var updateCheck = await new Util().CheckForUpdates(v);
+            var updateCheck = await new Util().CheckForUpdates();
 
             if (updateCheck != null)
             {
@@ -73,7 +82,26 @@ namespace Certify.UI.Controls
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Process.Start("https://certify.webprofusion.com/register");
+            System.Diagnostics.Process.Start("https://certifytheweb.com/register");
+        }
+
+        private void Button_ApplyRegistrationKey(object sender, RoutedEventArgs e)
+        {
+            var d = new Windows.Registration { Owner = Window.GetWindow(this) };
+            d.ShowDialog();
+
+            d.Unloaded += ApplyRegistration_Completed;
+        }
+
+        private void ApplyRegistration_Completed(object sender, EventArgs e)
+        {
+            //refresh registration status TODO: main window title
+            PopulateAppInfo();
+        }
+
+        private void Help_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://certifytheweb.com");
         }
     }
 }

@@ -1,0 +1,20 @@
+﻿<Controls:MetroWindow x:Class="Certify.UI.Windows.Registration"
+        xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Certify.UI.Windows"
+        mc:Ignorable="d"
+        Title="Registration" Height="201.6" Width="363.6"
+                       GlowBrush="{DynamicResource AccentColorBrush}"
+        BorderThickness="1" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner">
+    <Grid Margin="0,0,0,-19">
+        <Button x:Name="ValidateKey" Content="Validate Key" HorizontalAlignment="Left" Margin="228,137,0,0" VerticalAlignment="Top" Width="112" Click="ValidateKey_Click" />
+        <Label Content="Registered Email Address" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" />
+        <TextBox x:Name="EmailAddress" HorizontalAlignment="Left" Height="23" Margin="34,35,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="306" />
+        <Label Content="License Key" HorizontalAlignment="Left" Margin="10,66,0,0" VerticalAlignment="Top" Height="26" Width="108" />
+        <TextBox x:Name="LicenseKey" HorizontalAlignment="Left" Height="23" Margin="34,97,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="306" />
+        <Button x:Name="Cancel" Content="Cancel" HorizontalAlignment="Left" Margin="34,137,0,0" VerticalAlignment="Top" Width="75" Click="Cancel_Click" />
+    </Grid>
+</Controls:MetroWindow>

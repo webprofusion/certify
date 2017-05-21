@@ -23,8 +23,8 @@ namespace Certify.UI
         public enum PrimaryUITabs
         {
             ManagedItems = 0,
-            Vault = 1,
-            CurrentProgress = 2
+
+            CurrentProgress = 1
         }
 
         protected Certify.UI.ViewModel.AppModel MainViewModel
@@ -48,9 +48,15 @@ namespace Certify.UI
         private void Button_NewCertificate(object sender, RoutedEventArgs e)
         {
             //present new managed item (certificate request) UI
+            if (!MainViewModel.IsRegisteredVersion && MainViewModel.ManagedSites != null && MainViewModel.ManagedSites.Count >= 5)
+            {
+                MessageBox.Show("You are using the trial version of this app. Please purchase a registration key to upgrade. See the Register option on the About tab.");
+                return;
+            }
 
             //select tab Managed Items
-            this.MainTabControl.TabIndex = (int)PrimaryUITabs.ManagedItems;
+            MainViewModel.MainUITabIndex = (int)PrimaryUITabs.ManagedItems;
+
             MainViewModel.SelectedItem = new Certify.Models.ManagedSite { Name = "New Managed Certificate" };
         }
 
@@ -89,6 +95,11 @@ namespace Certify.UI
                 var d = new Windows.ImportManagedSites { Owner = this };
                 d.ShowDialog();
             }
+
+            if (!MainViewModel.IsRegisteredVersion)
+            {
+                this.Title += " [Free Trial Version]";
+            }
         }
 
         private void MetroWindow_ContentRendered(object sender, EventArgs e)
@@ -99,6 +110,19 @@ namespace Certify.UI
                 MessageBox.Show("Get started by registering a new contact, then you can start requesting certificates.");
                 var d = new Windows.EditContactDialog { Owner = this };
                 d.ShowDialog();
+            }
+        }
+
+        private void ButtonUpdateAvailable_Click(object sender, RoutedEventArgs e)
+        {
+            if (MainViewModel.UpdateCheckResult != null)
+            {
+                var gotoDownload = MessageBox.Show(MainViewModel.UpdateCheckResult.Message.Body + "\r\nVisit download page now?", Core.Properties.Resources.AppName, MessageBoxButton.YesNo);
+                if (gotoDownload == MessageBoxResult.Yes)
+                {
+                    System.Diagnostics.ProcessStartInfo sInfo = new System.Diagnostics.ProcessStartInfo(MainViewModel.UpdateCheckResult.Message.DownloadPageURL);
+                    System.Diagnostics.Process.Start(sInfo);
+                }
             }
         }
     }

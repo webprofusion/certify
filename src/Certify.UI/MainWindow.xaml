@@ -11,8 +11,16 @@
         GlowBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1"
         mc:Ignorable="d"
-        Title="Certify the web - SSL Certificate Management" WindowTransitionsEnabled="False" TitleCaps="False" Height="668" Width="1120" WindowStyle="ToolWindow" Loaded="MetroWindow_Loaded" ContentRendered="MetroWindow_ContentRendered">
+        Title="Certify SSL Certificate Management" WindowTransitionsEnabled="False" TitleCaps="False" Height="668" Width="1120" WindowStyle="ToolWindow" Loaded="MetroWindow_Loaded" ContentRendered="MetroWindow_ContentRendered">
+    <Controls:MetroWindow.Resources>
 
+        <ResourceDictionary>
+            <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Dragablz;component/Themes/mahapps.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Controls:MetroWindow.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="56"></RowDefinition>
@@ -38,6 +46,14 @@
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Configure Auto Renew" /></TextBlock>
                 </StackPanel>
             </Button>
+            <StackPanel Orientation="Horizontal" Visibility="{Binding IsUpdateAvailable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                <Button x:Name="ButtonUpdateAvailable" Height="32" Margin="8,0,0,5" Background="GreenYellow" Click="ButtonUpdateAvailable_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <fa:ImageAwesome Icon="Superpowers" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Update Available" /></TextBlock>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
         </StackPanel>
 
         <dragablz:TabablzControl x:Name="MainTabControl" Grid.Row="1" Margin="8,8,8,8" BorderThickness="0"
@@ -46,9 +62,9 @@
             <TabItem Header="Managed Sites" IsSelected="True">
                 <Controls1:ManagedSites Width="Auto" Height="Auto" />
             </TabItem>
-            <TabItem Header="Vault" VerticalContentAlignment="Stretch" HorizontalAlignment="Left" HorizontalContentAlignment="Left">
+            <!--<TabItem Header="Vault" VerticalContentAlignment="Stretch" HorizontalAlignment="Left" HorizontalContentAlignment="Left">
                 <Controls1:VaultExplorer Width="Auto" Height="Auto" />
-            </TabItem>
+            </TabItem>-->
             <TabItem Header="In Progress" VerticalContentAlignment="Stretch" HorizontalAlignment="Left" HorizontalContentAlignment="Left">
                 <Controls1:ProgressMonitor Width="Auto" Height="Auto" />
             </TabItem>

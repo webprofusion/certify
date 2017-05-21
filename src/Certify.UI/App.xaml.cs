@@ -1,4 +1,5 @@
 ﻿using MahApps.Metro;
+using Microsoft.ApplicationInsights;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -14,6 +15,8 @@ namespace Certify.UI
     /// </summary>
     public partial class App : Application
     {
+        private TelemetryClient tc = null;
+
         protected Certify.UI.ViewModel.AppModel MainViewModel
         {
             get
@@ -37,6 +40,47 @@ namespace Certify.UI
             base.OnStartup(e);
 
             MainViewModel.LoadSettings();
+
+            //check version capabilities
+            MainViewModel.PluginManager = new Management.PluginManager();
+
+            MainViewModel.PluginManager.LoadPlugins();
+
+            var licensingManager = MainViewModel.PluginManager.LicensingManager;
+            if (licensingManager != null)
+            {
+                if (licensingManager.IsInstallRegistered(ViewModel.AppModel.ProductTypeId, Certify.Management.Util.GetAppDataFolder()))
+                {
+                    MainViewModel.IsRegisteredVersion = true;
+                }
+            }
+
+            //check for updates and report result to view model
+            Task.Run(async () =>
+            {
+                var updateCheck = await new Certify.Management.Util().CheckForUpdates();
+                if (updateCheck != null && updateCheck.IsNewerVersion)
+                {
+                    MainViewModel.IsUpdateAvailable = true;
+                    MainViewModel.UpdateCheckResult = updateCheck;
+                }
+            });
+
+            //init telemetry if enabled
+            InitTelemetry();
+        }
+
+        private void InitTelemetry()
+        {
+            if (Certify.Properties.Settings.Default.EnableAppTelematics)
+            {
+                tc = new Certify.Management.Util().InitTelemetry();
+                tc.TrackEvent("Start");
+            }
+            else
+            {
+                tc = null;
+            }
         }
     }
 }

@@ -81,7 +81,7 @@ namespace Certify.Management
             return result.OrderBy(s => s.SiteName).ToList();
         }
 
-        public List<SiteBindingItem> GetSiteBindingList(bool includeOnlyStartedSites)
+        public List<SiteBindingItem> GetSiteBindingList(bool includeOnlyStartedSites, string siteId = null)
         {
             var result = new List<SiteBindingItem>();
             try
@@ -90,6 +90,7 @@ namespace Certify.Management
                 {
                     var sites = GetSites(iisManager, includeOnlyStartedSites);
 
+                    if (siteId != null) sites = sites.Where(s => s.Id.ToString() == siteId);
                     foreach (var site in sites)
                     {
                         foreach (var binding in site.Bindings.OrderByDescending(b => b?.EndPoint?.Port))
@@ -268,8 +269,12 @@ namespace Certify.Management
                         }
                         else
                         {
-                            //TODO: make use SNI optional in request config.
-                            InstallCertificateforBinding(site, storedCert, hostname, sslPort: !String.IsNullOrEmpty(requestConfig.BindingPort) ? int.Parse(requestConfig.BindingPort) : 443, useSNI: true, ipAddress: requestConfig.BindingIPAddress);
+                            //if any binding elements configured, use those, otherwise auto bind using defaults and SNI
+                            InstallCertificateforBinding(site, storedCert, hostname,
+                                sslPort: !String.IsNullOrEmpty(requestConfig.BindingPort) ? int.Parse(requestConfig.BindingPort) : 443,
+                                useSNI: (requestConfig.BindingUseSNI != null ? (bool)requestConfig.BindingUseSNI : true),
+                                ipAddress: requestConfig.BindingIPAddress
+                                );
                         }
                     }
                 }

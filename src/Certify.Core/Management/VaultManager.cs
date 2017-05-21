@@ -44,6 +44,7 @@ namespace Certify
 
         public VaultManager(string vaultFolderPath, string vaultFilename)
         {
+            Certify.Management.Util.SetSupportedTLSVersions();
             this.vaultFolderPath = vaultFolderPath;
             this.vaultFilename = vaultFilename;
 
@@ -441,9 +442,18 @@ namespace Certify
             }
         }
 
-        public void AddNewRegistrationAndAcceptTOS(string contact)
+        public bool AddNewRegistrationAndAcceptTOS(string contact)
         {
-            ACMESharpUtils.NewRegistration(null, new string[] { contact }, acceptTOS: true);
+            try
+            {
+                ACMESharpUtils.NewRegistration(null, new string[] { contact }, acceptTOS: true);
+                return true;
+            }
+            catch (System.Net.WebException exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.ToString());
+                return false;
+            }
         }
 
         public bool DeleteRegistrationInfo(Guid id)
@@ -624,7 +634,9 @@ namespace Certify
         public PendingAuthorization PerformIISAutomatedChallengeResponse(CertRequestConfig requestConfig, PendingAuthorization pendingAuth)
         {
             bool extensionlessConfigOK = false;
-            bool checkViaProxy = true;
+
+            //if validation proxy enabled, access to the domain being validated is checked via our remote API rather than directly on the servers
+            bool checkViaProxy = Certify.Properties.Settings.Default.EnableValidationProxyAPI;
 
             //if copying the file for the user, attempt that now
             if (pendingAuth.Challenge != null && requestConfig.PerformChallengeFileCopy)
