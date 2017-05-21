@@ -42,6 +42,7 @@ namespace Certify.UI.Windows
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
+            Mouse.OverrideCursor = Cursors.Arrow;
             this.Close();
         }
 
@@ -73,7 +74,7 @@ namespace Certify.UI.Windows
 
             if (Item.AgreedToTermsAndConditions)
             {
-                Cursor = Cursors.Wait;
+                Mouse.OverrideCursor = Cursors.Wait;
                 if (MainViewModel.AddContactCommand.CanExecute((Item)))
                 {
                     Application.Current.Dispatcher.BeginInvoke(new Action(
@@ -82,7 +83,7 @@ namespace Certify.UI.Windows
                             MainViewModel.AddContactCommand.Execute(Item);
                         }));
 
-                    Cursor = Cursors.Arrow;
+                    Mouse.OverrideCursor = Cursors.Arrow;
                     this.Close();
                 }
             }
