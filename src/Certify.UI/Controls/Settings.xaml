@@ -22,6 +22,7 @@
             <CheckBox x:Name="CheckForUpdatesCheckbox" Content="Check for updates automatically" Checked="SettingsUpdated" Unchecked="SettingsUpdated" />
             <CheckBox x:Name="EnableTelematicsCheckbox" Content="Enable app telemetry (feature usage reporting)" Unchecked="SettingsUpdated" Checked="SettingsUpdated" />
             <CheckBox x:Name="EnableProxyAPICheckbox" Content="Enable proxy API for domain config checks" Unchecked="SettingsUpdated" Checked="SettingsUpdated" />
+            <CheckBox x:Name="EnableEFS" Content="Enable Encrypted File System (EFS) for sensitive files. This option does not work on all versions of Windows." Unchecked="SettingsUpdated" Checked="SettingsUpdated" />
         </StackPanel>
     </StackPanel>
 </UserControl>

@@ -113,7 +113,7 @@ namespace Certify.ACMESharpCompat
             }
         }
 
-        public static CertificateInfo SubmitCertificate(string certificateRef, string pkiTool = null, string vaultProfile = null)
+        public static CertificateInfo SubmitCertificate(string certificateRef, string pkiTool = null, string vaultProfile = null, bool protectSensitiveFileStorage = false)
         {
             bool force = false;
 
@@ -160,7 +160,7 @@ namespace Certify.ACMESharpCompat
                             var csrPemFile = $"{ci.Id}-csr.pem";
 
                             var keyGenAsset = vlt.CreateAsset(VaultAssetType.KeyGen, keyGenFile, getOrCreate: force);
-                            var keyPemAsset = vlt.CreateAsset(VaultAssetType.KeyPem, keyPemFile, isSensitive: true, getOrCreate: force);
+                            var keyPemAsset = vlt.CreateAsset(VaultAssetType.KeyPem, keyPemFile, isSensitive: protectSensitiveFileStorage, getOrCreate: force);
                             var csrGenAsset = vlt.CreateAsset(VaultAssetType.CsrGen, csrGenFile, getOrCreate: force);
                             var csrPemAsset = vlt.CreateAsset(VaultAssetType.CsrPem, csrPemFile, getOrCreate: force);
 

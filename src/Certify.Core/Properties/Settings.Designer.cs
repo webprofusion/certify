@@ -103,5 +103,17 @@ namespace Certify.Properties {
                 this["EnableValidationProxyAPI"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool EnableEFS {
+            get {
+                return ((bool)(this["EnableEFS"]));
+            }
+            set {
+                this["EnableEFS"] = value;
+            }
+        }
     }
 }

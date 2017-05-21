@@ -35,6 +35,8 @@ namespace Certify
 
         private readonly IdnMapping idnMapping = new IdnMapping();
 
+        public bool UseEFSForSensitiveFiles { get; set; } = false;
+
         public string VaultFolderPath
         {
             get { return vaultFolderPath; }
@@ -370,7 +372,7 @@ namespace Certify
         {
             try
             {
-                var result = ACMESharpUtils.SubmitCertificate(certAlias);
+                var result = ACMESharpUtils.SubmitCertificate(certAlias, protectSensitiveFileStorage: UseEFSForSensitiveFiles);
 
                 return new APIResult { IsOK = true, Result = result };
             }

@@ -190,6 +190,10 @@ namespace Certify.Management
                     {
                         vaultManager = GetVaultManager();
                     }
+
+                    //enable or disable EFS flag on private key certs based on preference
+                    vaultManager.UseEFSForSensitiveFiles = Properties.Settings.Default.EnableEFS;
+
                     //primary domain and each subject alternative name must now be registered as an identifier with LE and validated
 
                     if (progress != null) progress.Report(new RequestProgressState { IsRunning = true, CurrentState = RequestState.Running, Message = "Registering Domain Identifiers" });
