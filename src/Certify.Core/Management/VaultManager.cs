@@ -573,7 +573,7 @@ namespace Certify
                 ReloadVaultConfig();
             }
 
-            if (vaultConfig != null && vaultConfig.Identifiers != null)
+            if (vaultConfig != null && vaultConfig.Certificates != null)
             {
                 return vaultConfig.Certificates.Values.ToList();
             }
@@ -853,7 +853,7 @@ namespace Certify
             var checkUrl = url + "";
             if (useProxyAPI)
             {
-                url = "https://certify.webprofusion.com/api/testurlaccess?url=" + url;
+                url = Properties.Resources.APIBaseURI + "testurlaccess?url=" + url;
             }
             //check http request to test path works
             bool checkSuccess = false;

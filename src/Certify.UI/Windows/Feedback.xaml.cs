@@ -55,7 +55,7 @@ namespace Certify.UI.Windows
             Submit.IsEnabled = false;
 
             //submit feedback if connection available
-            var API_BASE_URI = "https://certifytheweb.com/api/";
+            var API_BASE_URI = Certify.Properties.Resources.APIBaseURI;
 
             //AppDomain.CurrentDomain.SetupInformation.ConfigurationFile
 
