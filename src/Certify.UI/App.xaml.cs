@@ -37,6 +37,10 @@ namespace Certify.UI
                                         ThemeManager.GetAccent("Green"),
                                         ThemeManager.GetAppTheme("BaseLight")); // or appStyle.Item1
 */
+
+            AppDomain currentDomain = AppDomain.CurrentDomain;
+            currentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
             base.OnStartup(e);
 
             MainViewModel.LoadSettings();
@@ -68,6 +72,18 @@ namespace Certify.UI
 
             //init telemetry if enabled
             InitTelemetry();
+        }
+
+        private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            var feedbackMsg = "";
+            if (e.ExceptionObject != null)
+            {
+                feedbackMsg = "An error occurred: " + ((Exception)e.ExceptionObject).ToString();
+            }
+
+            var d = new Windows.Feedback(feedbackMsg, isException: true);
+            d.ShowDialog();
         }
 
         private void InitTelemetry()

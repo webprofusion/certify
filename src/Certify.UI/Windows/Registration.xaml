@@ -7,7 +7,7 @@
         xmlns:local="clr-namespace:Certify.UI.Windows"
         mc:Ignorable="d"
         Title="Registration" Height="201.6" Width="363.6"
-                       GlowBrush="{DynamicResource AccentColorBrush}"
+        GlowBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner">
     <Grid Margin="0,0,0,-19">
         <Button x:Name="ValidateKey" Content="Validate Key" HorizontalAlignment="Left" Margin="228,137,0,0" VerticalAlignment="Top" Width="112" Click="ValidateKey_Click" />

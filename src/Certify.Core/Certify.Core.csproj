@@ -157,6 +157,7 @@
     <Compile Include="Models\ContactRegistration.cs" />
     <Compile Include="Models\Plugins\PluginInterfaces.cs" />
     <Compile Include="Models\RequestProgressState.cs" />
+    <Compile Include="Models\Shared\FeedbackReport.cs" />
     <Compile Include="Models\Shared\LicenseCheckResult.cs" />
     <Compile Include="Models\Shared\LicenseKeyInstallResult.cs" />
     <Compile Include="Models\UpdateMessage.cs" />
