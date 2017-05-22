@@ -214,4 +214,7 @@ This software uses the following Open Source software (or significant portions o
   &lt;/system.web&gt;
 &lt;/configuration&gt;</value>
   </data>
+  <data name="APIBaseURI" xml:space="preserve">
+    <value>https://certifytheweb.com/api/</value>
+  </data>
 </root>

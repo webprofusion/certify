@@ -35,6 +35,8 @@ namespace Certify
 
         private readonly IdnMapping idnMapping = new IdnMapping();
 
+        public bool UseEFSForSensitiveFiles { get; set; } = false;
+
         public string VaultFolderPath
         {
             get { return vaultFolderPath; }
@@ -370,7 +372,7 @@ namespace Certify
         {
             try
             {
-                var result = ACMESharpUtils.SubmitCertificate(certAlias);
+                var result = ACMESharpUtils.SubmitCertificate(certAlias, protectSensitiveFileStorage: UseEFSForSensitiveFiles);
 
                 return new APIResult { IsOK = true, Result = result };
             }
@@ -571,7 +573,7 @@ namespace Certify
                 ReloadVaultConfig();
             }
 
-            if (vaultConfig != null && vaultConfig.Identifiers != null)
+            if (vaultConfig != null && vaultConfig.Certificates != null)
             {
                 return vaultConfig.Certificates.Values.ToList();
             }
@@ -851,7 +853,7 @@ namespace Certify
             var checkUrl = url + "";
             if (useProxyAPI)
             {
-                url = "https://certify.webprofusion.com/api/testurlaccess?url=" + url;
+                url = Properties.Resources.APIBaseURI + "testurlaccess?url=" + url;
             }
             //check http request to test path works
             bool checkSuccess = false;

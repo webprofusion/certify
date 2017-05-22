@@ -70,6 +70,15 @@ namespace Certify.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to https://certifytheweb.com/api/.
+        /// </summary>
+        public static string APIBaseURI {
+            get {
+                return ResourceManager.GetString("APIBaseURI", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Certify SSL Manager (beta).
         /// </summary>
         public static string AppName {

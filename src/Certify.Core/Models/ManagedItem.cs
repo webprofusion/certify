@@ -61,7 +61,7 @@ namespace Certify.Models
         {
             //FIXME:
 
-            var logPath = Util.GetAppDataFolder() + "\\" + Util.APPDATASUBFOLDER + "\\log_" + managedItemId.Replace(':', '_') + ".txt";
+            var logPath = Util.GetAppDataFolder() + "\\logs\\log_" + managedItemId.Replace(':', '_') + ".txt";
 
             var log = new LoggerConfiguration()
                 .WriteTo.File(logPath, shared: true)

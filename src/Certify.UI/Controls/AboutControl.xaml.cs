@@ -103,5 +103,11 @@ namespace Certify.UI.Controls
         {
             System.Diagnostics.Process.Start("https://certifytheweb.com");
         }
+
+        private void Feedback_Click(object sender, RoutedEventArgs e)
+        {
+            var d = new Windows.Feedback("", false);
+            d.ShowDialog();
+        }
     }
 }
