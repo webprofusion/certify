@@ -26,9 +26,9 @@
             <RowDefinition Height="56"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
+        
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,8,8,8" VerticalAlignment="Top">
-
-            <Button Height="32" Margin="8,0,0,5" Click="Button_NewCertificate">
+            <Button Height="32" Margin="0,0,0,5" Click="Button_NewCertificate">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome Icon="Globe" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="New Certificate" /></TextBlock>
