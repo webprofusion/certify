@@ -124,15 +124,13 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public bool ShowOnlyStartedSites { get; set; } = false;
-
         public List<SiteBindingItem> WebSiteList
         {
             get
             {
                 //get list of sites from IIS
                 var iisManager = new IISManager();
-                return iisManager.GetPrimarySites(ShowOnlyStartedSites);
+                return iisManager.GetPrimarySites(Certify.Properties.Settings.Default.IgnoreStoppedSites);
             }
         }
 
@@ -505,35 +503,54 @@ namespace Certify.UI.ViewModel
             managedSite.DomainOptions = new List<DomainOption>();
 
             //for the given selected web site, allow the user to choose which domains to combine into one certificate
-            var allSites = new IISManager().GetSiteBindingList(false, siteId);
+
+            var defaultNoDomainHost = "(no domain binding)";
+            var allSites = new IISManager().GetSiteBindingList(Certify.Properties.Settings.Default.IgnoreStoppedSites, siteId);
             var domains = new List<DomainOption>();
             foreach (var d in allSites)
             {
                 if (d.SiteId == siteId)
                 {
-                    DomainOption opt = new DomainOption { Domain = d.Host, IsPrimaryDomain = false, IsSelected = true };
-                    domains.Add(opt);
+                    //if domain not currently in the list of options, add it
+                    if (!domains.Any(item => item.Domain == d.Host))
+                    {
+                        DomainOption opt = new DomainOption
+                        {
+                            Domain = d.Host,
+                            IsPrimaryDomain = false,
+                            IsSelected = true
+                        };
+                        if (String.IsNullOrEmpty(opt.Domain)) opt.Domain = defaultNoDomainHost;
+
+                        domains.Add(opt);
+                    }
                 }
             }
 
-            if (domains.Any())
+            //TODO: if one or more binding is to a specific IP, how to manage in UI?
+
+            if (domains.Any(d => !String.IsNullOrEmpty(d.Domain)))
             {
-                //mark first domain as primary, if we have no other settings
+                // mark first domain as primary, if we have no other settings
                 if (!domains.Any(d => d.IsPrimaryDomain == true))
                 {
-                    domains[0].IsPrimaryDomain = true;
+                    var electableDomains = domains.Where(d => !String.IsNullOrEmpty(d.Domain) && d.Domain != defaultNoDomainHost);
+                    if (electableDomains.Any())
+                    {
+                        // promote first domain in list to primary by default
+                        electableDomains.First().IsPrimaryDomain = true;
+                    }
                 }
 
                 managedSite.DomainOptions = domains;
 
                 //MainViewModel.EnsureNotifyPropertyChange(nameof(MainViewModel.PrimarySubjectDomain));
             }
-            else
+
+            if (!domains.Any(d => d.Domain != defaultNoDomainHost))
             {
-                //TODO: command to show error in UI
                 ValidationError = "The selected site has no domain bindings setup. Configure the domains first using Edit Bindings in IIS.";
             }
-
             //TODO: load settings from previously saved managed site?
             RaisePropertyChanged(nameof(PrimarySubjectDomain));
         }

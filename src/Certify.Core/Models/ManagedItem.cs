@@ -229,5 +229,7 @@ namespace Certify.Models
         public string Protocol { get; set; }
         public int Port { get; set; }
         public bool HasCertificate { get; set; }
+
+        public bool IsEnabled { get; set; }
     }
 }

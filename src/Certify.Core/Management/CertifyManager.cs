@@ -432,7 +432,7 @@ namespace Certify.Management
             var iisManager = new IISManager();
 
             var identifiers = vaultManager.GetIdentifiers();
-            var iisSites = iisManager.GetSiteBindingList(includeOnlyStartedSites: false);
+            var iisSites = iisManager.GetSiteBindingList(ignoreStoppedSites: Certify.Properties.Settings.Default.IgnoreStoppedSites);
             foreach (var identifier in identifiers)
             {
                 //identify IIS site related to this identifier (if any)
