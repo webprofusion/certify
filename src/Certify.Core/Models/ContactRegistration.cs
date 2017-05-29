@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 namespace Certify.Models
 {
-    [ImplementPropertyChanged]
     public class ContactRegistration
     {
         public string EmailAddress { get; set; }

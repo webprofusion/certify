@@ -178,6 +178,8 @@ namespace Certify.Management
 
         public async Task<CertificateRequestResult> PerformCertificateRequest(VaultManager vaultManager, ManagedSite managedSite, IProgress<RequestProgressState> progress = null)
         {
+            // FIXME: refactor into different concerns, there's way to much being done here
+
             return await Task.Run(async () =>
             {
                 try
@@ -241,7 +243,9 @@ namespace Certify.Management
                                 identifierAlreadyValid = true;
                             }
 
-                            // managedSite.AppendLog(new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestStarted, Message = "Attempting Certificate Request: " + managedSite.SiteType });
+                            // managedSite.AppendLog(new ManagedSiteLogItem { EventDate =
+                            // DateTime.UtcNow, LogItemType = LogItemType.CertificateRequestStarted,
+                            // Message = "Attempting Certificate Request: " + managedSite.SiteType });
                             System.Diagnostics.Debug.WriteLine("Reusing existing valid non-expired identifier for the domain " + domain);
                         }
 
@@ -432,7 +436,7 @@ namespace Certify.Management
             var iisManager = new IISManager();
 
             var identifiers = vaultManager.GetIdentifiers();
-            var iisSites = iisManager.GetSiteBindingList(includeOnlyStartedSites: false);
+            var iisSites = iisManager.GetSiteBindingList(ignoreStoppedSites: Certify.Properties.Settings.Default.IgnoreStoppedSites);
             foreach (var identifier in identifiers)
             {
                 //identify IIS site related to this identifier (if any)
@@ -596,7 +600,8 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Creates the windows scheduled task to perform renewals, running as the given userid (who should be admin level so they can perform cert mgmt and IIS management functions)
+        /// Creates the windows scheduled task to perform renewals, running as the given userid (who
+        /// should be admin level so they can perform cert mgmt and IIS management functions)
         /// </summary>
         /// <param name="userId"></param>
         /// <param name="pwd"></param>

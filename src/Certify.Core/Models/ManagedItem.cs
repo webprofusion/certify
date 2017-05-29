@@ -79,7 +79,6 @@ namespace Certify.Models
         }
     }
 
-    [ImplementPropertyChanged]
     public class BindableBase : INotifyPropertyChanged
     {
         /// <summary>
@@ -156,7 +155,8 @@ namespace Certify.Models
         }
 
         /// <summary>
-        /// If true, the auto renewal process will include this item in attempted renewal operations if applicable
+        /// If true, the auto renewal process will include this item in attempted renewal operations
+        /// if applicable
         /// </summary>
         public bool IncludeInAutoRenew { get; set; }
 
@@ -197,7 +197,8 @@ namespace Certify.Models
         public bool IsPrimaryCertificateDomain { get; set; }
 
         /// <summary>
-        /// For SAN certificates, indicate if this name is an alternative name to be associated with a primary domain certificate
+        /// For SAN certificates, indicate if this name is an alternative name to be associated with
+        /// a primary domain certificate
         /// </summary>
         public bool IsSubjectAlternativeName { get; set; }
     }
@@ -229,5 +230,7 @@ namespace Certify.Models
         public string Protocol { get; set; }
         public int Port { get; set; }
         public bool HasCertificate { get; set; }
+
+        public bool IsEnabled { get; set; }
     }
 }

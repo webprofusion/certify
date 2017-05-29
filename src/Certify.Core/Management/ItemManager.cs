@@ -79,7 +79,7 @@ namespace Certify.Management
             {
                 try
                 {
-                    var iisSites = new IISManager().GetSiteBindingList(includeOnlyStartedSites: true).OrderBy(s => s.SiteId).ThenBy(s => s.Host);
+                    var iisSites = new IISManager().GetSiteBindingList(ignoreStoppedSites: Certify.Properties.Settings.Default.IgnoreStoppedSites).OrderBy(s => s.SiteId).ThenBy(s => s.Host);
 
                     var siteIds = iisSites.GroupBy(x => x.SiteId);
 
@@ -90,7 +90,7 @@ namespace Certify.Management
                         managedSite.TargetHost = "localhost";
                         managedSite.Name = iisSites.First(i => i.SiteId == s.Key).SiteName;
 
-                        //TODO: replace sute binding with domain options
+                        //TODO: replace site binding with domain options
                         //managedSite.SiteBindings = new List<ManagedSiteBinding>();
 
                         foreach (var binding in s)
