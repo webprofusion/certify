@@ -39,6 +39,7 @@ namespace Certify.UI.Controls
             this.CheckForUpdatesCheckbox.IsChecked = Certify.Properties.Settings.Default.CheckForUpdatesAtStartup;
             this.EnableTelematicsCheckbox.IsChecked = Certify.Properties.Settings.Default.EnableAppTelematics;
             this.EnableProxyAPICheckbox.IsChecked = Certify.Properties.Settings.Default.EnableValidationProxyAPI;
+            this.IgnoreStoppedSites.IsChecked = Certify.Properties.Settings.Default.IgnoreStoppedSites;
 
             //if true, EFS will be used for sensitive files such as private key file, does not work in all versions of windows.
             this.EnableEFS.IsChecked = Certify.Properties.Settings.Default.EnableEFS;
@@ -67,6 +68,7 @@ namespace Certify.UI.Controls
                 Certify.Properties.Settings.Default.EnableValidationProxyAPI = (this.EnableProxyAPICheckbox.IsChecked == true);
 
                 Certify.Properties.Settings.Default.EnableEFS = (this.EnableEFS.IsChecked == true);
+                Certify.Properties.Settings.Default.IgnoreStoppedSites = (this.IgnoreStoppedSites.IsChecked == true);
                 ///
                 //save
                 Certify.Properties.Settings.Default.Save();

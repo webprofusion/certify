@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace Certify.Models
 {
-    [ImplementPropertyChanged]
     public class DomainOption
     {
         public bool IsChanged { get; set; }

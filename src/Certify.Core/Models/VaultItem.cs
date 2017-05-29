@@ -22,7 +22,6 @@ namespace Certify.Models
     {
     }
 
-    [ImplementPropertyChanged]
     public class VaultItem
     {
         public string Id { get; set; }

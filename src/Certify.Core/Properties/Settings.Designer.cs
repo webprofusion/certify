@@ -115,5 +115,17 @@ namespace Certify.Properties {
                 this["EnableEFS"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool IgnoreStoppedSites {
+            get {
+                return ((bool)(this["IgnoreStoppedSites"]));
+            }
+            set {
+                this["IgnoreStoppedSites"] = value;
+            }
+        }
     }
 }
