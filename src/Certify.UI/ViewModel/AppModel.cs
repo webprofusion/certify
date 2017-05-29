@@ -13,7 +13,6 @@ using System.Windows.Input;
 
 namespace Certify.UI.ViewModel
 {
-    [ImplementPropertyChanged]
     public class AppModel : BindableBase
     {
         /// <summary>

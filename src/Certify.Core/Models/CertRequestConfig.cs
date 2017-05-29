@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace Certify.Models
 {
-    [ImplementPropertyChanged]
     public class CertRequestConfig : BindableBase
     {
         /// <summary>
@@ -37,17 +36,20 @@ namespace Certify.Models
         public string BindingPort { get; set; }
 
         /// <summary>
-        /// Optionally use SNI when creating bindings (the default us to PerformAutomatedCertBinding, which also uses SNI)
+        /// Optionally use SNI when creating bindings (the default us to PerformAutomatedCertBinding,
+        /// which also uses SNI)
         /// </summary>
         public bool? BindingUseSNI { get; set; }
 
         /// <summary>
-        /// If true, this request requires a challenge file copy as part of the web applications content, usually to /.well-known/acme-challenge/
+        /// If true, this request requires a challenge file copy as part of the web applications
+        /// content, usually to /.well-known/acme-challenge/
         /// </summary>
         public bool PerformChallengeFileCopy { get; set; }
 
         /// <summary>
-        /// If true, perform an automated check that the web host is configured to respond to extensionless file requests
+        /// If true, perform an automated check that the web host is configured to respond to
+        /// extensionless file requests
         /// </summary>
         public bool PerformExtensionlessConfigChecks { get; set; }
 
@@ -57,12 +59,14 @@ namespace Certify.Models
         public bool PerformAutoConfig { get; set; }
 
         /// <summary>
-        /// If true, automatically add/remove SSL certificate to store and create or update SSL certificate bindings in web host
+        /// If true, automatically add/remove SSL certificate to store and create or update SSL
+        /// certificate bindings in web host
         /// </summary>
         public bool PerformAutomatedCertBinding { get; set; }
 
         /// <summary>
-        /// If true, indicates that Certify should attempt to send failure notifications if an automated renewal request fails
+        /// If true, indicates that Certify should attempt to send failure notifications if an
+        /// automated renewal request fails
         /// </summary>
         public bool EnableFailureNotifications { get; set; }
 
