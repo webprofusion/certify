@@ -4,11 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:Certify.UI.Controls"
+       xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
              xmlns:fa="http://schemas.fontawesome.io/icons/" xmlns:ViewModel="clr-namespace:Certify.UI.ViewModel" x:Class="Certify.UI.Controls.Settings"
              mc:Ignorable="d" Height="292.857" Width="525">
 
     <StackPanel Orientation="Vertical" Margin="0,8,0,16">
-        <StackPanel Orientation="Horizontal" Margin="0,0,10,0" Height="32">
+        <StackPanel Orientation="Horizontal" Margin="8,0,10,0" Height="32">
             <Label Content="Primary Contact:" />
             <Label Content="{Binding PrimaryContactEmail}" />
             <Button Click="Button_NewContact" Margin="16,0,0,0">
@@ -19,11 +20,15 @@
             </Button>
         </StackPanel>
         <StackPanel Orientation="Vertical" Margin="8,0,10,0">
-            <CheckBox x:Name="CheckForUpdatesCheckbox" Content="Check for updates automatically" Checked="SettingsUpdated" Unchecked="SettingsUpdated" />
-            <CheckBox x:Name="EnableTelematicsCheckbox" Content="Enable app telemetry (feature usage reporting)" Unchecked="SettingsUpdated" Checked="SettingsUpdated" />
-            <CheckBox x:Name="EnableProxyAPICheckbox" Content="Enable proxy API for domain config checks" Unchecked="SettingsUpdated" Checked="SettingsUpdated" />
-            <CheckBox x:Name="EnableEFS" Content="Enable Encrypted File System (EFS) for sensitive files. This option does not work on all versions of Windows." Unchecked="SettingsUpdated" Checked="SettingsUpdated" />
-            <CheckBox x:Name="IgnoreStoppedSites" Content="Ignore stopped IIS sites" Unchecked="SettingsUpdated" Checked="SettingsUpdated" />
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,16">
+                <Label Content="Auto Renewal Interval (Days)" />
+                <Controls:NumericUpDown x:Name="RenewalIntervalDays" Minimum = "1"  Maximum = "60" Interval = "1" Width="100" ValueChanged="RenewalIntervalDays_ValueChanged" />
+            </StackPanel>
+            <CheckBox x:Name="CheckForUpdatesCheckbox" Content="Check for updates automatically" Checked="SettingsUpdated" Unchecked="SettingsUpdated" Margin="0,4,0,0" />
+            <CheckBox x:Name="EnableTelematicsCheckbox" Content="Enable app telemetry (feature usage reporting)" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
+            <CheckBox x:Name="EnableProxyAPICheckbox" Content="Enable proxy API for domain config checks" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
+            <CheckBox x:Name="EnableEFS" Content="Enable Encrypted File System (EFS) for sensitive files. This option does not work on all versions of Windows." Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
+            <CheckBox x:Name="IgnoreStoppedSites" Content="Ignore stopped IIS sites for new certificates and renewals" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
         </StackPanel>
     </StackPanel>
 </UserControl>

@@ -57,7 +57,7 @@ namespace Certify.UI
             //select tab Managed Items
             MainViewModel.MainUITabIndex = (int)PrimaryUITabs.ManagedItems;
 
-            MainViewModel.SelectedItem = new Certify.Models.ManagedSite { Name = "New Managed Certificate" };
+            MainViewModel.SelectedItem = new Certify.Models.ManagedSite();
         }
 
         private void Button_RenewAll(object sender, RoutedEventArgs e)
@@ -68,7 +68,8 @@ namespace Certify.UI
                 MainViewModel.MainUITabIndex = (int)PrimaryUITabs.CurrentProgress;
 
                 bool autoRenewalsOnly = true;
-                // renewals is a long running process so we need to run renewals process in the background and present UI to show progress.
+                // renewals is a long running process so we need to run renewals process in the
+                // background and present UI to show progress.
                 // TODO: We should prevent starting the renewals process if it is currently in progress.
                 if (MainViewModel.RenewAllCommand.CanExecute(autoRenewalsOnly))
                 {

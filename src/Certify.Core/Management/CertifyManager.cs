@@ -15,11 +15,6 @@ namespace Certify.Management
         private const string SCHEDULED_TASK_NAME = "Certify Maintenance Task";
         private const string SCHEDULED_TASK_EXE = "certify.exe";
         private const string SCHEDULED_TASK_ARGS = "renew";
-#if DEBUG
-        private const int RENEWAL_THRESHOLD_DAYS = 0;
-#else
-        private const int RENEWAL_THRESHOLD_DAYS = 7;
-#endif
 
         public CertifyManager()
         {
@@ -138,6 +133,15 @@ namespace Certify.Management
                 System.Threading.Thread.Sleep(500);
                 return new CertificateRequestResult { };
             });
+        }
+
+        public void DeleteManagedSite(string id)
+        {
+            var site = siteManager.GetManagedSite(id);
+            if (site != null)
+            {
+                this.siteManager.DeleteManagedSite(site);
+            }
         }
 
         public bool AddRegisteredContact(ContactRegistration reg)
@@ -522,15 +526,31 @@ namespace Certify.Management
                 sites = sites.Where(s => s.IncludeInAutoRenew == true);
             }
 
-            //check site list and examine current certificates. If certificate is less than 7 days old, don't attempt to renew it
+            //check site list and examine current certificates. If certificate is less than n days old, don't attempt to renew it
             var sitesToRenew = new List<ManagedSite>();
+            var renewalIntervalDays = Properties.Settings.Default.RenewalIntervalDays;
+
+#if DEBUG
+            //in debug mode we renew every time instead of skipping based on days old
+            renewalIntervalDays = 0;
+#endif
 
             var renewalTasks = new List<Task<CertificateRequestResult>>();
             foreach (var s in sites.Where(s => s.IncludeInAutoRenew == true))
             {
-                //if we know the last renewal date, check whether we shoudl renew again, otherwise assume it's more than 30 days ago by default and attempt renewal
+                //if we know the last renewal date, check whether we should renew again, otherwise assume it's more than 30 days ago by default and attempt renewal
                 var timeSinceLastRenewal = (s.DateRenewed != null ? s.DateRenewed : DateTime.Now.AddDays(-30)) - DateTime.Now;
-                if (Math.Abs(timeSinceLastRenewal.Value.TotalDays) > RENEWAL_THRESHOLD_DAYS)
+
+                bool isRenewalRequired = Math.Abs(timeSinceLastRenewal.Value.TotalDays) > renewalIntervalDays;
+                bool isSiteRunning = true;
+
+                //if we care about stopped sites being stopped, check for that
+                if (Properties.Settings.Default.IgnoreStoppedSites)
+                {
+                    isSiteRunning = IsManagedSiteRunning(s.Id);
+                }
+
+                if (isRenewalRequired && isSiteRunning)
                 {
                     //get matching progress tracker for this site
                     IProgress<RequestProgressState> tracker = null;
@@ -538,6 +558,7 @@ namespace Certify.Management
                     {
                         tracker = progressTrackers[s.Id];
                     }
+
                     if (testModeOnly)
                     {
                         //simulated request for UI testing
@@ -550,14 +571,22 @@ namespace Certify.Management
                 }
                 else
                 {
+                    var msg = "Skipping Renewal, existing certificate still OK. ";
+
+                    if (isRenewalRequired && !isSiteRunning)
+                    {
+                        //TODO: show this as warning rather than success
+                        msg = "Site stopped, renewal skipped as domain validation cannot be performed. ";
+                    }
+
                     if (progressTrackers != null)
                     {
                         //send progress back to report skip
                         var progress = (IProgress<RequestProgressState>)progressTrackers[s.Id];
-                        if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Success, Message = "Skipping Renewal, existing certificate still OK." });
+                        if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Success, Message = msg });
                     }
 
-                    ManagedSiteLog.AppendLog(s.Id, new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.GeneralInfo, Message = "Skipping Renewal, existing certificate still OK: " + s.Name });
+                    ManagedSiteLog.AppendLog(s.Id, new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.GeneralInfo, Message = msg + s.Name });
                 }
             }
 
@@ -583,6 +612,21 @@ namespace Certify.Management
                 }
 
                 return results;
+            }
+        }
+
+        private bool IsManagedSiteRunning(string id, IISManager iisManager = null)
+        {
+            var managedSite = siteManager.GetManagedSite(id);
+            if (managedSite != null)
+            {
+                if (iisManager == null) iisManager = new IISManager();
+                return iisManager.IsSiteRunning(id);
+            }
+            else
+            {
+                //site not identified, assume it is running
+                return true;
             }
         }
 
