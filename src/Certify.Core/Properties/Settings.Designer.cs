@@ -127,5 +127,17 @@ namespace Certify.Properties {
                 this["IgnoreStoppedSites"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("14")]
+        public int RenewalIntervalDays {
+            get {
+                return ((int)(this["RenewalIntervalDays"]));
+            }
+            set {
+                this["RenewalIntervalDays"] = value;
+            }
+        }
     }
 }

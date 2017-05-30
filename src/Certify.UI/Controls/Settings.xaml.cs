@@ -39,10 +39,12 @@ namespace Certify.UI.Controls
             this.CheckForUpdatesCheckbox.IsChecked = Certify.Properties.Settings.Default.CheckForUpdatesAtStartup;
             this.EnableTelematicsCheckbox.IsChecked = Certify.Properties.Settings.Default.EnableAppTelematics;
             this.EnableProxyAPICheckbox.IsChecked = Certify.Properties.Settings.Default.EnableValidationProxyAPI;
-            this.IgnoreStoppedSites.IsChecked = Certify.Properties.Settings.Default.IgnoreStoppedSites;
 
             //if true, EFS will be used for sensitive files such as private key file, does not work in all versions of windows.
             this.EnableEFS.IsChecked = Certify.Properties.Settings.Default.EnableEFS;
+            this.IgnoreStoppedSites.IsChecked = Certify.Properties.Settings.Default.IgnoreStoppedSites;
+
+            this.RenewalIntervalDays.Value = Certify.Properties.Settings.Default.RenewalIntervalDays;
 
             MainViewModel.LoadVaultTree();
             settingsInitialised = true;
@@ -69,10 +71,20 @@ namespace Certify.UI.Controls
 
                 Certify.Properties.Settings.Default.EnableEFS = (this.EnableEFS.IsChecked == true);
                 Certify.Properties.Settings.Default.IgnoreStoppedSites = (this.IgnoreStoppedSites.IsChecked == true);
+
+                // force renewal interval days to be between 1 and 60 days
+                if (this.RenewalIntervalDays.Value == null) this.RenewalIntervalDays.Value = 7;
+                if (this.RenewalIntervalDays.Value > 60) this.RenewalIntervalDays.Value = 60;
+                Certify.Properties.Settings.Default.RenewalIntervalDays = (int)this.RenewalIntervalDays.Value;
                 ///
                 //save
                 Certify.Properties.Settings.Default.Save();
             }
+        }
+
+        private void RenewalIntervalDays_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double?> e)
+        {
+            this.SettingsUpdated(sender, e);
         }
     }
 }

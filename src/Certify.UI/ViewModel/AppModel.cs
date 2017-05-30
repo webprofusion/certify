@@ -503,7 +503,7 @@ namespace Certify.UI.ViewModel
 
             //for the given selected web site, allow the user to choose which domains to combine into one certificate
 
-            var defaultNoDomainHost = "(no domain binding)";
+            var defaultNoDomainHost = "(default binding)";
             var allSites = new IISManager().GetSiteBindingList(Certify.Properties.Settings.Default.IgnoreStoppedSites, siteId);
             var domains = new List<DomainOption>();
             foreach (var d in allSites)
