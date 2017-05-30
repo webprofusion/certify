@@ -220,6 +220,22 @@ namespace Certify.Management
             }
         }
 
+        public bool IsSiteRunning(string id)
+        {
+            using (var iisManager = GetDefaultServerManager())
+            {
+                Site siteDetails = iisManager.Sites.FirstOrDefault(s => s.Id.ToString() == id);
+                if (siteDetails.State == ObjectState.Started)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
         #endregion IIS
 
         #region Certificates

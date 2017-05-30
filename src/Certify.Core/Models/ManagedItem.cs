@@ -142,8 +142,12 @@ namespace Certify.Models
     {
         public ManagedSite()
         {
+            this.Name = "New Managed Site";
+            this.IncludeInAutoRenew = true;
+
             this.DomainOptions = new List<DomainOption>();
             this.RequestConfig = new CertRequestConfig();
+            this.RequestConfig.EnableFailureNotifications = true;
 
             this.RequestConfig.PropertyChanged += RequestConfig_PropertyChanged;
         }
