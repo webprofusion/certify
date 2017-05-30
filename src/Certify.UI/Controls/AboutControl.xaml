@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:Certify.UI.Controls"
              mc:Ignorable="d" Height="359.514" Width="889.51" MinWidth="650">
-    <Grid Margin="0,0,11.6,10">
+    <Grid Margin="0,0,8,10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition></ColumnDefinition>
             <ColumnDefinition Width="190"></ColumnDefinition>
@@ -14,13 +14,13 @@
         <TextBlock x:Name="lblAppVersion" HorizontalAlignment="Left" Margin="10,35,0,0" TextWrapping="Wrap" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5" Height="16" Width="335"><Run Text="V2.0.201703" /><Run Text="27" /></TextBlock>
         <TextBlock x:Name="lblRegistrationType" HorizontalAlignment="Left" Margin="10,56,0,0" TextWrapping="Wrap" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5" Height="35" Width="335" Text="Not Registered" FontWeight="Bold" />
         <TextBlock x:Name="lblRegistrationDetails" Margin="10,123,9.6,0" TextWrapping="Wrap" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5" Height="64" FontSize="10"><Run Text="This version is free for evaluation" /><Run Text=" and is limited to managing up to 5 websites" /><Run Text=". " /><Run Text="To remove this limit " /><Run Text="please purchase a registration key. If you have previously " /><Run Text="donated " /><Run Text="please email apps@webprofusion.com with details of your sponsorship PayPal transaction to obtain a free key." /><Run Text=" This offer is also open to developers who have " /><Run Text="PRs accepted for " /><Run Text="this app on GitHub." /></TextBlock>
-        <TextBox HorizontalAlignment="Left" Margin="10,195,0,10" TextWrapping="Wrap" Text="Certify makes use of the following Open Source components:&#xD;&#xA;- ACMESharp&#xD;&#xA;- Newtonsoft Json.Net&#xD;&#xA;- Dragablz&#xD;&#xA;- Fontawesome.WPF&#xD;&#xA;- MahApps.Metro" Width="415" />
-        <Button Content="Check for Updates.." HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top" Width="161" Click="UpdateCheck_Click" Height="27" Grid.Column="1" />
-        <Button x:Name="Register" Content="Register" HorizontalAlignment="Left" Margin="0.4,105,0,0" VerticalAlignment="Top" Width="161" Height="27" Grid.Column="1" Click="Button_Click" />
+        <TextBlock TextWrapping="Wrap" Margin="10,195,286,28" Text="Certify makes use of the following Open Source components:&#xD;&#xA;- ACMESharp&#xD;&#xA;- Newtonsoft Json.Net&#xD;&#xA;- Dragablz&#xD;&#xA;- Fontawesome.WPF&#xD;&#xA;- MahApps.Metro"></TextBlock>
+        <Button Content="Check for Updates.." HorizontalAlignment="Right" Margin="0,10,0,0" VerticalAlignment="Top" Width="161" Click="UpdateCheck_Click" Height="27" Grid.Column="1" />
+        <Button x:Name="Register" Content="Register" HorizontalAlignment="Right" Margin="0.4,105,0,0" VerticalAlignment="Top" Width="161" Height="27" Grid.Column="1" Click="Button_Click" />
         <TextBlock x:Name="lblAbout" Margin="10,78,20,0" TextWrapping="Wrap" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5" Height="35"><Run Text="Copyright Webprofusion Pty Ltd 2017" /><LineBreak /><Run Text="https://certify" /><Run Text="theweb" /><Run Text=".com" /><LineBreak /><Run /></TextBlock>
         <TextBlock x:Name="lblAppTitle" HorizontalAlignment="Left" Margin="10,0,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="24" RenderTransformOrigin="0.5,0.5" Height="35" Width="335"><Run FontFamily="Segoe UI Semibold" Text="Certify " /><Run FontFamily="Segoe UI Semilight" Text="the web" /></TextBlock>
-        <Button x:Name="ValidateKey" Content="Enter Key.." HorizontalAlignment="Left" Margin="0.4,137,0,0" VerticalAlignment="Top" Width="161" Height="27" Grid.Column="1" Click="Button_ApplyRegistrationKey" />
-        <Button x:Name="Help" Content="Support" HorizontalAlignment="Left" Margin="0.4,42,0,0" VerticalAlignment="Top" Width="161" Height="27" Grid.Column="1" Click="Help_Click" />
-        <Button x:Name="Feedback" Content="Send Feedback" HorizontalAlignment="Left" Margin="0,195,0,0" VerticalAlignment="Top" Width="161" Height="27" Grid.Column="1" Click="Feedback_Click" />
+        <Button x:Name="ValidateKey" Content="Enter Key.." HorizontalAlignment="Right" Margin="0.4,137,0,0" VerticalAlignment="Top" Width="161" Height="27" Grid.Column="1" Click="Button_ApplyRegistrationKey" />
+        <Button x:Name="Help" Content="Support" HorizontalAlignment="Right" Margin="0.4,42,0,0" VerticalAlignment="Top" Width="161" Height="27" Grid.Column="1" Click="Help_Click" />
+        <Button x:Name="Feedback" Content="Send Feedback" HorizontalAlignment="Right" Margin="0,195,0,0" VerticalAlignment="Top" Width="161" Height="27" Grid.Column="1" Click="Feedback_Click" />
     </Grid>
 </UserControl>

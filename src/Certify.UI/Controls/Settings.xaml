@@ -13,7 +13,7 @@
             <Label Content="{Binding PrimaryContactEmail}" />
             <Button Click="Button_NewContact" Margin="16,0,0,0">
                 <StackPanel Orientation="Horizontal">
-                    <fa:ImageAwesome Icon="Flag" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <fa:ImageAwesome Icon="Flag" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource ButtonIcon}" />
                     <TextBlock Margin="6,0" VerticalAlignment="Center"><Run Text="New Contact" /></TextBlock>
                 </StackPanel>
             </Button>
