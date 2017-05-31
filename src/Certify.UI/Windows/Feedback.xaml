@@ -6,7 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Certify.UI.Windows"
         mc:Ignorable="d"
-        Title="Send Feedback" Height="333.8" Width="356.8"
+        Title="Send Feedback" Height="340.8" Width="356"
         GlowBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner" MinWidth="300" MinHeight="300">
     <Grid Margin="0,0,2,6.8">

@@ -8,6 +8,7 @@
         xmlns:local="clr-namespace:Certify.UI"
         xmlns:Controls1="clr-namespace:Certify.UI.Controls"
         xmlns:fa="http://schemas.fontawesome.io/icons/" x:Class="Certify.UI.MainWindow"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes" 
         GlowBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1"
         mc:Ignorable="d"
@@ -27,34 +28,38 @@
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,8,8,0" VerticalAlignment="Top">
-            <Button Height="32" Margin="0,0,0,0" Click="Button_NewCertificate" Style="{StaticResource MaterialDesignFlatButton}">
-                <StackPanel Orientation="Horizontal">
-                    <fa:ImageAwesome Icon="Certificate" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource ButtonIcon}" />
-                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="New Certificate" /></TextBlock>
-                </StackPanel>
-            </Button>
-            <Button Height="32" Margin="8,0,0,0" Click="Button_RenewAll" Style="{StaticResource MaterialDesignFlatButton}">
-                <StackPanel Orientation="Horizontal">
-                    <fa:ImageAwesome Icon="Refresh" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource ButtonIcon}" />
-                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Renew All" /></TextBlock>
-                </StackPanel>
-            </Button>
-            <Button Height="32" Margin="8,0,0,0" Click="Button_ScheduledTaskConfig" Style="{StaticResource MaterialDesignFlatButton}">
-                <StackPanel Orientation="Horizontal">
-                    <fa:ImageAwesome Icon="Calendar" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource ButtonIcon}" />
-                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Configure Auto Renew" /></TextBlock>
-                </StackPanel>
-            </Button>
-            <StackPanel Orientation="Horizontal" Visibility="{Binding IsUpdateAvailable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
-                <Button x:Name="ButtonUpdateAvailable" Height="32" Margin="8,0,0,0" Background="GreenYellow" Click="ButtonUpdateAvailable_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <fa:ImageAwesome Icon="Download" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource ButtonIcon}" />
-                        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Update Available" /></TextBlock>
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-        </StackPanel>
+        <DockPanel>
+            <materialDesign:ColorZone Grid.Row="0" Height="49" materialDesign:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryDark" DockPanel.Dock="Top">
+                <DockPanel>
+                        <Button Height="45" Margin="0" Click="Button_NewCertificate" Style="{StaticResource MaterialDesignFlatButton}">
+                            <StackPanel Orientation="Horizontal">
+                            <fa:ImageAwesome Icon="Globe"  Height="28" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource ButtonIcon}" />
+                                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Foreground="Black"><Run Text="New Certificate" /></TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <Button Height="45" Margin="0" Click="Button_RenewAll" Style="{StaticResource MaterialDesignFlatButton}">
+                            <StackPanel Orientation="Horizontal">
+                            <fa:ImageAwesome Icon="Refresh"  Height="28" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource ButtonIcon}" />
+                                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Foreground="Black"><Run Text="Renew All" /></TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <Button Height="45" Margin="8,0,0,0" Click="Button_ScheduledTaskConfig" Style="{StaticResource MaterialDesignFlatButton}">
+                            <StackPanel Orientation="Horizontal">
+                            <fa:ImageAwesome Icon="Calendar" Height="28" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource ButtonIcon}" />
+                                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Foreground="Black"><Run Text="Configure Auto Renew" /></TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <StackPanel Orientation="Horizontal" Visibility="{Binding IsUpdateAvailable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                            <Button x:Name="ButtonUpdateAvailable" Height="45" Margin="0" Background="GreenYellow" Click="ButtonUpdateAvailable_Click">
+                                <StackPanel Orientation="Horizontal">
+                                <fa:ImageAwesome Icon="Download"  Height="28" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource ButtonIcon}" />
+                                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Update Available" /></TextBlock>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                </DockPanel>
+            </materialDesign:ColorZone>
+        </DockPanel>
 
         <dragablz:TabablzControl x:Name="MainTabControl" Grid.Row="2" Margin="0" BorderThickness="0"
                                  SelectedIndex="{Binding MainUITabIndex}" HorizontalContentAlignment="Left" VerticalContentAlignment="Stretch" Height="auto">

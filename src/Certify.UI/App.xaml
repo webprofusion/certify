@@ -28,8 +28,8 @@
             
             <Style TargetType="{x:Type Controls:WindowButtonCommands}" BasedOn="{StaticResource MahApps.Metro.Styles.WindowButtonCommands.Win10}" />
             <Style TargetType="{x:Type dragablz:TabablzControl}" BasedOn="{StaticResource MaterialDesignTabablzControlStyle}" />
-            
-            <SolidColorBrush x:Key="ButtonIcon" Color="Green" />
+
+            <SolidColorBrush x:Key="ButtonIcon" Color="#FF2B2B2B" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
