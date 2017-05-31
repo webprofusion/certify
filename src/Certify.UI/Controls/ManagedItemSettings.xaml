@@ -13,7 +13,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="38"></RowDefinition>
-            <RowDefinition Height="32"></RowDefinition>
+            <RowDefinition Height="36"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
         <Grid.Resources>
@@ -24,38 +24,38 @@
             <Label Content="{Binding SelectedItem.Name}" Margin="8,0,0,2" FontSize="24" Foreground="{DynamicResource {x:Static SystemColors.ActiveCaptionTextBrushKey}}" FontFamily="Segoe UI Semilight" />
             <Label Content="{Binding ValidationError}" Margin="8,0,0,0" Foreground="#DDD30E0E" />
         </StackPanel>
-        <StackPanel Orientation="Horizontal" Height="32" Grid.Row="1">
+        <StackPanel Orientation="Horizontal" Height="36" Grid.Row="1">
 
-            <Button  IsEnabled="{Binding SelectedItem.IsChanged}" Click="Button_Save" Margin="8,0,0,0">
+            <Button IsEnabled="{Binding SelectedItem.IsChanged}" Click="Button_Save" Margin="8,0,0,0">
                 <StackPanel Orientation="Horizontal">
-                    <fa:ImageAwesome Icon="Save" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <fa:ImageAwesome Icon="Save" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource ButtonIcon}" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Save" /></TextBlock>
                 </StackPanel>
             </Button>
 
             <Button  IsEnabled="{Binding SelectedItem.IsChanged}" Click="Button_DiscardChanges" Margin="8,0,0,0">
                 <StackPanel Orientation="Horizontal">
-                    <fa:ImageAwesome Icon="Undo" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <fa:ImageAwesome Icon="Undo" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource ButtonIcon}" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Discard Changes" /></TextBlock>
                 </StackPanel>
             </Button>
 
             <Button Click="Button_Delete" Margin="8,0,0,0">
                 <StackPanel Orientation="Horizontal">
-                    <fa:ImageAwesome Icon="Trash" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <fa:ImageAwesome Icon="Trash" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource ButtonIcon}" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Delete" /></TextBlock>
                 </StackPanel>
             </Button>
 
-            <Button IsEnabled="{Binding IsSelectedItemValid}" Click="Button_RequestCertificate" Margin="16,0,0,0">
+            <Button IsEnabled="{Binding IsSelectedItemValid}" Click="Button_RequestCertificate" Margin="8,0,0,0">
                 <StackPanel Orientation="Horizontal">
-                    <fa:ImageAwesome Icon="Play" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <fa:ImageAwesome Icon="Send" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource ButtonIcon}" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Request Certificate" /></TextBlock>
                 </StackPanel>
             </Button>
         </StackPanel>
 
-        <dragablz:TabablzControl Margin="8" Grid.Row="2" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" SelectionChanged="TabablzControl_SelectionChanged">
+        <dragablz:TabablzControl Margin="8,4,8,8" Grid.Row="2" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" SelectionChanged="TabablzControl_SelectionChanged">
 
             <TabItem Header="Options" IsSelected="True">
 

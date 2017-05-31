@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Certify.UI.Windows"
                             xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         mc:Ignorable="d" TitleCaps="False" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner"
-        Title="Configure Auto Renewal" Height="222.689" Width="414.285"
+        Title="Configure Auto Renewal" Height="228" Width="416"
                        GlowBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1">
     <Grid>
