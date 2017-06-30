@@ -9,7 +9,7 @@ Features:
 - Auto renewal
 - SAN support (multi-domain certificates)
 
-![App Screenshot](https://certify.webprofusion.com/Content/images/screen3.png)
+![App Screenshot](https://certifytheweb.com/images/screen3.png)
 
 
 ----------
