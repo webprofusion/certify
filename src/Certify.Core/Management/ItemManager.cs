@@ -54,6 +54,16 @@ namespace Certify.Management
                 {
                     string configData = System.IO.File.ReadAllText(path);
                     this.ManagedSites = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ManagedSite>>(configData);
+
+                    //foreach managed site enable change notification for edits to domainoptions
+                    foreach(var s in this.ManagedSites)
+                    {
+                        foreach(var d in s.DomainOptions)
+                        {
+                            d.PropertyChanged += s.DomainOption_PropertyChanged;
+                            d.IsChanged = false;
+                        }
+                    }
                 }
             }
             else

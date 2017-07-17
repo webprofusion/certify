@@ -191,7 +191,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Utils\EnumConverter.cs" />
-    <Compile Include="Utils\OptionalBooleanToVisibilityConverter.cs" />
+    <Compile Include="Utils\BooleanConverters.cs" />
     <Compile Include="ViewModel\AppModel.cs" />
     <Compile Include="ViewModel\RelayCommand.cs" />
     <Compile Include="Windows\EditContactDialog.xaml.cs">

@@ -104,6 +104,21 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        public bool HasSelectedItemDomainOptions
+        {
+            get
+            {
+                if (SelectedItem != null && SelectedItem.DomainOptions != null && SelectedItem.DomainOptions.Any())
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
         public Certify.Models.ManagedSite SelectedItem { get; set; }
 
         public bool IsRegisteredVersion { get; set; }
@@ -181,9 +196,14 @@ namespace Certify.UI.ViewModel
         {
             if (SelectedItem != null)
             {
-                SelectedItem.IsChanged = false;
+                //mark all SelectedItem child items and main model as unchanged
+                foreach (var opt in SelectedItem.DomainOptions)
+                {
+                    opt.IsChanged = false;
+                }
+
                 SelectedItem.RequestConfig.IsChanged = false;
-                SelectedItem.DomainOptions.ForEach(d => d.IsChanged = false);
+                SelectedItem.IsChanged = false;
             }
 
             RaisePropertyChanged(nameof(SelectedItemHasChanges));
@@ -419,7 +439,10 @@ namespace Certify.UI.ViewModel
         {
             if (this.SelectedItem != null && this.SelectedItem.DomainOptions != null)
             {
-                this.SelectedItem.DomainOptions.ForEach(d => d.IsSelected = true);
+                foreach (var opt in this.SelectedItem.DomainOptions)
+                {
+                    opt.IsSelected = true;
+                }
             }
         }
 
@@ -427,7 +450,12 @@ namespace Certify.UI.ViewModel
         {
             if (this.SelectedItem != null && this.SelectedItem.DomainOptions != null)
             {
-                this.SelectedItem.DomainOptions.ForEach(d => d.IsSelected = false);
+                foreach (var opt in this.SelectedItem.DomainOptions)
+                {
+                    opt.IsSelected = false;
+                }
+
+                // RaisePropertyChanged(nameof(SelectedItem));
             }
         }
 
@@ -438,6 +466,7 @@ namespace Certify.UI.ViewModel
         private ManagedSite GetUpdatedManagedSiteSettings()
         {
             var item = SelectedItem;
+            // item.DomainOptions = new ObservableCollection<DomainOption>();
             var config = item.RequestConfig;
 
             // RefreshDomainOptionSettingsFromUI();
@@ -499,59 +528,24 @@ namespace Certify.UI.ViewModel
             managedSite.RequestConfig.EnableFailureNotifications = true;
             managedSite.RequestConfig.ChallengeType = "http-01";
             managedSite.IncludeInAutoRenew = true;
-            managedSite.DomainOptions = new List<DomainOption>();
-
+            managedSite.ClearDomainOptions();
             //for the given selected web site, allow the user to choose which domains to combine into one certificate
 
-            var defaultNoDomainHost = "(default binding)";
-            var allSites = new IISManager().GetSiteBindingList(Certify.Properties.Settings.Default.IgnoreStoppedSites, siteId);
-            var domains = new List<DomainOption>();
-            foreach (var d in allSites)
+            List<DomainOption> domainOptions = certifyManager.GetDomainOptionsFromSite(siteId);
+            if (domainOptions.Any())
             {
-                if (d.SiteId == siteId)
-                {
-                    //if domain not currently in the list of options, add it
-                    if (!domains.Any(item => item.Domain == d.Host))
-                    {
-                        DomainOption opt = new DomainOption
-                        {
-                            Domain = d.Host,
-                            IsPrimaryDomain = false,
-                            IsSelected = true
-                        };
-                        if (String.IsNullOrEmpty(opt.Domain)) opt.Domain = defaultNoDomainHost;
-
-                        domains.Add(opt);
-                    }
-                }
+                managedSite.AddDomainOptions(domainOptions);
             }
 
-            //TODO: if one or more binding is to a specific IP, how to manage in UI?
-
-            if (domains.Any(d => !String.IsNullOrEmpty(d.Domain)))
-            {
-                // mark first domain as primary, if we have no other settings
-                if (!domains.Any(d => d.IsPrimaryDomain == true))
-                {
-                    var electableDomains = domains.Where(d => !String.IsNullOrEmpty(d.Domain) && d.Domain != defaultNoDomainHost);
-                    if (electableDomains.Any())
-                    {
-                        // promote first domain in list to primary by default
-                        electableDomains.First().IsPrimaryDomain = true;
-                    }
-                }
-
-                managedSite.DomainOptions = domains;
-
-                //MainViewModel.EnsureNotifyPropertyChange(nameof(MainViewModel.PrimarySubjectDomain));
-            }
-
-            if (!domains.Any(d => d.Domain != defaultNoDomainHost))
+            if (!managedSite.DomainOptions.Any())
             {
                 ValidationError = "The selected site has no domain bindings setup. Configure the domains first using Edit Bindings in IIS.";
             }
+
             //TODO: load settings from previously saved managed site?
             RaisePropertyChanged(nameof(PrimarySubjectDomain));
+
+            RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
         }
 
         public async void BeginCertificateRequest(string managedItemId)

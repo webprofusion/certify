@@ -1,20 +1,7 @@
-﻿using Certify.Management;
-using Certify.Models;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
+﻿using System;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Certify.UI.Controls
 {
@@ -144,55 +131,10 @@ namespace Certify.UI.Controls
             }
         }
 
-        private void PrimaryDomain_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            /*if (e.AddedItems.Count > 0)
-            {
-                var primaryDomain = (DomainOption)e.AddedItems[0];
-                foreach (var d in MainViewModel.SelectedItem.DomainOptions)
-                {
-                    if (d.Domain == primaryDomain.Domain)
-                    {
-                        d.IsPrimaryDomain = true;
-                    }
-                    else
-                    {
-                        d.IsPrimaryDomain = false;
-                    }
-                }
-            }*/
-        }
-
         private void SANDomain_Toggled(object sender, RoutedEventArgs e)
         {
             this.MainViewModel.SelectedItem.IsChanged = true;
         }
-
-        private void TabablzControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-        }
     }
 
-    [System.Windows.Data.ValueConversion(typeof(bool), typeof(bool))]
-    public class InverseBooleanConverter : System.Windows.Data.IValueConverter
-    {
-        #region IValueConverter Members
-
-        public object Convert(object value, Type targetType, object parameter,
-            System.Globalization.CultureInfo culture)
-        {
-            if (targetType != typeof(bool?) && targetType != typeof(bool))
-                throw new InvalidOperationException("The target must be a boolean");
-            if (value == null) return false;
-            return !(bool)value;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter,
-            System.Globalization.CultureInfo culture)
-        {
-            return Convert(value, targetType, parameter, culture);
-        }
-
-        #endregion IValueConverter Members
-    }
 }

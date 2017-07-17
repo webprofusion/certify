@@ -431,6 +431,67 @@ namespace Certify.Management
             });
         }
 
+        public List<DomainOption> GetDomainOptionsFromSite(string siteId)
+        {
+            var defaultNoDomainHost = "(default binding)";
+            var domainOptions = new List<DomainOption>();
+
+            var matchingSites = new IISManager().GetSiteBindingList(Certify.Properties.Settings.Default.IgnoreStoppedSites, siteId);
+            var siteBindingList = matchingSites.Where(s => s.SiteId == siteId);
+
+            foreach (var siteDetails in siteBindingList)
+            {
+                //if domain not currently in the list of options, add it
+                if (!domainOptions.Any(item => item.Domain == siteDetails.Host))
+                {
+                    DomainOption opt = new DomainOption
+                    {
+                        Domain = siteDetails.Host,
+                        IsPrimaryDomain = false,
+                        IsSelected = true,
+                        Title = ""
+                    };
+
+                    if (String.IsNullOrEmpty(opt.Domain))
+                    {
+                        //binding has no hostname/domain set - user will need to specify 
+                        opt.Title = defaultNoDomainHost;
+                        opt.Domain = defaultNoDomainHost;
+                        opt.IsManualEntry = true;
+                    }
+                    else
+                    {
+                        opt.Title = siteDetails.Protocol + "://" + opt.Domain;
+                    }
+
+                    if (siteDetails.IP != null && siteDetails.IP != "0.0.0.0")
+                    {
+                        opt.Title += " : " + siteDetails.IP;
+                    }
+
+                    domainOptions.Add(opt);
+                }
+            }
+
+            //TODO: if one or more binding is to a specific IP, how to manage in UI?
+
+            if (domainOptions.Any(d => !String.IsNullOrEmpty(d.Domain)))
+            {
+                // mark first domain as primary, if we have no other settings
+                if (!domainOptions.Any(d => d.IsPrimaryDomain == true))
+                {
+                    var electableDomains = domainOptions.Where(d => !String.IsNullOrEmpty(d.Domain) && d.Domain != defaultNoDomainHost);
+                    if (electableDomains.Any())
+                    {
+                        // promote first domain in list to primary by default
+                        electableDomains.First().IsPrimaryDomain = true;
+                    }
+                }
+            }
+
+            return domainOptions;
+        }
+
         public List<ManagedSite> ImportManagedSitesFromVault(bool mergeSitesAsSan = false)
         {
             var sites = new List<ManagedSite>();
@@ -467,10 +528,9 @@ namespace Certify.Management
                         PrimaryDomain = identifier.Dns,
                         SubjectAlternativeNames = new string[] { identifier.Dns },
                         WebsiteRootPath = iisSite?.PhysicalPath
-                    },
-                    DomainOptions = new List<DomainOption>() { new DomainOption { Domain = identifier.Dns, IsPrimaryDomain = true, IsSelected = true } }
+                    }
                 };
-
+                site.AddDomainOption(new DomainOption { Domain = identifier.Dns, IsPrimaryDomain = true, IsSelected = true });
                 sites.Add(site);
             }
 
@@ -490,7 +550,7 @@ namespace Certify.Management
                         );
                         if (mergedSite != null)
                         {
-                            mergedSite.DomainOptions.Add(new DomainOption { Domain = s.RequestConfig.PrimaryDomain, IsPrimaryDomain = false, IsSelected = true });
+                            mergedSite.AddDomainOption(new DomainOption { Domain = s.RequestConfig.PrimaryDomain, IsPrimaryDomain = false, IsSelected = true });
 
                             //use shortest version of domain name as site name
                             if (mergedSite.RequestConfig.PrimaryDomain.Contains(s.RequestConfig.PrimaryDomain))

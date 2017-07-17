@@ -3,6 +3,7 @@ using PropertyChanged;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
@@ -145,11 +146,13 @@ namespace Certify.Models
             this.Name = "New Managed Site";
             this.IncludeInAutoRenew = true;
 
-            this.DomainOptions = new List<DomainOption>();
+            this.DomainOptions = new ObservableCollection<DomainOption>();
             this.RequestConfig = new CertRequestConfig();
             this.RequestConfig.EnableFailureNotifications = true;
 
             this.RequestConfig.PropertyChanged += RequestConfig_PropertyChanged;
+            
+            
         }
 
         private void RequestConfig_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -172,19 +175,51 @@ namespace Certify.Models
         /// <summary>
         /// List of configured domains this managed site will include (primary subject or SAN)
         /// </summary>
-        public List<DomainOption> DomainOptions { get; set; }
+        public ObservableCollection<DomainOption> DomainOptions { get; set; }
 
         /// <summary>
         /// Configuration options for this request
         /// </summary>
         public CertRequestConfig RequestConfig { get; set; }
+
+        public void AddDomainOption(DomainOption domainOption)
+        {
+            if (this.DomainOptions == null) this.DomainOptions = new ObservableCollection<DomainOption>();
+
+            domainOption.PropertyChanged += DomainOption_PropertyChanged;
+
+            this.DomainOptions.Add(domainOption);
+        }
+
+        internal void DomainOption_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            //if a domain option has changed then the parent managed item gets marked as changed as well
+            this.IsChanged = true;
+           
+        }
+
+        public void ClearDomainOptions()
+        {
+            this.DomainOptions = new ObservableCollection<DomainOption>();
+
+        }
+        public void AddDomainOptions(List<DomainOption> domainOptions)
+        {
+            // add list of domain options, this in turn wires up change notifications
+            foreach(var d in domainOptions)
+            {
+                this.AddDomainOption(d);
+            }
+
+            RaisePropertyChanged(nameof(DomainOptions));
+        }
     }
 
     //TODO: may deprecate, was mainly for preview of setup wizard
     public class ManagedSiteBinding
     {
         public string Hostname { get; set; }
-        public int Port { get; set; }
+        public int? Port { get; set; }
 
         /// <summary>
         /// IP is either * (all unassigned) or a specific IP
@@ -210,21 +245,6 @@ namespace Certify.Models
     //TODO: deprecate and remove
     public class SiteBindingItem
     {
-        public string Description
-        {
-            get
-            {
-                if (Host != null)
-                {
-                    return SiteName + " - " + Protocol + "://" + Host + ":" + Port;
-                }
-                else
-                {
-                    return SiteName;
-                }
-            }
-        }
-
         public string SiteId { get; set; }
         public string SiteName { get; set; }
         public string Host { get; set; }
@@ -232,7 +252,7 @@ namespace Certify.Models
         public string PhysicalPath { get; set; }
         public bool IsHTTPS { get; set; }
         public string Protocol { get; set; }
-        public int Port { get; set; }
+        public int? Port { get; set; }
         public bool HasCertificate { get; set; }
 
         public bool IsEnabled { get; set; }

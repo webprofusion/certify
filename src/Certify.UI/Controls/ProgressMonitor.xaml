@@ -17,7 +17,7 @@
         x:Key="BooleanToVisibilityConverter"
         True="Visible"
         False="Hidden" />
-            <local:InverseBooleanConverter x:Key="InvBoolConverter" />
+            <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
             <local:StateToColorConverter x:Key="StateToColorConverter" />
         </StackPanel.Resources>
         <Label Content="There are no requests currently in progress."  Visibility="{Binding HasRequestsInProgress, Converter={StaticResource InverseBooleanToVisibilityConverter}}"  HorizontalAlignment="Left" Margin="25,20,0,0" VerticalAlignment="Top" />

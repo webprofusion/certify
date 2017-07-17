@@ -8,10 +8,8 @@ using System.Threading.Tasks;
 
 namespace Certify.Models
 {
-    public class DomainOption
+    public class DomainOption: BindableBase
     {
-        public bool IsChanged { get; set; }
-
         /// <summary>
         /// Domain name we are managing
         /// </summary>
@@ -26,5 +24,13 @@ namespace Certify.Models
         /// If false, we are currently skipping this item for the certificate request
         /// </summary>
         public bool IsSelected { get; set; }
+
+        /// <summary>
+        /// If true, domain is not present in site bindings but is implicit by IP/dns wilcard etc and
+        /// is being specified manually
+        /// </summary>
+        public bool IsManualEntry { get; set; }
+
+        public string Title { get; set; }
     }
 }

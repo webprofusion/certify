@@ -49,9 +49,26 @@ namespace Certify.Management
 
         public IEnumerable<Site> GetSites(ServerManager iisManager, bool includeOnlyStartedSites)
         {
-            return includeOnlyStartedSites
-                ? iisManager.Sites.Where(s => s.State == ObjectState.Started)
-                : iisManager.Sites;
+            if (includeOnlyStartedSites)
+            {
+                //s.State may throw a com exception for sites in an invalid state.
+
+                return iisManager.Sites.Where(s =>
+                {
+                    try
+                    {
+                        return s.State == ObjectState.Started;
+                    }
+                    catch (Exception)
+                    {
+                        return false;
+                    }
+                });
+            }
+            else
+            {
+                return iisManager.Sites;
+            }
         }
 
         /// <summary>
@@ -79,13 +96,34 @@ namespace Certify.Management
 
                         b.PhysicalPath = site.Applications["/"].VirtualDirectories["/"].PhysicalPath;
 
-                        b.IsEnabled = (site.State == ObjectState.Started);
+                        try
+                        {
+                            b.IsEnabled = (site.State == ObjectState.Started);
+                        }
+                        catch (Exception exp)
+                        {
+                            System.Diagnostics.Debug.WriteLine("Exception reading IIS Site state value:" + site.Name);
+                        }
+
                         result.Add(b);
                     }
                 }
             }
 
             return result.OrderBy(s => s.SiteName).ToList();
+        }
+
+        public void AddSiteBindings(string siteId, List<string> domains)
+        {
+            using (var iisManager = GetDefaultServerManager())
+            {
+                var site = iisManager.Sites.FirstOrDefault(s => s.Id == long.Parse(siteId));
+                foreach(var d in domains)
+                {
+                    site.Bindings.Add("*:80:" + d,"http");
+                }
+                iisManager.CommitChanges();
+            }
         }
 
         public List<SiteBindingItem> GetSiteBindingList(bool ignoreStoppedSites, string siteId = null)
@@ -101,15 +139,18 @@ namespace Certify.Management
                 {
                     foreach (var binding in site.Bindings.OrderByDescending(b => b?.EndPoint?.Port))
                     {
-                        //if (string.IsNullOrEmpty(binding.Host)) continue;
-                        // if (result.Any(r => r.Host == binding.Host)) continue;
+                        var bindingDetails = GetSiteBinding(site, binding);
 
-                        result.Add(GetSiteBinding(site, binding));
+                        //ignore bindings which are not http or https
+                        if (bindingDetails.Protocol?.ToLower().StartsWith("http") == true)
+                        {
+                            result.Add(bindingDetails);
+                        }
                     }
                 }
             }
 
-            return result.OrderBy(r => r.Description).ToList();
+            return result.OrderBy(r => r.SiteName).ToList();
         }
 
         private SiteBindingItem GetSiteBinding(Site site, Binding binding)
@@ -119,17 +160,13 @@ namespace Certify.Management
                 SiteId = site.Id.ToString(),
                 SiteName = site.Name,
                 Host = binding.Host,
+                IP = binding.EndPoint?.Address?.ToString(),
                 PhysicalPath = site.Applications["/"].VirtualDirectories["/"].PhysicalPath,
-                Port = binding.EndPoint.Port,
+                Port = binding.EndPoint?.Port,
                 IsHTTPS = binding.Protocol.ToLower() == "https",
                 Protocol = binding.Protocol,
                 HasCertificate = (binding.CertificateHash != null)
             };
-        }
-
-        private Site GetSite(string siteName, ServerManager iisManager)
-        {
-            return GetSites(iisManager, false).FirstOrDefault(s => s.Name == siteName);
         }
 
         public Site GetSiteByDomain(string domain)
@@ -184,12 +221,21 @@ namespace Certify.Management
         {
             using (var iisManager = GetDefaultServerManager())
             {
-                iisManager.Sites.Add(siteName, protocol, ipAddress + ":" + port + ":" + hostname, phyPath);
-                iisManager.Sites[siteName].ApplicationDefaults.ApplicationPoolName = appPoolName;
+                // usual binding format is ip:port:dnshostname but can also be *:port,
+                // *:port:hostname or just hostname
+                string bindingInformation = (ipAddress != null ? (ipAddress + ":") : "")
+                    + (port != null ? (port + ":") : "")
+                    + hostname;
 
-                foreach (var item in iisManager.Sites[siteName].Applications)
+                iisManager.Sites.Add(siteName, protocol, bindingInformation, phyPath);
+                if (appPoolName != null)
                 {
-                    item.ApplicationPoolName = appPoolName;
+                    iisManager.Sites[siteName].ApplicationDefaults.ApplicationPoolName = appPoolName;
+
+                    foreach (var item in iisManager.Sites[siteName].Applications)
+                    {
+                        item.ApplicationPoolName = appPoolName;
+                    }
                 }
 
                 iisManager.CommitChanges();
@@ -225,7 +271,8 @@ namespace Certify.Management
             using (var iisManager = GetDefaultServerManager())
             {
                 Site siteDetails = iisManager.Sites.FirstOrDefault(s => s.Id.ToString() == id);
-                if (siteDetails.State == ObjectState.Started)
+
+                if (siteDetails?.State == ObjectState.Started)
                 {
                     return true;
                 }
