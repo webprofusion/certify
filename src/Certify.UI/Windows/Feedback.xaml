@@ -10,7 +10,7 @@
         GlowBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner" MinWidth="300" MinHeight="300">
     <Grid Margin="0,0,2,6.8">
-        <TextBox x:Name="Comment" Height="111" Margin="13,78,9.8,0" TextWrapping="Wrap" VerticalAlignment="Top" Text="" />
+        <TextBox x:Name="Comment" Height="111" Margin="13,78,9.8,0" TextWrapping="Wrap" VerticalAlignment="Top" Text="" VerticalScrollBarVisibility="Auto" AcceptsReturn="True" AcceptsTab="True" />
         <TextBlock x:Name="Prompt" HorizontalAlignment="Left" Margin="13,9,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontWeight="Bold"><Run Text="Your feedback is important to us. Please let us know how we can improve" /><Run Text="." /><LineBreak /><Run /></TextBlock>
         <TextBlock Margin="13,58,15.2,0" TextWrapping="Wrap" VerticalAlignment="Top" ><Run Text="Do you have " /><Run Text="any " /><Run Text="suggestions?" /></TextBlock>
         <Button x:Name="Submit" Content="Send" Margin="0,268,9.8,0" VerticalAlignment="Top" Click="Submit_Click" HorizontalAlignment="Right" Width="78" />
