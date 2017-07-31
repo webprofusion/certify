@@ -32,5 +32,8 @@
     <Setting Name="RenewalIntervalDays" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">14</Value>
     </Setting>
+    <Setting Name="LegacyRSASChannelSupport" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

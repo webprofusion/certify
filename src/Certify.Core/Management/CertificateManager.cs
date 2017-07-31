@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -27,7 +28,68 @@ namespace Certify.Management
 
             store.Add(certificate);
             store.Close();
+
+            if (Properties.Settings.Default.LegacyRSASChannelSupport) {
+                StoreCertificateLegacy(certificate);
+            }
+
             return certificate;
+        }
+
+        
+        public void StoreCertificateLegacy(X509Certificate2 certificate)
+        {
+            // https://blogs.technet.microsoft.com/jasonsla/2015/01/15/the-one-with-the-fba-redirect-loop/:
+            // Exchange FBA does not support CNG certificates.Exchange only uses and supports the legacy
+            // CryptoAPI which uses Cryptographic Service Providers(CSP).
+            // The certificate should be registered using this legacy method on the machine to support Exchage Server.
+
+            int exitCode = 0;
+            string certExportPath = Environment.SpecialFolder.ApplicationData + "\\CertifyCertificateLegacyTemp.pfx";
+            try {
+                if (System.IO.File.Exists(certExportPath)) {
+                    System.IO.File.Delete(certExportPath);
+                }
+            }
+            catch {
+                Debug.WriteLine("Certify Legacy Exchange Support: Unable to delete exported certificate.");
+            }
+            ProcessStartInfo export = new ProcessStartInfo() {
+                Arguments = string.Format("-p Certify -ExportPFX {0} \"{1}\"", certificate.GetSerialNumberString(), certExportPath),
+                FileName = "certutil"
+            };
+            using (Process proc = Process.Start(export)) {
+                proc.WaitForExit();
+                exitCode = proc.ExitCode;
+            }
+            if (!exitCode.Equals(0)) {
+                Debug.WriteLine("Certify Legacy Exchange Support: Failed to export certificate from store.");
+            }
+
+            ProcessStartInfo delete = new ProcessStartInfo() {
+                Arguments = string.Format("-delstore My \"{0}\"", certificate.GetSerialNumberString()),
+                FileName = "certutil"
+            };
+            using (Process proc = Process.Start(delete)) {
+                proc.WaitForExit();
+                exitCode = proc.ExitCode;
+            }
+            if (!exitCode.Equals(0)) {
+                Debug.WriteLine("Certify Legacy Exchange Support: Failed to delete certificate from store.");
+            }
+
+            ProcessStartInfo import = new ProcessStartInfo()
+            {
+                Arguments = string.Format("-p Certify -csp \"Microsoft RSA SChannel Cryptographic Provider\" -importpfx \"{0}\"", certExportPath),
+                FileName = "certutil"
+            };
+            using (Process proc = Process.Start(export)) {
+                proc.WaitForExit();
+                exitCode = proc.ExitCode;
+            }
+            if (!exitCode.Equals(0)) {
+                Debug.WriteLine("Certify Legacy Exchange Support: Failed to import certificate back to store.");
+            }
         }
 
         public X509Store GetDefaultStore()
