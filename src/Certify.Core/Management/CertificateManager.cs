@@ -45,7 +45,7 @@ namespace Certify.Management
             // The certificate should be registered using this legacy method on the machine to support Exchage Server.
 
             int exitCode = 0;
-            string certExportPath = Environment.SpecialFolder.ApplicationData + "\\CertifyCertificateLegacyTemp.pfx";
+            string certExportPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\CertifyCertificateLegacyTemp.pfx";
             try {
                 if (System.IO.File.Exists(certExportPath)) {
                     System.IO.File.Delete(certExportPath);
