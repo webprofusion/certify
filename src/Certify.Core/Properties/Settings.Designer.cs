@@ -139,5 +139,17 @@ namespace Certify.Properties {
                 this["RenewalIntervalDays"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool LegacyRSASChannelSupport {
+            get {
+                return ((bool)(this["LegacyRSASChannelSupport"]));
+            }
+            set {
+                this["LegacyRSASChannelSupport"] = value;
+            }
+        }
     }
 }
