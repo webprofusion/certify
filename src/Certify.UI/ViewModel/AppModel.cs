@@ -26,6 +26,17 @@ namespace Certify.UI.ViewModel
 
         public PluginManager PluginManager { get; set; }
 
+        public string CurrentError { get; set; }
+        public bool IsError { get; set; }
+
+        public void RaiseError(Exception exp)
+        {
+            this.IsError = true;
+            this.CurrentError = exp.Message;
+
+            System.Windows.MessageBox.Show(exp.Message);
+        }
+
         #region properties
 
         /// <summary>
@@ -602,7 +613,7 @@ namespace Certify.UI.ViewModel
         public ICommand SANSelectAllCommand => new RelayCommand<object>(SANSelectAll);
         public ICommand SANSelectNoneCommand => new RelayCommand<object>(SANSelectNone);
 
-        public ICommand AddContactCommand => new RelayCommand<ContactRegistration>(AddContactRegistration);
+        public ICommand AddContactCommand => new RelayCommand<ContactRegistration>(AddContactRegistration, this);
 
         public ICommand PopulateManagedSiteSettingsCommand => new RelayCommand<string>(PopulateManagedSiteSettings);
         public ICommand BeginCertificateRequestCommand => new RelayCommand<string>(BeginCertificateRequest);

@@ -17,6 +17,7 @@ namespace Certify.UI.ViewModel
 
         private readonly Action<T> _execute = null;
         private readonly Predicate<T> _canExecute = null;
+        private UI.ViewModel.AppModel _viewModel = null;
 
         #endregion Fields
 
@@ -25,11 +26,15 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// Initializes a new instance of <see cref="DelegateCommand{T}"/>.
         /// </summary>
-        /// <param name="execute">Delegate to execute when Execute is called on the command.  This can be null to just hook up a CanExecute delegate.</param>
+        /// <param name="execute">
+        /// Delegate to execute when Execute is called on the command. This can be null to just hook
+        /// up a CanExecute delegate.
+        /// </param>
         /// <remarks><seealso cref="CanExecute"/> will always return true.</remarks>
-        public RelayCommand(Action<T> execute)
-            : this(execute, null)
+        public RelayCommand(Action<T> execute, UI.ViewModel.AppModel viewModel = null)
+            : this(execute, canExecute: null)
         {
+            _viewModel = viewModel;
         }
 
         /// <summary>
@@ -74,7 +79,26 @@ namespace Certify.UI.ViewModel
         ///<param name="parameter">Data used by the command. If the command does not require data to be passed, this object can be set to <see langword="null" />.</param>
         public void Execute(object parameter)
         {
-            _execute((T)parameter);
+            try
+            {
+                _execute((T)parameter);
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
+        }
+
+        private void HandleException(Exception ex)
+        {
+            if (_viewModel != null)
+            {
+                _viewModel.RaiseError(ex);
+            }
+            else
+            {
+                throw ex;
+            }
         }
 
         #endregion ICommand Members

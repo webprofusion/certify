@@ -12,7 +12,7 @@
         Title="New Contact" Height="297" Width="514" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner">
     <Grid>
 
-        <TextBlock HorizontalAlignment="Left" Margin="12,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="472" Foreground="{DynamicResource AccentColorBrush}" ><Run Text="To use Certify and the " /><Run Text="free " /><Run Text="Let's Encrypt service to acquire SSL certificates" /><Run Text=" you must first register as a contact. The email address provided may be used to notify you of upcoming certificate renewals if required." /></TextBlock>
+        <TextBlock HorizontalAlignment="Left" Margin="12,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="472" Foreground="{DynamicResource AccentColorBrush}" ><Run Text="To use Certify and the " /><Run Text="free " /><Run Text="Let's Encrypt service to acquire SSL certificates" /><Run Text=" you must first register as a contact. " /><LineBreak /><Run /><LineBreak /><Run Text="The email address provided may be used to notify you of upcoming certificate renewals if required. Invalid email addresses will be rejected by Let's Encrypt." /></TextBlock>
         <Label Content="Email Address" HorizontalAlignment="Left" Margin="11,97,0,0" VerticalAlignment="Top" />
         <TextBox HorizontalAlignment="Left" Height="23" Margin="100,97,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="362" Text="{Binding EmailAddress}">
         </TextBox>
