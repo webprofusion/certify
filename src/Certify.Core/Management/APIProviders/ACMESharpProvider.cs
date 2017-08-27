@@ -14,6 +14,7 @@ namespace Certify.Management.APIProviders
         public ACMESharpProvider()
         {
             _vaultManager = new VaultManager(Properties.Settings.Default.VaultPath, ACMESharp.Vault.Providers.LocalDiskVault.VAULT);
+            _vaultManager.UseEFSForSensitiveFiles = false;
         }
 
         public List<RegistrationItem> GetContactRegistrations()
@@ -36,15 +37,33 @@ namespace Certify.Management.APIProviders
 
         public List<IdentifierItem> GetDomainIdentifiers()
         {
-            var reg = _vaultManager.GetIdentifiers(reloadVaultConfig: true);
+            var identList = _vaultManager.GetIdentifiers(reloadVaultConfig: true);
             var list = new List<IdentifierItem>();
 
-            foreach (var r in reg)
+            foreach (var r in identList)
             {
-                list.Add(new IdentifierItem { Id = r.Id.ToString(), Name = r.Dns, Dns = r.Dns, Status = r.Authorization?.Status });
+                list.Add(_vaultManager.GetDomainIdentifierItemFromIdentifierInfo(r));
             }
 
             return list;
+        }
+
+        public string ComputeDomainIdentifierId(string domain)
+        {
+            return _vaultManager.ComputeIdentifierAlias(domain);
+        }
+
+        public IdentifierItem GetDomainIdentifier(string domain)
+        {
+            var identifier = _vaultManager.GetIdentifier(domain.Trim().ToLower());
+            if (identifier != null)
+            {
+                return _vaultManager.GetDomainIdentifierItemFromIdentifierInfo(identifier);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public List<CertificateItem> GetCertificates()
@@ -68,6 +87,36 @@ namespace Certify.Management.APIProviders
         public string GetVaultSummary()
         {
             return _vaultManager.GetVaultPath();
+        }
+
+        public void EnableSensitiveFileEncryption()
+        {
+            _vaultManager.UseEFSForSensitiveFiles = true;
+        }
+
+        public PendingAuthorization BeginRegistrationAndValidation(CertRequestConfig config, string domainIdentifierId, string challengeType, string domain)
+        {
+            return _vaultManager.BeginRegistrationAndValidation(config, domainIdentifierId, challengeType, domain);
+        }
+
+        public PendingAuthorization PerformIISAutomatedChallengeResponse(CertRequestConfig requestConfig, PendingAuthorization pendingAuth)
+        {
+            return _vaultManager.PerformIISAutomatedChallengeResponse(requestConfig, pendingAuth);
+        }
+
+        public void SubmitChallenge(string domainIdentifierId, string challengeType)
+        {
+            _vaultManager.SubmitChallenge(domainIdentifierId, challengeType);
+        }
+
+        public bool CompleteIdentifierValidationProcess(string alias)
+        {
+            return _vaultManager.CompleteIdentifierValidationProcess(alias);
+        }
+
+        public ProcessStepResult PerformCertificateRequestProcess(string primaryDnsIdentifier, string[] alternativeDnsIdentifiers)
+        {
+            return _vaultManager.PerformCertificateRequestProcess(primaryDnsIdentifier, alternativeDnsIdentifiers);
         }
 
         #region IACMEClientProvider methods

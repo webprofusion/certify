@@ -91,7 +91,7 @@ namespace Certify.Management
         /// <param name="managedSite"></param>
         /// <param name="progress"></param>
         /// <returns></returns>
-        public async Task<CertificateRequestResult> PerformDummyCertificateRequest(VaultManager vaultManager, ManagedSite managedSite, IProgress<RequestProgressState> progress = null)
+        public async Task<CertificateRequestResult> PerformDummyCertificateRequest(ManagedSite managedSite, IProgress<RequestProgressState> progress = null)
         {
             return await Task<CertificateRequestResult>.Run<CertificateRequestResult>(() =>
             {
@@ -149,7 +149,7 @@ namespace Certify.Management
             return vaultProvider.GetVaultSummary();
         }
 
-        public async Task<CertificateRequestResult> PerformCertificateRequest(VaultManager vaultManager, ManagedSite managedSite, IProgress<RequestProgressState> progress = null)
+        public async Task<CertificateRequestResult> PerformCertificateRequest(ManagedSite managedSite, IProgress<RequestProgressState> progress = null)
         {
             // FIXME: refactor into different concerns, there's way to much being done here
 
@@ -162,7 +162,10 @@ namespace Certify.Management
                     bool enableIdentifierReuse = false;
 
                     //enable or disable EFS flag on private key certs based on preference
-                    vaultManager.UseEFSForSensitiveFiles = Properties.Settings.Default.EnableEFS;
+                    if (Properties.Settings.Default.EnableEFS)
+                    {
+                        vaultProvider.EnableSensitiveFileEncryption();
+                    }
 
                     //primary domain and each subject alternative name must now be registered as an identifier with LE and validated
 
@@ -185,28 +188,27 @@ namespace Certify.Management
 
                     foreach (var domain in distinctDomains)
                     {
-                        var identifierAlias = vaultManager.ComputeIdentifierAlias(domain);
+                        var domainIdentifierId = vaultProvider.ComputeDomainIdentifierId(domain);
 
-                        //check if this domain already has an associated identifier registerd with LetsEncrypt which hasn't expired yet
-                        //await Task.Delay(200); //allow UI update
+                        //check if this domain already has an associated identifier registered with LetsEncrypt which hasn't expired yet
 
-                        ACMESharp.Vault.Model.IdentifierInfo existingIdentifier = null;
+                        IdentifierItem existingIdentifier = null;
 
                         if (enableIdentifierReuse)
                         {
-                            existingIdentifier = vaultManager.GetIdentifier(domain.Trim().ToLower());
+                            existingIdentifier = vaultProvider.GetDomainIdentifier(domain);
                         }
 
                         bool identifierAlreadyValid = false;
                         if (existingIdentifier != null
-                            && existingIdentifier.Authorization != null
-                            && (existingIdentifier.Authorization.Status == "valid" || existingIdentifier.Authorization.Status == "pending")
-                            && existingIdentifier.Authorization.Expires > DateTime.Now.AddDays(1))
+                            && existingIdentifier.Status != null
+                            && (existingIdentifier.Status == "valid" || existingIdentifier.Status == "pending")
+                            && existingIdentifier.AuthorizationExpiry > DateTime.Now.AddDays(1))
                         {
                             //we have an existing validated identifier, reuse that for this certificate request
-                            identifierAlias = existingIdentifier.Alias;
+                            domainIdentifierId = existingIdentifier.Id;
 
-                            if (existingIdentifier.Authorization.Status == "valid")
+                            if (existingIdentifier.Status == "valid")
                             {
                                 identifierAlreadyValid = true;
                             }
@@ -222,17 +224,17 @@ namespace Certify.Management
                         //begin authorization process (register identifier, request authorization if not already given)
                         if (progress != null) progress.Report(new RequestProgressState { Message = "Registering and Validating " + domain });
 
-                        //TODO: make operations async and yeild IO of vault
+                        //TODO: make operations async and yield IO of vault
                         /*var authorization = await Task.Run(() =>
                         {
                             return vaultManager.BeginRegistrationAndValidation(config, identifierAlias, challengeType: config.ChallengeType, domain: domain);
                         });*/
 
-                        var authorization = vaultManager.BeginRegistrationAndValidation(config, identifierAlias, challengeType: config.ChallengeType, domain: domain);
+                        var authorization = vaultProvider.BeginRegistrationAndValidation(config, domainIdentifierId, challengeType: config.ChallengeType, domain: domain);
 
                         if (authorization != null && authorization.Identifier != null && !identifierAlreadyValid)
                         {
-                            if (authorization.Identifier.Authorization.IsPending())
+                            if (authorization.Identifier.IsAuthorizationPending)
                             {
                                 if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS)
                                 {
@@ -240,7 +242,7 @@ namespace Certify.Management
 
                                     //ask LE to check our answer to their authorization challenge (http), LE will then attempt to fetch our answer, if all accessible and correct (authorized) LE will then allow us to request a certificate
                                     //prepare IIS with answer for the LE challenege
-                                    authorization = vaultManager.PerformIISAutomatedChallengeResponse(config, authorization);
+                                    authorization = vaultProvider.PerformIISAutomatedChallengeResponse(config, authorization);
 
                                     //if we attempted extensionless config checks, report any errors
                                     if (config.PerformAutoConfig && !authorization.ExtensionlessConfigCheckedOK)
@@ -258,9 +260,9 @@ namespace Certify.Management
                                         if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Running, Message = "Requesting Validation from Lets Encrypt: " + domain });
 
                                         //ask LE to validate our challenge response
-                                        vaultManager.SubmitChallenge(identifierAlias, config.ChallengeType);
+                                        vaultProvider.SubmitChallenge(domainIdentifierId, config.ChallengeType);
 
-                                        bool identifierValidated = vaultManager.CompleteIdentifierValidationProcess(authorization.Identifier.Alias);
+                                        bool identifierValidated = vaultProvider.CompleteIdentifierValidationProcess(authorization.Identifier.Alias);
 
                                         if (!identifierValidated)
                                         {
@@ -279,7 +281,7 @@ namespace Certify.Management
                             }
                             else
                             {
-                                if (authorization.Identifier.Authorization.Status == "valid")
+                                if (authorization.Identifier.Status == "valid")
                                 {
                                     identifierAuthorizations.Add(new PendingAuthorization { Identifier = authorization.Identifier });
                                 }
@@ -309,7 +311,7 @@ namespace Certify.Management
                         if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Running, Message = "Requesting Certificate via Lets Encrypt" });
                         //await Task.Delay(200); //allow UI update
 
-                        var certRequestResult = vaultManager.PerformCertificateRequestProcess(primaryDnsIdentifier, alternativeDnsIdentifiers);
+                        var certRequestResult = vaultProvider.PerformCertificateRequestProcess(primaryDnsIdentifier, alternativeDnsIdentifiers);
                         if (certRequestResult.IsSuccess)
                         {
                             if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Success, Message = "Completed Certificate Request." });
@@ -586,11 +588,11 @@ namespace Certify.Management
                     if (testModeOnly)
                     {
                         //simulated request for UI testing
-                        renewalTasks.Add(this.PerformDummyCertificateRequest(null, s, tracker));
+                        renewalTasks.Add(this.PerformDummyCertificateRequest(s, tracker));
                     }
                     else
                     {
-                        renewalTasks.Add(this.PerformCertificateRequest(null, s, tracker));
+                        renewalTasks.Add(this.PerformCertificateRequest(s, tracker));
                     }
                 }
                 else

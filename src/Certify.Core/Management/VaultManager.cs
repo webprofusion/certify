@@ -608,7 +608,8 @@ namespace Certify
             //if an identifier exists for the same dns in vault, remove it to avoid confusion
             this.DeleteIdentifierByDNS(domain);
 
-            // ACME service requires international domain names in ascii mode, regiser the new identifier with Lets Encrypt
+            // ACME service requires international domain names in ascii mode, regiser the new
+            // identifier with Lets Encrypt
             var authState = ACMESharpUtils.NewIdentifier(identifierAlias, idnMapping.GetAscii(domain));
 
             var identifier = this.GetIdentifier(identifierAlias, reloadVaultConfig: true);
@@ -624,13 +625,42 @@ namespace Certify
                 var challengeInfo = identifier.Challenges.FirstOrDefault(c => c.Value.Type == challengeType).Value;
 
                 //identifier challenege specification is now ready for use to prepare and answer for LetsEncrypt to check
-                return new PendingAuthorization() { Challenge = challengeInfo, Identifier = identifier, TempFilePath = "", ExtensionlessConfigCheckedOK = false };
+                return new PendingAuthorization() { Challenge = GetAuthorizeChallengeItemFromAuthChallenge(challengeInfo), Identifier = GetDomainIdentifierItemFromIdentifierInfo(identifier), TempFilePath = "", ExtensionlessConfigCheckedOK = false };
             }
             else
             {
                 //identifier is null or already valid (previously authorized)
-                return new PendingAuthorization() { Challenge = null, Identifier = identifier, TempFilePath = "", ExtensionlessConfigCheckedOK = false };
+                return new PendingAuthorization() { Challenge = null, Identifier = GetDomainIdentifierItemFromIdentifierInfo(identifier), TempFilePath = "", ExtensionlessConfigCheckedOK = false };
             }
+        }
+
+        public AuthorizeChallengeItem GetAuthorizeChallengeItemFromAuthChallenge(AuthorizeChallenge challenge)
+        {
+            return new AuthorizeChallengeItem
+            {
+                Status = challenge.Status,
+                ChallengeData = challenge.Challenge
+            };
+        }
+
+        public IdentifierItem GetDomainIdentifierItemFromIdentifierInfo(ACMESharp.Vault.Model.IdentifierInfo identifier)
+        {
+            var i = new IdentifierItem
+            {
+                Id = identifier.Id.ToString(),
+                Alias = identifier.Alias,
+                Name = identifier.Dns,
+                Dns = identifier.Dns,
+                Status = identifier.Authorization?.Status,
+            };
+
+            if (identifier.Authorization != null)
+            {
+                i.AuthorizationExpiry = identifier.Authorization.Expires;
+                i.IsAuthorizationPending = identifier.Authorization.IsPending();
+            }
+
+            return i;
         }
 
         public PendingAuthorization PerformIISAutomatedChallengeResponse(CertRequestConfig requestConfig, PendingAuthorization pendingAuth)
@@ -643,7 +673,7 @@ namespace Certify
             //if copying the file for the user, attempt that now
             if (pendingAuth.Challenge != null && requestConfig.PerformChallengeFileCopy)
             {
-                var httpChallenge = (ACMESharp.ACME.HttpChallenge)pendingAuth.Challenge.Challenge;
+                var httpChallenge = (ACMESharp.ACME.HttpChallenge)pendingAuth.Challenge.ChallengeData;
                 this.LogAction("Preparing challenge response for LetsEncrypt server to check at: " + httpChallenge.FileUrl);
                 this.LogAction("If the challenge response file is not accessible at this exact URL the validation will fail and a certificate will not be issued.");
 

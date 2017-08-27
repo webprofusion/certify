@@ -53,6 +53,11 @@ namespace Certify.Management.APIProviders
             return null;
         }
 
+        public void EnableSensitiveFileEncryption()
+        {
+            throw new NotImplementedException();
+        }
+
         #region IACMEClientProvider methods
 
         public bool AddNewRegistrationAndAcceptTOS(string email)
@@ -74,6 +79,41 @@ namespace Certify.Management.APIProviders
         {
             System.Diagnostics.Debug.WriteLine("Certes: GetAcmeBaseURI not implemented");
             return null;
+        }
+
+        public string ComputeDomainIdentifierId(string domain)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IdentifierItem GetDomainIdentifier(string domain)
+        {
+            throw new NotImplementedException();
+        }
+
+        public PendingAuthorization BeginRegistrationAndValidation(CertRequestConfig config, string domainIdentifierId, string challengeType, string domain)
+        {
+            throw new NotImplementedException();
+        }
+
+        public PendingAuthorization PerformIISAutomatedChallengeResponse(CertRequestConfig requestConfig, PendingAuthorization pendingAuth)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SubmitChallenge(string domainIdentifierId, string challengeType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool CompleteIdentifierValidationProcess(string alias)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ProcessStepResult PerformCertificateRequestProcess(string primaryDnsIdentifier, string[] alternativeDnsIdentifiers)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion IACMEClientProvider methods

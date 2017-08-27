@@ -2,9 +2,6 @@
 using ACMESharp.JOSE;
 using ACMESharp.PKI;
 using ACMESharp.Vault.Model;
-
-using System;
-
 using System.IO;
 
 /*

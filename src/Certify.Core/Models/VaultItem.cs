@@ -16,6 +16,8 @@ namespace Certify.Models
     {
         public string Dns { get; set; }
         public string Status { get; set; }
+        public DateTime? AuthorizationExpiry { get; set; }
+        public bool IsAuthorizationPending { get; set; }
     }
 
     public class CertificateItem : VaultItem
@@ -25,6 +27,7 @@ namespace Certify.Models
     public class VaultItem
     {
         public string Id { get; set; }
+        public string Alias { get; set; }
         public string Name { get; set; }
         public string ItemType { get; set; }
 
