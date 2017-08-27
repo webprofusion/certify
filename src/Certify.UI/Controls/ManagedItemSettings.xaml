@@ -57,7 +57,7 @@
             </Button>
         </StackPanel>
 
-        <dragablz:TabablzControl Margin="8" Grid.Row="2" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
+        <dragablz:TabablzControl x:Name="SettingsTab" Margin="8" Grid.Row="2" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
 
             <TabItem Header="Options" IsSelected="True">
 

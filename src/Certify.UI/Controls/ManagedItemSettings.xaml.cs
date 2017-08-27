@@ -21,6 +21,12 @@ namespace Certify.UI.Controls
         public ManagedItemSettings()
         {
             InitializeComponent();
+            this.MainViewModel.PropertyChanged += MainViewModel_PropertyChanged;
+        }
+
+        private void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            this.SettingsTab.SelectedIndex = 0;
         }
 
         private void Button_Save(object sender, RoutedEventArgs e)
@@ -136,5 +142,4 @@ namespace Certify.UI.Controls
             this.MainViewModel.SelectedItem.IsChanged = true;
         }
     }
-
 }
