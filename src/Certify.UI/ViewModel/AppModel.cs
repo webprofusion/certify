@@ -576,7 +576,7 @@ namespace Certify.UI.ViewModel
                 BeginTrackingProgress(progressState);
 
                 var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
-                var result = await certifyManager.PerformCertificateRequest(null, managedSite, progressIndicator);
+                var result = await certifyManager.PerformCertificateRequest(managedSite, progressIndicator);
 
                 if (progressIndicator != null)
                 {
