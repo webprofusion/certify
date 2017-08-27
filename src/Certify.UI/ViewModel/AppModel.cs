@@ -57,8 +57,8 @@ namespace Certify.UI.ViewModel
             var registration = new VaultItem { Name = "Registrations" };
             registration.Children = new List<VaultItem>();
 
-            var reg = certifyManager.GetRegistrations();
-            foreach (var r in reg)
+            var contactRegistrations = certifyManager.GetContactRegistrations();
+            foreach (var r in contactRegistrations)
             {
                 r.ItemType = "registration";
                 registration.Children.Add(r);
@@ -72,7 +72,7 @@ namespace Certify.UI.ViewModel
             var identifiers = new VaultItem { Name = "Identifiers" };
             identifiers.Children = new List<VaultItem>();
 
-            var ids = certifyManager.GetIdentifiers();
+            var ids = certifyManager.GeDomainIdentifiers();
             foreach (var i in ids)
             {
                 i.ItemType = "identifier";

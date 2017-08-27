@@ -1,8 +1,11 @@
 ﻿using System;
-using System.IO;
 using ACMESharp.JOSE;
-using ACMESharp.Vault.Model;
 using ACMESharp.PKI;
+using ACMESharp.Vault.Model;
+
+using System;
+
+using System.IO;
 
 /*
  * Port of supporting utls for powershell methods from ACMESharp.POSH: https://github.com/ebekker/ACMESharp

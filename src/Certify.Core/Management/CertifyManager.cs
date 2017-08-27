@@ -11,7 +11,8 @@ namespace Certify.Management
     public class CertifyManager
     {
         private ItemManager siteManager = null;
-
+        private IACMEClientProvider acmeClientProvider = null;
+        private IVaultProvider vaultProvider = null;
         private const string SCHEDULED_TASK_NAME = "Certify Maintenance Task";
         private const string SCHEDULED_TASK_EXE = "certify.exe";
         private const string SCHEDULED_TASK_ARGS = "renew";
@@ -19,6 +20,11 @@ namespace Certify.Management
         public CertifyManager()
         {
             Certify.Management.Util.SetSupportedTLSVersions();
+
+            var acmeSharp = new Certify.Management.APIProviders.ACMESharpProvider();
+            // ACME Sharp is both a vault (config storage) provider and ACME client provider
+            acmeClientProvider = acmeSharp;
+            vaultProvider = acmeSharp;
 
             siteManager = new ItemManager();
             siteManager.LoadSettings();
@@ -42,56 +48,24 @@ namespace Certify.Management
             }
         }
 
-        private VaultManager GetVaultManager()
-        {
-            return new VaultManager(Properties.Settings.Default.VaultPath, ACMESharp.Vault.Providers.LocalDiskVault.VAULT);
-        }
-
         public List<ManagedSite> GetManagedSites()
         {
             return this.siteManager.GetManagedSites();
         }
 
-        public List<RegistrationItem> GetRegistrations()
+        public List<RegistrationItem> GetContactRegistrations()
         {
-            var vault = GetVaultManager();
-            var reg = vault.GetRegistrations(reloadVaultConfig: true);
-            var list = new List<RegistrationItem>();
-
-            foreach (var r in reg)
-            {
-                list.Add(new RegistrationItem { Id = r.Id.ToString(), Name = r.Registration.Contacts.First(), Contacts = r.Registration.Contacts });
-            }
-
-            return list;
+            return vaultProvider.GetContactRegistrations();
         }
 
-        public List<IdentifierItem> GetIdentifiers()
+        public List<IdentifierItem> GeDomainIdentifiers()
         {
-            var vault = GetVaultManager();
-            var reg = vault.GetIdentifiers(reloadVaultConfig: true);
-            var list = new List<IdentifierItem>();
-
-            foreach (var r in reg)
-            {
-                list.Add(new IdentifierItem { Id = r.Id.ToString(), Name = r.Dns, Dns = r.Dns, Status = r.Authorization?.Status });
-            }
-
-            return list;
+            return vaultProvider.GetDomainIdentifiers();
         }
 
         public List<CertificateItem> GetCertificates()
         {
-            var vault = GetVaultManager();
-            var certs = vault.GetCertificates(reloadVaultConfig: true);
-            var list = new List<CertificateItem>();
-
-            foreach (var i in certs)
-            {
-                list.Add(new CertificateItem { Id = i.Id.ToString(), Name = i.IdentifierDns });
-            }
-
-            return list;
+            return vaultProvider.GetCertificates();
         }
 
         public void SetManagedSites(List<ManagedSite> managedSites)
@@ -107,8 +81,7 @@ namespace Certify.Management
 
         public bool HasRegisteredContacts()
         {
-            var vaultManager = GetVaultManager();
-            return vaultManager.HasContacts(true);
+            return vaultProvider.HasRegisteredContacts();
         }
 
         /// <summary>
@@ -146,8 +119,7 @@ namespace Certify.Management
 
         public bool AddRegisteredContact(ContactRegistration reg)
         {
-            var vaultManager = GetVaultManager();
-            return vaultManager.AddNewRegistrationAndAcceptTOS("mailto:" + reg.EmailAddress);
+            return acmeClientProvider.AddNewRegistrationAndAcceptTOS(reg.EmailAddress);
         }
 
         /// <summary>
@@ -157,27 +129,24 @@ namespace Certify.Management
         /// <returns></returns>
         public void RemoveExtraContacts(string email)
         {
-            var vaultManager = GetVaultManager();
-            var regList = vaultManager.GetRegistrations(true).ToList();
+            var regList = vaultProvider.GetContactRegistrations();
             foreach (var reg in regList)
             {
-                if (!reg.Registration.Contacts.Contains("mailto:" + email))
+                if (!reg.Contacts.Contains("mailto:" + email))
                 {
-                    vaultManager.DeleteRegistrationInfo(reg.Id);
+                    vaultProvider.DeleteContactRegistration(reg.Id);
                 }
             }
         }
 
         public string GetAcmeSummary()
         {
-            var vaultManager = GetVaultManager();
-            return vaultManager.GetACMEBaseURI();
+            return acmeClientProvider.GetAcmeBaseURI();
         }
 
         public string GetVaultSummary()
         {
-            var vaultManager = GetVaultManager();
-            return vaultManager.GetVaultPath();
+            return vaultProvider.GetVaultSummary();
         }
 
         public async Task<CertificateRequestResult> PerformCertificateRequest(VaultManager vaultManager, ManagedSite managedSite, IProgress<RequestProgressState> progress = null)
@@ -191,11 +160,6 @@ namespace Certify.Management
                     ManagedSiteLog.AppendLog(managedSite.Id, new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.GeneralInfo, Message = "Beginning Certificate Request Process: " + managedSite.Name });
 
                     bool enableIdentifierReuse = false;
-
-                    if (vaultManager == null)
-                    {
-                        vaultManager = GetVaultManager();
-                    }
 
                     //enable or disable EFS flag on private key certs based on preference
                     vaultManager.UseEFSForSensitiveFiles = Properties.Settings.Default.EnableEFS;
@@ -454,7 +418,7 @@ namespace Certify.Management
 
                     if (String.IsNullOrEmpty(opt.Domain))
                     {
-                        //binding has no hostname/domain set - user will need to specify 
+                        //binding has no hostname/domain set - user will need to specify
                         opt.Title = defaultNoDomainHost;
                         opt.Domain = defaultNoDomainHost;
                         opt.IsManualEntry = true;
@@ -497,10 +461,10 @@ namespace Certify.Management
             var sites = new List<ManagedSite>();
 
             //get dns identifiers from vault
-            var vaultManager = new VaultManager(Properties.Settings.Default.VaultPath, ACMESharp.Vault.Providers.LocalDiskVault.VAULT);
+
             var iisManager = new IISManager();
 
-            var identifiers = vaultManager.GetIdentifiers();
+            var identifiers = vaultProvider.GetDomainIdentifiers();
             var iisSites = iisManager.GetSiteBindingList(ignoreStoppedSites: Certify.Properties.Settings.Default.IgnoreStoppedSites);
             foreach (var identifier in identifiers)
             {

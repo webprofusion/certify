@@ -84,6 +84,12 @@
     </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BouncyCastle.Crypto, Version=1.8.1.0, Culture=neutral, PublicKeyToken=0e99375e54769942, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Portable.BouncyCastle.1.8.1.2\lib\net4\BouncyCastle.Crypto.dll</HintPath>
+    </Reference>
+    <Reference Include="Certes, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Certes.1.1.0\lib\net45\Certes.dll</HintPath>
+    </Reference>
     <Reference Include="JetBrains.Annotations, Version=10.4.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
       <HintPath>..\..\packages\TaskScheduler.2.5.28\lib\net40\JetBrains.Annotations.dll</HintPath>
     </Reference>
@@ -131,6 +137,9 @@
     <Reference Include="System.Diagnostics.DiagnosticSource, Version=4.0.2.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\..\..\CertifyMisc\Certify.Plugins\Licensing\packages\System.Diagnostics.DiagnosticSource.4.4.1\lib\net45\System.Diagnostics.DiagnosticSource.dll</HintPath>
     </Reference>
+    <Reference Include="System.ValueTuple, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.ValueTuple.4.3.1\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -145,14 +154,19 @@
   <ItemGroup>
     <Compile Include="ACMESharpCompat\ACMESharpUtils.cs" />
     <Compile Include="ACMESharpCompat\Helpers.cs" />
+    <Compile Include="Management\APIProviders\CertesProvider.cs" />
+    <Compile Include="Management\IACMEClientProvider.cs" />
+    <Compile Include="Management\APIProviders\ACMESharpProvider.cs" />
     <Compile Include="Management\CertifyManager.cs" />
     <Compile Include="Management\ItemManager.cs" />
+    <Compile Include="Management\IVaultProvider.cs" />
     <Compile Include="Management\PluginManager.cs" />
     <Compile Include="Management\SecurityProtocolsManager.cs" />
     <Compile Include="Models\ActionLogItem.cs" />
     <Compile Include="Models\APIResponses.cs" />
     <Compile Include="Models\ApiResult.cs" />
     <Compile Include="Models\AppVersion.cs" />
+    <Compile Include="Models\CertificateAuthority.cs" />
     <Compile Include="Models\CertificateRequestResult.cs" />
     <Compile Include="Models\CertRequestConfig.cs" />
     <Compile Include="Models\DomainOption.cs" />
@@ -233,6 +247,7 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

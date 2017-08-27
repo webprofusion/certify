@@ -100,7 +100,7 @@ namespace Certify.Management
                         {
                             b.IsEnabled = (site.State == ObjectState.Started);
                         }
-                        catch (Exception exp)
+                        catch (Exception)
                         {
                             System.Diagnostics.Debug.WriteLine("Exception reading IIS Site state value:" + site.Name);
                         }
@@ -118,9 +118,9 @@ namespace Certify.Management
             using (var iisManager = GetDefaultServerManager())
             {
                 var site = iisManager.Sites.FirstOrDefault(s => s.Id == long.Parse(siteId));
-                foreach(var d in domains)
+                foreach (var d in domains)
                 {
-                    site.Bindings.Add("*:80:" + d,"http");
+                    site.Bindings.Add("*:80:" + d, "http");
                 }
                 iisManager.CommitChanges();
             }

@@ -17,10 +17,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 /*
  * Port of powershell methods from ACMESharp.POSH: https://github.com/ebekker/ACMESharp
@@ -143,9 +140,9 @@ namespace Certify.ACMESharpCompat
                         if (!string.IsNullOrEmpty(ci.GenerateDetailsFile))
                         {
                             // Generate a private key and CSR:
-                            //    Key:  RSA 2048-bit
-                            //    MD:   SHA 256
-                            //    CSR:  Details pulled from CSR Details JSON file
+                            // Key:  RSA 2048-bit
+                            // MD:   SHA 256
+                            // CSR:  Details pulled from CSR Details JSON file
 
                             CsrDetails csrDetails;
                             var csrDetailsAsset = vlt.GetAsset(VaultAssetType.CsrDetails, ci.GenerateDetailsFile);
@@ -252,8 +249,8 @@ namespace Certify.ACMESharpCompat
                                 ci.CrtPemFile = crtPemFile;
                             }
 
-                            // Extract a few pieces of info from the issued
-                            // cert that we like to have quick access to
+                            // Extract a few pieces of info from the issued cert that we like to have
+                            // quick access to
                             var x509 = new X509Certificate2(ci.CertificateRequest.GetCertificateContent());
                             ci.SerialNumber = x509.SerialNumber;
                             ci.Thumbprint = x509.Thumbprint;
@@ -524,7 +521,8 @@ namespace Certify.ACMESharpCompat
                             //WriteVerbose("Override Handler parameters specified");
                             if (handlerParams == null || handlerParams.Count == 0)
                             {
-                                // WriteVerbose("Profile does not define any parameters, using override parameters only");
+                                // WriteVerbose("Profile does not define any parameters, using
+                                // override parameters only");
                                 handlerParams = cliHandlerParams;
                             }
                             else
@@ -804,8 +802,8 @@ namespace Certify.ACMESharpCompat
                             {
                                 var crt = cp.ImportCertificate(EncodingFormat.DER, source);
 
-                                // We're saving the DER format cert "through"
-                                // the CP in order to validate its content
+                                // We're saving the DER format cert "through" the CP in order to
+                                // validate its content
                                 cp.ExportCertificate(crt, EncodingFormat.DER, derTarget);
                                 ci.CrtDerFile = crtDerFile;
 
@@ -830,9 +828,8 @@ namespace Certify.ACMESharpCompat
                             var upLink = links.GetFirstOrDefault("up");
                             if (upLink != null)
                             {
-                                // We need to save the ICA certificate to a local
-                                // temp file so that we can read it in and store
-                                // it properly as a vault asset through a stream
+                                // We need to save the ICA certificate to a local temp file so that
+                                // we can read it in and store it properly as a vault asset through a stream
                                 var tmp = Path.GetTempFileName();
                                 try
                                 {
