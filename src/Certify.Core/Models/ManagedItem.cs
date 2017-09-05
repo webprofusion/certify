@@ -61,7 +61,6 @@ namespace Certify.Models
         public static void AppendLog(string managedItemId, ManagedSiteLogItem logItem)
         {
             //FIXME:
-
             var logPath = Util.GetAppDataFolder() + "\\logs\\log_" + managedItemId.Replace(':', '_') + ".txt";
 
             var log = new LoggerConfiguration()
@@ -151,8 +150,6 @@ namespace Certify.Models
             this.RequestConfig.EnableFailureNotifications = true;
 
             this.RequestConfig.PropertyChanged += RequestConfig_PropertyChanged;
-            
-            
         }
 
         private void RequestConfig_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -195,18 +192,17 @@ namespace Certify.Models
         {
             //if a domain option has changed then the parent managed item gets marked as changed as well
             this.IsChanged = true;
-           
         }
 
         public void ClearDomainOptions()
         {
             this.DomainOptions = new ObservableCollection<DomainOption>();
-
         }
+
         public void AddDomainOptions(List<DomainOption> domainOptions)
         {
             // add list of domain options, this in turn wires up change notifications
-            foreach(var d in domainOptions)
+            foreach (var d in domainOptions)
             {
                 this.AddDomainOption(d);
             }

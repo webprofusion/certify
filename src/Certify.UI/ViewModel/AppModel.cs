@@ -394,16 +394,21 @@ namespace Certify.UI.ViewModel
 
         public async void RenewAll(bool autoRenewalsOnly)
         {
+            //FIXME: currently user can run renew all again while renewals are still in progress
+
             Dictionary<string, Progress<RequestProgressState>> itemTrackers = new Dictionary<string, Progress<RequestProgressState>>();
             foreach (var s in ManagedSites)
             {
                 if ((autoRenewalsOnly && s.IncludeInAutoRenew) || !autoRenewalsOnly)
                 {
                     var progressState = new RequestProgressState { ManagedItem = s };
-                    itemTrackers.Add(s.Id, new Progress<RequestProgressState>(progressState.ProgressReport));
+                    if (!itemTrackers.ContainsKey(s.Id))
+                    {
+                        itemTrackers.Add(s.Id, new Progress<RequestProgressState>(progressState.ProgressReport));
 
-                    //begin monitoring progress
-                    BeginTrackingProgress(progressState);
+                        //begin monitoring progress
+                        BeginTrackingProgress(progressState);
+                    }
                 }
             }
 

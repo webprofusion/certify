@@ -70,13 +70,37 @@ namespace Certify.ACMESharpCompat
                 : PkiToolExtManager.GetPkiTool(name);
         }
 
+        private static void OpenVaultStorage(ACMESharp.Vault.IVault vlt, bool initOrOpen = false)
+        {
+            // vault store can have IO access errors due to AV products scanning files while we want
+            // to use them, retry failed open attempts
+            int maxAttempts = 3;
+            while (maxAttempts > 0)
+            {
+                try
+                {
+                    vlt.OpenStorage(initOrOpen: initOrOpen);
+                    return;
+                }
+                catch (System.IO.IOException)
+                {
+                    maxAttempts--;
+#if DEBUG
+                    System.Diagnostics.Debug.WriteLine("Failed to open vault, retrying..");
+#endif
+                    System.Threading.Thread.Sleep(200);
+                }
+            }
+        }
+
         internal static AcmeRegistration NewRegistration(string alias, string[] contacts, bool acceptTOS, string Signer = "RS256", string vaultProfile = null)
         {
             lock (VaultManager.VAULT_LOCK)
             {
                 using (var vlt = GetVault(vaultProfile))
                 {
-                    vlt.OpenStorage();
+                    OpenVaultStorage(vlt);
+
                     var v = vlt.LoadVault();
 
                     AcmeRegistration r = null;
@@ -118,7 +142,7 @@ namespace Certify.ACMESharpCompat
             {
                 using (var vlt = GetVault(vaultProfile))
                 {
-                    vlt.OpenStorage();
+                    OpenVaultStorage(vlt);
                     var v = vlt.LoadVault();
 
                     if (v.Registrations == null || v.Registrations.Count < 1)
@@ -271,7 +295,7 @@ namespace Certify.ACMESharpCompat
             {
                 using (var vlt = GetVault(vaultProfile))
                 {
-                    vlt.OpenStorage();
+                    OpenVaultStorage(vlt);
                     var v = vlt.LoadVault();
 
                     if (v.Registrations == null || v.Registrations.Count < 1)
@@ -318,7 +342,7 @@ namespace Certify.ACMESharpCompat
             {
                 using (var vlt = GetVault(vaultProfile))
                 {
-                    vlt.OpenStorage();
+                    OpenVaultStorage(vlt);
                     var v = vlt.LoadVault();
 
                     if (v.Registrations == null || v.Registrations.Count < 1)
@@ -377,7 +401,7 @@ namespace Certify.ACMESharpCompat
             {
                 using (var vlt = GetVault(vaultProfile))
                 {
-                    vlt.OpenStorage();
+                    OpenVaultStorage(vlt);
                     var v = vlt.LoadVault();
 
                     if (v.Registrations == null || v.Registrations.Count < 1)
@@ -441,7 +465,7 @@ namespace Certify.ACMESharpCompat
             {
                 using (var vlt = GetVault(vaultProfile))
                 {
-                    vlt.OpenStorage();
+                    OpenVaultStorage(vlt);
                     var v = vlt.LoadVault();
 
                     if (v.Registrations == null || v.Registrations.Count < 1)
@@ -614,7 +638,7 @@ namespace Certify.ACMESharpCompat
 
                 using (var vlt = GetVault(vaultProfile))
                 {
-                    vlt.OpenStorage();
+                    OpenVaultStorage(vlt);
                     var v = vlt.LoadVault();
 
                     if (v.Registrations == null || v.Registrations.Count < 1)
@@ -750,7 +774,7 @@ namespace Certify.ACMESharpCompat
             {
                 using (var vlt = GetVault(vaultProfile))
                 {
-                    vlt.OpenStorage();
+                    OpenVaultStorage(vlt);
                     var v = vlt.LoadVault();
 
                     if (v.Registrations == null || v.Registrations.Count < 1)
@@ -934,7 +958,7 @@ namespace Certify.ACMESharpCompat
             {
                 using (var vlt = GetVault(vaultProfile))
                 {
-                    vlt.OpenStorage();
+                    OpenVaultStorage(vlt);
                     var v = vlt.LoadVault();
 
                     if (v.Registrations == null || v.Registrations.Count < 1)

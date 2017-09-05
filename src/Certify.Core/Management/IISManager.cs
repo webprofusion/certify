@@ -266,6 +266,15 @@ namespace Certify.Management
             }
         }
 
+        public Site GetSiteById(string id)
+        {
+            using (var iisManager = GetDefaultServerManager())
+            {
+                Site siteDetails = iisManager.Sites.FirstOrDefault(s => s.Id.ToString() == id);
+                return siteDetails;
+            }
+        }
+
         public bool IsSiteRunning(string id)
         {
             using (var iisManager = GetDefaultServerManager())
@@ -287,6 +296,16 @@ namespace Certify.Management
 
         #region Certificates
 
+        internal static void LogMessage(string managedSiteId, string msg)
+        {
+            ManagedSiteLog.AppendLog(managedSiteId, new ManagedSiteLogItem
+            {
+                EventDate = DateTime.UtcNow,
+                LogItemType = LogItemType.GeneralInfo,
+                Message = msg
+            });
+        }
+
         /// <summary>
         /// Creates or updates the htttps bindings associated with the dns names in the current
         /// request config, using the requested port/ips or autobinding
@@ -295,8 +314,10 @@ namespace Certify.Management
         /// <param name="pfxPath"></param>
         /// <param name="cleanupCertStore"></param>
         /// <returns></returns>
-        internal bool InstallCertForRequest(CertRequestConfig requestConfig, string pfxPath, bool cleanupCertStore)
+        internal bool InstallCertForRequest(ManagedSite managedSite, string pfxPath, bool cleanupCertStore)
         {
+            var requestConfig = managedSite.RequestConfig;
+
             if (new System.IO.FileInfo(pfxPath).Length == 0)
             {
                 throw new ArgumentException("InstallCertForRequest: Invalid PFX File");
@@ -307,14 +328,34 @@ namespace Certify.Management
 
             if (storedCert != null)
             {
+                //get list of domains we need to create/update https bindings for
                 List<string> dnsHosts = new List<string> { requestConfig.PrimaryDomain };
-                if (requestConfig.SubjectAlternativeNames != null) dnsHosts.AddRange(requestConfig.SubjectAlternativeNames);
+                if (requestConfig.SubjectAlternativeNames != null)
+                {
+                    dnsHosts.AddRange(requestConfig.SubjectAlternativeNames);
+                }
+
                 dnsHosts = dnsHosts.Distinct().ToList();
 
+                // identify the IIS set we want to target
+                var site = GetSiteById(managedSite.GroupId);
+
+                if (site != null)
+                {
+                    //TODO: check site has bindings for given domains, otherwise set back to null
+                }
+
+                if (site == null)
+                {
+                    site = GetSiteByDomain(dnsHosts.FirstOrDefault(d => !String.IsNullOrWhiteSpace(d)));
+                }
+
+                // add/update required bindings for each dns hostname
                 foreach (var hostname in dnsHosts)
                 {
                     //match dns host to IIS site
-                    var site = GetSiteByDomain(hostname);
+                    if (String.IsNullOrWhiteSpace(hostname)) throw new ArgumentException("InstallCertForRequest: Invalid (empty) DNS hostname supplied");
+
                     if (site != null)
                     {
                         //create/update binding and associate new cert
@@ -327,9 +368,9 @@ namespace Certify.Management
                         {
                             //if any binding elements configured, use those, otherwise auto bind using defaults and SNI
                             InstallCertificateforBinding(site, storedCert, hostname,
-                                sslPort: !String.IsNullOrEmpty(requestConfig.BindingPort) ? int.Parse(requestConfig.BindingPort) : 443,
+                                sslPort: !String.IsNullOrWhiteSpace(requestConfig.BindingPort) ? int.Parse(requestConfig.BindingPort) : 443,
                                 useSNI: (requestConfig.BindingUseSNI != null ? (bool)requestConfig.BindingUseSNI : true),
-                                ipAddress: requestConfig.BindingIPAddress
+                                ipAddress: !String.IsNullOrWhiteSpace(requestConfig.BindingIPAddress) ? requestConfig.BindingIPAddress : null
                                 );
                         }
                     }
@@ -380,7 +421,7 @@ namespace Certify.Management
                     else
                     {
                         //add new https binding at default port "<ip>:port:hostDnsName";
-                        string bindingSpec = (ipAddress != null ? ipAddress : "") +
+                        string bindingSpec = (ipAddress != null ? ipAddress : "*") +
                             ":" + sslPort + ":" + internationalHost;
                         var iisBinding = siteToUpdate.Bindings.Add(bindingSpec, certificate.GetCertHash(), store.Name);
 

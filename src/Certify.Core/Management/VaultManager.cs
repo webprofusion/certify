@@ -81,6 +81,29 @@ namespace Certify
             }
         }
 
+        private void OpenVaultStorage(ACMESharp.Vault.IVault vlt, bool initOrOpen)
+        {
+            // vault store can have IO access errors due to AV products scanning files while we want
+            // to use them, retry failed open attempts
+            int maxAttempts = 3;
+            while (maxAttempts > 0)
+            {
+                try
+                {
+                    vlt.OpenStorage(initOrOpen: initOrOpen);
+                    return;
+                }
+                catch (System.IO.IOException)
+                {
+                    maxAttempts--;
+#if DEBUG
+                    System.Diagnostics.Debug.WriteLine("Failed to open vault, retrying..");
+#endif
+                    Thread.Sleep(200);
+                }
+            }
+        }
+
         public bool InitVault(bool staging = true)
         {
             string apiURI = ACMESharpUtils.WELL_KNOWN_BASE_SERVICES[ACMESharpUtils.WELL_KNOWN_LESTAGE];
@@ -95,7 +118,7 @@ namespace Certify
             {
                 using (var vlt = ACMESharpUtils.GetVault(this.vaultProfile))
                 {
-                    vlt.OpenStorage(true);
+                    OpenVaultStorage(vlt, true);
                     var v = vlt.LoadVault(false);
                     if (v != null) vaultExists = true;
                 }
@@ -115,7 +138,7 @@ namespace Certify
                     {
                         this.LogAction("InitVault", "Creating Vault");
 
-                        vlt.OpenStorage(initOrOpen: true);
+                        OpenVaultStorage(vlt, true);
 
                         var v = new VaultInfo
                         {
@@ -158,7 +181,7 @@ namespace Certify
             {
                 using (var vlt = ACMESharpUtils.GetVault(this.vaultProfile))
                 {
-                    vlt.OpenStorage(true);
+                    OpenVaultStorage(vlt, true);
                     var v = vlt.LoadVault();
                     return v;
                 }
@@ -182,7 +205,7 @@ namespace Certify
             {
                 using (var vlt = ACMESharpUtils.GetVault(this.vaultProfile))
                 {
-                    vlt.OpenStorage();
+                    OpenVaultStorage(vlt, true);
                     var v = vlt.LoadVault();
 
                     List<Guid> toBeRemoved = new List<Guid>();
@@ -466,7 +489,7 @@ namespace Certify
                 {
                     try
                     {
-                        vlt.OpenStorage(true);
+                        OpenVaultStorage(vlt, true);
                         vaultConfig.Registrations.Remove(id);
                         vlt.SaveVault(vaultConfig);
                         return true;
@@ -489,7 +512,7 @@ namespace Certify
                 {
                     lock (VAULT_LOCK)
                     {
-                        vlt.OpenStorage(true);
+                        OpenVaultStorage(vlt, true);
                         if (vaultConfig.Identifiers != null)
                         {
                             var idsToRemove = vaultConfig.Identifiers.Values.Where(i => i.Dns == dns);
