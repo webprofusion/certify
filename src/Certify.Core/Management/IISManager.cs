@@ -359,23 +359,15 @@ namespace Certify.Management
                     if (site != null)
                     {
                         //create/update binding and associate new cert
-                        if (!requestConfig.PerformAutomatedCertBinding)
-                        {
-                            //create auto binding and use SNI
-                            InstallCertificateforBinding(site, storedCert, hostname);
-                        }
-                        else
-                        {
-                            //if any binding elements configured, use those, otherwise auto bind using defaults and SNI
-                            InstallCertificateforBinding(site, storedCert, hostname,
-                                sslPort: !String.IsNullOrWhiteSpace(requestConfig.BindingPort) ? int.Parse(requestConfig.BindingPort) : 443,
-                                useSNI: (requestConfig.BindingUseSNI != null ? (bool)requestConfig.BindingUseSNI : true),
-                                ipAddress: !String.IsNullOrWhiteSpace(requestConfig.BindingIPAddress) ? requestConfig.BindingIPAddress : null
-                                );
-                        }
+                        //if any binding elements configured, use those, otherwise auto bind using defaults and SNI
+                        InstallCertificateforBinding(site, storedCert, hostname,
+                            sslPort: !String.IsNullOrWhiteSpace(requestConfig.BindingPort) ? int.Parse(requestConfig.BindingPort) : 443,
+                            useSNI: (requestConfig.BindingUseSNI != null ? (bool)requestConfig.BindingUseSNI : true),
+                            ipAddress: !String.IsNullOrWhiteSpace(requestConfig.BindingIPAddress) ? requestConfig.BindingIPAddress : null
+                            );
                     }
                 }
-
+                
                 if (cleanupCertStore)
                 {
                     //remove old certs for this primary domain
@@ -406,10 +398,16 @@ namespace Certify.Management
             store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
             using (var iisManager = GetDefaultServerManager())
             {
+                if (GetIisVersion().Major < 8)
+                {
+                    // IIS ver < 8 doesn't support SNI - default to host/SNI-less bindings 
+                    useSNI = false;
+                    host = "";
+                }
                 var siteToUpdate = iisManager.Sites.FirstOrDefault(s => s.Id == site.Id);
                 if (siteToUpdate != null)
                 {
-                    string internationalHost = _idnMapping.GetUnicode(host);
+                    string internationalHost = host == "" ? "" : _idnMapping.GetUnicode(host);
                     var existingBinding = (from b in siteToUpdate.Bindings where b.Host == internationalHost && b.Protocol == "https" select b).FirstOrDefault();
 
                     if (existingBinding != null)

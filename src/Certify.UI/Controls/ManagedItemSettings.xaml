@@ -131,7 +131,7 @@
                             <TextBox Text="{Binding SelectedItem.RequestConfig.BindingPort}" Width="225" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
-                            <Label Width="131" Content="Use SNI (Server 2012 onwards):" />
+                            <Label Width="131" Content="Use SNI (IIS 8+):" />
                             <CheckBox IsChecked="{Binding SelectedItem.RequestConfig.BindingUseSNI}"></CheckBox>
                         </StackPanel>
                     </StackPanel>

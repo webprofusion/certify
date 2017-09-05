@@ -28,7 +28,7 @@
                     <StackPanel Orientation="Vertical" Margin="0,8,0,0">
                         <StackPanel Orientation="Horizontal">
                             <fa:FontAwesome Icon="Globe" Margin="0,0,8,0" />
-                            <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,8,0" Foreground="{DynamicResource {x:Static SystemColors.ActiveCaptionTextBrushKey} }" />
+                            <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,8,0" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrush} }" />
                         </StackPanel>
 
                         <TextBlock Text="{Binding Path=ItemType, Converter={StaticResource EnumConverter}}" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" Margin="16,0,0,0" FontSize="10" />
