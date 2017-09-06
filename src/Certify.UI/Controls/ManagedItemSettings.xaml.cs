@@ -50,6 +50,13 @@ namespace Certify.UI.Controls
                     MessageBox.Show("A Primary Domain must be selected");
                     return;
                 }
+
+                if (MainViewModel.SelectedItem.RequestConfig.PerformAutomatedCertBinding)
+                {
+                    MainViewModel.SelectedItem.RequestConfig.BindingIPAddress = null;
+                    MainViewModel.SelectedItem.RequestConfig.BindingPort = null;
+                    MainViewModel.SelectedItem.RequestConfig.BindingUseSNI = null;
+                }
                 //save changes
 
                 //creating new managed item
