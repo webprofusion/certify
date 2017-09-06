@@ -753,17 +753,20 @@ namespace Certify
                     }
                 }
 
-                if (!extensionlessConfigOK && requestConfig.PerformAutoConfig)
+                if (requestConfig.PerformExtensionlessConfigChecks)
                 {
-                    //if first attempt(s) at config failed, try an alternative config
-                    webConfigContent = Properties.Resources.IISWebConfigAlt;
-
-                    System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
-
-                    if (CheckURL("http://" + requestConfig.PrimaryDomain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
+                    if (!extensionlessConfigOK && requestConfig.PerformAutoConfig)
                     {
-                        //ready to complete challenge
-                        extensionlessConfigOK = true;
+                        //if first attempt(s) at config failed, try an alternative config
+                        webConfigContent = Properties.Resources.IISWebConfigAlt;
+
+                        System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
+
+                        if (CheckURL("http://" + requestConfig.PrimaryDomain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
+                        {
+                            //ready to complete challenge
+                            extensionlessConfigOK = true;
+                        }
                     }
                 }
             }

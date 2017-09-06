@@ -32,7 +32,6 @@ namespace Certify.UI.Utils
         }
     }
 
- 
     public class InverseBooleanConverter : IValueConverter
     {
         #region IValueConverter Members
@@ -52,9 +51,9 @@ namespace Certify.UI.Utils
             return this.Convert(value, targetType, parameter, culture);
         }
 
-        #endregion
+        #endregion IValueConverter Members
     }
-    
+
     /// <summary>
     /// http://stackoverflow.com/questions/534575/how-do-i-invert-booleantovisibilityconverter
     /// </summary>
@@ -63,5 +62,18 @@ namespace Certify.UI.Utils
         public OptionalBooleanToVisibilityConverter() :
             base(Visibility.Visible, Visibility.Collapsed)
         { }
+    }
+
+    public class NullVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value == null ? Visibility.Hidden : Visibility.Visible;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

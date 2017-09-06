@@ -21,6 +21,7 @@
             <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
             <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
             <utils:OptionalBooleanToVisibilityConverter True="Hidden" False="Visible" x:Key="InvBoolVisConverter" />
+            <utils:NullVisibilityConverter x:Key="NullVisConverter" />
         </Grid.Resources>
         <StackPanel Orientation="Vertical" Grid.Row="0">
             <Label Content="{Binding SelectedItem.Name}" Margin="8,0,0,2" FontSize="24" Foreground="{DynamicResource {x:Static SystemColors.ActiveCaptionTextBrushKey}}" FontFamily="Segoe UI Semilight" />
@@ -66,43 +67,45 @@
                         <Label Width="136" Content="Select IIS Site:" />
                         <ComboBox ItemsSource="{Binding WebSiteList}" SelectedItem="{Binding SelectedWebSite}"  DisplayMemberPath="SiteName" Width="225" SelectionChanged="Website_SelectionChanged" />
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <Label Width="136" Content="Display Name:" />
-                        <TextBox Text="{Binding SelectedItem.Name, UpdateSourceTrigger=PropertyChanged}" Width="225" />
-                    </StackPanel>
-                    <StackPanel Orientation="Vertical" Margin="136,8,0,0">
-                        <CheckBox Content="Enable Auto Renewal" IsChecked="{Binding SelectedItem.IncludeInAutoRenew}" />
-                        <CheckBox Content="Notify Primary Contact On Renewal Failure" IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" />
-                    </StackPanel>
-                    <StackPanel x:Name="NoBindings" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" Orientation="Vertical"  Margin="0,8,0,0">
-                        <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="8,0,0,0" FontWeight="Bold" FontFamily="Segoe UI Semibold" Foreground="#FFEA1010"><Run Text="There are no http or https bindings associated with the selected site. At least one is required." /></TextBlock>
-                    </StackPanel>
-                    <StackPanel x:Name="DomainOptions" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=BoolToVisConverter}}" Orientation="Vertical" Background="#FFF7F7F7" Margin="0,8,0,0">
-                        <StackPanel Orientation="Vertical" Margin="0,16,0,16" HorizontalAlignment="Left">
-                            <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="8,0,0,0" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" FontWeight="Bold" FontFamily="Segoe UI Semibold"><Run Text="The following domains will be included as a single certificate request. The Lets Encrypt service must be able to access all of theses sites via HTTP (port 80) for the certification process to work." /></TextBlock>
+                    <StackPanel Orientation="Vertical" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullVisConverter}}">
+                        <StackPanel Orientation="Horizontal">
+                            <Label Width="136" Content="Display Name:" />
+                            <TextBox Text="{Binding SelectedItem.Name, UpdateSourceTrigger=PropertyChanged}" Width="225" />
                         </StackPanel>
-
-                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                            <Label Content="Domains and Subdomains to include:" />
-                            <Button Content="Select All" Command="{Binding SANSelectAllCommand}" Margin="16,0,0,0" />
-                            <Button Content="Select None" Command="{Binding SANSelectNoneCommand}" Margin="8,0,0,0" />
+                        <StackPanel Orientation="Vertical" Margin="136,8,0,0">
+                            <CheckBox Content="Enable Auto Renewal" IsChecked="{Binding SelectedItem.IncludeInAutoRenew}" />
+                            <CheckBox Content="Notify Primary Contact On Renewal Failure" IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" />
                         </StackPanel>
-                        <StackPanel Orientation="Vertical">
+                        <StackPanel x:Name="NoBindings" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" Orientation="Vertical"  Margin="0,8,0,0">
+                            <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="16,0" FontWeight="Bold" FontFamily="Segoe UI Semibold" Foreground="#FFEA1010"><Run Text="There are no http or https hostname bindings associated with the selected site in IIS. At least one fully qualified hostname (e.g 'github.com') is required to create a certificate." /></TextBlock>
+                        </StackPanel>
+                        <StackPanel x:Name="DomainOptions" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=BoolToVisConverter}}" Orientation="Vertical" Background="#FFF7F7F7" Margin="0,8,0,0">
+                            <StackPanel Orientation="Vertical" Margin="0,16,0,16" HorizontalAlignment="Left">
+                                <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="8,0,0,0" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" FontWeight="Bold" FontFamily="Segoe UI Semibold"><Run Text="The following selected domains will be included as a single certificate request. The Lets Encrypt service must be able to access all of theses domains via HTTP (port 80) for the certification process to work." /></TextBlock>
+                            </StackPanel>
 
-                            <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" VerticalScrollBarVisibility="Auto" Height="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}, Path=ActualHeight}" ItemsSource="{Binding SelectedItem.DomainOptions}">
-                                <DataGrid.Columns>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Label Content="Domains and Subdomains to include:" />
+                                <Button Content="Select All" Command="{Binding SANSelectAllCommand}" Margin="16,0,0,0" />
+                                <Button Content="Select None" Command="{Binding SANSelectNoneCommand}" Margin="8,0,0,0" />
+                            </StackPanel>
+                            <StackPanel Orientation="Vertical">
 
-                                    <DataGridCheckBoxColumn Header="Include" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
-                                    <DataGridTextColumn Header="Domain" Binding="{Binding Domain, UpdateSourceTrigger=PropertyChanged}" Width="400" IsReadOnly="True" />
-                                    <DataGridTemplateColumn Header="Primary">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <RadioButton GroupName="PrimaryDomainGroup" IsChecked="{Binding IsPrimaryDomain, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" />
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                </DataGrid.Columns>
-                            </DataGrid>
+                                <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" VerticalScrollBarVisibility="Auto" Height="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}, Path=ActualHeight}" ItemsSource="{Binding SelectedItem.DomainOptions}">
+                                    <DataGrid.Columns>
+
+                                        <DataGridCheckBoxColumn Header="Include" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
+                                        <DataGridTextColumn Header="Domain" Binding="{Binding Domain, UpdateSourceTrigger=PropertyChanged}" Width="400" IsReadOnly="True" />
+                                        <DataGridTemplateColumn Header="Primary">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <RadioButton GroupName="PrimaryDomainGroup" IsChecked="{Binding IsPrimaryDomain, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>
