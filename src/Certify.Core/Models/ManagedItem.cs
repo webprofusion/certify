@@ -58,10 +58,15 @@ namespace Certify.Models
         /// </summary>
         public List<ManagedSiteLogItem> Logs { get; set; }
 
+        public static string GetLogPath(string managedItemId)
+        {
+            return Util.GetAppDataFolder() + "\\logs\\log_" + managedItemId.Replace(':', '_') + ".txt";
+        }
+
         public static void AppendLog(string managedItemId, ManagedSiteLogItem logItem)
         {
             //FIXME:
-            var logPath = Util.GetAppDataFolder() + "\\logs\\log_" + managedItemId.Replace(':', '_') + ".txt";
+            var logPath = GetLogPath(managedItemId);
 
             var log = new LoggerConfiguration()
                 .WriteTo.File(logPath, shared: true)

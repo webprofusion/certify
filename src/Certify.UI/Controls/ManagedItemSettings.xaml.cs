@@ -1,7 +1,11 @@
-﻿using System;
+﻿using Certify.Management;
+using System;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Controls;
+
+using System.Security.Cryptography.X509Certificates;
 
 namespace Certify.UI.Controls
 {
@@ -27,6 +31,20 @@ namespace Certify.UI.Controls
         private void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             this.SettingsTab.SelectedIndex = 0;
+
+            if (this.MainViewModel.SelectedItem != null)
+            {
+                //populate info
+                if (!String.IsNullOrEmpty(this.MainViewModel.SelectedItem.CertificatePath))
+                {
+                    CertPath.Content = this.MainViewModel.SelectedItem.CertificatePath;
+                }
+            }
+            else
+            {
+                //clear info
+                CertPath.Content = "Certificate Path: ";
+            }
         }
 
         private void Button_Save(object sender, RoutedEventArgs e)
@@ -147,6 +165,44 @@ namespace Certify.UI.Controls
         private void SANDomain_Toggled(object sender, RoutedEventArgs e)
         {
             this.MainViewModel.SelectedItem.IsChanged = true;
+        }
+
+        private void OpenLogFile_Click(object sender, RoutedEventArgs e)
+        {
+            // get file path for log
+            var logPath = Models.ManagedSiteLog.GetLogPath(this.MainViewModel.SelectedItem.Id);
+
+            //check file exists, if not inform user
+            if (System.IO.File.Exists(logPath))
+            {
+                //open file
+                System.Diagnostics.Process.Start(logPath);
+            }
+            else
+            {
+                MessageBox.Show("The log file for this item has not been created yet.");
+            }
+        }
+
+        private void OpenCertificateFile_Click(object sender, RoutedEventArgs e)
+        {
+            // get file path for log
+            var certPath = this.MainViewModel.SelectedItem.CertificatePath;
+
+            //check file exists, if not inform user
+            if (!String.IsNullOrEmpty(certPath) && System.IO.File.Exists(certPath))
+            {
+                //open file
+                var cert = new CertificateManager().GetCertificate(certPath);
+                if (cert != null)
+                {
+                    X509Certificate2UI.DisplayCertificate(cert);
+                }
+            }
+            else
+            {
+                MessageBox.Show("The certificate file for this item has not been created yet.");
+            }
         }
     }
 }

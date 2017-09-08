@@ -91,7 +91,7 @@
                             </StackPanel>
                             <StackPanel Orientation="Vertical">
 
-                                <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" VerticalScrollBarVisibility="Auto" Height="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}, Path=ActualHeight}" ItemsSource="{Binding SelectedItem.DomainOptions}">
+                                <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" VerticalScrollBarVisibility="Auto" Height="180" ItemsSource="{Binding SelectedItem.DomainOptions}">
                                     <DataGrid.Columns>
 
                                         <DataGridCheckBoxColumn Header="Include" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
@@ -138,6 +138,15 @@
                             <CheckBox IsChecked="{Binding SelectedItem.RequestConfig.BindingUseSNI}"></CheckBox>
                         </StackPanel>
                     </StackPanel>
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="Info" IsSelected="True">
+                <StackPanel Orientation="Vertical">
+
+                    <Button x:Name="OpenLogFile" Content="Open Log File" Click="OpenLogFile_Click" />
+                    <Label x:Name="CertPath" Content="Certificate Path:" />
+                    <Button x:Name="OpenCertificateFile" Content="View Certificate" Click="OpenCertificateFile_Click" />
+                    <Label  Content="Note: To export this certificate use the Manage Computer Certificates option in Windows. " />
                 </StackPanel>
             </TabItem>
         </dragablz:TabablzControl>

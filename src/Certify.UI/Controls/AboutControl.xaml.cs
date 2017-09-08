@@ -82,7 +82,7 @@ namespace Certify.UI.Controls
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Process.Start("https://certifytheweb.com/register");
+            System.Diagnostics.Process.Start("https://certifytheweb.com/register?src=app");
         }
 
         private void Button_ApplyRegistrationKey(object sender, RoutedEventArgs e)

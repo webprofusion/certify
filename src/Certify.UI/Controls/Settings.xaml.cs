@@ -58,6 +58,9 @@ namespace Certify.UI.Controls
                 Owner = Window.GetWindow(this)
             };
             d.ShowDialog();
+
+            //refresh
+            MainViewModel.LoadVaultTree();
         }
 
         private void SettingsUpdated(object sender, RoutedEventArgs e)
