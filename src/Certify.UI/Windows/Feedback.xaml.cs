@@ -70,6 +70,7 @@ namespace Certify.UI.Windows
                     {
                         Framework = Environment.Version.ToString(),
                         OS = Environment.OSVersion.ToString(),
+                        AppVersion = Core.Properties.Resources.AppName + " " + new Certify.Management.Util().GetAppVersion(),
                         IsException = this.IsException
                     }
                 });

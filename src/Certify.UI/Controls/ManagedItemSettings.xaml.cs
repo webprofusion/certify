@@ -5,8 +5,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Controls;
 
-using System.Security.Cryptography.X509Certificates;
-
 namespace Certify.UI.Controls
 {
     /// <summary>

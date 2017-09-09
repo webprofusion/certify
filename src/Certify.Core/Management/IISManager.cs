@@ -96,25 +96,33 @@ namespace Certify.Management
 
         public IEnumerable<Site> GetSites(ServerManager iisManager, bool includeOnlyStartedSites)
         {
-            if (includeOnlyStartedSites)
+            try
             {
-                //s.State may throw a com exception for sites in an invalid state.
-
-                return iisManager.Sites.Where(s =>
+                if (includeOnlyStartedSites)
                 {
-                    try
+                    //s.State may throw a com exception for sites in an invalid state.
+
+                    return iisManager.Sites.Where(s =>
                     {
-                        return s.State == ObjectState.Started;
-                    }
-                    catch (Exception)
-                    {
-                        return false;
-                    }
-                });
+                        try
+                        {
+                            return s.State == ObjectState.Started;
+                        }
+                        catch (Exception)
+                        {
+                            return false;
+                        }
+                    });
+                }
+                else
+                {
+                    return iisManager.Sites;
+                }
             }
-            else
+            catch (Exception)
             {
-                return iisManager.Sites;
+                //failed to enumerate sites
+                return new List<Site>();
             }
         }
 
