@@ -154,8 +154,14 @@ namespace Certify.UI.ViewModel
             get
             {
                 //get list of sites from IIS
-                var iisManager = new IISManager();
-                return iisManager.GetPrimarySites(Certify.Properties.Settings.Default.IgnoreStoppedSites);
+                if (certifyManager.IsIISAvailable)
+                {
+                    return certifyManager.GetPrimaryWebSites(Certify.Properties.Settings.Default.IgnoreStoppedSites);
+                }
+                else
+                {
+                    return new List<SiteBindingItem>();
+                }
             }
         }
 
@@ -354,6 +360,14 @@ namespace Certify.UI.ViewModel
             ProgressResults = new ObservableCollection<RequestProgressState>();
         }
 
+        public bool IsIISAvailable
+        {
+            get
+            {
+                return certifyManager.IsIISAvailable;
+            }
+        }
+
         public void PreviewImport(bool sanMergeMode)
         {
             AppViewModel.IsImportSANMergeMode = sanMergeMode;
@@ -367,15 +381,6 @@ namespace Certify.UI.ViewModel
             this.ManagedSites = new ObservableCollection<ManagedSite>(certifyManager.GetManagedSites());
             this.ImportedManagedSites = new ObservableCollection<ManagedSite>();
 
-            if (!this.ManagedSites.Any())
-            {
-                //if we have a vault, preview import. //TODO: make this async and only perform after UI has shown
-                PreviewImport(sanMergeMode: true);
-
-                //if we have no vault, start a new one
-
-                //if we have no registered contacts in the vault then prompt to register a contact
-            }
             /*if (this.ManagedSites.Any())
             {
                 //preselect the first managed site

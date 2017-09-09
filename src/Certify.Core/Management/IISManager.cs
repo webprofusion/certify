@@ -22,6 +22,23 @@ namespace Certify.Management
         // private readonly bool _showOnlyStartedWebsites = Properties.Settings.Default.ShowOnlyStartedWebsites;
         private readonly IdnMapping _idnMapping = new IdnMapping();
 
+        private bool _isIISAvailable { get; set; }
+
+        public bool IsIISAvailable
+        {
+            get
+            {
+                if (!_isIISAvailable)
+                {
+                    var srv = GetDefaultServerManager();
+                    // _isIISAvaillable will be updated by query against server manager
+                    if (srv != null) return _isIISAvailable;
+                }
+
+                return _isIISAvailable;
+            }
+        }
+
         public Version GetIisVersion()
         {
             //http://stackoverflow.com/questions/446390/how-to-detect-iis-version-using-c
@@ -29,6 +46,8 @@ namespace Certify.Management
             {
                 if (componentsKey != null)
                 {
+                    _isIISAvailable = true;
+
                     int majorVersion = (int)componentsKey.GetValue("MajorVersion", -1);
                     int minorVersion = (int)componentsKey.GetValue("MinorVersion", -1);
 
@@ -44,7 +63,35 @@ namespace Certify.Management
 
         private ServerManager GetDefaultServerManager()
         {
-            return new ServerManager(); //(@"C:\Windows\System32\inetsrv\config\applicationHost.config"
+            ServerManager srv = null;
+            try
+            {
+                srv = new ServerManager();
+            }
+            catch (System.Runtime.InteropServices.COMException)
+            {
+                try
+                {
+                    srv = new ServerManager(@"C:\Windows\System32\inetsrv\config\applicationHost.config");
+                }
+                catch (Exception)
+                {
+                    // IIS is probably not installed
+                }
+            }
+
+            _isIISAvailable = false;
+            if (srv != null)
+            {
+                //check iis version
+                var v = GetIisVersion();
+                if (v.Major < 7)
+                {
+                    _isIISAvailable = false;
+                }
+            }
+            // may be null if could not create server manager
+            return srv;
         }
 
         public IEnumerable<Site> GetSites(ServerManager iisManager, bool includeOnlyStartedSites)
@@ -82,30 +129,33 @@ namespace Certify.Management
 
             using (var iisManager = GetDefaultServerManager())
             {
-                var sites = GetSites(iisManager, includeOnlyStartedSites);
-
-                foreach (var site in sites)
+                if (iisManager != null)
                 {
-                    if (site != null)
+                    var sites = GetSites(iisManager, includeOnlyStartedSites);
+
+                    foreach (var site in sites)
                     {
-                        var b = new SiteBindingItem()
+                        if (site != null)
                         {
-                            SiteId = site.Id.ToString(),
-                            SiteName = site.Name
-                        };
+                            var b = new SiteBindingItem()
+                            {
+                                SiteId = site.Id.ToString(),
+                                SiteName = site.Name
+                            };
 
-                        b.PhysicalPath = site.Applications["/"].VirtualDirectories["/"].PhysicalPath;
+                            b.PhysicalPath = site.Applications["/"].VirtualDirectories["/"].PhysicalPath;
 
-                        try
-                        {
-                            b.IsEnabled = (site.State == ObjectState.Started);
+                            try
+                            {
+                                b.IsEnabled = (site.State == ObjectState.Started);
+                            }
+                            catch (Exception)
+                            {
+                                System.Diagnostics.Debug.WriteLine("Exception reading IIS Site state value:" + site.Name);
+                            }
+
+                            result.Add(b);
                         }
-                        catch (Exception)
-                        {
-                            System.Diagnostics.Debug.WriteLine("Exception reading IIS Site state value:" + site.Name);
-                        }
-
-                        result.Add(b);
                     }
                 }
             }
@@ -132,19 +182,22 @@ namespace Certify.Management
 
             using (var iisManager = GetDefaultServerManager())
             {
-                var sites = GetSites(iisManager, ignoreStoppedSites);
-
-                if (siteId != null) sites = sites.Where(s => s.Id.ToString() == siteId);
-                foreach (var site in sites)
+                if (iisManager != null)
                 {
-                    foreach (var binding in site.Bindings.OrderByDescending(b => b?.EndPoint?.Port))
-                    {
-                        var bindingDetails = GetSiteBinding(site, binding);
+                    var sites = GetSites(iisManager, ignoreStoppedSites);
 
-                        //ignore bindings which are not http or https
-                        if (bindingDetails.Protocol?.ToLower().StartsWith("http") == true)
+                    if (siteId != null) sites = sites.Where(s => s.Id.ToString() == siteId);
+                    foreach (var site in sites)
+                    {
+                        foreach (var binding in site.Bindings.OrderByDescending(b => b?.EndPoint?.Port))
                         {
-                            result.Add(bindingDetails);
+                            var bindingDetails = GetSiteBinding(site, binding);
+
+                            //ignore bindings which are not http or https
+                            if (bindingDetails.Protocol?.ToLower().StartsWith("http") == true)
+                            {
+                                result.Add(bindingDetails);
+                            }
                         }
                     }
                 }
@@ -367,7 +420,7 @@ namespace Certify.Management
                             );
                     }
                 }
-                
+
                 if (cleanupCertStore)
                 {
                     //remove old certs for this primary domain
@@ -400,7 +453,7 @@ namespace Certify.Management
             {
                 if (GetIisVersion().Major < 8)
                 {
-                    // IIS ver < 8 doesn't support SNI - default to host/SNI-less bindings 
+                    // IIS ver < 8 doesn't support SNI - default to host/SNI-less bindings
                     useSNI = false;
                     host = "";
                 }

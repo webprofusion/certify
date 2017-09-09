@@ -89,12 +89,21 @@ namespace Certify.UI
         {
             //check for any startup actions required such as vault import
 
-            if (MainViewModel.ImportedManagedSites.Any())
+            if (!this.MainViewModel.ManagedSites.Any())
             {
-                //show import ui
-                Task.Delay(100);
-                var d = new Windows.ImportManagedSites { Owner = this };
-                d.ShowDialog();
+                //if we have a vault, preview import.
+                this.MainViewModel.PreviewImport(sanMergeMode: true);
+            }
+
+            if (MainViewModel.IsIISAvailable)
+            {
+                if (MainViewModel.ImportedManagedSites.Any())
+                {
+                    //show import ui
+                    Task.Delay(100);
+                    var d = new Windows.ImportManagedSites { Owner = this };
+                    d.ShowDialog();
+                }
             }
 
             if (!MainViewModel.IsRegisteredVersion)
@@ -105,6 +114,13 @@ namespace Certify.UI
 
         private void MetroWindow_ContentRendered(object sender, EventArgs e)
         {
+            //warn if IIS not detected
+
+            if (!MainViewModel.IsIISAvailable)
+            {
+                MessageBox.Show("IIS Was not detected on this server, important functionality will be unavailable. If you know IIS is installed and working on this server, please report this error to apps@webprofusion providing details of your server Operating System version and IIS versions");
+            }
+
             if (!MainViewModel.HasRegisteredContacts)
             {
                 //start by registering

@@ -34,6 +34,21 @@ namespace Certify.Management
             _iisManager = new IISManager();
         }
 
+        public bool IsIISAvailable
+        {
+            get
+            {
+                if (_iisManager != null && _iisManager.IsIISAvailable)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
         /// <summary>
         /// Check if we have one or more managed sites setup
         /// </summary>
@@ -141,6 +156,11 @@ namespace Certify.Management
                     _vaultProvider.DeleteContactRegistration(reg.Id);
                 }
             }
+        }
+
+        public List<SiteBindingItem> GetPrimaryWebSites(bool ignoreStoppedSites)
+        {
+            return _iisManager.GetPrimarySites(ignoreStoppedSites);
         }
 
         public string GetAcmeSummary()
@@ -491,10 +511,18 @@ namespace Certify.Management
         {
             var sites = new List<ManagedSite>();
 
-            //get dns identifiers from vault
+            if (_iisManager == null || !_iisManager.IsIISAvailable)
+            {
+                // IIS not enabled, can't match sites to vault items
+                return sites;
+            }
 
+            //get dns identifiers from vault
             var identifiers = _vaultProvider.GetDomainIdentifiers();
+
+            // match existing IIS sites to vault items
             var iisSites = _iisManager.GetSiteBindingList(ignoreStoppedSites: Certify.Properties.Settings.Default.IgnoreStoppedSites);
+
             foreach (var identifier in identifiers)
             {
                 //identify IIS site related to this identifier (if any)
