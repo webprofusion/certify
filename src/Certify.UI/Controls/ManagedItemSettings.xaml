@@ -61,94 +61,120 @@
         <dragablz:TabablzControl x:Name="SettingsTab" Margin="8" Grid.Row="2" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
 
             <TabItem Header="Options" IsSelected="True">
+				<ScrollViewer VerticalScrollBarVisibility="Auto">
+					<StackPanel Margin="0,16,0,0">
+						<StackPanel Orientation="Horizontal" Visibility="{Binding IsWebsiteSelectable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+							<Label Width="136" Content="Select IIS Site:" />
+							<ComboBox ItemsSource="{Binding WebSiteList}" SelectedItem="{Binding SelectedWebSite}"  DisplayMemberPath="SiteName" Width="225" SelectionChanged="Website_SelectionChanged" />
+						</StackPanel>
+						<StackPanel Orientation="Vertical" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullVisConverter}}">
+							<StackPanel Orientation="Horizontal">
+								<Label Width="136" Content="Display Name:" />
+								<TextBox Text="{Binding SelectedItem.Name, UpdateSourceTrigger=PropertyChanged}" Width="225" />
+							</StackPanel>
+							<StackPanel Orientation="Vertical" Margin="136,8,0,0">
+								<CheckBox Content="Enable Auto Renewal" IsChecked="{Binding SelectedItem.IncludeInAutoRenew}" />
+								<CheckBox Content="Notify Primary Contact On Renewal Failure" IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" />
+							</StackPanel>
+							<StackPanel x:Name="NoBindings" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" Orientation="Vertical"  Margin="0,8,0,0">
+								<TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="16,0" FontWeight="Bold" FontFamily="Segoe UI Semibold" Foreground="#FFEA1010"><Run Text="There are no http or https hostname bindings associated with the selected site in IIS. At least one fully qualified hostname (e.g 'github.com') is required to create a certificate." /></TextBlock>
+							</StackPanel>
+							<StackPanel x:Name="DomainOptions" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=BoolToVisConverter}}" Orientation="Vertical" Background="#FFF7F7F7" Margin="0,8,0,0">
+								<StackPanel Orientation="Vertical" Margin="0,16,0,16" HorizontalAlignment="Left">
+									<TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="8,0,0,0" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" FontWeight="Bold" FontFamily="Segoe UI Semibold"><Run Text="The following selected domains will be included as a single certificate request. The Lets Encrypt service must be able to access all of theses domains via HTTP (port 80) for the certification process to work." /></TextBlock>
+								</StackPanel>
 
-                <StackPanel Margin="0,16,0,0">
-                    <StackPanel Orientation="Horizontal" Visibility="{Binding IsWebsiteSelectable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
-                        <Label Width="136" Content="Select IIS Site:" />
-                        <ComboBox ItemsSource="{Binding WebSiteList}" SelectedItem="{Binding SelectedWebSite}"  DisplayMemberPath="SiteName" Width="225" SelectionChanged="Website_SelectionChanged" />
-                    </StackPanel>
-                    <StackPanel Orientation="Vertical" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullVisConverter}}">
-                        <StackPanel Orientation="Horizontal">
-                            <Label Width="136" Content="Display Name:" />
-                            <TextBox Text="{Binding SelectedItem.Name, UpdateSourceTrigger=PropertyChanged}" Width="225" />
-                        </StackPanel>
-                        <StackPanel Orientation="Vertical" Margin="136,8,0,0">
-                            <CheckBox Content="Enable Auto Renewal" IsChecked="{Binding SelectedItem.IncludeInAutoRenew}" />
-                            <CheckBox Content="Notify Primary Contact On Renewal Failure" IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" />
-                        </StackPanel>
-                        <StackPanel x:Name="NoBindings" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" Orientation="Vertical"  Margin="0,8,0,0">
-                            <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="16,0" FontWeight="Bold" FontFamily="Segoe UI Semibold" Foreground="#FFEA1010"><Run Text="There are no http or https hostname bindings associated with the selected site in IIS. At least one fully qualified hostname (e.g 'github.com') is required to create a certificate." /></TextBlock>
-                        </StackPanel>
-                        <StackPanel x:Name="DomainOptions" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=BoolToVisConverter}}" Orientation="Vertical" Background="#FFF7F7F7" Margin="0,8,0,0">
-                            <StackPanel Orientation="Vertical" Margin="0,16,0,16" HorizontalAlignment="Left">
-                                <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="8,0,0,0" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" FontWeight="Bold" FontFamily="Segoe UI Semibold"><Run Text="The following selected domains will be included as a single certificate request. The Lets Encrypt service must be able to access all of theses domains via HTTP (port 80) for the certification process to work." /></TextBlock>
-                            </StackPanel>
+								<StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+									<Label Content="Domains and Subdomains to include:" />
+									<Button Content="Select All" Command="{Binding SANSelectAllCommand}" Margin="16,0,0,0" />
+									<Button Content="Select None" Command="{Binding SANSelectNoneCommand}" Margin="8,0,0,0" />
+								</StackPanel>
+								<StackPanel Orientation="Vertical">
 
-                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                <Label Content="Domains and Subdomains to include:" />
-                                <Button Content="Select All" Command="{Binding SANSelectAllCommand}" Margin="16,0,0,0" />
-                                <Button Content="Select None" Command="{Binding SANSelectNoneCommand}" Margin="8,0,0,0" />
-                            </StackPanel>
-                            <StackPanel Orientation="Vertical">
+									<DataGrid AutoGenerateColumns="False" CanUserAddRows="False" VerticalScrollBarVisibility="Auto" Height="180" ItemsSource="{Binding SelectedItem.DomainOptions}">
+										<DataGrid.Columns>
 
-                                <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" VerticalScrollBarVisibility="Auto" Height="180" ItemsSource="{Binding SelectedItem.DomainOptions}">
-                                    <DataGrid.Columns>
-
-                                        <DataGridCheckBoxColumn Header="Include" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
-                                        <DataGridTextColumn Header="Domain" Binding="{Binding Domain, UpdateSourceTrigger=PropertyChanged}" Width="400" IsReadOnly="True" />
-                                        <DataGridTemplateColumn Header="Primary">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <RadioButton GroupName="PrimaryDomainGroup" IsChecked="{Binding IsPrimaryDomain, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" />
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                    </DataGrid.Columns>
-                                </DataGrid>
-                            </StackPanel>
-                        </StackPanel>
-                    </StackPanel>
-                </StackPanel>
-            </TabItem>
+											<DataGridCheckBoxColumn Header="Include" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
+											<DataGridTextColumn Header="Domain" Binding="{Binding Domain, UpdateSourceTrigger=PropertyChanged}" Width="400" IsReadOnly="True" />
+											<DataGridTemplateColumn Header="Primary">
+												<DataGridTemplateColumn.CellTemplate>
+													<DataTemplate>
+														<RadioButton GroupName="PrimaryDomainGroup" IsChecked="{Binding IsPrimaryDomain, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" />
+													</DataTemplate>
+												</DataGridTemplateColumn.CellTemplate>
+											</DataGridTemplateColumn>
+										</DataGrid.Columns>
+									</DataGrid>
+								</StackPanel>
+							</StackPanel>
+						</StackPanel>
+					</StackPanel>
+				</ScrollViewer>
+			</TabItem>
             <TabItem Header="Advanced" IsSelected="True">
-                <StackPanel Margin="0,16,0,0">
+				<ScrollViewer VerticalScrollBarVisibility="Auto">
+					<StackPanel Margin="0,16,0,0">
 
-                    <StackPanel Orientation="Vertical" Margin="8,0,0,0">
-                        <CheckBox Content="Perform challenge response config checks" IsChecked="{Binding SelectedItem.RequestConfig.PerformExtensionlessConfigChecks}" />
-                        <CheckBox Content="Perform web application auto config" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutoConfig}" />
-                    </StackPanel>
+						<StackPanel Orientation="Horizontal" Margin="8,0,0,0">
+							<Label Width="155" Content="Website Root Directory"/>
+							<TextBox Text="{Binding SelectedItem.RequestConfig.WebsiteRootPath}" Width="350"/>
+							<Button Name="Button_WebRoot" Content="..." Margin="4,0,0,0" Click="DirectoryBrowse_Click"/>
+						</StackPanel>
 
-                    <StackPanel Orientation="Vertical" Margin="8,16,0,0">
-                        <RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" GroupName="BindingType" Content="Auto create/update IIS bindings (uses SNI)" />
-                        <RadioButton  IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType" Content="Use specific IP/Port bindings" />
-                    </StackPanel>
+						<StackPanel Orientation="Vertical" Margin="8,8,0,0">
+							<CheckBox Content="Perform challenge response config checks" IsChecked="{Binding SelectedItem.RequestConfig.PerformExtensionlessConfigChecks}" />
+							<CheckBox Content="Perform web application auto config" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutoConfig}" />
+						</StackPanel>
 
-                    <StackPanel Orientation="Vertical" IsEnabled="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" Margin="32,8,0,0">
-                        <StackPanel Orientation="Horizontal">
-                            <Label Width="131" Content="Bind to Specific IP:" />
+						<StackPanel Orientation="Vertical" Margin="8,16,0,0">
+							<RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" GroupName="BindingType" Content="Auto create/update IIS bindings (uses SNI)" />
+							<RadioButton  IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType" Content="Use specific IP/Port bindings" />
+						</StackPanel>
 
-                            <ComboBox ItemsSource="{Binding HostIPAddresses}" SelectedItem="{Binding SelectedItem.RequestConfig.BindingIPAddress}" Width="225" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <Label Width="131" Content="Bind to Specific Port:" />
-                            <TextBox Text="{Binding SelectedItem.RequestConfig.BindingPort}" Width="225" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <Label Width="131" Content="Use SNI (IIS 8+):" />
-                            <CheckBox IsChecked="{Binding SelectedItem.RequestConfig.BindingUseSNI}"></CheckBox>
-                        </StackPanel>
-                    </StackPanel>
-                </StackPanel>
-            </TabItem>
+						<StackPanel Orientation="Vertical" IsEnabled="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" Margin="32,8,0,0">
+							<StackPanel Orientation="Horizontal">
+								<Label Width="131" Content="Bind to Specific IP:" />
+
+								<ComboBox ItemsSource="{Binding HostIPAddresses}" SelectedItem="{Binding SelectedItem.RequestConfig.BindingIPAddress}" Width="225" />
+							</StackPanel>
+							<StackPanel Orientation="Horizontal">
+								<Label Width="131" Content="Bind to Specific Port:" />
+								<TextBox Text="{Binding SelectedItem.RequestConfig.BindingPort}" Width="225" />
+							</StackPanel>
+							<StackPanel Orientation="Horizontal">
+								<Label Width="131" Content="Use SNI (IIS 8+):" />
+								<CheckBox IsChecked="{Binding SelectedItem.RequestConfig.BindingUseSNI}"></CheckBox>
+							</StackPanel>
+						</StackPanel>
+
+						<StackPanel Orientation="Vertical" Margin="8,16,0,0">
+							<StackPanel Orientation="Horizontal">
+								<Label Width="155" Content="Pre-request PS Script:"/>
+								<TextBox Text="{Binding SelectedItem.RequestConfig.PreRequestPowerShellScript}" Width="350"/>
+								<Button Name="Button_PreRequest" Content="..." Margin="4,0,0,0" Click="FileBrowse_Click"/>
+								<Button Name="Button_TestPreRequest" Content="Test" Margin="4,0,0,0" Click="TestScript_Click"/>
+							</StackPanel>
+							<StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+								<Label Width="155" Content="Post-request PS Script:"/>
+								<TextBox Text="{Binding SelectedItem.RequestConfig.PostRequestPowerShellScript}" Width="350"/>
+								<Button Name="Button_PostRequest" Content="..." Margin="4,0,0,0" Click="FileBrowse_Click"/>
+								<Button Name="Button_TestPostRequest" Content="Test" Margin="4,0,0,0" Click="TestScript_Click"/>
+							</StackPanel>
+						</StackPanel>
+					</StackPanel>
+				</ScrollViewer>
+			</TabItem>
             <TabItem Header="Info" IsSelected="True">
-                <StackPanel Orientation="Vertical">
+				<ScrollViewer VerticalScrollBarVisibility="Auto">
+					<StackPanel Orientation="Vertical">
 
-                    <Button x:Name="OpenLogFile" Content="Open Log File" Click="OpenLogFile_Click" />
-                    <Label x:Name="CertPath" Content="Certificate Path:" />
-                    <Button x:Name="OpenCertificateFile" Content="View Certificate" Click="OpenCertificateFile_Click" />
-                    <Label  Content="Note: To export this certificate use the Manage Computer Certificates option in Windows. " />
-                </StackPanel>
-            </TabItem>
+						<Button x:Name="OpenLogFile" Content="Open Log File" Click="OpenLogFile_Click" />
+						<Label x:Name="CertPath" Content="Certificate Path:" />
+						<Button x:Name="OpenCertificateFile" Content="View Certificate" Click="OpenCertificateFile_Click" />
+						<Label  Content="Note: To export this certificate use the Manage Computer Certificates option in Windows. " />
+					</StackPanel>
+				</ScrollViewer>
+			</TabItem>
         </dragablz:TabablzControl>
     </Grid>
 </UserControl>

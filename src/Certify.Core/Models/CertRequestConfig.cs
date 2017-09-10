@@ -74,5 +74,15 @@ namespace Certify.Models
         /// In the case of Lets Encrypt, the challenge type this request will use (eg. http-01)
         /// </summary>
         public string ChallengeType { get; set; }
+
+        /// <summary>
+        /// PowerShell script to run before executing certificate request
+        /// </summary>
+        public string PreRequestPowerShellScript { get; set; }
+
+        /// <summary>
+        /// PowerShell script to run before executing certificate request
+        /// </summary>
+        public string PostRequestPowerShellScript { get; set; }
     }
 }
