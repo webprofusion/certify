@@ -209,8 +209,34 @@ namespace Certify.Management
 
             return await Task.Run(async () =>
             {
+                // start with a failure result, set to success when succeeding
+                var result = new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = "" };
+
+                var config = managedSite.RequestConfig;
                 try
                 {
+                    // run pre-request script, if set
+                    if (!string.IsNullOrEmpty(config.PreRequestPowerShellScript))
+                    {
+                        try
+                        {
+                            string scriptOutput = await PowerShellManager.RunScript(result, config.PreRequestPowerShellScript);
+                            LogMessage(managedSite.Id, $"Pre-Request Script output: \n{scriptOutput}");
+                        }
+                        catch (Exception ex)
+                        {
+                            LogMessage(managedSite.Id, $"Pre-Request Script error:\n{ex.Message}");
+                        }
+                    }
+
+                    // if the script has requested the certificate request to be aborted, skip the request
+                    if (result.Abort)
+                    {
+                        LogMessage(managedSite.Id, $"Certificate Request Aborted: {managedSite.Name}");
+                        result.Message = "Certificate Request was aborted by PS script";
+                        goto CertRequestAborted;
+                    }
+
                     LogMessage(managedSite.Id, $"Beginning Certificate Request Process: {managedSite.Name}");
 
                     //enable or disable EFS flag on private key certs based on preference
@@ -223,8 +249,6 @@ namespace Certify.Management
                     ReportProgress(progress, new RequestProgressState { IsRunning = true, CurrentState = RequestState.Running, Message = "Registering Domain Identifiers" });
 
                     await Task.Delay(200); //allow UI update, we should we using async calls instead
-
-                    var config = managedSite.RequestConfig;
 
                     List<string> allDomains = new List<string> { config.PrimaryDomain };
 
@@ -279,10 +303,10 @@ namespace Certify.Management
 
                                         _siteManager.StoreSettings();
 
-                                        var result = new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = "Automated configuration checks failed. Authorizations will not be able to complete.\nCheck you have http bindings for your site and ensure you can browse to http://" + domain + "/.well-known/acme-challenge/configcheck before proceeding." };
+                                        result.Message = "Automated configuration checks failed. Authorizations will not be able to complete.\nCheck you have http bindings for your site and ensure you can browse to http://" + domain + "/.well-known/acme-challenge/configcheck before proceeding.";
                                         ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Error, Message = result.Message, Result = result });
 
-                                        return result;
+                                        break;
                                     }
                                     else
                                     {
@@ -391,16 +415,14 @@ namespace Certify.Management
 
                                     _siteManager.UpdatedManagedSite(managedSite);
 
-                                    var result = new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = true, Message = $"Certificate installed and SSL bindings updated for {config.PrimaryDomain }" };
+                                    result.IsSuccess = true;
+                                    result.Message = $"Certificate installed and SSL bindings updated for {config.PrimaryDomain }";
                                     ReportProgress(progress, new RequestProgressState { IsRunning = false, CurrentState = RequestState.Success, Message = result.Message });
-                                    return result;
                                 }
                                 else
                                 {
-                                    var msg = $"An error occurred installing the certificate. Certificate file may not be valid: {pfxPath}";
-                                    LogMessage(managedSite.Id, msg, LogItemType.GeneralError);
-
-                                    return new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = msg };
+                                    result.Message = $"An error occurred installing the certificate. Certificate file may not be valid: {pfxPath}";
+                                    LogMessage(managedSite.Id, result.Message, LogItemType.GeneralError);
                                 }
                             }
                             else
@@ -409,35 +431,51 @@ namespace Certify.Management
 
                                 _siteManager.UpdatedManagedSite(managedSite);
 
-                                var msg = $"Certificate created ready for manual binding: {pfxPath}";
-                                LogMessage(managedSite.Id, msg, LogItemType.CertificateRequestSuccessful);
-
-                                return new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = true, Message = msg };
+                                result.IsSuccess = true;
+                                result.Message = $"Certificate created ready for manual binding: {pfxPath}";
+                                LogMessage(managedSite.Id, result.Message, LogItemType.CertificateRequestSuccessful);
                             }
                         }
                         else
                         {
-                            var msg = $"The Let's Encrypt service did not issue a valid certificate in the time allowed. {(certRequestResult.ErrorMessage ?? "")}";
-                            LogMessage(managedSite.Id, msg, LogItemType.CertficateRequestFailed);
-                            return new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = msg };
+                            result.Message = $"The Let's Encrypt service did not issue a valid certificate in the time allowed. {(certRequestResult.ErrorMessage ?? "")}";
+                            LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
                         }
                     }
                     else
                     {
-                        var msg = "Validation of the required challenges did not complete successfully. Please ensure all domains to be referenced in the Certificate can be used to access this site without redirection. ";
-                        LogMessage(managedSite.Id, msg, LogItemType.CertficateRequestFailed);
-                        return new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = msg };
+                        result.Message = "Validation of the required challenges did not complete successfully. Please ensure all domains to be referenced in the Certificate can be used to access this site without redirection. ";
+                        LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
                     }
+
+                    // Goto label for aborted certificate request
+                    CertRequestAborted: { }
                 }
                 catch (Exception exp)
                 {
-                    var msg = managedSite.Name + ": Request failed - " + exp.Message;
-                    LogMessage(managedSite.Id, msg, LogItemType.CertficateRequestFailed);
+                    result.IsSuccess = false;
+                    result.Message = managedSite.Name + ": Request failed - " + exp.Message;
+                    LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
 
                     System.Diagnostics.Debug.WriteLine(exp.ToString());
-
-                    return new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = msg };
                 }
+                finally
+                {
+                    // if the request was not aborted, run post-request script, if set
+                    if (!result.Abort && !string.IsNullOrEmpty(config.PostRequestPowerShellScript))
+                    {
+                        try
+                        {
+                            string scriptOutput = await PowerShellManager.RunScript(result, config.PostRequestPowerShellScript);
+                            LogMessage(managedSite.Id, $"Post-Request Script output:\n{scriptOutput}");
+                        }
+                        catch (Exception ex)
+                        {
+                            LogMessage(managedSite.Id, $"Post-Request Script error:\n{ex.Message}");
+                        }
+                    }
+                }
+                return result;
             });
         }
 

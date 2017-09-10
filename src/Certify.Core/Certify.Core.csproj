@@ -168,6 +168,7 @@
     <Compile Include="Management\ItemManager.cs" />
     <Compile Include="Management\IVaultProvider.cs" />
     <Compile Include="Management\PluginManager.cs" />
+    <Compile Include="Management\PowerShellManager.cs" />
     <Compile Include="Management\SecurityProtocolsManager.cs" />
     <Compile Include="Models\ActionLogItem.cs" />
     <Compile Include="Models\APIResponses.cs" />
