@@ -6,8 +6,9 @@ The SSL Certificate Management GUI for Windows, powered by [Let's Encrypt](https
 
 Features:
 - Easy certificate requests & automated SSL bindings
-- Auto renewal
+- Auto renewal, with configurable renewal frequency
 - SAN support (multi-domain certificates)
+- Pre/Post request powershell scripting hooks for advanced users
 
 ![App Screenshot](https://certifytheweb.com/images/screen3.png)
 
