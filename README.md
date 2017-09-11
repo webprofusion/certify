@@ -8,7 +8,7 @@ Features:
 - Easy certificate requests & automated SSL bindings
 - Auto renewal, with configurable renewal frequency
 - SAN support (multi-domain certificates)
-- Pre/Post request powershell scripting hooks for advanced users
+- Pre/Post request powershell ![scripting hooks](https://github.com/webprofusion/certify/blob/master/docs/Request%20Script%20Hooks.md) for advanced users
 
 ![App Screenshot](https://certifytheweb.com/images/screen3.png)
 
