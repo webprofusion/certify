@@ -373,6 +373,31 @@ namespace Certify.Management
         }
 
         /// <summary>
+        /// Finds the IIS <see cref="Site"/> corresponding to a <see cref="ManagedSite"/>.
+        /// </summary>
+        /// <param name="managedSite">Configured site.</param>
+        /// <returns>The matching IIS Site if found, otherwise null.</returns>
+        private Site FindManagedSite(ManagedSite managedSite)
+        {
+            if (managedSite == null)
+                throw new ArgumentNullException(nameof(managedSite));
+
+            var site = GetSiteById(managedSite.GroupId);
+
+            if (site != null)
+            {
+                //TODO: check site has bindings for given domains, otherwise set back to null
+            }
+
+            if (site == null)
+            {
+                site = GetSiteByDomain(managedSite.RequestConfig.PrimaryDomain);
+            }
+
+            return site;
+        }
+
+        /// <summary>
         /// Gets the current certificate request configuration for a site.
         /// </summary>
         /// <param name="managedSite">Configured site.</param>
@@ -383,7 +408,7 @@ namespace Certify.Management
                 throw new ArgumentNullException(nameof(managedSite));
 
             var config = new CertRequestConfig(managedSite.RequestConfig);
-            var site = GetSiteById(managedSite.GroupId);
+            var site = FindManagedSite(managedSite);
 
             // if the path hasn't been set, attempt to get the current path from IIS
             if (site != null && string.IsNullOrEmpty(config.WebsiteRootPath))
@@ -417,6 +442,8 @@ namespace Certify.Management
 
             if (storedCert != null)
             {
+                var site = FindManagedSite(managedSite);
+
                 //get list of domains we need to create/update https bindings for
                 List<string> dnsHosts = new List<string> { requestConfig.PrimaryDomain };
                 if (requestConfig.SubjectAlternativeNames != null)
@@ -425,19 +452,6 @@ namespace Certify.Management
                 }
 
                 dnsHosts = dnsHosts.Distinct().ToList();
-
-                // identify the IIS set we want to target
-                var site = GetSiteById(managedSite.GroupId);
-
-                if (site != null)
-                {
-                    //TODO: check site has bindings for given domains, otherwise set back to null
-                }
-
-                if (site == null)
-                {
-                    site = GetSiteByDomain(dnsHosts.FirstOrDefault(d => !String.IsNullOrWhiteSpace(d)));
-                }
 
                 // add/update required bindings for each dns hostname
                 foreach (var hostname in dnsHosts)
