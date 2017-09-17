@@ -171,6 +171,8 @@ namespace Certify.UI.Controls
 
         private void OpenLogFile_Click(object sender, RoutedEventArgs e)
         {
+            if (this.MainViewModel?.SelectedItem?.Id == null) return;
+
             // get file path for log
             var logPath = Models.ManagedSiteLog.GetLogPath(this.MainViewModel.SelectedItem.Id);
 
@@ -214,7 +216,7 @@ namespace Certify.UI.Controls
             {
                 SelectedPath = config.WebsiteRootPath
             };
-            if (dialog.ShowDialog()==WinForms.DialogResult.OK)
+            if (dialog.ShowDialog() == WinForms.DialogResult.OK)
             {
                 config.WebsiteRootPath = dialog.SelectedPath;
             }
@@ -253,7 +255,7 @@ namespace Certify.UI.Controls
             {
                 // invalid file passed in, open dialog with default options
             }
-            if (dialog.ShowDialog()==true)
+            if (dialog.ShowDialog() == true)
             {
                 saveAction();
             }
