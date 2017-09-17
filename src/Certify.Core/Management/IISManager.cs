@@ -214,6 +214,11 @@ namespace Certify.Management
             return result.OrderBy(r => r.SiteName).ToList();
         }
 
+        private string GetSitePhysicalPath(Site site)
+        {
+            return site.Applications["/"].VirtualDirectories["/"].PhysicalPath;
+        }
+
         private SiteBindingItem GetSiteBinding(Site site, Binding binding)
         {
             return new SiteBindingItem()
@@ -222,7 +227,7 @@ namespace Certify.Management
                 SiteName = site.Name,
                 Host = binding.Host,
                 IP = binding.EndPoint?.Address?.ToString(),
-                PhysicalPath = site.Applications["/"].VirtualDirectories["/"].PhysicalPath,
+                PhysicalPath = GetSitePhysicalPath(site),
                 Port = binding.EndPoint?.Port,
                 IsHTTPS = binding.Protocol.ToLower() == "https",
                 Protocol = binding.Protocol,
@@ -365,6 +370,29 @@ namespace Certify.Management
                 LogItemType = LogItemType.GeneralInfo,
                 Message = msg
             });
+        }
+
+        /// <summary>
+        /// Gets the current certificate request configuration for a site.
+        /// </summary>
+        /// <param name="managedSite">Configured site.</param>
+        /// <returns>A copy of the request configuration with current values.</returns>
+        internal CertRequestConfig GetCurrentCertRequestConfig(ManagedSite managedSite)
+        {
+            if (managedSite == null)
+                throw new ArgumentNullException(nameof(managedSite));
+
+            var config = new CertRequestConfig(managedSite.RequestConfig);
+            var site = GetSiteById(managedSite.GroupId);
+
+            // if the path hasn't been set, attempt to get the current path from IIS
+            if (site != null && string.IsNullOrEmpty(config.WebsiteRootPath))
+                config.WebsiteRootPath = GetSitePhysicalPath(site);
+
+            // expand any environment variables in the path
+            config.WebsiteRootPath = Environment.ExpandEnvironmentVariables(config.WebsiteRootPath);
+
+            return config;
         }
 
         /// <summary>

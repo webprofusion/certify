@@ -520,8 +520,6 @@ namespace Certify.UI.ViewModel
 
                 item.Id = Guid.NewGuid().ToString() + ":" + siteInfo.SiteId;
                 item.GroupId = siteInfo.SiteId;
-
-                config.WebsiteRootPath = Environment.ExpandEnvironmentVariables(siteInfo.PhysicalPath);
             }
 
             item.ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS;
