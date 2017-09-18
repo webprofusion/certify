@@ -212,7 +212,7 @@ namespace Certify.Management
                 // start with a failure result, set to success when succeeding
                 var result = new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = "" };
 
-                var config = managedSite.RequestConfig;
+                var config = _iisManager.GetCurrentCertRequestConfig(managedSite);
                 try
                 {
                     // run pre-request script, if set
@@ -585,8 +585,7 @@ namespace Certify.Management
                         PerformChallengeFileCopy = true,
                         PerformExtensionlessConfigChecks = true,
                         PrimaryDomain = identifier.Dns,
-                        SubjectAlternativeNames = new string[] { identifier.Dns },
-                        WebsiteRootPath = iisSite?.PhysicalPath
+                        SubjectAlternativeNames = new string[] { identifier.Dns }
                     }
                 };
                 site.AddDomainOption(new DomainOption { Domain = identifier.Dns, IsPrimaryDomain = true, IsSelected = true });
