@@ -50,7 +50,7 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Check if we have one or more managed sites setup
+        /// Check if we have one or more managed sites setup 
         /// </summary>
         public bool HasManagedSites
         {
@@ -104,7 +104,7 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Test dummy method for async UI testing etc
+        /// Test dummy method for async UI testing etc 
         /// </summary>
         /// <param name="vaultManager"></param>
         /// <param name="managedSite"></param>
@@ -142,7 +142,7 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Remove other contacts which don't match the email address given
+        /// Remove other contacts which don't match the email address given 
         /// </summary>
         /// <param name="email"></param>
         /// <returns></returns>
@@ -454,7 +454,7 @@ namespace Certify.Management
                 catch (Exception exp)
                 {
                     result.IsSuccess = false;
-                    result.Message = managedSite.Name + ": Request failed - " + exp.Message;
+                    result.Message = managedSite.Name + ": Request failed - " + exp.Message + " " + exp.ToString();
                     LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
 
                     System.Diagnostics.Debug.WriteLine(exp.ToString());
@@ -652,6 +652,8 @@ namespace Certify.Management
             //in debug mode we renew every time instead of skipping based on days old
             renewalIntervalDays = 0;
 #endif
+            int numRenewalTasks = 0;
+            int maxRenewalTasks = Properties.Settings.Default.MaxRenewalRequests;
 
             var renewalTasks = new List<Task<CertificateRequestResult>>();
             foreach (var s in sites.Where(s => s.IncludeInAutoRenew == true))
@@ -677,15 +679,20 @@ namespace Certify.Management
                         tracker = progressTrackers[s.Id];
                     }
 
-                    if (testModeOnly)
+                    // optionally limit the number of renewal tasks to attempt in this pass
+                    if (maxRenewalTasks == 0 || maxRenewalTasks > 0 && numRenewalTasks < maxRenewalTasks)
                     {
-                        //simulated request for UI testing
-                        renewalTasks.Add(this.PerformDummyCertificateRequest(s, tracker));
+                        if (testModeOnly)
+                        {
+                            //simulated request for UI testing
+                            renewalTasks.Add(this.PerformDummyCertificateRequest(s, tracker));
+                        }
+                        else
+                        {
+                            renewalTasks.Add(this.PerformCertificateRequest(s, tracker));
+                        }
                     }
-                    else
-                    {
-                        renewalTasks.Add(this.PerformCertificateRequest(s, tracker));
-                    }
+                    numRenewalTasks++;
                 }
                 else
                 {
