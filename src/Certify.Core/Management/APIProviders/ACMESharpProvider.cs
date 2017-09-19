@@ -99,9 +99,9 @@ namespace Certify.Management.APIProviders
             return _vaultManager.BeginRegistrationAndValidation(config, domainIdentifierId, challengeType, domain);
         }
 
-        public PendingAuthorization PerformIISAutomatedChallengeResponse(CertRequestConfig requestConfig, PendingAuthorization pendingAuth)
+        public PendingAuthorization PerformIISAutomatedChallengeResponse(IISManager iisManager, ManagedSite managedSite, PendingAuthorization pendingAuth)
         {
-            return _vaultManager.PerformIISAutomatedChallengeResponse(requestConfig, pendingAuth);
+            return _vaultManager.PerformIISAutomatedChallengeResponse(iisManager, managedSite, pendingAuth);
         }
 
         public void SubmitChallenge(string domainIdentifierId, string challengeType)

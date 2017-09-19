@@ -212,7 +212,7 @@ namespace Certify.Management
                 // start with a failure result, set to success when succeeding
                 var result = new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = "" };
 
-                var config = _iisManager.GetCurrentCertRequestConfig(managedSite);
+                var config = managedSite.RequestConfig;
                 try
                 {
                     // run pre-request script, if set
@@ -294,7 +294,7 @@ namespace Certify.Management
 
                                     //ask LE to check our answer to their authorization challenge (http), LE will then attempt to fetch our answer, if all accessible and correct (authorized) LE will then allow us to request a certificate
                                     //prepare IIS with answer for the LE challenege
-                                    authorization = _vaultProvider.PerformIISAutomatedChallengeResponse(config, authorization);
+                                    authorization = _vaultProvider.PerformIISAutomatedChallengeResponse(_iisManager, managedSite, authorization);
 
                                     //if we attempted extensionless config checks, report any errors
                                     if (config.PerformAutoConfig && !authorization.ExtensionlessConfigCheckedOK)

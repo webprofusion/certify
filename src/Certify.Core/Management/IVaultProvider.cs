@@ -30,7 +30,7 @@ namespace Certify.Management
 
         PendingAuthorization BeginRegistrationAndValidation(CertRequestConfig config, string domainIdentifierId, string challengeType, string domain);
 
-        PendingAuthorization PerformIISAutomatedChallengeResponse(CertRequestConfig requestConfig, PendingAuthorization pendingAuth);
+        PendingAuthorization PerformIISAutomatedChallengeResponse(IISManager iisManager, ManagedSite managedSite, PendingAuthorization pendingAuth);
 
         void SubmitChallenge(string domainIdentifierId, string challengeType);
 

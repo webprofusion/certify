@@ -96,7 +96,7 @@ namespace Certify.Management.APIProviders
             throw new NotImplementedException();
         }
 
-        public PendingAuthorization PerformIISAutomatedChallengeResponse(CertRequestConfig requestConfig, PendingAuthorization pendingAuth)
+        public PendingAuthorization PerformIISAutomatedChallengeResponse(IISManager iisManager, ManagedSite managedSite, PendingAuthorization pendingAuth)
         {
             throw new NotImplementedException();
         }
