@@ -16,7 +16,7 @@ using System.Windows.Shapes;
 namespace Certify.UI.Controls
 {
     /// <summary>
-    /// Interaction logic for Settings.xaml
+    /// Interaction logic for Settings.xaml 
     /// </summary>
     public partial class Settings : UserControl
     {
@@ -79,6 +79,12 @@ namespace Certify.UI.Controls
                 if (this.RenewalIntervalDays.Value == null) this.RenewalIntervalDays.Value = 7;
                 if (this.RenewalIntervalDays.Value > 60) this.RenewalIntervalDays.Value = 60;
                 Certify.Properties.Settings.Default.RenewalIntervalDays = (int)this.RenewalIntervalDays.Value;
+
+                // force max renewal requests to be between 0 and 100 ( 0 = unlimited)
+                if (this.RenewalMaxRequests.Value == null) this.RenewalMaxRequests.Value = 0;
+                if (this.RenewalMaxRequests.Value > 100) this.RenewalMaxRequests.Value = 100;
+                Certify.Properties.Settings.Default.MaxRenewalRequests = (int)this.RenewalMaxRequests.Value;
+
                 ///
                 //save
                 Certify.Properties.Settings.Default.Save();
@@ -86,6 +92,11 @@ namespace Certify.UI.Controls
         }
 
         private void RenewalIntervalDays_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double?> e)
+        {
+            this.SettingsUpdated(sender, e);
+        }
+
+        private void RenewalMaxRequests_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double?> e)
         {
             this.SettingsUpdated(sender, e);
         }

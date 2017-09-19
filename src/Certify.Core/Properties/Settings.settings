@@ -32,5 +32,8 @@
     <Setting Name="RenewalIntervalDays" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">14</Value>
     </Setting>
+    <Setting Name="MaxRenewalRequests" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
