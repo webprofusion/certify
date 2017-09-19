@@ -3,6 +3,7 @@ using ACMESharp.Vault.Model;
 using ACMESharp.Vault.Providers;
 using ACMESharp.Vault.Util;
 using Certify.ACMESharpCompat;
+using Certify.Management;
 using Certify.Models;
 using Newtonsoft.Json;
 using System;
@@ -686,8 +687,9 @@ namespace Certify
             return i;
         }
 
-        public PendingAuthorization PerformIISAutomatedChallengeResponse(CertRequestConfig requestConfig, PendingAuthorization pendingAuth)
+        public PendingAuthorization PerformIISAutomatedChallengeResponse(IISManager iisManager, ManagedSite managedSite, PendingAuthorization pendingAuth)
         {
+            var requestConfig = managedSite.RequestConfig;
             bool extensionlessConfigOK = false;
 
             //if validation proxy enabled, access to the domain being validated is checked via our remote API rather than directly on the servers
@@ -700,8 +702,13 @@ namespace Certify
                 this.LogAction("Preparing challenge response for LetsEncrypt server to check at: " + httpChallenge.FileUrl);
                 this.LogAction("If the challenge response file is not accessible at this exact URL the validation will fail and a certificate will not be issued.");
 
+                // get website root path
+                string websiteRootPath = requestConfig.WebsiteRootPath;
+                Environment.SetEnvironmentVariable("websiteroot", iisManager.GetSitePhysicalPath(managedSite)); // sets env variable for this process only
+                websiteRootPath = Environment.ExpandEnvironmentVariables(websiteRootPath); // expand all env variables
+
                 //copy temp file to path challenge expects in web folder
-                var destFile = Path.Combine(requestConfig.WebsiteRootPath, httpChallenge.FilePath);
+                var destFile = Path.Combine(websiteRootPath, httpChallenge.FilePath);
                 var destPath = Path.GetDirectoryName(destFile);
                 if (!Directory.Exists(destPath))
                 {
@@ -712,7 +719,7 @@ namespace Certify
                 System.IO.File.WriteAllText(destFile, httpChallenge.FileContent);
 
                 var wellknownContentPath = httpChallenge.FilePath.Substring(0, httpChallenge.FilePath.LastIndexOf("/"));
-                var testFilePath = Path.Combine(requestConfig.WebsiteRootPath, wellknownContentPath + "//configcheck");
+                var testFilePath = Path.Combine(websiteRootPath, wellknownContentPath + "//configcheck");
                 System.IO.File.WriteAllText(testFilePath, "Extensionless File Config Test - OK");
 
                 //create a web.config for extensionless files, then test it (make a request for the extensionless configcheck file over http)

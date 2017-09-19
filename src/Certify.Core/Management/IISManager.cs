@@ -14,7 +14,6 @@ namespace Certify.Management
     /// <summary>
     /// Model to work with IIS site details.
     /// </summary>
-
     public class IISManager
     {
         #region IIS
@@ -214,9 +213,14 @@ namespace Certify.Management
             return result.OrderBy(r => r.SiteName).ToList();
         }
 
+        public string GetSitePhysicalPath(ManagedSite managedSite)
+        {
+            return GetSitePhysicalPath(FindManagedSite(managedSite));
+        }
+
         private string GetSitePhysicalPath(Site site)
         {
-            return site.Applications["/"].VirtualDirectories["/"].PhysicalPath;
+            return site?.Applications["/"].VirtualDirectories["/"].PhysicalPath;
         }
 
         private SiteBindingItem GetSiteBinding(Site site, Binding binding)
@@ -395,29 +399,6 @@ namespace Certify.Management
             }
 
             return site;
-        }
-
-        /// <summary>
-        /// Gets the current certificate request configuration for a site.
-        /// </summary>
-        /// <param name="managedSite">Configured site.</param>
-        /// <returns>A copy of the request configuration with current values.</returns>
-        internal CertRequestConfig GetCurrentCertRequestConfig(ManagedSite managedSite)
-        {
-            if (managedSite == null)
-                throw new ArgumentNullException(nameof(managedSite));
-
-            var config = new CertRequestConfig(managedSite.RequestConfig);
-            var site = FindManagedSite(managedSite);
-
-            // if the path hasn't been set, attempt to get the current path from IIS
-            if (site != null && string.IsNullOrEmpty(config.WebsiteRootPath))
-                config.WebsiteRootPath = GetSitePhysicalPath(site);
-
-            // expand any environment variables in the path
-            config.WebsiteRootPath = Environment.ExpandEnvironmentVariables(config.WebsiteRootPath);
-
-            return config;
         }
 
         /// <summary>

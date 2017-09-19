@@ -10,29 +10,6 @@ namespace Certify.Models
 {
     public class CertRequestConfig : BindableBase
     {
-        public CertRequestConfig()
-        {
-        }
-
-        public CertRequestConfig(CertRequestConfig config)
-        {
-            // copy constructor
-            PrimaryDomain = config.PrimaryDomain;
-            SubjectAlternativeNames = config.SubjectAlternativeNames;
-            WebsiteRootPath = config.WebsiteRootPath;
-            BindingIPAddress = config.BindingIPAddress;
-            BindingPort = config.BindingPort;
-            BindingUseSNI = config.BindingUseSNI;
-            PerformChallengeFileCopy = config.PerformChallengeFileCopy;
-            PerformExtensionlessConfigChecks = config.PerformExtensionlessConfigChecks;
-            PerformAutoConfig = config.PerformAutoConfig;
-            PerformAutomatedCertBinding = config.PerformAutomatedCertBinding;
-            EnableFailureNotifications = config.EnableFailureNotifications;
-            ChallengeType = config.ChallengeType;
-            PreRequestPowerShellScript = config.PreRequestPowerShellScript;
-            PostRequestPowerShellScript = config.PostRequestPowerShellScript;
-        }
-
         /// <summary>
         /// Primary subject domain for our SSL Cert request
         /// </summary>
