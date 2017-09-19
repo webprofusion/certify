@@ -720,7 +720,12 @@ namespace Certify
 
                 var wellknownContentPath = httpChallenge.FilePath.Substring(0, httpChallenge.FilePath.LastIndexOf("/"));
                 var testFilePath = Path.Combine(websiteRootPath, wellknownContentPath + "//configcheck");
-                System.IO.File.WriteAllText(testFilePath, "Extensionless File Config Test - OK");
+
+                // write the config check file if it doesn't already exist
+                if (!File.Exists(testFilePath))
+                {
+                    System.IO.File.WriteAllText(testFilePath, "Extensionless File Config Test - OK");
+                }
 
                 //create a web.config for extensionless files, then test it (make a request for the extensionless configcheck file over http)
                 string webConfigContent = Core.Properties.Resources.IISWebConfig;
