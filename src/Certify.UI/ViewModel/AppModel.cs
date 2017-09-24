@@ -487,10 +487,7 @@ namespace Certify.UI.ViewModel
         private ManagedSite GetUpdatedManagedSiteSettings()
         {
             var item = SelectedItem;
-            // item.DomainOptions = new ObservableCollection<DomainOption>();
             var config = item.RequestConfig;
-
-            // RefreshDomainOptionSettingsFromUI();
             var primaryDomain = item.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain == true);
 
             //if no primary domain need to go back and select one
@@ -505,14 +502,9 @@ namespace Certify.UI.ViewModel
                 .Select(i => i.Domain)
                 .ToArray();
 
-            //config.PerformChallengeFileCopy = true;
-            //config.PerformExtensionlessConfigChecks = !chkSkipConfigCheck.Checked;
-            config.PerformAutoConfig = true;
-
-            // config.EnableFailureNotifications = chkEnableNotifications.Checked;
+            // TODO: config.EnableFailureNotifications = chkEnableNotifications.Checked;
 
             //determine if this site has an existing entry in Managed Sites, if so use that, otherwise start a new one
-
             if (SelectedItem.Id == null)
             {
                 var siteInfo = SelectedWebSite;
@@ -523,11 +515,6 @@ namespace Certify.UI.ViewModel
             }
 
             item.ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS;
-
-            //store domain options settings and request config for this site so we can replay for automated renewal
-
-            //managedSite.RequestConfig = config;
-
             return item;
         }
 
