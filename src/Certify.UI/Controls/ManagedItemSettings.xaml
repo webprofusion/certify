@@ -128,7 +128,7 @@
 
 						<StackPanel Orientation="Vertical" Margin="8,16,0,0">
 							<RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" GroupName="BindingType" Content="Auto create/update IIS bindings (uses SNI)" />
-							<RadioButton  IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType" Content="Use specific IP/Port bindings" />
+							<RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType" Content="Use specific IP/Port bindings" />
 						</StackPanel>
 
 						<StackPanel Orientation="Vertical" IsEnabled="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" Margin="32,8,0,0">
