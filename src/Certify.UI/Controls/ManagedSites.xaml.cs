@@ -38,6 +38,14 @@ namespace Certify.UI.Controls
             }
         }
 
+        private void UserControl_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            CollectionViewSource.GetDefaultView(lvManagedSites.ItemsSource).Filter =
+                i => txtFilter.Text.Trim() == "" ||
+                ((Models.ManagedSite)i).Name.IndexOf(txtFilter.Text, StringComparison.OrdinalIgnoreCase) > -1 ||
+                (((Models.ManagedSite)i).DomainOptions?.Any(d => d.Domain.IndexOf(txtFilter.Text, StringComparison.OrdinalIgnoreCase) > -1) ?? false);
+        }
+
         private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (e.AddedItems.Count > 0)
@@ -69,6 +77,11 @@ namespace Certify.UI.Controls
             {
                 // this.MainViewModel.ManagedSites[0].Name = DateTime.Now.ToShortDateString();
             }
+        }
+
+        private void TxtFilter_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            CollectionViewSource.GetDefaultView(lvManagedSites.ItemsSource).Refresh();
         }
     }
 }
