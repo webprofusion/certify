@@ -281,18 +281,26 @@ namespace Certify.Management
                                 {
                                     ReportProgress(progress, $"Performing Challenge Response via IIS: {domain} ");
 
-                                    //ask LE to check our answer to their authorization challenge (http), LE will then attempt to fetch our answer, if all accessible and correct (authorized) LE will then allow us to request a certificate
-                                    //prepare IIS with answer for the LE challenege
+                                    // ask LE to check our answer to their authorization challenge (http-01 or tls-sni-01), LE will then attempt to fetch our answer, 
+                                    // if all accessible and correct (authorized) LE will then allow us to request a certificate 
                                     authorization = _vaultProvider.PerformIISAutomatedChallengeResponse(_iisManager, managedSite, authorization);
 
-                                    //if we attempted extensionless config checks, report any errors
-                                    if (config.PerformAutoConfig && !authorization.ExtensionlessConfigCheckedOK)
+                                    if ((config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP && !authorization.ExtensionlessConfigCheckedOK) ||
+                                        (config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI && !authorization.TlsSniConfigCheckedOK))
                                     {
+                                        //if we failed the config checks, report any errors
                                         LogMessage(managedSite.Id, $"Failed prerequisite configuration checks ({ managedSite.ItemType })", LogItemType.CertficateRequestFailed);
 
                                         _siteManager.StoreSettings();
 
-                                        result.Message = "Automated configuration checks failed. Authorizations will not be able to complete.\nCheck you have http bindings for your site and ensure you can browse to http://" + domain + "/.well-known/acme-challenge/configcheck before proceeding.";
+                                        if (config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP)
+                                        {
+                                            result.Message = "Automated configuration checks failed. Authorizations will not be able to complete.\nCheck you have http bindings for your site and ensure you can browse to http://" + domain + "/.well-known/acme-challenge/configcheck before proceeding.";
+                                        }
+                                        if (config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI)
+                                        {
+                                            result.Message = "Automated configuration checks failed. Authorizations will not be able to complete.\nCheck you have https SNI bindings for your site\n(ex: '0123456789ABCDEF0123456789ABCDEF.0123456789ABCDEF0123456789ABCDEF.acme.invalid') before proceeding.";
+                                        }
                                         ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Error, Message = result.Message, Result = result });
 
                                         break;
@@ -300,23 +308,31 @@ namespace Certify.Management
                                     else
                                     {
                                         ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Running, Message = $"Requesting Validation from Let's Encrypt: {domain}" });
-
-                                        //ask LE to validate our challenge response
-                                        _vaultProvider.SubmitChallenge(domainIdentifierId, config.ChallengeType);
-
-                                        bool identifierValidated = _vaultProvider.CompleteIdentifierValidationProcess(authorization.Identifier.Alias);
-
-                                        if (!identifierValidated)
+                                        try
                                         {
-                                            ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Error, Message = "Domain validation failed: " + domain }, managedSite.Id);
+                                            //ask LE to validate our challenge response
+                                            _vaultProvider.SubmitChallenge(domainIdentifierId, config.ChallengeType);
 
-                                            allIdentifiersValidated = false;
+                                            bool identifierValidated = _vaultProvider.CompleteIdentifierValidationProcess(authorization.Identifier.Alias);
+
+                                            if (!identifierValidated)
+                                            {
+                                                ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Error, Message = "Domain validation failed: " + domain }, managedSite.Id);
+
+                                                allIdentifiersValidated = false;
+                                            }
+                                            else
+                                            {
+                                                ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Running, Message = "Domain validation completed: " + domain }, managedSite.Id);
+
+                                                identifierAuthorizations.Add(authorization);
+                                            }
                                         }
-                                        else
+                                        finally
                                         {
-                                            ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Running, Message = "Domain validation completed: " + domain }, managedSite.Id);
-
-                                            identifierAuthorizations.Add(authorization);
+                                            // clean up challenge answers (.well-known/acme-challenge/*
+                                            // files for http-01 or iis bindings for tls-sni-01)
+                                            authorization.Cleanup();
                                         }
                                     }
                                 }
@@ -445,7 +461,7 @@ namespace Certify.Management
                     result.IsSuccess = false;
                     result.Message = managedSite.Name + ": Request failed - " + exp.Message + " " + exp.ToString();
                     LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
-
+                    LogMessage(managedSite.Id, _vaultProvider.GetActionSummary());
                     System.Diagnostics.Debug.WriteLine(exp.ToString());
                 }
                 finally

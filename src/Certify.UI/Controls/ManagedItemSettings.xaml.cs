@@ -55,19 +55,26 @@ namespace Certify.UI.Controls
             {
                 if (MainViewModel.SelectedItem.Id == null && MainViewModel.SelectedWebSite == null)
                 {
-                    MessageBox.Show("Select the website to create a certificate for.");
+                    MessageBox.Show("Select the website to create a certificate for.", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
                 if (String.IsNullOrEmpty(MainViewModel.SelectedItem.Name))
                 {
-                    MessageBox.Show("A name is required for this item.");
+                    MessageBox.Show("A name is required for this item.", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
                 if (MainViewModel.PrimarySubjectDomain == null)
                 {
-                    MessageBox.Show("A Primary Domain must be selected");
+                    MessageBox.Show("A Primary Domain must be selected", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                if (MainViewModel.SelectedItem.RequestConfig.ChallengeType==ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI &&
+                    MainViewModel.IISVersion.Major < 8)
+                {
+                    MessageBox.Show($"The {ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI} challenge is only available for IIS versions 8+.", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
@@ -197,7 +204,7 @@ namespace Certify.UI.Controls
             if (!String.IsNullOrEmpty(certPath) && System.IO.File.Exists(certPath))
             {
                 //open file
-                var cert = new CertificateManager().GetCertificate(certPath);
+                var cert = CertificateManager.LoadCertificate(certPath);
                 if (cert != null)
                 {
                     X509Certificate2UI.DisplayCertificate(cert);

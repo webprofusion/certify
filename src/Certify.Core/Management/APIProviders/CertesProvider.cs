@@ -53,6 +53,12 @@ namespace Certify.Management.APIProviders
             return null;
         }
 
+        public string GetActionSummary()
+        {
+            System.Diagnostics.Debug.WriteLine("Certes: GetActionSummary not implemented");
+            return null;
+        }
+
         public void EnableSensitiveFileEncryption()
         {
             throw new NotImplementedException();

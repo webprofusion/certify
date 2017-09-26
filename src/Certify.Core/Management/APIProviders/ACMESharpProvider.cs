@@ -89,6 +89,11 @@ namespace Certify.Management.APIProviders
             return _vaultManager.GetVaultPath();
         }
 
+        public string GetActionSummary()
+        {
+            return _vaultManager.GetActionLogSummary();
+        }
+
         public void EnableSensitiveFileEncryption()
         {
             _vaultManager.UseEFSForSensitiveFiles = true;

@@ -12,6 +12,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 
@@ -696,95 +697,134 @@ namespace Certify
             bool checkViaProxy = Certify.Properties.Settings.Default.EnableValidationProxyAPI;
 
             //if copying the file for the user, attempt that now
-            if (pendingAuth.Challenge != null && requestConfig.PerformChallengeFileCopy)
+            if (pendingAuth.Challenge != null)
             {
-                var httpChallenge = (ACMESharp.ACME.HttpChallenge)pendingAuth.Challenge.ChallengeData;
-                this.LogAction("Preparing challenge response for LetsEncrypt server to check at: " + httpChallenge.FileUrl);
-                this.LogAction("If the challenge response file is not accessible at this exact URL the validation will fail and a certificate will not be issued.");
-
-                // get website root path
-                string websiteRootPath = requestConfig.WebsiteRootPath;
-                Environment.SetEnvironmentVariable("websiteroot", iisManager.GetSitePhysicalPath(managedSite)); // sets env variable for this process only
-                websiteRootPath = Environment.ExpandEnvironmentVariables(websiteRootPath); // expand all env variables
-
-                //copy temp file to path challenge expects in web folder
-                var destFile = Path.Combine(websiteRootPath, httpChallenge.FilePath);
-                var destPath = Path.GetDirectoryName(destFile);
-                if (!Directory.Exists(destPath))
+                if (pendingAuth.Challenge.ChallengeData is ACMESharp.ACME.HttpChallenge && requestConfig.PerformChallengeFileCopy)
                 {
-                    Directory.CreateDirectory(destPath);
-                }
+                    var httpChallenge = (ACMESharp.ACME.HttpChallenge)pendingAuth.Challenge.ChallengeData;
+                    this.LogAction("Preparing challenge response for LetsEncrypt server to check at: " + httpChallenge.FileUrl);
+                    this.LogAction("If the challenge response file is not accessible at this exact URL the validation will fail and a certificate will not be issued.");
 
-                //copy challenge response to web folder /.well-known/acme-challenge
-                System.IO.File.WriteAllText(destFile, httpChallenge.FileContent);
+                    // get website root path
+                    string websiteRootPath = requestConfig.WebsiteRootPath;
+                    Environment.SetEnvironmentVariable("websiteroot", iisManager.GetSitePhysicalPath(managedSite)); // sets env variable for this process only
+                    websiteRootPath = Environment.ExpandEnvironmentVariables(websiteRootPath); // expand all env variables
 
-                var wellknownContentPath = httpChallenge.FilePath.Substring(0, httpChallenge.FilePath.LastIndexOf("/"));
-                var testFilePath = Path.Combine(websiteRootPath, wellknownContentPath + "//configcheck");
-
-                // write the config check file if it doesn't already exist
-                if (!File.Exists(testFilePath))
-                {
-                    System.IO.File.WriteAllText(testFilePath, "Extensionless File Config Test - OK");
-                }
-
-                //create a web.config for extensionless files, then test it (make a request for the extensionless configcheck file over http)
-                string webConfigContent = Core.Properties.Resources.IISWebConfig;
-
-                if (!File.Exists(destPath + "\\web.config"))
-                {
-                    //no existing config, attempt auto config and perform test
-                    System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
-                    if (requestConfig.PerformExtensionlessConfigChecks)
+                    //copy temp file to path challenge expects in web folder
+                    var destFile = Path.Combine(websiteRootPath, httpChallenge.FilePath);
+                    var destPath = Path.GetDirectoryName(destFile);
+                    if (!Directory.Exists(destPath))
                     {
-                        if (CheckURL("http://" + requestConfig.PrimaryDomain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
-                        {
-                            extensionlessConfigOK = true;
-                        }
+                        Directory.CreateDirectory(destPath);
                     }
-                }
-                else
-                {
-                    //web config already exists, don't overwrite it, just test it
 
-                    if (requestConfig.PerformExtensionlessConfigChecks)
+                    //copy challenge response to web folder /.well-known/acme-challenge
+                    System.IO.File.WriteAllText(destFile, httpChallenge.FileContent);
+
+                    // configure cleanup
+                    pendingAuth.Cleanup = () => File.Delete(destFile);
+
+                    var wellknownContentPath = httpChallenge.FilePath.Substring(0, httpChallenge.FilePath.LastIndexOf("/"));
+                    var testFilePath = Path.Combine(websiteRootPath, wellknownContentPath + "//configcheck");
+
+                    // write the config check file if it doesn't already exist
+                    if (!File.Exists(testFilePath))
                     {
-                        if (CheckURL("http://" + requestConfig.PrimaryDomain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
-                        {
-                            extensionlessConfigOK = true;
-                        }
-                        if (!extensionlessConfigOK && requestConfig.PerformAutoConfig)
-                        {
-                            //didn't work, try our default config
-                            System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
+                        System.IO.File.WriteAllText(testFilePath, "Extensionless File Config Test - OK");
+                    }
 
+                    //create a web.config for extensionless files, then test it (make a request for the extensionless configcheck file over http)
+                    string webConfigContent = Core.Properties.Resources.IISWebConfig;
+
+                    if (!File.Exists(destPath + "\\web.config"))
+                    {
+                        //no existing config, attempt auto config and perform test
+                        System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
+                        if (requestConfig.PerformExtensionlessConfigChecks)
+                        {
                             if (CheckURL("http://" + requestConfig.PrimaryDomain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
                             {
                                 extensionlessConfigOK = true;
                             }
                         }
                     }
-                }
-
-                if (requestConfig.PerformExtensionlessConfigChecks)
-                {
-                    if (!extensionlessConfigOK && requestConfig.PerformAutoConfig)
+                    else
                     {
-                        //if first attempt(s) at config failed, try an alternative config
-                        webConfigContent = Properties.Resources.IISWebConfigAlt;
-
-                        System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
-
-                        if (CheckURL("http://" + requestConfig.PrimaryDomain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
+                        //web config already exists, don't overwrite it, just test it
+                        if (requestConfig.PerformExtensionlessConfigChecks)
                         {
-                            //ready to complete challenge
-                            extensionlessConfigOK = true;
+                            if (CheckURL("http://" + requestConfig.PrimaryDomain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
+                            {
+                                extensionlessConfigOK = true;
+                            }
+                            if (!extensionlessConfigOK && requestConfig.PerformAutoConfig)
+                            {
+                                //didn't work, try our default config
+                                System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
+
+                                if (CheckURL("http://" + requestConfig.PrimaryDomain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
+                                {
+                                    extensionlessConfigOK = true;
+                                }
+                            }
                         }
+                    }
+                    pendingAuth.ExtensionlessConfigCheckedOK = extensionlessConfigOK;
+                }
+                if (pendingAuth.Challenge.ChallengeData is ACMESharp.ACME.TlsSniChallenge && requestConfig.PerformChallengeFileCopy)
+                {
+                    var tlsSniChallenge = (ACMESharp.ACME.TlsSniChallenge)pendingAuth.Challenge.ChallengeData;
+                    var tlsSniAnswer = (ACMESharp.ACME.TlsSniChallengeAnswer)tlsSniChallenge.Answer;
+                    var token = Encoding.UTF8.GetBytes(tlsSniAnswer.KeyAuthorization);
+                    var sha256 = System.Security.Cryptography.SHA256.Create();
+                    var z = new byte[tlsSniChallenge.IterationCount][];
+
+                    // compute n sha256 hashes, where n=challengedata.iterationcount
+                    z[0] = sha256.ComputeHash(token);
+                    for (int i=1; i<z.Length; i++)
+                    {
+                        z[i] = sha256.ComputeHash(z[i - 1]);
+                    }
+                    // generate certs and install iis bindings
+                    var cleanupQueue = new List<Action>();
+                    var checkQueue = new List<Func<bool>>();
+                    foreach (string hex in z.Select(b => 
+                        BitConverter.ToString(b).Replace("-","").ToLower()))
+                    {
+                        string domain = $"{hex.Substring(0, 32)}.{hex.Substring(32)}.acme.invalid";
+                        this.LogAction($"Preparing binding at: https://{requestConfig.PrimaryDomain}, sni: {domain}");
+
+                        var x509 = CertificateManager.GenerateTlsSni01Certificate(domain);
+                        CertificateManager.StoreCertificate(x509);
+                        iisManager.InstallCertificateforBinding(managedSite, x509, domain);
+
+                        // add check to the queue
+                        checkQueue.Add(() => {
+                            var sniOK = CheckSNI(requestConfig.PrimaryDomain, domain, checkViaProxy);
+                            if (!sniOK)
+                            {
+                                this.LogAction($"SNI Binding check failed for: https://{requestConfig.PrimaryDomain}, sni:{domain}");
+                            }
+                            return sniOK;
+                        });
+
+                        // add cleanup actions to queue
+                        cleanupQueue.Add(() => iisManager.RemoveHttpsBinding(managedSite, domain));
+                        cleanupQueue.Add(() => CertificateManager.RemoveCertificate(x509));
+                    }
+
+                    // configure cleanup to execute the cleanup queue
+                    pendingAuth.Cleanup = () => cleanupQueue.ForEach(a => a());
+
+                    // perform our own config checks
+                    pendingAuth.TlsSniConfigCheckedOK = true;
+                    if (requestConfig.PerformTlsSniBindingConfigChecks)
+                    {
+                        // set config check OK if all checks return true
+                        pendingAuth.TlsSniConfigCheckedOK = checkQueue.All(check => check());
                     }
                 }
             }
-
-            //configuration applied, ready to ask LE to validate our answer
-            pendingAuth.ExtensionlessConfigCheckedOK = extensionlessConfigOK;
             return pendingAuth;
         }
 
@@ -914,6 +954,43 @@ namespace Certify
                 }
             }
             return output;
+        }
+
+        private bool CheckSNI(string host, string sni, bool useProxyAPI)
+        {
+            if (useProxyAPI)
+            {
+                // this is not implemented, needs server support
+                System.Diagnostics.Debug.WriteLine("ProxyAPI is not implemented for Checking SNI config");
+                return true;
+            }
+            try
+            {
+                // create request with the SNI host, then reset the Uri
+                var req = new HttpRequestMessage(HttpMethod.Get, $"https://{sni}")
+                {
+                    // reset uri host so HttpClient sends request to correct IP
+                    RequestUri = new Uri($"https://{host}")
+                };
+                ServicePointManager.ServerCertificateValidationCallback = (obj, cert, chain, errors) =>
+                {
+                    // verify SNI-selected certificate is correctly configured
+                    return CertificateManager.VerifyCertificateSAN(cert, sni);
+                };
+                using (var client = new HttpClient())
+                {
+                    var resp = client.SendAsync(req).Result;
+                    // if the GET request succeeded, the Cert validation succeeded
+                    this.LogAction($"TLS SNI binding check OK: {host}, {sni}");
+                    return true;
+                }
+            }
+            catch
+            {
+                // eat the error that HttpClient throws, either cert validation failed
+                // or the site is inaccessible via https://host name
+                return false;
+            }
         }
 
         private bool CheckURL(string url, bool useProxyAPI)

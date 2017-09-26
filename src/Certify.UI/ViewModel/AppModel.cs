@@ -528,6 +528,7 @@ namespace Certify.UI.ViewModel
             //TODO: if this site would be a duplicate need to increment the site name
 
             //set defaults first
+            managedSite.RequestConfig.WebsiteRootPath = Environment.ExpandEnvironmentVariables(SelectedWebSite.PhysicalPath);
             managedSite.RequestConfig.PerformExtensionlessConfigChecks = true;
             managedSite.RequestConfig.PerformTlsSniBindingConfigChecks = true;
             managedSite.RequestConfig.PerformChallengeFileCopy = true;

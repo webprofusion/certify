@@ -22,6 +22,8 @@ namespace Certify.Management
 
         string GetVaultSummary();
 
+        string GetActionSummary();
+
         void EnableSensitiveFileEncryption();
 
         string ComputeDomainIdentifierId(string domain);

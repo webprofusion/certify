@@ -469,6 +469,49 @@ namespace Certify.Management
         }
 
         /// <summary>
+        /// removes the managedSite's https binding for the dns host name specified 
+        /// </summary>
+        /// <param name="managedSite"></param>
+        /// <param name="host"></param>
+        public void RemoveHttpsBinding(ManagedSite managedSite, string host)
+        {
+            using (var iisManager = GetDefaultServerManager())
+            {
+                var site = iisManager.Sites.FirstOrDefault(s => s.Id == long.Parse(managedSite.GroupId));
+                if (site != null)
+                {
+                    string internationalHost = host == "" ? "" : _idnMapping.GetUnicode(host);
+                    var binding = site.Bindings.Where(b => 
+                        b.Host == internationalHost && 
+                        b.Protocol == "https"
+                    ).FirstOrDefault();
+
+                    if (binding != null)
+                    {
+                        site.Bindings.Remove(binding);
+                        iisManager.CommitChanges();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// creates or updates the https binding for the dns host name specified, assigning the given
+        /// certificate selected from the certificate store
+        /// </summary>
+        /// <param name="managedSite"></param>
+        /// <param name="certificate"></param>
+        /// <param name="host"></param>
+        /// <param name="sslPort"></param>
+        /// <param name="useSNI"></param>
+        /// <param name="ipAddress"></param>
+        public void InstallCertificateforBinding(ManagedSite managedSite, X509Certificate2 certificate, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null)
+        {
+            var site = FindManagedSite(managedSite);
+            InstallCertificateforBinding(site, certificate, host, sslPort, useSNI, ipAddress);
+        }
+
+        /// <summary>
         /// creates or updates the https binding for the dns host name specified, assigning the given
         /// certificate selected from the certificate store
         /// </summary>
