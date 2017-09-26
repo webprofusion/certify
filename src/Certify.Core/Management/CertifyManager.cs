@@ -257,7 +257,7 @@ namespace Certify.Management
                     // begin by assuming all identifiers are valid
                     bool allIdentifiersValidated = true;
 
-                    if (config.ChallengeType == null) config.ChallengeType = "http-01";
+                    if (config.ChallengeType == null) config.ChallengeType = ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP;
 
                     List<PendingAuthorization> identifierAuthorizations = new List<PendingAuthorization>();
                     var distinctDomains = allDomains.Distinct();
@@ -578,7 +578,7 @@ namespace Certify.Management
                     {
                         BindingIPAddress = iisSite?.IP,
                         BindingPort = iisSite?.Port.ToString(),
-                        ChallengeType = "http-01",
+                        ChallengeType = ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP,
                         EnableFailureNotifications = true,
                         PerformAutoConfig = true,
                         PerformAutomatedCertBinding = true,

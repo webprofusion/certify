@@ -612,7 +612,7 @@ namespace Certify
             ACMESharpUtils.UpdateIdentifier(domainIdentifierAlias);
         }
 
-        public void SubmitChallenge(string alias, string challengeType = "http-01")
+        public void SubmitChallenge(string alias, string challengeType = ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP)
         {
             //well known challenge all ready to be read by server
             ACMESharpUtils.SubmitChallenge(alias, challengeType);
@@ -622,7 +622,7 @@ namespace Certify
 
         #region ACME Workflow Steps
 
-        public PendingAuthorization BeginRegistrationAndValidation(CertRequestConfig requestConfig, string identifierAlias, string challengeType = "http-01", string domain = null)
+        public PendingAuthorization BeginRegistrationAndValidation(CertRequestConfig requestConfig, string identifierAlias, string challengeType = ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP, string domain = null)
         {
             //if no alternative domain specified, use the primary domains as the subject
             if (domain == null) domain = requestConfig.PrimaryDomain;

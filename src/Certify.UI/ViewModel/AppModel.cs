@@ -188,6 +188,12 @@ namespace Certify.UI.ViewModel
             RaisePropertyChanged(nameof(HasRegisteredContacts));
         }
 
+        // Certify-supported challenge types
+        public IEnumerable<string> ChallengeTypes { get; set; } = new string[] {
+            ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP,
+            ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI
+        };
+
         public List<IPAddress> HostIPAddresses
         {
             get
@@ -528,11 +534,12 @@ namespace Certify.UI.ViewModel
 
             //set defaults first
             managedSite.RequestConfig.PerformExtensionlessConfigChecks = true;
+            managedSite.RequestConfig.PerformTlsSniBindingConfigChecks = true;
             managedSite.RequestConfig.PerformChallengeFileCopy = true;
             managedSite.RequestConfig.PerformAutomatedCertBinding = true;
             managedSite.RequestConfig.PerformAutoConfig = true;
             managedSite.RequestConfig.EnableFailureNotifications = true;
-            managedSite.RequestConfig.ChallengeType = "http-01";
+            managedSite.RequestConfig.ChallengeType = ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP;
             managedSite.IncludeInAutoRenew = true;
             managedSite.ClearDomainOptions();
             //for the given selected web site, allow the user to choose which domains to combine into one certificate
