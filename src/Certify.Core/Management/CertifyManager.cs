@@ -34,20 +34,9 @@ namespace Certify.Management
             _iisManager = new IISManager();
         }
 
-        public bool IsIISAvailable
-        {
-            get
-            {
-                if (_iisManager != null && _iisManager.IsIISAvailable)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-        }
+        // expose IIS metadata
+        public bool IsIISAvailable => _iisManager?.IsIISAvailable ?? false;
+        public Version IISVersion => _iisManager.GetIisVersion();
 
         /// <summary>
         /// Check if we have one or more managed sites setup 
@@ -386,7 +375,7 @@ namespace Certify.Management
                             // update managed site summary
                             try
                             {
-                                var certInfo = new CertificateManager().GetCertificate(pfxPath);
+                                var certInfo = CertificateManager.LoadCertificate(pfxPath);
                                 managedSite.DateStart = certInfo.NotBefore;
                                 managedSite.DateExpiry = certInfo.NotAfter;
                                 managedSite.DateRenewed = DateTime.Now;

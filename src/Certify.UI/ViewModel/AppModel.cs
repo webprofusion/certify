@@ -366,13 +366,8 @@ namespace Certify.UI.ViewModel
             ProgressResults = new ObservableCollection<RequestProgressState>();
         }
 
-        public bool IsIISAvailable
-        {
-            get
-            {
-                return certifyManager.IsIISAvailable;
-            }
-        }
+        public bool IsIISAvailable => certifyManager.IsIISAvailable;
+        public Version IISVersion => certifyManager.IISVersion;
 
         public void PreviewImport(bool sanMergeMode)
         {

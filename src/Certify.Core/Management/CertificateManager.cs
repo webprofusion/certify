@@ -7,20 +7,17 @@ using System.Threading.Tasks;
 
 namespace Certify.Management
 {
-    public class CertificateManager
+    public static class CertificateManager
     {
-        public X509Certificate2 GetCertificate(string filename)
+        public static X509Certificate2 LoadCertificate(string filename)
         {
             var cert = new X509Certificate2();
             cert.Import(filename);
             return cert;
         }
 
-        public X509Certificate2 StoreCertificate(string host, string pfxFile)
+        public static X509Certificate2 StoreCertificate(string host, string pfxFile)
         {
-            var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
-            store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
-            //TODO: remove old cert?
             var certificate = new X509Certificate2(pfxFile, "", X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
             certificate.GetExpirationDateString();
             certificate.FriendlyName = host + " [Certify] - " + certificate.GetEffectiveDateString() + " to " + certificate.GetExpirationDateString();
@@ -30,7 +27,7 @@ namespace Certify.Management
             return certificate;
         }
 
-        public X509Store GetDefaultStore()
+        public static X509Store GetDefaultStore()
         {
             return new X509Store(StoreName.My, StoreLocation.LocalMachine);
         }
@@ -41,7 +38,7 @@ namespace Certify.Management
         /// </summary>
         /// <param name="certificate">The new cert to keep</param>
         /// <param name="hostPrefix">The cert friendly name prefix to match certs to clean up</param>
-        public void CleanupCertificateDuplicates(X509Certificate2 certificate, string hostPrefix)
+        public static void CleanupCertificateDuplicates(X509Certificate2 certificate, string hostPrefix)
         {
             // TODO: remove distinction, this is legacy from the old version which didn't have a
             //       clear app specific prefix

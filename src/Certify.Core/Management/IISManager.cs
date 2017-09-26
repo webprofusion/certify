@@ -29,9 +29,11 @@ namespace Certify.Management
             {
                 if (!_isIISAvailable)
                 {
-                    var srv = GetDefaultServerManager();
-                    // _isIISAvaillable will be updated by query against server manager
-                    if (srv != null) return _isIISAvailable;
+                    using (var srv = GetDefaultServerManager())
+                    {
+                        // _isIISAvaillable will be updated by query against server manager
+                        if (srv != null) return _isIISAvailable;
+                    }
                 }
 
                 return _isIISAvailable;
@@ -419,7 +421,7 @@ namespace Certify.Management
             }
 
             //store cert against primary domain
-            var storedCert = new CertificateManager().StoreCertificate(requestConfig.PrimaryDomain, pfxPath);
+            var storedCert = CertificateManager.StoreCertificate(requestConfig.PrimaryDomain, pfxPath);
 
             if (storedCert != null)
             {
@@ -455,7 +457,7 @@ namespace Certify.Management
                 if (cleanupCertStore)
                 {
                     //remove old certs for this primary domain
-                    new CertificateManager().CleanupCertificateDuplicates(storedCert, requestConfig.PrimaryDomain);
+                    CertificateManager.CleanupCertificateDuplicates(storedCert, requestConfig.PrimaryDomain);
                 }
 
                 return true;
@@ -539,7 +541,7 @@ namespace Certify.Management
                     System.Diagnostics.Debug.WriteLine("InstallCertForDomain: Invalid PFX File");
                     return false;
                 }
-                var storedCert = new CertificateManager().StoreCertificate(hostDnsName, pfxPath);
+                var storedCert = CertificateManager.StoreCertificate(hostDnsName, pfxPath);
                 if (storedCert != null)
                 {
                     if (!skipBindings)
@@ -548,7 +550,7 @@ namespace Certify.Management
                     }
                     if (cleanupCertStore)
                     {
-                        new CertificateManager().CleanupCertificateDuplicates(storedCert, hostDnsName);
+                        CertificateManager.CleanupCertificateDuplicates(storedCert, hostDnsName);
                     }
 
                     return true;
