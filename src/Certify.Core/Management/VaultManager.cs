@@ -991,6 +991,11 @@ namespace Certify
                 // or the site is inaccessible via https://host name
                 return false;
             }
+            finally
+            {
+                // reset the callback for other http requests
+                ServicePointManager.ServerCertificateValidationCallback = null;
+            }
         }
 
         private bool CheckURL(string url, bool useProxyAPI)
