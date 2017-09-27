@@ -928,6 +928,11 @@ namespace Certify
             try
             {
                 WebRequest request = WebRequest.Create(url);
+                ServicePointManager.ServerCertificateValidationCallback = (obj, cert, chain, errors) =>
+                {
+                    // ignore all cert errors when validating URL response
+                    return true;
+                };
                 var response = (HttpWebResponse)request.GetResponse();
 
                 //if checking via proxy, examine result
@@ -971,6 +976,11 @@ namespace Certify
             {
                 System.Diagnostics.Debug.WriteLine("Failed to check url for access");
                 checkSuccess = false;
+            }
+            finally
+            {
+                // reset callback for other requests to validate using default behavior
+                ServicePointManager.ServerCertificateValidationCallback = null;
             }
 
             return checkSuccess;
