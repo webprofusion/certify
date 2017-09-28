@@ -45,6 +45,7 @@ namespace Certify.UI.Controls
             this.IgnoreStoppedSites.IsChecked = Certify.Properties.Settings.Default.IgnoreStoppedSites;
 
             this.RenewalIntervalDays.Value = Certify.Properties.Settings.Default.RenewalIntervalDays;
+            this.RenewalMaxRequests.Value = Certify.Properties.Settings.Default.MaxRenewalRequests;
 
             MainViewModel.LoadVaultTree();
             settingsInitialised = true;
