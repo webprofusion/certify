@@ -118,6 +118,7 @@
                         <StackPanel Orientation="Horizontal" Margin="4,0,0,0">
                             <Label Width="100" Content="Challenge Type:" />
                             <ComboBox ItemsSource="{Binding ChallengeTypes}" SelectedItem="{Binding SelectedItem.RequestConfig.ChallengeType}" Width="225" />
+                            <Button Name="Button_TestChallenge" Content="Test" Margin="4,0,0,0" Click="TestChallenge_Click"/>
                         </StackPanel>
 
                         <StackPanel>

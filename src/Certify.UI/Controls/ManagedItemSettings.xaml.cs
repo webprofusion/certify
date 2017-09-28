@@ -293,5 +293,37 @@ namespace Certify.UI.Controls
                 MessageBox.Show(ex.Message, "Script Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private async void TestChallenge_Click(object sender, EventArgs e)
+        {
+            if (!MainViewModel.IsIISAvailable)
+            {
+                MessageBox.Show("Cannot check challenges if IIS is not available.", "Challenge Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            else if (MainViewModel.SelectedItem.RequestConfig.ChallengeType != null)
+            {
+                Button_TestChallenge.IsEnabled = false;
+                var config = MainViewModel.SelectedItem.RequestConfig;
+                if (config.PrimaryDomain==null)
+                {
+                    // new unsaved managed site, set PrimaryDomain & GroupId
+                    var primaryDomain = MainViewModel.SelectedItem.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain == true);
+                    var _idnMapping = new System.Globalization.IdnMapping();
+                    config.PrimaryDomain = _idnMapping.GetAscii(primaryDomain.Domain);
+                    MainViewModel.SelectedItem.GroupId = MainViewModel.SelectedWebSite.SiteId;
+                }
+
+                var result = await MainViewModel.TestChallengeResponse(MainViewModel.SelectedItem);
+                if (result.IsOK)
+                {
+                    MessageBox.Show("Check Success", "Challenge", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show($"Check Failed:\n{result.Message}", "Challenge Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                Button_TestChallenge.IsEnabled = true;
+            }
+        }
     }
 }

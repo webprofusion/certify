@@ -56,7 +56,7 @@ namespace Certify.UI
 
             //select tab Managed Items
             MainViewModel.MainUITabIndex = (int)PrimaryUITabs.ManagedItems;
-
+            MainViewModel.SelectedWebSite = null;
             MainViewModel.SelectedItem = new Certify.Models.ManagedSite();
         }
 

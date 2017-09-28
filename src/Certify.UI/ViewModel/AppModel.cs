@@ -592,6 +592,11 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        public async Task<APIResult> TestChallengeResponse(ManagedSite managedSite)
+        {
+            return await certifyManager.TestChallenge(managedSite);
+        }
+
         private void BeginTrackingProgress(RequestProgressState state)
         {
             var existing = ProgressResults.FirstOrDefault(p => p.ManagedItem.Id == state.ManagedItem.Id);
