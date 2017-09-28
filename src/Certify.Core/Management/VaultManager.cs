@@ -15,6 +15,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Certify
 {
@@ -688,144 +689,214 @@ namespace Certify
             return i;
         }
 
-        public PendingAuthorization PerformIISAutomatedChallengeResponse(IISManager iisManager, ManagedSite managedSite, PendingAuthorization pendingAuth)
+        /// <summary>
+        /// Simulates responding to a challenge, performs a sample configuration and attempts to verify it.
+        /// </summary>
+        /// <param name="iisManager"></param>
+        /// <param name="managedSite"></param>
+        /// <returns>APIResult</returns>
+        /// <remarks>
+        /// The purpose of this method is to test the options (permissions, configuration) before submitting
+        /// a request to the ACME server, to avoid creating failed requests and hitting usage limits.
+        /// </remarks>
+        public async Task<APIResult> TestChallengeResponse(IISManager iisManager, ManagedSite managedSite)
         {
-            var requestConfig = managedSite.RequestConfig;
-            bool extensionlessConfigOK = false;
-
-            //if validation proxy enabled, access to the domain being validated is checked via our remote API rather than directly on the servers
-            bool checkViaProxy = Certify.Properties.Settings.Default.EnableValidationProxyAPI;
-
-            //if copying the file for the user, attempt that now
-            if (pendingAuth.Challenge != null)
+            return await Task.Run(() =>
             {
-                if (pendingAuth.Challenge.ChallengeData is ACMESharp.ACME.HttpChallenge && requestConfig.PerformChallengeFileCopy)
+                ActionLogs.Clear(); // reset action logs
+                var requestConfig = managedSite.RequestConfig;
+                var result = new APIResult();
+                var simulatedAuthorization = new PendingAuthorization(); // create simulated challenge
+                // example KeyAuthorization (from https://tools.ietf.org/html/draft-ietf-acme-acme-01#section-7.2)
+                string KA = "evaGxfADs6pSRb2LAv9IZf17Dt3juxGJ-PCt92wr-oA.nP1qzpXGymHBrUEepNY9HCsQk7K8KhOypzEt62jcerQ";
+                try
                 {
-                    var httpChallenge = (ACMESharp.ACME.HttpChallenge)pendingAuth.Challenge.ChallengeData;
-                    this.LogAction("Preparing challenge response for LetsEncrypt server to check at: " + httpChallenge.FileUrl);
-                    this.LogAction("If the challenge response file is not accessible at this exact URL the validation will fail and a certificate will not be issued.");
-
-                    // get website root path
-                    string websiteRootPath = requestConfig.WebsiteRootPath;
-                    Environment.SetEnvironmentVariable("websiteroot", iisManager.GetSitePhysicalPath(managedSite)); // sets env variable for this process only
-                    websiteRootPath = Environment.ExpandEnvironmentVariables(websiteRootPath); // expand all env variables
-
-                    //copy temp file to path challenge expects in web folder
-                    var destFile = Path.Combine(websiteRootPath, httpChallenge.FilePath);
-                    var destPath = Path.GetDirectoryName(destFile);
-                    if (!Directory.Exists(destPath))
+                    if (requestConfig.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP)
                     {
-                        Directory.CreateDirectory(destPath);
-                    }
-
-                    //copy challenge response to web folder /.well-known/acme-challenge
-                    System.IO.File.WriteAllText(destFile, httpChallenge.FileContent);
-
-                    // configure cleanup
-                    pendingAuth.Cleanup = () => File.Delete(destFile);
-
-                    var wellknownContentPath = httpChallenge.FilePath.Substring(0, httpChallenge.FilePath.LastIndexOf("/"));
-                    var testFilePath = Path.Combine(websiteRootPath, wellknownContentPath + "//configcheck");
-
-                    // write the config check file if it doesn't already exist
-                    if (!File.Exists(testFilePath))
-                    {
-                        System.IO.File.WriteAllText(testFilePath, "Extensionless File Config Test - OK");
-                    }
-
-                    //create a web.config for extensionless files, then test it (make a request for the extensionless configcheck file over http)
-                    string webConfigContent = Core.Properties.Resources.IISWebConfig;
-
-                    if (!File.Exists(destPath + "\\web.config"))
-                    {
-                        //no existing config, attempt auto config and perform test
-                        System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
-                        if (requestConfig.PerformExtensionlessConfigChecks)
+                        simulatedAuthorization.Challenge = new AuthorizeChallengeItem
                         {
-                            if (CheckURL("http://" + requestConfig.PrimaryDomain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
+                            ChallengeData = new ACMESharp.ACME.HttpChallenge(ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP,
+                                new ACMESharp.ACME.HttpChallengeAnswer { KeyAuthorization = KA })
                             {
-                                extensionlessConfigOK = true;
+                                FilePath = ".well-known/acme-challenge/configcheck",
+                                FileContent = "Extensionless File Config Test - OK",
+                                FileUrl = $"http://{managedSite.RequestConfig.PrimaryDomain}/.well-known/acme-challenge/configcheck"
                             }
+                        };
+                        result.IsOK = PrepareChallengeResponse_Http01(iisManager, managedSite, simulatedAuthorization)();
+                    }
+                    else if (requestConfig.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI)
+                    {
+                        if (iisManager.GetIisVersion().Major < 8)
+                        {
+                            result.IsOK = false;
+                            result.Message = $"The {ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI} challenge is only available for IIS versions 8+.";
+                            return result;
                         }
+                        // create simulated challenge
+                        simulatedAuthorization.Challenge = new AuthorizeChallengeItem()
+                        {
+                            ChallengeData = new ACMESharp.ACME.TlsSniChallenge(ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI,
+                                new ACMESharp.ACME.TlsSniChallengeAnswer { KeyAuthorization = KA })
+                            {
+                                IterationCount = 1
+                            }
+                        };
+                        result.IsOK = PrepareChallengeResponse_TlsSni01(iisManager, managedSite, simulatedAuthorization).All(check => check());
                     }
                     else
                     {
-                        //web config already exists, don't overwrite it, just test it
-                        if (requestConfig.PerformExtensionlessConfigChecks)
-                        {
-                            if (CheckURL("http://" + requestConfig.PrimaryDomain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
-                            {
-                                extensionlessConfigOK = true;
-                            }
-                            if (!extensionlessConfigOK && requestConfig.PerformAutoConfig)
-                            {
-                                //didn't work, try our default config
-                                System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
-
-                                if (CheckURL("http://" + requestConfig.PrimaryDomain + "/" + wellknownContentPath + "/configcheck", checkViaProxy))
-                                {
-                                    extensionlessConfigOK = true;
-                                }
-                            }
-                        }
+                        throw new NotSupportedException($"ChallengeType not supported: {requestConfig.ChallengeType}");
                     }
-                    pendingAuth.ExtensionlessConfigCheckedOK = extensionlessConfigOK;
                 }
-                if (pendingAuth.Challenge.ChallengeData is ACMESharp.ACME.TlsSniChallenge && requestConfig.PerformChallengeFileCopy)
+                finally
                 {
-                    var tlsSniChallenge = (ACMESharp.ACME.TlsSniChallenge)pendingAuth.Challenge.ChallengeData;
-                    var tlsSniAnswer = (ACMESharp.ACME.TlsSniChallengeAnswer)tlsSniChallenge.Answer;
-                    var token = Encoding.UTF8.GetBytes(tlsSniAnswer.KeyAuthorization);
-                    var sha256 = System.Security.Cryptography.SHA256.Create();
-                    var z = new byte[tlsSniChallenge.IterationCount][];
+                    result.Message = GetActionLogSummary();
+                    simulatedAuthorization.Cleanup();
+                }
+                return result;
+            });
+        }
 
-                    // compute n sha256 hashes, where n=challengedata.iterationcount
-                    z[0] = sha256.ComputeHash(token);
-                    for (int i=1; i<z.Length; i++)
+        public PendingAuthorization PerformIISAutomatedChallengeResponse(IISManager iisManager, ManagedSite managedSite, PendingAuthorization pendingAuth)
+        {
+            var requestConfig = managedSite.RequestConfig;
+
+            if (pendingAuth.Challenge != null)
+            {
+                if (pendingAuth.Challenge.ChallengeData is ACMESharp.ACME.HttpChallenge 
+                    && requestConfig.PerformChallengeFileCopy /* is this needed? */)
+                {
+                    var check = PrepareChallengeResponse_Http01(iisManager, managedSite, pendingAuth);
+                    if (requestConfig.PerformExtensionlessConfigChecks)
                     {
-                        z[i] = sha256.ComputeHash(z[i - 1]);
+                        pendingAuth.ExtensionlessConfigCheckedOK = check();
                     }
-                    // generate certs and install iis bindings
-                    var cleanupQueue = new List<Action>();
-                    var checkQueue = new List<Func<bool>>();
-                    foreach (string hex in z.Select(b => 
-                        BitConverter.ToString(b).Replace("-","").ToLower()))
-                    {
-                        string domain = $"{hex.Substring(0, 32)}.{hex.Substring(32)}.acme.invalid";
-                        this.LogAction($"Preparing binding at: https://{requestConfig.PrimaryDomain}, sni: {domain}");
-
-                        var x509 = CertificateManager.GenerateTlsSni01Certificate(domain);
-                        CertificateManager.StoreCertificate(x509);
-                        iisManager.InstallCertificateforBinding(managedSite, x509, domain);
-
-                        // add check to the queue
-                        checkQueue.Add(() => {
-                            var sniOK = CheckSNI(requestConfig.PrimaryDomain, domain, checkViaProxy);
-                            if (!sniOK)
-                            {
-                                this.LogAction($"SNI Binding check failed for: https://{requestConfig.PrimaryDomain}, sni:{domain}");
-                            }
-                            return sniOK;
-                        });
-
-                        // add cleanup actions to queue
-                        cleanupQueue.Add(() => iisManager.RemoveHttpsBinding(managedSite, domain));
-                        cleanupQueue.Add(() => CertificateManager.RemoveCertificate(x509));
-                    }
-
-                    // configure cleanup to execute the cleanup queue
-                    pendingAuth.Cleanup = () => cleanupQueue.ForEach(a => a());
-
-                    // perform our own config checks
-                    pendingAuth.TlsSniConfigCheckedOK = true;
+                }
+                if (pendingAuth.Challenge.ChallengeData is ACMESharp.ACME.TlsSniChallenge)
+                {
+                    var checks = PrepareChallengeResponse_TlsSni01(iisManager, managedSite, pendingAuth);
                     if (requestConfig.PerformTlsSniBindingConfigChecks)
                     {
                         // set config check OK if all checks return true
-                        pendingAuth.TlsSniConfigCheckedOK = checkQueue.All(check => check());
+                        pendingAuth.TlsSniConfigCheckedOK = checks.All(check => check());
                     }
                 }
             }
             return pendingAuth;
+        }
+
+        /// <summary>
+        /// Prepares IIS to respond to a http-01 challenge
+        /// </summary>
+        /// <returns>A Boolean returning Func. Invoke the Func to test the challenge response locally.</returns>
+        private Func<bool> PrepareChallengeResponse_Http01(IISManager iisManager, ManagedSite managedSite, PendingAuthorization pendingAuth)
+        {
+            var requestConfig = managedSite.RequestConfig;
+            var httpChallenge = (ACMESharp.ACME.HttpChallenge)pendingAuth.Challenge.ChallengeData;
+            this.LogAction("Preparing challenge response for LetsEncrypt server to check at: " + httpChallenge.FileUrl);
+            this.LogAction("If the challenge response file is not accessible at this exact URL the validation will fail and a certificate will not be issued.");
+
+            // get website root path
+            string websiteRootPath = requestConfig.WebsiteRootPath;
+            Environment.SetEnvironmentVariable("websiteroot", iisManager.GetSitePhysicalPath(managedSite)); // sets env variable for this process only
+            websiteRootPath = Environment.ExpandEnvironmentVariables(websiteRootPath); // expand all env variables
+
+            //copy temp file to path challenge expects in web folder
+            var destFile = Path.Combine(websiteRootPath, httpChallenge.FilePath);
+            var destPath = Path.GetDirectoryName(destFile);
+            if (!Directory.Exists(destPath))
+            {
+                Directory.CreateDirectory(destPath);
+            }
+
+            //copy challenge response to web folder /.well-known/acme-challenge
+            System.IO.File.WriteAllText(destFile, httpChallenge.FileContent);
+
+            // configure cleanup
+            pendingAuth.Cleanup = () => File.Delete(destFile);
+
+            //create a web.config for extensionless files, then test it (make a request for the extensionless configcheck file over http)
+            string webConfigContent = Core.Properties.Resources.IISWebConfig;
+
+            if (!File.Exists(destPath + "\\web.config"))
+            {
+                //no existing config, attempt auto config and perform test
+                this.LogAction($"Config does not exist, writing default config to: {destPath}\\web.config");
+                System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
+                return () => CheckURL("http://" + requestConfig.PrimaryDomain + "/" + httpChallenge.FilePath);
+            }
+            else
+            {
+                //web config already exists, don't overwrite it, just test it
+                return () =>
+                {
+                    if (CheckURL("http://" + requestConfig.PrimaryDomain + "/" + httpChallenge.FilePath))
+                    {
+                        return true;
+                    }
+                    if (requestConfig.PerformAutoConfig)
+                    {
+                        this.LogAction($"Pre-config check failed: Auto-config will overwrite existing config: {destPath}\\web.config");
+                        //didn't work, try our default config
+                        System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
+
+                        if (CheckURL("http://" + requestConfig.PrimaryDomain + "/" + httpChallenge.FilePath))
+                        {
+                            return true;
+                        }
+                    }
+                    return false;
+                };
+            }
+        }
+
+        /// <summary>
+        /// Prepares IIS to respond to a tls-sni-01 challenge
+        /// </summary>
+        /// <returns>A List of Boolean-returning Funcs. Invoke the Funcs to test the challenge response locally.</returns>
+        private List<Func<bool>> PrepareChallengeResponse_TlsSni01(IISManager iisManager, ManagedSite managedSite, PendingAuthorization pendingAuth)
+        {
+            var requestConfig = managedSite.RequestConfig;
+            var tlsSniChallenge = (ACMESharp.ACME.TlsSniChallenge)pendingAuth.Challenge.ChallengeData;
+            var tlsSniAnswer = (ACMESharp.ACME.TlsSniChallengeAnswer)tlsSniChallenge.Answer;
+            var token = Encoding.UTF8.GetBytes(tlsSniAnswer.KeyAuthorization);
+            var sha256 = System.Security.Cryptography.SHA256.Create();
+            var z = new byte[tlsSniChallenge.IterationCount][];
+
+            // compute n sha256 hashes, where n=challengedata.iterationcount
+            z[0] = sha256.ComputeHash(token);
+            for (int i = 1; i < z.Length; i++)
+            {
+                z[i] = sha256.ComputeHash(z[i - 1]);
+            }
+            // generate certs and install iis bindings
+            var cleanupQueue = new List<Action>();
+            var checkQueue = new List<Func<bool>>();
+            foreach (string hex in z.Select(b =>
+                BitConverter.ToString(b).Replace("-", "").ToLower()))
+            {
+                string domain = $"{hex.Substring(0, 32)}.{hex.Substring(32)}.acme.invalid";
+                this.LogAction($"Preparing binding at: https://{requestConfig.PrimaryDomain}, sni: {domain}");
+
+                var x509 = CertificateManager.GenerateTlsSni01Certificate(domain);
+                CertificateManager.StoreCertificate(x509);
+                iisManager.InstallCertificateforBinding(managedSite, x509, domain);
+
+                // add check to the queue
+                checkQueue.Add(() => CheckSNI(requestConfig.PrimaryDomain, domain));
+
+                // add cleanup actions to queue
+                cleanupQueue.Add(() => iisManager.RemoveHttpsBinding(managedSite, domain));
+                cleanupQueue.Add(() => CertificateManager.RemoveCertificate(x509));
+            }
+
+            // configure cleanup to execute the cleanup queue
+            pendingAuth.Cleanup = () => cleanupQueue.ForEach(a => a());
+
+            // perform our own config checks
+            pendingAuth.TlsSniConfigCheckedOK = true;
+            return checkQueue;
         }
 
         public bool CompleteIdentifierValidationProcess(string domainIdentifierAlias)
@@ -858,8 +929,6 @@ namespace Certify
 
         public ProcessStepResult PerformCertificateRequestProcess(string domainIdentifierRef, string[] alternativeIdentifierRefs)
         {
-            //
-
             //all good, we can request a certificate
             //if authorizing a SAN we would need to repeat the above until all domains are valid, then we can request cert
             var certAlias = "cert_" + domainIdentifierRef;

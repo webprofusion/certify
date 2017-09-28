@@ -92,6 +92,11 @@ namespace Certify.Management
             return _vaultProvider.HasRegisteredContacts();
         }
 
+        public async Task<APIResult> TestChallenge(ManagedSite managedSite)
+        {
+            return await _vaultProvider.TestChallengeResponse(_iisManager, managedSite);
+        }
+
         /// <summary>
         /// Test dummy method for async UI testing etc 
         /// </summary>

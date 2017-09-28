@@ -107,6 +107,11 @@ namespace Certify.Management.APIProviders
             throw new NotImplementedException();
         }
 
+        public Task<APIResult> TestChallengeResponse(IISManager iISManager, ManagedSite managedSite)
+        {
+            throw new NotImplementedException();
+        }
+
         public void SubmitChallenge(string domainIdentifierId, string challengeType)
         {
             throw new NotImplementedException();

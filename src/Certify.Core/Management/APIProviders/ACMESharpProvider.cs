@@ -109,6 +109,11 @@ namespace Certify.Management.APIProviders
             return _vaultManager.PerformIISAutomatedChallengeResponse(iisManager, managedSite, pendingAuth);
         }
 
+        public async Task<APIResult> TestChallengeResponse(IISManager iisManager, ManagedSite managedSite)
+        {
+            return await _vaultManager.TestChallengeResponse(iisManager, managedSite);
+        }
+
         public void SubmitChallenge(string domainIdentifierId, string challengeType)
         {
             _vaultManager.SubmitChallenge(domainIdentifierId, challengeType);
