@@ -956,39 +956,75 @@ namespace Certify
             return output;
         }
 
-        private bool CheckSNI(string host, string sni, bool useProxyAPI)
+        /// <summary>
+        /// Performs a simulated tls-sni-01 verification over HTTPS/SNI.
+        /// </summary>
+        /// <param name="host">The domain being verified</param>
+        /// <param name="sni">The server name indication used for TLS server response</param>
+        /// <param name="useProxyAPI">Whether to use the server proxy for verification</param>
+        /// <returns>True if the verification is successful, False if not.</returns>
+        private bool CheckSNI(string host, string sni, bool? useProxyAPI = null)
         {
-            if (useProxyAPI)
+            // if validation proxy enabled, access to the domain being validated is checked via
+            // our remote API rather than directly on the servers
+            bool useProxy = useProxyAPI ?? Certify.Properties.Settings.Default.EnableValidationProxyAPI;
+            if (useProxy)
             {
-                // this is not implemented, needs server support
-                System.Diagnostics.Debug.WriteLine("ProxyAPI is not implemented for Checking SNI config");
-                return true;
+                // TODO: check proxy here, needs server support. if successful "return true"; and "LogAction(...)"
+                System.Diagnostics.Debug.WriteLine("ProxyAPI is not implemented for Checking SNI config, trying local");
+                this.LogAction($"Proxy TLS SNI binding check error: {host}, {sni}"); 
+
+                return CheckSNI(host, sni, false); // proxy failed, try local
             }
+            var hosts = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"drivers\etc\hosts");
             try
             {
-                // create request with the SNI host, then reset the Uri
-                var req = new HttpRequestMessage(HttpMethod.Get, $"https://{sni}")
-                {
-                    // reset uri host so HttpClient sends request to correct IP
-                    RequestUri = new Uri($"https://{host}")
-                };
+                var req = new HttpRequestMessage(HttpMethod.Get, $"https://{sni}");
                 ServicePointManager.ServerCertificateValidationCallback = (obj, cert, chain, errors) =>
                 {
                     // verify SNI-selected certificate is correctly configured
                     return CertificateManager.VerifyCertificateSAN(cert, sni);
                 };
-                using (var client = new HttpClient())
+                // modify the hosts file
+                var ip = Dns.GetHostEntry(host).AddressList.First();
+                string hostEntry = $"\n{ip}\t{sni}";
+                using (StreamWriter writer = File.AppendText(hosts))
                 {
-                    var resp = client.SendAsync(req).Result;
-                    // if the GET request succeeded, the Cert validation succeeded
-                    this.LogAction($"TLS SNI binding check OK: {host}, {sni}");
-                    return true;
+                    writer.Write(hostEntry);
                 }
+                Thread.Sleep(250); // wait a bit for hostsfile to take effect
+                try
+                {
+                    using (var client = new HttpClient())
+                    {
+                        var resp = client.SendAsync(req).Result;
+                        // if the GET request succeeded, the Cert validation succeeded
+                        this.LogAction($"Local TLS SNI binding check OK: {host}, {sni}"); ;
+                    }
+                }
+                finally
+                {
+                    // clean up hosts
+                    try
+                    {
+                        var txt = File.ReadAllText(hosts);
+                        txt = txt.Substring(0, txt.Length - hostEntry.Length);
+                        File.WriteAllText(hosts, txt);
+                    }
+                    catch
+                    {
+                        // if this fails the user will have to clean up manually
+                        this.LogAction($"Error cleaning up hosts file: {hosts}");
+                        throw;
+                    }
+                }
+                return true; // success!
             }
-            catch
+            catch (Exception ex)
             {
                 // eat the error that HttpClient throws, either cert validation failed
                 // or the site is inaccessible via https://host name
+                this.LogAction($"Local TLS SNI binding check error: {host}, {sni}\n{ex.GetType()}: {ex.Message}\n{ex.StackTrace}");
                 return false;
             }
             finally
@@ -998,22 +1034,21 @@ namespace Certify
             }
         }
 
-        private bool CheckURL(string url, bool useProxyAPI)
+        private bool CheckURL(string url, bool? useProxyAPI = null)
         {
-            var checkUrl = url + "";
-            if (useProxyAPI)
-            {
-                url = Properties.Resources.APIBaseURI + "testurlaccess?url=" + url;
-            }
+            // if validation proxy enabled, access to the domain being validated is checked via
+            // our remote API rather than directly on the servers
+            bool useProxy = useProxyAPI ?? Certify.Properties.Settings.Default.EnableValidationProxyAPI;
+
             //check http request to test path works
-            bool checkSuccess = false;
             try
             {
-                WebRequest request = WebRequest.Create(url);
+                var request = WebRequest.Create(!useProxy ? url : 
+                    Properties.Resources.APIBaseURI + "testurlaccess?url=" + url);
                 var response = (HttpWebResponse)request.GetResponse();
 
                 //if checking via proxy, examine result
-                if (useProxyAPI)
+                if (useProxy)
                 {
                     if ((int)response.StatusCode >= 200)
                     {
@@ -1021,41 +1056,29 @@ namespace Certify
                         using (var reader = new System.IO.StreamReader(response.GetResponseStream(), encoding))
                         {
                             string jsonText = reader.ReadToEnd();
-                            this.LogAction("URL Check Result: " + jsonText);
+                            this.LogAction("Proxy URL Check Result: " + jsonText);
                             var result = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.API.URLCheckResult>(jsonText);
                             if (result.IsAccessible == true)
                             {
-                                checkSuccess = true;
-                            }
-                            else
-                            {
-                                checkSuccess = false;
+                                return true;
                             }
                         }
                     }
+                    //request failed using proxy api, request again using local http
+                    return CheckURL(url, false);
                 }
                 else
                 {
+                    this.LogAction($"Local URL Check Result: HTTP {response.StatusCode}");
                     //not checking via proxy, base result on status code
-                    if ((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
-                    {
-                        checkSuccess = true;
-                    }
-                }
-
-                if (checkSuccess == false && useProxyAPI == true)
-                {
-                    //request failed using proxy api, request again using local http
-                    checkSuccess = CheckURL(checkUrl, false);
+                    return (int)response.StatusCode >= 200 && (int)response.StatusCode < 300;
                 }
             }
             catch (Exception)
             {
                 System.Diagnostics.Debug.WriteLine("Failed to check url for access");
-                checkSuccess = false;
+                return false;
             }
-
-            return checkSuccess;
         }
 
         #endregion Utils
