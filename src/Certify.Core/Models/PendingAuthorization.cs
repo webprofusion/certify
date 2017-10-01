@@ -19,5 +19,7 @@ namespace Certify.Models
         public IdentifierItem Identifier { get; set; }
         public string TempFilePath { get; set; }
         public bool ExtensionlessConfigCheckedOK { get; set; }
+
+        public List<string> LogItems { get; set; }
     }
 }

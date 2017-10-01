@@ -296,6 +296,17 @@ namespace Certify.Management
                                     //prepare IIS with answer for the LE challenege
                                     authorization = _vaultProvider.PerformIISAutomatedChallengeResponse(_iisManager, managedSite, authorization);
 
+                                    if (authorization.LogItems != null)
+                                    {
+                                        //pass log items onto main log
+                                        foreach (var msg in authorization.LogItems)
+                                        {
+                                            if (msg != null)
+                                            {
+                                                LogMessage(managedSite.Id, msg, LogItemType.GeneralInfo);
+                                            }
+                                        }
+                                    }
                                     //if we attempted extensionless config checks, report any errors
                                     if (config.PerformAutoConfig && !authorization.ExtensionlessConfigCheckedOK)
                                     {
