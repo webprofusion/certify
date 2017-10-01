@@ -23,9 +23,14 @@
             <ColumnDefinition Width="*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
 
-        <StackPanel Grid.Column="0" Margin="0,10,0,0">
-            <TextBox Name="txtFilter" TextChanged="TxtFilter_TextChanged" Controls:TextBoxHelper.Watermark="Filter..."></TextBox>
-            <ListView Name="lvManagedSites" ItemsSource="{Binding ManagedSites}" SelectionChanged="ListView_SelectionChanged" SelectionMode="Single" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" BorderBrush="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}">
+        <Grid Grid.Column="0" Margin="0,10,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="28">
+                </RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+            </Grid.RowDefinitions>
+            <TextBox Grid.Row="0" Name="txtFilter" TextChanged="TxtFilter_TextChanged" Controls:TextBoxHelper.Watermark="Filter..."></TextBox>
+            <ListView Grid.Row="1" Name="lvManagedSites" ItemsSource="{Binding ManagedSites}" SelectionChanged="ListView_SelectionChanged" SelectionMode="Single" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" BorderBrush="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Vertical" Margin="0,8,0,0">
@@ -40,7 +45,7 @@
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
-        </StackPanel>
+        </Grid>
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition></RowDefinition>

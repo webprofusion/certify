@@ -106,7 +106,16 @@ namespace Certify.Management.APIProviders
 
         public PendingAuthorization PerformIISAutomatedChallengeResponse(IISManager iisManager, ManagedSite managedSite, PendingAuthorization pendingAuth)
         {
-            return _vaultManager.PerformIISAutomatedChallengeResponse(iisManager, managedSite, pendingAuth);
+            var processedAuth = _vaultManager.PerformIISAutomatedChallengeResponse(iisManager, managedSite, pendingAuth);
+            if (_vaultManager.ActionLogs != null)
+            {
+                processedAuth.LogItems = new List<string>();
+                foreach (var a in _vaultManager.ActionLogs)
+                {
+                    processedAuth.LogItems.Add(a.Result);
+                }
+            }
+            return processedAuth;
         }
 
         public async Task<APIResult> TestChallengeResponse(IISManager iisManager, ManagedSite managedSite)

@@ -634,7 +634,7 @@ namespace Certify
             //if an identifier exists for the same dns in vault, remove it to avoid confusion
             this.DeleteIdentifierByDNS(domain);
 
-            // ACME service requires international domain names in ascii mode, regiser the new
+            // ACME service requires international domain names in ascii mode, register the new
             // identifier with Lets Encrypt
             var authState = ACMESharpUtils.NewIdentifier(identifierAlias, idnMapping.GetAscii(domain));
 
@@ -797,10 +797,35 @@ namespace Certify
             this.LogAction("Preparing challenge response for LetsEncrypt server to check at: " + httpChallenge.FileUrl);
             this.LogAction("If the challenge response file is not accessible at this exact URL the validation will fail and a certificate will not be issued.");
 
-            // get website root path
+            // get website root path, expand environment variables if required
             string websiteRootPath = requestConfig.WebsiteRootPath;
-            Environment.SetEnvironmentVariable("websiteroot", iisManager.GetSitePhysicalPath(managedSite)); // sets env variable for this process only
-            websiteRootPath = Environment.ExpandEnvironmentVariables(websiteRootPath); // expand all env variables
+
+            // if website root path not specified, determine it now
+            if (String.IsNullOrEmpty(websiteRootPath))
+            {
+                websiteRootPath = iisManager.GetSitePhysicalPath(managedSite);
+            }
+
+            if (!String.IsNullOrEmpty(websiteRootPath) && websiteRootPath.Contains("%"))
+            {
+                // if websiteRootPath contains %websiteroot% variable, replace that with the
+                // current physical path for the site
+                if (websiteRootPath.Contains("%websiteroot%"))
+                {
+                    // sets env variable for this process only
+                    Environment.SetEnvironmentVariable("websiteroot", iisManager.GetSitePhysicalPath(managedSite));
+                }
+                // expand any environment variables present in site path
+                websiteRootPath = Environment.ExpandEnvironmentVariables(websiteRootPath);
+            }
+
+            if (String.IsNullOrEmpty(websiteRootPath) || !Directory.Exists(websiteRootPath))
+            {
+                // our website no longer appears to exist on disk, continuing would potentially
+                // create unwanted folders, so it's time for us to give up
+                this.LogAction($"The website root path for {managedSite.Name} could not be determined. Request cannot continue.");
+                return () => false;
+            }
 
             //copy temp file to path challenge expects in web folder
             var destFile = Path.Combine(websiteRootPath, httpChallenge.FilePath);

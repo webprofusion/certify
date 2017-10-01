@@ -21,5 +21,6 @@ namespace Certify.Models
         public bool ExtensionlessConfigCheckedOK { get; set; } = true;
         public bool TlsSniConfigCheckedOK { get; set; } = true;
         public Action Cleanup { get; set; } = () => { };
+        public List<string> LogItems { get; set; }
     }
 }

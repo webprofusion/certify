@@ -290,6 +290,17 @@ namespace Certify.Management
                                     // if all accessible and correct (authorized) LE will then allow us to request a certificate 
                                     authorization = _vaultProvider.PerformIISAutomatedChallengeResponse(_iisManager, managedSite, authorization);
 
+                                    if (authorization.LogItems != null)
+                                    {
+                                        //pass log items onto main log
+                                        foreach (var msg in authorization.LogItems)
+                                        {
+                                            if (msg != null)
+                                            {
+                                                LogMessage(managedSite.Id, msg, LogItemType.GeneralInfo);
+                                            }
+                                        }
+                                    }
                                     if ((config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP && !authorization.ExtensionlessConfigCheckedOK) ||
                                         (config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI && !authorization.TlsSniConfigCheckedOK))
                                     {
