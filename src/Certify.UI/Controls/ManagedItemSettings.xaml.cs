@@ -55,19 +55,26 @@ namespace Certify.UI.Controls
             {
                 if (MainViewModel.SelectedItem.Id == null && MainViewModel.SelectedWebSite == null)
                 {
-                    MessageBox.Show("Select the website to create a certificate for.");
+                    MessageBox.Show("Select the website to create a certificate for.", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
                 if (String.IsNullOrEmpty(MainViewModel.SelectedItem.Name))
                 {
-                    MessageBox.Show("A name is required for this item.");
+                    MessageBox.Show("A name is required for this item.", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
                 if (MainViewModel.PrimarySubjectDomain == null)
                 {
-                    MessageBox.Show("A Primary Domain must be selected");
+                    MessageBox.Show("A Primary Domain must be selected", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                if (MainViewModel.SelectedItem.RequestConfig.ChallengeType==ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI &&
+                    MainViewModel.IISVersion.Major < 8)
+                {
+                    MessageBox.Show($"The {ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI} challenge is only available for IIS versions 8+.", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
@@ -197,7 +204,7 @@ namespace Certify.UI.Controls
             if (!String.IsNullOrEmpty(certPath) && System.IO.File.Exists(certPath))
             {
                 //open file
-                var cert = new CertificateManager().GetCertificate(certPath);
+                var cert = CertificateManager.LoadCertificate(certPath);
                 if (cert != null)
                 {
                     X509Certificate2UI.DisplayCertificate(cert);
@@ -284,6 +291,38 @@ namespace Certify.UI.Controls
             catch (ArgumentException ex)
             {
                 MessageBox.Show(ex.Message, "Script Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void TestChallenge_Click(object sender, EventArgs e)
+        {
+            if (!MainViewModel.IsIISAvailable)
+            {
+                MessageBox.Show("Cannot check challenges if IIS is not available.", "Challenge Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            else if (MainViewModel.SelectedItem.RequestConfig.ChallengeType != null)
+            {
+                Button_TestChallenge.IsEnabled = false;
+                var config = MainViewModel.SelectedItem.RequestConfig;
+                if (config.PrimaryDomain==null)
+                {
+                    // new unsaved managed site, set PrimaryDomain & GroupId
+                    var primaryDomain = MainViewModel.SelectedItem.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain == true);
+                    var _idnMapping = new System.Globalization.IdnMapping();
+                    config.PrimaryDomain = _idnMapping.GetAscii(primaryDomain.Domain);
+                    MainViewModel.SelectedItem.GroupId = MainViewModel.SelectedWebSite.SiteId;
+                }
+
+                var result = await MainViewModel.TestChallengeResponse(MainViewModel.SelectedItem);
+                if (result.IsOK)
+                {
+                    MessageBox.Show("Check Success", "Challenge", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show($"Check Failed:\n{result.Message}", "Challenge Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                Button_TestChallenge.IsEnabled = true;
             }
         }
     }

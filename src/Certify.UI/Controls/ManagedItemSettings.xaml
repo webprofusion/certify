@@ -8,6 +8,7 @@
     xmlns:fa="http://schemas.fontawesome.io/icons/"
     xmlns:Custom="http://metro.mahapps.com/winfx/xaml/controls"
     xmlns:utils="clr-namespace:Certify.UI.Utils"
+    xmlns:acme="clr-namespace:Certify.ACMESharpCompat;assembly=Certify.Core"
     x:Class="Certify.UI.Controls.ManagedItemSettings"
              mc:Ignorable="d" Width="697.442" Height="425.672">
 
@@ -113,29 +114,61 @@
 			</TabItem>
             <TabItem Header="Advanced" IsSelected="True">
 				<ScrollViewer VerticalScrollBarVisibility="Auto">
-					<StackPanel Margin="0,16,0,0">
+                    <StackPanel Margin="0,16,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="4,0,0,0">
+                            <Label Width="100" Content="Challenge Type:" />
+                            <ComboBox ItemsSource="{Binding ChallengeTypes}" SelectedItem="{Binding SelectedItem.RequestConfig.ChallengeType}" Width="225" />
+                            <Button Name="Button_TestChallenge" Content="Test" Margin="4,0,0,0" Click="TestChallenge_Click"/>
+                        </StackPanel>
 
-						<StackPanel Orientation="Horizontal" Margin="8,0,0,0">
-							<Label Width="155" Content="Website Root Directory"/>
-							<TextBox Text="{Binding SelectedItem.RequestConfig.WebsiteRootPath}" Width="350"/>
-							<Button Name="Button_WebRoot" Content="..." Margin="4,0,0,0" Click="DirectoryBrowse_Click"/>
-						</StackPanel>
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style>
+                                    <Setter Property="StackPanel.Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static acme:ACMESharpUtils.CHALLENGE_TYPE_HTTP}">
+                                            <Setter Property="StackPanel.Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <StackPanel Orientation="Horizontal" Margin="4,8,0,0">
+                                <Label Width="155" Content="Website Root Directory"/>
+                                <TextBox Text="{Binding SelectedItem.RequestConfig.WebsiteRootPath}" Width="350"/>
+                                <Button Name="Button_WebRoot" Content="..." Margin="4,0,0,0" Click="DirectoryBrowse_Click"/>
+                            </StackPanel>
 
-						<StackPanel Orientation="Vertical" Margin="8,8,0,0">
-							<CheckBox Content="Perform challenge response config checks" IsChecked="{Binding SelectedItem.RequestConfig.PerformExtensionlessConfigChecks}" />
-							<CheckBox Content="Perform web application auto config" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutoConfig}" />
-						</StackPanel>
+                            <StackPanel Orientation="Vertical" Margin="8,8,0,0">
+                                <CheckBox Content="Perform challenge response config checks" IsChecked="{Binding SelectedItem.RequestConfig.PerformExtensionlessConfigChecks}" />
+                                <CheckBox Content="Perform web application auto config" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutoConfig}" />
+                            </StackPanel>
+                        </StackPanel>
 
-						<StackPanel Orientation="Vertical" Margin="8,16,0,0">
-							<RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" GroupName="BindingType" Content="Auto create/update IIS bindings (uses SNI)" />
-							<RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType" Content="Use specific IP/Port bindings" />
-						</StackPanel>
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style>
+                                    <Setter Property="StackPanel.Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static acme:ACMESharpUtils.CHALLENGE_TYPE_SNI}">
+                                            <Setter Property="StackPanel.Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <StackPanel Orientation="Vertical" Margin="8,8,0,0">
+                                <CheckBox Content="Perform challenge response config checks" IsChecked="{Binding SelectedItem.RequestConfig.PerformTlsSniBindingConfigChecks}" />
+                            </StackPanel>
+                        </StackPanel>
 
-						<StackPanel Orientation="Vertical" IsEnabled="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" Margin="32,8,0,0">
+                        <StackPanel Orientation="Vertical" Margin="8,16,0,0">
+                            <RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" GroupName="BindingType" Content="Auto create/update IIS bindings (uses SNI)" />
+                            <RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType" Content="Use specific IP/Port bindings" />
+                        </StackPanel>
+
+                        <StackPanel Orientation="Vertical" IsEnabled="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" Margin="32,8,0,0">
 							<StackPanel Orientation="Horizontal">
-								<Label Width="131" Content="Bind to Specific IP:" />
-
-								<ComboBox ItemsSource="{Binding HostIPAddresses}" SelectedItem="{Binding SelectedItem.RequestConfig.BindingIPAddress}" Width="225" />
+                                <Label Width="131" Content="Bind to Specific IP:" />
+                                <ComboBox ItemsSource="{Binding HostIPAddresses}" SelectedItem="{Binding SelectedItem.RequestConfig.BindingIPAddress}" Width="225" />
 							</StackPanel>
 							<StackPanel Orientation="Horizontal">
 								<Label Width="131" Content="Bind to Specific Port:" />
@@ -147,7 +180,7 @@
 							</StackPanel>
 						</StackPanel>
 
-						<StackPanel Orientation="Vertical" Margin="8,16,0,0">
+						<StackPanel Orientation="Vertical" Margin="4,16,0,0">
 							<StackPanel Orientation="Horizontal">
 								<Label Width="155" Content="Pre-request PS Script:"/>
 								<TextBox Text="{Binding SelectedItem.RequestConfig.PreRequestPowerShellScript}" Width="350"/>

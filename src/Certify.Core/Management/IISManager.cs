@@ -29,9 +29,11 @@ namespace Certify.Management
             {
                 if (!_isIISAvailable)
                 {
-                    var srv = GetDefaultServerManager();
-                    // _isIISAvaillable will be updated by query against server manager
-                    if (srv != null) return _isIISAvailable;
+                    using (var srv = GetDefaultServerManager())
+                    {
+                        // _isIISAvaillable will be updated by query against server manager
+                        if (srv != null) return _isIISAvailable;
+                    }
                 }
 
                 return _isIISAvailable;
@@ -419,7 +421,7 @@ namespace Certify.Management
             }
 
             //store cert against primary domain
-            var storedCert = new CertificateManager().StoreCertificate(requestConfig.PrimaryDomain, pfxPath);
+            var storedCert = CertificateManager.StoreCertificate(requestConfig.PrimaryDomain, pfxPath);
 
             if (storedCert != null)
             {
@@ -455,7 +457,7 @@ namespace Certify.Management
                 if (cleanupCertStore)
                 {
                     //remove old certs for this primary domain
-                    new CertificateManager().CleanupCertificateDuplicates(storedCert, requestConfig.PrimaryDomain);
+                    CertificateManager.CleanupCertificateDuplicates(storedCert, requestConfig.PrimaryDomain);
                 }
 
                 return true;
@@ -464,6 +466,49 @@ namespace Certify.Management
             {
                 return false;
             }
+        }
+
+        /// <summary>
+        /// removes the managedSite's https binding for the dns host name specified 
+        /// </summary>
+        /// <param name="managedSite"></param>
+        /// <param name="host"></param>
+        public void RemoveHttpsBinding(ManagedSite managedSite, string host)
+        {
+            using (var iisManager = GetDefaultServerManager())
+            {
+                var site = iisManager.Sites.FirstOrDefault(s => s.Id == long.Parse(managedSite.GroupId));
+                if (site != null)
+                {
+                    string internationalHost = host == "" ? "" : _idnMapping.GetUnicode(host);
+                    var binding = site.Bindings.Where(b => 
+                        b.Host == internationalHost && 
+                        b.Protocol == "https"
+                    ).FirstOrDefault();
+
+                    if (binding != null)
+                    {
+                        site.Bindings.Remove(binding);
+                        iisManager.CommitChanges();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// creates or updates the https binding for the dns host name specified, assigning the given
+        /// certificate selected from the certificate store
+        /// </summary>
+        /// <param name="managedSite"></param>
+        /// <param name="certificate"></param>
+        /// <param name="host"></param>
+        /// <param name="sslPort"></param>
+        /// <param name="useSNI"></param>
+        /// <param name="ipAddress"></param>
+        public void InstallCertificateforBinding(ManagedSite managedSite, X509Certificate2 certificate, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null)
+        {
+            var site = FindManagedSite(managedSite);
+            InstallCertificateforBinding(site, certificate, host, sslPort, useSNI, ipAddress);
         }
 
         /// <summary>
@@ -539,7 +584,7 @@ namespace Certify.Management
                     System.Diagnostics.Debug.WriteLine("InstallCertForDomain: Invalid PFX File");
                     return false;
                 }
-                var storedCert = new CertificateManager().StoreCertificate(hostDnsName, pfxPath);
+                var storedCert = CertificateManager.StoreCertificate(hostDnsName, pfxPath);
                 if (storedCert != null)
                 {
                     if (!skipBindings)
@@ -548,7 +593,7 @@ namespace Certify.Management
                     }
                     if (cleanupCertStore)
                     {
-                        new CertificateManager().CleanupCertificateDuplicates(storedCert, hostDnsName);
+                        CertificateManager.CleanupCertificateDuplicates(storedCert, hostDnsName);
                     }
 
                     return true;

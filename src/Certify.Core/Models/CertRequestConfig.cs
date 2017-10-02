@@ -54,6 +54,12 @@ namespace Certify.Models
         public bool PerformExtensionlessConfigChecks { get; set; }
 
         /// <summary>
+        /// If true, perform an automated check that the web host is configured to respond to
+        /// tls sni requests
+        /// </summary>
+        public bool PerformTlsSniBindingConfigChecks { get; set; }
+
+        /// <summary>
         /// If true, attempt to automatically configure the web host/web aplication as required
         /// </summary>
         public bool PerformAutoConfig { get; set; }

@@ -188,6 +188,12 @@ namespace Certify.UI.ViewModel
             RaisePropertyChanged(nameof(HasRegisteredContacts));
         }
 
+        // Certify-supported challenge types
+        public IEnumerable<string> ChallengeTypes { get; set; } = new string[] {
+            ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP,
+            ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI
+        };
+
         public List<IPAddress> HostIPAddresses
         {
             get
@@ -360,13 +366,8 @@ namespace Certify.UI.ViewModel
             ProgressResults = new ObservableCollection<RequestProgressState>();
         }
 
-        public bool IsIISAvailable
-        {
-            get
-            {
-                return certifyManager.IsIISAvailable;
-            }
-        }
+        public bool IsIISAvailable => certifyManager.IsIISAvailable;
+        public Version IISVersion => certifyManager.IISVersion;
 
         public void PreviewImport(bool sanMergeMode)
         {
@@ -527,12 +528,14 @@ namespace Certify.UI.ViewModel
             //TODO: if this site would be a duplicate need to increment the site name
 
             //set defaults first
+            managedSite.RequestConfig.WebsiteRootPath = Environment.ExpandEnvironmentVariables(SelectedWebSite.PhysicalPath);
             managedSite.RequestConfig.PerformExtensionlessConfigChecks = true;
+            managedSite.RequestConfig.PerformTlsSniBindingConfigChecks = true;
             managedSite.RequestConfig.PerformChallengeFileCopy = true;
             managedSite.RequestConfig.PerformAutomatedCertBinding = true;
             managedSite.RequestConfig.PerformAutoConfig = true;
             managedSite.RequestConfig.EnableFailureNotifications = true;
-            managedSite.RequestConfig.ChallengeType = "http-01";
+            managedSite.RequestConfig.ChallengeType = ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP;
             managedSite.IncludeInAutoRenew = true;
             managedSite.ClearDomainOptions();
             //for the given selected web site, allow the user to choose which domains to combine into one certificate
@@ -587,6 +590,11 @@ namespace Certify.UI.ViewModel
                     }
                 }
             }
+        }
+
+        public async Task<APIResult> TestChallengeResponse(ManagedSite managedSite)
+        {
+            return await certifyManager.TestChallenge(managedSite);
         }
 
         private void BeginTrackingProgress(RequestProgressState state)
