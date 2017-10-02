@@ -303,15 +303,7 @@ namespace Certify.UI.Controls
             else if (MainViewModel.SelectedItem.RequestConfig.ChallengeType != null)
             {
                 Button_TestChallenge.IsEnabled = false;
-                var config = MainViewModel.SelectedItem.RequestConfig;
-                if (config.PrimaryDomain==null)
-                {
-                    // new unsaved managed site, set PrimaryDomain & GroupId
-                    var primaryDomain = MainViewModel.SelectedItem.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain == true);
-                    var _idnMapping = new System.Globalization.IdnMapping();
-                    config.PrimaryDomain = _idnMapping.GetAscii(primaryDomain.Domain);
-                    MainViewModel.SelectedItem.GroupId = MainViewModel.SelectedWebSite.SiteId;
-                }
+                MainViewModel.UpdateManagedSiteSettings();
 
                 var result = await MainViewModel.TestChallengeResponse(MainViewModel.SelectedItem);
                 if (result.IsOK)
