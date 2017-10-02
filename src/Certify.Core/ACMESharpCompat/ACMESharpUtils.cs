@@ -32,6 +32,22 @@ namespace Certify.ACMESharpCompat
     /// </summary>
     public static class ACMESharpUtils
     {
+        /// <summary>
+        /// Identifier validation challenge type indicator for
+        /// <see cref="https://tools.ietf.org/html/draft-ietf-acme-acme-01#section-7.5">DNS</see>.
+        /// </summary>
+        public static readonly string CHALLENGE_TYPE_DNS = "dns-01";
+        /// <summary>
+        /// Identifier validation challenge type indicator for
+        /// <see cref="https://tools.ietf.org/html/draft-ietf-acme-acme-01#section-7.2">HTTP (non-SSL/TLS)</see>.
+        /// </summary>
+        public const string CHALLENGE_TYPE_HTTP = "http-01";
+        /// <summary>
+        /// Identifier validation challenge type indicator for
+        /// <see cref="https://tools.ietf.org/html/draft-ietf-acme-acme-01#section-7.3">TLS SNI</see>.
+        /// </summary>
+        public const string CHALLENGE_TYPE_SNI = "tls-sni-01";
+
         public const string WELL_KNOWN_LE = "LetsEncrypt";
 
         public const string WELL_KNOWN_LESTAGE = "LetsEncrypt-STAGING";

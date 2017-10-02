@@ -22,6 +22,8 @@ namespace Certify.Management
 
         string GetVaultSummary();
 
+        string GetActionSummary();
+
         void EnableSensitiveFileEncryption();
 
         string ComputeDomainIdentifierId(string domain);
@@ -31,6 +33,8 @@ namespace Certify.Management
         PendingAuthorization BeginRegistrationAndValidation(CertRequestConfig config, string domainIdentifierId, string challengeType, string domain);
 
         PendingAuthorization PerformIISAutomatedChallengeResponse(IISManager iisManager, ManagedSite managedSite, PendingAuthorization pendingAuth);
+
+        Task<APIResult> TestChallengeResponse(IISManager iisManager, ManagedSite managedSite);
 
         void SubmitChallenge(string domainIdentifierId, string challengeType);
 
