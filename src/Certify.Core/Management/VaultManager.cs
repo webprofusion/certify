@@ -690,14 +690,16 @@ namespace Certify
         }
 
         /// <summary>
-        /// Simulates responding to a challenge, performs a sample configuration and attempts to verify it.
+        /// Simulates responding to a challenge, performs a sample configuration and attempts to
+        /// verify it.
         /// </summary>
         /// <param name="iisManager"></param>
         /// <param name="managedSite"></param>
-        /// <returns>APIResult</returns>
+        /// <returns> APIResult </returns>
         /// <remarks>
-        /// The purpose of this method is to test the options (permissions, configuration) before submitting
-        /// a request to the ACME server, to avoid creating failed requests and hitting usage limits.
+        /// The purpose of this method is to test the options (permissions, configuration) before
+        /// submitting a request to the ACME server, to avoid creating failed requests and hitting
+        /// usage limits.
         /// </remarks>
         public async Task<APIResult> TestChallengeResponse(IISManager iisManager, ManagedSite managedSite)
         {
@@ -779,12 +781,13 @@ namespace Certify
         }
 
         /// <summary>
-        /// Creates a realistic-looking simulated Key Authorization
+        /// Creates a realistic-looking simulated Key Authorization 
         /// </summary>
         /// <remarks>
-        /// example KeyAuthorization (from https://tools.ietf.org/html/draft-ietf-acme-acme-01#section-7.2):
+        /// example KeyAuthorization (from
+        /// https://tools.ietf.org/html/draft-ietf-acme-acme-01#section-7.2):
         /// "evaGxfADs6pSRb2LAv9IZf17Dt3juxGJ-PCt92wr-oA.nP1qzpXGymHBrUEepNY9HCsQk7K8KhOypzEt62jcerQ"
-        /// i.e. [token-string].[sha256(token-string bytes)] where token-string is >= 128 bits of data
+        /// i.e. [token-string].[sha256(token-string bytes)] where token-string is &gt;= 128 bits of data
         /// </remarks>
         private string GenerateSimulatedKeyAuth()
         {
@@ -805,7 +808,7 @@ namespace Certify
             var domain = pendingAuth.Identifier.Dns;
             if (pendingAuth.Challenge != null)
             {
-                if (pendingAuth.Challenge.ChallengeData is ACMESharp.ACME.HttpChallenge 
+                if (pendingAuth.Challenge.ChallengeData is ACMESharp.ACME.HttpChallenge
                     && requestConfig.PerformChallengeFileCopy /* is this needed? */)
                 {
                     var check = PrepareChallengeResponse_Http01(iisManager, domain, managedSite, pendingAuth);
@@ -828,9 +831,11 @@ namespace Certify
         }
 
         /// <summary>
-        /// Prepares IIS to respond to a http-01 challenge
+        /// Prepares IIS to respond to a http-01 challenge 
         /// </summary>
-        /// <returns>A Boolean returning Func. Invoke the Func to test the challenge response locally.</returns>
+        /// <returns>
+        /// A Boolean returning Func. Invoke the Func to test the challenge response locally.
+        /// </returns>
         private Func<bool> PrepareChallengeResponse_Http01(IISManager iisManager, string domain, ManagedSite managedSite, PendingAuthorization pendingAuth)
         {
             var requestConfig = managedSite.RequestConfig;
@@ -849,8 +854,8 @@ namespace Certify
 
             if (!String.IsNullOrEmpty(websiteRootPath) && websiteRootPath.Contains("%"))
             {
-                // if websiteRootPath contains %websiteroot% variable, replace that with the
-                // current physical path for the site
+                // if websiteRootPath contains %websiteroot% variable, replace that with the current
+                // physical path for the site
                 if (websiteRootPath.Contains("%websiteroot%"))
                 {
                     // sets env variable for this process only
@@ -918,9 +923,11 @@ namespace Certify
         }
 
         /// <summary>
-        /// Prepares IIS to respond to a tls-sni-01 challenge
+        /// Prepares IIS to respond to a tls-sni-01 challenge 
         /// </summary>
-        /// <returns>A Boolean-returning Func. Invoke the Func to test the challenge response locally.</returns>
+        /// <returns>
+        /// A Boolean-returning Func. Invoke the Func to test the challenge response locally.
+        /// </returns>
         private Func<bool> PrepareChallengeResponse_TlsSni01(IISManager iisManager, string domain, ManagedSite managedSite, PendingAuthorization pendingAuth)
         {
             var requestConfig = managedSite.RequestConfig;
@@ -1091,22 +1098,22 @@ namespace Certify
         }
 
         /// <summary>
-        /// Performs a simulated tls-sni-01 verification over HTTPS/SNI.
+        /// Performs a simulated tls-sni-01 verification over HTTPS/SNI. 
         /// </summary>
-        /// <param name="host">The domain being verified</param>
-        /// <param name="sni">The server name indication used for TLS server response</param>
-        /// <param name="useProxyAPI">Whether to use the server proxy for verification</param>
-        /// <returns>True if the verification is successful, False if not.</returns>
+        /// <param name="host"> The domain being verified </param>
+        /// <param name="sni"> The server name indication used for TLS server response </param>
+        /// <param name="useProxyAPI"> Whether to use the server proxy for verification </param>
+        /// <returns> True if the verification is successful, False if not. </returns>
         private bool CheckSNI(string host, string sni, bool? useProxyAPI = null)
         {
-            // if validation proxy enabled, access to the domain being validated is checked via
-            // our remote API rather than directly on the servers
+            // if validation proxy enabled, access to the domain being validated is checked via our
+            // remote API rather than directly on the servers
             bool useProxy = useProxyAPI ?? Certify.Properties.Settings.Default.EnableValidationProxyAPI;
             if (useProxy)
             {
                 // TODO: check proxy here, needs server support. if successful "return true"; and "LogAction(...)"
                 System.Diagnostics.Debug.WriteLine("ProxyAPI is not implemented for Checking SNI config, trying local");
-                this.LogAction($"Proxy TLS SNI binding check error: {host}, {sni}"); 
+                this.LogAction($"Proxy TLS SNI binding check error: {host}, {sni}");
 
                 return CheckSNI(host, sni, false); // proxy failed, try local
             }
@@ -1119,14 +1126,30 @@ namespace Certify
                     // verify SNI-selected certificate is correctly configured
                     return CertificateManager.VerifyCertificateSAN(cert, sni);
                 };
-                // modify the hosts file
-                var ip = Dns.GetHostEntry(host).AddressList.First();
-                string hostEntry = $"\n{ip}\t{sni}";
+
+                // modify the hosts file so we can resolve this request locally: create an entry for
+                // the primary IP address and also for 127.0.0.1 (where primary IP will not resolve
+                // internally i.e. the default resolution is an external IP)
+
+                List<string> testHostEntries = new List<string> {
+                    $"\n127.0.0.1\t{sni}",
+                };
+
+                var ip = Dns.GetHostEntry(host)?.AddressList?.FirstOrDefault();
+                if (ip != null)
+                {
+                    testHostEntries.Add($"\n{ip}\t{sni}");
+                }
+
                 using (StreamWriter writer = File.AppendText(hosts))
                 {
-                    writer.Write(hostEntry);
+                    foreach (var hostEntry in testHostEntries)
+                    {
+                        writer.Write(hostEntry);
+                    }
                 }
-                Thread.Sleep(250); // wait a bit for hostsfile to take effect
+                Thread.Sleep(250); // wait a bit for hosts file to take effect
+
                 try
                 {
                     using (var client = new HttpClient())
@@ -1138,11 +1161,16 @@ namespace Certify
                 }
                 finally
                 {
-                    // clean up hosts
+                    // clean up temp entries in hosts file
                     try
                     {
                         var txt = File.ReadAllText(hosts);
-                        txt = txt.Substring(0, txt.Length - hostEntry.Length);
+                        foreach (var hostEntry in testHostEntries)
+                        {
+                            //should we just remove all .acme.invalid entries instead of looking for our current entries?
+                            txt = txt.Substring(0, txt.Length - hostEntry.Length);
+                        }
+
                         File.WriteAllText(hosts, txt);
                     }
                     catch
@@ -1156,8 +1184,8 @@ namespace Certify
             }
             catch (Exception ex)
             {
-                // eat the error that HttpClient throws, either cert validation failed
-                // or the site is inaccessible via https://host name
+                // eat the error that HttpClient throws, either cert validation failed or the site is
+                // inaccessible via https://host name
                 this.LogAction($"Local TLS SNI binding check error: {host}, {sni}\n{ex.GetType()}: {ex.Message}\n{ex.StackTrace}");
                 return false;
             }
@@ -1170,14 +1198,14 @@ namespace Certify
 
         private bool CheckURL(string url, bool? useProxyAPI = null)
         {
-            // if validation proxy enabled, access to the domain being validated is checked via
-            // our remote API rather than directly on the servers
+            // if validation proxy enabled, access to the domain being validated is checked via our
+            // remote API rather than directly on the servers
             bool useProxy = useProxyAPI ?? Certify.Properties.Settings.Default.EnableValidationProxyAPI;
 
             //check http request to test path works
             try
             {
-                var request = WebRequest.Create(!useProxy ? url : 
+                var request = WebRequest.Create(!useProxy ? url :
                     Properties.Resources.APIBaseURI + "testurlaccess?url=" + url);
                 ServicePointManager.ServerCertificateValidationCallback = (obj, cert, chain, errors) =>
                 {
