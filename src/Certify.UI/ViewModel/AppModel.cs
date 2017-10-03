@@ -167,7 +167,7 @@ namespace Certify.UI.ViewModel
 
         internal void SaveManagedItemChanges()
         {
-            SelectedItem = GetUpdatedManagedSiteSettings();
+            UpdateManagedSiteSettings();
             AddOrUpdateManagedSite(SelectedItem);
 
             MarkAllChangesCompleted();
@@ -485,7 +485,7 @@ namespace Certify.UI.ViewModel
         /// For the given set of options get a new CertRequestConfig to store
         /// </summary>
         /// <returns></returns>
-        private ManagedSite GetUpdatedManagedSiteSettings()
+        public void UpdateManagedSiteSettings()
         {
             var item = SelectedItem;
             var config = item.RequestConfig;
@@ -516,7 +516,6 @@ namespace Certify.UI.ViewModel
             }
 
             item.ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS;
-            return item;
         }
 
         private void PopulateManagedSiteSettings(string siteId)
@@ -524,6 +523,7 @@ namespace Certify.UI.ViewModel
             ValidationError = null;
             var managedSite = SelectedItem;
             managedSite.Name = SelectedWebSite.SiteName;
+            managedSite.GroupId = SelectedWebSite.SiteId;
 
             //TODO: if this site would be a duplicate need to increment the site name
 

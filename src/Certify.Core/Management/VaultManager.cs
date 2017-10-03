@@ -706,24 +706,36 @@ namespace Certify
                 ActionLogs.Clear(); // reset action logs
                 var requestConfig = managedSite.RequestConfig;
                 var result = new APIResult();
-                var simulatedAuthorization = new PendingAuthorization(); // create simulated challenge
-                // example KeyAuthorization (from https://tools.ietf.org/html/draft-ietf-acme-acme-01#section-7.2)
-                string KA = "evaGxfADs6pSRb2LAv9IZf17Dt3juxGJ-PCt92wr-oA.nP1qzpXGymHBrUEepNY9HCsQk7K8KhOypzEt62jcerQ";
+                var domains = new List<string> { requestConfig.PrimaryDomain };
+                if (requestConfig.SubjectAlternativeNames != null)
+                {
+                    domains.AddRange(requestConfig.SubjectAlternativeNames);
+                }
+                var generatedAuthorizations = new List<PendingAuthorization>();
                 try
                 {
                     if (requestConfig.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP)
                     {
-                        simulatedAuthorization.Challenge = new AuthorizeChallengeItem
+                        result.IsOK = domains.All(domain =>
                         {
-                            ChallengeData = new ACMESharp.ACME.HttpChallenge(ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP,
-                                new ACMESharp.ACME.HttpChallengeAnswer { KeyAuthorization = KA })
+                            var simulatedAuthorization = new PendingAuthorization
                             {
-                                FilePath = ".well-known/acme-challenge/configcheck",
-                                FileContent = "Extensionless File Config Test - OK",
-                                FileUrl = $"http://{managedSite.RequestConfig.PrimaryDomain}/.well-known/acme-challenge/configcheck"
-                            }
-                        };
-                        result.IsOK = PrepareChallengeResponse_Http01(iisManager, managedSite, simulatedAuthorization)();
+                                Challenge = new AuthorizeChallengeItem
+                                {
+                                    ChallengeData = new ACMESharp.ACME.HttpChallenge(ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP,
+                                    new ACMESharp.ACME.HttpChallengeAnswer { KeyAuthorization = GenerateSimulatedKeyAuth() })
+                                    {
+                                        FilePath = ".well-known/acme-challenge/configcheck",
+                                        FileContent = "Extensionless File Config Test - OK",
+                                        FileUrl = $"http://{domain}/.well-known/acme-challenge/configcheck"
+                                    }
+                                }
+                            };
+                            generatedAuthorizations.Add(simulatedAuthorization);
+                            return PrepareChallengeResponse_Http01(
+                               iisManager, domain, managedSite, simulatedAuthorization
+                            )();
+                        });
                     }
                     else if (requestConfig.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI)
                     {
@@ -733,16 +745,24 @@ namespace Certify
                             result.Message = $"The {ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI} challenge is only available for IIS versions 8+.";
                             return result;
                         }
-                        // create simulated challenge
-                        simulatedAuthorization.Challenge = new AuthorizeChallengeItem()
+                        result.IsOK = domains.All(domain =>
                         {
-                            ChallengeData = new ACMESharp.ACME.TlsSniChallenge(ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI,
-                                new ACMESharp.ACME.TlsSniChallengeAnswer { KeyAuthorization = KA })
+                            var simulatedAuthorization = new PendingAuthorization
                             {
-                                IterationCount = 1
-                            }
-                        };
-                        result.IsOK = PrepareChallengeResponse_TlsSni01(iisManager, managedSite, simulatedAuthorization).All(check => check());
+                                Challenge = new AuthorizeChallengeItem()
+                                {
+                                    ChallengeData = new ACMESharp.ACME.TlsSniChallenge(ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI,
+                                    new ACMESharp.ACME.TlsSniChallengeAnswer { KeyAuthorization = GenerateSimulatedKeyAuth() })
+                                    {
+                                        IterationCount = 1
+                                    }
+                                }
+                            };
+                            generatedAuthorizations.Add(simulatedAuthorization);
+                            return PrepareChallengeResponse_TlsSni01(
+                                iisManager, domain, managedSite, simulatedAuthorization
+                            )();
+                        });
                     }
                     else
                     {
@@ -752,22 +772,43 @@ namespace Certify
                 finally
                 {
                     result.Message = GetActionLogSummary();
-                    simulatedAuthorization.Cleanup();
+                    generatedAuthorizations.ForEach(ga => ga.Cleanup());
                 }
                 return result;
             });
         }
 
+        /// <summary>
+        /// Creates a realistic-looking simulated Key Authorization
+        /// </summary>
+        /// <remarks>
+        /// example KeyAuthorization (from https://tools.ietf.org/html/draft-ietf-acme-acme-01#section-7.2):
+        /// "evaGxfADs6pSRb2LAv9IZf17Dt3juxGJ-PCt92wr-oA.nP1qzpXGymHBrUEepNY9HCsQk7K8KhOypzEt62jcerQ"
+        /// i.e. [token-string].[sha256(token-string bytes)] where token-string is >= 128 bits of data
+        /// </remarks>
+        private string GenerateSimulatedKeyAuth()
+        {
+            // create simulated challenge
+            var random = new Random();
+            var simulated_token_data = new byte[24]; // generate 192 bits of data
+            random.NextBytes(simulated_token_data);
+            string simulated_token = Convert.ToBase64String(simulated_token_data);
+            var sha256 = System.Security.Cryptography.SHA256.Create();
+            byte[] thumbprint_data = sha256.ComputeHash(Encoding.UTF8.GetBytes(simulated_token));
+            var thumbprint = BitConverter.ToString(thumbprint_data).Replace("-", "").ToLower();
+            return $"{simulated_token}.{thumbprint}";
+        }
+
         public PendingAuthorization PerformIISAutomatedChallengeResponse(IISManager iisManager, ManagedSite managedSite, PendingAuthorization pendingAuth)
         {
             var requestConfig = managedSite.RequestConfig;
-
+            var domain = pendingAuth.Identifier.Dns;
             if (pendingAuth.Challenge != null)
             {
                 if (pendingAuth.Challenge.ChallengeData is ACMESharp.ACME.HttpChallenge 
                     && requestConfig.PerformChallengeFileCopy /* is this needed? */)
                 {
-                    var check = PrepareChallengeResponse_Http01(iisManager, managedSite, pendingAuth);
+                    var check = PrepareChallengeResponse_Http01(iisManager, domain, managedSite, pendingAuth);
                     if (requestConfig.PerformExtensionlessConfigChecks)
                     {
                         pendingAuth.ExtensionlessConfigCheckedOK = check();
@@ -775,11 +816,11 @@ namespace Certify
                 }
                 if (pendingAuth.Challenge.ChallengeData is ACMESharp.ACME.TlsSniChallenge)
                 {
-                    var checks = PrepareChallengeResponse_TlsSni01(iisManager, managedSite, pendingAuth);
+                    var check = PrepareChallengeResponse_TlsSni01(iisManager, domain, managedSite, pendingAuth);
                     if (requestConfig.PerformTlsSniBindingConfigChecks)
                     {
                         // set config check OK if all checks return true
-                        pendingAuth.TlsSniConfigCheckedOK = checks.All(check => check());
+                        pendingAuth.TlsSniConfigCheckedOK = check();
                     }
                 }
             }
@@ -790,7 +831,7 @@ namespace Certify
         /// Prepares IIS to respond to a http-01 challenge
         /// </summary>
         /// <returns>A Boolean returning Func. Invoke the Func to test the challenge response locally.</returns>
-        private Func<bool> PrepareChallengeResponse_Http01(IISManager iisManager, ManagedSite managedSite, PendingAuthorization pendingAuth)
+        private Func<bool> PrepareChallengeResponse_Http01(IISManager iisManager, string domain, ManagedSite managedSite, PendingAuthorization pendingAuth)
         {
             var requestConfig = managedSite.RequestConfig;
             var httpChallenge = (ACMESharp.ACME.HttpChallenge)pendingAuth.Challenge.ChallengeData;
@@ -849,14 +890,14 @@ namespace Certify
                 //no existing config, attempt auto config and perform test
                 this.LogAction($"Config does not exist, writing default config to: {destPath}\\web.config");
                 System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
-                return () => CheckURL("http://" + requestConfig.PrimaryDomain + "/" + httpChallenge.FilePath);
+                return () => CheckURL($"http://{domain}/{httpChallenge.FilePath}");
             }
             else
             {
                 //web config already exists, don't overwrite it, just test it
                 return () =>
                 {
-                    if (CheckURL("http://" + requestConfig.PrimaryDomain + "/" + httpChallenge.FilePath))
+                    if (CheckURL($"http://{domain}/{httpChallenge.FilePath}"))
                     {
                         return true;
                     }
@@ -866,7 +907,7 @@ namespace Certify
                         //didn't work, try our default config
                         System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
 
-                        if (CheckURL("http://" + requestConfig.PrimaryDomain + "/" + httpChallenge.FilePath))
+                        if (CheckURL($"http://{domain}/{httpChallenge.FilePath}"))
                         {
                             return true;
                         }
@@ -879,18 +920,17 @@ namespace Certify
         /// <summary>
         /// Prepares IIS to respond to a tls-sni-01 challenge
         /// </summary>
-        /// <returns>A List of Boolean-returning Funcs. Invoke the Funcs to test the challenge response locally.</returns>
-        private List<Func<bool>> PrepareChallengeResponse_TlsSni01(IISManager iisManager, ManagedSite managedSite, PendingAuthorization pendingAuth)
+        /// <returns>A Boolean-returning Func. Invoke the Func to test the challenge response locally.</returns>
+        private Func<bool> PrepareChallengeResponse_TlsSni01(IISManager iisManager, string domain, ManagedSite managedSite, PendingAuthorization pendingAuth)
         {
             var requestConfig = managedSite.RequestConfig;
             var tlsSniChallenge = (ACMESharp.ACME.TlsSniChallenge)pendingAuth.Challenge.ChallengeData;
             var tlsSniAnswer = (ACMESharp.ACME.TlsSniChallengeAnswer)tlsSniChallenge.Answer;
-            var token = Encoding.UTF8.GetBytes(tlsSniAnswer.KeyAuthorization);
             var sha256 = System.Security.Cryptography.SHA256.Create();
             var z = new byte[tlsSniChallenge.IterationCount][];
 
             // compute n sha256 hashes, where n=challengedata.iterationcount
-            z[0] = sha256.ComputeHash(token);
+            z[0] = sha256.ComputeHash(Encoding.UTF8.GetBytes(tlsSniAnswer.KeyAuthorization));
             for (int i = 1; i < z.Length; i++)
             {
                 z[i] = sha256.ComputeHash(z[i - 1]);
@@ -901,18 +941,18 @@ namespace Certify
             foreach (string hex in z.Select(b =>
                 BitConverter.ToString(b).Replace("-", "").ToLower()))
             {
-                string domain = $"{hex.Substring(0, 32)}.{hex.Substring(32)}.acme.invalid";
-                this.LogAction($"Preparing binding at: https://{requestConfig.PrimaryDomain}, sni: {domain}");
+                string sni = $"{hex.Substring(0, 32)}.{hex.Substring(32)}.acme.invalid";
+                this.LogAction($"Preparing binding at: https://{domain}, sni: {sni}");
 
-                var x509 = CertificateManager.GenerateTlsSni01Certificate(domain);
+                var x509 = CertificateManager.GenerateTlsSni01Certificate(sni);
                 CertificateManager.StoreCertificate(x509);
-                iisManager.InstallCertificateforBinding(managedSite, x509, domain);
+                iisManager.InstallCertificateforBinding(managedSite, x509, sni);
 
                 // add check to the queue
-                checkQueue.Add(() => CheckSNI(requestConfig.PrimaryDomain, domain));
+                checkQueue.Add(() => CheckSNI(domain, sni));
 
                 // add cleanup actions to queue
-                cleanupQueue.Add(() => iisManager.RemoveHttpsBinding(managedSite, domain));
+                cleanupQueue.Add(() => iisManager.RemoveHttpsBinding(managedSite, sni));
                 cleanupQueue.Add(() => CertificateManager.RemoveCertificate(x509));
             }
 
@@ -921,7 +961,7 @@ namespace Certify
 
             // perform our own config checks
             pendingAuth.TlsSniConfigCheckedOK = true;
-            return checkQueue;
+            return () => checkQueue.All(check => check());
         }
 
         public bool CompleteIdentifierValidationProcess(string domainIdentifierAlias)
