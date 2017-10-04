@@ -18,7 +18,7 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// Provide single static instance of model for all consumers
         /// </summary>
-        public static AppModel AppViewModel = new AppModel();
+        public static AppModel AppViewModel = AppModel.GetModel();
 
         public const int ProductTypeId = 1;
 
@@ -49,7 +49,7 @@ namespace Certify.UI.ViewModel
         /// </summary>
         public ObservableCollection<Certify.Models.ManagedSite> ImportedManagedSites { get; set; }
 
-        internal void LoadVaultTree()
+        internal virtual void LoadVaultTree()
         {
             List<VaultItem> tree = new List<VaultItem>();
 
@@ -272,7 +272,6 @@ namespace Certify.UI.ViewModel
                         d.IsPrimaryDomain = false;
                     }
                 }
-
                 SelectedItem.IsChanged = true;
             }
         }
@@ -359,10 +358,25 @@ namespace Certify.UI.ViewModel
 
         #region methods
 
+        public static AppModel GetModel()
+        {
+            var stack = new System.Diagnostics.StackTrace();
+            if (stack.GetFrames().Last().GetMethod().Name == "Main")
+            {
+                return new AppModel();
+            }
+            else
+            {
+                return new DesignViewModel();
+            }
+        }
+
         public AppModel()
         {
-            certifyManager = new CertifyManager();
-
+            if (!(this is DesignViewModel))
+            {
+                certifyManager = new CertifyManager();
+            }
             ProgressResults = new ObservableCollection<RequestProgressState>();
         }
 

@@ -5,13 +5,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
              xmlns:local="clr-namespace:Certify.UI.Controls"
-    xmlns:fa="http://schemas.fontawesome.io/icons/"
-    xmlns:Custom="http://metro.mahapps.com/winfx/xaml/controls"
-    xmlns:utils="clr-namespace:Certify.UI.Utils"
-    xmlns:acme="clr-namespace:Certify.ACMESharpCompat;assembly=Certify.Core"
-    x:Class="Certify.UI.Controls.ManagedItemSettings"
-             mc:Ignorable="d" Width="697.442" Height="425.672">
-
+             xmlns:certifyui="clr-namespace:Certify.UI"
+             xmlns:fa="http://schemas.fontawesome.io/icons/"
+             xmlns:Custom="http://metro.mahapps.com/winfx/xaml/controls"
+             xmlns:utils="clr-namespace:Certify.UI.Utils"
+             xmlns:acme="clr-namespace:Certify.ACMESharpCompat;assembly=Certify.Core"
+             x:Class="Certify.UI.Controls.ManagedItemSettings"
+             mc:Ignorable="d" Width="697.442" Height="425.672"
+             d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="38"></RowDefinition>

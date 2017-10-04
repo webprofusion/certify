@@ -5,11 +5,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
              xmlns:local="clr-namespace:Certify.UI.Controls"
-              xmlns:System="clr-namespace:System;assembly=mscorlib"
-    xmlns:fa="http://schemas.fontawesome.io/icons/"
-    xmlns:utils="clr-namespace:Certify.UI.Utils" x:Class="Certify.UI.Controls.ManagedSites"
+             xmlns:certifyui="clr-namespace:Certify.UI"
+             xmlns:System="clr-namespace:System;assembly=mscorlib"
+             xmlns:fa="http://schemas.fontawesome.io/icons/"
+             xmlns:utils="clr-namespace:Certify.UI.Utils" x:Class="Certify.UI.Controls.ManagedSites"
              mc:Ignorable="d" Width="970" Height="487"
-             Loaded="UserControl_OnLoaded">
+             Loaded="UserControl_OnLoaded"
+             d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}">
 
     <Grid>
         <Grid.Resources>

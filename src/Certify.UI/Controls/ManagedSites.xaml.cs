@@ -31,11 +31,7 @@ namespace Certify.UI.Controls
         public ManagedSites()
         {
             InitializeComponent();
-
-            if (!System.ComponentModel.DesignerProperties.GetIsInDesignMode(this))
-            {
-                this.DataContext = MainViewModel;
-            }
+            this.DataContext = MainViewModel;
         }
 
         private void UserControl_OnLoaded(object sender, RoutedEventArgs e)
