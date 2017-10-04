@@ -33,20 +33,6 @@ namespace Certify.UI.Controls
         private void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             this.SettingsTab.SelectedIndex = 0;
-
-            if (this.MainViewModel.SelectedItem != null)
-            {
-                //populate info
-                if (!String.IsNullOrEmpty(this.MainViewModel.SelectedItem.CertificatePath))
-                {
-                    CertPath.Content = this.MainViewModel.SelectedItem.CertificatePath;
-                }
-            }
-            else
-            {
-                //clear info
-                CertPath.Content = "Certificate Path: ";
-            }
         }
 
         private void Button_Save(object sender, RoutedEventArgs e)
