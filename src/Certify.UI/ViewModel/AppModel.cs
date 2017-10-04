@@ -244,20 +244,7 @@ namespace Certify.UI.ViewModel
 
         public DomainOption PrimarySubjectDomain
         {
-            get
-            {
-                if (SelectedItem != null)
-                {
-                    var primary = SelectedItem.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain == true);
-                    if (primary != null)
-                    {
-                        return primary;
-                    }
-                }
-
-                return null;
-            }
-
+            get { return SelectedItem?.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain && d.IsSelected); }
             set
             {
                 foreach (var d in SelectedItem.DomainOptions)

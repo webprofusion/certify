@@ -67,7 +67,7 @@ namespace Certify.UI.Controls
 
                 if (MainViewModel.PrimarySubjectDomain == null)
                 {
-                    MessageBox.Show("A Primary Domain must be selected", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("A Primary Domain must be included", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
