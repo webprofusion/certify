@@ -25,7 +25,7 @@
         <ListView ItemsSource="{Binding ProgressResults}"  SelectionMode="Single" BorderBrush="{DynamicResource IdealForegroundDisabledBrush}" MinWidth="200" MinHeight="100" HorizontalContentAlignment="Stretch">
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel Orientation="Vertical" Margin="0,8,0,0">
+                    <StackPanel Orientation="Vertical" Margin="0,8,0,0" MouseUp="ManagedSite_ViewLog">
                         <StackPanel Orientation="Horizontal">
                             <fa:FontAwesome Icon="Globe" Margin="0,0,8,0" />
                             <TextBlock Text="{Binding ManagedItem.Name}" Width="200" FontWeight="Bold" Margin="0,0,8,0" Foreground="{DynamicResource AccentColorBrush3}" />

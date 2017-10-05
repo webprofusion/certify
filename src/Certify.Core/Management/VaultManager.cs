@@ -546,6 +546,7 @@ namespace Certify
 
         public IdentifierInfo GetIdentifier(string aliasOrDNS, bool reloadVaultConfig = false)
         {
+            return null;
             if (reloadVaultConfig)
             {
                 ReloadVaultConfig();
@@ -650,13 +651,13 @@ namespace Certify
                 identifier = GetIdentifier(identifierAlias);
                 var challengeInfo = identifier.Challenges.FirstOrDefault(c => c.Value.Type == challengeType).Value;
 
-                //identifier challenege specification is now ready for use to prepare and answer for LetsEncrypt to check
-                return new PendingAuthorization() { Challenge = GetAuthorizeChallengeItemFromAuthChallenge(challengeInfo), Identifier = GetDomainIdentifierItemFromIdentifierInfo(identifier), TempFilePath = "", ExtensionlessConfigCheckedOK = false };
+                //identifier challenge specification is now ready for use to prepare and answer for LetsEncrypt to check
+                return new PendingAuthorization() { Challenge = GetAuthorizeChallengeItemFromAuthChallenge(challengeInfo), Identifier = GetDomainIdentifierItemFromIdentifierInfo(identifier), TempFilePath = "", ExtensionlessConfigCheckedOK = false, LogItems = this.GetActionLogSummary() };
             }
             else
             {
                 //identifier is null or already valid (previously authorized)
-                return new PendingAuthorization() { Challenge = null, Identifier = GetDomainIdentifierItemFromIdentifierInfo(identifier), TempFilePath = "", ExtensionlessConfigCheckedOK = false };
+                return new PendingAuthorization() { Challenge = null, Identifier = GetDomainIdentifierItemFromIdentifierInfo(identifier), TempFilePath = "", ExtensionlessConfigCheckedOK = false, LogItems = this.GetActionLogSummary() };
             }
         }
 
@@ -671,6 +672,8 @@ namespace Certify
 
         public IdentifierItem GetDomainIdentifierItemFromIdentifierInfo(ACMESharp.Vault.Model.IdentifierInfo identifier)
         {
+            if (identifier == null) return null;
+
             var i = new IdentifierItem
             {
                 Id = identifier.Id.ToString(),
@@ -706,14 +709,18 @@ namespace Certify
             return await Task.Run(() =>
             {
                 ActionLogs.Clear(); // reset action logs
+
                 var requestConfig = managedSite.RequestConfig;
                 var result = new APIResult();
                 var domains = new List<string> { requestConfig.PrimaryDomain };
+
                 if (requestConfig.SubjectAlternativeNames != null)
                 {
                     domains.AddRange(requestConfig.SubjectAlternativeNames);
                 }
+
                 var generatedAuthorizations = new List<PendingAuthorization>();
+
                 try
                 {
                     if (requestConfig.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP)
@@ -733,7 +740,9 @@ namespace Certify
                                     }
                                 }
                             };
+
                             generatedAuthorizations.Add(simulatedAuthorization);
+
                             return PrepareChallengeResponse_Http01(
                                iisManager, domain, managedSite, simulatedAuthorization
                             )();
@@ -747,6 +756,7 @@ namespace Certify
                             result.Message = $"The {ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI} challenge is only available for IIS versions 8+.";
                             return result;
                         }
+
                         result.IsOK = domains.All(domain =>
                         {
                             var simulatedAuthorization = new PendingAuthorization
@@ -773,7 +783,7 @@ namespace Certify
                 }
                 finally
                 {
-                    result.Message = GetActionLogSummary();
+                    result.Message = String.Join("\r\n", GetActionLogSummary());
                     generatedAuthorizations.ForEach(ga => ga.Cleanup());
                 }
                 return result;
@@ -873,21 +883,23 @@ namespace Certify
                 return () => false;
             }
 
-            //copy temp file to path challenge expects in web folder
+            // copy temp file to path challenge expects in web folder
             var destFile = Path.Combine(websiteRootPath, httpChallenge.FilePath);
             var destPath = Path.GetDirectoryName(destFile);
+
             if (!Directory.Exists(destPath))
             {
                 Directory.CreateDirectory(destPath);
             }
 
-            //copy challenge response to web folder /.well-known/acme-challenge
+            // copy challenge response to web folder /.well-known/acme-challenge
             System.IO.File.WriteAllText(destFile, httpChallenge.FileContent);
 
             // configure cleanup
             pendingAuth.Cleanup = () => File.Delete(destFile);
 
-            //create a web.config for extensionless files, then test it (make a request for the extensionless configcheck file over http)
+            // create a web.config for extensionless files, then test it (make a request for the
+            // extensionless configcheck file over http)
             string webConfigContent = Core.Properties.Resources.IISWebConfig;
 
             if (!File.Exists(destPath + "\\web.config"))
@@ -899,17 +911,18 @@ namespace Certify
             }
             else
             {
-                //web config already exists, don't overwrite it, just test it
+                // web config already exists, don't overwrite it, just test it
                 return () =>
                 {
                     if (CheckURL($"http://{domain}/{httpChallenge.FilePath}"))
                     {
                         return true;
                     }
+
                     if (requestConfig.PerformAutoConfig)
                     {
                         this.LogAction($"Pre-config check failed: Auto-config will overwrite existing config: {destPath}\\web.config");
-                        //didn't work, try our default config
+                        // didn't work, try our default config
                         System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
 
                         if (CheckURL($"http://{domain}/{httpChallenge.FilePath}"))
@@ -1084,14 +1097,14 @@ namespace Certify
             return "ident" + Guid.NewGuid().ToString().Substring(0, 8).Replace("-", "");
         }
 
-        public string GetActionLogSummary()
+        public List<string> GetActionLogSummary()
         {
-            string output = "";
+            List<string> output = new List<string>();
             if (this.ActionLogs != null)
             {
                 foreach (var a in this.ActionLogs)
                 {
-                    output += a.ToString() + "\r\n";
+                    output.Add(a.Result);
                 }
             }
             return output;

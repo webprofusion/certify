@@ -36,6 +36,7 @@ namespace Certify.Management
 
         // expose IIS metadata
         public bool IsIISAvailable => _iisManager?.IsIISAvailable ?? false;
+
         public Version IISVersion => _iisManager.GetIisVersion();
 
         /// <summary>
@@ -187,6 +188,17 @@ namespace Certify.Management
             }
         }
 
+        private void LogMessage(string managedSiteId, List<string> msgs, LogItemType logType = LogItemType.GeneralInfo)
+        {
+            foreach (var msg in msgs)
+            {
+                if (msg != null)
+                {
+                    LogMessage(managedSiteId, msg, logType);
+                }
+            }
+        }
+
         private void LogMessage(string managedSiteId, string msg, LogItemType logType = LogItemType.GeneralInfo)
         {
             ManagedSiteLog.AppendLog(managedSiteId, new ManagedSiteLogItem
@@ -273,7 +285,7 @@ namespace Certify.Management
 
                         // begin authorization by registering the domain identifier. This may return
                         // an already validated authorization or we may still have to complete the
-                        // authorization challenge
+                        // authorization challenge. When rate limits are encountered, this step may fail.
                         var authorization = _vaultProvider.BeginRegistrationAndValidation(config, domainIdentifierId, challengeType: config.ChallengeType, domain: domain);
 
                         if (authorization != null && authorization.Identifier != null)
@@ -286,8 +298,10 @@ namespace Certify.Management
                                 {
                                     ReportProgress(progress, $"Performing Challenge Response via IIS: {domain} ");
 
-                                    // ask LE to check our answer to their authorization challenge (http-01 or tls-sni-01), LE will then attempt to fetch our answer, 
-                                    // if all accessible and correct (authorized) LE will then allow us to request a certificate 
+                                    // ask LE to check our answer to their authorization challenge
+                                    // (http-01 or tls-sni-01), LE will then attempt to fetch our
+                                    // answer, if all accessible and correct (authorized) LE will
+                                    // then allow us to request a certificate
                                     authorization = _vaultProvider.PerformIISAutomatedChallengeResponse(_iisManager, managedSite, authorization);
 
                                     if (authorization.LogItems != null)
@@ -346,8 +360,9 @@ namespace Certify.Management
                                         }
                                         finally
                                         {
-                                            // clean up challenge answers (.well-known/acme-challenge/*
-                                            // files for http-01 or iis bindings for tls-sni-01)
+                                            // clean up challenge answers
+                                            // (.well-known/acme-challenge/* files for http-01 or iis
+                                            // bindings for tls-sni-01)
                                             authorization.Cleanup();
                                         }
                                     }
@@ -374,6 +389,11 @@ namespace Certify.Management
                         {
                             // could not begin authorization
                             LogMessage(managedSite.Id, $"Could not begin authorization for domain with Let's Encrypt: { domain } ");
+
+                            if (authorization != null && authorization.LogItems != null)
+                            {
+                                LogMessage(managedSite.Id, authorization.LogItems);
+                            }
                             allIdentifiersValidated = false;
                         }
 
@@ -477,7 +497,7 @@ namespace Certify.Management
                     result.IsSuccess = false;
                     result.Message = managedSite.Name + ": Request failed - " + exp.Message + " " + exp.ToString();
                     LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
-                    LogMessage(managedSite.Id, _vaultProvider.GetActionSummary());
+                    LogMessage(managedSite.Id, String.Join("\r\n", _vaultProvider.GetActionSummary()));
                     System.Diagnostics.Debug.WriteLine(exp.ToString());
                 }
                 finally

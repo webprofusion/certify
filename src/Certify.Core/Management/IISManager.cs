@@ -12,7 +12,7 @@ using System.Globalization;
 namespace Certify.Management
 {
     /// <summary>
-    /// Model to work with IIS site details.
+    /// Model to work with IIS site details. 
     /// </summary>
     public class IISManager
     {
@@ -128,7 +128,7 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Return list of sites (non-specific bindings)
+        /// Return list of sites (non-specific bindings) 
         /// </summary>
         /// <param name="includeOnlyStartedSites"></param>
         /// <returns></returns>
@@ -283,7 +283,7 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Create a new IIS site with the given default host name, path, app pool
+        /// Create a new IIS site with the given default host name, path, app pool 
         /// </summary>
         /// <param name="siteName"></param>
         /// <param name="hostname"></param>
@@ -315,7 +315,7 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Check if site with given site name exists
+        /// Check if site with given site name exists 
         /// </summary>
         /// <param name="siteName"></param>
         /// <returns></returns>
@@ -379,10 +379,10 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Finds the IIS <see cref="Site"/> corresponding to a <see cref="ManagedSite"/>.
+        /// Finds the IIS <see cref="Site" /> corresponding to a <see cref="ManagedSite" />. 
         /// </summary>
-        /// <param name="managedSite">Configured site.</param>
-        /// <returns>The matching IIS Site if found, otherwise null.</returns>
+        /// <param name="managedSite"> Configured site. </param>
+        /// <returns> The matching IIS Site if found, otherwise null. </returns>
         private Site FindManagedSite(ManagedSite managedSite)
         {
             if (managedSite == null)
@@ -481,8 +481,8 @@ namespace Certify.Management
                 if (site != null)
                 {
                     string internationalHost = host == "" ? "" : _idnMapping.GetUnicode(host);
-                    var binding = site.Bindings.Where(b => 
-                        b.Host == internationalHost && 
+                    var binding = site.Bindings.Where(b =>
+                        b.Host == internationalHost &&
                         b.Protocol == "https"
                     ).FirstOrDefault();
 
@@ -505,10 +505,12 @@ namespace Certify.Management
         /// <param name="sslPort"></param>
         /// <param name="useSNI"></param>
         /// <param name="ipAddress"></param>
-        public void InstallCertificateforBinding(ManagedSite managedSite, X509Certificate2 certificate, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null)
+        public bool InstallCertificateforBinding(ManagedSite managedSite, X509Certificate2 certificate, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null)
         {
             var site = FindManagedSite(managedSite);
-            InstallCertificateforBinding(site, certificate, host, sslPort, useSNI, ipAddress);
+            if (site == null) return false;
+
+            return InstallCertificateforBinding(site, certificate, host, sslPort, useSNI, ipAddress);
         }
 
         /// <summary>
@@ -521,10 +523,11 @@ namespace Certify.Management
         /// <param name="sslPort"></param>
         /// <param name="useSNI"></param>
         /// <param name="ipAddress"></param>
-        public void InstallCertificateforBinding(Site site, X509Certificate2 certificate, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null)
+        public bool InstallCertificateforBinding(Site site, X509Certificate2 certificate, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null)
         {
             var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
             store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
+
             using (var iisManager = GetDefaultServerManager())
             {
                 if (GetIisVersion().Major < 8)
@@ -533,7 +536,9 @@ namespace Certify.Management
                     useSNI = false;
                     host = "";
                 }
+
                 var siteToUpdate = iisManager.Sites.FirstOrDefault(s => s.Id == site.Id);
+
                 if (siteToUpdate != null)
                 {
                     string internationalHost = host == "" ? "" : _idnMapping.GetUnicode(host);
@@ -567,40 +572,17 @@ namespace Certify.Management
                         }
                     }
                 }
+                else
+                {
+                    //could not match site to bind to
+                    return false;
+                }
 
                 iisManager.CommitChanges();
                 store.Close();
+
+                return true;
             }
-        }
-
-        public bool InstallCertForDomain(string hostDnsName, string pfxPath, bool cleanupCertStore = true, bool skipBindings = false)
-        {
-            //gets the IIS site associated with this dns host name (or first, if multiple defined)
-            var site = GetSiteByDomain(hostDnsName);
-            if (site != null)
-            {
-                if (new System.IO.FileInfo(pfxPath).Length == 0)
-                {
-                    System.Diagnostics.Debug.WriteLine("InstallCertForDomain: Invalid PFX File");
-                    return false;
-                }
-                var storedCert = CertificateManager.StoreCertificate(hostDnsName, pfxPath);
-                if (storedCert != null)
-                {
-                    if (!skipBindings)
-                    {
-                        InstallCertificateforBinding(site, storedCert, hostDnsName);
-                    }
-                    if (cleanupCertStore)
-                    {
-                        CertificateManager.CleanupCertificateDuplicates(storedCert, hostDnsName);
-                    }
-
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         #endregion Certificates

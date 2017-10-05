@@ -22,7 +22,7 @@ namespace Certify.Management
 
         string GetVaultSummary();
 
-        string GetActionSummary();
+        List<string> GetActionSummary();
 
         void EnableSensitiveFileEncryption();
 

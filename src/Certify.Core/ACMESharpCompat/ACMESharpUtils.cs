@@ -28,23 +28,26 @@ using System.Text.RegularExpressions;
 namespace Certify.ACMESharpCompat
 {
     /// <summary>
-    /// Port of powershell methods from ACMESharp.POSH
+    /// Port of powershell methods from ACMESharp.POSH 
     /// </summary>
     public static class ACMESharpUtils
     {
         /// <summary>
-        /// Identifier validation challenge type indicator for
-        /// <see cref="https://tools.ietf.org/html/draft-ietf-acme-acme-01#section-7.5">DNS</see>.
+        /// Identifier validation challenge type indicator for <see
+        /// cref="https://tools.ietf.org/html/draft-ietf-acme-acme-01#section-7.5"> DNS </see>.
         /// </summary>
         public static readonly string CHALLENGE_TYPE_DNS = "dns-01";
+
         /// <summary>
-        /// Identifier validation challenge type indicator for
-        /// <see cref="https://tools.ietf.org/html/draft-ietf-acme-acme-01#section-7.2">HTTP (non-SSL/TLS)</see>.
+        /// Identifier validation challenge type indicator for <see
+        /// cref="https://tools.ietf.org/html/draft-ietf-acme-acme-01#section-7.2"> HTTP
+        /// (non-SSL/TLS) </see>.
         /// </summary>
         public const string CHALLENGE_TYPE_HTTP = "http-01";
+
         /// <summary>
-        /// Identifier validation challenge type indicator for
-        /// <see cref="https://tools.ietf.org/html/draft-ietf-acme-acme-01#section-7.3">TLS SNI</see>.
+        /// Identifier validation challenge type indicator for <see
+        /// cref="https://tools.ietf.org/html/draft-ietf-acme-acme-01#section-7.3"> TLS SNI </see>.
         /// </summary>
         public const string CHALLENGE_TYPE_SNI = "tls-sni-01";
 

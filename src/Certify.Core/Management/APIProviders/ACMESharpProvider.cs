@@ -89,7 +89,7 @@ namespace Certify.Management.APIProviders
             return _vaultManager.GetVaultPath();
         }
 
-        public string GetActionSummary()
+        public List<string> GetActionSummary()
         {
             return _vaultManager.GetActionLogSummary();
         }

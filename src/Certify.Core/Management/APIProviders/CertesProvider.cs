@@ -53,7 +53,7 @@ namespace Certify.Management.APIProviders
             return null;
         }
 
-        public string GetActionSummary()
+        public List<string> GetActionSummary()
         {
             System.Diagnostics.Debug.WriteLine("Certes: GetActionSummary not implemented");
             return null;

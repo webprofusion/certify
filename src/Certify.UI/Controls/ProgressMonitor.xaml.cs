@@ -1,24 +1,16 @@
 ﻿using Certify.Models;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Certify.UI.Controls
 {
     /// <summary>
-    /// Interaction logic for ProgressMonitor.xaml
+    /// Interaction logic for ProgressMonitor.xaml 
     /// </summary>
     public partial class ProgressMonitor : UserControl
     {
@@ -34,6 +26,22 @@ namespace Certify.UI.Controls
         {
             InitializeComponent();
             this.DataContext = MainViewModel;
+        }
+
+        private void ManagedSite_ViewLog(object sender, MouseButtonEventArgs e)
+        {
+            // show log for the selected managed site
+            try
+            {
+                var itemId = ((RequestProgressState)((StackPanel)sender).DataContext).ManagedItem.Id;
+                var logPath = Models.ManagedSiteLog.GetLogPath(itemId);
+                if (System.IO.File.Exists(logPath))
+                {
+                    //open file
+                    System.Diagnostics.Process.Start(logPath);
+                }
+            }
+            catch (Exception) { }
         }
     }
 
