@@ -213,6 +213,14 @@ namespace Certify.Management
         {
             // FIXME: refactor into different concerns, there's way to much being done here
 
+            ReportProgress(progress, new RequestProgressState { IsRunning = true, CurrentState = RequestState.Running, Message = "Performing Config Tests" });
+
+            var testResult = await TestChallenge(managedSite);
+            if (!testResult.IsOK)
+            {
+                return new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = String.Join("; ", testResult.FailedItemSummary), Result = testResult.Result };
+            }
+
             return await Task.Run(async () =>
             {
                 // start with a failure result, set to success when succeeding
