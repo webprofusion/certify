@@ -113,6 +113,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Utils\ExpiryDateConverter.cs" />
+    <Compile Include="ViewModel\DesignViewModel.cs" />
     <Compile Include="Windows\Feedback.xaml.cs">
       <DependentUpon>Feedback.xaml</DependentUpon>
     </Compile>

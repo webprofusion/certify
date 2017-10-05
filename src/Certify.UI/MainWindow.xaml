@@ -11,7 +11,8 @@
         GlowBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1"
         mc:Ignorable="d"
-        Title="Certify SSL Certificate Management" WindowTransitionsEnabled="False" TitleCaps="False" Height="668" MinWidth="680" MinHeight="400" Width="1120" WindowStyle="ToolWindow" Loaded="MetroWindow_Loaded" ContentRendered="MetroWindow_ContentRendered">
+        Title="Certify SSL Certificate Management" WindowTransitionsEnabled="False" TitleCaps="False" Height="668" MinWidth="680" MinHeight="400" Width="1120" WindowStyle="ToolWindow" Loaded="MetroWindow_Loaded" ContentRendered="MetroWindow_ContentRendered"
+        d:DataContext="{d:DesignInstance Type=local:DesignViewModel, IsDesignTimeCreatable=True}">
     <Controls:MetroWindow.Resources>
 
         <ResourceDictionary>
@@ -26,7 +27,7 @@
             <RowDefinition Height="56"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,8,8,8" VerticalAlignment="Top">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,8,8,0" VerticalAlignment="Top">
 
             <Button Height="32" Margin="8,0,0,5" Click="Button_NewCertificate">
                 <StackPanel Orientation="Horizontal">
@@ -56,7 +57,7 @@
             </StackPanel>
         </StackPanel>
 
-        <dragablz:TabablzControl x:Name="MainTabControl" Grid.Row="1" Margin="8,8,8,8" BorderThickness="0"
+        <dragablz:TabablzControl x:Name="MainTabControl" Grid.Row="1" Margin="8,8,8,8" BorderThickness="0" FixedHeaderCount="4"
                                  SelectedIndex="{Binding MainUITabIndex}" HorizontalContentAlignment="Left" VerticalContentAlignment="Stretch" Height="auto">
 
             <TabItem Header="Managed Sites" IsSelected="True">

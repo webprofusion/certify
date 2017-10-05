@@ -33,20 +33,6 @@ namespace Certify.UI.Controls
         private void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             this.SettingsTab.SelectedIndex = 0;
-
-            if (this.MainViewModel.SelectedItem != null)
-            {
-                //populate info
-                if (!String.IsNullOrEmpty(this.MainViewModel.SelectedItem.CertificatePath))
-                {
-                    CertPath.Content = this.MainViewModel.SelectedItem.CertificatePath;
-                }
-            }
-            else
-            {
-                //clear info
-                CertPath.Content = "Certificate Path: ";
-            }
         }
 
         private void Button_Save(object sender, RoutedEventArgs e)
@@ -67,7 +53,7 @@ namespace Certify.UI.Controls
 
                 if (MainViewModel.PrimarySubjectDomain == null)
                 {
-                    MessageBox.Show("A Primary Domain must be selected", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("A Primary Domain must be included", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
