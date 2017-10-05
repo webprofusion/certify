@@ -12,7 +12,7 @@ using WinForms = System.Windows.Forms;
 namespace Certify.UI.Controls
 {
     /// <summary>
-    /// Interaction logic for ManagedItemSettings.xaml
+    /// Interaction logic for ManagedItemSettings.xaml 
     /// </summary>
     public partial class ManagedItemSettings : UserControl
     {
@@ -57,7 +57,7 @@ namespace Certify.UI.Controls
                     return;
                 }
 
-                if (MainViewModel.SelectedItem.RequestConfig.ChallengeType==ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI &&
+                if (MainViewModel.SelectedItem.RequestConfig.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI &&
                     MainViewModel.IISVersion.Major < 8)
                 {
                     MessageBox.Show($"The {ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI} challenge is only available for IIS versions 8+.", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -294,11 +294,11 @@ namespace Certify.UI.Controls
                 var result = await MainViewModel.TestChallengeResponse(MainViewModel.SelectedItem);
                 if (result.IsOK)
                 {
-                    MessageBox.Show("Check Success", "Challenge", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Configuration Checked OK", "Challenge", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
-                    MessageBox.Show($"Check Failed:\n{result.Message}", "Challenge Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"Configuration Check Failed:\n{String.Join("\r\n", result.FailedItemSummary)}", "Challenge Test Failed", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 Button_TestChallenge.IsEnabled = true;
             }

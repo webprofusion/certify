@@ -16,7 +16,7 @@ namespace Certify.UI.ViewModel
     public class AppModel : BindableBase
     {
         /// <summary>
-        /// Provide single static instance of model for all consumers
+        /// Provide single static instance of model for all consumers 
         /// </summary>
         public static AppModel AppViewModel = AppModel.GetModel();
 
@@ -40,12 +40,12 @@ namespace Certify.UI.ViewModel
         #region properties
 
         /// <summary>
-        /// List of all the sites we currently manage
+        /// List of all the sites we currently manage 
         /// </summary>
         public ObservableCollection<Certify.Models.ManagedSite> ManagedSites { get; set; }
 
         /// <summary>
-        /// If set, there are one or more vault items available to be imported as managed sites
+        /// If set, there are one or more vault items available to be imported as managed sites 
         /// </summary>
         public ObservableCollection<Certify.Models.ManagedSite> ImportedManagedSites { get; set; }
 
@@ -103,7 +103,7 @@ namespace Certify.UI.ViewModel
         }
 
         /// <summary>
-        /// If true, import from vault/iis scan will merge multi domain sites into one managed site
+        /// If true, import from vault/iis scan will merge multi domain sites into one managed site 
         /// </summary>
         public bool IsImportSANMergeMode { get; set; }
 
@@ -213,7 +213,7 @@ namespace Certify.UI.ViewModel
         }
 
         /// <summary>
-        /// Reset all IsChanged flags for the Selected Item
+        /// Reset all IsChanged flags for the Selected Item 
         /// </summary>
         internal void MarkAllChangesCompleted()
         {
@@ -264,7 +264,7 @@ namespace Certify.UI.ViewModel
         }
 
         /// <summary>
-        /// Determine if user should be able to choose/change the Website for the current SelectedItem
+        /// Determine if user should be able to choose/change the Website for the current SelectedItem 
         /// </summary>
         public bool IsWebsiteSelectable
         {
@@ -337,7 +337,7 @@ namespace Certify.UI.ViewModel
         public bool IsUpdateAvailable { get; set; }
 
         /// <summary>
-        /// If an update is available this will contain more info about the new update
+        /// If an update is available this will contain more info about the new update 
         /// </summary>
         public UpdateCheck UpdateCheckResult { get; set; }
 
@@ -483,7 +483,7 @@ namespace Certify.UI.ViewModel
         }
 
         /// <summary>
-        /// For the given set of options get a new CertRequestConfig to store
+        /// For the given set of options get a new CertRequestConfig to store 
         /// </summary>
         /// <returns></returns>
         public void UpdateManagedSiteSettings()

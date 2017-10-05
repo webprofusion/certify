@@ -724,8 +724,10 @@ namespace Certify
                 {
                     if (requestConfig.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP)
                     {
-                        result.IsOK = domains.All(domain =>
+                        foreach (var domain in domains.Distinct())
                         {
+                            string challengeFileUrl = $"http://{domain}/.well-known/acme-challenge/configcheck";
+
                             var simulatedAuthorization = new PendingAuthorization
                             {
                                 Challenge = new AuthorizeChallengeItem
@@ -735,17 +737,23 @@ namespace Certify
                                     {
                                         FilePath = ".well-known/acme-challenge/configcheck",
                                         FileContent = "Extensionless File Config Test - OK",
-                                        FileUrl = $"http://{domain}/.well-known/acme-challenge/configcheck"
+                                        FileUrl = challengeFileUrl
                                     }
                                 }
                             };
 
                             generatedAuthorizations.Add(simulatedAuthorization);
 
-                            return PrepareChallengeResponse_Http01(
+                            var resultOK = PrepareChallengeResponse_Http01(
                                iisManager, domain, managedSite, simulatedAuthorization
                             )();
-                        });
+
+                            if (!resultOK)
+                            {
+                                result.IsOK = false;
+                                result.FailedItemSummary.Add($"Config checks failed to verify http://{domain} is both publicly accessible and can serve extensionless files e.g. {challengeFileUrl}");
+                            }
+                        }
                     }
                     else if (requestConfig.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI)
                     {
@@ -756,7 +764,7 @@ namespace Certify
                             return result;
                         }
 
-                        result.IsOK = domains.All(domain =>
+                        result.IsOK = domains.Distinct().All(domain =>
                         {
                             var simulatedAuthorization = new PendingAuthorization
                             {
