@@ -546,7 +546,6 @@ namespace Certify
 
         public IdentifierInfo GetIdentifier(string aliasOrDNS, bool reloadVaultConfig = false)
         {
-            return null;
             if (reloadVaultConfig)
             {
                 ReloadVaultConfig();
