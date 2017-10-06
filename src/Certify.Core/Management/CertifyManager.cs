@@ -277,6 +277,8 @@ namespace Certify.Management
                     List<PendingAuthorization> identifierAuthorizations = new List<PendingAuthorization>();
                     var distinctDomains = allDomains.Distinct();
 
+                    string failureSummaryMessage = null;
+
                     // perform validation process for each domain
                     foreach (var domain in distinctDomains)
                     {
@@ -313,17 +315,12 @@ namespace Certify.Management
                                     // then allow us to request a certificate
                                     authorization = _vaultProvider.PerformIISAutomatedChallengeResponse(_iisManager, managedSite, authorization);
 
-                                    if (authorization.LogItems != null)
+                                    // pass authorization log items onto main log
+                                    authorization.LogItems?.ForEach((msg) =>
                                     {
-                                        //pass log items onto main log
-                                        foreach (var msg in authorization.LogItems)
-                                        {
-                                            if (msg != null)
-                                            {
-                                                LogMessage(managedSite.Id, msg, LogItemType.GeneralInfo);
-                                            }
-                                        }
-                                    }
+                                        if (msg != null) LogMessage(managedSite.Id, msg, LogItemType.GeneralInfo);
+                                    });
+
                                     if ((config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP && config.PerformExtensionlessConfigChecks && !authorization.ExtensionlessConfigCheckedOK) ||
                                         (config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI && config.PerformTlsSniBindingConfigChecks && !authorization.TlsSniConfigCheckedOK))
                                     {
@@ -336,10 +333,12 @@ namespace Certify.Management
                                         {
                                             result.Message = "Automated configuration checks failed. Authorizations will not be able to complete.\nCheck you have http bindings for your site and ensure you can browse to http://" + domain + "/.well-known/acme-challenge/configcheck before proceeding.";
                                         }
+
                                         if (config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI)
                                         {
                                             result.Message = "Automated configuration checks failed. Authorizations will not be able to complete.\nCheck you have https SNI bindings for your site\n(ex: '0123456789ABCDEF0123456789ABCDEF.0123456789ABCDEF0123456789ABCDEF.acme.invalid') before proceeding.";
                                         }
+
                                         ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Error, Message = result.Message, Result = result });
 
                                         break;
@@ -356,7 +355,12 @@ namespace Certify.Management
 
                                             if (!identifierValidated)
                                             {
-                                                ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Error, Message = "Domain validation failed: " + domain }, managedSite.Id);
+                                                var identifierInfo = _vaultProvider.GetDomainIdentifier(domain);
+                                                var errorMsg = identifierInfo?.ValidationError;
+                                                var errorType = identifierInfo?.ValidationErrorType;
+
+                                                failureSummaryMessage = $"Domain validation failed: {domain} \r\n{errorMsg}";
+                                                ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Error, Message = failureSummaryMessage }, managedSite.Id);
 
                                                 allIdentifiersValidated = false;
                                             }
@@ -494,7 +498,7 @@ namespace Certify.Management
                     }
                     else
                     {
-                        result.Message = "Validation of the required challenges did not complete successfully. Please ensure all domains to be referenced in the Certificate can be used to access this site without redirection. ";
+                        result.Message = "Validation of the required challenges did not complete successfully. " + (failureSummaryMessage != null ? failureSummaryMessage : "");
                         LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
                     }
 

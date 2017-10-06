@@ -610,15 +610,15 @@ namespace Certify
             }
         }
 
-        public void UpdateIdentifier(string domainIdentifierAlias)
+        public AuthorizationState UpdateIdentifier(string domainIdentifierAlias)
         {
-            ACMESharpUtils.UpdateIdentifier(domainIdentifierAlias);
+            return ACMESharpUtils.UpdateIdentifier(domainIdentifierAlias);
         }
 
-        public void SubmitChallenge(string alias, string challengeType = ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP)
+        public AuthorizationState SubmitChallenge(string alias, string challengeType = ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP)
         {
             //well known challenge all ready to be read by server
-            ACMESharpUtils.SubmitChallenge(alias, challengeType);
+            return ACMESharpUtils.SubmitChallenge(alias, challengeType);
         }
 
         #endregion Vault Operations
@@ -689,15 +689,24 @@ namespace Certify
                 Alias = identifier.Alias,
                 Name = identifier.Dns,
                 Dns = identifier.Dns,
-                Status = identifier.Authorization?.Status,
+                Status = identifier.Authorization?.Status
             };
 
             if (identifier.Authorization != null)
             {
                 i.AuthorizationExpiry = identifier.Authorization.Expires;
                 i.IsAuthorizationPending = identifier.Authorization.IsPending();
-            }
 
+                if (identifier.Authorization.Status == "invalid")
+                {
+                    var failedChallenge = identifier.Authorization.Challenges?.FirstOrDefault(c => c.ChallengePart?.Error != null);
+                    if (failedChallenge != null)
+                    {
+                        i.ValidationError = String.Join("\r\n", failedChallenge.ChallengePart.Error);
+                        i.ValidationErrorType = failedChallenge.ChallengePart.Error["type"];
+                    }
+                }
+            }
             return i;
         }
 
@@ -1028,6 +1037,11 @@ namespace Certify
             {
                 //still pending or failed
                 System.Diagnostics.Debug.WriteLine("LE Authorization problem: " + identiferStatus.Authorization.Status);
+
+                var failedChallenge = identiferStatus.Authorization.Challenges.FirstOrDefault(c => c.ChallengePart.Error != null);
+                // throw new Exception(String.Join("\r\n", failedChallenge.ChallengePart.Error));
+                LogAction(String.Join("\r\n", failedChallenge.ChallengePart.Error));
+
                 return false;
             }
             else
