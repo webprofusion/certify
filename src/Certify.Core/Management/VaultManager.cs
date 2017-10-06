@@ -1124,8 +1124,12 @@ namespace Certify
             List<string> output = new List<string>();
             if (this.ActionLogs != null)
             {
-                ActionLogs.ToList().ForEach((a) => { output.Add(a.Result); });
+                ActionLogs.ToList().ForEach((a) =>
+                {
+                    output.Add(a.Command + " : " + (a.Result != null ? a.Result : ""));
+                });
             }
+
             return output;
         }
 
@@ -1148,8 +1152,8 @@ namespace Certify
                 var req = new HttpRequestMessage(HttpMethod.Get, $"https://{sni}");
                 ServicePointManager.ServerCertificateValidationCallback = (obj, cert, chain, errors) =>
                 {
-                    // verify SNI-selected certificate is correctly configured
-                    return CertificateManager.VerifyCertificateSAN(cert, sni);
+                // verify SNI-selected certificate is correctly configured
+                return CertificateManager.VerifyCertificateSAN(cert, sni);
                 };
 
                 // modify the hosts file so we can resolve this request locally: create an entry for
@@ -1234,8 +1238,8 @@ namespace Certify
                     Properties.Resources.APIBaseURI + "testurlaccess?url=" + url);
                 ServicePointManager.ServerCertificateValidationCallback = (obj, cert, chain, errors) =>
                 {
-                    // ignore all cert errors when validating URL response
-                    return true;
+                // ignore all cert errors when validating URL response
+                return true;
                 };
                 var response = (HttpWebResponse)request.GetResponse();
 

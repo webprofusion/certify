@@ -112,7 +112,7 @@ namespace Certify.Management.APIProviders
                 processedAuth.LogItems = new List<string>();
                 foreach (var a in _vaultManager.ActionLogs)
                 {
-                    processedAuth.LogItems.Add(a.Result);
+                    processedAuth.LogItems.Add(a.Command + (a.Result != null ? a.Result : ""));
                 }
             }
             return processedAuth;
