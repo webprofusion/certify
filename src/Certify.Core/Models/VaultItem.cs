@@ -18,6 +18,8 @@ namespace Certify.Models
         public string Status { get; set; }
         public DateTime? AuthorizationExpiry { get; set; }
         public bool IsAuthorizationPending { get; set; }
+        public string ValidationError { get; set; }
+        public string ValidationErrorType { get; set; }
     }
 
     public class CertificateItem : VaultItem
