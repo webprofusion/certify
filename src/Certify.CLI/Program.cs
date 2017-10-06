@@ -15,6 +15,9 @@ namespace Certify.CLI
     {
         private static int Main(string[] args)
         {
+            // upgrade assembly version of saved settings (if required)
+            Properties.Settings.Default.UpgradeSettingsVersion();
+
             if (args.Length == 0)
             {
                 ShowVersion();
@@ -110,12 +113,13 @@ namespace Certify.CLI
             // System.Console.WriteLine("help : show this help information");
 
             // System.Console.WriteLine("-l --list : list managed sites");
-            //  System.Console.WriteLine("-p --preview : auto scan and preview proposed list of managed sites");
+            // System.Console.WriteLine("-p --preview : auto scan and preview proposed list of
+            // managed sites");
             System.Console.WriteLine("\n");
         }
 
         /// <summary>
-        /// Auto scan and preview list of sites to manage
+        /// Auto scan and preview list of sites to manage 
         /// </summary>
         private void PreviewAutoManage()
         {
@@ -204,16 +208,20 @@ namespace Certify.CLI
 
              //Initialize-ACMEVault -BaseURI https://acme-staging.api.letsencrypt.org/
 
-             // Get-Module -ListAvailable ACMESharp
-             // New-ACMEIdentifier -Dns test7.examplesite.co.uk -Alias test7_examplesite_co_uk636213616564101276 -Label Identifier:test7.examplesite.co.uk
-             // Complete-ACMEChallenge -Ref test7_examplesite_co_uk636213616564101276 -ChallengeType http-01 -Handler manual  -Regenerate
-             // Submit-ACMEChallenge -Ref test7_examplesite_co_uk636213616564101276 -Challenge http-01
-             // Update-ACMEIdentifier -Ref test7_examplesite_co_uk636213616564101276
-             // Update-ACMEIdentifier -Ref test7_examplesite_co_uk636213616564101276
-             // New-ACMECertificate -Identifier test7_examplesite_co_uk636213616564101276 -Alias cert_test7_examplesite_co_uk636213616564101276 -Generate
-             // Update-ACMEIdentifier -Ref test7_examplesite_co_uk636213616564101276
-             // Update-ACMEIdentifier -Ref test7_examplesite_co_uk636213616564101276
-             // Get-ACMECertificate -Ref = ac22dbfe - b75f - 4cac-9247-b40c1d9bf9eb -ExportPkcs12 C:\ProgramData\ACMESharp\sysVault\99-ASSET\ac22dbfe-b75f-4cac-9247-b40c1d9bf9eb-all.pfx -Overwrite
+             // Get-Module -ListAvailable ACMESharp New-ACMEIdentifier -Dns test7.examplesite.co.uk
+             // -Alias test7_examplesite_co_uk636213616564101276 -Label
+             // Identifier:test7.examplesite.co.uk Complete-ACMEChallenge -Ref
+             // test7_examplesite_co_uk636213616564101276 -ChallengeType http-01 -Handler manual
+             // -Regenerate Submit-ACMEChallenge -Ref test7_examplesite_co_uk636213616564101276
+             // -Challenge http-01 Update-ACMEIdentifier -Ref
+             // test7_examplesite_co_uk636213616564101276 Update-ACMEIdentifier -Ref
+             // test7_examplesite_co_uk636213616564101276 New-ACMECertificate -Identifier
+             // test7_examplesite_co_uk636213616564101276 -Alias
+             // cert_test7_examplesite_co_uk636213616564101276 -Generate Update-ACMEIdentifier -Ref
+             // test7_examplesite_co_uk636213616564101276 Update-ACMEIdentifier -Ref
+             // test7_examplesite_co_uk636213616564101276 Get-ACMECertificate -Ref = ac22dbfe - b75f
+             // - 4cac-9247-b40c1d9bf9eb -ExportPkcs12
+             // C:\ProgramData\ACMESharp\sysVault\99-ASSET\ac22dbfe-b75f-4cac-9247-b40c1d9bf9eb-all.pfx -Overwrite
 
              //get info on existing IIS site we want to create/update SSL binding for
              IISManager iisManager = new IISManager();
