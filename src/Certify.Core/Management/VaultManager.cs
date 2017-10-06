@@ -54,6 +54,7 @@ namespace Certify
             this.vaultFilename = vaultFilename;
 
             this.ActionLogs = new List<ActionLogItem>();
+            this.ActionLogs.Capacity = 1000;
 
 #if DEBUG
             this.InitVault(staging: true);
@@ -648,10 +649,19 @@ namespace Certify
                 //get challenge info
                 ReloadVaultConfig();
                 identifier = GetIdentifier(identifierAlias);
-                var challengeInfo = identifier.Challenges.FirstOrDefault(c => c.Value.Type == challengeType).Value;
+                try
+                {
+                    //identifier challenge specification is now ready for use to prepare and answer for LetsEncrypt to check
 
-                //identifier challenge specification is now ready for use to prepare and answer for LetsEncrypt to check
-                return new PendingAuthorization() { Challenge = GetAuthorizeChallengeItemFromAuthChallenge(challengeInfo), Identifier = GetDomainIdentifierItemFromIdentifierInfo(identifier), TempFilePath = "", ExtensionlessConfigCheckedOK = false, LogItems = this.GetActionLogSummary() };
+                    var challengeInfo = identifier.Challenges.FirstOrDefault(c => c.Value.Type == challengeType).Value;
+                    return new PendingAuthorization() { Challenge = GetAuthorizeChallengeItemFromAuthChallenge(challengeInfo), Identifier = GetDomainIdentifierItemFromIdentifierInfo(identifier), TempFilePath = "", ExtensionlessConfigCheckedOK = false, LogItems = this.GetActionLogSummary() };
+                }
+                catch (Exception exp)
+                {
+                    LogAction("GetIdentifier", exp.ToString());
+                    //identifier challenge could not be requested this time (FIXME: did we discard it when reloading vault?)
+                    return null;
+                }
             }
             else
             {
@@ -899,10 +909,15 @@ namespace Certify
                 Directory.CreateDirectory(destPath);
             }
 
-            // copy challenge response to web folder /.well-known/acme-challenge
-            System.IO.File.WriteAllText(destFile, httpChallenge.FileContent);
+            // copy challenge response to web folder /.well-known/acme-challenge. Check if it already
+            // exists (as in 'configcheck' file) as can cause conflicts.
+            if (!System.IO.File.Exists(destFile))
+            {
+                System.IO.File.WriteAllText(destFile, httpChallenge.FileContent);
+            }
 
-            // configure cleanup
+            // configure cleanup - should this be configurable? In the case of many sites renewing
+            // which all point to the same web root, the configcheck step could collide here
             pendingAuth.Cleanup = () => File.Delete(destFile);
 
             // create a web.config for extensionless files, then test it (make a request for the
@@ -911,7 +926,7 @@ namespace Certify
 
             if (!File.Exists(destPath + "\\web.config"))
             {
-                //no existing config, attempt auto config and perform test
+                // no existing config, attempt auto config and perform test
                 this.LogAction($"Config does not exist, writing default config to: {destPath}\\web.config");
                 System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
                 return () => CheckURL($"http://{domain}/{httpChallenge.FilePath}");
@@ -1109,21 +1124,11 @@ namespace Certify
             List<string> output = new List<string>();
             if (this.ActionLogs != null)
             {
-                foreach (var a in this.ActionLogs)
-                {
-                    output.Add(a.Result);
-                }
+                ActionLogs.ToList().ForEach((a) => { output.Add(a.Result); });
             }
             return output;
         }
 
-        /// <summary>
-        /// Performs a simulated tls-sni-01 verification over HTTPS/SNI. 
-        /// </summary>
-        /// <param name="host"> The domain being verified </param>
-        /// <param name="sni"> The server name indication used for TLS server response </param>
-        /// <param name="useProxyAPI"> Whether to use the server proxy for verification </param>
-        /// <returns> True if the verification is successful, False if not. </returns>
         private bool CheckSNI(string host, string sni, bool? useProxyAPI = null)
         {
             // if validation proxy enabled, access to the domain being validated is checked via our
