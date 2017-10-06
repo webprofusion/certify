@@ -911,14 +911,17 @@ namespace Certify
 
             // copy challenge response to web folder /.well-known/acme-challenge. Check if it already
             // exists (as in 'configcheck' file) as can cause conflicts.
-            if (!System.IO.File.Exists(destFile))
+            if (!File.Exists(destFile))
             {
-                System.IO.File.WriteAllText(destFile, httpChallenge.FileContent);
+                File.WriteAllText(destFile, httpChallenge.FileContent);
             }
 
-            // configure cleanup - should this be configurable? In the case of many sites renewing
-            // which all point to the same web root, the configcheck step could collide here
-            pendingAuth.Cleanup = () => File.Delete(destFile);
+            // configure cleanup - should this be configurable? Because in some case many sites
+            // renewing may all point to the same web root, we keep the configcheck file
+            pendingAuth.Cleanup = () =>
+            {
+                if (destFile.EndsWith("configcheck")) File.Delete(destFile);
+            };
 
             // create a web.config for extensionless files, then test it (make a request for the
             // extensionless configcheck file over http)
@@ -1152,8 +1155,8 @@ namespace Certify
                 var req = new HttpRequestMessage(HttpMethod.Get, $"https://{sni}");
                 ServicePointManager.ServerCertificateValidationCallback = (obj, cert, chain, errors) =>
                 {
-                // verify SNI-selected certificate is correctly configured
-                return CertificateManager.VerifyCertificateSAN(cert, sni);
+                    // verify SNI-selected certificate is correctly configured
+                    return CertificateManager.VerifyCertificateSAN(cert, sni);
                 };
 
                 // modify the hosts file so we can resolve this request locally: create an entry for
@@ -1238,8 +1241,8 @@ namespace Certify
                     Properties.Resources.APIBaseURI + "testurlaccess?url=" + url);
                 ServicePointManager.ServerCertificateValidationCallback = (obj, cert, chain, errors) =>
                 {
-                // ignore all cert errors when validating URL response
-                return true;
+                    // ignore all cert errors when validating URL response
+                    return true;
                 };
                 var response = (HttpWebResponse)request.GetResponse();
 
