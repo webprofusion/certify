@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Certify.Management
@@ -211,14 +210,16 @@ namespace Certify.Management
 
         public async Task<CertificateRequestResult> PerformCertificateRequest(ManagedSite managedSite, IProgress<RequestProgressState> progress = null)
         {
-            // FIXME: refactor into different concerns, there's way to much being done here
-
-            ReportProgress(progress, new RequestProgressState { IsRunning = true, CurrentState = RequestState.Running, Message = "Performing Config Tests" });
-
-            var testResult = await TestChallenge(managedSite);
-            if (!testResult.IsOK)
+            // FIXME: refactor into different concerns, there's way too much being done here
+            if (managedSite.RequestConfig.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP && managedSite.RequestConfig.PerformExtensionlessConfigChecks)
             {
-                return new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = String.Join("; ", testResult.FailedItemSummary), Result = testResult.Result };
+                ReportProgress(progress, new RequestProgressState { IsRunning = true, CurrentState = RequestState.Running, Message = "Performing Config Tests" });
+
+                var testResult = await TestChallenge(managedSite);
+                if (!testResult.IsOK)
+                {
+                    return new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = String.Join("; ", testResult.FailedItemSummary), Result = testResult.Result };
+                }
             }
 
             return await Task.Run(async () =>
@@ -677,11 +678,25 @@ namespace Certify.Management
             return sites;
         }
 
+        public static bool IsRenewalRequired(ManagedSite s, int renewalIntervalDays)
+        {
+            // if we know the last renewal date, check whether we should renew again, otherwise
+            // assume it's more than 30 days ago by default and attempt renewal
+
+            var timeSinceLastRenewal = (s.DateRenewed != null ? s.DateRenewed : DateTime.Now.AddDays(-30)) - DateTime.Now;
+
+            bool isRenewalRequired = Math.Abs(timeSinceLastRenewal.Value.TotalDays) > renewalIntervalDays;
+
+            return isRenewalRequired;
+        }
+
         public async Task<List<CertificateRequestResult>> PerformRenewalAllManagedSites(bool autoRenewalOnly = true, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null)
         {
             await Task.Delay(200); //allow UI to update
-                                   //currently the vault won't let us run parallel requests due to file locks
+
+            //currently the vault won't let us run parallel requests due to file locks
             bool performRequestsInParallel = false;
+
             bool testModeOnly = false;
 
             _siteManager.LoadSettings();
@@ -693,27 +708,22 @@ namespace Certify.Management
                 sites = sites.Where(s => s.IncludeInAutoRenew == true);
             }
 
-            //check site list and examine current certificates. If certificate is less than n days old, don't attempt to renew it
+            // check site list and examine current certificates. If certificate is less than n days
+            // old, don't attempt to renew it
             var sitesToRenew = new List<ManagedSite>();
             var renewalIntervalDays = Properties.Settings.Default.RenewalIntervalDays;
 
-#if DEBUG
-            //in debug mode we renew every time instead of skipping based on days old
-            renewalIntervalDays = 0;
-#endif
             int numRenewalTasks = 0;
             int maxRenewalTasks = Properties.Settings.Default.MaxRenewalRequests;
 
             var renewalTasks = new List<Task<CertificateRequestResult>>();
             foreach (var s in sites.Where(s => s.IncludeInAutoRenew == true))
             {
-                //if we know the last renewal date, check whether we should renew again, otherwise assume it's more than 30 days ago by default and attempt renewal
-                var timeSinceLastRenewal = (s.DateRenewed != null ? s.DateRenewed : DateTime.Now.AddDays(-30)) - DateTime.Now;
-
-                bool isRenewalRequired = Math.Abs(timeSinceLastRenewal.Value.TotalDays) > renewalIntervalDays;
-                bool isSiteRunning = true;
+                // determine if this site requires renewal
+                bool isRenewalRequired = IsRenewalRequired(s, renewalIntervalDays);
 
                 //if we care about stopped sites being stopped, check for that
+                bool isSiteRunning = true;
                 if (Properties.Settings.Default.IgnoreStoppedSites)
                 {
                     isSiteRunning = IsManagedSiteRunning(s.Id);
