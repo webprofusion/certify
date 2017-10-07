@@ -1,0 +1,38 @@
+﻿using Certify.Management;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Certify.Core.Tests.Unit
+{
+    [TestClass]
+    public class DnsTests
+    {
+        [TestMethod, Description("Ensure that DNS verification (CAA/DNSSEC) is correct")]
+        public void TestDNSTests()
+        {
+            var net = new NetworkUtils();
+
+            // check invalid domain
+            Assert.IsFalse(net.CheckDNS("fdlsakdfoweinoijsjdfpsdkfspdf.com").Ok, "Bad DNS does not throw an error");
+
+            // certifytheweb.com = no CAA records
+            Assert.IsTrue(net.CheckDNS("certifytheweb.com").Ok, "CAA records are not required");
+
+            // google.com = no letsencrypt.org CAA records (returns "pki.goog" only)
+            Assert.IsFalse(net.CheckDNS("google.com").Ok, "If CAA records are present, letsencrypt.org is returned.");
+
+            // dnsimple.com = correctly configured letsencrypt.org CAA record
+            Assert.IsTrue(net.CheckDNS("dnsimple.com").Ok, "Correctly configured LE CAA entries work");
+
+            // example.com = correctly configured DNSSEC record
+            Assert.IsTrue(net.CheckDNS("example.com").Ok, "correctly configured DNSSEC record should pass dns check");
+
+            // dnssec-failed.org = incorrectly configured DNSSEC record
+            Assert.IsFalse(net.CheckDNS("dnssec-failed.org").Ok, "incorrectly configured DNSSEC record should fail dns check");
+        }
+    }
+}
