@@ -11,8 +11,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -743,6 +741,21 @@ namespace Certify
 
                 try
                 {
+                    // check all domain configs
+                    foreach (var domain in domains.Distinct())
+                    {
+                        var (ok, message) = NetUtil.CheckDNS(domain);
+                        if (!ok)
+                        {
+                            result.IsOK = false;
+                            result.FailedItemSummary.Add(message);
+                        }
+                    }
+                    if (!result.IsOK)
+                    {
+                        return result;
+                    }
+
                     if (requestConfig.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP)
                     {
                         foreach (var domain in domains.Distinct())
@@ -781,7 +794,7 @@ namespace Certify
                         if (iisManager.GetIisVersion().Major < 8)
                         {
                             result.IsOK = false;
-                            result.Message = $"The {ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI} challenge is only available for IIS versions 8+.";
+                            result.FailedItemSummary.Add($"The {ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI} challenge is only available for IIS versions 8+.");
                             return result;
                         }
 

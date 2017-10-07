@@ -1,4 +1,7 @@
-﻿using System;
+﻿using ARSoft.Tools.Net;
+using ARSoft.Tools.Net.Dns;
+using Certify.Models;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -161,6 +164,63 @@ namespace Certify.Management
                 // reset callback for other requests to validate using default behavior
                 ServicePointManager.ServerCertificateValidationCallback = null;
             }
+        }
+
+        public (bool Ok, string Message) CheckDNS(string domain)
+        {
+            var dn = DomainName.Parse(domain);
+            var dns = DnsClient.Default.Resolve(dn, RecordType.CAA);
+            if (dns == null || dns.ReturnCode != ReturnCode.NoError)
+            {
+                // dns lookup failed
+                string message = $"DNS lookup failed for '{domain}'";
+                Log(message);
+                return (false, message);
+            }
+
+            // check CAA
+            if (dns.AnswerRecords.Where(r => r is CAARecord).Count() > 0)
+            {
+                // dns returned at least 1 CAA record, check for validity
+                if (!dns.AnswerRecords.Where(r => r is CAARecord).Cast<CAARecord>()
+                    .Any(r => (r.Tag == "issue" || r.Tag == "issuewild") &&
+                        r.Value == "letsencrypt.org"))
+                {
+                    // there were no CAA records of "[flag] [tag] [value]" 
+                    // where [tag] = issue | issuewild
+                    // and [value] = letsencrypt.org
+                    // see: https://letsencrypt.org/docs/caa/
+                    string message = $"DNS CAA verification failed for '{domain}'";
+                    Log(message);
+                    return (false, message);
+                }
+            }
+            // now either there were no CAA records returned (i.e. CAA is not configured)
+            // or the CAA records are correctly configured
+
+            // note: this seems to need to run in a Task or it hangs forever
+            // when called from the WPF UI
+            if (!Task.Run(async () =>
+            {
+                // check DNSSEC
+                var dnssec = new DnsSecRecursiveDnsResolver();
+                try
+                {
+                    var res = await dnssec.ResolveSecureAsync<ARecord>(dn);
+                    return res.ValidationResult != DnsSecValidationResult.Bogus;
+                }
+                catch (DnsSecValidationException)
+                {
+                    // invalid dnssec
+                    return false; 
+                }
+            }).Result)
+            {
+                string message = $"DNSSEC verification failed for '{domain}'";
+                Log(message);
+                return (false, message);
+            }
+            return (true, "");
         }
     }
 }
