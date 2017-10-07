@@ -742,7 +742,12 @@ namespace Certify
                 try
                 {
                     // check all domain configs
-                    foreach (var domain in domains.Distinct())
+                    Parallel.ForEach(domains.Distinct(), new ParallelOptions
+                    {
+                        // check 8 domains at a time
+                        MaxDegreeOfParallelism = 8
+                    },
+                    domain =>
                     {
                         var (ok, message) = NetUtil.CheckDNS(domain);
                         if (!ok)
@@ -750,7 +755,7 @@ namespace Certify
                             result.IsOK = false;
                             result.FailedItemSummary.Add(message);
                         }
-                    }
+                    });
                     if (!result.IsOK)
                     {
                         return result;
