@@ -166,8 +166,18 @@ namespace Certify.Management
             }
         }
 
-        public (bool Ok, string Message) CheckDNS(string domain)
+        public (bool Ok, string Message) CheckDNS(string domain, bool? useProxyAPI = null)
         {
+            // if validation proxy enabled, DNS for the domain being validated is checked via our
+            // remote API rather than directly on the servers
+            bool useProxy = useProxyAPI ?? Certify.Properties.Settings.Default.EnableValidationProxyAPI;
+
+            if (useProxy)
+            {
+                // TODO: update proxy and implement proxy check here
+                // return (ok, message);
+            }
+
             var dn = DomainName.Parse(domain);
             var dns = DnsClient.Default.Resolve(dn, RecordType.CAA);
             if (dns == null || dns.ReturnCode != ReturnCode.NoError)
