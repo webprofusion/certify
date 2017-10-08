@@ -38,12 +38,7 @@ namespace Certify.UI
                 PostRequestPowerShellScript = @"c:\inetpub\scripts\post-req-script.ps1",
                 WebhookTrigger = Webhook.ON_SUCCESS,
                 WebhookUrl = "https://certifytheweb.com/api/notify?domain=$domain&key=123456",
-                WebhookMethod = Webhook.METHOD_POST,
-                WebhookContentType = "application/json",
-                WebhookContentBody = @"{
-    ""domain"": ""$domain"",
-    ""trigger"": ""$trigger""
-}"
+                WebhookMethod = Webhook.METHOD_POST
             };
             SelectedItem.CertificatePath = @"C:\ProgramData\ACMESharp\sysVault\99-ASSET\cert_ident1a2b3c4d-all.pfx";
             SelectedItem.DomainOptions = new ObservableCollection<DomainOption>();
