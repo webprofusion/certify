@@ -194,6 +194,8 @@ namespace Certify.UI.ViewModel
             ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI
         };
 
+        public IEnumerable<string> WebhookTriggerTypes => Webhook.TriggerTypes;
+ 
         public List<IPAddress> HostIPAddresses
         {
             get
