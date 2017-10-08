@@ -11,8 +11,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,6 +31,7 @@ namespace Certify
         private string vaultFilename;
         private string vaultProfile = null;
         public List<ActionLogItem> ActionLogs { get; }
+        private NetworkUtils NetUtil;
 
         internal const string VAULT_LOCK = "CertifyVault";
 
@@ -55,6 +54,7 @@ namespace Certify
 
             this.ActionLogs = new List<ActionLogItem>();
             this.ActionLogs.Capacity = 1000;
+            this.NetUtil = new NetworkUtils { Log = (message) => LogAction(message) };
 
 #if DEBUG
             this.InitVault(staging: true);
@@ -741,6 +741,26 @@ namespace Certify
 
                 try
                 {
+                    // check all domain configs
+                    Parallel.ForEach(domains.Distinct(), new ParallelOptions
+                    {
+                        // check 8 domains at a time
+                        MaxDegreeOfParallelism = 8
+                    },
+                    domain =>
+                    {
+                        var (ok, message) = NetUtil.CheckDNS(domain);
+                        if (!ok)
+                        {
+                            result.IsOK = false;
+                            result.FailedItemSummary.Add(message);
+                        }
+                    });
+                    if (!result.IsOK)
+                    {
+                        return result;
+                    }
+
                     if (requestConfig.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP)
                     {
                         foreach (var domain in domains.Distinct())
@@ -779,7 +799,7 @@ namespace Certify
                         if (iisManager.GetIisVersion().Major < 8)
                         {
                             result.IsOK = false;
-                            result.Message = $"The {ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI} challenge is only available for IIS versions 8+.";
+                            result.FailedItemSummary.Add($"The {ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI} challenge is only available for IIS versions 8+.");
                             return result;
                         }
 
@@ -941,14 +961,14 @@ namespace Certify
                 // no existing config, attempt auto config and perform test
                 this.LogAction($"Config does not exist, writing default config to: {destPath}\\web.config");
                 System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
-                return () => CheckURL($"http://{domain}/{httpChallenge.FilePath}");
+                return () => NetUtil.CheckURL($"http://{domain}/{httpChallenge.FilePath}");
             }
             else
             {
                 // web config already exists, don't overwrite it, just test it
                 return () =>
                 {
-                    if (CheckURL($"http://{domain}/{httpChallenge.FilePath}"))
+                    if (NetUtil.CheckURL($"http://{domain}/{httpChallenge.FilePath}"))
                     {
                         return true;
                     }
@@ -959,7 +979,7 @@ namespace Certify
                         // didn't work, try our default config
                         System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
 
-                        if (CheckURL($"http://{domain}/{httpChallenge.FilePath}"))
+                        if (NetUtil.CheckURL($"http://{domain}/{httpChallenge.FilePath}"))
                         {
                             return true;
                         }
@@ -1003,7 +1023,7 @@ namespace Certify
                 iisManager.InstallCertificateforBinding(managedSite, x509, sni);
 
                 // add check to the queue
-                checkQueue.Add(() => CheckSNI(domain, sni));
+                checkQueue.Add(() => NetUtil.CheckSNI(domain, sni));
 
                 // add cleanup actions to queue
                 cleanupQueue.Add(() => iisManager.RemoveHttpsBinding(managedSite, sni));
@@ -1148,155 +1168,6 @@ namespace Certify
             }
 
             return output;
-        }
-
-        private bool CheckSNI(string host, string sni, bool? useProxyAPI = null)
-        {
-            // if validation proxy enabled, access to the domain being validated is checked via our
-            // remote API rather than directly on the servers
-            bool useProxy = useProxyAPI ?? Certify.Properties.Settings.Default.EnableValidationProxyAPI;
-            if (useProxy)
-            {
-                // TODO: check proxy here, needs server support. if successful "return true"; and "LogAction(...)"
-                System.Diagnostics.Debug.WriteLine("ProxyAPI is not implemented for Checking SNI config, trying local");
-                this.LogAction($"Proxy TLS SNI binding check error: {host}, {sni}");
-
-                return CheckSNI(host, sni, false); // proxy failed, try local
-            }
-            var hosts = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"drivers\etc\hosts");
-            try
-            {
-                var req = new HttpRequestMessage(HttpMethod.Get, $"https://{sni}");
-                ServicePointManager.ServerCertificateValidationCallback = (obj, cert, chain, errors) =>
-                {
-                    // verify SNI-selected certificate is correctly configured
-                    return CertificateManager.VerifyCertificateSAN(cert, sni);
-                };
-
-                // modify the hosts file so we can resolve this request locally: create an entry for
-                // the primary IP address and also for 127.0.0.1 (where primary IP will not resolve
-                // internally i.e. the default resolution is an external IP)
-
-                List<string> testHostEntries = new List<string> {
-                    $"\n127.0.0.1\t{sni}",
-                };
-
-                var ip = Dns.GetHostEntry(host)?.AddressList?.FirstOrDefault();
-                if (ip != null)
-                {
-                    testHostEntries.Add($"\n{ip}\t{sni}");
-                }
-
-                using (StreamWriter writer = File.AppendText(hosts))
-                {
-                    foreach (var hostEntry in testHostEntries)
-                    {
-                        writer.Write(hostEntry);
-                    }
-                }
-                Thread.Sleep(250); // wait a bit for hosts file to take effect
-
-                try
-                {
-                    using (var client = new HttpClient())
-                    {
-                        var resp = client.SendAsync(req).Result;
-                        // if the GET request succeeded, the Cert validation succeeded
-                        this.LogAction($"Local TLS SNI binding check OK: {host}, {sni}"); ;
-                    }
-                }
-                finally
-                {
-                    // clean up temp entries in hosts file
-                    try
-                    {
-                        var txt = File.ReadAllText(hosts);
-                        foreach (var hostEntry in testHostEntries)
-                        {
-                            //should we just remove all .acme.invalid entries instead of looking for our current entries?
-                            txt = txt.Substring(0, txt.Length - hostEntry.Length);
-                        }
-
-                        File.WriteAllText(hosts, txt);
-                    }
-                    catch
-                    {
-                        // if this fails the user will have to clean up manually
-                        this.LogAction($"Error cleaning up hosts file: {hosts}");
-                        throw;
-                    }
-                }
-                return true; // success!
-            }
-            catch (Exception ex)
-            {
-                // eat the error that HttpClient throws, either cert validation failed or the site is
-                // inaccessible via https://host name
-                this.LogAction($"Local TLS SNI binding check error: {host}, {sni}\n{ex.GetType()}: {ex.Message}\n{ex.StackTrace}");
-                return false;
-            }
-            finally
-            {
-                // reset the callback for other http requests
-                ServicePointManager.ServerCertificateValidationCallback = null;
-            }
-        }
-
-        private bool CheckURL(string url, bool? useProxyAPI = null)
-        {
-            // if validation proxy enabled, access to the domain being validated is checked via our
-            // remote API rather than directly on the servers
-            bool useProxy = useProxyAPI ?? Certify.Properties.Settings.Default.EnableValidationProxyAPI;
-
-            //check http request to test path works
-            try
-            {
-                var request = WebRequest.Create(!useProxy ? url :
-                    Properties.Resources.APIBaseURI + "testurlaccess?url=" + url);
-                ServicePointManager.ServerCertificateValidationCallback = (obj, cert, chain, errors) =>
-                {
-                    // ignore all cert errors when validating URL response
-                    return true;
-                };
-                var response = (HttpWebResponse)request.GetResponse();
-
-                //if checking via proxy, examine result
-                if (useProxy)
-                {
-                    if ((int)response.StatusCode >= 200)
-                    {
-                        var encoding = ASCIIEncoding.UTF8;
-                        using (var reader = new System.IO.StreamReader(response.GetResponseStream(), encoding))
-                        {
-                            string jsonText = reader.ReadToEnd();
-                            this.LogAction("Proxy URL Check Result: " + jsonText);
-                            var result = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.API.URLCheckResult>(jsonText);
-                            if (result.IsAccessible == true)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                    //request failed using proxy api, request again using local http
-                    return CheckURL(url, false);
-                }
-                else
-                {
-                    this.LogAction($"Local URL Check Result: HTTP {response.StatusCode}");
-                    //not checking via proxy, base result on status code
-                    return (int)response.StatusCode >= 200 && (int)response.StatusCode < 300;
-                }
-            }
-            catch (Exception)
-            {
-                System.Diagnostics.Debug.WriteLine("Failed to check url for access");
-                return false;
-            }
-            finally
-            {
-                // reset callback for other requests to validate using default behavior
-                ServicePointManager.ServerCertificateValidationCallback = null;
-            }
         }
 
         #endregion Utils
