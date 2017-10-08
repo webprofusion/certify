@@ -36,10 +36,14 @@ namespace Certify.UI.Controls
 
         private void UserControl_OnLoaded(object sender, RoutedEventArgs e)
         {
-            CollectionViewSource.GetDefaultView(lvManagedSites.ItemsSource).Filter =
-                i => txtFilter.Text.Trim() == "" ||
-                ((Models.ManagedSite)i).Name.IndexOf(txtFilter.Text, StringComparison.OrdinalIgnoreCase) > -1 ||
-                (((Models.ManagedSite)i).DomainOptions?.Any(d => d.Domain.IndexOf(txtFilter.Text, StringComparison.OrdinalIgnoreCase) > -1) ?? false);
+            CollectionViewSource.GetDefaultView(lvManagedSites.ItemsSource).Filter = (item) =>
+            {
+                string filter = txtFilter.Text.Trim();
+                return filter == "" || filter.Split(';').Where(f => f.Trim() != "").Any(f =>
+                    ((Models.ManagedSite)item).Name.IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1 ||
+                    (((Models.ManagedSite)item).DomainOptions?.Any(d => d.Domain.IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1) ?? false) ||
+                    (((Models.ManagedSite)item).Comments ?? "").IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1);
+            };
         }
 
         private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)

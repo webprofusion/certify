@@ -155,6 +155,12 @@ namespace Certify.Models
             this.RequestConfig.EnableFailureNotifications = true;
 
             this.RequestConfig.PropertyChanged += RequestConfig_PropertyChanged;
+            this.PropertyChanged += ManagedSite_PropertyChanged;
+        }
+
+        private void ManagedSite_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "Comments") IsChanged = true;
         }
 
         private void RequestConfig_PropertyChanged(object sender, PropertyChangedEventArgs e)
