@@ -82,6 +82,31 @@ namespace Certify.Models
         public string ChallengeType { get; set; }
 
         /// <summary>
+        /// The trigger for the webhook (None, Success, Error)
+        /// </summary>
+        public string WebhookTrigger { get; set; } = Webhook.ON_NONE;
+
+        /// <summary>
+        /// The http method for the webhook request
+        /// </summary>
+        public string WebhookMethod { get; set; }
+
+        /// <summary>
+        /// The http url for the webhook request
+        /// </summary>
+        public string WebhookUrl { get; set; }
+
+        /// <summary>
+        /// The http content type header for the webhook request
+        /// </summary>
+        public string WebhookContentType { get; set; }
+
+        /// <summary>
+        /// The http body template for the webhook request
+        /// </summary>
+        public string WebhookContentBody { get; set; }
+
+        /// <summary>
         /// PowerShell script to run before executing certificate request
         /// </summary>
         public string PreRequestPowerShellScript { get; set; }

@@ -515,17 +515,36 @@ namespace Certify.Management
                 }
                 finally
                 {
-                    // if the request was not aborted, run post-request script, if set
-                    if (!result.Abort && !string.IsNullOrEmpty(config.PostRequestPowerShellScript))
+                    // if the request was not aborted, perform post-request actions
+                    if (!result.Abort)
                     {
-                        try
+                        // run post-request script, if set
+                        if (!string.IsNullOrEmpty(config.PostRequestPowerShellScript))
                         {
-                            string scriptOutput = await PowerShellManager.RunScript(result, config.PostRequestPowerShellScript);
-                            LogMessage(managedSite.Id, $"Post-Request Script output:\n{scriptOutput}");
+                            try
+                            {
+                                string scriptOutput = await PowerShellManager.RunScript(result, config.PostRequestPowerShellScript);
+                                LogMessage(managedSite.Id, $"Post-Request Script output:\n{scriptOutput}");
+                            }
+                            catch (Exception ex)
+                            {
+                                LogMessage(managedSite.Id, $"Post-Request Script error: {ex.Message}");
+                            }
                         }
-                        catch (Exception ex)
+                        // run webhook triggers, if set
+                        if ((config.WebhookTrigger == Webhook.ON_SUCCESS && result.IsSuccess) ||
+                            (config.WebhookTrigger == Webhook.ON_ERROR && !result.IsSuccess) || 
+                            (config.WebhookTrigger == Webhook.ON_SUCCESS_OR_ERROR))
                         {
-                            LogMessage(managedSite.Id, $"Post-Request Script error:\n{ex.Message}");
+                            try
+                            {
+                                var (success, code) = await Webhook.SendRequest(config, result.IsSuccess);
+                                LogMessage(managedSite.Id, $"Webhook invoked: Url: {config.WebhookUrl}, Success: {success}, StatusCode: {code}");
+                            }
+                            catch (Exception ex)
+                            {
+                                LogMessage(managedSite.Id, $"Webhook error: {ex.Message}");
+                            }
                         }
                     }
                 }

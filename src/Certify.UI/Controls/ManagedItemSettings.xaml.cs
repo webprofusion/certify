@@ -39,13 +39,14 @@ namespace Certify.UI.Controls
         {
             if (this.MainViewModel.SelectedItemHasChanges)
             {
-                if (MainViewModel.SelectedItem.Id == null && MainViewModel.SelectedWebSite == null)
+                var item = MainViewModel.SelectedItem;
+                if (item.Id == null && MainViewModel.SelectedWebSite == null)
                 {
                     MessageBox.Show("Select the website to create a certificate for.", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
-                if (String.IsNullOrEmpty(MainViewModel.SelectedItem.Name))
+                if (String.IsNullOrEmpty(item.Name))
                 {
                     MessageBox.Show("A name is required for this item.", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
@@ -57,19 +58,44 @@ namespace Certify.UI.Controls
                     return;
                 }
 
-                if (MainViewModel.SelectedItem.RequestConfig.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI &&
+                if (item.RequestConfig.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI &&
                     MainViewModel.IISVersion.Major < 8)
                 {
                     MessageBox.Show($"The {ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI} challenge is only available for IIS versions 8+.", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
-                if (MainViewModel.SelectedItem.RequestConfig.PerformAutomatedCertBinding)
+                if (item.RequestConfig.PerformAutomatedCertBinding)
                 {
-                    MainViewModel.SelectedItem.RequestConfig.BindingIPAddress = null;
-                    MainViewModel.SelectedItem.RequestConfig.BindingPort = null;
-                    MainViewModel.SelectedItem.RequestConfig.BindingUseSNI = null;
+                    item.RequestConfig.BindingIPAddress = null;
+                    item.RequestConfig.BindingPort = null;
+                    item.RequestConfig.BindingUseSNI = null;
                 }
+
+                if (!string.IsNullOrEmpty(item.RequestConfig.WebhookTrigger) &&
+                    item.RequestConfig.WebhookTrigger != Webhook.ON_NONE)
+                {
+                    if (string.IsNullOrEmpty(item.RequestConfig.WebhookUrl) ||
+                        !Uri.TryCreate(item.RequestConfig.WebhookUrl, UriKind.Absolute, out var uri))
+                    {
+                        MessageBox.Show($"The Url for the webhook must be set to a valid Url.", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                    if (string.IsNullOrEmpty(item.RequestConfig.WebhookMethod))
+                    {
+                        MessageBox.Show($"The Method for the webhook must be set.", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                }
+                else
+                {
+                    // clear out saved values if settng webhook to NONE
+                    item.RequestConfig.WebhookUrl = null;
+                    item.RequestConfig.WebhookMethod = null;
+                    item.RequestConfig.WebhookContentType = null;
+                    item.RequestConfig.WebhookContentBody = null;
+                }
+
                 //save changes
 
                 //creating new managed item
@@ -301,6 +327,38 @@ namespace Certify.UI.Controls
                     MessageBox.Show($"Configuration Check Failed:\n{String.Join("\r\n", result.FailedItemSummary)}", "Challenge Test Failed", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 Button_TestChallenge.IsEnabled = true;
+            }
+        }
+
+        private async void TestWebhook_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Button_TestWebhook.IsEnabled = false;
+
+                var config = MainViewModel.SelectedItem.RequestConfig;
+                if (!Uri.TryCreate(config.WebhookUrl, UriKind.Absolute, out var result))
+                {
+                    MessageBox.Show($"The webhook url must be a valid url.", "Webhook Test Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                if (string.IsNullOrEmpty(config.WebhookMethod))
+                {
+                    MessageBox.Show($"The webhook method must be selected.", "Webhook Test Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                bool forSuccess = config.WebhookTrigger == Webhook.ON_SUCCESS;
+                var (success, status) = await Webhook.SendRequest(config, forSuccess);
+                string completed = success ? "succeeded" : "failed";
+                MessageBox.Show($"Webhook request {completed}: HTTP {status}", "Webhook Test", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Webhook request error: {ex.Message}", "Webhook Test Failed", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            finally
+            {
+                Button_TestWebhook.IsEnabled = true;
             }
         }
     }
