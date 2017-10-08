@@ -7,8 +7,9 @@
                xmlns:fa="http://schemas.fontawesome.io/icons/"
              xmlns:utils="clr-namespace:Certify.UI.Utils"
              mc:Ignorable="d">
-    <StackPanel Orientation="Vertical" VerticalAlignment="Top">
-        <StackPanel.Resources>
+
+    <DockPanel>
+        <DockPanel.Resources>
             <utils:OptionalBooleanToVisibilityConverter
         x:Key="InverseBooleanToVisibilityConverter"
         True="Collapsed"
@@ -19,7 +20,7 @@
         False="Hidden" />
             <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
             <local:StateToColorConverter x:Key="StateToColorConverter" />
-        </StackPanel.Resources>
+        </DockPanel.Resources>
         <Label Content="There are no requests currently in progress."  Visibility="{Binding HasRequestsInProgress, Converter={StaticResource InverseBooleanToVisibilityConverter}}"  HorizontalAlignment="Left" Margin="25,20,0,0" VerticalAlignment="Top" />
 
         <ListView ItemsSource="{Binding ProgressResults}"  SelectionMode="Single" BorderBrush="{DynamicResource IdealForegroundDisabledBrush}" MinWidth="200" MinHeight="100" HorizontalContentAlignment="Stretch">
@@ -38,5 +39,5 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-    </StackPanel>
+    </DockPanel>
 </UserControl>
