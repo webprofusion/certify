@@ -949,7 +949,7 @@ namespace Certify
             // renewing may all point to the same web root, we keep the configcheck file
             pendingAuth.Cleanup = () =>
             {
-                if (destFile.EndsWith("configcheck")) File.Delete(destFile);
+                if (!destFile.EndsWith("configcheck")) File.Delete(destFile);
             };
 
             // create a web.config for extensionless files, then test it (make a request for the
