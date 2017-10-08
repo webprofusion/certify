@@ -273,6 +273,10 @@
             <TabItem Header="Info" IsSelected="True">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Orientation="Vertical" Margin="12">
+                        <DockPanel Margin="0,0,0,12">
+                            <Label Content="Comments: "/>
+                            <TextBox Text="{Binding SelectedItem.Comments}" Height="50"/>
+                        </DockPanel>
                         <Button x:Name="OpenLogFile" Content="Open Log File" Click="OpenLogFile_Click" />
                         <Label x:Name="CertPath" Content="{Binding SelectedItem.CertificatePath, TargetNullValue='Certificate Path: [to be set]'}" />
                         <Button x:Name="OpenCertificateFile" Content="View Certificate" Click="OpenCertificateFile_Click" />
