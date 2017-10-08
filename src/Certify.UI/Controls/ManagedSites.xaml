@@ -33,25 +33,25 @@
                 <RowDefinition Height="*"></RowDefinition>
             </Grid.RowDefinitions>
             <TextBox Grid.Row="0" Name="txtFilter" TextChanged="TxtFilter_TextChanged" Controls:TextBoxHelper.Watermark="Filter..."></TextBox>
-            <ListView Grid.Row="1" Name="lvManagedSites" ItemsSource="{Binding ManagedSites}" SelectionChanged="ListView_SelectionChanged" SelectionMode="Single" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" BorderBrush="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}">
+            <ListView Grid.Row="1" Name="lvManagedSites" ItemsSource="{Binding ManagedSites}" SelectionChanged="ListView_SelectionChanged" SelectionMode="Single">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Vertical" Margin="0,8,0,0">
                             <StackPanel Orientation="Horizontal">
                                 <fa:FontAwesome Icon="Globe" Margin="0,0,8,0" />
-                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,8,0" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrush} }" />
+                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,8,0" />
                             </StackPanel>
 
-                            <TextBlock Text="{Binding Path=ItemType, Converter={StaticResource EnumConverter}}" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" Margin="16,0,0,0" FontSize="10" />
+                            <TextBlock Text="{Binding Path=ItemType, Converter={StaticResource EnumConverter}}" Margin="16,0,0,0" FontSize="10" Foreground="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}" />
                             <TextBlock Text="{Binding Path=DateExpiry, Converter={StaticResource ExpiryDateConverter}}"  Foreground="{Binding Path=DateExpiry, Converter={StaticResource ExpiryDateColourConverter}}"  Margin="16,0,0,0" FontSize="10" />
                         </StackPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
         </Grid>
-        <GridSplitter Grid.Column="1" Width="10" HorizontalAlignment="Stretch" Background="White"/>
+        <GridSplitter Grid.Column="1" Width="10" HorizontalAlignment="Stretch" Background="White" />
         <Grid Grid.Column="2">
-            <local:ManagedItemSettings Visibility="{Binding IsItemSelected, Converter={StaticResource BoolToVisConverter}}" BorderBrush="{DynamicResource WindowTitleColorBrush}" Margin="0,10,0,0" Width="Auto" Height="Auto"/>
+            <local:ManagedItemSettings Visibility="{Binding IsItemSelected, Converter={StaticResource BoolToVisConverter}}" BorderBrush="{DynamicResource WindowTitleColorBrush}" Margin="0,10,0,0" Width="Auto" Height="Auto" />
             <StackPanel Visibility="{Binding IsNoItemSelected, Converter={StaticResource BoolToVisConverter}}" Margin="16,0,0,0" Height="Auto">
                 <StackPanel Margin="6,8"  Height="Auto" MinHeight="300" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
                     <TextBlock TextWrapping="Wrap" FontSize="36" Margin="16,16,0,16"  FontFamily="Segoe UI Light"><Run FontWeight="Bold" FontFamily="Segoe UI Semibold" Text="Certify" /><Run Text=" the " /><Run Text="w" /><Run Text="eb" /></TextBlock>

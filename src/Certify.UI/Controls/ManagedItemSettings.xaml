@@ -28,8 +28,8 @@
             <utils:NullVisibilityConverter x:Key="NullVisConverter" />
         </Grid.Resources>
         <StackPanel Orientation="Vertical" Grid.Row="0">
-            <Label Content="{Binding SelectedItem.Name}" Margin="8,0,0,2" FontSize="24" Foreground="{DynamicResource {x:Static SystemColors.ActiveCaptionTextBrushKey}}" FontFamily="Segoe UI Semilight" />
-            <Label Content="{Binding ValidationError}" Margin="8,0,0,0" Foreground="#DDD30E0E" />
+            <Label Content="{Binding SelectedItem.Name}" Margin="8,0,0,2" FontSize="24" FontFamily="Segoe UI Semilight" />
+            <Label Content="{Binding ValidationError}" Margin="8,0,0,0" />
         </StackPanel>
         <StackPanel Orientation="Horizontal" Height="32" Grid.Row="1">
 
@@ -63,7 +63,7 @@
         </StackPanel>
 
         <dragablz:TabablzControl x:Name="SettingsTab" Margin="8" Grid.Row="2" FixedHeaderCount="3"
-                                 VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                                 VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
             <TabItem Header="Options" IsSelected="True">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="12" Orientation="Vertical" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullVisConverter}}">
@@ -82,7 +82,7 @@
                         <StackPanel x:Name="NoBindings" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" Orientation="Vertical"  Margin="0,8,0,0">
                             <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="8,0" FontWeight="Bold" FontFamily="Segoe UI Semibold" Foreground="#FFEA1010"><Run Text="There are no http or https hostname bindings associated with the selected site in IIS. At least one fully qualified hostname (e.g 'github.com') is required to create a certificate." /></TextBlock>
                         </StackPanel>
-                        <StackPanel x:Name="DomainOptions" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=BoolToVisConverter}}" Orientation="Vertical" Background="#FFF7F7F7">
+                        <StackPanel x:Name="DomainOptions" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=BoolToVisConverter}}" Orientation="Vertical" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
                             <StackPanel Orientation="Vertical" Margin="0,8,8,8" HorizontalAlignment="Left">
                                 <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="8,0,0,0" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" FontWeight="Bold" FontFamily="Segoe UI Semibold"><Run Text="The following selected domains will be included as a single certificate request. The Lets Encrypt service must be able to access all of these domains via port 80 (for HTTP challenges) or port 443 (for TLS-SNI challenges) for the certification process to work." /></TextBlock>
                             </StackPanel>
