@@ -54,7 +54,7 @@ namespace Certify.Models
         }
 
         /// <summary>
-        /// Log of recent actions/results for this item
+        /// Log of recent actions/results for this item 
         /// </summary>
         public List<ManagedSiteLogItem> Logs { get; set; }
 
@@ -87,7 +87,7 @@ namespace Certify.Models
     public class BindableBase : INotifyPropertyChanged
     {
         /// <summary>
-        /// change notification provide by fody on compile, not that subclasses shouldn't inherit
+        /// change notification provide by fody on compile, not that subclasses shouldn't inherit 
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -103,7 +103,7 @@ namespace Certify.Models
         }
 
         /// <summary>
-        /// True if a property has been changed on the model since IsChanged was last set to false
+        /// True if a property has been changed on the model since IsChanged was last set to false 
         /// </summary>
         public bool IsChanged { get; set; }
     }
@@ -111,27 +111,27 @@ namespace Certify.Models
     public class ManagedItem : BindableBase
     {
         /// <summary>
-        /// Unique ID for this managed item
+        /// Unique ID for this managed item 
         /// </summary>
         public string Id { get; set; }
 
         /// <summary>
-        /// Optional grouping ID, such as where mamaged sites share a common IIS site id
+        /// Optional grouping ID, such as where mamaged sites share a common IIS site id 
         /// </summary>
         public string GroupId { get; set; }
 
         /// <summary>
-        /// Display name for this item, for easier reference
+        /// Display name for this item, for easier reference 
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// Optional user notes regarding this item
+        /// Optional user notes regarding this item 
         /// </summary>
         public string Comments { get; set; }
 
         /// <summary>
-        /// Specific type of item we are managing, affects the renewal/rewuest operations required
+        /// Specific type of item we are managing, affects the renewal/rewuest operations required 
         /// </summary>
         public ManagedItemType ItemType { get; set; }
 
@@ -155,12 +155,6 @@ namespace Certify.Models
             this.RequestConfig.EnableFailureNotifications = true;
 
             this.RequestConfig.PropertyChanged += RequestConfig_PropertyChanged;
-            this.PropertyChanged += ManagedSite_PropertyChanged;
-        }
-
-        private void ManagedSite_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == "Comments") IsChanged = true;
         }
 
         private void RequestConfig_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -176,17 +170,17 @@ namespace Certify.Models
         public bool IncludeInAutoRenew { get; set; }
 
         /// <summary>
-        /// Host or server where this item is based, usually localhost if managing the local server
+        /// Host or server where this item is based, usually localhost if managing the local server 
         /// </summary>
         public string TargetHost { get; set; }
 
         /// <summary>
-        /// List of configured domains this managed site will include (primary subject or SAN)
+        /// List of configured domains this managed site will include (primary subject or SAN) 
         /// </summary>
         public ObservableCollection<DomainOption> DomainOptions { get; set; }
 
         /// <summary>
-        /// Configuration options for this request
+        /// Configuration options for this request 
         /// </summary>
         public CertRequestConfig RequestConfig { get; set; }
 
@@ -229,7 +223,7 @@ namespace Certify.Models
         public int? Port { get; set; }
 
         /// <summary>
-        /// IP is either * (all unassigned) or a specific IP
+        /// IP is either * (all unassigned) or a specific IP 
         /// </summary>
         public string IP { get; set; }
 
@@ -238,7 +232,7 @@ namespace Certify.Models
         public RequiredActionType PlannedAction { get; set; }
 
         /// <summary>
-        /// The primary domain is the main domain listed on the certificate
+        /// The primary domain is the main domain listed on the certificate 
         /// </summary>
         public bool IsPrimaryCertificateDomain { get; set; }
 

@@ -116,24 +116,24 @@
                         <StackPanel Orientation="Horizontal">
                             <Label Width="100" Content="Challenge Type:" />
                             <ComboBox ItemsSource="{Binding ChallengeTypes}" SelectedItem="{Binding SelectedItem.RequestConfig.ChallengeType}" Width="225" />
-                            <Button Name="Button_TestChallenge" Content="Test" Margin="4,0,0,0" Click="TestChallenge_Click"/>
+                            <Button Name="Button_TestChallenge" Content="Test" Margin="4,0,0,0" Click="TestChallenge_Click" />
                         </StackPanel>
 
                         <StackPanel>
                             <StackPanel.Style>
                                 <Style>
-                                    <Setter Property="StackPanel.Visibility" Value="Collapsed"/>
+                                    <Setter Property="StackPanel.Visibility" Value="Collapsed" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static acme:ACMESharpUtils.CHALLENGE_TYPE_HTTP}">
-                                            <Setter Property="StackPanel.Visibility" Value="Visible"/>
+                                            <Setter Property="StackPanel.Visibility" Value="Visible" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </StackPanel.Style>
                             <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                <Label Width="155" Content="Website Root Directory"/>
-                                <TextBox Text="{Binding SelectedItem.RequestConfig.WebsiteRootPath}" Width="350"/>
-                                <Button Name="Button_WebRoot" Content="..." Margin="4,0,0,0" Click="DirectoryBrowse_Click"/>
+                                <Label Width="155" Content="Website Root Directory" />
+                                <TextBox Text="{Binding SelectedItem.RequestConfig.WebsiteRootPath}" Width="350" />
+                                <Button Name="Button_WebRoot" Content="..." Margin="4,0,0,0" Click="DirectoryBrowse_Click" />
                             </StackPanel>
 
                             <StackPanel Orientation="Vertical" Margin="4,8,0,0">
@@ -145,10 +145,10 @@
                         <StackPanel>
                             <StackPanel.Style>
                                 <Style>
-                                    <Setter Property="StackPanel.Visibility" Value="Collapsed"/>
+                                    <Setter Property="StackPanel.Visibility" Value="Collapsed" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static acme:ACMESharpUtils.CHALLENGE_TYPE_SNI}">
-                                            <Setter Property="StackPanel.Visibility" Value="Visible"/>
+                                            <Setter Property="StackPanel.Visibility" Value="Visible" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -164,34 +164,34 @@
                         </StackPanel>
 
                         <StackPanel Orientation="Vertical" IsEnabled="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" Margin="32,8,0,0">
-							<StackPanel Orientation="Horizontal">
+                            <StackPanel Orientation="Horizontal">
                                 <Label Width="131" Content="Bind to Specific IP:" />
                                 <ComboBox ItemsSource="{Binding HostIPAddresses}" SelectedItem="{Binding SelectedItem.RequestConfig.BindingIPAddress}" Width="225" />
-							</StackPanel>
-							<StackPanel Orientation="Horizontal">
-								<Label Width="131" Content="Bind to Specific Port:" />
-								<TextBox Text="{Binding SelectedItem.RequestConfig.BindingPort}" Width="225" />
-							</StackPanel>
-							<StackPanel Orientation="Horizontal">
-								<Label Width="131" Content="Use SNI (IIS 8+):" />
-								<CheckBox IsChecked="{Binding SelectedItem.RequestConfig.BindingUseSNI}"></CheckBox>
-							</StackPanel>
-						</StackPanel>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Label Width="131" Content="Bind to Specific Port:" />
+                                <TextBox Text="{Binding SelectedItem.RequestConfig.BindingPort}" Width="225" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Label Width="131" Content="Use SNI (IIS 8+):" />
+                                <CheckBox IsChecked="{Binding SelectedItem.RequestConfig.BindingUseSNI}"></CheckBox>
+                            </StackPanel>
+                        </StackPanel>
 
-						<StackPanel Orientation="Vertical" Margin="0,16,0,0">
-							<StackPanel Orientation="Horizontal">
-								<Label Width="155" Content="Pre-request PS Script:"/>
-								<TextBox Text="{Binding SelectedItem.RequestConfig.PreRequestPowerShellScript}" Width="350"/>
-								<Button Name="Button_PreRequest" Content="..." Margin="4,0,0,0" Click="FileBrowse_Click"/>
-								<Button Name="Button_TestPreRequest" Content="Test" Margin="4,0,0,0" Click="TestScript_Click"/>
-							</StackPanel>
-							<StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-								<Label Width="155" Content="Post-request PS Script:"/>
-								<TextBox Text="{Binding SelectedItem.RequestConfig.PostRequestPowerShellScript}" Width="350"/>
-								<Button Name="Button_PostRequest" Content="..." Margin="4,0,0,0" Click="FileBrowse_Click"/>
-								<Button Name="Button_TestPostRequest" Content="Test" Margin="4,0,0,0" Click="TestScript_Click"/>
-							</StackPanel>
-						</StackPanel>
+                        <StackPanel Orientation="Vertical" Margin="0,16,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <Label Width="155" Content="Pre-request PS Script:" />
+                                <TextBox Text="{Binding SelectedItem.RequestConfig.PreRequestPowerShellScript}" Width="350" />
+                                <Button Name="Button_PreRequest" Content="..." Margin="4,0,0,0" Click="FileBrowse_Click" />
+                                <Button Name="Button_TestPreRequest" Content="Test" Margin="4,0,0,0" Click="TestScript_Click" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                <Label Width="155" Content="Post-request PS Script:" />
+                                <TextBox Text="{Binding SelectedItem.RequestConfig.PostRequestPowerShellScript}" Width="350" />
+                                <Button Name="Button_PostRequest" Content="..." Margin="4,0,0,0" Click="FileBrowse_Click" />
+                                <Button Name="Button_TestPostRequest" Content="Test" Margin="4,0,0,0" Click="TestScript_Click" />
+                            </StackPanel>
+                        </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
                             <Label Width="155" Content="Webhook Trigger:" />
@@ -199,83 +199,86 @@
                             <Border>
                                 <Border.Style>
                                     <Style>
-                                        <Setter Property="Border.Visibility" Value="Visible"/>
+                                        <Setter Property="Border.Visibility" Value="Visible" />
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding SelectedItem.RequestConfig.WebhookTrigger}" Value="{x:Static model:Webhook.ON_NONE}">
-                                                <Setter Property="Border.Visibility" Value="Collapsed"/>
+                                                <Setter Property="Border.Visibility" Value="Collapsed" />
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </Border.Style>
-                                <Button Name="Button_TestWebhook" Content="Test" Margin="4,0,0,0" Click="TestWebhook_Click"/>
+                                <Button Name="Button_TestWebhook" Content="Test" Margin="4,0,0,0" Click="TestWebhook_Click" />
                             </Border>
                         </StackPanel>
                         <StackPanel Background="#efefef" Margin="46,8,12,12" Width="520" HorizontalAlignment="Left">
                             <StackPanel.Style>
                                 <Style>
-                                    <Setter Property="StackPanel.Visibility" Value="Visible"/>
+                                    <Setter Property="StackPanel.Visibility" Value="Visible" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding SelectedItem.RequestConfig.WebhookTrigger}" Value="{x:Static model:Webhook.ON_NONE}">
-                                            <Setter Property="StackPanel.Visibility" Value="Collapsed"/>
+                                            <Setter Property="StackPanel.Visibility" Value="Collapsed" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </StackPanel.Style>
                             <Grid Margin="8,8,12,8">
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="100" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
 
                                 <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" Content="Url:" />
-                                <TextBox Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Controls:TextBoxHelper.Watermark="https://example.org/api/controller?domain=$PrimaryDomain" Text="{Binding SelectedItem.RequestConfig.WebhookUrl}" Margin="0,0,0,4"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Controls:TextBoxHelper.Watermark="https://example.org/api/controller?domain=$PrimaryDomain" Text="{Binding SelectedItem.RequestConfig.WebhookUrl}" Margin="0,0,0,4" />
 
                                 <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" Content="Method:" />
-                                <ComboBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" ItemsSource="{x:Static model:Webhook.Methods}" SelectedItem="{Binding SelectedItem.RequestConfig.WebhookMethod}" Width="100" Margin="0,0,0,4"/>
+                                <ComboBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" ItemsSource="{x:Static model:Webhook.Methods}" SelectedItem="{Binding SelectedItem.RequestConfig.WebhookMethod}" Width="100" Margin="0,0,0,4" />
 
                                 <Grid Grid.Row="2" Grid.ColumnSpan="2" Margin="0">
                                     <Grid.RowDefinitions>
-                                        <RowDefinition Height="*"/>
-                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="*" />
                                     </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="100" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <Grid.Style>
                                         <Style>
-                                            <Setter Property="Grid.Visibility" Value="Collapsed"/>
+                                            <Setter Property="Grid.Visibility" Value="Collapsed" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding SelectedItem.RequestConfig.WebhookMethod}" Value="{x:Static model:Webhook.METHOD_POST}">
-                                                    <Setter Property="StackPanel.Visibility" Value="Visible"/>
+                                                    <Setter Property="StackPanel.Visibility" Value="Visible" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
                                     </Grid.Style>
 
                                     <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" Content="ContentType:" />
-                                    <TextBox Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" Controls:TextBoxHelper.Watermark="application/json" Width="200" Text="{Binding SelectedItem.RequestConfig.WebhookContentType}" Margin="0,0,0,4"/>
+                                    <TextBox Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" Controls:TextBoxHelper.Watermark="application/json" Width="200" Text="{Binding SelectedItem.RequestConfig.WebhookContentType}" Margin="0,0,0,4" />
 
                                     <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" Content="Body:" />
-                                    <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Height="150" Text="{Binding SelectedItem.RequestConfig.WebhookContentBody}" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,4" Controls:TextBoxHelper.Watermark="{x:Static model:Webhook.DEFAULT_BODY}"/>
+                                    <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Height="150" Text="{Binding SelectedItem.RequestConfig.WebhookContentBody}" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,4" Controls:TextBoxHelper.Watermark="{x:Static model:Webhook.DEFAULT_BODY}" />
                                 </Grid>
                             </Grid>
                         </StackPanel>
-
                     </StackPanel>
-				</ScrollViewer>
-			</TabItem>
+                </ScrollViewer>
+            </TabItem>
             <TabItem Header="Info" IsSelected="True">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Orientation="Vertical" Margin="12">
                         <DockPanel Margin="0,0,0,12">
-                            <Label Content="Comments: "/>
-                            <TextBox Text="{Binding SelectedItem.Comments}" Height="50"/>
+                            <Label Content="Comments: " />
+                            <TextBox Height="50">
+                                <TextBox.Text>
+                                    <Binding  Path="SelectedItem.Comments" UpdateSourceTrigger="PropertyChanged" />
+                                </TextBox.Text>
+                            </TextBox>
                         </DockPanel>
                         <Button x:Name="OpenLogFile" Content="Open Log File" Click="OpenLogFile_Click" />
                         <Label x:Name="CertPath" Content="{Binding SelectedItem.CertificatePath, TargetNullValue='Certificate Path: [to be set]'}" />
