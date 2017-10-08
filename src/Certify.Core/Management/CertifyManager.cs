@@ -316,10 +316,10 @@ namespace Certify.Management
                                     authorization = _vaultProvider.PerformIISAutomatedChallengeResponse(_iisManager, managedSite, authorization);
 
                                     // pass authorization log items onto main log
-                                    authorization.LogItems?.ForEach((msg) =>
+                                    /*authorization.LogItems?.ForEach((msg) =>
                                     {
                                         if (msg != null) LogMessage(managedSite.Id, msg, LogItemType.GeneralInfo);
-                                    });
+                                    });*/
 
                                     if ((config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP && config.PerformExtensionlessConfigChecks && !authorization.ExtensionlessConfigCheckedOK) ||
                                         (config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI && config.PerformTlsSniBindingConfigChecks && !authorization.TlsSniConfigCheckedOK))
