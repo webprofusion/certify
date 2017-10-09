@@ -32,6 +32,12 @@ If you cannot provide a fix for the problem yourself, please file an issue and d
 > - Visual Studio 2017 Community Edition (or higher) 
 > - A local instance of IIS installed.
 > - To build the current release version use the release branch: https://github.com/webprofusion/certify/tree/release, master is the current work in progress.
+> - fetch any submodules using:
+```
+git submodule sync
+git submodule update --init --recursive --remote
+```
+
 > - To build, first build the submodule for ACMESharp under /src/lib/ACMESharp - this will restore the required nuget packages.
 > - The app needs to run as Administrator, otherwise it cannot access IIS, write to the IIS website root paths or manage the windows certificate store.
 
