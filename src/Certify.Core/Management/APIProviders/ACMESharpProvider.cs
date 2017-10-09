@@ -138,6 +138,11 @@ namespace Certify.Management.APIProviders
             return _vaultManager.PerformCertificateRequestProcess(primaryDnsIdentifier, alternativeDnsIdentifiers);
         }
 
+        public async Task<APIResult> RevokeCertificate(ManagedSite managedSite)
+        {
+            return await _vaultManager.RevokeCertificate(managedSite.CertificatePath);
+        }
+
         #region IACMEClientProvider methods
 
         public bool AddNewRegistrationAndAcceptTOS(string email)

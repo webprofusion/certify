@@ -97,6 +97,16 @@ namespace Certify.Management
             return await _vaultProvider.TestChallengeResponse(_iisManager, managedSite);
         }
 
+        public async Task<APIResult> RevokeCertificate(ManagedSite managedSite)
+        {
+            var result = await _vaultProvider.RevokeCertificate(managedSite);
+            if (result.IsOK)
+            {
+                managedSite.CertificateRevoked = true;
+            }
+            return result;
+        }
+
         /// <summary>
         /// Test dummy method for async UI testing etc 
         /// </summary>
@@ -446,6 +456,7 @@ namespace Certify.Management
                                 managedSite.DateRenewed = DateTime.Now;
 
                                 managedSite.CertificatePath = pfxPath;
+                                managedSite.CertificateRevoked = false;
 
                                 //ensure certificate contains all the requested domains
                                 var subjectNames = certInfo.GetNameInfo(System.Security.Cryptography.X509Certificates.X509NameType.UpnName, false);

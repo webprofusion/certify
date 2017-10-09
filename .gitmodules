@@ -1,4 +1,4 @@
 [submodule "src/lib/ACMESharp"]
 	path = src/lib/ACMESharp
 	url = https://github.com/Marcus-L/ACMESharp.git
-	branch = tls-sni
+	branch = certify

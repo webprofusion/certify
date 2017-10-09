@@ -1107,6 +1107,65 @@ namespace Certify.ACMESharpCompat
             }
         }
 
+        public static CertificateInfo RevokeCertificate(object certref, string vaultProfile = null)
+        {
+            lock (VaultManager.VAULT_LOCK)
+            {
+                using (var vlt = GetVault(vaultProfile))
+                {
+                    OpenVaultStorage(vlt);
+                    var v = vlt.LoadVault();
+
+                    if (v.Registrations == null || v.Registrations.Count < 1)
+                        throw new InvalidOperationException("No registrations found");
+
+                    var ri = v.Registrations[0];
+                    var r = ri.Registration;
+
+                    if (v.Certificates == null || v.Certificates.Count < 1)
+                        throw new InvalidOperationException("No certificates found");
+
+                    var ci = v.Certificates.Values.FirstOrDefault(c => c.Alias.Equals(certref) || c.Id.Equals(certref));
+                    if (ci == null)
+                        throw new Exception($"Unable to find a Certificate for the given reference '{certref}' (by id or alias)");
+
+                    if (ci.CertificateRequest == null)
+                        throw new Exception("Certificate has not been submitted yet; cannot revoke status");
+
+                    if (string.IsNullOrEmpty(ci.CertificateRequest.CertificateContent))
+                        throw new Exception("Certificate has not been issued; cannot revoke status");
+
+                    using (var c = ClientHelper.GetClient(v, ri))
+                    {
+                        c.Init();
+                        c.GetDirectory(true);
+
+                        try
+                        {
+                            c.RevokeCertificate(ci.CertificateRequest.CertificateContent);
+                            ci.RevokedAt = DateTime.Now;
+                        }
+                        catch (AcmeClient.AcmeProtocolException ax)
+                        {
+                            if (ax.Response.StatusCode == HttpStatusCode.Conflict)
+                            {
+                                // cert already revoked, update vault
+                                ci.RevokedAt = DateTime.Now;
+                            }
+                            else
+                            {
+                                throw;
+                            }
+                        }
+                    }
+
+                    vlt.SaveVault(v);
+
+                    return ci;
+                }
+            }
+        }
+
         internal static IDictionary<K, V> Convert<K, V>(this Hashtable h, IDictionary<K, V> d = null)
         {
             if (h == null)

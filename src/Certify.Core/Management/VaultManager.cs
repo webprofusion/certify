@@ -457,6 +457,32 @@ namespace Certify
             }
         }
 
+        public async Task<APIResult> RevokeCertificate(string pfxPath)
+        {
+            var fi = new FileInfo(pfxPath);
+            string certAlias = fi.Name.Replace("-all.pfx", "");
+            return await Task<APIResult>.Run(() =>
+            {
+                try
+                {
+                    return new APIResult()
+                    {
+                        IsOK = true,
+                        Result = ACMESharpUtils.RevokeCertificate(certAlias)
+                    };
+                }
+                catch (Exception ex)
+                {
+                    return new APIResult()
+                    {
+                        IsOK = false,
+                        FailedItemSummary = new List<string>() { $"Certificate revocation error: {ex.Message}" },
+                        Message = ex.Message
+                    };
+                }
+            });
+        }
+
         public bool CertExists(string domainAlias)
         {
             var certRef = "cert_" + domainAlias;

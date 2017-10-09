@@ -141,6 +141,7 @@ namespace Certify.Models
 
         public string CertificateId { get; set; }
         public string CertificatePath { get; set; }
+        public bool CertificateRevoked { get; set; }
     }
 
     public class ManagedSite : ManagedItem

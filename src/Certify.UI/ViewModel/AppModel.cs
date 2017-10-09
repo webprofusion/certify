@@ -600,6 +600,16 @@ namespace Certify.UI.ViewModel
             return await certifyManager.TestChallenge(managedSite);
         }
 
+        public async Task<APIResult> RevokeCertificate(ManagedSite managedSite)
+        {
+            var result = await certifyManager.RevokeCertificate(managedSite);
+            if (result.IsOK)
+            {
+                AddOrUpdateManagedSite(managedSite);
+            }
+            return result;
+        }
+
         private void BeginTrackingProgress(RequestProgressState state)
         {
             var existing = ProgressResults.FirstOrDefault(p => p.ManagedItem.Id == state.ManagedItem.Id);
