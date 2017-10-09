@@ -364,12 +364,20 @@ namespace Certify.UI.Controls
 
         private async void RevokeCertificateBtn_Click(object sender, RoutedEventArgs e)
         {
+            // check cert exists, if not inform user
+            var certPath = this.MainViewModel.SelectedItem.CertificatePath;
+            if (String.IsNullOrEmpty(certPath) || !File.Exists(certPath))
+            {
+                MessageBox.Show("The certificate file for this item has not been created yet.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
             if (MessageBox.Show("Are you sure you want to revoke this certificate?", "Alert", MessageBoxButton.OKCancel, MessageBoxImage.Exclamation)==MessageBoxResult.OK)
             {
                 try
                 {
                     RevokeCertificateBtn.IsEnabled = false;
-                    var result = await MainViewModel.RevokeCertificate(MainViewModel.SelectedItem);
+                    var result = await MainViewModel.RevokeSelectedItem();
                     if (result.IsOK)
                     {
                         MessageBox.Show("Certificate Revoked.", "Alert", MessageBoxButton.OK, MessageBoxImage.Information);

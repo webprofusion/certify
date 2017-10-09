@@ -600,12 +600,14 @@ namespace Certify.UI.ViewModel
             return await certifyManager.TestChallenge(managedSite);
         }
 
-        public async Task<APIResult> RevokeCertificate(ManagedSite managedSite)
+        public async Task<APIResult> RevokeSelectedItem()
         {
+            var managedSite = SelectedItem;
             var result = await certifyManager.RevokeCertificate(managedSite);
             if (result.IsOK)
             {
                 AddOrUpdateManagedSite(managedSite);
+                MarkAllChangesCompleted();
             }
             return result;
         }
