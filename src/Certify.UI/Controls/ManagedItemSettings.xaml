@@ -283,7 +283,33 @@
                         <Button x:Name="OpenLogFile" Content="Open Log File" Click="OpenLogFile_Click" />
                         <Label x:Name="CertPath" Content="{Binding SelectedItem.CertificatePath, TargetNullValue='Certificate Path: [to be set]'}" />
                         <Button x:Name="OpenCertificateFile" Content="View Certificate" Click="OpenCertificateFile_Click" />
-                        <Label  Content="Note: To export this certificate use the Manage Computer Certificates option in Windows. " />
+                        <Label Content="Note: To export this certificate use the Manage Computer Certificates option in Windows. " />
+                        <Border>
+                            <Border.Style>
+                                <Style>
+                                    <Setter Property="Border.Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedItem.CertificateRevoked}" Value="False">
+                                            <Setter Property="Border.Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Button x:Name="RevokeCertificateBtn" Content="Revoke Certificate" Click="RevokeCertificateBtn_Click" Background="#FFFFC7C7"/>
+                        </Border>
+                        <Border>
+                            <Border.Style>
+                                <Style>
+                                    <Setter Property="Border.Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedItem.CertificateRevoked}" Value="True">
+                                            <Setter Property="Border.Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Label Content="WARNING: This certificate has been revoked." Background="#FFFFC7C7"/>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

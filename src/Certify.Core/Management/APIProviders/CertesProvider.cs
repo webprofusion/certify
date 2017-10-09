@@ -64,6 +64,11 @@ namespace Certify.Management.APIProviders
             throw new NotImplementedException();
         }
 
+        public Task<APIResult> RevokeCertificate(ManagedSite managedSite)
+        {
+            throw new NotImplementedException();
+        }
+
         #region IACMEClientProvider methods
 
         public bool AddNewRegistrationAndAcceptTOS(string email)

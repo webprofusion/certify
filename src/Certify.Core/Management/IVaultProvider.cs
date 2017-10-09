@@ -41,5 +41,7 @@ namespace Certify.Management
         bool CompleteIdentifierValidationProcess(string alias);
 
         ProcessStepResult PerformCertificateRequestProcess(string primaryDnsIdentifier, string[] alternativeDnsIdentifiers);
+
+        Task<APIResult> RevokeCertificate(ManagedSite managedSite);
     }
 }
