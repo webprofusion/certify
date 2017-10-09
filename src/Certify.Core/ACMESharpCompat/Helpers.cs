@@ -38,7 +38,7 @@ namespace ACMESharp.POSH.Util
             _Client.BeforeGetResponseAction = req =>
             {
                 var version = typeof(ClientHelper).Assembly.GetName().Version;
-                req.UserAgent = $"Certify/{0} {req.UserAgent}";
+                req.UserAgent = $"Certify/{version} {req.UserAgent}";
                 req.Headers[HttpRequestHeader.AcceptLanguage] = "en-US; en;q=0.8";
             };
             _Client.RootUrl = new Uri(Config.BaseUri);
