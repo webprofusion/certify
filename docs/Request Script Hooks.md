@@ -102,3 +102,17 @@ remove-item $tempfile
 * In the Certify UI, you may test scripts by clicking the "Test" button after entering the script filename for the hook you would like to test. 
 * For a testing pre-request script, the `$result.IsSuccess` value will be `$false`, and for a post-request script the value will be `$true`. 
 * The `$result.MangagedItem.CertificatePath` value be set to the filename (including path) of the PFX file containing the requested certificate, unless the site is new and has not had a successful Certificate Request, in which case the value will not be set.
+
+### Using 64-bit modules
+
+If you attempt to import a module with [`Import-Module`](https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/import-module?view=powershell-5.1) that does not run in 32-bit mode (i.e. RemoteDesktop), you may receive an error like `"Import-Module : The specified module 'RemoteDesktop' was not loaded because no valid module file was found in any module directory."`. To load a 64-bit module you can use this snippet to pass the `$result` object to a script running in 64-bit powershell:
+```powershell
+param($result)
+set-alias ps64 "$env:windir\sysnative\WindowsPowerShell\v1.0\powershell.exe" 
+ps64 -args $result -command {
+   $result = $args[0]
+   write-output $result.IsSuccess
+   import-module -name RemoteDesktop
+   Set-RDCertificate ...
+}
+```
