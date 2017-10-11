@@ -58,16 +58,16 @@ Notes: Post-request scripts are executed immediately after the Certificate Reque
 ```PowerShell
 param($result)
 if (!$result.IsSuccess) {
-    $EmailFrom = "username@gmail.com"
-    $EmailTo = "username@gmail.com" 
-    $Subject = "Cert Request Failed: " + $result.ManagedItem.RequestConfig.PrimaryDomain
-    $Body = "Error: " + $result.Message 
-    $SMTPServer = "smtp.gmail.com" 
-    $SMTPClient = New-Object Net.Mail.SmtpClient($SmtpServer, 587) 
-    $SMTPClient.EnableSsl = $true 
-    $SMTPClient.Credentials = New-Object System.Net.NetworkCredential("username@gmail.com", "password"); 
-    $SMTPClient.Send($EmailFrom, $EmailTo, $Subject, $Body)
-    write-output "Sent notification email"
+   $EmailFrom = "username@gmail.com"
+   $EmailTo = "username@gmail.com" 
+   $Subject = "Cert Request Failed: " + $result.ManagedItem.RequestConfig.PrimaryDomain
+   $Body = "Error: " + $result.Message 
+   $SMTPServer = "smtp.gmail.com" 
+   $SMTPClient = New-Object Net.Mail.SmtpClient($SmtpServer, 587) 
+   $SMTPClient.EnableSsl = $true 
+   $SMTPClient.Credentials = New-Object System.Net.NetworkCredential("username@gmail.com", "password"); 
+   $SMTPClient.Send($EmailFrom, $EmailTo, $Subject, $Body)
+   write-output "Sent notification email"
 }
 ```
 
@@ -76,10 +76,10 @@ if (!$result.IsSuccess) {
 ```PowerShell
 param($result)
 if ($result.IsSuccess -and $result.ManagedItem.GroupId -eq 1) {
-	write-output "Restarting RRAS..."
-	Net Stop RemoteAccess
-	Net Start RemoteAccess
-	write-output "Done"
+   write-output "Restarting RRAS..."
+   Net Stop RemoteAccess
+   Net Start RemoteAccess
+   write-output "Done"
 }
 ```
 
@@ -93,6 +93,22 @@ certutil -f -p Certify -exportpfx $pfx.SerialNumber $tempfile
 certutil -delstore my $pfx.SerialNumber
 certutil -p Certify -csp "Microsoft RSA SChannel Cryptographic Provider" -importpfx $tempfile
 remove-item $tempfile
+```
+
+### Example: update Remote Desktop Role Certificates
+(switches to 64-bit powershell to import the 64-bit RemoteDesktop module)
+```PowerShell
+param($result)
+set-alias ps64 "$env:windir\sysnative\WindowsPowerShell\v1.0\powershell.exe" 
+ps64 -args $result -command {
+   $result = $args[0]
+   $pfxpath = $result.ManagedItem.CertificatePath
+   Import-Module RemoteDesktop
+   Set-RDCertificate -Role RDPublishing -ImportPath $pfxpath -Force
+   Set-RDCertificate -Role RDWebAcces -ImportPath $pfxpath -Force
+   Set-RDCertificate -Role RDGateway -ImportPath $pfxpath -Force
+   Set-RDCertificate -Role RDRedirector -ImportPath $pfxpath -Force
+}
 ```
 
 ## Troubleshooting
