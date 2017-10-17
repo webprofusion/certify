@@ -11,24 +11,27 @@
              d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}">
 
     <StackPanel Orientation="Vertical" Margin="0,8,0,16">
+
         <StackPanel Orientation="Horizontal" Margin="8,0,10,0" Height="32">
-            <Label Content="Primary Contact:" />
-            <Label Content="{Binding PrimaryContactEmail}" />
-            <Button Click="Button_NewContact" Margin="16,0,0,0">
+            <Button Click="Button_NewContact" Margin="0
+                    ,0,0,0">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome Icon="Flag" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
                     <TextBlock Margin="6,0" VerticalAlignment="Center"><Run Text="New Contact" /></TextBlock>
                 </StackPanel>
             </Button>
+            <Label Content="Primary Contact:" />
+            <Label Content="{Binding PrimaryContactEmail}" />
         </StackPanel>
-        <StackPanel Orientation="Vertical" Margin="8,0,10,0">
-            <StackPanel Orientation="Horizontal" Margin="0,8,0,16">
-                <Label Content="Auto Renewal Interval (Days)" Width="340" />
+        <StackPanel Orientation="Vertical" Margin="8,8,10,0">
+            <StackPanel Orientation="Horizontal" Margin="0,8">
                 <Controls:NumericUpDown x:Name="RenewalIntervalDays" Minimum = "1"  Maximum = "60" Interval = "1" Width="100" ValueChanged="RenewalIntervalDays_ValueChanged" />
+                <Label Content="Auto Renewal Interval (Days)" Width="340" Margin="4,0,0,0" />
             </StackPanel>
-            <StackPanel Orientation="Horizontal" Margin="0,8,0,16">
-                <Label Content="Maximum Auto Renewal Requests Per Session (0 = Unlimited)" Width="340" />
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,8
+                        ">
                 <Controls:NumericUpDown x:Name="RenewalMaxRequests" Minimum = "0"  Maximum = "100" Interval = "1" Width="100" ValueChanged="RenewalMaxRequests_ValueChanged" />
+                <Label Content="Maximum Auto Renewal Requests Per Session (0 = Unlimited)" Width="340" Margin="4,0,0,0" />
             </StackPanel>
             <CheckBox x:Name="CheckForUpdatesCheckbox" Content="Check for updates automatically" Checked="SettingsUpdated" Unchecked="SettingsUpdated" Margin="0,4,0,0" />
             <CheckBox x:Name="EnableTelematicsCheckbox" Content="Enable app telemetry (feature usage reporting)" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
