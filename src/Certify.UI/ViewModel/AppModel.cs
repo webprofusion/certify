@@ -156,7 +156,7 @@ namespace Certify.UI.ViewModel
                 //get list of sites from IIS
                 if (certifyManager.IsIISAvailable)
                 {
-                    return certifyManager.GetPrimaryWebSites(CoreAppSettings.Current.IgnoreStoppeSites);
+                    return certifyManager.GetPrimaryWebSites(CoreAppSettings.Current.IgnoreStoppedSites);
                 }
                 else
                 {
