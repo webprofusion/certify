@@ -17,7 +17,7 @@ namespace Certify.Management
             this.SettingsSchemaVersion = 1;
             this.CheckForUpdatesAtStartup = true;
             this.EnableAppTelematics = true;
-            this.IgnoreStoppeSites = true;
+            this.IgnoreStoppedSites = true;
             this.EnableValidationProxyAPI = true;
             this.EnableAppTelematics = true;
             this.EnableEFS = false;
@@ -57,7 +57,7 @@ namespace Certify.Management
 
         public bool EnableAppTelematics { get; set; }
 
-        public bool IgnoreStoppeSites { get; set; }
+        public bool IgnoreStoppedSites { get; set; }
 
         public bool EnableValidationProxyAPI { get; set; }
 
@@ -111,7 +111,7 @@ namespace Certify.Management
                 CoreAppSettings.Current.EnableDNSValidationChecks = oldProps.EnableDNSValidationChecks;
                 CoreAppSettings.Current.EnableEFS = oldProps.EnableEFS;
                 CoreAppSettings.Current.EnableValidationProxyAPI = oldProps.EnableValidationProxyAPI;
-                CoreAppSettings.Current.IgnoreStoppeSites = oldProps.ShowOnlyStartedWebsites;
+                CoreAppSettings.Current.IgnoreStoppedSites = oldProps.ShowOnlyStartedWebsites;
                 CoreAppSettings.Current.RenewalIntervalDays = oldProps.RenewalIntervalDays;
                 CoreAppSettings.Current.MaxRenewalRequests = oldProps.MaxRenewalRequests;
                 CoreAppSettings.Current.VaultPath = oldProps.VaultPath;

@@ -49,7 +49,7 @@ namespace Certify.UI.Controls
 
             //if true, EFS will be used for sensitive files such as private key file, does not work in all versions of windows.
             this.EnableEFS.IsChecked = CoreAppSettings.Current.EnableEFS;
-            this.IgnoreStoppedSites.IsChecked = CoreAppSettings.Current.IgnoreStoppeSites;
+            this.IgnoreStoppedSites.IsChecked = CoreAppSettings.Current.IgnoreStoppedSites;
 
             this.EnableDNSValidationChecks.IsChecked = CoreAppSettings.Current.EnableDNSValidationChecks;
 
@@ -86,10 +86,10 @@ namespace Certify.UI.Controls
                 CoreAppSettings.Current.EnableDNSValidationChecks = (this.EnableDNSValidationChecks.IsChecked == true);
 
                 CoreAppSettings.Current.EnableEFS = (this.EnableEFS.IsChecked == true);
-                CoreAppSettings.Current.IgnoreStoppeSites = (this.IgnoreStoppedSites.IsChecked == true);
+                CoreAppSettings.Current.IgnoreStoppedSites = (this.IgnoreStoppedSites.IsChecked == true);
 
                 // force renewal interval days to be between 1 and 60 days
-                if (this.RenewalIntervalDays.Value == null) this.RenewalIntervalDays.Value = 7;
+                if (this.RenewalIntervalDays.Value == null) this.RenewalIntervalDays.Value = 14;
                 if (this.RenewalIntervalDays.Value > 60) this.RenewalIntervalDays.Value = 60;
                 CoreAppSettings.Current.RenewalIntervalDays = (int)this.RenewalIntervalDays.Value;
 

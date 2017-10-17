@@ -568,7 +568,7 @@ namespace Certify.Management
             var defaultNoDomainHost = "";
             var domainOptions = new List<DomainOption>();
 
-            var matchingSites = _iisManager.GetSiteBindingList(CoreAppSettings.Current.IgnoreStoppeSites, siteId);
+            var matchingSites = _iisManager.GetSiteBindingList(CoreAppSettings.Current.IgnoreStoppedSites, siteId);
             var siteBindingList = matchingSites.Where(s => s.SiteId == siteId);
 
             bool includeEmptyHostnameBindings = false;
@@ -643,7 +643,7 @@ namespace Certify.Management
             var identifiers = _vaultProvider.GetDomainIdentifiers();
 
             // match existing IIS sites to vault items
-            var iisSites = _iisManager.GetSiteBindingList(ignoreStoppedSites: CoreAppSettings.Current.IgnoreStoppeSites);
+            var iisSites = _iisManager.GetSiteBindingList(ignoreStoppedSites: CoreAppSettings.Current.IgnoreStoppedSites);
 
             foreach (var identifier in identifiers)
             {
@@ -717,9 +717,9 @@ namespace Certify.Management
             // if we know the last renewal date, check whether we should renew again, otherwise
             // assume it's more than 30 days ago by default and attempt renewal
 
-            var timeSinceLastRenewal = (s.DateRenewed != null ? s.DateRenewed : DateTime.Now.AddDays(-30)) - DateTime.Now;
+            var timeSinceLastRenewal = (s.DateRenewed.HasValue ? s.DateRenewed.Value : DateTime.Now.AddDays(-30)) - DateTime.Now;
 
-            bool isRenewalRequired = Math.Abs(timeSinceLastRenewal.Value.TotalDays) > renewalIntervalDays;
+            bool isRenewalRequired = Math.Abs(timeSinceLastRenewal.TotalDays) > renewalIntervalDays;
 
             return isRenewalRequired;
         }
@@ -758,7 +758,7 @@ namespace Certify.Management
 
                 //if we care about stopped sites being stopped, check for that
                 bool isSiteRunning = true;
-                if (CoreAppSettings.Current.IgnoreStoppeSites)
+                if (!CoreAppSettings.Current.IgnoreStoppedSites)
                 {
                     isSiteRunning = IsManagedSiteRunning(s.Id);
                 }
@@ -794,7 +794,7 @@ namespace Certify.Management
                     if (isRenewalRequired && !isSiteRunning)
                     {
                         //TODO: show this as warning rather than success
-                        msg = "Site stopped, renewal skipped as domain validation cannot be performed. ";
+                        msg = "Site stopped (or not present), renewal skipped as domain validation cannot be performed. ";
                     }
 
                     if (progressTrackers != null)
