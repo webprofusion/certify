@@ -27,39 +27,31 @@ namespace Certify.Models
 
         public static bool IsOtherVersionNewer(AppVersion currentVersion, AppVersion otherVersion)
         {
-            if (currentVersion.Major >= otherVersion.Major)
+            if (otherVersion.Major > currentVersion.Major)
             {
-                if (currentVersion.Major > otherVersion.Major)
-                {
-                    return false;
-                }
-
-                //current major version is same, check minor
-                if (currentVersion.Minor >= otherVersion.Minor)
-                {
-                    if (currentVersion.Patch < otherVersion.Patch)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-
-                //current minor version is less
-                if (currentVersion.Minor < otherVersion.Minor)
-                {
-                    return true;
-                }
-            }
-            else
-            {
-                //other Major version is newer
                 return true;
             }
 
-            return false; ;
+            if (otherVersion.Major == currentVersion.Major)
+            {
+                //current major version is same, check minor
+                if (otherVersion.Minor > currentVersion.Minor)
+                {
+                    return true;
+                }
+
+                if (otherVersion.Minor == currentVersion.Minor)
+                {
+                    //majro and minor version the same, check patch level
+                    if (otherVersion.Patch > currentVersion.Patch)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            // other version is not newer than current version
+            return false;
         }
     }
 }
