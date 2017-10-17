@@ -198,7 +198,7 @@ namespace Certify.Management
             if (dns == null || dns.ReturnCode != ReturnCode.NoError)
             {
                 // dns lookup failed
-                string message = $"DNS lookup failed for '{domain}'";
+                string message = $"DNS lookup failed for '{domain}'. DNS checks can be disabled in Settings if required.";
                 Log(message);
                 return (false, message);
             }

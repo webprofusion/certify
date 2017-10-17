@@ -767,24 +767,28 @@ namespace Certify
 
                 try
                 {
-                    // check all domain configs
-                    Parallel.ForEach(domains.Distinct(), new ParallelOptions
+                    // if DNS checks enabled, attempt them here
+                    if (Certify.Properties.Settings.Default.EnableDNSValidationChecks)
                     {
-                        // check 8 domains at a time
-                        MaxDegreeOfParallelism = 8
-                    },
-                    domain =>
-                    {
-                        var (ok, message) = NetUtil.CheckDNS(domain);
-                        if (!ok)
+                        // check all domain configs
+                        Parallel.ForEach(domains.Distinct(), new ParallelOptions
                         {
-                            result.IsOK = false;
-                            result.FailedItemSummary.Add(message);
+                            // check 8 domains at a time
+                            MaxDegreeOfParallelism = 8
+                        },
+                        domain =>
+                        {
+                            var (ok, message) = NetUtil.CheckDNS(domain);
+                            if (!ok)
+                            {
+                                result.IsOK = false;
+                                result.FailedItemSummary.Add(message);
+                            }
+                        });
+                        if (!result.IsOK)
+                        {
+                            return result;
                         }
-                    });
-                    if (!result.IsOK)
-                    {
-                        return result;
                     }
 
                     if (requestConfig.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP)

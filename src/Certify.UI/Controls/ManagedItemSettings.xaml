@@ -117,6 +117,7 @@
                             <Label Width="100" Content="Challenge Type:" />
                             <ComboBox ItemsSource="{Binding ChallengeTypes}" SelectedItem="{Binding SelectedItem.RequestConfig.ChallengeType}" Width="225" />
                             <Button Name="Button_TestChallenge" Content="Test" Margin="4,0,0,0" Click="TestChallenge_Click" />
+                            <fa:ImageAwesome x:Name="TestInProgress" Margin="4,0,0,0" Visibility="Hidden" Icon="Refresh" Height="16" Spin="True" SpinDuration="1" />
                         </StackPanel>
 
                         <StackPanel>
@@ -295,7 +296,7 @@
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
-                            <Button x:Name="RevokeCertificateBtn" Content="Revoke Certificate" Click="RevokeCertificateBtn_Click" Background="#FFFFC7C7"/>
+                            <Button x:Name="RevokeCertificateBtn" Content="Revoke Certificate" Click="RevokeCertificateBtn_Click" Background="#FFFFC7C7" />
                         </Border>
                         <Border>
                             <Border.Style>
@@ -308,7 +309,7 @@
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
-                            <Label Content="WARNING: This certificate has been revoked." Background="#FFFFC7C7"/>
+                            <Label Content="WARNING: This certificate has been revoked." Background="#FFFFC7C7" />
                         </Border>
                     </StackPanel>
                 </ScrollViewer>

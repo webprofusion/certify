@@ -315,6 +315,8 @@ namespace Certify.UI.Controls
             else if (MainViewModel.SelectedItem.RequestConfig.ChallengeType != null)
             {
                 Button_TestChallenge.IsEnabled = false;
+                TestInProgress.Visibility = Visibility.Visible;
+
                 MainViewModel.UpdateManagedSiteSettings();
 
                 var result = await MainViewModel.TestChallengeResponse(MainViewModel.SelectedItem);
@@ -327,6 +329,7 @@ namespace Certify.UI.Controls
                     MessageBox.Show($"Configuration Check Failed:\n{String.Join("\r\n", result.FailedItemSummary)}", "Challenge Test Failed", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 Button_TestChallenge.IsEnabled = true;
+                TestInProgress.Visibility = Visibility.Hidden;
             }
         }
 
@@ -372,7 +375,7 @@ namespace Certify.UI.Controls
                 return;
             }
 
-            if (MessageBox.Show("Are you sure you want to revoke this certificate?", "Alert", MessageBoxButton.OKCancel, MessageBoxImage.Exclamation)==MessageBoxResult.OK)
+            if (MessageBox.Show("Are you sure you want to revoke this certificate?", "Alert", MessageBoxButton.OKCancel, MessageBoxImage.Exclamation) == MessageBoxResult.OK)
             {
                 try
                 {

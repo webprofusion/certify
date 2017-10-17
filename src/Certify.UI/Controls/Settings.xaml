@@ -38,6 +38,7 @@
             <CheckBox x:Name="EnableProxyAPICheckbox" Content="Enable proxy API for domain config checks" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
             <CheckBox x:Name="EnableEFS" Content="Enable Encrypted File System (EFS) for sensitive files. This option does not work on all versions of Windows." Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
             <CheckBox x:Name="IgnoreStoppedSites" Content="Ignore stopped IIS sites for new certificates and renewals" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
+            <CheckBox x:Name="EnableDNSValidationChecks" Content="Enable DNS Validations checks (resolution, CAA)" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
         </StackPanel>
     </StackPanel>
 </UserControl>

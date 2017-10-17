@@ -44,6 +44,8 @@ namespace Certify.UI.Controls
             this.EnableEFS.IsChecked = Certify.Properties.Settings.Default.EnableEFS;
             this.IgnoreStoppedSites.IsChecked = Certify.Properties.Settings.Default.IgnoreStoppedSites;
 
+            this.EnableDNSValidationChecks.IsChecked = Certify.Properties.Settings.Default.EnableDNSValidationChecks;
+
             this.RenewalIntervalDays.Value = Certify.Properties.Settings.Default.RenewalIntervalDays;
             this.RenewalMaxRequests.Value = Certify.Properties.Settings.Default.MaxRenewalRequests;
 
@@ -72,6 +74,7 @@ namespace Certify.UI.Controls
                 Certify.Properties.Settings.Default.CheckForUpdatesAtStartup = (this.CheckForUpdatesCheckbox.IsChecked == true);
                 Certify.Properties.Settings.Default.EnableAppTelematics = (this.EnableTelematicsCheckbox.IsChecked == true);
                 Certify.Properties.Settings.Default.EnableValidationProxyAPI = (this.EnableProxyAPICheckbox.IsChecked == true);
+                Certify.Properties.Settings.Default.EnableDNSValidationChecks = (this.EnableDNSValidationChecks.IsChecked == true);
 
                 Certify.Properties.Settings.Default.EnableEFS = (this.EnableEFS.IsChecked == true);
                 Certify.Properties.Settings.Default.IgnoreStoppedSites = (this.IgnoreStoppedSites.IsChecked == true);

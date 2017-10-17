@@ -151,5 +151,17 @@ namespace Certify.Properties {
                 this["MaxRenewalRequests"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool EnableDNSValidationChecks {
+            get {
+                return ((bool)(this["EnableDNSValidationChecks"]));
+            }
+            set {
+                this["EnableDNSValidationChecks"] = value;
+            }
+        }
     }
 }
