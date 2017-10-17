@@ -168,18 +168,33 @@ namespace Certify.Management
 
         public (bool Ok, string Message) CheckDNS(string domain, bool? useProxyAPI = null)
         {
+            if (String.IsNullOrEmpty(domain))
+            {
+                return (false, "CheckDNS: Cannot check null or empty DNS name.");
+            }
+
             // if validation proxy enabled, DNS for the domain being validated is checked via our
             // remote API rather than directly on the servers
             bool useProxy = useProxyAPI ?? Certify.Properties.Settings.Default.EnableValidationProxyAPI;
 
             if (useProxy)
             {
-                // TODO: update proxy and implement proxy check here
-                // return (ok, message);
+                // TODO: update proxy and implement proxy check here return (ok, message);
             }
 
-            var dn = DomainName.Parse(domain);
-            var dns = DnsClient.Default.Resolve(dn, RecordType.CAA);
+            DnsMessage dns = null;
+            DomainName dn = null;
+
+            try
+            {
+                dn = DomainName.Parse(domain);
+                dns = DnsClient.Default.Resolve(dn, RecordType.CAA);
+            }
+            catch (Exception exp)
+            {
+                Log("CheckDNS: domain failed to parse or resolve: " + exp.ToString());
+            }
+
             if (dns == null || dns.ReturnCode != ReturnCode.NoError)
             {
                 // dns lookup failed
@@ -196,20 +211,18 @@ namespace Certify.Management
                     .Any(r => (r.Tag == "issue" || r.Tag == "issuewild") &&
                         r.Value == "letsencrypt.org"))
                 {
-                    // there were no CAA records of "[flag] [tag] [value]" 
-                    // where [tag] = issue | issuewild
-                    // and [value] = letsencrypt.org
+                    // there were no CAA records of "[flag] [tag] [value]" where [tag] = issue |
+                    // issuewild and [value] = letsencrypt.org
                     // see: https://letsencrypt.org/docs/caa/
                     string message = $"DNS CAA verification failed for '{domain}'";
                     Log(message);
                     return (false, message);
                 }
             }
-            // now either there were no CAA records returned (i.e. CAA is not configured)
-            // or the CAA records are correctly configured
+            // now either there were no CAA records returned (i.e. CAA is not configured) or the CAA
+            // records are correctly configured
 
-            // note: this seems to need to run in a Task or it hangs forever
-            // when called from the WPF UI
+            // note: this seems to need to run in a Task or it hangs forever when called from the WPF UI
             if (!Task.Run(async () =>
             {
                 // check DNSSEC
@@ -222,7 +235,7 @@ namespace Certify.Management
                 catch (DnsSecValidationException)
                 {
                     // invalid dnssec
-                    return false; 
+                    return false;
                 }
             }).Result)
             {
