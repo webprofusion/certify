@@ -21,7 +21,7 @@ namespace Certify.Management
         {
             // if validation proxy enabled, access to the domain being validated is checked via our
             // remote API rather than directly on the servers
-            bool useProxy = useProxyAPI ?? Certify.Properties.Settings.Default.EnableValidationProxyAPI;
+            bool useProxy = useProxyAPI ?? CoreAppSettings.Current.EnableValidationProxyAPI;
             if (useProxy)
             {
                 // TODO: check proxy here, needs server support. if successful "return true"; and "LogAction(...)"
@@ -113,7 +113,7 @@ namespace Certify.Management
         {
             // if validation proxy enabled, access to the domain being validated is checked via our
             // remote API rather than directly on the servers
-            bool useProxy = useProxyAPI ?? Certify.Properties.Settings.Default.EnableValidationProxyAPI;
+            bool useProxy = useProxyAPI ?? CoreAppSettings.Current.EnableValidationProxyAPI;
 
             //check http request to test path works
             try
@@ -175,7 +175,7 @@ namespace Certify.Management
 
             // if validation proxy enabled, DNS for the domain being validated is checked via our
             // remote API rather than directly on the servers
-            bool useProxy = useProxyAPI ?? Certify.Properties.Settings.Default.EnableValidationProxyAPI;
+            bool useProxy = useProxyAPI ?? CoreAppSettings.Current.EnableValidationProxyAPI;
 
             if (useProxy)
             {

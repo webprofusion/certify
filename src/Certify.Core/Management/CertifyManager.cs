@@ -265,7 +265,7 @@ namespace Certify.Management
                     LogMessage(managedSite.Id, $"Beginning Certificate Request Process: {managedSite.Name}");
 
                     //enable or disable EFS flag on private key certs based on preference
-                    if (Properties.Settings.Default.EnableEFS)
+                    if (CoreAppSettings.Current.EnableEFS)
                     {
                         _vaultProvider.EnableSensitiveFileEncryption();
                     }
@@ -544,7 +544,7 @@ namespace Certify.Management
                         }
                         // run webhook triggers, if set
                         if ((config.WebhookTrigger == Webhook.ON_SUCCESS && result.IsSuccess) ||
-                            (config.WebhookTrigger == Webhook.ON_ERROR && !result.IsSuccess) || 
+                            (config.WebhookTrigger == Webhook.ON_ERROR && !result.IsSuccess) ||
                             (config.WebhookTrigger == Webhook.ON_SUCCESS_OR_ERROR))
                         {
                             try
@@ -568,7 +568,7 @@ namespace Certify.Management
             var defaultNoDomainHost = "";
             var domainOptions = new List<DomainOption>();
 
-            var matchingSites = _iisManager.GetSiteBindingList(Certify.Properties.Settings.Default.IgnoreStoppedSites, siteId);
+            var matchingSites = _iisManager.GetSiteBindingList(CoreAppSettings.Current.IgnoreStoppeSites, siteId);
             var siteBindingList = matchingSites.Where(s => s.SiteId == siteId);
 
             bool includeEmptyHostnameBindings = false;
@@ -643,7 +643,7 @@ namespace Certify.Management
             var identifiers = _vaultProvider.GetDomainIdentifiers();
 
             // match existing IIS sites to vault items
-            var iisSites = _iisManager.GetSiteBindingList(ignoreStoppedSites: Certify.Properties.Settings.Default.IgnoreStoppedSites);
+            var iisSites = _iisManager.GetSiteBindingList(ignoreStoppedSites: CoreAppSettings.Current.IgnoreStoppeSites);
 
             foreach (var identifier in identifiers)
             {
@@ -745,10 +745,10 @@ namespace Certify.Management
             // check site list and examine current certificates. If certificate is less than n days
             // old, don't attempt to renew it
             var sitesToRenew = new List<ManagedSite>();
-            var renewalIntervalDays = Properties.Settings.Default.RenewalIntervalDays;
+            var renewalIntervalDays = CoreAppSettings.Current.RenewalIntervalDays;
 
             int numRenewalTasks = 0;
-            int maxRenewalTasks = Properties.Settings.Default.MaxRenewalRequests;
+            int maxRenewalTasks = CoreAppSettings.Current.MaxRenewalRequests;
 
             var renewalTasks = new List<Task<CertificateRequestResult>>();
             foreach (var s in sites.Where(s => s.IncludeInAutoRenew == true))
@@ -758,7 +758,7 @@ namespace Certify.Management
 
                 //if we care about stopped sites being stopped, check for that
                 bool isSiteRunning = true;
-                if (Properties.Settings.Default.IgnoreStoppedSites)
+                if (CoreAppSettings.Current.IgnoreStoppeSites)
                 {
                     isSiteRunning = IsManagedSiteRunning(s.Id);
                 }

@@ -39,7 +39,8 @@ namespace Certify.UI
 */
 
             // upgrade assembly version of saved settings (if required)
-            Certify.Properties.Settings.Default.UpgradeSettingsVersion();
+            Certify.Properties.Settings.Default.UpgradeSettingsVersion(); // deprecated
+            Certify.Management.SettingsManager.LoadAppSettings();
 
             AppDomain currentDomain = AppDomain.CurrentDomain;
             currentDomain.UnhandledException += CurrentDomain_UnhandledException;
@@ -63,15 +64,18 @@ namespace Certify.UI
             }
 
             //check for updates and report result to view model
-            Task.Run(async () =>
+            if (Management.CoreAppSettings.Current.CheckForUpdatesAtStartup)
             {
-                var updateCheck = await new Certify.Management.Util().CheckForUpdates();
-                if (updateCheck != null && updateCheck.IsNewerVersion)
+                Task.Run(async () =>
                 {
-                    MainViewModel.IsUpdateAvailable = true;
-                    MainViewModel.UpdateCheckResult = updateCheck;
-                }
-            });
+                    var updateCheck = await new Certify.Management.Util().CheckForUpdates();
+                    if (updateCheck != null && updateCheck.IsNewerVersion)
+                    {
+                        MainViewModel.IsUpdateAvailable = true;
+                        MainViewModel.UpdateCheckResult = updateCheck;
+                    }
+                });
+            }
 
             //init telemetry if enabled
             InitTelemetry();
@@ -91,7 +95,7 @@ namespace Certify.UI
 
         private void InitTelemetry()
         {
-            if (Certify.Properties.Settings.Default.EnableAppTelematics)
+            if (Management.CoreAppSettings.Current.EnableAppTelematics)
             {
                 tc = new Certify.Management.Util().InitTelemetry();
                 tc.TrackEvent("Start");

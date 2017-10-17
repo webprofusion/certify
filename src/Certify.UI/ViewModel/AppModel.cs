@@ -156,7 +156,7 @@ namespace Certify.UI.ViewModel
                 //get list of sites from IIS
                 if (certifyManager.IsIISAvailable)
                 {
-                    return certifyManager.GetPrimaryWebSites(Certify.Properties.Settings.Default.IgnoreStoppedSites);
+                    return certifyManager.GetPrimaryWebSites(CoreAppSettings.Current.IgnoreStoppeSites);
                 }
                 else
                 {
@@ -195,7 +195,7 @@ namespace Certify.UI.ViewModel
         };
 
         public IEnumerable<string> WebhookTriggerTypes => Webhook.TriggerTypes;
- 
+
         public List<IPAddress> HostIPAddresses
         {
             get

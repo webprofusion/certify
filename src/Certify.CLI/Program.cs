@@ -16,7 +16,8 @@ namespace Certify.CLI
         private static int Main(string[] args)
         {
             // upgrade assembly version of saved settings (if required)
-            Properties.Settings.Default.UpgradeSettingsVersion();
+            Certify.Properties.Settings.Default.UpgradeSettingsVersion(); // deprecated
+            Certify.Management.SettingsManager.LoadAppSettings();
 
             if (args.Length == 0)
             {
@@ -57,7 +58,7 @@ namespace Certify.CLI
 
         private void InitTelematics()
         {
-            if (Certify.Properties.Settings.Default.EnableAppTelematics)
+            if (CoreAppSettings.Current.EnableAppTelematics)
             {
                 tc = new TelemetryClient();
                 tc.Context.InstrumentationKey = Certify.Properties.Resources.AIInstrumentationKey;
@@ -297,7 +298,7 @@ namespace Certify.CLI
 
         private void InitTelemetry()
         {
-            if (Certify.Properties.Settings.Default.EnableAppTelematics)
+            if (CoreAppSettings.Current.EnableAppTelematics)
             {
                 tc = new Certify.Management.Util().InitTelemetry();
                 tc.TrackEvent("Start");

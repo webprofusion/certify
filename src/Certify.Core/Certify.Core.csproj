@@ -171,6 +171,7 @@
     <Compile Include="Management\PluginManager.cs" />
     <Compile Include="Management\PowerShellManager.cs" />
     <Compile Include="Management\SecurityProtocolsManager.cs" />
+    <Compile Include="Management\SettingsManager.cs" />
     <Compile Include="Models\ActionLogItem.cs" />
     <Compile Include="Models\APIResponses.cs" />
     <Compile Include="Models\ApiResult.cs" />

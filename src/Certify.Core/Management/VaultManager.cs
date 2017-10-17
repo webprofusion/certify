@@ -768,7 +768,7 @@ namespace Certify
                 try
                 {
                     // if DNS checks enabled, attempt them here
-                    if (Certify.Properties.Settings.Default.EnableDNSValidationChecks)
+                    if (CoreAppSettings.Current.EnableDNSValidationChecks)
                     {
                         // check all domain configs
                         Parallel.ForEach(domains.Distinct(), new ParallelOptions

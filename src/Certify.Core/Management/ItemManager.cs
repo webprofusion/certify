@@ -8,14 +8,17 @@ using Certify.Models;
 namespace Certify.Management
 {
     /// <summary>
-    /// SiteManager encapsulates settings and operations on the list of Sites we manage certificates for using Certify and is additional to the ACMESharp Vault. These could be Local IIS, Manually Configured, DNS driven etc
+    /// SiteManager encapsulates settings and operations on the list of Sites we manage certificates
+    /// for using Certify and is additional to the ACMESharp Vault. These could be Local IIS,
+    /// Manually Configured, DNS driven etc
     /// </summary>
     public class ItemManager
     {
         public const string ITEMMANAGERCONFIG = "manageditems.json";
 
         /// <summary>
-        /// If true, one or more of our managed sites are hosted within a Local IIS server on the same machine
+        /// If true, one or more of our managed sites are hosted within a Local IIS server on the
+        /// same machine
         /// </summary>
         public bool EnableLocalIISMode { get; set; } //TODO: driven by config
 
@@ -56,9 +59,9 @@ namespace Certify.Management
                     this.ManagedSites = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ManagedSite>>(configData);
 
                     //foreach managed site enable change notification for edits to domainoptions
-                    foreach(var s in this.ManagedSites)
+                    foreach (var s in this.ManagedSites)
                     {
-                        foreach(var d in s.DomainOptions)
+                        foreach (var d in s.DomainOptions)
                         {
                             d.PropertyChanged += s.DomainOption_PropertyChanged;
                             d.IsChanged = false;
@@ -78,7 +81,8 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// For current configured environment, show preview of recommended site management (for local IIS, scan sites and recommend actions)
+        /// For current configured environment, show preview of recommended site management (for
+        /// local IIS, scan sites and recommend actions)
         /// </summary>
         /// <returns></returns>
         public List<ManagedSite> Preview()
@@ -89,7 +93,7 @@ namespace Certify.Management
             {
                 try
                 {
-                    var iisSites = new IISManager().GetSiteBindingList(ignoreStoppedSites: Certify.Properties.Settings.Default.IgnoreStoppedSites).OrderBy(s => s.SiteId).ThenBy(s => s.Host);
+                    var iisSites = new IISManager().GetSiteBindingList(ignoreStoppedSites: CoreAppSettings.Current.IgnoreStoppeSites).OrderBy(s => s.SiteId).ThenBy(s => s.Host);
 
                     var siteIds = iisSites.GroupBy(x => x.SiteId);
 

@@ -13,7 +13,7 @@ namespace Certify.Management.APIProviders
 
         public ACMESharpProvider()
         {
-            _vaultManager = new VaultManager(Properties.Settings.Default.VaultPath, ACMESharp.Vault.Providers.LocalDiskVault.VAULT);
+            _vaultManager = new VaultManager(CoreAppSettings.Current.VaultPath, ACMESharp.Vault.Providers.LocalDiskVault.VAULT);
             _vaultManager.UseEFSForSensitiveFiles = false;
         }
 

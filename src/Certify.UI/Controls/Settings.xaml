@@ -7,8 +7,8 @@
              xmlns:certifyui="clr-namespace:Certify.UI"
              xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
              xmlns:fa="http://schemas.fontawesome.io/icons/" xmlns:ViewModel="clr-namespace:Certify.UI.ViewModel" x:Class="Certify.UI.Controls.Settings"
-             mc:Ignorable="d" Height="292.857" Width="525"
-             d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}">
+             mc:Ignorable="d" Height="309.657" Width="529.8"
+             d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}" Loaded="UserControl_Loaded">
 
     <StackPanel Orientation="Vertical" Margin="0,8,0,16">
 
@@ -39,6 +39,7 @@
             <CheckBox x:Name="EnableEFS" Content="Enable Encrypted File System (EFS) for sensitive files. This option does not work on all versions of Windows." Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
             <CheckBox x:Name="IgnoreStoppedSites" Content="Ignore stopped IIS sites for new certificates and renewals" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
             <CheckBox x:Name="EnableDNSValidationChecks" Content="Enable DNS Validations checks (resolution, CAA)" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
+            <Button x:Name="Save" Content="Save Changes" Click="Save_Click" Width="160" HorizontalAlignment="Right" Margin="0,8,0,0" />
         </StackPanel>
     </StackPanel>
 </UserControl>

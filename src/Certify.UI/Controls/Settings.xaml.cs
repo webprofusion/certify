@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Certify.Management;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,28 +30,36 @@ namespace Certify.UI.Controls
         }
 
         private bool settingsInitialised = false;
+        private bool hasChanges = false;
 
         public Settings()
         {
             InitializeComponent();
-            this.DataContext = MainViewModel;
+        }
+
+        private void LoadCurrentSettings()
+        {
+            MainViewModel.LoadVaultTree();
+            SettingsManager.LoadAppSettings();
 
             //MainViewModel.LoadVaultTree();
-            this.CheckForUpdatesCheckbox.IsChecked = Certify.Properties.Settings.Default.CheckForUpdatesAtStartup;
-            this.EnableTelematicsCheckbox.IsChecked = Certify.Properties.Settings.Default.EnableAppTelematics;
-            this.EnableProxyAPICheckbox.IsChecked = Certify.Properties.Settings.Default.EnableValidationProxyAPI;
+            this.CheckForUpdatesCheckbox.IsChecked = CoreAppSettings.Current.CheckForUpdatesAtStartup;
+            this.EnableTelematicsCheckbox.IsChecked = CoreAppSettings.Current.EnableAppTelematics;
+            this.EnableProxyAPICheckbox.IsChecked = CoreAppSettings.Current.EnableValidationProxyAPI;
 
             //if true, EFS will be used for sensitive files such as private key file, does not work in all versions of windows.
-            this.EnableEFS.IsChecked = Certify.Properties.Settings.Default.EnableEFS;
-            this.IgnoreStoppedSites.IsChecked = Certify.Properties.Settings.Default.IgnoreStoppedSites;
+            this.EnableEFS.IsChecked = CoreAppSettings.Current.EnableEFS;
+            this.IgnoreStoppedSites.IsChecked = CoreAppSettings.Current.IgnoreStoppeSites;
 
-            this.EnableDNSValidationChecks.IsChecked = Certify.Properties.Settings.Default.EnableDNSValidationChecks;
+            this.EnableDNSValidationChecks.IsChecked = CoreAppSettings.Current.EnableDNSValidationChecks;
 
-            this.RenewalIntervalDays.Value = Certify.Properties.Settings.Default.RenewalIntervalDays;
-            this.RenewalMaxRequests.Value = Certify.Properties.Settings.Default.MaxRenewalRequests;
+            this.RenewalIntervalDays.Value = CoreAppSettings.Current.RenewalIntervalDays;
+            this.RenewalMaxRequests.Value = CoreAppSettings.Current.MaxRenewalRequests;
 
-            MainViewModel.LoadVaultTree();
+            this.DataContext = MainViewModel;
+
             settingsInitialised = true;
+            Save.IsEnabled = false;
         }
 
         private void Button_NewContact(object sender, RoutedEventArgs e)
@@ -71,27 +80,25 @@ namespace Certify.UI.Controls
             if (settingsInitialised)
             {
                 ///capture settings
-                Certify.Properties.Settings.Default.CheckForUpdatesAtStartup = (this.CheckForUpdatesCheckbox.IsChecked == true);
-                Certify.Properties.Settings.Default.EnableAppTelematics = (this.EnableTelematicsCheckbox.IsChecked == true);
-                Certify.Properties.Settings.Default.EnableValidationProxyAPI = (this.EnableProxyAPICheckbox.IsChecked == true);
-                Certify.Properties.Settings.Default.EnableDNSValidationChecks = (this.EnableDNSValidationChecks.IsChecked == true);
+                CoreAppSettings.Current.CheckForUpdatesAtStartup = (this.CheckForUpdatesCheckbox.IsChecked == true);
+                CoreAppSettings.Current.EnableAppTelematics = (this.EnableTelematicsCheckbox.IsChecked == true);
+                CoreAppSettings.Current.EnableValidationProxyAPI = (this.EnableProxyAPICheckbox.IsChecked == true);
+                CoreAppSettings.Current.EnableDNSValidationChecks = (this.EnableDNSValidationChecks.IsChecked == true);
 
-                Certify.Properties.Settings.Default.EnableEFS = (this.EnableEFS.IsChecked == true);
-                Certify.Properties.Settings.Default.IgnoreStoppedSites = (this.IgnoreStoppedSites.IsChecked == true);
+                CoreAppSettings.Current.EnableEFS = (this.EnableEFS.IsChecked == true);
+                CoreAppSettings.Current.IgnoreStoppeSites = (this.IgnoreStoppedSites.IsChecked == true);
 
                 // force renewal interval days to be between 1 and 60 days
                 if (this.RenewalIntervalDays.Value == null) this.RenewalIntervalDays.Value = 7;
                 if (this.RenewalIntervalDays.Value > 60) this.RenewalIntervalDays.Value = 60;
-                Certify.Properties.Settings.Default.RenewalIntervalDays = (int)this.RenewalIntervalDays.Value;
+                CoreAppSettings.Current.RenewalIntervalDays = (int)this.RenewalIntervalDays.Value;
 
                 // force max renewal requests to be between 0 and 100 ( 0 = unlimited)
                 if (this.RenewalMaxRequests.Value == null) this.RenewalMaxRequests.Value = 0;
                 if (this.RenewalMaxRequests.Value > 100) this.RenewalMaxRequests.Value = 100;
-                Certify.Properties.Settings.Default.MaxRenewalRequests = (int)this.RenewalMaxRequests.Value;
-
-                ///
-                //save
-                Certify.Properties.Settings.Default.Save();
+                CoreAppSettings.Current.MaxRenewalRequests = (int)this.RenewalMaxRequests.Value;
+                hasChanges = true;
+                Save.IsEnabled = true;
             }
         }
 
@@ -103,6 +110,19 @@ namespace Certify.UI.Controls
         private void RenewalMaxRequests_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double?> e)
         {
             this.SettingsUpdated(sender, e);
+        }
+
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            // reload settings
+            LoadCurrentSettings();
+        }
+
+        private void Save_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsManager.SaveAppSettings();
+            hasChanges = false;
+            Save.IsEnabled = false;
         }
     }
 }
