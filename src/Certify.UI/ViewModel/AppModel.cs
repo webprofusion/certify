@@ -597,7 +597,7 @@ namespace Certify.UI.ViewModel
 
         public async Task<APIResult> TestChallengeResponse(ManagedSite managedSite)
         {
-            return await certifyManager.TestChallenge(managedSite);
+            return await certifyManager.TestChallenge(managedSite, isPreviewMode: true);
         }
 
         public async Task<APIResult> RevokeSelectedItem()

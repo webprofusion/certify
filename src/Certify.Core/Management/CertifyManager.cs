@@ -92,9 +92,18 @@ namespace Certify.Management
             return _vaultProvider.HasRegisteredContacts();
         }
 
-        public async Task<APIResult> TestChallenge(ManagedSite managedSite)
+        /// <summary>
+        /// Perform set of test challenges and configuration checks to determine if site appears
+        /// valid for certificate requests
+        /// </summary>
+        /// <param name="managedSite"> managed site to check </param>
+        /// <param name="isPreviewMode">
+        /// If true, perform full set of checks (DNS etc), if false performs minimal/basic checks
+        /// </param>
+        /// <returns></returns>
+        public async Task<APIResult> TestChallenge(ManagedSite managedSite, bool isPreviewMode)
         {
-            return await _vaultProvider.TestChallengeResponse(_iisManager, managedSite);
+            return await _vaultProvider.TestChallengeResponse(_iisManager, managedSite, isPreviewMode);
         }
 
         public async Task<APIResult> RevokeCertificate(ManagedSite managedSite)
@@ -225,7 +234,7 @@ namespace Certify.Management
             {
                 ReportProgress(progress, new RequestProgressState { IsRunning = true, CurrentState = RequestState.Running, Message = "Performing Config Tests" });
 
-                var testResult = await TestChallenge(managedSite);
+                var testResult = await TestChallenge(managedSite, isPreviewMode: false);
                 if (!testResult.IsOK)
                 {
                     return new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = String.Join("; ", testResult.FailedItemSummary), Result = testResult.Result };

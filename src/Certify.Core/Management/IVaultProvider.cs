@@ -34,7 +34,7 @@ namespace Certify.Management
 
         PendingAuthorization PerformIISAutomatedChallengeResponse(IISManager iisManager, ManagedSite managedSite, PendingAuthorization pendingAuth);
 
-        Task<APIResult> TestChallengeResponse(IISManager iisManager, ManagedSite managedSite);
+        Task<APIResult> TestChallengeResponse(IISManager iisManager, ManagedSite managedSite, bool isPreviewMode);
 
         void SubmitChallenge(string domainIdentifierId, string challengeType);
 

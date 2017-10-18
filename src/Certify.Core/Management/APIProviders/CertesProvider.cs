@@ -112,7 +112,7 @@ namespace Certify.Management.APIProviders
             throw new NotImplementedException();
         }
 
-        public Task<APIResult> TestChallengeResponse(IISManager iISManager, ManagedSite managedSite)
+        public Task<APIResult> TestChallengeResponse(IISManager iISManager, ManagedSite managedSite, bool isPreviewMode)
         {
             throw new NotImplementedException();
         }

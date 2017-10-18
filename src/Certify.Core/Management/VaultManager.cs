@@ -748,7 +748,7 @@ namespace Certify
         /// submitting a request to the ACME server, to avoid creating failed requests and hitting
         /// usage limits.
         /// </remarks>
-        public async Task<APIResult> TestChallengeResponse(IISManager iisManager, ManagedSite managedSite)
+        public async Task<APIResult> TestChallengeResponse(IISManager iisManager, ManagedSite managedSite, bool isPreviewMode)
         {
             return await Task.Run(() =>
             {
@@ -768,7 +768,7 @@ namespace Certify
                 try
                 {
                     // if DNS checks enabled, attempt them here
-                    if (CoreAppSettings.Current.EnableDNSValidationChecks)
+                    if (isPreviewMode && CoreAppSettings.Current.EnableDNSValidationChecks)
                     {
                         // check all domain configs
                         Parallel.ForEach(domains.Distinct(), new ParallelOptions

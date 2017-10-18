@@ -118,9 +118,9 @@ namespace Certify.Management.APIProviders
             return processedAuth;
         }
 
-        public async Task<APIResult> TestChallengeResponse(IISManager iisManager, ManagedSite managedSite)
+        public async Task<APIResult> TestChallengeResponse(IISManager iisManager, ManagedSite managedSite, bool isPreviewMode)
         {
-            return await _vaultManager.TestChallengeResponse(iisManager, managedSite);
+            return await _vaultManager.TestChallengeResponse(iisManager, managedSite, isPreviewMode);
         }
 
         public void SubmitChallenge(string domainIdentifierId, string challengeType)

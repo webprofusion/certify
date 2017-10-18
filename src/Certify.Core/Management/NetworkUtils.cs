@@ -251,6 +251,12 @@ namespace Certify.Management
                     // invalid dnssec
                     return false;
                 }
+                catch (Exception exp)
+                {
+                    // domain failed to resolve from this machine
+                    Log($"'{domain}' DNS error resolving DnsSecRecursiveDnsResolver: " + exp.ToString());
+                    return false;
+                }
             }).Result)
             {
                 return errorResponse($"'{domain}' DNSSEC verification failed.");
