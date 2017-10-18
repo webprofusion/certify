@@ -17,7 +17,9 @@ namespace Certify.Core.Tests.Unit
             var net = new NetworkUtils();
 
             // check invalid domain
-            Assert.IsFalse(net.CheckDNS("fdlsakdfoweinoijsjdfpsdkfspdf.com").Ok, "Bad DNS does not throw an error");
+            Assert.IsFalse(net.CheckDNS("fdlsakdfoweinoijsjdfpsdkfspdf.com").Ok, "Non-existant DNS does not throw an error");
+
+            Assert.IsFalse(net.CheckDNS("cloudapp.net").Ok, "Valid domain that does not resolve to an IP Address does not throw an error");
 
             // certifytheweb.com = no CAA records
             Assert.IsTrue(net.CheckDNS("certifytheweb.com").Ok, "CAA records are not required");
