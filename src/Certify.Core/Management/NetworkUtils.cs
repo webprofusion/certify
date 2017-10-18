@@ -168,9 +168,17 @@ namespace Certify.Management
 
         public (bool Ok, string Message) CheckDNS(string domain, bool? useProxyAPI = null)
         {
+            // helper function to log the error then return the ValueTuple
+            Func<string, (bool, string)> errorResponse = (msg) =>
+            {
+                msg = $"CheckDNS: {msg}\nDNS checks can be disabled in Settings if required.";
+                Log(msg);
+                return (false, msg);
+            };
+
             if (String.IsNullOrEmpty(domain))
             {
-                return (false, "CheckDNS: Cannot check null or empty DNS name.");
+                return errorResponse("Cannot check null or empty DNS name.");
             }
 
             // if validation proxy enabled, DNS for the domain being validated is checked via our
@@ -182,41 +190,47 @@ namespace Certify.Management
                 // TODO: update proxy and implement proxy check here return (ok, message);
             }
 
-            DnsMessage dns = null;
+            // check dns
+            try
+            {
+                Dns.GetHostEntry(domain); // this throws SocketException for bad DNS
+            }
+            catch
+            {
+                return errorResponse($"'{domain}' failed to resolve to an IP Address.");
+            }
+
+            DnsMessage caa_query = null;
             DomainName dn = null;
 
             try
             {
+                // check CAA
                 dn = DomainName.Parse(domain);
-                dns = DnsClient.Default.Resolve(dn, RecordType.CAA);
+                caa_query = DnsClient.Default.Resolve(dn, RecordType.CAA);
             }
             catch (Exception exp)
             {
-                Log("CheckDNS: domain failed to parse or resolve: " + exp.ToString());
+                Log($"'{domain}' DNS error resolving CAA: " + exp.ToString());
             }
 
-            if (dns == null || dns.ReturnCode != ReturnCode.NoError)
+            if (caa_query == null || caa_query.ReturnCode != ReturnCode.NoError)
             {
                 // dns lookup failed
-                string message = $"DNS lookup failed for '{domain}'. DNS checks can be disabled in Settings if required.";
-                Log(message);
-                return (false, message);
+                return errorResponse($"'{domain}' failed to parse or resolve CAA.");
             }
 
-            // check CAA
-            if (dns.AnswerRecords.Where(r => r is CAARecord).Count() > 0)
+            if (caa_query.AnswerRecords.Where(r => r is CAARecord).Count() > 0)
             {
                 // dns returned at least 1 CAA record, check for validity
-                if (!dns.AnswerRecords.Where(r => r is CAARecord).Cast<CAARecord>()
+                if (!caa_query.AnswerRecords.Where(r => r is CAARecord).Cast<CAARecord>()
                     .Any(r => (r.Tag == "issue" || r.Tag == "issuewild") &&
                         r.Value == "letsencrypt.org"))
                 {
                     // there were no CAA records of "[flag] [tag] [value]" where [tag] = issue |
                     // issuewild and [value] = letsencrypt.org
                     // see: https://letsencrypt.org/docs/caa/
-                    string message = $"DNS CAA verification failed for '{domain}'";
-                    Log(message);
-                    return (false, message);
+                    return errorResponse($"'{domain}' DNS CAA verification failed.");
                 }
             }
             // now either there were no CAA records returned (i.e. CAA is not configured) or the CAA
@@ -239,9 +253,7 @@ namespace Certify.Management
                 }
             }).Result)
             {
-                string message = $"DNSSEC verification failed for '{domain}'";
-                Log(message);
-                return (false, message);
+                return errorResponse($"'{domain}' DNSSEC verification failed.");
             }
             return (true, "");
         }
