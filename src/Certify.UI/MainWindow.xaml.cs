@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,6 +15,8 @@ using System.Windows.Shapes;
 
 namespace Certify.UI
 {
+    using Resources;
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -50,7 +52,7 @@ namespace Certify.UI
             //present new managed item (certificate request) UI
             if (!MainViewModel.IsRegisteredVersion && MainViewModel.ManagedSites != null && MainViewModel.ManagedSites.Count >= 5)
             {
-                MessageBox.Show("You are using the trial version of this app. Please purchase a registration key to upgrade. See the Register option on the About tab.");
+                MessageBox.Show(SR.MainWindow_TrialLimitionReached);
                 return;
             }
 
@@ -63,7 +65,7 @@ namespace Certify.UI
         private void Button_RenewAll(object sender, RoutedEventArgs e)
         {
             //present new renew all confirmation
-            if (MessageBox.Show("This will renew certificates for all auto-renewed items. Proceed?", "Renew All", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            if (MessageBox.Show(SR.MainWindow_RenewAllConfirm, SR.Renew_All, MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 MainViewModel.MainUITabIndex = (int)PrimaryUITabs.CurrentProgress;
 
@@ -108,7 +110,7 @@ namespace Certify.UI
 
             if (!MainViewModel.IsRegisteredVersion)
             {
-                this.Title += " [Free Trial Version]";
+                this.Title += SR.MainWindow_TitleTrialPostfix;
             }
         }
 
@@ -118,13 +120,13 @@ namespace Certify.UI
 
             if (!MainViewModel.IsIISAvailable)
             {
-                MessageBox.Show("IIS Was not detected on this server, important functionality will be unavailable. If you know IIS is installed and working on this server, please report this error to apps@webprofusion providing details of your server Operating System version and IIS versions");
+                MessageBox.Show(SR.MainWindow_IISNotAvailable);
             }
 
             if (!MainViewModel.HasRegisteredContacts)
             {
                 //start by registering
-                MessageBox.Show("Get started by registering a new contact, then you can start requesting certificates.");
+                MessageBox.Show(SR.MainWindow_GetStartGuideWithNewCert);
                 var d = new Windows.EditContactDialog { Owner = this };
                 d.ShowDialog();
             }
@@ -134,7 +136,7 @@ namespace Certify.UI
         {
             if (MainViewModel.UpdateCheckResult != null)
             {
-                var gotoDownload = MessageBox.Show(MainViewModel.UpdateCheckResult.Message.Body + "\r\nVisit download page now?", Core.Properties.Resources.AppName, MessageBoxButton.YesNo);
+                var gotoDownload = MessageBox.Show(MainViewModel.UpdateCheckResult.Message.Body + "\r\n" + SR.MainWindow_VisitDownloadPage, Core.Properties.Resources.AppName, MessageBoxButton.YesNo);
                 if (gotoDownload == MessageBoxResult.Yes)
                 {
                     System.Diagnostics.ProcessStartInfo sInfo = new System.Diagnostics.ProcessStartInfo(MainViewModel.UpdateCheckResult.Message.DownloadPageURL);

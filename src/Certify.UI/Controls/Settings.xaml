@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -8,6 +8,7 @@
              xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
              xmlns:fa="http://schemas.fontawesome.io/icons/" xmlns:ViewModel="clr-namespace:Certify.UI.ViewModel" x:Class="Certify.UI.Controls.Settings"
              mc:Ignorable="d" Height="309.657" Width="529.8"
+             xmlns:res="clr-namespace:Certify.UI.Resources"
              d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}" Loaded="UserControl_Loaded">
 
     <StackPanel Orientation="Vertical" Margin="0,8,0,16">
@@ -17,29 +18,29 @@
                     ,0,0,0">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome Icon="Flag" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
-                    <TextBlock Margin="6,0" VerticalAlignment="Center"><Run Text="New Contact" /></TextBlock>
+                    <TextBlock Margin="6,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.New_Contact}" /></TextBlock>
                 </StackPanel>
             </Button>
-            <Label Content="Primary Contact:" />
+            <Label Content="{x:Static res:SR.Settings_PrimaryContact}" />
             <Label Content="{Binding PrimaryContactEmail}" />
         </StackPanel>
         <StackPanel Orientation="Vertical" Margin="8,8,10,0">
             <StackPanel Orientation="Horizontal" Margin="0,8">
                 <Controls:NumericUpDown x:Name="RenewalIntervalDays" Minimum = "1"  Maximum = "60" Interval = "1" Width="100" ValueChanged="RenewalIntervalDays_ValueChanged" />
-                <Label Content="Auto Renewal Interval (Days)" Width="340" Margin="4,0,0,0" />
+                <Label Content="{x:Static res:SR.Settings_AutoRenewalInterval}" Width="340" Margin="4,0,0,0" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,8,0,8
                         ">
                 <Controls:NumericUpDown x:Name="RenewalMaxRequests" Minimum = "0"  Maximum = "100" Interval = "1" Width="100" ValueChanged="RenewalMaxRequests_ValueChanged" />
-                <Label Content="Maximum Auto Renewal Requests Per Session (0 = Unlimited)" Width="340" Margin="4,0,0,0" />
+                <Label Content="{x:Static res:SR.Settings_AutoRenewalRequestLimit}" Width="340" Margin="4,0,0,0" />
             </StackPanel>
-            <CheckBox x:Name="CheckForUpdatesCheckbox" Content="Check for updates automatically" Checked="SettingsUpdated" Unchecked="SettingsUpdated" Margin="0,4,0,0" />
-            <CheckBox x:Name="EnableTelematicsCheckbox" Content="Enable app telemetry (feature usage reporting)" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
-            <CheckBox x:Name="EnableProxyAPICheckbox" Content="Enable proxy API for domain config checks" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
-            <CheckBox x:Name="EnableEFS" Content="Enable Encrypted File System (EFS) for sensitive files. This option does not work on all versions of Windows." Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
-            <CheckBox x:Name="IgnoreStoppedSites" Content="Ignore stopped IIS sites for new certificates and renewals" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
-            <CheckBox x:Name="EnableDNSValidationChecks" Content="Enable DNS Validations checks (Resolution, CAA, DNSSEC)" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
-            <Button x:Name="Save" Content="Save Changes" Click="Save_Click" Width="160" HorizontalAlignment="Right" Margin="0,8,0,0" />
+            <CheckBox x:Name="CheckForUpdatesCheckbox" Content="{x:Static res:SR.Settings_CheckUpdates}" Checked="SettingsUpdated" Unchecked="SettingsUpdated" Margin="0,4,0,0" />
+            <CheckBox x:Name="EnableTelematicsCheckbox" Content="{x:Static res:SR.Settings_EnableTelemetry}" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
+            <CheckBox x:Name="EnableProxyAPICheckbox" Content="{x:Static res:SR.Settings_EnableProxyApiForDomainConfig}" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
+            <CheckBox x:Name="EnableEFS" Content="{x:Static res:SR.Settings_EnableEFS}" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
+            <CheckBox x:Name="IgnoreStoppedSites" Content="{x:Static res:SR.Settings_IgnoreStoppedSites}" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
+            <CheckBox x:Name="EnableDNSValidationChecks" Content="{x:Static res:SR.Settings_EnableDnsValidation}" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
+            <Button x:Name="Save" Content="{x:Static res:SR.SaveChanges}" Click="Save_Click" Width="160" HorizontalAlignment="Right" Margin="0,8,0,0" />
         </StackPanel>
     </StackPanel>
 </UserControl>

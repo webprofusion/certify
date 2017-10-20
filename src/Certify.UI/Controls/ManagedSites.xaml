@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -9,6 +9,7 @@
              xmlns:System="clr-namespace:System;assembly=mscorlib"
              xmlns:fa="http://schemas.fontawesome.io/icons/"
              xmlns:utils="clr-namespace:Certify.UI.Utils" x:Class="Certify.UI.Controls.ManagedSites"
+             xmlns:res="clr-namespace:Certify.UI.Resources"
              mc:Ignorable="d" Width="970" Height="487"
              Loaded="UserControl_OnLoaded"
              d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}">
@@ -32,7 +33,7 @@
                 </RowDefinition>
                 <RowDefinition Height="*"></RowDefinition>
             </Grid.RowDefinitions>
-            <TextBox Grid.Row="0" Name="txtFilter" TextChanged="TxtFilter_TextChanged" Controls:TextBoxHelper.Watermark="Filter..."></TextBox>
+            <TextBox Grid.Row="0" Name="txtFilter" TextChanged="TxtFilter_TextChanged" Controls:TextBoxHelper.Watermark="{x:Static res:SR.ManagedSites_Filter}"></TextBox>
             <ListView Grid.Row="1" Name="lvManagedSites" ItemsSource="{Binding ManagedSites}" SelectionChanged="ListView_SelectionChanged" SelectionMode="Single">
                 <ListView.ItemTemplate>
                     <DataTemplate>
@@ -55,7 +56,7 @@
             <StackPanel Visibility="{Binding IsNoItemSelected, Converter={StaticResource BoolToVisConverter}}" Margin="16,0,0,0" Height="Auto">
                 <StackPanel Margin="6,8"  Height="Auto" MinHeight="300" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
                     <TextBlock TextWrapping="Wrap" FontSize="36" Margin="16,16,0,16"  FontFamily="Segoe UI Light"><Run FontWeight="Bold" FontFamily="Segoe UI Semibold" Text="Certify" /><Run Text=" the " /><Run Text="w" /><Run Text="eb" /></TextBlock>
-                    <TextBlock TextWrapping="Wrap" Margin="16,0,0,0" FontSize="14" FontFamily="Segoe UI Light"><Run Text="Free SSL Certificates provided via the Let's Encrypt service (https://letsencrypt.org)." /><LineBreak /><Run /><Run /><LineBreak /><Run Text="Select a Managed Site or select New Certificate to begin." /><Run Text="&#x9;" /></TextBlock>
+                    <TextBlock TextWrapping="Wrap" Margin="16,0,0,0" FontSize="14" FontFamily="Segoe UI Light"><Run Text="{x:Static res:SR.ManagedSites_NoItemSelectedDesc}" /><LineBreak /><Run /><Run /><LineBreak /><Run Text="{x:Static res:SR.ManagedSites_NoItemSelectedTip}" /><Run Text="&#x9;" /></TextBlock>
                 </StackPanel>
             </StackPanel>
         </Grid>
