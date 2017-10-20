@@ -403,7 +403,7 @@
     <value>启动DNS验证检查（Resolution, CAA, DNSSEC）</value>
   </data>
   <data name="Settings_EnableEFS" xml:space="preserve">
-    <value>启用敏感文件保存在EFS中，这个选项并不支持所有Windows系统。</value>
+    <value>启用敏感文件保存在EFS中，这个选项并不支持所有Windows系统</value>
   </data>
   <data name="Settings_EnableProxyApiForDomainConfig" xml:space="preserve">
     <value>启用域名检测配置的代理API</value>
