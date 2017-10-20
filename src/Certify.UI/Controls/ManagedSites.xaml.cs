@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,6 +15,8 @@ using System.Windows.Shapes;
 
 namespace Certify.UI.Controls
 {
+    using Resources;
+
     /// <summary>
     /// Interaction logic for ManagedSites.xaml
     /// </summary>
@@ -53,7 +55,7 @@ namespace Certify.UI.Controls
                 if (MainViewModel.SelectedItem != null && MainViewModel.SelectedItemHasChanges && MainViewModel.SelectedItem.Id != null)
                 {
                     //user needs to save or discard changes before changing selection
-                    MessageBox.Show("You have unsaved changes. Save or Discard your changes before proceeding.");
+                    MessageBox.Show(SR.ManagedSites_UnsavedWarning);
                 }
                 else
                 {

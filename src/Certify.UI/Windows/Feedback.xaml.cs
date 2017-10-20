@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -15,6 +15,8 @@ using System.Windows.Shapes;
 
 namespace Certify.UI.Windows
 {
+    using Resources;
+
     /// <summary>
     /// Interaction logic for Feedback.xaml
     /// </summary>
@@ -36,7 +38,7 @@ namespace Certify.UI.Windows
 
             if (this.IsException)
             {
-                this.Prompt.Text = "Oops, something went wrong. Please tell us about it.";
+                this.Prompt.Text =SR.Send_Feedback_Exception;
             }
         }
 
@@ -81,7 +83,7 @@ namespace Certify.UI.Windows
                 var response = await client.PostAsync(API_BASE_URI + "submitfeedback", data);
                 if (response.IsSuccessStatusCode)
                 {
-                    MessageBox.Show("Thanks, your feedback has now been submitted.");
+                    MessageBox.Show(SR.Send_Feedback_Success);
 
                     this.Close();
                     return;
@@ -94,7 +96,7 @@ namespace Certify.UI.Windows
 
             Submit.IsEnabled = true;
             //failed
-            MessageBox.Show("Sorry, there was a problem submitting your feedback.");
+            MessageBox.Show(Certify.UI.Resources.SR.Send_Feedback_Error);
         }
     }
 }

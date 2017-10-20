@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,6 +14,8 @@ using System.Windows.Shapes;
 
 namespace Certify.UI.Windows
 {
+    using Resources;
+
     /// <summary>
     /// Interaction logic for ScheduledTaskConfig.xaml
     /// </summary>
@@ -31,7 +33,7 @@ namespace Certify.UI.Windows
 
             if (TaskConfigured)
             {
-                AutoRenewPrompt.Text = "The auto renewal task is already configured. If required you can change the admin user account used to execute the task.";
+                AutoRenewPrompt.Text = SR.ScheduledTaskConfig_AlreadyConfiged;
                 AutoRenewPrompt.Foreground = Brushes.DarkGreen;
             }
         }
@@ -44,17 +46,17 @@ namespace Certify.UI.Windows
                 var certifyManager = new Certify.Management.CertifyManager();
                 if (certifyManager.CreateWindowsScheduledTask(Username.Text, Password.Password))
                 {
-                    MessageBox.Show("Scheduled task created");
+                    MessageBox.Show(SR.ScheduledTaskConfig_TaskCreated);
                     this.Close();
                 }
                 else
                 {
-                    MessageBox.Show("Failed to create scheduled task with given credentials");
+                    MessageBox.Show(SR.ScheduledTaskConfig_FailedToCreateTask);
                 }
             }
             else
             {
-                MessageBox.Show("Please provide the username and password for an admin level user.");
+                MessageBox.Show(SR.ScheduledTaskConfig_PleaseProvideCredential);
             }
         }
 

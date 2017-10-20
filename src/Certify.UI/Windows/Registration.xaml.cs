@@ -1,4 +1,4 @@
-﻿using Certify.Management;
+using Certify.Management;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,13 +34,13 @@ namespace Certify.UI.Windows
 
             if (String.IsNullOrEmpty(email))
             {
-                MessageBox.Show("Please enter the email address you used when registering your key.");
+                MessageBox.Show(Certify.UI.Resources.SR.Registration_NeedEmail);
                 return;
             }
 
             if (String.IsNullOrEmpty(key))
             {
-                MessageBox.Show("Please enter your license key.");
+                MessageBox.Show(Certify.UI.Resources.SR.Registration_NeedKey);
                 return;
             }
 
@@ -81,12 +81,12 @@ namespace Certify.UI.Windows
                 }
                 catch (Exception)
                 {
-                    MessageBox.Show("There was a problem trying to validate your license key. Please try again or contact support.");
+                    MessageBox.Show(Certify.UI.Resources.SR.Registration_KeyValidationError);
                 }
             }
             else
             {
-                MessageBox.Show("There was a problem beginning the license validation process.");
+                MessageBox.Show(Certify.UI.Resources.SR.Registration_UnableToVerify);
             }
         }
 

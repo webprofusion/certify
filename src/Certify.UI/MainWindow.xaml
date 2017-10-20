@@ -1,4 +1,4 @@
-﻿<Controls:MetroWindow
+<Controls:MetroWindow
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -7,6 +7,7 @@
         xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
         xmlns:local="clr-namespace:Certify.UI"
         xmlns:Controls1="clr-namespace:Certify.UI.Controls"
+        xmlns:res="clr-namespace:Certify.UI.Resources"
         xmlns:fa="http://schemas.fontawesome.io/icons/" x:Class="Certify.UI.MainWindow"
         GlowBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1"
@@ -29,26 +30,26 @@
             <Button Height="32" Margin="8,0,0,5" Click="Button_NewCertificate">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome Icon="Globe" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
-                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="New Certificate" /></TextBlock>
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.New_Certificate}" /></TextBlock>
                 </StackPanel>
             </Button>
             <Button Height="32" Margin="8,0,0,5" Click="Button_RenewAll">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome Icon="Refresh" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
-                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Renew All" /></TextBlock>
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Renew_All}" /></TextBlock>
                 </StackPanel>
             </Button>
             <Button Height="32" Margin="8,0,0,5" Click="Button_ScheduledTaskConfig">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome Icon="Calendar" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
-                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Configure Auto Renew" /></TextBlock>
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Configure_Auto_Renew}" /></TextBlock>
                 </StackPanel>
             </Button>
             <StackPanel Orientation="Horizontal" Visibility="{Binding IsUpdateAvailable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
                 <Button x:Name="ButtonUpdateAvailable" Height="32" Margin="8,0,0,5" Background="GreenYellow" Click="ButtonUpdateAvailable_Click">
                     <StackPanel Orientation="Horizontal">
                         <fa:ImageAwesome Icon="Superpowers" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
-                        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="Update Available" /></TextBlock>
+                        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Update_Available}" /></TextBlock>
                     </StackPanel>
                 </Button>
             </StackPanel>
@@ -59,16 +60,16 @@
 
                                  Height="auto">
 
-            <TabItem  Header="Managed Sites" IsSelected="True" Controls:ControlsHelper.HeaderFontSize="12">
+            <TabItem  Header="{x:Static res:SR.Managed_Sites}" IsSelected="True" Controls:ControlsHelper.HeaderFontSize="12">
                 <Controls1:ManagedSites Width="Auto" Height="Auto" />
             </TabItem>
-            <TabItem  Header="In Progress" VerticalContentAlignment="Stretch" HorizontalAlignment="Left" HorizontalContentAlignment="Left" Controls:ControlsHelper.HeaderFontSize="12">
+            <TabItem  Header="{x:Static res:SR.In_Progress}" VerticalContentAlignment="Stretch" HorizontalAlignment="Left" HorizontalContentAlignment="Left" Controls:ControlsHelper.HeaderFontSize="12">
                 <Controls1:ProgressMonitor Width="Auto" Height="Auto" />
             </TabItem>
-            <TabItem  Header="Settings" VerticalContentAlignment="Stretch" HorizontalAlignment="Left" HorizontalContentAlignment="Left" Controls:ControlsHelper.HeaderFontSize="12">
+            <TabItem  Header="{x:Static res:SR.Settings}" VerticalContentAlignment="Stretch" HorizontalAlignment="Left" HorizontalContentAlignment="Left" Controls:ControlsHelper.HeaderFontSize="12">
                 <Controls1:Settings  Width="Auto" Height="Auto" />
             </TabItem>
-            <TabItem Header="About" VerticalContentAlignment="Stretch" HorizontalAlignment="Left" HorizontalContentAlignment="Left" Controls:ControlsHelper.HeaderFontSize="12">
+            <TabItem Header="{x:Static res:SR.About}" VerticalContentAlignment="Stretch" HorizontalAlignment="Left" HorizontalContentAlignment="Left" Controls:ControlsHelper.HeaderFontSize="12">
                 <Controls1:AboutControl Width="Auto" Height="Auto" />
             </TabItem>
         </TabControl>

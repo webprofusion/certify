@@ -1,4 +1,4 @@
-﻿using Certify.Management;
+using Certify.Management;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +16,8 @@ using System.Windows.Shapes;
 
 namespace Certify.UI.Controls
 {
+    using Resources;
+
     /// <summary>
     /// Interaction logic for AboutControl.xaml
     /// </summary>
@@ -47,6 +49,11 @@ namespace Certify.UI.Controls
 
                 this.lblRegistrationType.Text = "Registered Version";
                 this.lblRegistrationDetails.Text = "";
+            }
+
+            if (!string.IsNullOrEmpty(SR.LanguageAuthor))
+            {
+                this.creditLibs.Text += Environment.NewLine + SR.About_LanguageTranslator + SR.LanguageAuthor;
             }
         }
 

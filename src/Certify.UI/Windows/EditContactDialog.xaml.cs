@@ -1,4 +1,4 @@
-﻿using Certify.Models;
+using Certify.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -67,7 +67,7 @@ namespace Certify.UI.Windows
 
             if (!isValidEmail)
             {
-                MessageBox.Show("Ooops, you forgot to provide a valid email address.");
+                MessageBox.Show(Certify.UI.Resources.SR.New_Contact_EmailError);
 
                 return;
             }
@@ -89,7 +89,7 @@ namespace Certify.UI.Windows
             }
             else
             {
-                MessageBox.Show("You need to agree to the latest LetsEncrypt.org Subscriber Agreement.");
+                MessageBox.Show(Certify.UI.Resources.SR.New_Contact_NeedAgree);
             }
         }
     }

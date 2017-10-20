@@ -112,6 +112,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Resources\SR.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SR.resx</DependentUpon>
+    </Compile>
     <Compile Include="Utils\ExpiryDateConverter.cs" />
     <Compile Include="ViewModel\DesignViewModel.cs" />
     <Compile Include="Windows\Feedback.xaml.cs">
@@ -225,6 +230,13 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\SR.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>SR.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\SR.zh-Hans.resx">
+      <DependentUpon>SR.resx</DependentUpon>
     </EmbeddedResource>
     <None Include="app.manifest" />
     <None Include="packages.config">
