@@ -337,7 +337,7 @@
     <value>执行Web应用自动配置</value>
   </data>
   <data name="ManagedItemSettings_PerRequsetScript" xml:space="preserve">
-    <value>按请求PS脚本：</value>
+    <value>请求前PS脚本：</value>
   </data>
   <data name="ManagedItemSettings_Primary" xml:space="preserve">
     <value>主要</value>
@@ -475,10 +475,10 @@
     <value>确定要吊销此证书吗？</value>
   </data>
   <data name="ManagedItemSettings_HookMethodMustBeSet" xml:space="preserve">
-    <value>Webhook方法必须设置。</value>
+    <value>Web钩子方法必须设置。</value>
   </data>
   <data name="ManagedItemSettings_HookMustBeValidUrl" xml:space="preserve">
-    <value>Webhook的URL必须有效。</value>
+    <value>Web钩子的URL必须有效。</value>
   </data>
   <data name="ManagedItemSettings_LogNotCreated" xml:space="preserve">
     <value>暂无日志。</value>
@@ -502,16 +502,16 @@
     <value>选择要创建证书的站点。</value>
   </data>
   <data name="ManagedItemSettings_WebhookRequestError" xml:space="preserve">
-    <value>Webhook请求失败：{0}</value>
+    <value>Web钩子请求失败：{0}</value>
   </data>
   <data name="ManagedItemSettings_WebhookRequestResult" xml:space="preserve">
-    <value>Webhook请求 {0}: HTTP {1}</value>
+    <value>Web钩子请求 {0}: HTTP {1}</value>
   </data>
   <data name="ManagedItemSettings_WebhookTest" xml:space="preserve">
-    <value>Webhook测试</value>
+    <value>Web钩子测试</value>
   </data>
   <data name="ManagedItemSettings_WebhookTestFailed" xml:space="preserve">
-    <value>Webhook测试失败</value>
+    <value>Web钩子测试失败</value>
   </data>
   <data name="SaveError" xml:space="preserve">
     <value>保存失败</value>
@@ -542,5 +542,41 @@
   </data>
   <data name="About_LanguageTranslator" xml:space="preserve">
     <value>- 当前语言翻译:</value>
+  </data>
+  <data name="Info" xml:space="preserve">
+    <value>信息</value>
+  </data>
+  <data name="Comments" xml:space="preserve">
+    <value>注释：</value>
+  </data>
+  <data name="ManagedItemSettings_RevokeCertificate" xml:space="preserve">
+    <value>吊销证书</value>
+  </data>
+  <data name="ManagedItemSettings_HookUrl" xml:space="preserve">
+    <value>地址：</value>
+  </data>
+  <data name="ManagedItemSettings_HookMethod" xml:space="preserve">
+    <value>方法：</value>
+  </data>
+  <data name="ManagedItemSettings_HookBody" xml:space="preserve">
+    <value>内容：</value>
+  </data>
+  <data name="ManagedItemSettings_HookContentType" xml:space="preserve">
+    <value>ContentType：</value>
+  </data>
+  <data name="ManagedItemSettings_PostRequestScript" xml:space="preserve">
+    <value>请求后PS脚本：</value>
+  </data>
+  <data name="ManagedItemSettings_UseSpecificBinding" xml:space="preserve">
+    <value>使用指定的IP/端口绑定</value>
+  </data>
+  <data name="ManagedItemSettings_HookTrigger" xml:space="preserve">
+    <value>Web钩子触发：</value>
+  </data>
+  <data name="ManagedItemSettings_AutoUpdateBinding" xml:space="preserve">
+    <value>自动创建或更新IIS绑定（启用SNI）</value>
+  </data>
+  <data name="ManagedItemSettings_CertificatePathEmpty" xml:space="preserve">
+    <value>证书路径（等待设置）</value>
   </data>
 </root>

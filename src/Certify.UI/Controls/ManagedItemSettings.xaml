@@ -162,8 +162,8 @@
                         </StackPanel>
 
                         <StackPanel Orientation="Vertical" Margin="4,16,0,0">
-                            <RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" GroupName="BindingType" Content="Auto create/update IIS bindings (uses SNI)" />
-                            <RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType" Content="Use specific IP/Port bindings" />
+                            <RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" GroupName="BindingType" Content="{x:Static Resources:SR.ManagedItemSettings_AutoUpdateBinding}" />
+                            <RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType" Content="{x:Static Resources:SR.ManagedItemSettings_UseSpecificBinding}" />
                         </StackPanel>
 
                         <StackPanel Orientation="Vertical" IsEnabled="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" Margin="32,8,0,0">
@@ -189,7 +189,7 @@
                                 <Button Name="Button_TestPreRequest" Content="{x:Static Resources:SR.Test}" Margin="4,0,0,0" Click="TestScript_Click" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                <Label Width="155" Content="Post-request PS Script:" />
+                                <Label Width="155" Content="{x:Static Resources:SR.ManagedItemSettings_PostRequestScript}" />
                                 <TextBox Text="{Binding SelectedItem.RequestConfig.PostRequestPowerShellScript}" Width="350" />
                                 <Button Name="Button_PostRequest" Content="{x:Static Resources:SR.Browser}" Margin="4,0,0,0" Click="FileBrowse_Click" />
                                 <Button Name="Button_TestPostRequest" Content="{x:Static Resources:SR.Test}" Margin="4,0,0,0" Click="TestScript_Click" />
@@ -197,7 +197,7 @@
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
-                            <Label Width="155" Content="Webhook Trigger:" />
+                            <Label Width="155" Content="{x:Static Resources:SR.ManagedItemSettings_HookTrigger}" />
                             <ComboBox ItemsSource="{Binding WebhookTriggerTypes}" SelectedItem="{Binding SelectedItem.RequestConfig.WebhookTrigger}" Width="150" />
                             <Border>
                                 <Border.Style>
@@ -235,10 +235,10 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
 
-                                <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" Content="Url:" />
+                                <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" Content="{x:Static Resources:SR.ManagedItemSettings_HookUrl}" />
                                 <TextBox Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Controls:TextBoxHelper.Watermark="https://example.org/api/controller?domain=$PrimaryDomain" Text="{Binding SelectedItem.RequestConfig.WebhookUrl}" Margin="0,0,0,4" />
 
-                                <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" Content="Method:" />
+                                <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" Content="{x:Static Resources:SR.ManagedItemSettings_HookMethod}" />
                                 <ComboBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" ItemsSource="{x:Static model:Webhook.Methods}" SelectedItem="{Binding SelectedItem.RequestConfig.WebhookMethod}" Width="100" Margin="0,0,0,4" />
 
                                 <Grid Grid.Row="2" Grid.ColumnSpan="2" Margin="0">
@@ -261,10 +261,10 @@
                                         </Style>
                                     </Grid.Style>
 
-                                    <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" Content="ContentType:" />
+                                    <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" Content="{x:Static Resources:SR.ManagedItemSettings_HookContentType}" />
                                     <TextBox Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" Controls:TextBoxHelper.Watermark="application/json" Width="200" Text="{Binding SelectedItem.RequestConfig.WebhookContentType}" Margin="0,0,0,4" />
 
-                                    <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" Content="Body:" />
+                                    <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" Content="{x:Static Resources:SR.ManagedItemSettings_HookBody}" />
                                     <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Height="150" Text="{Binding SelectedItem.RequestConfig.WebhookContentBody}" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,4" Controls:TextBoxHelper.Watermark="{x:Static model:Webhook.DEFAULT_BODY}" />
                                 </Grid>
                             </Grid>
@@ -272,11 +272,11 @@
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
-            <TabItem Header="Info" IsSelected="True">
+            <TabItem Header="{x:Static Resources:SR.Info}" IsSelected="True">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Orientation="Vertical" Margin="12">
                         <DockPanel Margin="0,0,0,12">
-                            <Label Content="Comments: " />
+                            <Label Content="{x:Static Resources:SR.Comments}" />
                             <TextBox Height="50">
                                 <TextBox.Text>
                                     <Binding  Path="SelectedItem.Comments" UpdateSourceTrigger="PropertyChanged" />
@@ -284,7 +284,7 @@
                             </TextBox>
                         </DockPanel>
                         <Button x:Name="OpenLogFile" Content="{x:Static Resources:SR.ManagedItemSettings_OpenLogFile}" Click="OpenLogFile_Click" />
-                        <Label x:Name="CertPath" Content="{Binding SelectedItem.CertificatePath, TargetNullValue='Certificate Path: [to be set]'}" />
+                        <Label x:Name="CertPath" Content="{Binding SelectedItem.CertificatePath, TargetNullValue={x:Static res:SR.ManagedItemSettings_CertificatePathEmpty}}" />
                         <Button x:Name="OpenCertificateFile" Content="{x:Static Resources:SR.ManagedItemSettings_ViewCertificate}" Click="OpenCertificateFile_Click" />
                         <Label Content="{x:Static Resources:SR.ManagedItemSettings_ExportTip}" />
                         <Border>
@@ -298,7 +298,7 @@
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
-                            <Button x:Name="RevokeCertificateBtn" Content="Revoke Certificate" Click="RevokeCertificateBtn_Click" Background="#FFFFC7C7" />
+                            <Button x:Name="RevokeCertificateBtn" Content="{x:Static Resources:SR.ManagedItemSettings_RevokeCertificate}" Click="RevokeCertificateBtn_Click" Background="#FFFFC7C7" />
                         </Border>
                         <Border>
                             <Border.Style>

@@ -196,6 +196,15 @@ namespace Certify.UI.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Comments:  的本地化字符串。
+        /// </summary>
+        public static string Comments {
+            get {
+                return ResourceManager.GetString("Comments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Configure Auto Renew 的本地化字符串。
         /// </summary>
         public static string Configure_Auto_Renew {
@@ -322,6 +331,15 @@ namespace Certify.UI.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Info 的本地化字符串。
+        /// </summary>
+        public static string Info {
+            get {
+                return ResourceManager.GetString("Info", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Certify （https://certifytheweb.com） 的本地化字符串。
         /// </summary>
         public static string LanguageAuthor {
@@ -403,6 +421,15 @@ namespace Certify.UI.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Auto create/update IIS bindings (uses SNI) 的本地化字符串。
+        /// </summary>
+        public static string ManagedItemSettings_AutoUpdateBinding {
+            get {
+                return ResourceManager.GetString("ManagedItemSettings_AutoUpdateBinding", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Bind to Specific IP: 的本地化字符串。
         /// </summary>
         public static string ManagedItemSettings_BindIP {
@@ -453,6 +480,15 @@ namespace Certify.UI.Resources {
         public static string ManagedItemSettings_CertificateNotReady {
             get {
                 return ResourceManager.GetString("ManagedItemSettings_CertificateNotReady", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Certificate Path: [to be set] 的本地化字符串。
+        /// </summary>
+        public static string ManagedItemSettings_CertificatePathEmpty {
+            get {
+                return ResourceManager.GetString("ManagedItemSettings_CertificatePathEmpty", resourceCulture);
             }
         }
         
@@ -575,6 +611,33 @@ namespace Certify.UI.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Body: 的本地化字符串。
+        /// </summary>
+        public static string ManagedItemSettings_HookBody {
+            get {
+                return ResourceManager.GetString("ManagedItemSettings_HookBody", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 ContentType: 的本地化字符串。
+        /// </summary>
+        public static string ManagedItemSettings_HookContentType {
+            get {
+                return ResourceManager.GetString("ManagedItemSettings_HookContentType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Method: 的本地化字符串。
+        /// </summary>
+        public static string ManagedItemSettings_HookMethod {
+            get {
+                return ResourceManager.GetString("ManagedItemSettings_HookMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The Method for the webhook must be set. 的本地化字符串。
         /// </summary>
         public static string ManagedItemSettings_HookMethodMustBeSet {
@@ -589,6 +652,24 @@ namespace Certify.UI.Resources {
         public static string ManagedItemSettings_HookMustBeValidUrl {
             get {
                 return ResourceManager.GetString("ManagedItemSettings_HookMustBeValidUrl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Webhook Trigger: 的本地化字符串。
+        /// </summary>
+        public static string ManagedItemSettings_HookTrigger {
+            get {
+                return ResourceManager.GetString("ManagedItemSettings_HookTrigger", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Url: 的本地化字符串。
+        /// </summary>
+        public static string ManagedItemSettings_HookUrl {
+            get {
+                return ResourceManager.GetString("ManagedItemSettings_HookUrl", resourceCulture);
             }
         }
         
@@ -692,6 +773,15 @@ namespace Certify.UI.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Post-request PS Script: 的本地化字符串。
+        /// </summary>
+        public static string ManagedItemSettings_PostRequestScript {
+            get {
+                return ResourceManager.GetString("ManagedItemSettings_PostRequestScript", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Primary 的本地化字符串。
         /// </summary>
         public static string ManagedItemSettings_Primary {
@@ -706,6 +796,15 @@ namespace Certify.UI.Resources {
         public static string ManagedItemSettings_RequestCertificate {
             get {
                 return ResourceManager.GetString("ManagedItemSettings_RequestCertificate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Revoke Certificate 的本地化字符串。
+        /// </summary>
+        public static string ManagedItemSettings_RevokeCertificate {
+            get {
+                return ResourceManager.GetString("ManagedItemSettings_RevokeCertificate", resourceCulture);
             }
         }
         
@@ -770,6 +869,15 @@ namespace Certify.UI.Resources {
         public static string ManagedItemSettings_UseSNI {
             get {
                 return ResourceManager.GetString("ManagedItemSettings_UseSNI", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Use specific IP/Port bindings 的本地化字符串。
+        /// </summary>
+        public static string ManagedItemSettings_UseSpecificBinding {
+            get {
+                return ResourceManager.GetString("ManagedItemSettings_UseSpecificBinding", resourceCulture);
             }
         }
         

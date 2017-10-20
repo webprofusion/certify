@@ -545,4 +545,40 @@
   <data name="About_LanguageTranslator" xml:space="preserve">
     <value>Current Language Translator: </value>
   </data>
+  <data name="Info" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="Comments" xml:space="preserve">
+    <value>Comments: </value>
+  </data>
+  <data name="ManagedItemSettings_RevokeCertificate" xml:space="preserve">
+    <value>Revoke Certificate</value>
+  </data>
+  <data name="ManagedItemSettings_HookUrl" xml:space="preserve">
+    <value>Url:</value>
+  </data>
+  <data name="ManagedItemSettings_HookMethod" xml:space="preserve">
+    <value>Method:</value>
+  </data>
+  <data name="ManagedItemSettings_HookBody" xml:space="preserve">
+    <value>Body:</value>
+  </data>
+  <data name="ManagedItemSettings_HookContentType" xml:space="preserve">
+    <value>ContentType:</value>
+  </data>
+  <data name="ManagedItemSettings_PostRequestScript" xml:space="preserve">
+    <value>Post-request PS Script:</value>
+  </data>
+  <data name="ManagedItemSettings_AutoUpdateBinding" xml:space="preserve">
+    <value>Auto create/update IIS bindings (uses SNI)</value>
+  </data>
+  <data name="ManagedItemSettings_UseSpecificBinding" xml:space="preserve">
+    <value>Use specific IP/Port bindings</value>
+  </data>
+  <data name="ManagedItemSettings_HookTrigger" xml:space="preserve">
+    <value>Webhook Trigger:</value>
+  </data>
+  <data name="ManagedItemSettings_CertificatePathEmpty" xml:space="preserve">
+    <value>Certificate Path: [to be set]</value>
+  </data>
 </root>
