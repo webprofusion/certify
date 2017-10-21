@@ -127,7 +127,7 @@
     <value>License Key</value>
   </data>
   <data name="Cancel" xml:space="preserve">
-    <value>取消</value>
+    <value>Cancel</value>
   </data>
   <data name="ValidateKey" xml:space="preserve">
     <value>Validate Key</value>
@@ -540,7 +540,7 @@
     <value> [Free Trial Version]</value>
   </data>
   <data name="LanguageAuthor" xml:space="preserve">
-    <value>Certify （https://certifytheweb.com）</value>
+    <value>Certify SSL Manager Contributors （https://certifytheweb.com）</value>
   </data>
   <data name="About_LanguageTranslator" xml:space="preserve">
     <value>Current Language Translator: </value>
