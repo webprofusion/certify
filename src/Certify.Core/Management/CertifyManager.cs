@@ -848,7 +848,7 @@ namespace Certify.Management
             if (managedSite != null)
             {
                 if (iis == null) iis = _iisManager;
-                return iis.IsSiteRunning(id);
+                return iis.IsSiteRunning(managedSite.GroupId);
             }
             else
             {
