@@ -26,6 +26,8 @@ namespace Certify.CLI
 
                 var p = new Program();
                 p.ShowACMEInfo();
+                p.ListManagedSites();
+                Console.ReadKey();
                 //p.PreviewAutoManage();
                 //p.PerformVaultCleanup();
                 //System.Console.ReadKey();
@@ -196,6 +198,27 @@ namespace Certify.CLI
                 Console.ForegroundColor = ConsoleColor.White;
             }
             return results;
+        }
+
+        private void ListManagedSites()
+        {
+            var siteManager = new ItemManager();
+            siteManager.LoadSettings();
+
+            var managedSites = siteManager.GetManagedSites();
+            IISManager iisManager = new IISManager();
+            foreach (var site in managedSites)
+            {
+                var siteIISInfo = iisManager.GetSiteById(site.GroupId);
+                string status = "Running";
+                if (!iisManager.IsSiteRunning(site.GroupId))
+                {
+                    status = "Not Running";
+                }
+                Console.ForegroundColor = ConsoleColor.White;
+
+                Console.WriteLine($"{site.Name},{status},{site.DateExpiry}");
+            }
         }
 
         private bool PerformCertRequestAndIISBinding(string certDomain, string[] alternativeNames)
