@@ -411,6 +411,15 @@ namespace Certify.Management
                                 }
                                 else
                                 {
+                                    var errorMsg = "";
+                                    if (authorization?.Identifier != null)
+                                    {
+                                        errorMsg = authorization.Identifier.ValidationError;
+                                        var errorType = authorization.Identifier.ValidationErrorType;
+                                    }
+
+                                    failureSummaryMessage = $"Domain validation failed: {domain} \r\n{errorMsg}";
+
                                     LogMessage(managedSite.Id, $"Domain authorization failed : { domain } ");
 
                                     allIdentifiersValidated = false;
@@ -419,13 +428,15 @@ namespace Certify.Management
                         }
                         else
                         {
-                            // could not begin authorization
-                            LogMessage(managedSite.Id, $"Could not begin authorization for domain with Let's Encrypt: { domain } ");
+                            // could not begin authorization : TODO: pass error from authorization
+                            // step to UI
 
-                            if (authorization != null && authorization.LogItems != null)
+                            LogMessage(managedSite.Id, $"Could not begin authorization for domain with Let's Encrypt: { domain } {(authorization?.AuthorizationError != null ? authorization?.AuthorizationError : "Could not register domain identifier")}");
+
+                            /*if (authorization != null && authorization.LogItems != null)
                             {
                                 LogMessage(managedSite.Id, authorization.LogItems);
-                            }
+                            }*/
                             allIdentifiersValidated = false;
                         }
 
@@ -530,7 +541,7 @@ namespace Certify.Management
                     result.IsSuccess = false;
                     result.Message = managedSite.Name + ": Request failed - " + exp.Message + " " + exp.ToString();
                     LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
-                    LogMessage(managedSite.Id, String.Join("\r\n", _vaultProvider.GetActionSummary()));
+                    //LogMessage(managedSite.Id, String.Join("\r\n", _vaultProvider.GetActionSummary())); FIXME: needs to be filtered in managed site
                     System.Diagnostics.Debug.WriteLine(exp.ToString());
                 }
                 finally

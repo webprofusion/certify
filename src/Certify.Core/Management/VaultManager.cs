@@ -171,11 +171,11 @@ namespace Certify
             return vaultConfig.BaseUri;
         }
 
-        private void LogAction(string command, string result = null)
+        private void LogAction(string command, string result = null, string managedSiteId = null)
         {
             if (this.ActionLogs != null)
             {
-                this.ActionLogs.Add(new ActionLogItem { Command = command, Result = result, DateTime = DateTime.Now });
+                this.ActionLogs.Add(new ActionLogItem { Command = command, Result = result, ManagedSiteId = managedSiteId, DateTime = DateTime.Now });
             }
         }
 
@@ -663,7 +663,15 @@ namespace Certify
 
             // ACME service requires international domain names in ascii mode, register the new
             // identifier with Lets Encrypt
-            var authState = ACMESharpUtils.NewIdentifier(identifierAlias, idnMapping.GetAscii(domain));
+            try
+            {
+                var authState = ACMESharpUtils.NewIdentifier(identifierAlias, idnMapping.GetAscii(domain));
+            }
+            catch (Exception exp)
+            {
+                // failed to register the domain identifier with LE (rate limit or CAA fail?)
+                return new PendingAuthorization { AuthorizationError = exp.ToString() };
+            }
 
             var identifier = this.GetIdentifier(identifierAlias, reloadVaultConfig: true);
 
@@ -680,7 +688,7 @@ namespace Certify
                     //identifier challenge specification is now ready for use to prepare and answer for LetsEncrypt to check
 
                     var challengeInfo = identifier.Challenges.FirstOrDefault(c => c.Value.Type == challengeType).Value;
-                    return new PendingAuthorization() { Challenge = GetAuthorizeChallengeItemFromAuthChallenge(challengeInfo), Identifier = GetDomainIdentifierItemFromIdentifierInfo(identifier), TempFilePath = "", ExtensionlessConfigCheckedOK = false, LogItems = this.GetActionLogSummary() };
+                    return new PendingAuthorization() { Challenge = GetAuthorizeChallengeItemFromAuthChallenge(challengeInfo), Identifier = GetDomainIdentifierItemFromIdentifierInfo(identifier), TempFilePath = "", ExtensionlessConfigCheckedOK = false }; //TODO (filter on managed site): LogItems = this.GetActionLogSummary()
                 }
                 catch (Exception exp)
                 {
@@ -859,7 +867,7 @@ namespace Certify
                 }
                 finally
                 {
-                    result.Message = String.Join("\r\n", GetActionLogSummary());
+                    //FIXME: needs to be filtered by managed site: result.Message = String.Join("\r\n", GetActionLogSummary());
                     generatedAuthorizations.ForEach(ga => ga.Cleanup());
                 }
                 return result;
