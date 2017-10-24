@@ -1,20 +1,27 @@
-# Certify SSL Manager
+# Certify The Web - SSL Manager
 
 Home page for downloads and info : [https://certifytheweb.com/](https://certifytheweb.com/)
 
-The SSL Certificate Management GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/), allowing you to generate and install free SSL certificates (with a 90 day expiry).
+The SSL/TLS Certificate Management GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/), allowing you to generate and install free SSL certificates for IIS (with a 90 day expiry and automated renewal).
 
 Features:
 - Easy certificate requests & automated SSL bindings
 - Auto renewal, with configurable renewal frequency
 - SAN support (multi-domain certificates)
-- Pre/Post request powershell ![scripting hooks](https://github.com/webprofusion/certify/blob/master/docs/Request%20Script%20Hooks.md) for advanced users (feature contributed by [Marcus-L](https://github.com/Marcus-L))
+- Pre/Post request powershell and web hook support ![scripting hooks](https://github.com/webprofusion/certify/blob/master/docs/Request%20Script%20Hooks.md) for advanced users (feature contributed by [Marcus-L](https://github.com/Marcus-L))
 
 ![App Screenshot](https://certifytheweb.com/images/screen3.png)
 
 
 ----------
+Quick Start
+----------
+1. Download from [https://certifytheweb.com/](https://certifytheweb.com/) and install it.
+2. Click 'New Certificate', choose your IIS site (which must have 1 or more hostname bindings set). Save your settings and click 'Request Certificate'
+3. All done! Click 'Configure Auto Renew' to setup the scheduled task for renewals.
 
+Development
+-------------
 
 If you have a bug or feature and you can fix the problem yourself please just:
 
