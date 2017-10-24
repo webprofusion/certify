@@ -107,6 +107,8 @@ namespace Certify.Management.APIProviders
         public PendingAuthorization PerformIISAutomatedChallengeResponse(IISManager iisManager, ManagedSite managedSite, PendingAuthorization pendingAuth)
         {
             var processedAuth = _vaultManager.PerformIISAutomatedChallengeResponse(iisManager, managedSite, pendingAuth);
+
+            /*// FIXME: vault logs need to be filtered by managed site
             if (_vaultManager.ActionLogs != null)
             {
                 processedAuth.LogItems = new List<string>();
@@ -114,7 +116,7 @@ namespace Certify.Management.APIProviders
                 {
                     processedAuth.LogItems.Add(a.Command + (a.Result != null ? a.Result : ""));
                 }
-            }
+            }*/
             return processedAuth;
         }
 
