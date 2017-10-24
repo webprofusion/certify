@@ -20,7 +20,7 @@ Quick Start
 2. Click 'New Certificate', choose your IIS site (which must have 1 or more hostname bindings set). Save your settings and click 'Request Certificate'
 3. All done! Click 'Configure Auto Renew' to setup the scheduled task for renewals.
 
-Development
+Development & Bug Reporting
 -------------
 
 If you have a bug or feature and you can fix the problem yourself please just:
@@ -32,10 +32,17 @@ If you have a bug or feature and you can fix the problem yourself please just:
    
 If you cannot provide a fix for the problem yourself, please file an issue and describe the fault with steps to reproduce.
 
-----------
+Translation
+------------
 
-> **Build/Run Requirements:**
-> 
+You can help translate the app by cloning the repo and installing ResXManager to easily update translation text:
+https://marketplace.visualstudio.com/items?itemName=TomEnglert.ResXManager
+
+
+
+Build/Run Requirements:
+----------------------
+
 > - Visual Studio 2017 Community Edition (or higher) 
 > - A local instance of IIS installed.
 > - To build the current release version use the release branch: https://github.com/webprofusion/certify/tree/release, master is the current work in progress.
