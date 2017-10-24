@@ -1,4 +1,4 @@
-﻿using Certify.Models;
+using Certify.Models;
 
 using System;
 using System.Collections.Generic;
@@ -134,7 +134,7 @@ namespace Certify.Management
                     var time = new Random().Next(2000);
                     System.Threading.Thread.Sleep(time);
                 }
-                if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Success, Message = "Finish" });
+                if (progress != null) progress.Report(new RequestProgressState { CurrentState = RequestState.Success, Message = CoreSR.Finish });
                 System.Threading.Thread.Sleep(500);
                 return new CertificateRequestResult { };
             });
@@ -232,7 +232,7 @@ namespace Certify.Management
             // FIXME: refactor into different concerns, there's way too much being done here
             if (managedSite.RequestConfig.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP && managedSite.RequestConfig.PerformExtensionlessConfigChecks)
             {
-                ReportProgress(progress, new RequestProgressState { IsRunning = true, CurrentState = RequestState.Running, Message = "Performing Config Tests" });
+                ReportProgress(progress, new RequestProgressState { IsRunning = true, CurrentState = RequestState.Running, Message = Certify.CoreSR.CertifyManager_PerformingConfigTests });
 
                 var testResult = await TestChallenge(managedSite, isPreviewMode: false);
                 if (!testResult.IsOK)
@@ -267,7 +267,7 @@ namespace Certify.Management
                     if (result.Abort)
                     {
                         LogMessage(managedSite.Id, $"Certificate Request Aborted: {managedSite.Name}");
-                        result.Message = "Certificate Request was aborted by PS script";
+                        result.Message = Certify.CoreSR.CertificateRequestWasAbortedByPSScript;
                         goto CertRequestAborted;
                     }
 
@@ -280,7 +280,7 @@ namespace Certify.Management
                     }
 
                     //primary domain and each subject alternative name must now be registered as an identifier with LE and validated
-                    ReportProgress(progress, new RequestProgressState { IsRunning = true, CurrentState = RequestState.Running, Message = "Registering Domain Identifiers" });
+                    ReportProgress(progress, new RequestProgressState { IsRunning = true, CurrentState = RequestState.Running, Message = CoreSR.CertifyManager_RegisterDomainIdentity });
 
                     await Task.Delay(200); //allow UI update, we should we using async calls instead
 
@@ -305,7 +305,7 @@ namespace Certify.Management
                         var domainIdentifierId = _vaultProvider.ComputeDomainIdentifierId(domain);
 
                         LogMessage(managedSite.Id, $"Attempting Domain Validation: {domain}", LogItemType.CertificateRequestStarted);
-                        ReportProgress(progress, $"Registering and Validating {domain} ");
+                        ReportProgress(progress, string.Format(Certify.CoreSR.CertifyManager_RegisteringAndValidatingX0, domain));
 
                         //TODO: make operations async and yield IO of vault
                         /*var authorization = await Task.Run(() =>
@@ -326,7 +326,7 @@ namespace Certify.Management
                             {
                                 if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS)
                                 {
-                                    ReportProgress(progress, $"Performing Challenge Response via IIS: {domain} ");
+                                    ReportProgress(progress, string.Format(Certify.CoreSR.CertifyManager_PerformingChallengeResponseViaIISX0, domain));
 
                                     // ask LE to check our answer to their authorization challenge
                                     // (http-01 or tls-sni-01), LE will then attempt to fetch our
@@ -344,18 +344,18 @@ namespace Certify.Management
                                         (config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI && config.PerformTlsSniBindingConfigChecks && !authorization.TlsSniConfigCheckedOK))
                                     {
                                         //if we failed the config checks, report any errors
-                                        LogMessage(managedSite.Id, $"Failed prerequisite configuration checks ({ managedSite.ItemType })", LogItemType.CertficateRequestFailed);
+                                        LogMessage(managedSite.Id, string.Format(CoreSR.CertifyManager_FailedPrerequisiteCheck, managedSite.ItemType), LogItemType.CertficateRequestFailed);
 
                                         _siteManager.StoreSettings();
 
                                         if (config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP)
                                         {
-                                            result.Message = "Automated configuration checks failed. Authorizations will not be able to complete.\nCheck you have http bindings for your site and ensure you can browse to http://" + domain + "/.well-known/acme-challenge/configcheck before proceeding.";
+                                            result.Message = string.Format(CoreSR.CertifyManager_AutomateConfigurationCheckFailed_HTTP, domain);
                                         }
 
                                         if (config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI)
                                         {
-                                            result.Message = "Automated configuration checks failed. Authorizations will not be able to complete.\nCheck you have https SNI bindings for your site\n(ex: '0123456789ABCDEF0123456789ABCDEF.0123456789ABCDEF0123456789ABCDEF.acme.invalid') before proceeding.";
+                                            result.Message = Certify.CoreSR.CertifyManager_AutomateConfigurationCheckFailed_SNI;
                                         }
 
                                         ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Error, Message = result.Message, Result = result });
@@ -364,7 +364,7 @@ namespace Certify.Management
                                     }
                                     else
                                     {
-                                        ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Running, Message = $"Requesting Validation from Let's Encrypt: {domain}" });
+                                        ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Running, Message = string.Format(CoreSR.CertifyManager_ReqestValidationFromLetsEncrypt, domain)});
                                         try
                                         {
                                             //ask LE to validate our challenge response
@@ -378,14 +378,14 @@ namespace Certify.Management
                                                 var errorMsg = identifierInfo?.ValidationError;
                                                 var errorType = identifierInfo?.ValidationErrorType;
 
-                                                failureSummaryMessage = $"Domain validation failed: {domain} \r\n{errorMsg}";
+                                                failureSummaryMessage = string.Format(CoreSR.CertifyManager_DomainValidationFailed, domain, errorMsg);
                                                 ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Error, Message = failureSummaryMessage }, managedSite.Id);
 
                                                 allIdentifiersValidated = false;
                                             }
                                             else
                                             {
-                                                ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Running, Message = "Domain validation completed: " + domain }, managedSite.Id);
+                                                ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Running, Message = string.Format(CoreSR.CertifyManager_DomainValidationCompleted, domain) }, managedSite.Id);
 
                                                 identifierAuthorizations.Add(authorization);
                                             }
@@ -405,13 +405,13 @@ namespace Certify.Management
                                 // we already have a completed authorization, check it's valid
                                 if (authorization.Identifier.Status == "valid")
                                 {
-                                    LogMessage(managedSite.Id, $"Domain already has current authorization, skipping verification: { domain }");
+                                    LogMessage(managedSite.Id, string.Format(CoreSR.CertifyManager_DomainValidationSkipVerifed, domain));
 
                                     identifierAuthorizations.Add(new PendingAuthorization { Identifier = authorization.Identifier });
                                 }
                                 else
                                 {
-                                    LogMessage(managedSite.Id, $"Domain authorization failed : { domain } ");
+                                    LogMessage(managedSite.Id, string.Format(CoreSR.CertifyManager_DomainValidationFailed, domain));
 
                                     allIdentifiersValidated = false;
                                 }
@@ -420,7 +420,7 @@ namespace Certify.Management
                         else
                         {
                             // could not begin authorization
-                            LogMessage(managedSite.Id, $"Could not begin authorization for domain with Let's Encrypt: { domain } ");
+                            LogMessage(managedSite.Id, msg: string.Format(CoreSR.CertifyManager_DomainValidationCannotStart, domain));
 
                             if (authorization != null && authorization.LogItems != null)
                             {
@@ -444,7 +444,7 @@ namespace Certify.Management
                         string primaryDnsIdentifier = identifierAuthorizations.First().Identifier.Alias;
                         string[] alternativeDnsIdentifiers = identifierAuthorizations.Select(i => i.Identifier.Alias).ToArray();
 
-                        ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Running, Message = "Requesting Certificate via Lets Encrypt" }, managedSite.Id);
+                        ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Running, Message = CoreSR.CertifyManager_RequestCertificate }, managedSite.Id);
 
                         // Perform CSR request
                         // FIXME: make call async
@@ -452,7 +452,7 @@ namespace Certify.Management
 
                         if (certRequestResult.IsSuccess)
                         {
-                            ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Success, Message = "Completed Certificate Request." }, managedSite.Id);
+                            ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Success, Message = CoreSR.CertifyManager_CompleteRequest }, managedSite.Id);
 
                             string pfxPath = certRequestResult.Result.ToString();
 
@@ -479,23 +479,23 @@ namespace Certify.Management
 
                             if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS && config.PerformAutomatedCertBinding)
                             {
-                                ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Running, Message = "Performing Automated Certificate Binding" });
+                                ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Running, Message = CoreSR.CertifyManager_AutoBinding });
 
                                 // Install certificate into certificate store and bind to IIS site
                                 if (_iisManager.InstallCertForRequest(managedSite, pfxPath, cleanupCertStore: true))
                                 {
                                     //all done
-                                    LogMessage(managedSite.Id, "Completed certificate request and automated bindings update (IIS)", LogItemType.CertificateRequestSuccessful);
+                                    LogMessage(managedSite.Id, CoreSR.CertifyManager_CompleteRequestAndUpdateBinding, LogItemType.CertificateRequestSuccessful);
 
                                     _siteManager.UpdatedManagedSite(managedSite);
 
                                     result.IsSuccess = true;
-                                    result.Message = $"Certificate installed and SSL bindings updated for {config.PrimaryDomain }";
+                                    result.Message = string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
                                     ReportProgress(progress, new RequestProgressState { IsRunning = false, CurrentState = RequestState.Success, Message = result.Message });
                                 }
                                 else
                                 {
-                                    result.Message = $"An error occurred installing the certificate. Certificate file may not be valid: {pfxPath}";
+                                    result.Message = string.Format(CoreSR.CertifyManager_CertificateInstallFailed, pfxPath);
                                     LogMessage(managedSite.Id, result.Message, LogItemType.GeneralError);
                                 }
                             }
@@ -506,19 +506,19 @@ namespace Certify.Management
                                 _siteManager.UpdatedManagedSite(managedSite);
 
                                 result.IsSuccess = true;
-                                result.Message = $"Certificate created ready for manual binding: {pfxPath}";
+                                result.Message = string.Format(CoreSR.CertifyManager_CertificateCreatedForBinding, pfxPath);
                                 LogMessage(managedSite.Id, result.Message, LogItemType.CertificateRequestSuccessful);
                             }
                         }
                         else
                         {
-                            result.Message = $"The Let's Encrypt service did not issue a valid certificate in the time allowed. {(certRequestResult.ErrorMessage ?? "")}";
+                            result.Message = string.Format(CoreSR.CertifyManager_LetsEncryptServiceTimeout, certRequestResult.ErrorMessage ?? "");
                             LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
                         }
                     }
                     else
                     {
-                        result.Message = "Validation of the required challenges did not complete successfully. " + (failureSummaryMessage != null ? failureSummaryMessage : "");
+                        result.Message = string.Format(CoreSR.CertifyManager_ValidationForChallengeNotSuccess, (failureSummaryMessage != null ? failureSummaryMessage : ""));
                         LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
                     }
 
@@ -528,7 +528,7 @@ namespace Certify.Management
                 catch (Exception exp)
                 {
                     result.IsSuccess = false;
-                    result.Message = managedSite.Name + ": Request failed - " + exp.Message + " " + exp.ToString();
+                    result.Message = string.Format(Certify.CoreSR.CertifyManager_RequestFailed, managedSite.Name, exp.Message, exp);
                     LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
                     LogMessage(managedSite.Id, String.Join("\r\n", _vaultProvider.GetActionSummary()));
                     System.Diagnostics.Debug.WriteLine(exp.ToString());
@@ -798,12 +798,12 @@ namespace Certify.Management
                 }
                 else
                 {
-                    var msg = "Skipping Renewal, existing certificate still OK. ";
+                    var msg = CoreSR.CertifyManager_SkipRenewalOk;
 
                     if (isRenewalRequired && !isSiteRunning)
                     {
                         //TODO: show this as warning rather than success
-                        msg = "Site stopped (or not present), renewal skipped as domain validation cannot be performed. ";
+                        msg = CoreSR.CertifyManager_SiteStopped;
                     }
 
                     if (progressTrackers != null)

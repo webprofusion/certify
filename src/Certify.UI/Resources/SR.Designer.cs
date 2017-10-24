@@ -259,6 +259,24 @@ namespace Certify.UI.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Expires in {0} days 的本地化字符串。
+        /// </summary>
+        public static string ExpiryDateConverter_CertificateExpiresIn {
+            get {
+                return ResourceManager.GetString("ExpiryDateConverter_CertificateExpiresIn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 No current certificate. 的本地化字符串。
+        /// </summary>
+        public static string ExpiryDateConverter_NoCurrentCertificate {
+            get {
+                return ResourceManager.GetString("ExpiryDateConverter_NoCurrentCertificate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 failed 的本地化字符串。
         /// </summary>
         public static string failed {
