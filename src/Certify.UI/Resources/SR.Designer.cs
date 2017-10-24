@@ -259,6 +259,24 @@ namespace Certify.UI.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Expires in {0} days.
+        /// </summary>
+        public static string ExpiryDateConverter_CertificateExpiresIn {
+            get {
+                return ResourceManager.GetString("ExpiryDateConverter_CertificateExpiresIn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No current certificate..
+        /// </summary>
+        public static string ExpiryDateConverter_NoCurrentCertificate {
+            get {
+                return ResourceManager.GetString("ExpiryDateConverter_NoCurrentCertificate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to failed.
         /// </summary>
         public static string failed {
