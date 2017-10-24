@@ -22,5 +22,6 @@ namespace Certify.Models
         public bool TlsSniConfigCheckedOK { get; set; } = true;
         public Action Cleanup { get; set; } = () => { };
         public List<string> LogItems { get; set; }
+        public string AuthorizationError { get; set; }
     }
 }

@@ -136,9 +136,6 @@
   <data name="CertifyManager_DomainValidationSkipVerifed" xml:space="preserve">
     <value>域名当前已经认证通过，跳过认证：{0}</value>
   </data>
-  <data name="CertifyManager_DomainValidationCannotStart" xml:space="preserve">
-    <value>无法通过Let's Encrypt进行域名认证：{0}</value>
-  </data>
   <data name="CertifyManager_RequestCertificate" xml:space="preserve">
     <value>正在申请证书</value>
   </data>
