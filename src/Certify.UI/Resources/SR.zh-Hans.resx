@@ -579,4 +579,10 @@
   <data name="ManagedItemSettings_CertificatePathEmpty" xml:space="preserve">
     <value>证书路径（等待设置）</value>
   </data>
+  <data name="ExpiryDateConverter_NoCurrentCertificate" xml:space="preserve">
+    <value>无证书</value>
+  </data>
+  <data name="ExpiryDateConverter_CertificateExpiresIn" xml:space="preserve">
+    <value>{0} 天后过期</value>
+  </data>
 </root>

@@ -210,6 +210,9 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>CoreSR.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <EmbeddedResource Include="CoreSR.zh-Hans.resx">
+      <DependentUpon>CoreSR.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
