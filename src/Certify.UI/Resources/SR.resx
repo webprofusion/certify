@@ -581,4 +581,10 @@
   <data name="ManagedItemSettings_CertificatePathEmpty" xml:space="preserve">
     <value>Certificate Path: [to be set]</value>
   </data>
+  <data name="ExpiryDateConverter_NoCurrentCertificate" xml:space="preserve">
+    <value>No current certificate.</value>
+  </data>
+  <data name="ExpiryDateConverter_CertificateExpiresIn" xml:space="preserve">
+    <value>Expires in {0} days</value>
+  </data>
 </root>

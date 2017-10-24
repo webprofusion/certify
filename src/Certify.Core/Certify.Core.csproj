@@ -161,6 +161,11 @@
   <ItemGroup>
     <Compile Include="ACMESharpCompat\ACMESharpUtils.cs" />
     <Compile Include="ACMESharpCompat\Helpers.cs" />
+    <Compile Include="CoreSR.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CoreSR.resx</DependentUpon>
+    </Compile>
     <Compile Include="Management\APIProviders\CertesProvider.cs" />
     <Compile Include="Management\IACMEClientProvider.cs" />
     <Compile Include="Management\APIProviders\ACMESharpProvider.cs" />
@@ -200,6 +205,14 @@
     <Compile Include="Management\VaultManager.cs" />
     <Compile Include="Resources.cs" />
     <Compile Include="Settings.cs" />
+    <Compile Include="Utils\SRDescription.cs" />
+    <EmbeddedResource Include="CoreSR.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>CoreSR.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CoreSR.zh-Hans.resx">
+      <DependentUpon>CoreSR.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

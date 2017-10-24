@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -10,6 +10,8 @@ using System.Windows.Data;
 
 namespace Certify.UI.Utils
 {
+    using Resources;
+
     public class ExpiryDateConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
@@ -26,10 +28,10 @@ namespace Certify.UI.Utils
 
         public static string GetDescription(DateTime? expiry)
         {
-            if (expiry == null) return "No current certificate.";
+            if (expiry == null) return SR.ExpiryDateConverter_NoCurrentCertificate;
 
             var days = (int)Math.Abs((DateTime.Now - expiry).Value.TotalDays);
-            return String.Format("Expires in {0} days", days);
+            return String.Format(SR.ExpiryDateConverter_CertificateExpiresIn, days);
         }
     }
 

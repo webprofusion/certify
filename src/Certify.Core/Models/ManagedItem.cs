@@ -1,4 +1,4 @@
-﻿using Certify.Management;
+using Certify.Management;
 using PropertyChanged;
 using Serilog;
 using System;
@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 
 namespace Certify.Models
 {
+    using Utils;
+
     public enum LogItemType
     {
         GeneralInfo = 1,
@@ -31,10 +33,10 @@ namespace Certify.Models
 
     public enum ManagedItemType
     {
-        [Description("Local IIS, SSL Certificate via Let's Encrypt")]
+        [SRDescription("ManagedItemType_LocalIIS")]
         SSL_LetsEncrypt_LocalIIS = 1,
 
-        [Description("Manual SSL Certificate via Let's Encrypt")]
+        [SRDescription("ManagedItemType_Manual")]
         SSL_LetsEncrypt_Manual = 2
     }
 
