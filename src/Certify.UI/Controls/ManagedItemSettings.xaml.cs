@@ -319,7 +319,16 @@ namespace Certify.UI.Controls
                 Button_TestChallenge.IsEnabled = false;
                 TestInProgress.Visibility = Visibility.Visible;
 
-                MainViewModel.UpdateManagedSiteSettings();
+                try
+                {
+                    MainViewModel.UpdateManagedSiteSettings();
+                }
+                catch (Exception exp)
+                {
+                    // usual failure is that primary domain is not set
+                    MessageBox.Show(exp.Message);
+                    return;
+                }
 
                 var result = await MainViewModel.TestChallengeResponse(MainViewModel.SelectedItem);
                 if (result.IsOK)
@@ -330,6 +339,7 @@ namespace Certify.UI.Controls
                 {
                     MessageBox.Show(string.Format(SR.ManagedItemSettings_ConfigurationCheckFailed, String.Join("\r\n", result.FailedItemSummary)), SR.ManagedItemSettings_ChallengeTestFailed, MessageBoxButton.OK, MessageBoxImage.Error);
                 }
+
                 Button_TestChallenge.IsEnabled = true;
                 TestInProgress.Visibility = Visibility.Hidden;
             }
