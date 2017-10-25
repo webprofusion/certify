@@ -1119,6 +1119,11 @@ namespace Certify
 
             var certRegResult = this.NewCertificate(domainIdentifierRef, certAlias, subjectAlternativeNameIdentifiers: alternativeIdentifierRefs);
 
+            if (!certRegResult.IsOK)
+            {
+                return new ProcessStepResult { IsSuccess = false, ErrorMessage = "Failed to begin request for new certificate from LetsEncrypt :: " + certRegResult.Message };
+            }
+
             //ask LE to issue a certificate for our domain(s)
             //if this step fails we should quit and try again later
             var certRequestResult = this.SubmitCertificate(certAlias);
@@ -1128,12 +1133,12 @@ namespace Certify
                 //LE may now have issued a certificate, this process may not be immediate
                 var certDetails = this.GetCertificate(certAlias, reloadVaultConfig: true);
                 var attempts = 0;
-                var maxAttempts = 3;
+                var maxAttempts = 5;
 
                 //cert not issued yet, wait and try again
                 while ((certDetails == null || String.IsNullOrEmpty(certDetails.IssuerSerialNumber)) && attempts < maxAttempts)
                 {
-                    System.Threading.Thread.Sleep(2000); //wait a couple of seconds before checking again
+                    System.Threading.Thread.Sleep(3000); //wait a couple of seconds before checking again
                     this.UpdateCertificate(certAlias);
                     certDetails = this.GetCertificate(certAlias, reloadVaultConfig: true);
                     attempts++;
