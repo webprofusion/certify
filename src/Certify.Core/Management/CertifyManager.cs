@@ -364,7 +364,7 @@ namespace Certify.Management
                                     }
                                     else
                                     {
-                                        ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Running, Message = string.Format(CoreSR.CertifyManager_ReqestValidationFromLetsEncrypt, domain)});
+                                        ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Running, Message = string.Format(CoreSR.CertifyManager_ReqestValidationFromLetsEncrypt, domain) });
                                         try
                                         {
                                             //ask LE to validate our challenge response
@@ -481,7 +481,7 @@ namespace Certify.Management
                                 //ensure certificate contains all the requested domains
                                 var subjectNames = certInfo.GetNameInfo(System.Security.Cryptography.X509Certificates.X509NameType.UpnName, false);
 
-                                LogMessage(managedSite.Id, "New certificate contains following domains: " + subjectNames, LogItemType.GeneralInfo);
+                                //FIXME: LogMessage(managedSite.Id, "New certificate contains following domains: " + subjectNames, LogItemType.GeneralInfo);
                             }
                             catch (Exception)
                             {
