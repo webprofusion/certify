@@ -475,9 +475,11 @@ namespace Certify.Management
         /// <param name="host"></param>
         public void RemoveHttpsBinding(ManagedSite managedSite, string host)
         {
+            if (string.IsNullOrEmpty(managedSite.GroupId)) throw new Exception("RemoveHttpsBinding: Managed site has no GroupID for IIS Site");
+
             using (var iisManager = GetDefaultServerManager())
             {
-                var site = iisManager.Sites.FirstOrDefault(s => s.Id == long.Parse(managedSite.GroupId));
+                var site = iisManager.Sites.FirstOrDefault(s => s.Id.ToString() == managedSite.GroupId);
                 if (site != null)
                 {
                     string internationalHost = host == "" ? "" : _idnMapping.GetUnicode(host);
