@@ -1111,8 +1111,7 @@ namespace Certify
 
         public ProcessStepResult PerformCertificateRequestProcess(string domainIdentifierRef, string[] alternativeIdentifierRefs)
         {
-            //all good, we can request a certificate
-            //if authorizing a SAN we would need to repeat the above until all domains are valid, then we can request cert
+            //given a validated primary domain identifier and optionally a set of subject alternative names, we can begin to request a certificate
             var certAlias = "cert_" + domainIdentifierRef;
 
             //register cert placeholder in vault

@@ -84,7 +84,7 @@ namespace Certify.Management
         public void SaveManagedSites(List<ManagedSite> managedSites)
         {
             this._siteManager.UpdatedManagedSites(managedSites);
-            this._siteManager.StoreSettings();
+            // this._siteManager.StoreSettings();
         }
 
         public bool HasRegisteredContacts()
