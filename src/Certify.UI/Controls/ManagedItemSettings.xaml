@@ -67,7 +67,7 @@
         <dragablz:TabablzControl x:Name="SettingsTab" Margin="8" Grid.Row="2" FixedHeaderCount="3"
                                  VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
             <TabItem Header="{x:Static Resources:SR.ManagedItemSettings_Tab_Options}" IsSelected="True">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
                     <StackPanel Margin="12" Orientation="Vertical" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullVisConverter}}">
                         <StackPanel Orientation="Horizontal" Visibility="{Binding IsWebsiteSelectable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
                             <Label Width="136" Content="{x:Static Resources:SR.ManagedItemSettings_SelectIISSite}" />
