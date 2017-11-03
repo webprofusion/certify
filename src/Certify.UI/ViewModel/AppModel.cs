@@ -201,37 +201,6 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        /// <summary>
-        /// Determine if user should be able to choose/change the Website for the current SelectedItem 
-        /// </summary>
-        public bool IsWebsiteSelectable
-        {
-            get
-            {
-                if (SelectedItem != null && SelectedItem.Id == null)
-                {
-                    return true;
-                }
-                return false;
-            }
-        }
-
-        public bool IsItemSelected
-        {
-            get
-            {
-                return (this.SelectedItem != null);
-            }
-        }
-
-        public bool IsNoItemSelected
-        {
-            get
-            {
-                return (this.SelectedItem == null);
-            }
-        }
-
         public bool IsSelectedItemValid
         {
             get => SelectedItem?.Id != null && !SelectedItem.IsChanged;
