@@ -51,55 +51,28 @@ namespace Certify.UI.ViewModel
 
         internal virtual void LoadVaultTree()
         {
-            List<VaultItem> tree = new List<VaultItem>();
-
-            // populate registrations
-            var registration = new VaultItem { Name = "Registrations" };
-            registration.Children = new List<VaultItem>();
-
-            var contactRegistrations = certifyManager.GetContactRegistrations();
-            foreach (var r in contactRegistrations)
+            VaultTree = new List<VaultItem>()
             {
-                r.ItemType = "registration";
-                registration.Children.Add(r);
-            }
-
-            this.PrimaryContactEmail = registration.Children.FirstOrDefault()?.Name;
-
-            tree.Add(registration);
-
-            // populate identifiers
-            var identifiers = new VaultItem { Name = "Identifiers" };
-            identifiers.Children = new List<VaultItem>();
-
-            var ids = certifyManager.GeDomainIdentifiers();
-            foreach (var i in ids)
-            {
-                i.ItemType = "identifier";
-                identifiers.Children.Add(i);
-            }
-
-            tree.Add(identifiers);
-
-            // populate identifiers
-            var certs = new VaultItem { Name = "Certificates" };
-            certs.Children = new List<VaultItem>();
-
-            var certlist = certifyManager.GetCertificates();
-            foreach (var i in ids)
-            {
-                i.ItemType = "certificate";
-                certs.Children.Add(i);
-            }
-
-            tree.Add(certs);
-
-            VaultTree = tree;
-
-            this.ACMESummary = certifyManager.GetAcmeSummary();
-            this.VaultSummary = certifyManager.GetVaultSummary();
-
-            RaisePropertyChanged(nameof(VaultTree));
+                new VaultItem
+                {
+                    Name = "Registrations",
+                    Children = new List<VaultItem>(certifyManager.GetContactRegistrations())
+                },
+                new VaultItem
+                {
+                    Name = "Identifiers",
+                    Children = new List<VaultItem>(certifyManager.GeDomainIdentifiers())
+                },
+                new VaultItem
+                {
+                    Name = "Certificates",
+                    Children = new List<VaultItem>(certifyManager.GetCertificates())
+                }
+            };
+            PrimaryContactEmail = VaultTree.First(i => i.Name == "Registrations")
+                .Children.FirstOrDefault()?.Name;
+            ACMESummary = certifyManager.GetAcmeSummary();
+            VaultSummary = certifyManager.GetVaultSummary();
         }
 
         /// <summary>
@@ -134,21 +107,6 @@ namespace Certify.UI.ViewModel
 
         public bool IsRegisteredVersion { get; set; }
 
-        public bool SelectedItemHasChanges
-        {
-            get
-            {
-                if (this.SelectedItem != null)
-                {
-                    if (this.SelectedItem.IsChanged || (this.SelectedItem.RequestConfig != null && this.SelectedItem.RequestConfig.IsChanged) || (this.SelectedItem.DomainOptions != null && this.SelectedItem.DomainOptions.Any(d => d.IsChanged)))
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            }
-        }
-
         public List<SiteBindingItem> WebSiteList
         {
             get
@@ -169,9 +127,6 @@ namespace Certify.UI.ViewModel
         {
             UpdateManagedSiteSettings();
             AddOrUpdateManagedSite(SelectedItem);
-
-            MarkAllChangesCompleted();
-
             RaisePropertyChanged(nameof(IsSelectedItemValid));
         }
 
@@ -213,26 +168,6 @@ namespace Certify.UI.ViewModel
                     return new List<IPAddress>();
                 }
             }
-        }
-
-        /// <summary>
-        /// Reset all IsChanged flags for the Selected Item 
-        /// </summary>
-        internal void MarkAllChangesCompleted()
-        {
-            if (SelectedItem != null)
-            {
-                //mark all SelectedItem child items and main model as unchanged
-                foreach (var opt in SelectedItem.DomainOptions)
-                {
-                    opt.IsChanged = false;
-                }
-
-                SelectedItem.RequestConfig.IsChanged = false;
-                SelectedItem.IsChanged = false;
-            }
-
-            RaisePropertyChanged(nameof(SelectedItemHasChanges));
         }
 
         internal void SelectFirstOrDefaultItem()
@@ -299,17 +234,7 @@ namespace Certify.UI.ViewModel
 
         public bool IsSelectedItemValid
         {
-            get
-            {
-                if (this.SelectedItem != null && this.SelectedItem.Id != null && this.SelectedItem.IsChanged == false)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
+            get => SelectedItem?.Id != null && !SelectedItem.IsChanged;
         }
 
         public string ValidationError { get; set; }
@@ -541,13 +466,10 @@ namespace Certify.UI.ViewModel
             managedSite.RequestConfig.EnableFailureNotifications = true;
             managedSite.RequestConfig.ChallengeType = ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP;
             managedSite.IncludeInAutoRenew = true;
-            managedSite.ClearDomainOptions();
-            //for the given selected web site, allow the user to choose which domains to combine into one certificate
-
-            List<DomainOption> domainOptions = certifyManager.GetDomainOptionsFromSite(siteId);
-            if (domainOptions.Any())
+            managedSite.DomainOptions.Clear();
+            foreach (var option in certifyManager.GetDomainOptionsFromSite(siteId))
             {
-                managedSite.AddDomainOptions(domainOptions);
+                managedSite.DomainOptions.Add(option);
             }
 
             if (!managedSite.DomainOptions.Any())
@@ -608,7 +530,6 @@ namespace Certify.UI.ViewModel
             if (result.IsOK)
             {
                 AddOrUpdateManagedSite(managedSite);
-                MarkAllChangesCompleted();
             }
             return result;
         }

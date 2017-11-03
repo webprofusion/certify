@@ -41,7 +41,6 @@ namespace Certify.UI
                 WebhookMethod = Webhook.METHOD_POST
             };
             SelectedItem.CertificatePath = @"C:\ProgramData\ACMESharp\sysVault\99-ASSET\cert_ident1a2b3c4d-all.pfx";
-            SelectedItem.DomainOptions = new ObservableCollection<DomainOption>();
             SelectedItem.DomainOptions.Add(new DomainOption()
             {
                 Domain = SelectedItem.Name,

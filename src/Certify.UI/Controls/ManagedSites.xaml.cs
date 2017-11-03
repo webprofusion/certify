@@ -60,7 +60,6 @@ namespace Certify.UI.Controls
                 else
                 {
                     MainViewModel.SelectedItem = (Certify.Models.ManagedSite)e.AddedItems[0];
-                    MainViewModel.MarkAllChangesCompleted();
                 }
             }
         }

@@ -38,7 +38,6 @@ namespace Certify.UI.Windows
         {
             this.MainViewModel.ManagedSites = new System.Collections.ObjectModel.ObservableCollection<Models.ManagedSite>(this.MainViewModel.ImportedManagedSites);
 
-            MainViewModel.MarkAllChangesCompleted();
             MainViewModel.SaveSettings(null);
             this.Close();
         }

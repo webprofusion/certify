@@ -30,7 +30,6 @@ namespace Certify.UI.Controls
         }
 
         private bool settingsInitialised = false;
-        private bool hasChanges = false;
 
         public Settings()
         {
@@ -97,7 +96,6 @@ namespace Certify.UI.Controls
                 if (this.RenewalMaxRequests.Value == null) this.RenewalMaxRequests.Value = 0;
                 if (this.RenewalMaxRequests.Value > 100) this.RenewalMaxRequests.Value = 100;
                 CoreAppSettings.Current.MaxRenewalRequests = (int)this.RenewalMaxRequests.Value;
-                hasChanges = true;
                 Save.IsEnabled = true;
             }
         }
@@ -121,7 +119,6 @@ namespace Certify.UI.Controls
         private void Save_Click(object sender, RoutedEventArgs e)
         {
             SettingsManager.SaveAppSettings();
-            hasChanges = false;
             Save.IsEnabled = false;
         }
     }
