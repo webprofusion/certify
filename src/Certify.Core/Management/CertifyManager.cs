@@ -171,6 +171,14 @@ namespace Certify.Management
             }
         }
 
+        public void RemoveAllContacts()
+        {
+            var regList = _vaultProvider.GetContactRegistrations();
+            foreach (var reg in regList)
+            {
+                _vaultProvider.DeleteContactRegistration(reg.Id);
+            }
+        }
         public List<SiteBindingItem> GetPrimaryWebSites(bool ignoreStoppedSites)
         {
             return _iisManager.GetPrimarySites(ignoreStoppedSites);
