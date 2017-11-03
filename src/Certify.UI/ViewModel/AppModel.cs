@@ -1,5 +1,6 @@
 ﻿using Certify.Management;
 using Certify.Models;
+using Certify.UI.Resources;
 using PropertyChanged;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Windows.Input;
 
 namespace Certify.UI.ViewModel
@@ -294,6 +296,41 @@ namespace Certify.UI.ViewModel
         public void SaveSettings(object param)
         {
             certifyManager.SaveManagedSites(this.ManagedSites.ToList());
+        }
+
+        public bool ConfirmDiscardUnsavedChanges()
+        {
+            if (SelectedItem?.IsChanged ?? false)
+            {
+                //user needs to save or discard changes before changing selection
+                if (MessageBox.Show(SR.ManagedSites_UnsavedWarning, SR.Alert, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning)==DialogResult.OK)
+                {
+                    DiscardChanges();
+                }
+                else
+                {
+                    // user cancelled out of dialog
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public void DiscardChanges()
+        {
+            if (SelectedItem?.IsChanged ?? false)
+            {
+                if (SelectedItem.Id == null)
+                {
+                    SelectedItem = null;
+                }
+                else
+                {
+                    var id = SelectedItem.Id;
+                    LoadSettings();
+                    SelectedItem = ManagedSites.FirstOrDefault(m => m.Id == id);
+                }
+            }
         }
 
         public async void RenewAll(bool autoRenewalsOnly)

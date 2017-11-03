@@ -376,7 +376,7 @@
     <value>选择一个已管理的站点或选择新建证书来继续。</value>
   </data>
   <data name="ManagedSites_UnsavedWarning" xml:space="preserve">
-    <value>修改未保存，继续前请保存或放弃修改。</value>
+    <value>选择中有未保存的更改。 放弃更改？ </value>
   </data>
   <data name="ProgressMonitor_NoProgress" xml:space="preserve">
     <value>当前没有请求在操作中。</value>

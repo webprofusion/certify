@@ -1,3 +1,4 @@
+using Certify.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,8 +16,6 @@ using System.Windows.Shapes;
 
 namespace Certify.UI.Controls
 {
-    using Resources;
-
     /// <summary>
     /// Interaction logic for ManagedSites.xaml
     /// </summary>
@@ -48,19 +47,17 @@ namespace Certify.UI.Controls
             };
         }
 
-        private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ListViewItem_InteractionEvent(object sender, InputEventArgs e)
         {
-            if (e.AddedItems.Count > 0)
+            var item = (ListViewItem)sender;
+            var site = (ManagedSite)item.DataContext;
+            bool changingSelection = MainViewModel.SelectedItem != site ||
+                (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl));
+
+            if (changingSelection && !MainViewModel.ConfirmDiscardUnsavedChanges())
             {
-                if (MainViewModel.SelectedItem != null && MainViewModel.SelectedItemHasChanges && MainViewModel.SelectedItem.Id != null)
-                {
-                    //user needs to save or discard changes before changing selection
-                    MessageBox.Show(SR.ManagedSites_UnsavedWarning);
-                }
-                else
-                {
-                    MainViewModel.SelectedItem = (Certify.Models.ManagedSite)e.AddedItems[0];
-                }
+                // user did not want to discard changes, ignore click
+                e.Handled = true;
             }
         }
 

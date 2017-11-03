@@ -120,9 +120,7 @@ namespace Certify.UI.Controls
             else
             {
                 //reload settings for managed sites, discard changes
-                var currentSiteId = MainViewModel.SelectedItem.Id;
-                MainViewModel.LoadSettings();
-                MainViewModel.SelectedItem = MainViewModel.ManagedSites.FirstOrDefault(m => m.Id == currentSiteId);
+                MainViewModel.DiscardChanges();
             }
         }
 

@@ -298,7 +298,7 @@
     <value>Select a Managed Site or select New Certificate to begin.</value>
   </data>
   <data name="ManagedSites_UnsavedWarning" xml:space="preserve">
-    <value>You have unsaved changes. Save or Discard your changes before proceeding.</value>
+    <value>There are unsaved changes to the selected site. Discard changes?</value>
   </data>
   <data name="ProgressMonitor_NoProgress" xml:space="preserve">
     <value>There are no requests currently in progress.</value>

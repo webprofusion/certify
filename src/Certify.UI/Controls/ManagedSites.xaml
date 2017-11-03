@@ -35,7 +35,13 @@
                 <RowDefinition Height="*"></RowDefinition>
             </Grid.RowDefinitions>
             <TextBox Grid.Row="0" Name="txtFilter" TextChanged="TxtFilter_TextChanged" Controls:TextBoxHelper.Watermark="{x:Static res:SR.ManagedSites_Filter}"></TextBox>
-            <ListView Grid.Row="1" Name="lvManagedSites" ItemsSource="{Binding ManagedSites}" SelectionChanged="ListView_SelectionChanged" SelectionMode="Single">
+            <ListView Grid.Row="1" Name="lvManagedSites" ItemsSource="{Binding ManagedSites}" SelectedItem="{Binding SelectedItem}" SelectionMode="Single">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <EventSetter Event="PreviewMouseLeftButtonDown" Handler="ListViewItem_InteractionEvent"/>
+                        <EventSetter Event="PreviewTouchDown" Handler="ListViewItem_InteractionEvent"/>
+                    </Style>
+                </ListView.ItemContainerStyle>
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Vertical" Margin="0,8,0,0">
