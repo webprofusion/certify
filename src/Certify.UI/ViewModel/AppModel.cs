@@ -177,7 +177,8 @@ namespace Certify.UI.ViewModel
 
         internal void AddContactRegistration(ContactRegistration reg)
         {
-            // in practise only one registered contact is used, so remove alternatives to avoid cert processing picking up the wrong one
+            // in practise only one registered contact is used, so remove alternatives to avoid cert
+            // processing picking up the wrong one
             certifyManager.RemoveAllContacts();
 
             if (certifyManager.AddRegisteredContact(reg))

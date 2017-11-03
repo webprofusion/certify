@@ -43,6 +43,9 @@ namespace Certify.CLI
                     var renewalTask = p.PerformAutoRenew();
                     renewalTask.ConfigureAwait(true);
                     renewalTask.Wait();
+
+                    // now perform vault cleanup
+                    p.PerformVaultCleanup();
                 }
 
                 if (args.Contains("list", StringComparer.InvariantCultureIgnoreCase))
