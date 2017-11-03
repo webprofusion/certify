@@ -26,10 +26,7 @@ namespace Certify.Management
             // ACME Sharp is both a vault (config storage) provider and ACME client provider
             _acmeClientProvider = acmeSharp;
             _vaultProvider = acmeSharp;
-
             _siteManager = new ItemManager();
-            _siteManager.LoadSettings();
-
             _iisManager = new IISManager();
         }
 
