@@ -105,7 +105,7 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public Certify.Models.ManagedSite SelectedItem { get; set; }
+        public ManagedSite SelectedItem { get; set; }
 
         public bool IsRegisteredVersion { get; set; }
 
@@ -170,11 +170,6 @@ namespace Certify.UI.ViewModel
                     return new List<IPAddress>();
                 }
             }
-        }
-
-        internal void SelectFirstOrDefaultItem()
-        {
-            SelectedItem = ManagedSites.FirstOrDefault();
         }
 
         public SiteBindingItem SelectedWebSite
@@ -293,7 +288,7 @@ namespace Certify.UI.ViewModel
             }*/
         }
 
-        public void SaveSettings(object param)
+        public void SaveSettings()
         {
             certifyManager.SaveManagedSites(this.ManagedSites.ToList());
         }
@@ -394,26 +389,12 @@ namespace Certify.UI.ViewModel
 
         public void SANSelectAll(object o)
         {
-            if (this.SelectedItem != null && this.SelectedItem.DomainOptions != null)
-            {
-                foreach (var opt in this.SelectedItem.DomainOptions)
-                {
-                    opt.IsSelected = true;
-                }
-            }
+            SelectedItem?.DomainOptions.ToList().ForEach(opt => opt.IsSelected = true);
         }
 
         public void SANSelectNone(object o)
         {
-            if (this.SelectedItem != null && this.SelectedItem.DomainOptions != null)
-            {
-                foreach (var opt in this.SelectedItem.DomainOptions)
-                {
-                    opt.IsSelected = false;
-                }
-
-                // RaisePropertyChanged(nameof(SelectedItem));
-            }
+            SelectedItem?.DomainOptions.ToList().ForEach(opt => opt.IsSelected = false);
         }
 
         /// <summary>
@@ -485,7 +466,6 @@ namespace Certify.UI.ViewModel
 
             //TODO: load settings from previously saved managed site?
             RaisePropertyChanged(nameof(PrimarySubjectDomain));
-
             RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
         }
 

@@ -126,7 +126,7 @@ namespace Certify.UI.Controls
 
         private void ReturnToDefaultManagedItemView()
         {
-            MainViewModel.SelectFirstOrDefaultItem();
+            MainViewModel.SelectedItem = MainViewModel.ManagedSites.FirstOrDefault();
         }
 
         private void Button_RequestCertificate(object sender, RoutedEventArgs e)
@@ -155,19 +155,18 @@ namespace Certify.UI.Controls
 
         private void Button_Delete(object sender, RoutedEventArgs e)
         {
-            if (this.MainViewModel.SelectedItem.Id == null)
-            {
-                //item not saved, discard
-                ReturnToDefaultManagedItemView();
-            }
-            else
+            if (this.MainViewModel.SelectedItem.Id != null)
             {
                 if (MessageBox.Show(SR.ManagedItemSettings_ConfirmDelete, SR.ConfirmDelete, MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
                 {
-                    this.MainViewModel.DeleteManagedSite(this.MainViewModel.SelectedItem);
-                    ReturnToDefaultManagedItemView();
+                    MainViewModel.DeleteManagedSite(MainViewModel.SelectedItem);
+                }
+                else
+                {
+                    return;
                 }
             }
+            ReturnToDefaultManagedItemView();
         }
 
         private void Website_SelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -7,12 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Certify.UI.Controls
 {
@@ -21,7 +16,7 @@ namespace Certify.UI.Controls
     /// </summary>
     public partial class ManagedSites
     {
-        protected Certify.UI.ViewModel.AppModel MainViewModel
+        protected ViewModel.AppModel MainViewModel
         {
             get
             {
@@ -58,22 +53,6 @@ namespace Certify.UI.Controls
             {
                 // user did not want to discard changes, ignore click
                 e.Handled = true;
-            }
-        }
-
-        private void ListView_TouchDown(object sender, TouchEventArgs e)
-        {
-        }
-
-        private void ManagedItemSettings_Loaded(object sender, RoutedEventArgs e)
-        {
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            if (MainViewModel.ManagedSites != null && MainViewModel.ManagedSites.Any())
-            {
-                // this.MainViewModel.ManagedSites[0].Name = DateTime.Now.ToShortDateString();
             }
         }
 
