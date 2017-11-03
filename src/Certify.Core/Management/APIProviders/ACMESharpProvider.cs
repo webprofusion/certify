@@ -157,6 +157,16 @@ namespace Certify.Management.APIProviders
             return _vaultManager.GetACMEBaseURI();
         }
 
+        public void PerformVaultCleanup()
+        {
+            _vaultManager.CleanupVault();
+        }
+
+        public ActionLogItem GetLastActionLogItem()
+        {
+            return _vaultManager.ActionLogs.LastOrDefault();
+        }
+
         #endregion IACMEClientProvider methods
     }
 }

@@ -132,6 +132,16 @@ namespace Certify.Management.APIProviders
             throw new NotImplementedException();
         }
 
+        public void PerformVaultCleanup()
+        {
+            throw new NotImplementedException();
+        }
+
+        public ActionLogItem GetLastActionLogItem()
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion IACMEClientProvider methods
     }
 }

@@ -87,6 +87,11 @@ namespace Certify.Management
             // this._siteManager.StoreSettings();
         }
 
+        public void PerformVaultCleanup()
+        {
+            _vaultProvider.PerformVaultCleanup();
+        }
+
         public bool HasRegisteredContacts()
         {
             return _vaultProvider.HasRegisteredContacts();
@@ -179,6 +184,7 @@ namespace Certify.Management
                 _vaultProvider.DeleteContactRegistration(reg.Id);
             }
         }
+
         public List<SiteBindingItem> GetPrimaryWebSites(bool ignoreStoppedSites)
         {
             return _iisManager.GetPrimarySites(ignoreStoppedSites);
@@ -439,7 +445,14 @@ namespace Certify.Management
                             // could not begin authorization : TODO: pass error from authorization
                             // step to UI
 
-                            LogMessage(managedSite.Id, $"Could not begin authorization for domain with Let's Encrypt: { domain } {(authorization?.AuthorizationError != null ? authorization?.AuthorizationError : "Could not register domain identifier")}");
+                            var lastActionLogItem = _vaultProvider.GetLastActionLogItem();
+                            var actionLogMsg = "";
+                            if (lastActionLogItem != null)
+                            {
+                                actionLogMsg = lastActionLogItem.ToString();
+                            }
+
+                            LogMessage(managedSite.Id, $"Could not begin authorization for domain with Let's Encrypt: { domain } {(authorization?.AuthorizationError != null ? authorization?.AuthorizationError : "Could not register domain identifier")} - {actionLogMsg}");
 
                             /*if (authorization != null && authorization.LogItems != null)
                             {

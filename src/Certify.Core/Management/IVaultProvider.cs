@@ -22,6 +22,8 @@ namespace Certify.Management
 
         string GetVaultSummary();
 
+        ActionLogItem GetLastActionLogItem();
+
         List<string> GetActionSummary();
 
         void EnableSensitiveFileEncryption();
@@ -43,5 +45,7 @@ namespace Certify.Management
         ProcessStepResult PerformCertificateRequestProcess(string primaryDnsIdentifier, string[] alternativeDnsIdentifiers);
 
         Task<APIResult> RevokeCertificate(ManagedSite managedSite);
+
+        void PerformVaultCleanup();
     }
 }

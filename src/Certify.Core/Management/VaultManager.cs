@@ -222,7 +222,7 @@ namespace Certify
                     }
                     else
                     {
-                        //find all orphaned identified
+                        //find all orphaned identified or identifiers with no certificate
                         if (v.Identifiers != null)
                         {
                             foreach (var k in v.Identifiers.Keys)
@@ -282,6 +282,8 @@ namespace Certify
                         }
                     }*/
 
+                    // Remove VaultInfo.ServerDirectory.* where * value contains
+                    // "adding-random-entries-to-the-directory" v.ServerDirectory.
                     vlt.SaveVault(v);
                 }
             }
@@ -661,8 +663,8 @@ namespace Certify
             //if an identifier exists for the same dns in vault, remove it to avoid confusion
             this.DeleteIdentifierByDNS(domain);
 
-            // ACME service requires international domain names in ascii mode, register the new
-            // identifier with Lets Encrypt
+            // ACME service requires international domain names in ascii mode, create new identifier
+            // in vault
             try
             {
                 var authState = ACMESharpUtils.NewIdentifier(identifierAlias, idnMapping.GetAscii(domain));
@@ -670,19 +672,22 @@ namespace Certify
             catch (Exception exp)
             {
                 // failed to register the domain identifier with LE (rate limit or CAA fail?)
+                LogAction("NewIdentifier", exp.ToString());
                 return new PendingAuthorization { AuthorizationError = exp.ToString() };
             }
+
+            Thread.Sleep(200);
 
             var identifier = this.GetIdentifier(identifierAlias, reloadVaultConfig: true);
 
             //FIXME: when validating subsequent SAN names in parallel request mode, the identifier is null?
             if (identifier != null && identifier.Authorization != null && identifier.Authorization.IsPending())
             {
-                ACMESharpUtils.CompleteChallenge(identifier.Alias, challengeType, Handler: "manual", Regenerate: true, Repeat: true);
+                var authState = ACMESharpUtils.CompleteChallenge(identifier.Alias, challengeType, Handler: "manual", Regenerate: true, Repeat: true);
+                LogAction("CompleteChallenge", authState.Status);
 
-                //get challenge info
-                ReloadVaultConfig();
-                identifier = GetIdentifier(identifierAlias);
+                //get challenge info for this identifier
+                identifier = GetIdentifier(identifierAlias, reloadVaultConfig: true);
                 try
                 {
                     //identifier challenge specification is now ready for use to prepare and answer for LetsEncrypt to check
