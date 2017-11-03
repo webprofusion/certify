@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Certify.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Certify.Models;
-using System.IO;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Certify.Management
 {
@@ -89,6 +89,8 @@ namespace Certify.Management
                     }
                 }*/
             }
+            // reset IsChanged as all items have been persisted
+            ManagedSites.ForEach(s => s.IsChanged = false);
         }
 
         public void LoadSettings()
@@ -104,7 +106,7 @@ namespace Certify.Management
                 {
                     // string configData = System.IO.File.ReadAllText(path); this.ManagedSites = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ManagedSite>>(configData);
 
-                    var managedSites = new List<ManagedSite>();
+                    ManagedSites = new List<ManagedSite>();
                     // read managed sites using tokenize stream, this is useful for large files
 
                     using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
@@ -120,34 +122,20 @@ namespace Certify.Management
                                         // Load each object from the stream and do something with it
                                         JObject obj = JObject.Load(reader);
                                         var managedSite = obj.ToObject<ManagedSite>();
-                                        managedSites.Add(managedSite);
+                                        ManagedSites.Add(managedSite);
                                     }
                                 }
                             }
                         }
                     }
 
-                    this.ManagedSites = managedSites;
-
-                    //foreach managed site enable change notification for edits to domainoptions
-                    foreach (var s in this.ManagedSites)
-                    {
-                        foreach (var d in s.DomainOptions)
-                        {
-                            d.PropertyChanged += s.DomainOption_PropertyChanged;
-                            d.IsChanged = false;
-                        }
-                    }
+                    // reset IsChanged for all loaded settings
+                    ManagedSites.ForEach(s => s.IsChanged = false);
                 }
             }
             else
             {
                 this.ManagedSites = new List<ManagedSite>();
-            }
-
-            foreach (var s in this.ManagedSites)
-            {
-                s.IsChanged = false;
             }
         }
 

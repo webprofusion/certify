@@ -1,9 +1,12 @@
 using Certify.Management;
-using PropertyChanged;
+using Certify.Utils;
+using Newtonsoft.Json;
 using Serilog;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
@@ -11,8 +14,6 @@ using System.Threading.Tasks;
 
 namespace Certify.Models
 {
-    using Utils;
-
     public enum LogItemType
     {
         GeneralInfo = 1,
@@ -86,6 +87,13 @@ namespace Certify.Models
         }
     }
 
+    /// <summary>
+    /// Base class for data classes used with WPF, with a bubbled IsChanged property
+    /// </summary>
+    /// <remarks>
+    /// Handles any level of nested INotifyPropertyChanged objects (ex: other BindableBase-
+    /// derived classes) or INotifyCollectionChanged objects (ex: ObservableCollection)
+    /// </remarks>
     public class BindableBase : INotifyPropertyChanged
     {
         /// <summary>
@@ -93,10 +101,70 @@ namespace Certify.Models
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public void OnPropertyChanged(string propertyName, object before, object after)
+        public void OnPropertyChanged(string prop, object before, object after)
         {
-            //Perform property validation
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            if (prop != "IsChanged")
+            {
+                // auto-update the IsChanged property for standard properties
+                IsChanged = true;
+            }
+
+            // hook up to events
+            DetachChangeEventHandlers(before);
+            AttachChangeEventHandlers(after);
+
+            // fire the event
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+        }
+
+        private void AttachChangeEventHandlers(object obj)
+        {
+            // attach to INotifyPropertyChanged properties
+            if (obj is INotifyPropertyChanged prop)
+            {
+                prop.PropertyChanged += HandleChangeEvent;
+            }
+            // attach to INotifyCollectionChanged properties
+            if (obj is INotifyCollectionChanged coll)
+            {
+                coll.CollectionChanged += HandleChangeEvent;
+            }
+        }
+
+        private void DetachChangeEventHandlers(object obj)
+        {
+            // detach from INotifyPropertyChanged properties
+            if (obj is INotifyPropertyChanged prop)
+            {
+                prop.PropertyChanged -= HandleChangeEvent;
+            }
+            // detach from INotifyCollectionChanged properties
+            if (obj is INotifyCollectionChanged coll)
+            {
+                coll.CollectionChanged -= HandleChangeEvent;
+            }
+        }
+
+        private void HandleChangeEvent(object src, EventArgs args)
+        {
+            IsChanged = true;
+            if (args is NotifyCollectionChangedEventArgs ccArgs)
+            {
+                if (ccArgs.Action == NotifyCollectionChangedAction.Remove)
+                {
+                    foreach (object obj in ccArgs.OldItems)
+                    {
+                        DetachChangeEventHandlers(obj);
+                    }
+                }
+                if (ccArgs.Action == NotifyCollectionChangedAction.Add)
+                {
+                    foreach (object obj in ccArgs.NewItems)
+                    {
+                        AttachChangeEventHandlers(obj);
+                    }
+                }
+            }
         }
 
         public void RaisePropertyChanged(string prop)
@@ -107,7 +175,58 @@ namespace Certify.Models
         /// <summary>
         /// True if a property has been changed on the model since IsChanged was last set to false 
         /// </summary>
-        public bool IsChanged { get; set; }
+        [JsonIgnore] // don't serialize this property to saved settings
+        public bool IsChanged
+        {
+            get { return isChanged; }
+            set
+            {
+                if (!value)
+                {
+                    UnsetChanged(this);
+                }
+                else
+                {
+                    isChanged = value;
+                }
+            }
+        }
+        private bool isChanged;
+
+        // recursively unsets IsChanged on a BindableBase object, any property
+        // on the object of type BindableBase, and any BindableBase objects
+        // nested in ICollection properties
+        private void UnsetChanged(object obj)
+        {
+            if (obj is BindableBase bb)
+            {
+                bb.isChanged = false;
+                var props = obj.GetType().GetProperties();
+                foreach (var prop in props.Where(p =>
+                    p.PropertyType.GetInterfaces().Contains(typeof(ICollection))))
+                {
+                    object val = prop.GetValue(obj);
+                    if (val is ICollection propertyCollection)
+                    {
+                        foreach (object subObj in propertyCollection)
+                        {
+                            UnsetChanged(subObj);
+                        }
+                    }
+                    if (val is BindableBase bbSub)
+                    {
+                        UnsetChanged(bbSub);
+                    }
+                }
+            }
+            if (obj is ICollection collection)
+            {
+                foreach (object subObj in collection)
+                {
+                    UnsetChanged(subObj);
+                }
+            }
+        }
     }
 
     public class ManagedItem : BindableBase
@@ -156,14 +275,6 @@ namespace Certify.Models
             this.DomainOptions = new ObservableCollection<DomainOption>();
             this.RequestConfig = new CertRequestConfig();
             this.RequestConfig.EnableFailureNotifications = true;
-
-            this.RequestConfig.PropertyChanged += RequestConfig_PropertyChanged;
-        }
-
-        private void RequestConfig_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            //when RequestConfig IsChanged also mark ManagedItem as changed
-            if (RequestConfig.IsChanged) IsChanged = true;
         }
 
         /// <summary>
@@ -180,43 +291,12 @@ namespace Certify.Models
         /// <summary>
         /// List of configured domains this managed site will include (primary subject or SAN) 
         /// </summary>
-        public ObservableCollection<DomainOption> DomainOptions { get; set; }
+        public ObservableCollection<DomainOption> DomainOptions { get; private set; }
 
         /// <summary>
         /// Configuration options for this request 
         /// </summary>
         public CertRequestConfig RequestConfig { get; set; }
-
-        public void AddDomainOption(DomainOption domainOption)
-        {
-            if (this.DomainOptions == null) this.DomainOptions = new ObservableCollection<DomainOption>();
-
-            domainOption.PropertyChanged += DomainOption_PropertyChanged;
-
-            this.DomainOptions.Add(domainOption);
-        }
-
-        internal void DomainOption_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            //if a domain option has changed then the parent managed item gets marked as changed as well
-            this.IsChanged = true;
-        }
-
-        public void ClearDomainOptions()
-        {
-            this.DomainOptions = new ObservableCollection<DomainOption>();
-        }
-
-        public void AddDomainOptions(List<DomainOption> domainOptions)
-        {
-            // add list of domain options, this in turn wires up change notifications
-            foreach (var d in domainOptions)
-            {
-                this.AddDomainOption(d);
-            }
-
-            RaisePropertyChanged(nameof(DomainOptions));
-        }
     }
 
     //TODO: may deprecate, was mainly for preview of setup wizard

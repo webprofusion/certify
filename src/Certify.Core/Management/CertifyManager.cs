@@ -73,11 +73,6 @@ namespace Certify.Management
             return _vaultProvider.GetCertificates();
         }
 
-        public void SetManagedSites(List<ManagedSite> managedSites)
-        {
-            this._siteManager.UpdatedManagedSites(managedSites);
-        }
-
         public void SaveManagedSites(List<ManagedSite> managedSites)
         {
             this._siteManager.UpdatedManagedSites(managedSites);
@@ -710,7 +705,7 @@ namespace Certify.Management
                         SubjectAlternativeNames = new string[] { identifier.Dns }
                     }
                 };
-                site.AddDomainOption(new DomainOption { Domain = identifier.Dns, IsPrimaryDomain = true, IsSelected = true });
+                site.DomainOptions.Add(new DomainOption { Domain = identifier.Dns, IsPrimaryDomain = true, IsSelected = true });
                 sites.Add(site);
             }
 
@@ -730,7 +725,7 @@ namespace Certify.Management
                         );
                         if (mergedSite != null)
                         {
-                            mergedSite.AddDomainOption(new DomainOption { Domain = s.RequestConfig.PrimaryDomain, IsPrimaryDomain = false, IsSelected = true });
+                            mergedSite.DomainOptions.Add(new DomainOption { Domain = s.RequestConfig.PrimaryDomain, IsPrimaryDomain = false, IsSelected = true });
 
                             //use shortest version of domain name as site name
                             if (mergedSite.RequestConfig.PrimaryDomain.Contains(s.RequestConfig.PrimaryDomain))
