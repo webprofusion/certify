@@ -8,7 +8,7 @@
         xmlns:res="clr-namespace:Certify.UI.Resources"
         mc:Ignorable="d"
         Title="{x:Static res:SR.Registration}" Height="201.6" Width="363.6"
-        GlowBrush="{DynamicResource AccentColorBrush}"
+        GlowBrush="{DynamicResource AccentColorBrush}" ResizeMode="NoResize"
         BorderThickness="1" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner">
     <Grid Margin="0,0,0,-19">
         <Button x:Name="ValidateKey" Content="{x:Static res:SR.ValidateKey}" HorizontalAlignment="Left" Margin="228,137,0,0" VerticalAlignment="Top" Width="112" Click="ValidateKey_Click" />
