@@ -12,6 +12,7 @@ using WinForms = System.Windows.Forms;
 namespace Certify.UI.Controls
 {
     using Resources;
+    using System.Windows.Input;
 
     /// <summary>
     /// Interaction logic for ManagedItemSettings.xaml 
@@ -407,6 +408,16 @@ namespace Certify.UI.Controls
                     RevokeCertificateBtn.IsEnabled = true;
                 }
             }
+        }
+
+        private void ScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            // allows mousewheel scrolling while mouse cursor is over the DataGrid
+            // see: https://stackoverflow.com/a/16235785/490657
+            ScrollViewer scv = (ScrollViewer)sender;
+            
+            scv.ScrollToVerticalOffset(scv.VerticalOffset - e.Delta/2);
+            e.Handled = true;
         }
     }
 }
