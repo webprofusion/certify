@@ -49,8 +49,17 @@ namespace Certify.Management
                 var path = appDataPath + "\\" + ITEMMANAGERCONFIG;
 
                 //backup settings file
-                System.IO.File.Delete(path + ".bak");
-                System.IO.File.Move(path, path + ".bak");
+                if (File.Exists(path))
+                {
+                    // delete old settings backup if present
+                    if (File.Exists(path + ".bak"))
+                    {
+                        System.IO.File.Delete(path + ".bak");
+                    }
+
+                    // backup settings
+                    System.IO.File.Move(path, path + ".bak");
+                }
 
                 // write new settings files as tokenized stream
                 // System.IO.File.WriteAllText(appDataPath + "\\" + ITEMMANAGERCONFIG, siteManagerConfig);
@@ -88,6 +97,7 @@ namespace Certify.Management
             //        files can be hundreds of megabytes
             string appDataPath = Util.GetAppDataFolder();
             var path = appDataPath + "\\" + ITEMMANAGERCONFIG;
+
             if (System.IO.File.Exists(path))
             {
                 lock (ITEMMANAGERCONFIG)
