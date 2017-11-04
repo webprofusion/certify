@@ -324,7 +324,7 @@
   <data name="ManagedItemSettings_Include" xml:space="preserve">
     <value>包含</value>
   </data>
-  <data name="ManagedItemSettings_NoHostNameBindingWarnging" xml:space="preserve">
+  <data name="ManagedItemSettings_NoHostNameBindingWarning" xml:space="preserve">
     <value>选定站点没有任何HTTP或HTTPS域名绑定。至少需要一个完整的域名（如 github.com）才能继续申请证书。</value>
   </data>
   <data name="ManagedItemSettings_NotifyPrimaryContactOnRenewalFailure" xml:space="preserve">

@@ -739,9 +739,9 @@ namespace Certify.UI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to There are no http or https hostname bindings associated with the selected site in IIS. At least one fully qualified hostname (e.g &apos;github.com&apos;) is required to create a certificate..
         /// </summary>
-        public static string ManagedItemSettings_NoHostNameBindingWarnging {
+        public static string ManagedItemSettings_NoHostNameBindingWarning {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_NoHostNameBindingWarnging", resourceCulture);
+                return ResourceManager.GetString("ManagedItemSettings_NoHostNameBindingWarning", resourceCulture);
             }
         }
         
