@@ -63,20 +63,6 @@ namespace Certify.UI
                 }
             }
 
-            //check for updates and report result to view model
-            if (Management.CoreAppSettings.Current.CheckForUpdatesAtStartup)
-            {
-                Task.Run(async () =>
-                {
-                    var updateCheck = await new Certify.Management.Util().CheckForUpdates();
-                    if (updateCheck != null && updateCheck.IsNewerVersion)
-                    {
-                        MainViewModel.IsUpdateAvailable = true;
-                        MainViewModel.UpdateCheckResult = updateCheck;
-                    }
-                });
-            }
-
             //init telemetry if enabled
             InitTelemetry();
         }
