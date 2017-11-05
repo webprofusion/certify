@@ -20,6 +20,7 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// Provide single static instance of model for all consumers 
         /// </summary>
+        //public static AppModel AppViewModel = new DesignViewModel(); // for UI testing
         public static AppModel AppViewModel = AppModel.GetModel();
 
         public const int ProductTypeId = 1;
@@ -82,7 +83,7 @@ namespace Certify.UI.ViewModel
         /// </summary>
         public bool IsImportSANMergeMode { get; set; }
 
-        public bool HasRegisteredContacts
+        public virtual bool HasRegisteredContacts
         {
             get
             {
@@ -109,7 +110,7 @@ namespace Certify.UI.ViewModel
 
         public bool IsRegisteredVersion { get; set; }
 
-        public List<SiteBindingItem> WebSiteList
+        public virtual List<SiteBindingItem> WebSiteList
         {
             get
             {
@@ -261,8 +262,8 @@ namespace Certify.UI.ViewModel
             ProgressResults = new ObservableCollection<RequestProgressState>();
         }
 
-        public bool IsIISAvailable => certifyManager.IsIISAvailable;
-        public Version IISVersion => certifyManager.IISVersion;
+        public virtual bool IsIISAvailable => certifyManager.IsIISAvailable;
+        public virtual Version IISVersion => certifyManager.IISVersion;
 
         public void PreviewImport(bool sanMergeMode)
         {
@@ -272,7 +273,7 @@ namespace Certify.UI.ViewModel
             ImportedManagedSites = new ObservableCollection<ManagedSite>(importedSites);
         }
 
-        public void LoadSettings()
+        public virtual void LoadSettings()
         {
             this.ManagedSites = new ObservableCollection<ManagedSite>(certifyManager.GetManagedSites());
             this.ImportedManagedSites = new ObservableCollection<ManagedSite>();
@@ -288,7 +289,7 @@ namespace Certify.UI.ViewModel
             }*/
         }
 
-        public void SaveSettings()
+        public virtual void SaveSettings()
         {
             certifyManager.SaveManagedSites(this.ManagedSites.ToList());
         }
@@ -372,7 +373,7 @@ namespace Certify.UI.ViewModel
             return item;
         }
 
-        internal void DeleteManagedSite(ManagedSite selectedItem)
+        public virtual void DeleteManagedSite(ManagedSite selectedItem)
         {
             var existing = this.ManagedSites.FirstOrDefault(s => s.Id == selectedItem.Id);
 
@@ -454,8 +455,8 @@ namespace Certify.UI.ViewModel
             managedSite.RequestConfig.ChallengeType = ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP;
             managedSite.IncludeInAutoRenew = true;
             managedSite.DomainOptions.Clear();
-            foreach (var option in certifyManager.GetDomainOptionsFromSite(siteId))
-            {
+            foreach (var option in GetDomainOptionsFromSite(siteId))
+            { 
                 managedSite.DomainOptions.Add(option);
             }
 
@@ -467,6 +468,11 @@ namespace Certify.UI.ViewModel
             //TODO: load settings from previously saved managed site?
             RaisePropertyChanged(nameof(PrimarySubjectDomain));
             RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
+        }
+
+        protected virtual IEnumerable<DomainOption> GetDomainOptionsFromSite(string siteId)
+        {
+            return certifyManager.GetDomainOptionsFromSite(siteId);
         }
 
         public async void BeginCertificateRequest(string managedItemId)

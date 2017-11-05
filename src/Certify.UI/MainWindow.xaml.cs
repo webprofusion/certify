@@ -40,11 +40,7 @@ namespace Certify.UI
         public MainWindow()
         {
             InitializeComponent();
-
-            if (!System.ComponentModel.DesignerProperties.GetIsInDesignMode(this))
-            {
-                this.DataContext = MainViewModel;
-            }
+            DataContext = MainViewModel;
         }
 
         private void Button_NewCertificate(object sender, RoutedEventArgs e)

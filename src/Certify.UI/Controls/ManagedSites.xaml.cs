@@ -16,18 +16,12 @@ namespace Certify.UI.Controls
     /// </summary>
     public partial class ManagedSites
     {
-        protected ViewModel.AppModel MainViewModel
-        {
-            get
-            {
-                return ViewModel.AppModel.AppViewModel;
-            }
-        }
+        protected ViewModel.AppModel MainViewModel => ViewModel.AppModel.AppViewModel;
 
         public ManagedSites()
         {
             InitializeComponent();
-            this.DataContext = MainViewModel;
+            DataContext = MainViewModel;
         }
 
         private void UserControl_OnLoaded(object sender, RoutedEventArgs e)
