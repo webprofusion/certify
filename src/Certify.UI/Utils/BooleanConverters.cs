@@ -66,11 +66,12 @@ namespace Certify.UI.Utils
 
     public class NullVisibilityConverter : IValueConverter
     {
-        public bool NullVisible { get; set; }
+        public Visibility Null { get; set; } = Visibility.Collapsed;
+        public Visibility NotNull { get; set; } = Visibility.Visible;
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return value == null ^ NullVisible ? Visibility.Hidden : Visibility.Visible;
+            return value == null ? Null : NotNull;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

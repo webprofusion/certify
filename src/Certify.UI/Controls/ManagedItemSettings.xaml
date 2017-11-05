@@ -27,8 +27,8 @@
             <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
             <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
             <utils:OptionalBooleanToVisibilityConverter True="Hidden" False="Visible" x:Key="InvBoolVisConverter" />
-            <utils:NullVisibilityConverter x:Key="NullVisibleConverter" />
-            <utils:NullVisibilityConverter x:Key="NullHiddenConverter" NullVisible="False"/>
+            <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
+            <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed"/>
         </Grid.Resources>
         <StackPanel Orientation="Vertical" Grid.Row="0">
             <Label Content="{Binding SelectedItem.Name}" Margin="8,0,0,2" FontSize="24" FontFamily="Segoe UI Semilight" />
@@ -69,8 +69,8 @@
                                  VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
             <TabItem Header="{x:Static Resources:SR.ManagedItemSettings_Tab_Options}" IsSelected="True">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
-                    <StackPanel Margin="12" Orientation="Vertical" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
-                        <StackPanel Orientation="Horizontal" Visibility="{Binding SelectedItem?.Id, Converter={StaticResource ResourceKey=NullHiddenConverter}}">
+                    <StackPanel Margin="12" Orientation="Vertical" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
+                        <StackPanel Orientation="Horizontal" Visibility="{Binding SelectedItem.Id, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
                             <Label Width="136" Content="{x:Static Resources:SR.ManagedItemSettings_SelectIISSite}" />
                             <ComboBox ItemsSource="{Binding WebSiteList}" SelectedItem="{Binding SelectedWebSite}"  DisplayMemberPath="SiteName" Width="225" SelectionChanged="Website_SelectionChanged" />
                         </StackPanel>

@@ -16,8 +16,8 @@
 
     <Grid>
         <Grid.Resources>
-            <utils:NullVisibilityConverter x:Key="NullHiddenConverter"/>
-            <utils:NullVisibilityConverter x:Key="NullVisibleConverter" NullVisible="True"/>
+            <utils:NullVisibilityConverter x:Key="NullCollapsedConverter"/>
+            <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed"/>
             <utils:EnumConverter x:Key="EnumConverter" />
             <utils:ExpiryDateConverter x:Key="ExpiryDateConverter" />
             <utils:ExpiryDateColourConverter x:Key="ExpiryDateColourConverter" />
@@ -65,7 +65,7 @@
         </Grid>
         <GridSplitter Grid.Column="1" Width="10" HorizontalAlignment="Stretch" Background="White" />
         <Grid Grid.Column="2">
-            <local:ManagedItemSettings Visibility="{Binding SelectedItem, Converter={StaticResource NullHiddenConverter}}" BorderBrush="{DynamicResource WindowTitleColorBrush}" Margin="0,10,0,0" Width="Auto" Height="Auto" />
+            <local:ManagedItemSettings Visibility="{Binding SelectedItem, Converter={StaticResource NullCollapsedConverter}}" BorderBrush="{DynamicResource WindowTitleColorBrush}" Margin="0,10,0,0" Width="Auto" Height="Auto" />
             <StackPanel Visibility="{Binding SelectedItem, Converter={StaticResource NullVisibleConverter}}" Margin="16,0,0,0" Height="Auto">
                 <StackPanel Margin="6,8"  Height="Auto" MinHeight="300" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
                     <TextBlock TextWrapping="Wrap" FontSize="36" Margin="16,16,0,16"  FontFamily="Segoe UI Light"><Run FontWeight="Bold" FontFamily="Segoe UI Semibold" Text="Certify" /><Run Text=" the " /><Run Text="w" /><Run Text="eb" /></TextBlock>
