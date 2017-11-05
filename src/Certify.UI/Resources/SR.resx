@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -351,7 +351,7 @@
   <data name="ManagedItemSettings_NotifyPrimaryContactOnRenewalFailure" xml:space="preserve">
     <value>Notify Primary Contact On Renewal Failure</value>
   </data>
-  <data name="ManagedItemSettings_NoHostNameBindingWarnging" xml:space="preserve">
+  <data name="ManagedItemSettings_NoHostNameBindingWarning" xml:space="preserve">
     <value>There are no http or https hostname bindings associated with the selected site in IIS. At least one fully qualified hostname (e.g 'github.com') is required to create a certificate.</value>
   </data>
   <data name="ManagedItemSettings_Tab_Options" xml:space="preserve">

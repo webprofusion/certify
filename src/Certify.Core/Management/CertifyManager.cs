@@ -84,7 +84,12 @@ namespace Certify.Management
         public void SaveManagedSites(List<ManagedSite> managedSites)
         {
             this._siteManager.UpdatedManagedSites(managedSites);
-            this._siteManager.StoreSettings();
+            // this._siteManager.StoreSettings();
+        }
+
+        public void PerformVaultCleanup()
+        {
+            _vaultProvider.PerformVaultCleanup();
         }
 
         public bool HasRegisteredContacts()
@@ -168,6 +173,15 @@ namespace Certify.Management
                 {
                     _vaultProvider.DeleteContactRegistration(reg.Id);
                 }
+            }
+        }
+
+        public void RemoveAllContacts()
+        {
+            var regList = _vaultProvider.GetContactRegistrations();
+            foreach (var reg in regList)
+            {
+                _vaultProvider.DeleteContactRegistration(reg.Id);
             }
         }
 
@@ -431,7 +445,14 @@ namespace Certify.Management
                             // could not begin authorization : TODO: pass error from authorization
                             // step to UI
 
-                            LogMessage(managedSite.Id, $"Could not begin authorization for domain with Let's Encrypt: { domain } {(authorization?.AuthorizationError != null ? authorization?.AuthorizationError : "Could not register domain identifier")}");
+                            var lastActionLogItem = _vaultProvider.GetLastActionLogItem();
+                            var actionLogMsg = "";
+                            if (lastActionLogItem != null)
+                            {
+                                actionLogMsg = lastActionLogItem.ToString();
+                            }
+
+                            LogMessage(managedSite.Id, $"Could not begin authorization for domain with Let's Encrypt: { domain } {(authorization?.AuthorizationError != null ? authorization?.AuthorizationError : "Could not register domain identifier")} - {actionLogMsg}");
 
                             /*if (authorization != null && authorization.LogItems != null)
                             {

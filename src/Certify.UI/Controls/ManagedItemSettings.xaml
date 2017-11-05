@@ -67,7 +67,7 @@
         <dragablz:TabablzControl x:Name="SettingsTab" Margin="8" Grid.Row="2" FixedHeaderCount="3"
                                  VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
             <TabItem Header="{x:Static Resources:SR.ManagedItemSettings_Tab_Options}" IsSelected="True">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
                     <StackPanel Margin="12" Orientation="Vertical" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullVisConverter}}">
                         <StackPanel Orientation="Horizontal" Visibility="{Binding IsWebsiteSelectable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
                             <Label Width="136" Content="{x:Static Resources:SR.ManagedItemSettings_SelectIISSite}" />
@@ -82,7 +82,7 @@
                             <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_NotifyPrimaryContactOnRenewalFailure}" IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" />
                         </StackPanel>
                         <StackPanel x:Name="NoBindings" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" Orientation="Vertical"  Margin="0,8,0,0">
-                            <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="8,0" FontWeight="Bold" FontFamily="Segoe UI Semibold" Foreground="#FFEA1010"><Run Text="{x:Static Resources:SR.ManagedItemSettings_NoHostNameBindingWarnging}" /></TextBlock>
+                            <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="8,0" FontWeight="Bold" FontFamily="Segoe UI Semibold" Foreground="#FFEA1010"><Run Text="{x:Static Resources:SR.ManagedItemSettings_NoHostNameBindingWarning}" /></TextBlock>
                         </StackPanel>
                         <StackPanel x:Name="DomainOptions" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=BoolToVisConverter}}" Orientation="Vertical" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
                             <StackPanel Orientation="Vertical" Margin="0,8,8,8" HorizontalAlignment="Left">

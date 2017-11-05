@@ -32,15 +32,8 @@ namespace ACMESharp.POSH.Util
             var p = Config.Proxy;
             var _Client = new AcmeClient();
 
-            // depends on https://github.com/ebekker/ACMESharp/pull/300
-            //_Client.UserAgent = $"Certify/{0} {_Client.UserAgent}";
-            //_Client.Language = "en-US, en;q=0.8";
-            _Client.BeforeGetResponseAction = req =>
-            {
-                var version = typeof(ClientHelper).Assembly.GetName().Version;
-                req.UserAgent = $"Certify/{version} {req.UserAgent}";
-                req.Headers[HttpRequestHeader.AcceptLanguage] = "en-US; en;q=0.8";
-            };
+            _Client.UserAgent = $"Certify/{0} {_Client.UserAgent}";
+            _Client.Language = "en-US, en;q=0.8";
             _Client.RootUrl = new Uri(Config.BaseUri);
             _Client.Directory = Config.ServerDirectory;
 

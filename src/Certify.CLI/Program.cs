@@ -19,42 +19,51 @@ namespace Certify.CLI
             Certify.Properties.Settings.Default.UpgradeSettingsVersion(); // deprecated
             Certify.Management.SettingsManager.LoadAppSettings();
 
+            var p = new CertifyCLI();
+            p.ShowVersion();
+
             if (args.Length == 0)
             {
-                ShowVersion();
-                ShowHelp();
-
-                var p = new Program();
+                p.ShowHelp();
                 p.ShowACMEInfo();
-                p.ListManagedSites();
-                Console.ReadKey();
-                //p.PreviewAutoManage();
-                //p.PerformVaultCleanup();
-                //System.Console.ReadKey();
-                return 1;
             }
             else
             {
-                var p = new Program();
-
-                ShowVersion();
-
                 p.ShowACMEInfo();
+
+                if (args.Contains("cleanup", StringComparer.InvariantCultureIgnoreCase))
+                {
+                    // cleanup vault
+                    p.PerformVaultCleanup();
+                }
 
                 if (args.Contains("renew", StringComparer.InvariantCultureIgnoreCase))
                 {
-                    //renew all
-                    var t = p.PerformAutoRenew();
-                    t.ConfigureAwait(true);
+                    // perform auto renew all
+                    var renewalTask = p.PerformAutoRenew();
+                    renewalTask.ConfigureAwait(true);
+                    renewalTask.Wait();
 
-                    t.Wait();
+                    // now perform vault cleanup
+                    p.PerformVaultCleanup();
                 }
-                //System.Console.ReadKey();
+
+                if (args.Contains("list", StringComparer.InvariantCultureIgnoreCase))
+                {
+                    //list managed sites and status
+                    p.ListManagedSites();
+                }
             }
 
+#if DEBUG
+            Console.ReadKey();
+#endif
             return 0;
         }
+    }
 
+    internal class CertifyCLI
+    {
         private readonly IdnMapping _idnMapping = new IdnMapping();
         private TelemetryClient tc = null;
 
@@ -75,26 +84,25 @@ namespace Certify.CLI
             }
         }
 
-        private void PerformVaultCleanup()
-        {
-            /*var vaultManager = new VaultManager(Properties.Settings.Default.VaultPath, LocalDiskVault.VAULT);
-
-            //init vault if not already created
-            vaultManager.InitVault(staging: true);
-
-            vaultManager.CleanupVault();*/
-        }
-
-        private static void ShowVersion()
+        internal void ShowVersion()
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
-            System.Console.WriteLine("Certify SSL Manager - CLI v1.0.0");
+            System.Console.WriteLine("Certify SSL Manager - CLI v1.1.0. Certify.Core v" + new Certify.Management.Util().GetAppVersion().ToString());
             Console.ForegroundColor = ConsoleColor.White;
             System.Console.WriteLine("For more information see " + Certify.Properties.Resources.AppWebsiteURL);
             System.Console.WriteLine("");
         }
 
-        private void ShowACMEInfo()
+        internal void PerformVaultCleanup()
+        {
+            System.Console.WriteLine("Beginning Vault Cleanup..");
+            var certifyManager = new CertifyManager();
+            certifyManager.PerformVaultCleanup();
+
+            System.Console.WriteLine("Completed Vault Cleanup..");
+        }
+
+        internal void ShowACMEInfo()
         {
             var certifyManager = new CertifyManager();
             string vaultInfo = certifyManager.GetVaultSummary();
@@ -108,23 +116,21 @@ namespace Certify.CLI
             Console.ForegroundColor = ConsoleColor.White;
         }
 
-        private static void ShowHelp()
+        internal void ShowHelp()
         {
             Console.ForegroundColor = ConsoleColor.White;
             System.Console.WriteLine("Usage: certify <command> \n");
             System.Console.WriteLine("certify renew : renew certificates for all auto renewed managed sites");
-            // System.Console.WriteLine("help : show this help information");
+            System.Console.WriteLine("certify list : list managed sites and current running/not running status in IIS");
+            System.Console.WriteLine("certify cleanup : cleanup vault entries");
 
-            // System.Console.WriteLine("-l --list : list managed sites");
-            // System.Console.WriteLine("-p --preview : auto scan and preview proposed list of
-            // managed sites");
             System.Console.WriteLine("\n");
         }
 
         /// <summary>
         /// Auto scan and preview list of sites to manage 
         /// </summary>
-        private void PreviewAutoManage()
+        internal void PreviewAutoManage()
         {
             var siteManager = new ItemManager();
             var siteList = siteManager.Preview();
@@ -151,7 +157,7 @@ namespace Certify.CLI
             siteManager.StoreSettings();
         }
 
-        private async Task<System.Collections.Generic.List<CertificateRequestResult>> PerformAutoRenew()
+        internal async Task<System.Collections.Generic.List<CertificateRequestResult>> PerformAutoRenew()
         {
             if (tc == null) InitTelematics();
             if (tc != null)
@@ -170,6 +176,7 @@ namespace Certify.CLI
             {
                 if (r.ManagedItem != null)
                 {
+                    System.Console.WriteLine("--------------------------------------");
                     if (r.IsSuccess)
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
@@ -200,7 +207,7 @@ namespace Certify.CLI
             return results;
         }
 
-        private void ListManagedSites()
+        internal void ListManagedSites()
         {
             var siteManager = new ItemManager();
             siteManager.LoadSettings();

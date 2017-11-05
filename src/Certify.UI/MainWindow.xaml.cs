@@ -18,7 +18,7 @@ namespace Certify.UI
     using Resources;
 
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for MainWindow.xaml 
     /// </summary>
     public partial class MainWindow
     {
@@ -114,7 +114,7 @@ namespace Certify.UI
             }
         }
 
-        private void MetroWindow_ContentRendered(object sender, EventArgs e)
+        private async void MetroWindow_ContentRendered(object sender, EventArgs e)
         {
             //warn if IIS not detected
 
@@ -129,6 +129,17 @@ namespace Certify.UI
                 MessageBox.Show(SR.MainWindow_GetStartGuideWithNewCert);
                 var d = new Windows.EditContactDialog { Owner = this };
                 d.ShowDialog();
+            }
+
+            //check for updates and report result to view model
+            if (Management.CoreAppSettings.Current.CheckForUpdatesAtStartup)
+            {
+                var updateCheck = await new Certify.Management.Util().CheckForUpdates();
+                if (updateCheck != null && updateCheck.IsNewerVersion)
+                {
+                    MainViewModel.UpdateCheckResult = updateCheck;
+                    MainViewModel.IsUpdateAvailable = true;
+                }
             }
         }
 

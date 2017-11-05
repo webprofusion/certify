@@ -9,7 +9,7 @@
         mc:Ignorable="d" TitleCaps="False" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner"
         Title="{x:Static res:SR.ScheduledTaskConfig_WindowTitle}" Height="222.689" Width="414.285"
                        GlowBrush="{DynamicResource AccentColorBrush}"
-        BorderThickness="1">
+        BorderThickness="1" ResizeMode="NoResize">
     <Grid>
         <TextBox x:Name="Username" HorizontalAlignment="Left" Height="23" Margin="177,74,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="219" />
         <PasswordBox x:Name="Password" HorizontalAlignment="Left" Margin="177,106,0,0" VerticalAlignment="Top" Width="219" />
@@ -18,6 +18,6 @@
         <Label Content="{x:Static res:SR.ScheduledTaskConfig_UserNameLabel}" HorizontalAlignment="Left" Margin="10,74,0,0" VerticalAlignment="Top" />
         <Label Content="{x:Static res:SR.Password}" HorizontalAlignment="Left" Margin="10,110,0,0" VerticalAlignment="Top" />
 
-        <TextBlock x:Name="AutoRenewPrompt" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top"><Run Text="{x:Static res:SR.ScheduledTaskConfig_Tip}" /><LineBreak /><Run /></TextBlock>
+        <TextBlock x:Name="AutoRenewPrompt" HorizontalAlignment="Left" Margin="10,10,10,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="384"><Run Text="{x:Static res:SR.ScheduledTaskConfig_Tip}" /><LineBreak /><Run /></TextBlock>
     </Grid>
 </Controls:MetroWindow>
