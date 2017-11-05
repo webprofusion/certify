@@ -22,11 +22,21 @@ namespace Certify.UI.Controls
         {
             InitializeComponent();
             DataContext = MainViewModel;
+
+            SetFilter(); // start listening
+            MainViewModel.PropertyChanged += (obj, args) =>
+            {
+                if (args.PropertyName == "ManagedSites" &&
+                    MainViewModel.ManagedSites != null)
+                {
+                    SetFilter(); // reset listeners when ManagedSites are reset
+                }
+            };
         }
 
-        private void UserControl_OnLoaded(object sender, RoutedEventArgs e)
+        private void SetFilter()
         {
-            CollectionViewSource.GetDefaultView(lvManagedSites.ItemsSource).Filter = (item) =>
+            CollectionViewSource.GetDefaultView(MainViewModel.ManagedSites).Filter = (item) =>
             {
                 string filter = txtFilter.Text.Trim();
                 return filter == "" || filter.Split(';').Where(f => f.Trim() != "").Any(f =>
@@ -39,20 +49,186 @@ namespace Certify.UI.Controls
         private void ListViewItem_InteractionEvent(object sender, InputEventArgs e)
         {
             var item = (ListViewItem)sender;
+            var ctrl = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
             var site = (ManagedSite)item.DataContext;
-            bool changingSelection = MainViewModel.SelectedItem != site ||
-                (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl));
-
-            if (changingSelection && !MainViewModel.ConfirmDiscardUnsavedChanges())
+            site = site == MainViewModel.SelectedItem && ctrl ? null : site;
+            if (MainViewModel.SelectedItem != site)
             {
-                // user did not want to discard changes, ignore click
+                if (MainViewModel.ConfirmDiscardUnsavedChanges())
+                {
+                    SelectAndFocus(site);
+                }
                 e.Handled = true;
             }
         }
 
         private void TxtFilter_TextChanged(object sender, TextChangedEventArgs e)
         {
-            CollectionViewSource.GetDefaultView(lvManagedSites.ItemsSource).Refresh();
+            var defaultView = CollectionViewSource.GetDefaultView(lvManagedSites.ItemsSource);
+            defaultView.Refresh();
+            if (lvManagedSites.SelectedIndex == -1 && MainViewModel.SelectedItem != null)
+            {
+                // if the data model's selected item has come into view after 
+                // filter box text changed, select the item in the list
+                if (defaultView.Filter(MainViewModel.SelectedItem))
+                {
+                    lvManagedSites.SelectedItem = MainViewModel.SelectedItem;
+                }
+            }
+        }
+
+        private void TxtFilter_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape) ResetFilter();
+            if (e.Key == Key.Enter || e.Key == Key.Down)
+            {
+                if (lvManagedSites.Items.Count > 0)
+                {
+                    // get selected index of filtered list or 0
+                    int index = lvManagedSites.Items.IndexOf(MainViewModel.SelectedItem);
+                    var item = lvManagedSites.Items[index == -1 ? 0 : index];
+
+                    // if navigating away, confirm discard
+                    if (item != MainViewModel.SelectedItem &&
+                        !MainViewModel.ConfirmDiscardUnsavedChanges())
+                    {
+                        return;
+                    }
+
+                    // if confirmed, select and focus
+                    e.Handled = true;
+                    SelectAndFocus(item);
+                }
+            }
+        }
+
+        private void ResetFilter()
+        {
+            txtFilter.Text = "";
+            txtFilter.Focus();
+            if (lvManagedSites.SelectedItem != null)
+            {
+                lvManagedSites.ScrollIntoView(lvManagedSites.SelectedItem);
+            }
+        }
+
+        private void SelectAndFocus(object obj)
+        {  
+            MainViewModel.SelectedItem = obj as ManagedSite;
+            if (lvManagedSites.Items.Count > 0 && lvManagedSites.Items.Contains(MainViewModel.SelectedItem))
+            {
+                lvManagedSites.UpdateLayout(); // ensure containers exist
+                if (lvManagedSites.ItemContainerGenerator.ContainerFromItem(MainViewModel.SelectedItem) is ListViewItem item)
+                {
+                    item.Focus();
+                    item.IsSelected = true;
+                }
+            }
+        }
+
+        private void ListViewItem_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+            {
+                ResetFilter();
+                return;
+            }
+            if (e.Key == Key.Delete && lvManagedSites.SelectedItem != null)
+            {
+                MainViewModel.DeleteManagedSite(MainViewModel.SelectedItem);
+                if (lvManagedSites.Items.Count > 0)
+                {
+                    SelectAndFocus(lvManagedSites.SelectedItem);
+                }
+                return;
+            }
+            object next = MainViewModel.SelectedItem;
+            var item = ((ListViewItem)sender);
+            int index = lvManagedSites.Items.IndexOf(item.DataContext);
+            if (e.Key == Key.Enter)
+            {
+                next = item.DataContext;
+            }
+            var ctrl = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
+            if (e.Key == Key.Space)
+            {
+                next = MainViewModel.SelectedItem != null && ctrl ? null : item.DataContext;
+            }
+            if (e.Key == Key.Up)
+            {
+                next = lvManagedSites.Items[index - 1 > -1 ? index - 1 : 0];
+            }
+            if (e.Key == Key.Down)
+            {
+                next = lvManagedSites.Items[index + 1 < lvManagedSites.Items.Count ? index + 1 : lvManagedSites.Items.Count - 1];
+            }
+            if (e.Key == Key.Home)
+            {
+                next = lvManagedSites.Items[0];
+            }
+            if (e.Key == Key.End)
+            {
+                next = lvManagedSites.Items[lvManagedSites.Items.Count - 1];
+            }
+            if (e.Key == Key.PageUp)
+            {
+                int pagesize = (int)(lvManagedSites.ActualHeight / item.ActualHeight);
+                next = lvManagedSites.Items[index - pagesize > -1 ? index - pagesize : 0];
+            }
+            if (e.Key == Key.PageDown)
+            {
+                int pagesize = (int)(lvManagedSites.ActualHeight / item.ActualHeight);
+                next = lvManagedSites.Items[index + pagesize < lvManagedSites.Items.Count ? index + pagesize : lvManagedSites.Items.Count - 1];
+            }
+            if (next != MainViewModel.SelectedItem)
+            {
+                if (MainViewModel.ConfirmDiscardUnsavedChanges())
+                {
+                    SelectAndFocus(next);
+                }
+                e.Handled = true;
+            }
+        }
+
+        private int lastSelectedIndex = -1;
+        private void lvManagedSites_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (MainViewModel.SelectedItem != null && 
+                !MainViewModel.ManagedSites.Contains(MainViewModel.SelectedItem))
+            {
+                if (lvManagedSites.Items.Count == 0)
+                {
+                    MainViewModel.SelectedItem = null;
+                    txtFilter.Focus();
+                }
+                else
+                {
+                    // selected item was deleted
+                    int newIndex = lastSelectedIndex;
+                    while (newIndex >= lvManagedSites.Items.Count && newIndex >= -1)
+                    {
+                        newIndex--;
+                    }
+                    SelectAndFocus(newIndex == -1 ? null : lvManagedSites.Items[newIndex]);
+                }
+            }
+            lastSelectedIndex = lvManagedSites.SelectedIndex;
+        }
+
+        private void UserControl_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            var window = Window.GetWindow(this);
+            if (window != null) // null in XAML designer
+            {
+                window.KeyDown += (obj, args) =>
+                {
+                    if (args.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
+                    {
+                        txtFilter.Focus();
+                        txtFilter.SelectAll();
+                    }
+                };
+            }
         }
     }
 }

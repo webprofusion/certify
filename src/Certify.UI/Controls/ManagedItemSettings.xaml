@@ -164,7 +164,7 @@
 
                         <StackPanel Orientation="Vertical" Margin="4,16,0,0">
                             <RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" GroupName="BindingType" Content="{x:Static Resources:SR.ManagedItemSettings_AutoUpdateBinding}" />
-                            <RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType" Content="{x:Static Resources:SR.ManagedItemSettings_UseSpecificBinding}" />
+                            <RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Mode=OneWay, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType" Content="{x:Static Resources:SR.ManagedItemSettings_UseSpecificBinding}" />
                         </StackPanel>
 
                         <StackPanel Orientation="Vertical" IsEnabled="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" Margin="32,8,0,0">

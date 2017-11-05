@@ -103,7 +103,7 @@ namespace Certify.Models
 
         public void OnPropertyChanged(string prop, object before, object after)
         {
-            if (prop != "IsChanged")
+            if (prop != nameof(IsChanged))
             {
                 // auto-update the IsChanged property for standard properties
                 IsChanged = true;
@@ -203,7 +203,8 @@ namespace Certify.Models
                 bb.isChanged = false;
                 var props = obj.GetType().GetProperties();
                 foreach (var prop in props.Where(p =>
-                    p.PropertyType.GetInterfaces().Contains(typeof(ICollection))))
+                    typeof(ICollection).IsAssignableFrom(p.PropertyType) ||
+                    p.PropertyType.IsSubclassOf(typeof(BindableBase))))
                 {
                     object val = prop.GetValue(obj);
                     if (val is ICollection propertyCollection)
@@ -263,6 +264,11 @@ namespace Certify.Models
         public string CertificateId { get; set; }
         public string CertificatePath { get; set; }
         public bool CertificateRevoked { get; set; }
+
+        public override string ToString()
+        {
+            return $"[{Id ?? "null"}]: \"{Name}\"";
+        }
     }
 
     public class ManagedSite : ManagedItem

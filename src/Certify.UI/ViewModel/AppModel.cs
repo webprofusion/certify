@@ -45,12 +45,25 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// List of all the sites we currently manage 
         /// </summary>
-        public ObservableCollection<Certify.Models.ManagedSite> ManagedSites { get; set; }
+        public ObservableCollection<ManagedSite> ManagedSites
+        {
+            get { return managedSites; }
+            set
+            {
+                managedSites = value;
+                if (SelectedItem != null)
+                {
+                    SelectedItem = SelectedItem;
+                    RaisePropertyChanged(nameof(SelectedItem));
+                }
+            }
+        }
+        private ObservableCollection<ManagedSite> managedSites;
 
         /// <summary>
         /// If set, there are one or more vault items available to be imported as managed sites 
         /// </summary>
-        public ObservableCollection<Certify.Models.ManagedSite> ImportedManagedSites { get; set; }
+        public ObservableCollection<ManagedSite> ImportedManagedSites { get; set; }
 
         internal virtual void LoadVaultTree()
         {
@@ -106,7 +119,19 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public ManagedSite SelectedItem { get; set; }
+        public ManagedSite SelectedItem
+        {
+            get { return selectedItem; }
+            set
+            {
+                if (value?.Id != null && !ManagedSites.Contains(value))
+                {
+                    value = ManagedSites.FirstOrDefault(s => s.Id == value.Id);
+                }
+                selectedItem = value;
+            }
+        }
+        private ManagedSite selectedItem;
 
         public bool IsRegisteredVersion { get; set; }
 
@@ -291,7 +316,8 @@ namespace Certify.UI.ViewModel
 
         public virtual void SaveSettings()
         {
-            certifyManager.SaveManagedSites(this.ManagedSites.ToList());
+            certifyManager.SaveManagedSites(ManagedSites.ToList());
+            ManagedSites = new ObservableCollection<ManagedSite>(ManagedSites);
         }
 
         public bool ConfirmDiscardUnsavedChanges()
@@ -322,9 +348,7 @@ namespace Certify.UI.ViewModel
                 }
                 else
                 {
-                    var id = SelectedItem.Id;
                     LoadSettings();
-                    SelectedItem = ManagedSites.FirstOrDefault(m => m.Id == id);
                 }
             }
         }
@@ -354,38 +378,31 @@ namespace Certify.UI.ViewModel
             //return results;
         }
 
-        public ManagedItem AddOrUpdateManagedSite(ManagedSite item)
+        public void AddOrUpdateManagedSite(ManagedSite item)
         {
-            var existing = this.ManagedSites.FirstOrDefault(s => s.Id == item.Id);
-
-            //add new or replace existing
-
-            if (existing != null)
+            int index = ManagedSites.ToList().FindIndex(s => s.Id == item.Id);
+            if (index == -1)
             {
-                this.ManagedSites.Remove(existing);
+                ManagedSites.Add(item);
             }
-
-            this.ManagedSites.Add(item);
-
-            //save settings
-            certifyManager.SaveManagedSites(this.ManagedSites.ToList());
-
-            return item;
+            else
+            {
+                ManagedSites[index] = item;
+            }
+            SaveSettings();
         }
 
         public virtual void DeleteManagedSite(ManagedSite selectedItem)
         {
-            var existing = this.ManagedSites.FirstOrDefault(s => s.Id == selectedItem.Id);
-
-            //remove existing
-
+            var existing = ManagedSites.FirstOrDefault(s => s.Id == selectedItem.Id);
             if (existing != null)
             {
-                this.ManagedSites.Remove(existing);
+                if (MessageBox.Show(SR.ManagedItemSettings_ConfirmDelete, SR.ConfirmDelete, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning)==DialogResult.OK)
+                {
+                    ManagedSites.Remove(existing);
+                    SaveSettings();
+                }
             }
-
-            //save settings
-            certifyManager.SaveManagedSites(this.ManagedSites.ToList());
         }
 
         public void SANSelectAll(object o)

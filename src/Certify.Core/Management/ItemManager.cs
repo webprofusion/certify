@@ -33,12 +33,6 @@ namespace Certify.Management
             this.ManagedSites = new List<ManagedSite>(); // this.Preview();
         }
 
-        internal void UpdatedManagedSites(List<ManagedSite> managedSites)
-        {
-            this.ManagedSites = managedSites;
-            this.StoreSettings();
-        }
-
         public void StoreSettings()
         {
             string appDataPath = Util.GetAppDataFolder();
@@ -135,7 +129,7 @@ namespace Certify.Management
             }
             else
             {
-                this.ManagedSites = new List<ManagedSite>();
+                ManagedSites = new List<ManagedSite>();
             }
         }
 
@@ -191,37 +185,40 @@ namespace Certify.Management
 
         public List<ManagedSite> GetManagedSites()
         {
-            this.LoadSettings();
+            LoadSettings();
+            return ManagedSites;
+        }
 
-            if (this.ManagedSites == null) this.ManagedSites = new List<ManagedSite>();
-
-            return this.ManagedSites;
+        public void UpdatedManagedSites(List<ManagedSite> managedSites)
+        {
+            ManagedSites = managedSites;
+            StoreSettings();
         }
 
         public void UpdatedManagedSite(ManagedSite managedSite)
         {
-            this.LoadSettings();
-
-            var existingSite = this.ManagedSites.FirstOrDefault(s => s.Id == managedSite.Id);
-            if (existingSite != null)
+            LoadSettings();
+            int index = ManagedSites.FindIndex(s => s.Id == managedSite.Id);
+            if (index == -1)
             {
-                this.ManagedSites.Remove(existingSite);
+                ManagedSites.Add(managedSite);
             }
-
-            this.ManagedSites.Add(managedSite);
-            this.StoreSettings();
+            else
+            {
+                ManagedSites[index] = managedSite;
+            }
+            StoreSettings();
         }
 
         public void DeleteManagedSite(ManagedSite site)
         {
-            this.LoadSettings();
-
-            var existingSite = this.ManagedSites.FirstOrDefault(s => s.Id == site.Id);
+            LoadSettings();
+            var existingSite = ManagedSites.FirstOrDefault(s => s.Id == site.Id);
             if (existingSite != null)
             {
-                this.ManagedSites.Remove(existingSite);
+                ManagedSites.Remove(existingSite);
             }
-            this.StoreSettings();
+            StoreSettings();
         }
     }
 }

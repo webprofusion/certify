@@ -155,18 +155,11 @@ namespace Certify.UI.Controls
 
         private void Button_Delete(object sender, RoutedEventArgs e)
         {
-            if (this.MainViewModel.SelectedItem.Id != null)
+            MainViewModel.DeleteManagedSite(MainViewModel.SelectedItem);
+            if (MainViewModel.ManagedSites.Count == 0 || MainViewModel.SelectedItem.Id == null)
             {
-                if (MessageBox.Show(SR.ManagedItemSettings_ConfirmDelete, SR.ConfirmDelete, MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
-                {
-                    MainViewModel.DeleteManagedSite(MainViewModel.SelectedItem);
-                }
-                else
-                {
-                    return;
-                }
+                MainViewModel.SelectedItem = MainViewModel.ManagedSites.FirstOrDefault();
             }
-            ReturnToDefaultManagedItemView();
         }
 
         private void Website_SelectionChanged(object sender, SelectionChangedEventArgs e)
