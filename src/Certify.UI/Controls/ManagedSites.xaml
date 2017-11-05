@@ -40,6 +40,12 @@
                     <Style TargetType="ListViewItem">
                         <EventSetter Event="PreviewMouseLeftButtonDown" Handler="ListViewItem_InteractionEvent"/>
                         <EventSetter Event="PreviewTouchDown" Handler="ListViewItem_InteractionEvent"/>
+                        <EventSetter Event="PreviewKeyDown" Handler="ListViewItem_PreviewKeyDown"/>
+                        <Style.Resources>
+                            <!-- for non-Aero systems (windows server 2008 r2 and below) -->
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="Black"/>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#efefef"/>
+                        </Style.Resources>
                     </Style>
                 </ListView.ItemContainerStyle>
                 <ListView.ItemTemplate>
