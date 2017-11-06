@@ -16,7 +16,7 @@ namespace Certify.Core.Tests.Unit
             managedSiteSettings.DeleteAllManagedSites();
             managedSiteSettings.StoreSettings();
 
-            var numTestManagedSites = 100000;
+            var numTestManagedSites = 10000;
             var numSANsPerSite = 2;
 
             for (var i = 0; i < numTestManagedSites; i++)
