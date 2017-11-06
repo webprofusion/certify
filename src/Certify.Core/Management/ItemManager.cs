@@ -25,23 +25,23 @@ namespace Certify.Management
         /// </summary>
         public bool EnableLocalIISMode { get; set; } //TODO: driven by config
 
-        private List<ManagedSite> ManagedSites { get; set; }
+        private Dictionary<string,ManagedSite> ManagedSites { get; set; }
         public string StorageSubfolder = ""; //if specifed will be appended to AppData path as subfolder to load/save to
 
         public ItemManager()
         {
             EnableLocalIISMode = true;
-            this.ManagedSites = new List<ManagedSite>(); // this.Preview();
+            ManagedSites = new Dictionary<string,ManagedSite>(); // this.Preview();
         }
 
         public void StoreSettings()
         {
-            string appDataPath = Util.GetAppDataFolder();
+            string appDataPath = Util.GetAppDataFolder(StorageSubfolder);
             //string siteManagerConfig = Newtonsoft.Json.JsonConvert.SerializeObject(this.ManagedSites, Newtonsoft.Json.Formatting.Indented);
 
             lock (ITEMMANAGERCONFIG)
             {
-                var path = Path.Combine(new string[] { appDataPath, StorageSubfolder, ITEMMANAGERCONFIG });
+                var path = Path.Combine(appDataPath, ITEMMANAGERCONFIG);
 
                 //backup settings file
                 if (File.Exists(path))
@@ -49,29 +49,28 @@ namespace Certify.Management
                     // delete old settings backup if present
                     if (File.Exists(path + ".bak"))
                     {
-                        System.IO.File.Delete(path + ".bak");
+                        File.Delete(path + ".bak");
                     }
 
                     // backup settings
-                    System.IO.File.Move(path, path + ".bak");
+                    File.Move(path, path + ".bak");
                 }
 
                 // serialize JSON directly to a file
                 using (StreamWriter file = File.CreateText(path))
                 {
-                    JsonSerializer serializer = new JsonSerializer();
-                    serializer.Serialize(file, this.ManagedSites);
+                    new JsonSerializer().Serialize(file, ManagedSites.Values);
                 }
             }
 
             // reset IsChanged as all items have been persisted
-            ManagedSites.ForEach(s => s.IsChanged = false);
+            foreach (var site in ManagedSites.Values) { site.IsChanged = false; }
         }
 
         public void DeleteAllManagedSites()
         {
             LoadSettings();
-            this.ManagedSites.RemoveAll(i => i.Id != null);
+            ManagedSites.Clear();
             StoreSettings();
         }
 
@@ -79,43 +78,30 @@ namespace Certify.Management
         {
             // FIXME: this method should be async and called only when absolutely required, these
             //        files can be hundreds of megabytes
-            string appDataPath = Util.GetAppDataFolder();
-            var path = Path.Combine(new string[] { appDataPath, StorageSubfolder, ITEMMANAGERCONFIG });
+            string appDataPath = Util.GetAppDataFolder(StorageSubfolder);
+            var path = Path.Combine(appDataPath, ITEMMANAGERCONFIG);
 
-            if (System.IO.File.Exists(path))
+            if (File.Exists(path))
             {
                 lock (ITEMMANAGERCONFIG)
                 {
-                    // string configData = System.IO.File.ReadAllText(path); this.ManagedSites = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ManagedSite>>(configData);
-
-                    ManagedSites = new List<ManagedSite>();
-
                     // read managed sites using tokenize stream, this is useful for large files
-                    using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
+                    var managedSites = new List<ManagedSite>();
+                    var serializer = new JsonSerializer();
+                    using (StreamReader sr = new StreamReader(path))
+                    using (JsonTextReader reader = new JsonTextReader(sr))
                     {
-                        using (StreamReader sr = new StreamReader(fs))
-                        {
-                            using (JsonTextReader reader = new JsonTextReader(sr))
-                            {
-                                while (reader.Read())
-                                {
-                                    if (reader.TokenType == JsonToken.StartObject)
-                                    {
-                                        // Load each Managed Site from the stream into memory
-                                        ManagedSites.Add(JObject.Load(reader).ToObject<ManagedSite>());
-                                    }
-                                }
-                            }
-                        }
+                        managedSites = serializer.Deserialize<List<ManagedSite>>(reader);
                     }
 
                     // reset IsChanged for all loaded settings
-                    ManagedSites.ForEach(s => s.IsChanged = false);
+                    managedSites.ForEach(s => s.IsChanged = false);
+                    ManagedSites = managedSites.ToDictionary(s => s.Id);
                 }
             }
             else
             {
-                ManagedSites = new List<ManagedSite>();
+                ManagedSites = new Dictionary<string,ManagedSite>();
             }
         }
 
@@ -163,49 +149,34 @@ namespace Certify.Management
             return sites;
         }
 
-        public ManagedSite GetManagedSite(string siteId, string domain = null)
+        public ManagedSite GetManagedSite(string siteId)
         {
-            var site = this.ManagedSites.FirstOrDefault(s => (siteId != null && s.Id == siteId) || (domain != null && s.DomainOptions.Any(bind => bind.Domain == domain)));
-            return site;
+            return ManagedSites.TryGetValue(siteId, out var retval) ? retval : null;
         }
 
         public List<ManagedSite> GetManagedSites()
         {
             LoadSettings();
-            return ManagedSites;
+            return new List<ManagedSite>(ManagedSites.Values);
         }
 
         public void UpdatedManagedSites(List<ManagedSite> managedSites)
         {
-            ManagedSites = managedSites;
+            ManagedSites = managedSites.ToDictionary(site => site.Id);
             StoreSettings();
         }
 
         public void UpdatedManagedSite(ManagedSite managedSite, bool loadLatest = true, bool saveAfterUpdate = true)
         {
             if (loadLatest) LoadSettings();
-
-            int index = ManagedSites.FindIndex(s => s.Id == managedSite.Id);
-            if (index == -1)
-            {
-                ManagedSites.Add(managedSite);
-            }
-            else
-            {
-                ManagedSites[index] = managedSite;
-            }
-
+            ManagedSites[managedSite.Id] = managedSite;
             if (saveAfterUpdate) StoreSettings();
         }
 
         public void DeleteManagedSite(ManagedSite site)
         {
             LoadSettings();
-            var existingSite = ManagedSites.FirstOrDefault(s => s.Id == site.Id);
-            if (existingSite != null)
-            {
-                ManagedSites.Remove(existingSite);
-            }
+            ManagedSites.Remove(site.Id);
             StoreSettings();
         }
     }
