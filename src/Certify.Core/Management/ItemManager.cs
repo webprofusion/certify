@@ -26,6 +26,7 @@ namespace Certify.Management
         public bool EnableLocalIISMode { get; set; } //TODO: driven by config
 
         private List<ManagedSite> ManagedSites { get; set; }
+        public string StorageSubfolder = ""; //if specifed will be appended to AppData path as subfolder to load/save to
 
         public ItemManager()
         {
@@ -40,7 +41,7 @@ namespace Certify.Management
 
             lock (ITEMMANAGERCONFIG)
             {
-                var path = appDataPath + "\\" + ITEMMANAGERCONFIG;
+                var path = Path.Combine(new string[] { appDataPath, StorageSubfolder, ITEMMANAGERCONFIG });
 
                 //backup settings file
                 if (File.Exists(path))
@@ -55,44 +56,31 @@ namespace Certify.Management
                     System.IO.File.Move(path, path + ".bak");
                 }
 
-                // write new settings files as tokenized stream
-                // System.IO.File.WriteAllText(appDataPath + "\\" + ITEMMANAGERCONFIG, siteManagerConfig);
-
                 // serialize JSON directly to a file
                 using (StreamWriter file = File.CreateText(path))
                 {
                     JsonSerializer serializer = new JsonSerializer();
                     serializer.Serialize(file, this.ManagedSites);
                 }
-
-                /*using (FileStream fs = new FileStream(path, FileMode.CreateNew, FileAccess.ReadWrite))
-                {
-                    using (StreamWriter sw = new StreamWriter(fs))
-                    {
-                        using (JsonTextWriter writer = new JsonTextWriter(sw))
-                        {
-                            writer.WriteStartArray();
-                            foreach (var i in this.ManagedSites)
-                            {
-                                writer.WriteRaw(JsonConvert.SerializeObject(i, Formatting.Indented));
-                                writer.WriteRaw(",");
-                            }
-
-                            writer.WriteEndArray();
-                        }
-                    }
-                }*/
             }
+
             // reset IsChanged as all items have been persisted
             ManagedSites.ForEach(s => s.IsChanged = false);
         }
 
+        public void DeleteAllManagedSites()
+        {
+            LoadSettings();
+            this.ManagedSites.RemoveAll(i => i.Id != null);
+            StoreSettings();
+        }
+
         public void LoadSettings()
         {
-            // FIXME: this lemthod should be async asn called only when absolutely required, these
+            // FIXME: this method should be async and called only when absolutely required, these
             //        files can be hundreds of megabytes
             string appDataPath = Util.GetAppDataFolder();
-            var path = appDataPath + "\\" + ITEMMANAGERCONFIG;
+            var path = Path.Combine(new string[] { appDataPath, StorageSubfolder, ITEMMANAGERCONFIG });
 
             if (System.IO.File.Exists(path))
             {
@@ -101,8 +89,8 @@ namespace Certify.Management
                     // string configData = System.IO.File.ReadAllText(path); this.ManagedSites = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ManagedSite>>(configData);
 
                     ManagedSites = new List<ManagedSite>();
-                    // read managed sites using tokenize stream, this is useful for large files
 
+                    // read managed sites using tokenize stream, this is useful for large files
                     using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
                     {
                         using (StreamReader sr = new StreamReader(fs))
@@ -113,10 +101,8 @@ namespace Certify.Management
                                 {
                                     if (reader.TokenType == JsonToken.StartObject)
                                     {
-                                        // Load each object from the stream and do something with it
-                                        JObject obj = JObject.Load(reader);
-                                        var managedSite = obj.ToObject<ManagedSite>();
-                                        ManagedSites.Add(managedSite);
+                                        // Load each Managed Site from the stream into memory
+                                        ManagedSites.Add(JObject.Load(reader).ToObject<ManagedSite>());
                                     }
                                 }
                             }
@@ -195,9 +181,10 @@ namespace Certify.Management
             StoreSettings();
         }
 
-        public void UpdatedManagedSite(ManagedSite managedSite)
+        public void UpdatedManagedSite(ManagedSite managedSite, bool loadLatest = true, bool saveAfterUpdate = true)
         {
-            LoadSettings();
+            if (loadLatest) LoadSettings();
+
             int index = ManagedSites.FindIndex(s => s.Id == managedSite.Id);
             if (index == -1)
             {
@@ -207,7 +194,8 @@ namespace Certify.Management
             {
                 ManagedSites[index] = managedSite;
             }
-            StoreSettings();
+
+            if (saveAfterUpdate) StoreSettings();
         }
 
         public void DeleteManagedSite(ManagedSite site)
