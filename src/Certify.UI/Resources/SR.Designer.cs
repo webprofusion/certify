@@ -981,7 +981,7 @@ namespace Certify.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You have unsaved changes. Save or Discard your changes before proceeding..
+        ///   Looks up a localized string similar to There are unsaved changes to the selected site. Discard changes?.
         /// </summary>
         public static string ManagedSites_UnsavedWarning {
             get {

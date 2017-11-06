@@ -1,5 +1,7 @@
+using Certify.UI.Resources;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,8 +17,6 @@ using System.Windows.Shapes;
 
 namespace Certify.UI
 {
-    using Resources;
-
     /// <summary>
     /// Interaction logic for MainWindow.xaml 
     /// </summary>
@@ -40,15 +40,14 @@ namespace Certify.UI
         public MainWindow()
         {
             InitializeComponent();
-
-            if (!System.ComponentModel.DesignerProperties.GetIsInDesignMode(this))
-            {
-                this.DataContext = MainViewModel;
-            }
+            DataContext = MainViewModel;
         }
 
         private void Button_NewCertificate(object sender, RoutedEventArgs e)
         {
+            // save or discard site changes before creating a new site/certificate
+            if (!MainViewModel.ConfirmDiscardUnsavedChanges()) return;
+
             //present new managed item (certificate request) UI
             if (!MainViewModel.IsRegisteredVersion && MainViewModel.ManagedSites != null && MainViewModel.ManagedSites.Count >= 5)
             {
@@ -59,11 +58,15 @@ namespace Certify.UI
             //select tab Managed Items
             MainViewModel.MainUITabIndex = (int)PrimaryUITabs.ManagedItems;
             MainViewModel.SelectedWebSite = null;
+            MainViewModel.SelectedItem = null; // deselect site list item
             MainViewModel.SelectedItem = new Certify.Models.ManagedSite();
         }
 
         private void Button_RenewAll(object sender, RoutedEventArgs e)
         {
+            // save or discard site changes before creating a new site/certificate
+            if (!MainViewModel.ConfirmDiscardUnsavedChanges()) return;
+
             //present new renew all confirmation
             if (MessageBox.Show(SR.MainWindow_RenewAllConfirm, SR.Renew_All, MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
@@ -154,6 +157,12 @@ namespace Certify.UI
                     System.Diagnostics.Process.Start(sInfo);
                 }
             }
+        }
+
+        private void MetroWindow_Closing(object sender, CancelEventArgs e)
+        {
+            // allow cancelling exit to save changes
+            if (!MainViewModel.ConfirmDiscardUnsavedChanges()) e.Cancel = true;
         }
     }
 }

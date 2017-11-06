@@ -40,7 +40,7 @@ namespace Certify.UI.Controls
 
         private void Button_Save(object sender, RoutedEventArgs e)
         {
-            if (this.MainViewModel.SelectedItemHasChanges)
+            if (MainViewModel.SelectedItem.IsChanged)
             {
                 var item = MainViewModel.SelectedItem;
                 if (item.Id == null && MainViewModel.SelectedWebSite == null)
@@ -120,17 +120,13 @@ namespace Certify.UI.Controls
             else
             {
                 //reload settings for managed sites, discard changes
-                var currentSiteId = MainViewModel.SelectedItem.Id;
-                MainViewModel.LoadSettings();
-                MainViewModel.SelectedItem = MainViewModel.ManagedSites.FirstOrDefault(m => m.Id == currentSiteId);
+                MainViewModel.DiscardChanges();
             }
-
-            MainViewModel.MarkAllChangesCompleted();
         }
 
         private void ReturnToDefaultManagedItemView()
         {
-            MainViewModel.SelectFirstOrDefaultItem();
+            MainViewModel.SelectedItem = MainViewModel.ManagedSites.FirstOrDefault();
         }
 
         private void Button_RequestCertificate(object sender, RoutedEventArgs e)
@@ -159,18 +155,10 @@ namespace Certify.UI.Controls
 
         private void Button_Delete(object sender, RoutedEventArgs e)
         {
-            if (this.MainViewModel.SelectedItem.Id == null)
+            MainViewModel.DeleteManagedSite(MainViewModel.SelectedItem);
+            if (MainViewModel.ManagedSites.Count == 0 || MainViewModel.SelectedItem.Id == null)
             {
-                //item not saved, discard
-                ReturnToDefaultManagedItemView();
-            }
-            else
-            {
-                if (MessageBox.Show(SR.ManagedItemSettings_ConfirmDelete, SR.ConfirmDelete, MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
-                {
-                    this.MainViewModel.DeleteManagedSite(this.MainViewModel.SelectedItem);
-                    ReturnToDefaultManagedItemView();
-                }
+                MainViewModel.SelectedItem = MainViewModel.ManagedSites.FirstOrDefault();
             }
         }
 
@@ -184,11 +172,6 @@ namespace Certify.UI.Controls
                     MainViewModel.PopulateManagedSiteSettingsCommand.Execute(siteId);
                 }
             }
-        }
-
-        private void SANDomain_Toggled(object sender, RoutedEventArgs e)
-        {
-            this.MainViewModel.SelectedItem.IsChanged = true;
         }
 
         private void OpenLogFile_Click(object sender, RoutedEventArgs e)

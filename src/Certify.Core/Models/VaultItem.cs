@@ -9,11 +9,13 @@ namespace Certify.Models
 {
     public class RegistrationItem : VaultItem
     {
+        public RegistrationItem() : base("registration") { }
         public IEnumerable<string> Contacts { get; set; }
     }
 
     public class IdentifierItem : VaultItem
     {
+        public IdentifierItem() : base("identifier") { }
         public string Dns { get; set; }
         public string Status { get; set; }
         public DateTime? AuthorizationExpiry { get; set; }
@@ -24,6 +26,7 @@ namespace Certify.Models
 
     public class CertificateItem : VaultItem
     {
+        public CertificateItem() : base("certificate") { }
     }
 
     public class VaultItem
@@ -34,5 +37,10 @@ namespace Certify.Models
         public string ItemType { get; set; }
 
         public List<VaultItem> Children { get; set; }
+        public VaultItem() { }
+        public VaultItem(string itemType)
+        {
+            ItemType = itemType;
+        }
     }
 }

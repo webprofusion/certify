@@ -1,5 +1,6 @@
 ﻿using Certify.Management;
 using Certify.Models;
+using Certify.UI.Resources;
 using PropertyChanged;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Windows.Input;
 
 namespace Certify.UI.ViewModel
@@ -18,6 +20,7 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// Provide single static instance of model for all consumers 
         /// </summary>
+        //public static AppModel AppViewModel = new DesignViewModel(); // for UI testing
         public static AppModel AppViewModel = AppModel.GetModel();
 
         public const int ProductTypeId = 1;
@@ -42,64 +45,50 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// List of all the sites we currently manage 
         /// </summary>
-        public ObservableCollection<Certify.Models.ManagedSite> ManagedSites { get; set; }
+        public ObservableCollection<ManagedSite> ManagedSites
+        {
+            get { return managedSites; }
+            set
+            {
+                managedSites = value;
+                if (SelectedItem != null)
+                {
+                    SelectedItem = SelectedItem;
+                    RaisePropertyChanged(nameof(SelectedItem));
+                }
+            }
+        }
+        private ObservableCollection<ManagedSite> managedSites;
 
         /// <summary>
         /// If set, there are one or more vault items available to be imported as managed sites 
         /// </summary>
-        public ObservableCollection<Certify.Models.ManagedSite> ImportedManagedSites { get; set; }
+        public ObservableCollection<ManagedSite> ImportedManagedSites { get; set; }
 
         internal virtual void LoadVaultTree()
         {
-            List<VaultItem> tree = new List<VaultItem>();
-
-            // populate registrations
-            var registration = new VaultItem { Name = "Registrations" };
-            registration.Children = new List<VaultItem>();
-
-            var contactRegistrations = certifyManager.GetContactRegistrations();
-            foreach (var r in contactRegistrations)
+            VaultTree = new List<VaultItem>()
             {
-                r.ItemType = "registration";
-                registration.Children.Add(r);
-            }
-
-            this.PrimaryContactEmail = registration.Children.FirstOrDefault()?.Name;
-
-            tree.Add(registration);
-
-            // populate identifiers
-            var identifiers = new VaultItem { Name = "Identifiers" };
-            identifiers.Children = new List<VaultItem>();
-
-            var ids = certifyManager.GeDomainIdentifiers();
-            foreach (var i in ids)
-            {
-                i.ItemType = "identifier";
-                identifiers.Children.Add(i);
-            }
-
-            tree.Add(identifiers);
-
-            // populate identifiers
-            var certs = new VaultItem { Name = "Certificates" };
-            certs.Children = new List<VaultItem>();
-
-            var certlist = certifyManager.GetCertificates();
-            foreach (var i in ids)
-            {
-                i.ItemType = "certificate";
-                certs.Children.Add(i);
-            }
-
-            tree.Add(certs);
-
-            VaultTree = tree;
-
-            this.ACMESummary = certifyManager.GetAcmeSummary();
-            this.VaultSummary = certifyManager.GetVaultSummary();
-
-            RaisePropertyChanged(nameof(VaultTree));
+                new VaultItem
+                {
+                    Name = "Registrations",
+                    Children = new List<VaultItem>(certifyManager.GetContactRegistrations())
+                },
+                new VaultItem
+                {
+                    Name = "Identifiers",
+                    Children = new List<VaultItem>(certifyManager.GeDomainIdentifiers())
+                },
+                new VaultItem
+                {
+                    Name = "Certificates",
+                    Children = new List<VaultItem>(certifyManager.GetCertificates())
+                }
+            };
+            PrimaryContactEmail = VaultTree.First(i => i.Name == "Registrations")
+                .Children.FirstOrDefault()?.Name;
+            ACMESummary = certifyManager.GetAcmeSummary();
+            VaultSummary = certifyManager.GetVaultSummary();
         }
 
         /// <summary>
@@ -107,7 +96,7 @@ namespace Certify.UI.ViewModel
         /// </summary>
         public bool IsImportSANMergeMode { get; set; }
 
-        public bool HasRegisteredContacts
+        public virtual bool HasRegisteredContacts
         {
             get
             {
@@ -130,26 +119,23 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public Certify.Models.ManagedSite SelectedItem { get; set; }
+        public ManagedSite SelectedItem
+        {
+            get { return selectedItem; }
+            set
+            {
+                if (value?.Id != null && !ManagedSites.Contains(value))
+                {
+                    value = ManagedSites.FirstOrDefault(s => s.Id == value.Id);
+                }
+                selectedItem = value;
+            }
+        }
+        private ManagedSite selectedItem;
 
         public bool IsRegisteredVersion { get; set; }
 
-        public bool SelectedItemHasChanges
-        {
-            get
-            {
-                if (this.SelectedItem != null)
-                {
-                    if (this.SelectedItem.IsChanged || (this.SelectedItem.RequestConfig != null && this.SelectedItem.RequestConfig.IsChanged) || (this.SelectedItem.DomainOptions != null && this.SelectedItem.DomainOptions.Any(d => d.IsChanged)))
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            }
-        }
-
-        public List<SiteBindingItem> WebSiteList
+        public virtual List<SiteBindingItem> WebSiteList
         {
             get
             {
@@ -169,9 +155,6 @@ namespace Certify.UI.ViewModel
         {
             UpdateManagedSiteSettings();
             AddOrUpdateManagedSite(SelectedItem);
-
-            MarkAllChangesCompleted();
-
             RaisePropertyChanged(nameof(IsSelectedItemValid));
         }
 
@@ -215,31 +198,6 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        /// <summary>
-        /// Reset all IsChanged flags for the Selected Item 
-        /// </summary>
-        internal void MarkAllChangesCompleted()
-        {
-            if (SelectedItem != null)
-            {
-                //mark all SelectedItem child items and main model as unchanged
-                foreach (var opt in SelectedItem.DomainOptions)
-                {
-                    opt.IsChanged = false;
-                }
-
-                SelectedItem.RequestConfig.IsChanged = false;
-                SelectedItem.IsChanged = false;
-            }
-
-            RaisePropertyChanged(nameof(SelectedItemHasChanges));
-        }
-
-        internal void SelectFirstOrDefaultItem()
-        {
-            SelectedItem = ManagedSites.FirstOrDefault();
-        }
-
         public SiteBindingItem SelectedWebSite
         {
             get; set;
@@ -266,50 +224,9 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        /// <summary>
-        /// Determine if user should be able to choose/change the Website for the current SelectedItem 
-        /// </summary>
-        public bool IsWebsiteSelectable
-        {
-            get
-            {
-                if (SelectedItem != null && SelectedItem.Id == null)
-                {
-                    return true;
-                }
-                return false;
-            }
-        }
-
-        public bool IsItemSelected
-        {
-            get
-            {
-                return (this.SelectedItem != null);
-            }
-        }
-
-        public bool IsNoItemSelected
-        {
-            get
-            {
-                return (this.SelectedItem == null);
-            }
-        }
-
         public bool IsSelectedItemValid
         {
-            get
-            {
-                if (this.SelectedItem != null && this.SelectedItem.Id != null && this.SelectedItem.IsChanged == false)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
+            get => SelectedItem?.Id != null && !SelectedItem.IsChanged;
         }
 
         public string ValidationError { get; set; }
@@ -370,8 +287,8 @@ namespace Certify.UI.ViewModel
             ProgressResults = new ObservableCollection<RequestProgressState>();
         }
 
-        public bool IsIISAvailable => certifyManager.IsIISAvailable;
-        public Version IISVersion => certifyManager.IISVersion;
+        public virtual bool IsIISAvailable => certifyManager.IsIISAvailable;
+        public virtual Version IISVersion => certifyManager.IISVersion;
 
         public void PreviewImport(bool sanMergeMode)
         {
@@ -381,7 +298,7 @@ namespace Certify.UI.ViewModel
             ImportedManagedSites = new ObservableCollection<ManagedSite>(importedSites);
         }
 
-        public void LoadSettings()
+        public virtual void LoadSettings()
         {
             this.ManagedSites = new ObservableCollection<ManagedSite>(certifyManager.GetManagedSites());
             this.ImportedManagedSites = new ObservableCollection<ManagedSite>();
@@ -397,9 +314,43 @@ namespace Certify.UI.ViewModel
             }*/
         }
 
-        public void SaveSettings(object param)
+        public virtual void SaveSettings()
         {
-            certifyManager.SaveManagedSites(this.ManagedSites.ToList());
+            certifyManager.SaveManagedSites(ManagedSites.ToList());
+            ManagedSites = new ObservableCollection<ManagedSite>(ManagedSites);
+        }
+
+        public bool ConfirmDiscardUnsavedChanges()
+        {
+            if (SelectedItem?.IsChanged ?? false)
+            {
+                //user needs to save or discard changes before changing selection
+                if (MessageBox.Show(SR.ManagedSites_UnsavedWarning, SR.Alert, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning)==DialogResult.OK)
+                {
+                    DiscardChanges();
+                }
+                else
+                {
+                    // user cancelled out of dialog
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public void DiscardChanges()
+        {
+            if (SelectedItem?.IsChanged ?? false)
+            {
+                if (SelectedItem.Id == null)
+                {
+                    SelectedItem = null;
+                }
+                else
+                {
+                    LoadSettings();
+                }
+            }
         }
 
         public async void RenewAll(bool autoRenewalsOnly)
@@ -427,62 +378,41 @@ namespace Certify.UI.ViewModel
             //return results;
         }
 
-        public ManagedItem AddOrUpdateManagedSite(ManagedSite item)
+        public void AddOrUpdateManagedSite(ManagedSite item)
         {
-            var existing = this.ManagedSites.FirstOrDefault(s => s.Id == item.Id);
-
-            //add new or replace existing
-
-            if (existing != null)
+            int index = ManagedSites.ToList().FindIndex(s => s.Id == item.Id);
+            if (index == -1)
             {
-                this.ManagedSites.Remove(existing);
+                ManagedSites.Add(item);
             }
-
-            this.ManagedSites.Add(item);
-
-            //save settings
-            certifyManager.SaveManagedSites(this.ManagedSites.ToList());
-
-            return item;
+            else
+            {
+                ManagedSites[index] = item;
+            }
+            SaveSettings();
         }
 
-        internal void DeleteManagedSite(ManagedSite selectedItem)
+        public virtual void DeleteManagedSite(ManagedSite selectedItem)
         {
-            var existing = this.ManagedSites.FirstOrDefault(s => s.Id == selectedItem.Id);
-
-            //remove existing
-
+            var existing = ManagedSites.FirstOrDefault(s => s.Id == selectedItem.Id);
             if (existing != null)
             {
-                this.ManagedSites.Remove(existing);
+                if (MessageBox.Show(SR.ManagedItemSettings_ConfirmDelete, SR.ConfirmDelete, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning)==DialogResult.OK)
+                {
+                    ManagedSites.Remove(existing);
+                    SaveSettings();
+                }
             }
-
-            //save settings
-            certifyManager.SaveManagedSites(this.ManagedSites.ToList());
         }
 
         public void SANSelectAll(object o)
         {
-            if (this.SelectedItem != null && this.SelectedItem.DomainOptions != null)
-            {
-                foreach (var opt in this.SelectedItem.DomainOptions)
-                {
-                    opt.IsSelected = true;
-                }
-            }
+            SelectedItem?.DomainOptions.ToList().ForEach(opt => opt.IsSelected = true);
         }
 
         public void SANSelectNone(object o)
         {
-            if (this.SelectedItem != null && this.SelectedItem.DomainOptions != null)
-            {
-                foreach (var opt in this.SelectedItem.DomainOptions)
-                {
-                    opt.IsSelected = false;
-                }
-
-                // RaisePropertyChanged(nameof(SelectedItem));
-            }
+            SelectedItem?.DomainOptions.ToList().ForEach(opt => opt.IsSelected = false);
         }
 
         /// <summary>
@@ -541,13 +471,10 @@ namespace Certify.UI.ViewModel
             managedSite.RequestConfig.EnableFailureNotifications = true;
             managedSite.RequestConfig.ChallengeType = ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP;
             managedSite.IncludeInAutoRenew = true;
-            managedSite.ClearDomainOptions();
-            //for the given selected web site, allow the user to choose which domains to combine into one certificate
-
-            List<DomainOption> domainOptions = certifyManager.GetDomainOptionsFromSite(siteId);
-            if (domainOptions.Any())
-            {
-                managedSite.AddDomainOptions(domainOptions);
+            managedSite.DomainOptions.Clear();
+            foreach (var option in GetDomainOptionsFromSite(siteId))
+            { 
+                managedSite.DomainOptions.Add(option);
             }
 
             if (!managedSite.DomainOptions.Any())
@@ -557,8 +484,12 @@ namespace Certify.UI.ViewModel
 
             //TODO: load settings from previously saved managed site?
             RaisePropertyChanged(nameof(PrimarySubjectDomain));
-
             RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
+        }
+
+        protected virtual IEnumerable<DomainOption> GetDomainOptionsFromSite(string siteId)
+        {
+            return certifyManager.GetDomainOptionsFromSite(siteId);
         }
 
         public async void BeginCertificateRequest(string managedItemId)
@@ -608,7 +539,6 @@ namespace Certify.UI.ViewModel
             if (result.IsOK)
             {
                 AddOrUpdateManagedSite(managedSite);
-                MarkAllChangesCompleted();
             }
             return result;
         }

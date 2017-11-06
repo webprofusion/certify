@@ -16,7 +16,8 @@
 
     <Grid>
         <Grid.Resources>
-            <utils:OptionalBooleanToVisibilityConverter x:Key="BoolToVisConverter" True="Visible" False="Collapsed" />
+            <utils:NullVisibilityConverter x:Key="NullCollapsedConverter"/>
+            <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed"/>
             <utils:EnumConverter x:Key="EnumConverter" />
             <utils:ExpiryDateConverter x:Key="ExpiryDateConverter" />
             <utils:ExpiryDateColourConverter x:Key="ExpiryDateColourConverter" />
@@ -33,8 +34,20 @@
                 </RowDefinition>
                 <RowDefinition Height="*"></RowDefinition>
             </Grid.RowDefinitions>
-            <TextBox Grid.Row="0" Name="txtFilter" TextChanged="TxtFilter_TextChanged" Controls:TextBoxHelper.Watermark="{x:Static res:SR.ManagedSites_Filter}"></TextBox>
-            <ListView Grid.Row="1" Name="lvManagedSites" ItemsSource="{Binding ManagedSites}" SelectionChanged="ListView_SelectionChanged" SelectionMode="Single">
+            <TextBox Grid.Row="0" Name="txtFilter" TextChanged="TxtFilter_TextChanged" PreviewKeyDown="TxtFilter_PreviewKeyDown" Controls:TextBoxHelper.Watermark="{x:Static res:SR.ManagedSites_Filter}" Controls:TextBoxHelper.ClearTextButton="True"></TextBox>
+            <ListView Grid.Row="1" Name="lvManagedSites" ItemsSource="{Binding ManagedSites}" SelectedItem="{Binding SelectedItem, Mode=OneWay}" SelectionChanged="lvManagedSites_SelectionChanged" SelectionMode="Single">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <EventSetter Event="PreviewMouseLeftButtonDown" Handler="ListViewItem_InteractionEvent"/>
+                        <EventSetter Event="PreviewTouchDown" Handler="ListViewItem_InteractionEvent"/>
+                        <EventSetter Event="PreviewKeyDown" Handler="ListViewItem_PreviewKeyDown"/>
+                        <Style.Resources>
+                            <!-- for non-Aero systems (windows server 2008 r2 and below) -->
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="Black"/>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#efefef"/>
+                        </Style.Resources>
+                    </Style>
+                </ListView.ItemContainerStyle>
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Vertical" Margin="0,8,0,0">
@@ -52,8 +65,8 @@
         </Grid>
         <GridSplitter Grid.Column="1" Width="10" HorizontalAlignment="Stretch" Background="White" />
         <Grid Grid.Column="2">
-            <local:ManagedItemSettings Visibility="{Binding IsItemSelected, Converter={StaticResource BoolToVisConverter}}" BorderBrush="{DynamicResource WindowTitleColorBrush}" Margin="0,10,0,0" Width="Auto" Height="Auto" />
-            <StackPanel Visibility="{Binding IsNoItemSelected, Converter={StaticResource BoolToVisConverter}}" Margin="16,0,0,0" Height="Auto">
+            <local:ManagedItemSettings Visibility="{Binding SelectedItem, Converter={StaticResource NullCollapsedConverter}}" BorderBrush="{DynamicResource WindowTitleColorBrush}" Margin="0,10,0,0" Width="Auto" Height="Auto" />
+            <StackPanel Visibility="{Binding SelectedItem, Converter={StaticResource NullVisibleConverter}}" Margin="16,0,0,0" Height="Auto">
                 <StackPanel Margin="6,8"  Height="Auto" MinHeight="300" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
                     <TextBlock TextWrapping="Wrap" FontSize="36" Margin="16,16,0,16"  FontFamily="Segoe UI Light"><Run FontWeight="Bold" FontFamily="Segoe UI Semibold" Text="Certify" /><Run Text=" the " /><Run Text="w" /><Run Text="eb" /></TextBlock>
                     <TextBlock TextWrapping="Wrap" Margin="16,0,0,0" FontSize="14" FontFamily="Segoe UI Light"><Run Text="{x:Static res:SR.ManagedSites_NoItemSelectedDesc}" /><LineBreak /><Run /><Run /><LineBreak /><Run Text="{x:Static res:SR.ManagedSites_NoItemSelectedTip}" /><Run Text="&#x9;" /></TextBlock>
