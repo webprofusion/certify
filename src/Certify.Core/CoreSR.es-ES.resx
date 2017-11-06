@@ -1,0 +1,204 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="CertifyManager_RegisterDomainIdentity" xml:space="preserve">
+    <value>Registro de Identificadores de Dominio</value>
+  </data>
+  <data name="CertifyManager_DomainValidationFailed" xml:space="preserve">
+    <value>La validación del dominio falló: {0}
+{1}</value>
+  </data>
+  <data name="CertifyManager_DomainValidationCompleted" xml:space="preserve">
+    <value>Validación de dominio completada: {0}</value>
+  </data>
+  <data name="Finish" xml:space="preserve">
+    <value>Finalizar</value>
+  </data>
+  <data name="CertifyManager_CertificateInstallFailed" xml:space="preserve">
+    <value>Se produjo un error al instalar el certificado. El archivo de certificado puede no ser válido: {0}</value>
+  </data>
+  <data name="CertificateRequestWasAbortedByPSScript" xml:space="preserve">
+    <value>La solicitud de certificado fue abortada por script de PS</value>
+  </data>
+  <data name="CertifyManager_AutomateConfigurationCheckFailed_HTTP" xml:space="preserve">
+    <value>Las comprobaciones de configuración automatizadas han fallado. Las autorizaciones no podrán completarse. Compruebe que tiene enlaces HTTP para su sitio y asegúrese de que puede navegar a http://{0}/.well-known/acme-challenge/configcheck antes de continuar.</value>
+  </data>
+  <data name="CertifyManager_AutoBinding" xml:space="preserve">
+    <value>Ejecutando enlace de certificado automatizado</value>
+  </data>
+  <data name="CertifyManager_CertificateCreatedForBinding" xml:space="preserve">
+    <value>Certificado creado listo para enlace manual: {0}</value>
+  </data>
+  <data name="CertifyManager_CompleteRequest" xml:space="preserve">
+    <value>Solicitud de Certificado Completada</value>
+  </data>
+  <data name="CertifyManager_CompleteRequestAndUpdateBinding" xml:space="preserve">
+    <value>Solicitud de certificado y actualización automática de enlaces completada (IIS)</value>
+  </data>
+  <data name="CertifyManager_DomainValidationSkipVerifed" xml:space="preserve">
+    <value>El dominio ya está autorizado, omitiendo la verificación: {0}</value>
+  </data>
+  <data name="ManagedItemType_Manual" xml:space="preserve">
+    <value>Certificado SSL Manual vía Let's Encrypt</value>
+  </data>
+  <data name="ManagedItemType_LocalIIS" xml:space="preserve">
+    <value>Certificado SSL IIS Local vía Let's Encrypt</value>
+  </data>
+  <data name="CertifyManager_AutomateConfigurationCheckFailed_SNI" xml:space="preserve">
+    <value>Las comprobaciones automatizadas de configuración fallaron. Las autorizaciones no podrán completarse.
+Compruebe que tiene enlaces https de SNI para su sitio
+(por ejepmlo: '0123456789ABCDEF0123456789ABCDEF.0123456789ABCDEF0123456789ABCDEF.acme.invalid') antes de continuar.</value>
+  </data>
+  <data name="CertifyManager_CertificateInstalledAndBindingUpdated" xml:space="preserve">
+    <value>Certificado instalado y enlaces SSL actualizados para {0}</value>
+  </data>
+  <data name="CertifyManager_FailedPrerequisiteCheck" xml:space="preserve">
+    <value>Verificación de configuración de pre-requisitos fallida ({0})</value>
+  </data>
+  <data name="CertifyManager_LetsEncryptServiceTimeout" xml:space="preserve">
+    <value>El servicio Let's Encrypt no emitió un certificado válido en el tiempo permitido. {0}</value>
+  </data>
+  <data name="CertifyManager_PerformingChallengeResponseViaIISX0" xml:space="preserve">
+    <value>Ejecutando Respuesta al Desafío vía IIS: {0}</value>
+  </data>
+  <data name="CertifyManager_PerformingConfigTests" xml:space="preserve">
+    <value>Ejecutando Pruebas de Configuración</value>
+  </data>
+  <data name="CertifyManager_RegisteringAndValidatingX0" xml:space="preserve">
+    <value>Registrando y Validando {0}</value>
+  </data>
+  <data name="CertifyManager_RequestCertificate" xml:space="preserve">
+    <value>Solicitando Certificado vía Let's Encrypt</value>
+  </data>
+  <data name="CertifyManager_ReqestValidationFromLetsEncrypt" xml:space="preserve">
+    <value>Solicitando Valdiación desde Let's Encrypt: {0}</value>
+  </data>
+  <data name="CertifyManager_RequestFailed" xml:space="preserve">
+    <value>{0}: Solicitud fallida - {1} {2}</value>
+  </data>
+  <data name="CertifyManager_SiteStopped" xml:space="preserve">
+    <value>Sitio detenido (o no presente), la renovación ha sido omitida porque la validación del dominio no puede ser realizada.</value>
+  </data>
+  <data name="CertifyManager_SkipRenewalOk" xml:space="preserve">
+    <value>Saltando la renovación, el certificado existente sigue siendo correcto.</value>
+  </data>
+  <data name="CertifyManager_ValidationForChallengeNotSuccess" xml:space="preserve">
+    <value>La validación de los desafíos requeridos no se completó con éxito. {0}</value>
+  </data>
+</root>

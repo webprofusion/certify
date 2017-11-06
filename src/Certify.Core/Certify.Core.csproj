@@ -206,6 +206,7 @@
     <Compile Include="Resources.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="Utils\SRDescription.cs" />
+    <EmbeddedResource Include="CoreSR.es-ES.resx" />
     <EmbeddedResource Include="CoreSR.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>CoreSR.Designer.cs</LastGenOutput>
@@ -213,6 +214,7 @@
     <EmbeddedResource Include="CoreSR.zh-Hans.resx">
       <DependentUpon>CoreSR.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.es-ES.resx" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
