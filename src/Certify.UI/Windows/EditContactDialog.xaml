@@ -10,16 +10,16 @@
         mc:Ignorable="d"
         GlowBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1" ResizeMode="NoResize"
-        Title="{x:Static res:SR.New_Contact}" Height="288.072" Width="514" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner">
+        Title="{x:Static res:SR.New_Contact}" Height="319.69" Width="514.703" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner">
     <Grid>
 
         <TextBlock HorizontalAlignment="Left" Margin="12,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="472" Foreground="{DynamicResource AccentColorBrush}" ><Run Text="{x:Static res:SR.New_Contact_Tip1}" /><LineBreak /><Run /><LineBreak /><Run Text="{x:Static res:SR.New_Contact_Tip2}" /></TextBlock>
-        <Label Content="{x:Static res:SR.Email_Address}" Padding="0,5,5,5" HorizontalAlignment="Left" Margin="11,98,0,0" VerticalAlignment="Top" />
-        <TextBox HorizontalAlignment="Left" Height="23" Margin="95,98,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="367" Text="{Binding EmailAddress}">
+        <Label Content="{x:Static res:SR.Email_Address}" Padding="0,5,5,5" HorizontalAlignment="Left" Margin="12,119,0,0" VerticalAlignment="Top" />
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="96,119,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="367" Text="{Binding EmailAddress}">
         </TextBox>
-        <TextBlock Margin="12,133,32,0" TextWrapping="Wrap" Text="{x:Static res:SR.NewContact_AgreeConfirm}" VerticalAlignment="Top" Foreground="{DynamicResource AccentColorBrush}" />
-        <CheckBox Content="{x:Static res:SR.Yes_I_Agree}" HorizontalAlignment="Left" Margin="12,177,0,0" VerticalAlignment="Top" IsChecked="{Binding AgreedToTermsAndConditions}" />
-        <Button x:Name="Save" Content="{x:Static res:SR.Register_Contact}" Margin="304,210,16,0" VerticalAlignment="Top" Click="Save_Click" />
-        <Button x:Name="Cancel" Content="{x:Static res:SR.Cancel}" HorizontalAlignment="Left" Margin="12,210,0,0" VerticalAlignment="Top" Width="135" Click="Cancel_Click" />
+        <TextBlock Margin="10,150,33.6,0" TextWrapping="Wrap" Text="{x:Static res:SR.NewContact_AgreeConfirm}" VerticalAlignment="Top" Foreground="{DynamicResource AccentColorBrush}" />
+        <CheckBox Content="{x:Static res:SR.Yes_I_Agree}" HorizontalAlignment="Left" Margin="10,218,0,0" VerticalAlignment="Top" IsChecked="{Binding AgreedToTermsAndConditions}" />
+        <Button x:Name="Save" Content="{x:Static res:SR.Register_Contact}" Margin="302,251,17.6,0" VerticalAlignment="Top" Click="Save_Click" />
+        <Button x:Name="Cancel" Content="{x:Static res:SR.Cancel}" HorizontalAlignment="Left" Margin="10,251,0,0" VerticalAlignment="Top" Width="135" Click="Cancel_Click" />
     </Grid>
 </Controls:MetroWindow>

@@ -36,7 +36,10 @@ namespace Certify.UI
             ThemeManager.ChangeAppStyle(Application.Current,
                                         ThemeManager.GetAccent("Green"),
                                         ThemeManager.GetAppTheme("BaseLight")); // or appStyle.Item1
-*/
+            */
+
+            // Test translations
+            //System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("zh-HANS");
 
             // upgrade assembly version of saved settings (if required)
             Certify.Properties.Settings.Default.UpgradeSettingsVersion(); // deprecated
