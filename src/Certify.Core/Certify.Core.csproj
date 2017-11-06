@@ -181,10 +181,12 @@
     <Compile Include="Models\APIResponses.cs" />
     <Compile Include="Models\ApiResult.cs" />
     <Compile Include="Models\AppVersion.cs" />
+    <Compile Include="Models\BindableBase.cs" />
     <Compile Include="Models\CertificateAuthority.cs" />
     <Compile Include="Models\CertificateRequestResult.cs" />
     <Compile Include="Models\CertRequestConfig.cs" />
     <Compile Include="Models\DomainOption.cs" />
+    <Compile Include="Models\ManagedSiteLog.cs" />
     <Compile Include="Models\PendingAuthorization.cs" />
     <Compile Include="Models\ManagedItem.cs" />
     <Compile Include="Models\ContactRegistration.cs" />
@@ -207,8 +209,8 @@
     <Compile Include="Settings.cs" />
     <Compile Include="Utils\SRDescription.cs" />
     <EmbeddedResource Include="CoreSR.es-ES.resx">
-     <DependentUpon>CoreSR.resx</DependentUpon>
-     </EmbeddedResource>
+      <DependentUpon>CoreSR.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="CoreSR.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>CoreSR.Designer.cs</LastGenOutput>
