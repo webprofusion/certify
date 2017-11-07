@@ -196,7 +196,7 @@ Compruebe que tiene enlaces https de SNI para su sitio
     <value>Sitio detenido (o no presente), la renovación ha sido omitida porque la validación del dominio no puede ser realizada.</value>
   </data>
   <data name="CertifyManager_SkipRenewalOk" xml:space="preserve">
-    <value>Saltando la renovación, el certificado existente sigue siendo correcto.</value>
+    <value>Omitiendo la renovación, el certificado existente sigue siendo correcto.</value>
   </data>
   <data name="CertifyManager_ValidationForChallengeNotSuccess" xml:space="preserve">
     <value>La validación de los desafíos requeridos no se completó con éxito. {0}</value>
