@@ -95,7 +95,7 @@ namespace Certify.Models
         /// <summary>
         /// True if a property has been changed on the model since IsChanged was last set to false 
         /// </summary>
-        [JsonIgnore] // don't serialize this property to saved settings
+        [JsonIgnore] // don't deserialize this property from legacy saved settings
         public bool IsChanged
         {
             get { return isChanged; }

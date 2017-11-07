@@ -317,6 +317,10 @@ namespace Certify.UI.ViewModel
         public virtual void SaveSettings()
         {
             certifyManager.SaveManagedSites(ManagedSites.ToList());
+            foreach (var site in ManagedSites.Where(s => s.Deleted).ToList())
+            {
+                ManagedSites.Remove(site);
+            }
             ManagedSites = new ObservableCollection<ManagedSite>(ManagedSites);
         }
 
@@ -399,7 +403,7 @@ namespace Certify.UI.ViewModel
             {
                 if (MessageBox.Show(SR.ManagedItemSettings_ConfirmDelete, SR.ConfirmDelete, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning)==DialogResult.OK)
                 {
-                    ManagedSites.Remove(existing);
+                    existing.Deleted = true;
                     SaveSettings();
                 }
             }

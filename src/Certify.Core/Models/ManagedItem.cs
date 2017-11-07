@@ -1,4 +1,5 @@
 using Certify.Utils;
+using Newtonsoft.Json;
 using System;
 using System.Collections.ObjectModel;
 using System.Text;
@@ -62,6 +63,9 @@ namespace Certify.Models
         {
             return $"[{Id ?? "null"}]: \"{Name}\"";
         }
+
+        [JsonIgnore]
+        public bool Deleted { get; set; } // do not serialize to settings
     }
 
     public class ManagedSite : ManagedItem
