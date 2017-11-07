@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Certify.Models;
 using Microsoft.ApplicationInsights;
 using System.Net;
+using System.IO;
 
 namespace Certify.Management
 {
@@ -19,12 +20,18 @@ namespace Certify.Management
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
         }
 
-        public static string GetAppDataFolder()
+        public static string GetAppDataFolder(string subFolder = null)
         {
-            var path = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\" + APPDATASUBFOLDER;
-            if (!System.IO.Directory.Exists(path))
+            var parts = new List<string>()
             {
-                System.IO.Directory.CreateDirectory(path);
+                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                APPDATASUBFOLDER
+            };
+            if (subFolder != null) parts.Add(subFolder);
+            var path = Path.Combine(parts.ToArray());
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
             }
             return path;
         }
