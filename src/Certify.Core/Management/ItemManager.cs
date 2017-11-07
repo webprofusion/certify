@@ -27,13 +27,13 @@ namespace Certify.Management
         /// </summary>
         public bool EnableLocalIISMode { get; set; } //TODO: driven by config
 
-        private Dictionary<string,ManagedSite> ManagedSites { get; set; }
+        private Dictionary<string, ManagedSite> ManagedSites { get; set; }
         public string StorageSubfolder = ""; //if specifed will be appended to AppData path as subfolder to load/save to
 
         public ItemManager()
         {
             EnableLocalIISMode = true;
-            ManagedSites = new Dictionary<string,ManagedSite>();
+            ManagedSites = new Dictionary<string, ManagedSite>();
         }
 
         public void StoreSettings()
@@ -131,7 +131,7 @@ namespace Certify.Management
             }
             else
             {
-                ManagedSites = new Dictionary<string,ManagedSite>();
+                ManagedSites = new Dictionary<string, ManagedSite>();
             }
             Debug.WriteLine($"LoadSettings[Sqlite] took {watch.ElapsedMilliseconds}ms for {ManagedSites.Count} records");
         }
@@ -151,11 +151,25 @@ namespace Certify.Management
                     using (StreamReader sr = new StreamReader(json))
                     using (JsonTextReader reader = new JsonTextReader(sr))
                     {
-                        ManagedSites = serializer.Deserialize<List<ManagedSite>>(reader).ToDictionary(s => s.Id);
+                        var managedSiteList = serializer.Deserialize<List<ManagedSite>>(reader);
+
+                        //safety check, if any dupe id's exists (which they shouldn't but the test data set did) make Id unique in the set.
+                        var duplicateKeys = managedSiteList.GroupBy(x => x.Id).Where(group => group.Count() > 1).Select(group => group.Key);
+                        foreach (var dupeKey in duplicateKeys)
+                        {
+                            var count = 0;
+                            foreach (var i in managedSiteList.Where(m => m.Id == dupeKey))
+                            {
+                                i.Id = i.Id + "_" + count;
+                                count++;
+                            }
+                        }
+
+                        ManagedSites = managedSiteList.ToDictionary(s => s.Id);
                     }
                 }
 
-                StoreSettings(); // upgrade to liteDB
+                StoreSettings(); // upgrade to SQLite db storage
                 File.Delete($"{json}.bak");
                 File.Move(json, $"{json}.bak");
                 Debug.WriteLine($"UpgradeSettings[Json->Sqlite] took {watch.ElapsedMilliseconds}ms for {ManagedSites.Count} records");
