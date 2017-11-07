@@ -9,15 +9,15 @@
              xmlns:System="clr-namespace:System;assembly=mscorlib"
              xmlns:fa="http://schemas.fontawesome.io/icons/"
              xmlns:utils="clr-namespace:Certify.UI.Utils" x:Class="Certify.UI.Controls.ManagedSites"
-             xmlns:res="clr-namespace:Certify.UI.Resources"
+             xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
              mc:Ignorable="d" Width="970" Height="487"
              Loaded="UserControl_OnLoaded"
              d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}">
 
     <Grid>
         <Grid.Resources>
-            <utils:NullVisibilityConverter x:Key="NullCollapsedConverter"/>
-            <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed"/>
+            <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
+            <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
             <utils:EnumConverter x:Key="EnumConverter" />
             <utils:ExpiryDateConverter x:Key="ExpiryDateConverter" />
             <utils:ExpiryDateColourConverter x:Key="ExpiryDateColourConverter" />
@@ -36,9 +36,9 @@
             </Grid.RowDefinitions>
             <TextBox Grid.Row="0" Name="txtFilter" TextChanged="TxtFilter_TextChanged" PreviewKeyDown="TxtFilter_PreviewKeyDown" Controls:TextBoxHelper.Watermark="{x:Static res:SR.ManagedSites_Filter}" Controls:TextBoxHelper.ClearTextButton="True"></TextBox>
             <ListView Grid.Row="1" Name="lvManagedSites"
-                      ItemsSource="{Binding ManagedSites}" 
-                      SelectedItem="{Binding SelectedItem, Mode=OneWay}" 
-                      SelectionChanged="lvManagedSites_SelectionChanged" 
+                      ItemsSource="{Binding ManagedSites}"
+                      SelectedItem="{Binding SelectedItem, Mode=OneWay}"
+                      SelectionChanged="lvManagedSites_SelectionChanged"
                       SelectionMode="Single"
                       ScrollViewer.CanContentScroll="True"
                       VirtualizingPanel.IsVirtualizing="True"
@@ -46,13 +46,13 @@
                       ScrollViewer.HorizontalScrollBarVisibility="Auto">
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem">
-                        <EventSetter Event="PreviewMouseLeftButtonDown" Handler="ListViewItem_InteractionEvent"/>
-                        <EventSetter Event="PreviewTouchDown" Handler="ListViewItem_InteractionEvent"/>
-                        <EventSetter Event="PreviewKeyDown" Handler="ListViewItem_PreviewKeyDown"/>
+                        <EventSetter Event="PreviewMouseLeftButtonDown" Handler="ListViewItem_InteractionEvent" />
+                        <EventSetter Event="PreviewTouchDown" Handler="ListViewItem_InteractionEvent" />
+                        <EventSetter Event="PreviewKeyDown" Handler="ListViewItem_PreviewKeyDown" />
                         <Style.Resources>
                             <!-- for non-Aero systems (windows server 2008 r2 and below) -->
-                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="Black"/>
-                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#efefef"/>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="Black" />
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#efefef" />
                         </Style.Resources>
                     </Style>
                 </ListView.ItemContainerStyle>

@@ -34,13 +34,13 @@ namespace Certify.UI.Windows
 
             if (String.IsNullOrEmpty(email))
             {
-                MessageBox.Show(Certify.UI.Resources.SR.Registration_NeedEmail);
+                MessageBox.Show(Certify.Locales.SR.Registration_NeedEmail);
                 return;
             }
 
             if (String.IsNullOrEmpty(key))
             {
-                MessageBox.Show(Certify.UI.Resources.SR.Registration_NeedKey);
+                MessageBox.Show(Certify.Locales.SR.Registration_NeedKey);
                 return;
             }
 
@@ -81,12 +81,12 @@ namespace Certify.UI.Windows
                 }
                 catch (Exception)
                 {
-                    MessageBox.Show(Certify.UI.Resources.SR.Registration_KeyValidationError);
+                    MessageBox.Show(Certify.Locales.SR.Registration_KeyValidationError);
                 }
             }
             else
             {
-                MessageBox.Show(Certify.UI.Resources.SR.Registration_UnableToVerify);
+                MessageBox.Show(Certify.Locales.SR.Registration_UnableToVerify);
             }
         }
 

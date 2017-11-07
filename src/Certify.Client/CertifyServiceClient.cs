@@ -49,5 +49,10 @@ namespace Certify.Client
         {
             throw new NotImplementedException();
         }
+
+        public async Task<string> GetAppVersion()
+        {
+            return await FetchAsync("system/getappversion");
+        }
     }
 }

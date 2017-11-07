@@ -116,11 +116,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Resources\SR.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>SR.resx</DependentUpon>
-    </Compile>
     <Compile Include="Utils\ExpiryDateConverter.cs" />
     <Compile Include="ViewModel\DesignViewModel.cs" />
     <Compile Include="Windows\Feedback.xaml.cs">
@@ -235,16 +230,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\SR.es-ES.resx">
-      <DependentUpon>SR.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\SR.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>SR.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\SR.zh-Hans.resx">
-      <DependentUpon>SR.resx</DependentUpon>
-    </EmbeddedResource>
     <None Include="app.manifest" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
@@ -278,11 +263,16 @@
       <Project>{87baa9ca-e0c9-4d3e-8971-55a30134c932}</Project>
       <Name>Certify.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj">
+      <Project>{8bcaa93d-18aa-4f62-bcb4-c883cc65c049}</Project>
+      <Name>Certify.Locales</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="FodyWeavers.xml" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Resources\" />
     <Folder Include="SampleData\" />
   </ItemGroup>
   <ItemGroup>

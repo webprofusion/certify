@@ -8,12 +8,11 @@ using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Controls;
 using WinForms = System.Windows.Forms;
+using System.Windows.Input;
+using Certify.Locales;
 
 namespace Certify.UI.Controls
 {
-    using Resources;
-    using System.Windows.Input;
-
     /// <summary>
     /// Interaction logic for ManagedItemSettings.xaml 
     /// </summary>
@@ -398,8 +397,8 @@ namespace Certify.UI.Controls
             // allows mousewheel scrolling while mouse cursor is over the DataGrid
             // see: https://stackoverflow.com/a/16235785/490657
             ScrollViewer scv = (ScrollViewer)sender;
-            
-            scv.ScrollToVerticalOffset(scv.VerticalOffset - e.Delta/2);
+
+            scv.ScrollToVerticalOffset(scv.VerticalOffset - e.Delta / 2);
             e.Handled = true;
         }
     }

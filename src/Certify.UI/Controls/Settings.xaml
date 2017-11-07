@@ -8,7 +8,7 @@
              xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
              xmlns:fa="http://schemas.fontawesome.io/icons/" xmlns:ViewModel="clr-namespace:Certify.UI.ViewModel" x:Class="Certify.UI.Controls.Settings"
              mc:Ignorable="d" Height="309.657" Width="529.8"
-             xmlns:res="clr-namespace:Certify.UI.Resources"
+             xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
              d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}" Loaded="UserControl_Loaded">
 
     <StackPanel Orientation="Vertical" Margin="0,8,0,16">

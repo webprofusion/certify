@@ -1,3 +1,4 @@
+using Certify.Locales;
 using Certify.Management;
 using System;
 using System.Collections.Generic;
@@ -16,10 +17,8 @@ using System.Windows.Shapes;
 
 namespace Certify.UI.Controls
 {
-    using Resources;
-
     /// <summary>
-    /// Interaction logic for AboutControl.xaml
+    /// Interaction logic for AboutControl.xaml 
     /// </summary>
     public partial class AboutControl : UserControl
     {
@@ -40,7 +39,7 @@ namespace Certify.UI.Controls
 
         private void PopulateAppInfo()
         {
-            this.lblAppVersion.Text = Core.Properties.Resources.AppName + " " + new Certify.Management.Util().GetAppVersion();
+            this.lblAppVersion.Text = ConfigResources.AppName + " " + new Certify.Management.Util().GetAppVersion();
 
             if (this.MainViewModel.IsRegisteredVersion)
             {
@@ -70,10 +69,10 @@ namespace Certify.UI.Controls
             {
                 if (updateCheck.IsNewerVersion)
                 {
-                    var gotoDownload = MessageBox.Show(updateCheck.Message.Body + "\r\nVisit download page now?", Core.Properties.Resources.AppName, MessageBoxButton.YesNo);
+                    var gotoDownload = MessageBox.Show(updateCheck.Message.Body + "\r\nVisit download page now?", ConfigResources.AppName, MessageBoxButton.YesNo);
                     if (gotoDownload == MessageBoxResult.Yes)
                     {
-                        System.Diagnostics.ProcessStartInfo sInfo = new System.Diagnostics.ProcessStartInfo(Core.Properties.Resources.AppWebsiteURL);
+                        System.Diagnostics.ProcessStartInfo sInfo = new System.Diagnostics.ProcessStartInfo(ConfigResources.AppWebsiteURL);
                         System.Diagnostics.Process.Start(sInfo);
                     }
                 }
@@ -81,7 +80,7 @@ namespace Certify.UI.Controls
                 {
                     if (!silent)
                     {
-                        MessageBox.Show(Core.Properties.Resources.UpdateCheckLatestVersion, Core.Properties.Resources.AppName);
+                        MessageBox.Show(ConfigResources.UpdateCheckLatestVersion, ConfigResources.AppName);
                     }
                 }
             }

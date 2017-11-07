@@ -8,6 +8,7 @@ using Certify.Models;
 using Microsoft.ApplicationInsights;
 using System.Net;
 using System.IO;
+using Certify.Locales;
 
 namespace Certify.Management
 {
@@ -39,8 +40,8 @@ namespace Certify.Management
         public TelemetryClient InitTelemetry()
         {
             var tc = new TelemetryClient();
-            tc.Context.InstrumentationKey = Certify.Properties.Resources.AIInstrumentationKey;
-            tc.InstrumentationKey = Certify.Properties.Resources.AIInstrumentationKey;
+            tc.Context.InstrumentationKey = ConfigResources.AIInstrumentationKey;
+            tc.InstrumentationKey = ConfigResources.AIInstrumentationKey;
 
             // Set session data:
 
@@ -86,7 +87,7 @@ namespace Certify.Management
             try
             {
                 HttpClient client = new HttpClient();
-                var response = await client.GetAsync(Properties.Resources.AppUpdateCheckURI + "?v=" + appVersion);
+                var response = await client.GetAsync(ConfigResources.AppUpdateCheckURI + "?v=" + appVersion);
                 if (response.IsSuccessStatusCode)
                 {
                     string json = await response.Content.ReadAsStringAsync();

@@ -1,24 +1,14 @@
+using Certify.Locales;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace Certify.UI.Windows
 {
-    using Resources;
-
     /// <summary>
-    /// Interaction logic for Feedback.xaml
+    /// Interaction logic for Feedback.xaml 
     /// </summary>
     public partial class Feedback
     {
@@ -38,7 +28,7 @@ namespace Certify.UI.Windows
 
             if (this.IsException)
             {
-                this.Prompt.Text =SR.Send_Feedback_Exception;
+                this.Prompt.Text = SR.Send_Feedback_Exception;
             }
         }
 
@@ -57,7 +47,7 @@ namespace Certify.UI.Windows
             Submit.IsEnabled = false;
 
             //submit feedback if connection available
-            var API_BASE_URI = Certify.Properties.Resources.APIBaseURI;
+            var API_BASE_URI = ConfigResources.APIBaseURI;
 
             //AppDomain.CurrentDomain.SetupInformation.ConfigurationFile
 
@@ -72,7 +62,7 @@ namespace Certify.UI.Windows
                     {
                         Framework = Environment.Version.ToString(),
                         OS = Environment.OSVersion.ToString(),
-                        AppVersion = Core.Properties.Resources.AppName + " " + new Certify.Management.Util().GetAppVersion(),
+                        AppVersion = ConfigResources.AppName + " " + new Certify.Management.Util().GetAppVersion(),
                         IsException = this.IsException
                     }
                 });
@@ -96,7 +86,7 @@ namespace Certify.UI.Windows
 
             Submit.IsEnabled = true;
             //failed
-            MessageBox.Show(Certify.UI.Resources.SR.Send_Feedback_Error);
+            MessageBox.Show(SR.Send_Feedback_Error);
         }
     }
 }

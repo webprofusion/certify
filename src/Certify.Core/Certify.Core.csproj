@@ -164,11 +164,6 @@
   <ItemGroup>
     <Compile Include="ACMESharpCompat\ACMESharpUtils.cs" />
     <Compile Include="ACMESharpCompat\Helpers.cs" />
-    <Compile Include="CoreSR.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>CoreSR.resx</DependentUpon>
-    </Compile>
     <Compile Include="Management\APIProviders\CertesProvider.cs" />
     <Compile Include="Management\IACMEClientProvider.cs" />
     <Compile Include="Management\APIProviders\ACMESharpProvider.cs" />
@@ -186,31 +181,7 @@
     <Compile Include="Models\ManagedSiteLog.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Management\VaultManager.cs" />
-    <Compile Include="Resources.cs" />
     <Compile Include="Settings.cs" />
-    <EmbeddedResource Include="CoreSR.es-ES.resx">
-      <DependentUpon>CoreSR.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CoreSR.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>CoreSR.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CoreSR.zh-Hans.resx">
-      <DependentUpon>CoreSR.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.es-ES.resx">
-      <DependentUpon>Resources.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
@@ -243,6 +214,10 @@
     <ProjectReference Include="..\Certify.Core.Models\Certify.Core.Models.csproj">
       <Project>{50a30c5d-f5d7-4bb1-9eab-957af34fbf3d}</Project>
       <Name>Certify.Core.Models</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj">
+      <Project>{8bcaa93d-18aa-4f62-bcb4-c883cc65c049}</Project>
+      <Name>Certify.Locales</Name>
     </ProjectReference>
     <ProjectReference Include="..\lib\ACMESharp\ACMESharp\ACMESharp.PKI.Providers.BouncyCastle\ACMESharp.PKI.Providers.BouncyCastle.csproj">
       <Project>{473bff7d-c7f0-471d-b7a3-19ad9adfdba9}</Project>

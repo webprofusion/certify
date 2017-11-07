@@ -1,3 +1,4 @@
+using Certify.Locales;
 using Certify.Models;
 
 using System;
@@ -238,7 +239,7 @@ namespace Certify.Management
             // FIXME: refactor into different concerns, there's way too much being done here
             if (managedSite.RequestConfig.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP && managedSite.RequestConfig.PerformExtensionlessConfigChecks)
             {
-                ReportProgress(progress, new RequestProgressState { IsRunning = true, CurrentState = RequestState.Running, Message = Certify.CoreSR.CertifyManager_PerformingConfigTests });
+                ReportProgress(progress, new RequestProgressState { IsRunning = true, CurrentState = RequestState.Running, Message = Certify.Locales.CoreSR.CertifyManager_PerformingConfigTests });
 
                 var testResult = await TestChallenge(managedSite, isPreviewMode: false);
                 if (!testResult.IsOK)
@@ -273,7 +274,7 @@ namespace Certify.Management
                     if (result.Abort)
                     {
                         LogMessage(managedSite.Id, $"Certificate Request Aborted: {managedSite.Name}");
-                        result.Message = Certify.CoreSR.CertificateRequestWasAbortedByPSScript;
+                        result.Message = Certify.Locales.CoreSR.CertificateRequestWasAbortedByPSScript;
                         goto CertRequestAborted;
                     }
 
@@ -311,7 +312,7 @@ namespace Certify.Management
                         var domainIdentifierId = _vaultProvider.ComputeDomainIdentifierId(domain);
 
                         LogMessage(managedSite.Id, $"Attempting Domain Validation: {domain}", LogItemType.CertificateRequestStarted);
-                        ReportProgress(progress, string.Format(Certify.CoreSR.CertifyManager_RegisteringAndValidatingX0, domain));
+                        ReportProgress(progress, string.Format(Certify.Locales.CoreSR.CertifyManager_RegisteringAndValidatingX0, domain));
 
                         //TODO: make operations async and yield IO of vault
                         /*var authorization = await Task.Run(() =>
@@ -332,7 +333,7 @@ namespace Certify.Management
                             {
                                 if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS)
                                 {
-                                    ReportProgress(progress, string.Format(Certify.CoreSR.CertifyManager_PerformingChallengeResponseViaIISX0, domain));
+                                    ReportProgress(progress, string.Format(Certify.Locales.CoreSR.CertifyManager_PerformingChallengeResponseViaIISX0, domain));
 
                                     // ask LE to check our answer to their authorization challenge
                                     // (http-01 or tls-sni-01), LE will then attempt to fetch our
@@ -361,7 +362,7 @@ namespace Certify.Management
 
                                         if (config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI)
                                         {
-                                            result.Message = Certify.CoreSR.CertifyManager_AutomateConfigurationCheckFailed_SNI;
+                                            result.Message = Certify.Locales.CoreSR.CertifyManager_AutomateConfigurationCheckFailed_SNI;
                                         }
 
                                         ReportProgress(progress, new RequestProgressState { CurrentState = RequestState.Error, Message = result.Message, Result = result });
@@ -552,7 +553,7 @@ namespace Certify.Management
                 catch (Exception exp)
                 {
                     result.IsSuccess = false;
-                    result.Message = string.Format(Certify.CoreSR.CertifyManager_RequestFailed, managedSite.Name, exp.Message, exp);
+                    result.Message = string.Format(Certify.Locales.CoreSR.CertifyManager_RequestFailed, managedSite.Name, exp.Message, exp);
                     LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
                     //LogMessage(managedSite.Id, String.Join("\r\n", _vaultProvider.GetActionSummary())); FIXME: needs to be filtered in managed site
                     System.Diagnostics.Debug.WriteLine(exp.ToString());

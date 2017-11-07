@@ -67,7 +67,7 @@ namespace Certify.UI.Windows
 
             if (!isValidEmail)
             {
-                MessageBox.Show(Certify.UI.Resources.SR.New_Contact_EmailError);
+                MessageBox.Show(Certify.Locales.SR.New_Contact_EmailError);
 
                 return;
             }
@@ -89,7 +89,7 @@ namespace Certify.UI.Windows
             }
             else
             {
-                MessageBox.Show(Certify.UI.Resources.SR.New_Contact_NeedAgree);
+                MessageBox.Show(Certify.Locales.SR.New_Contact_NeedAgree);
             }
         }
     }

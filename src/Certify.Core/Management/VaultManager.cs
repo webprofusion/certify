@@ -3,6 +3,7 @@ using ACMESharp.Vault.Model;
 using ACMESharp.Vault.Providers;
 using ACMESharp.Vault.Util;
 using Certify.ACMESharpCompat;
+using Certify.Locales;
 using Certify.Management;
 using Certify.Models;
 using Newtonsoft.Json;
@@ -997,7 +998,7 @@ namespace Certify
 
             // create a web.config for extensionless files, then test it (make a request for the
             // extensionless configcheck file over http)
-            string webConfigContent = Core.Properties.Resources.IISWebConfig;
+            string webConfigContent = ConfigResources.IISWebConfig;
 
             if (!File.Exists(destPath + "\\web.config"))
             {

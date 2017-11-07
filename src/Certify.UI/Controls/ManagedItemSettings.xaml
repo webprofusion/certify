@@ -12,8 +12,7 @@
              xmlns:utils="clr-namespace:Certify.UI.Utils"
              xmlns:acme="clr-namespace:Certify.ACMESharpCompat;assembly=Certify.Core"
              xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Core.Models"
-             xmlns:res="clr-namespace:Certify.UI.Resources"
-             xmlns:Resources="clr-namespace:Certify.UI.Resources"
+             xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
              x:Class="Certify.UI.Controls.ManagedItemSettings"
              mc:Ignorable="d" Width="697.442" Height="425.672"
              d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}">
@@ -286,7 +285,7 @@
                             </TextBox>
                         </DockPanel>
                         <Button x:Name="OpenLogFile" Content="{x:Static Resources:SR.ManagedItemSettings_OpenLogFile}" Click="OpenLogFile_Click" />
-                        <Label x:Name="CertPath" Content="{Binding SelectedItem.CertificatePath, TargetNullValue={x:Static res:SR.ManagedItemSettings_CertificatePathEmpty}}" />
+                        <Label x:Name="CertPath" Content="{Binding SelectedItem.CertificatePath, TargetNullValue={x:Static Resources:SR.ManagedItemSettings_CertificatePathEmpty}}" />
                         <Button x:Name="OpenCertificateFile" Content="{x:Static Resources:SR.ManagedItemSettings_ViewCertificate}" Click="OpenCertificateFile_Click" />
                         <Label Content="{x:Static Resources:SR.ManagedItemSettings_ExportTip}" />
                         <Border>

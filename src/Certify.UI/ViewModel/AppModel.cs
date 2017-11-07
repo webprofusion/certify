@@ -1,6 +1,6 @@
-﻿using Certify.Management;
+﻿using Certify.Locales;
+using Certify.Management;
 using Certify.Models;
-using Certify.UI.Resources;
 using PropertyChanged;
 using System;
 using System.Collections.Generic;
@@ -58,6 +58,7 @@ namespace Certify.UI.ViewModel
                 }
             }
         }
+
         private ObservableCollection<ManagedSite> managedSites;
 
         /// <summary>
@@ -131,6 +132,7 @@ namespace Certify.UI.ViewModel
                 selectedItem = value;
             }
         }
+
         private ManagedSite selectedItem;
 
         public bool IsRegisteredVersion { get; set; }
@@ -329,7 +331,7 @@ namespace Certify.UI.ViewModel
             if (SelectedItem?.IsChanged ?? false)
             {
                 //user needs to save or discard changes before changing selection
-                if (MessageBox.Show(SR.ManagedSites_UnsavedWarning, SR.Alert, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning)==DialogResult.OK)
+                if (MessageBox.Show(SR.ManagedSites_UnsavedWarning, SR.Alert, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
                 {
                     DiscardChanges();
                 }
@@ -401,7 +403,7 @@ namespace Certify.UI.ViewModel
             var existing = ManagedSites.FirstOrDefault(s => s.Id == selectedItem.Id);
             if (existing != null)
             {
-                if (MessageBox.Show(SR.ManagedItemSettings_ConfirmDelete, SR.ConfirmDelete, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning)==DialogResult.OK)
+                if (MessageBox.Show(SR.ManagedItemSettings_ConfirmDelete, SR.ConfirmDelete, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
                 {
                     existing.Deleted = true;
                     SaveSettings();
@@ -477,7 +479,7 @@ namespace Certify.UI.ViewModel
             managedSite.IncludeInAutoRenew = true;
             managedSite.DomainOptions.Clear();
             foreach (var option in GetDomainOptionsFromSite(siteId))
-            { 
+            {
                 managedSite.DomainOptions.Add(option);
             }
 

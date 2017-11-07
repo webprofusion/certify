@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel;
 
-namespace Certify.Utils
+namespace Certify.Locales
 {
     [AttributeUsage(AttributeTargets.All)]
     public class SRDescription : DescriptionAttribute

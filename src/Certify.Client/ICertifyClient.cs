@@ -11,6 +11,8 @@ namespace Certify.Client
     /// </summary>
     public interface ICertifyClient
     {
+        Task<string> GetAppVersion();
+
         Task<CertificateRequestResult> PerformCertificateRequest(ManagedSite site);
 
         Task<object> GetRequestsInProgress(); // Could be a signalr service?

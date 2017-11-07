@@ -1,5 +1,6 @@
 ﻿using ARSoft.Tools.Net;
 using ARSoft.Tools.Net.Dns;
+using Certify.Locales;
 using Certify.Models;
 using System;
 using System.Collections.Generic;
@@ -119,7 +120,7 @@ namespace Certify.Management
             try
             {
                 var request = WebRequest.Create(!useProxy ? url :
-                    Properties.Resources.APIBaseURI + "testurlaccess?url=" + url);
+                    ConfigResources.APIBaseURI + "testurlaccess?url=" + url);
                 ServicePointManager.ServerCertificateValidationCallback = (obj, cert, chain, errors) =>
                 {
                     // ignore all cert errors when validating URL response

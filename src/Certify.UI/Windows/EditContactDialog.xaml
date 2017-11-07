@@ -6,7 +6,7 @@
               xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         xmlns:local="clr-namespace:Certify.UI.Windows"
         xmlns:Models="clr-namespace:Certify.Models;assembly=Certify.Core" x:Class="Certify.UI.Windows.EditContactDialog"
-        xmlns:res="clr-namespace:Certify.UI.Resources"
+        xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
         mc:Ignorable="d"
         GlowBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1" ResizeMode="NoResize"

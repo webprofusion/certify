@@ -16,7 +16,7 @@ namespace Certify.CLI
         private static int Main(string[] args)
         {
             // upgrade assembly version of saved settings (if required)
-#if RELEASE
+#if DIRECTCLIENT
             Certify.Properties.Settings.Default.UpgradeSettingsVersion(); // deprecated
             Certify.Management.SettingsManager.LoadAppSettings();
 #endif
@@ -73,8 +73,11 @@ namespace Certify.CLI
 
         public CertifyCLI()
         {
-            //_certifyClient = new CertifyDirectClient();
+#if DIRECTCLIENT
+            _certifyClient = new CertifyDirectClient();
+#else
             _certifyClient = new CertifyServiceClient();
+#endif
         }
 
         private bool IsTelematicsEnabled()
@@ -91,13 +94,14 @@ namespace Certify.CLI
 
         private string GetAppVersion()
         {
-            return "CLI 2.0";
-            //return new Certify.Management.Util().GetAppVersion().ToString();
+            string version = _certifyClient.GetAppVersion().Result;
+            return version;
         }
 
         private string GetAppWebsiteURL()
         {
             return "https://certifytheweb.com";
+            // return Certify.Locales.CoreSR.Ap
             //return Certify.Properties.Resources.AppWebsiteURL;
         }
 
