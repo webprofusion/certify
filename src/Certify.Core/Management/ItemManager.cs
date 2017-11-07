@@ -52,7 +52,7 @@ namespace Certify.Management
                     using (var target = new SQLiteConnection($"Data Source={path}"))
                     {
                         target.Open();
-                        using (var cmd = new SQLiteCommand("CREATE TABLE managedsettings (id TEXT NOT NULL UNIQUE PRIMARY KEY, json TEXT NOT NULL)", target))
+                        using (var cmd = new SQLiteCommand("CREATE TABLE manageditem (id TEXT NOT NULL UNIQUE PRIMARY KEY, json TEXT NOT NULL)", target))
                         {
                             cmd.ExecuteNonQuery();
                         }
@@ -67,7 +67,7 @@ namespace Certify.Management
                     {
                         foreach (var deleted in ManagedSites.Values.Where(s => s.Deleted).ToList())
                         {
-                            using (var cmd = new SQLiteCommand("DELETE FROM managedsettings WHERE id=@id", target))
+                            using (var cmd = new SQLiteCommand("DELETE FROM manageditem WHERE id=@id", target))
                             {
                                 cmd.Parameters.Add(new SQLiteParameter("@id", deleted.Id));
                                 cmd.ExecuteNonQuery();
@@ -76,7 +76,7 @@ namespace Certify.Management
                         }
                         foreach (var changed in ManagedSites.Values.Where(s => s.IsChanged))
                         {
-                            using (var cmd = new SQLiteCommand("INSERT OR REPLACE INTO managedsettings (id,json) VALUES (@id,@json)", target))
+                            using (var cmd = new SQLiteCommand("INSERT OR REPLACE INTO manageditem (id,json) VALUES (@id,@json)", target))
                             {
                                 cmd.Parameters.Add(new SQLiteParameter("@id", changed.Id));
                                 cmd.Parameters.Add(new SQLiteParameter("@json", JsonConvert.SerializeObject(changed)));
@@ -114,7 +114,7 @@ namespace Certify.Management
                 {
                     var managedSites = new List<ManagedSite>();
                     using (var target = new SQLiteConnection($"Data Source={path}"))
-                    using (var cmd = new SQLiteCommand("SELECT json FROM managedsettings", target))
+                    using (var cmd = new SQLiteCommand("SELECT json FROM manageditem", target))
                     {
                         target.Open();
                         using (var reader = cmd.ExecuteReader())
