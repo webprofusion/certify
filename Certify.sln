@@ -32,9 +32,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Service", "src\Cert
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Client", "src\Certify.Client\Certify.Client.csproj", "{CEC76BB6-5B17-4267-B1FF-5EA0F67EB1C5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Core.Models", "src\Certify.Core.Models\Certify.Core.Models.csproj", "{50A30C5D-F5D7-4BB1-9EAB-957AF34FBF3D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Models", "src\Certify.Core.Models\Certify.Models.csproj", "{50A30C5D-F5D7-4BB1-9EAB-957AF34FBF3D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Locales", "src\Certify.Locales\Certify.Locales.csproj", "{8BCAA93D-18AA-4F62-BCB4-C883CC65C049}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Shared", "src\Certify.Shared\Certify.Shared.csproj", "{ED48B479-B619-4C16-AFA3-83DD3CD89338}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -90,6 +92,10 @@ Global
 		{8BCAA93D-18AA-4F62-BCB4-C883CC65C049}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8BCAA93D-18AA-4F62-BCB4-C883CC65C049}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8BCAA93D-18AA-4F62-BCB4-C883CC65C049}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED48B479-B619-4C16-AFA3-83DD3CD89338}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED48B479-B619-4C16-AFA3-83DD3CD89338}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED48B479-B619-4C16-AFA3-83DD3CD89338}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED48B479-B619-4C16-AFA3-83DD3CD89338}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

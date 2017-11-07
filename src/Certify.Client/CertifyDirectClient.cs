@@ -45,5 +45,10 @@ namespace Certify.Client
         {
             return Task.FromResult(new Management.Util().GetAppVersion().ToString());
         }
+
+        public Task<UpdateCheck> CheckForUpdates()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

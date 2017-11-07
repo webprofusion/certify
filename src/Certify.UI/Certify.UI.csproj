@@ -251,13 +251,17 @@
     <Resource Include="Assets\Images\Icons\readme.txt.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Certify.Client\Certify.Client.csproj">
+      <Project>{CEC76BB6-5B17-4267-B1FF-5EA0F67EB1C5}</Project>
+      <Name>Certify.Client</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Certify.CLI\Certify.CLI.csproj">
       <Project>{da0ccd9f-8cbd-4471-93e0-53bcfb6ca25e}</Project>
       <Name>Certify.CLI</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Certify.Core.Models\Certify.Core.Models.csproj">
+    <ProjectReference Include="..\Certify.Core.Models\Certify.Models.csproj">
       <Project>{50a30c5d-f5d7-4bb1-9eab-957af34fbf3d}</Project>
-      <Name>Certify.Core.Models</Name>
+      <Name>Certify.Models</Name>
     </ProjectReference>
     <ProjectReference Include="..\Certify.Core\Certify.Core.csproj">
       <Project>{87baa9ca-e0c9-4d3e-8971-55a30134c932}</Project>
@@ -266,6 +270,10 @@
     <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj">
       <Project>{8bcaa93d-18aa-4f62-bcb4-c883cc65c049}</Project>
       <Name>Certify.Locales</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Certify.Shared\Certify.Shared.csproj">
+      <Project>{ED48B479-B619-4C16-AFA3-83DD3CD89338}</Project>
+      <Name>Certify.Shared</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

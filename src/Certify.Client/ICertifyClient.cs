@@ -13,6 +13,8 @@ namespace Certify.Client
     {
         Task<string> GetAppVersion();
 
+        Task<UpdateCheck> CheckForUpdates();
+
         Task<CertificateRequestResult> PerformCertificateRequest(ManagedSite site);
 
         Task<object> GetRequestsInProgress(); // Could be a signalr service?

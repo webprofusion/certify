@@ -75,9 +75,9 @@
       <Project>{cec76bb6-5b17-4267-b1ff-5ea0f67eb1c5}</Project>
       <Name>Certify.Client</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Certify.Core.Models\Certify.Core.Models.csproj">
+    <ProjectReference Include="..\Certify.Core.Models\Certify.Models.csproj">
       <Project>{50A30C5D-F5D7-4BB1-9EAB-957AF34FBF3D}</Project>
-      <Name>Certify.Core.Models</Name>
+      <Name>Certify.Models</Name>
     </ProjectReference>
     <ProjectReference Include="..\Certify.Core\Certify.Core.csproj">
       <Project>{87baa9ca-e0c9-4d3e-8971-55a30134c932}</Project>

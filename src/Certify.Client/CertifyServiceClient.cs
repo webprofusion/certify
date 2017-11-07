@@ -54,5 +54,10 @@ namespace Certify.Client
         {
             return await FetchAsync("system/getappversion");
         }
+
+        public Task<UpdateCheck> CheckForUpdates()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

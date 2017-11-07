@@ -104,7 +104,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Win32.TaskScheduler, Version=2.6.4.0, Culture=neutral, PublicKeyToken=c416bc1b32d97233, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\TaskScheduler.2.6.4\lib\net40\Microsoft.Win32.TaskScheduler.dll</HintPath>
+      <HintPath>..\..\packages\TaskScheduler.2.6.4\lib\net452\Microsoft.Win32.TaskScheduler.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -143,6 +143,7 @@
     <Reference Include="System.Diagnostics.DiagnosticSource, Version=4.0.2.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\..\packages\System.Diagnostics.DiagnosticSource.4.4.1\lib\net45\System.Diagnostics.DiagnosticSource.dll</HintPath>
     </Reference>
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Management.Automation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\packages\System.Management.Automation.6.1.7601.17515\lib\net45\System.Management.Automation.dll</HintPath>
       <Private>True</Private>
@@ -171,13 +172,11 @@
     <Compile Include="Management\ItemManager.cs" />
     <Compile Include="Management\IVaultProvider.cs" />
     <Compile Include="Management\NetworkUtils.cs" />
-    <Compile Include="Management\PluginManager.cs" />
     <Compile Include="Management\PowerShellManager.cs" />
     <Compile Include="Management\SecurityProtocolsManager.cs" />
     <Compile Include="Management\SettingsManager.cs" />
     <Compile Include="Management\CertificateManager.cs" />
     <Compile Include="Management\IISManager.cs" />
-    <Compile Include="Management\Util.cs" />
     <Compile Include="Models\ManagedSiteLog.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Management\VaultManager.cs" />
@@ -211,13 +210,17 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Certify.Core.Models\Certify.Core.Models.csproj">
+    <ProjectReference Include="..\Certify.Core.Models\Certify.Models.csproj">
       <Project>{50a30c5d-f5d7-4bb1-9eab-957af34fbf3d}</Project>
-      <Name>Certify.Core.Models</Name>
+      <Name>Certify.Models</Name>
     </ProjectReference>
     <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj">
       <Project>{8bcaa93d-18aa-4f62-bcb4-c883cc65c049}</Project>
       <Name>Certify.Locales</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Certify.Shared\Certify.Shared.csproj">
+      <Project>{ed48b479-b619-4c16-afa3-83dd3cd89338}</Project>
+      <Name>Certify.Shared</Name>
     </ProjectReference>
     <ProjectReference Include="..\lib\ACMESharp\ACMESharp\ACMESharp.PKI.Providers.BouncyCastle\ACMESharp.PKI.Providers.BouncyCastle.csproj">
       <Project>{473bff7d-c7f0-471d-b7a3-19ad9adfdba9}</Project>

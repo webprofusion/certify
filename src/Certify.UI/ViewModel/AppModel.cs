@@ -1,4 +1,5 @@
-﻿using Certify.Locales;
+﻿using Certify.Client;
+using Certify.Locales;
 using Certify.Management;
 using Certify.Models;
 using PropertyChanged;
