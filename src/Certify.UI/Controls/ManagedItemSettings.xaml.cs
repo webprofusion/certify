@@ -156,7 +156,7 @@ namespace Certify.UI.Controls
         private void Button_Delete(object sender, RoutedEventArgs e)
         {
             MainViewModel.DeleteManagedSite(MainViewModel.SelectedItem);
-            if (MainViewModel.ManagedSites.Count == 0 || MainViewModel.SelectedItem.Id == null)
+            if (MainViewModel.SelectedItem?.Id == null)
             {
                 MainViewModel.SelectedItem = MainViewModel.ManagedSites.FirstOrDefault();
             }

@@ -3,6 +3,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -17,7 +19,7 @@ namespace Certify.Management
     /// </summary>
     public class ItemManager
     {
-        public const string ITEMMANAGERCONFIG = "manageditems.json";
+        public const string ITEMMANAGERCONFIG = "manageditems";
 
         /// <summary>
         /// If true, one or more of our managed sites are hosted within a Local IIS server on the
@@ -31,77 +33,132 @@ namespace Certify.Management
         public ItemManager()
         {
             EnableLocalIISMode = true;
-            ManagedSites = new Dictionary<string,ManagedSite>(); // this.Preview();
+            ManagedSites = new Dictionary<string,ManagedSite>();
         }
 
         public void StoreSettings()
         {
+            var watch = Stopwatch.StartNew();
             string appDataPath = Util.GetAppDataFolder(StorageSubfolder);
-            //string siteManagerConfig = Newtonsoft.Json.JsonConvert.SerializeObject(this.ManagedSites, Newtonsoft.Json.Formatting.Indented);
 
             lock (ITEMMANAGERCONFIG)
             {
-                var path = Path.Combine(appDataPath, ITEMMANAGERCONFIG);
+                var path = Path.Combine(appDataPath, $"{ITEMMANAGERCONFIG}.db");
 
                 //backup settings file
-                if (File.Exists(path))
+                if (!File.Exists(path))
                 {
-                    // delete old settings backup if present
-                    if (File.Exists(path + ".bak"))
+                    SQLiteConnection.CreateFile(path);
+                    using (var target = new SQLiteConnection($"Data Source={path}"))
                     {
-                        File.Delete(path + ".bak");
+                        target.Open();
+                        using (var cmd = new SQLiteCommand("CREATE TABLE managedsettings (id TEXT NOT NULL UNIQUE PRIMARY KEY, json TEXT NOT NULL)", target))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
                     }
-
-                    // backup settings
-                    File.Move(path, path + ".bak");
                 }
 
-                // serialize JSON directly to a file
-                using (StreamWriter file = File.CreateText(path))
+                // save modified items into settings database
+                using (var target = new SQLiteConnection($"Data Source={path}"))
                 {
-                    new JsonSerializer().Serialize(file, ManagedSites.Values);
+                    target.Open();
+                    using (var tran = target.BeginTransaction())
+                    {
+                        foreach (var deleted in ManagedSites.Values.Where(s => s.Deleted).ToList())
+                        {
+                            using (var cmd = new SQLiteCommand("DELETE FROM managedsettings WHERE id=@id", target))
+                            {
+                                cmd.Parameters.Add(new SQLiteParameter("@id", deleted.Id));
+                                cmd.ExecuteNonQuery();
+                            }
+                            ManagedSites.Remove(deleted.Id);
+                        }
+                        foreach (var changed in ManagedSites.Values.Where(s => s.IsChanged))
+                        {
+                            using (var cmd = new SQLiteCommand("INSERT OR REPLACE INTO managedsettings (id,json) VALUES (@id,@json)", target))
+                            {
+                                cmd.Parameters.Add(new SQLiteParameter("@id", changed.Id));
+                                cmd.Parameters.Add(new SQLiteParameter("@json", JsonConvert.SerializeObject(changed)));
+                                cmd.ExecuteNonQuery();
+                            }
+                            changed.IsChanged = false;
+                        }
+                        tran.Commit();
+                    }
                 }
             }
 
             // reset IsChanged as all items have been persisted
-            foreach (var site in ManagedSites.Values) { site.IsChanged = false; }
+            Debug.WriteLine($"StoreSettings[Sqlite] took {watch.ElapsedMilliseconds}ms for {ManagedSites.Count} records");
         }
 
         public void DeleteAllManagedSites()
         {
-            LoadSettings();
-            ManagedSites.Clear();
-            StoreSettings();
+            foreach (var site in ManagedSites.Values) site.Deleted = true;
         }
 
         public void LoadSettings()
         {
+            UpgradeSettings();
+
+            var watch = Stopwatch.StartNew();
             // FIXME: this method should be async and called only when absolutely required, these
             //        files can be hundreds of megabytes
             string appDataPath = Util.GetAppDataFolder(StorageSubfolder);
-            var path = Path.Combine(appDataPath, ITEMMANAGERCONFIG);
+            var path = Path.Combine(appDataPath, $"{ITEMMANAGERCONFIG}.db");
 
             if (File.Exists(path))
             {
                 lock (ITEMMANAGERCONFIG)
                 {
-                    // read managed sites using tokenize stream, this is useful for large files
                     var managedSites = new List<ManagedSite>();
-                    var serializer = new JsonSerializer();
-                    using (StreamReader sr = new StreamReader(path))
-                    using (JsonTextReader reader = new JsonTextReader(sr))
+                    using (var target = new SQLiteConnection($"Data Source={path}"))
+                    using (var cmd = new SQLiteCommand("SELECT json FROM managedsettings", target))
                     {
-                        managedSites = serializer.Deserialize<List<ManagedSite>>(reader);
+                        target.Open();
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                managedSites.Add(JsonConvert.DeserializeObject<ManagedSite>((string)reader["json"]));
+                            }
+                        }
                     }
-
-                    // reset IsChanged for all loaded settings
-                    managedSites.ForEach(s => s.IsChanged = false);
+                    foreach (var site in managedSites) site.IsChanged = false;
                     ManagedSites = managedSites.ToDictionary(s => s.Id);
                 }
             }
             else
             {
                 ManagedSites = new Dictionary<string,ManagedSite>();
+            }
+            Debug.WriteLine($"LoadSettings[Sqlite] took {watch.ElapsedMilliseconds}ms for {ManagedSites.Count} records");
+        }
+
+        private void UpgradeSettings()
+        {
+            var watch = Stopwatch.StartNew();
+            string appDataPath = Util.GetAppDataFolder(StorageSubfolder);
+            var json = Path.Combine(appDataPath, $"{ITEMMANAGERCONFIG}.json");
+            var db = Path.Combine(appDataPath, $"{ITEMMANAGERCONFIG}.db");
+            if (File.Exists(json) && !File.Exists(db))
+            {
+                lock (ITEMMANAGERCONFIG)
+                {
+                    // read managed sites using tokenize stream, this is useful for large files
+                    var serializer = new JsonSerializer();
+                    using (StreamReader sr = new StreamReader(json))
+                    using (JsonTextReader reader = new JsonTextReader(sr))
+                    {
+                        ManagedSites = serializer.Deserialize<List<ManagedSite>>(reader).ToDictionary(s => s.Id);
+                    }
+                }
+
+                StoreSettings(); // upgrade to liteDB
+                File.Delete($"{json}.bak");
+                File.Move(json, $"{json}.bak");
+                Debug.WriteLine($"UpgradeSettings[Json->Sqlite] took {watch.ElapsedMilliseconds}ms for {ManagedSites.Count} records");
             }
         }
 
@@ -143,7 +200,7 @@ namespace Certify.Management
                 catch (Exception)
                 {
                     //can't read sites
-                    System.Diagnostics.Debug.WriteLine("Can't get IIS site list.");
+                    Debug.WriteLine("Can't get IIS site list.");
                 }
             }
             return sites;
