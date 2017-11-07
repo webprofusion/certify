@@ -331,7 +331,7 @@
     <value>Seleccione un Sitio Administrado o seleccione Nuevo certificado para comenzar.</value>
   </data>
   <data name="ManagedSites_UnsavedWarning" xml:space="preserve">
-    <value>Tiene cambios sin guardar. Guarde o descarte sus cambios antes de continuar.</value>
+    <value>Hay cambios no guardados en el sitio seleccionado. ¿Descartar los cambios?</value>
   </data>
   <data name="ProgressMonitor_NoProgress" xml:space="preserve">
     <value>No hay solicitudes actualmente en curso.</value>

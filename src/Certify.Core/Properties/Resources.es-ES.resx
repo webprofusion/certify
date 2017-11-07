@@ -142,4 +142,75 @@ Este software utiliza el siguiente software de código abierto (o porciones sign
 - Algunos iconos de Font Awesome por Dave Gandy - http://fontawesome.io
 - OpenSSL (https://github.com/openssl-net/openssl-net)</value>
   </data>
+  <data name="AppWebsiteURL" xml:space="preserve">
+    <value>https://certifytheweb.com</value>
+  </data>
+  <data name="AppUpdateCheckURI" xml:space="preserve">
+    <value>https://certifytheweb.com/downloads/version.json</value>
+  </data>
+  <data name="IISWebConfig" xml:space="preserve">
+    <value>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;configuration&gt;
+  &lt;system.webServer&gt;
+    &lt;validation validateIntegratedModeConfiguration="false" /&gt;
+    &lt;staticContent&gt;
+        &lt;mimeMap fileExtension="." mimeType="text/json" /&gt;
+    &lt;/staticContent&gt;
+  &lt;handlers&gt;
+      &lt;clear /&gt;
+    &lt;add name="StaticFile" path="*" verb="*" type="" modules="StaticFileModule,DefaultDocumentModule,DirectoryListingModule" scriptProcessor="" resourceType="Either" requireAccess="Read" allowPathInfo="false" preCondition="" responseBufferLimit="4194304" /&gt;
+  &lt;/handlers&gt;
+  &lt;/system.webServer&gt;
+  &lt;system.web&gt;
+    &lt;authorization&gt;
+      &lt;allow users="*" /&gt;
+    &lt;/authorization&gt;
+  &lt;/system.web&gt;
+&lt;/configuration&gt;</value>
+  </data>
+  <data name="IISWebConfigAlt" xml:space="preserve">
+    <value>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;configuration&gt;
+  &lt;system.webServer&gt;
+    &lt;validation validateIntegratedModeConfiguration="false" /&gt;
+    &lt;staticContent&gt;
+      &lt;mimeMap fileExtension="." mimeType="text/json" /&gt;
+    &lt;/staticContent&gt;
+  &lt;/system.webServer&gt;
+  &lt;system.web&gt;
+    &lt;authorization&gt;
+      &lt;allow users="*" /&gt;
+    &lt;/authorization&gt;
+  &lt;/system.web&gt;
+&lt;/configuration&gt;</value>
+  </data>
+  <data name="AIInstrumentationKey" xml:space="preserve">
+    <value>63154103-66ba-4636-8c6b-7081084daa0e</value>
+  </data>
+  <data name="IISWebConfigAlt2" xml:space="preserve">
+    <value>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;configuration&gt;
+  &lt;system.webServer&gt;
+    &lt;validation validateIntegratedModeConfiguration="false" /&gt;
+    &lt;staticContent&gt;
+        &lt;mimeMap fileExtension=".*" mimeType="text/json" /&gt;
+    &lt;/staticContent&gt;
+  &lt;handlers&gt;
+      &lt;clear /&gt;
+    &lt;add name="StaticFile" path="*" verb="*" type="" modules="StaticFileModule,DefaultDocumentModule,DirectoryListingModule" scriptProcessor="" resourceType="Either" requireAccess="Read" allowPathInfo="false" preCondition="" responseBufferLimit="4194304" /&gt;
+  &lt;/handlers&gt;
+  &lt;/system.webServer&gt;
+  &lt;system.web&gt;
+    &lt;authorization&gt;
+      &lt;allow users="*" /&gt;
+    &lt;/authorization&gt;
+  &lt;/system.web&gt;
+&lt;/configuration&gt;</value>
+  </data>
+  <data name="APIBaseURI" xml:space="preserve">
+    <value>https://certifytheweb.com/api/</value>
+  </data>
 </root>
