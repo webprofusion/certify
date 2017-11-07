@@ -62,6 +62,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Certify.Core.Models\Certify.Core.Models.csproj">
+      <Project>{50a30c5d-f5d7-4bb1-9eab-957af34fbf3d}</Project>
+      <Name>Certify.Core.Models</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Certify.Core\Certify.Core.csproj">
       <Project>{87baa9ca-e0c9-4d3e-8971-55a30134c932}</Project>
       <Name>Certify.Core</Name>

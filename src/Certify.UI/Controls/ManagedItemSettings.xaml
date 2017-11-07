@@ -11,7 +11,7 @@
              xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
              xmlns:utils="clr-namespace:Certify.UI.Utils"
              xmlns:acme="clr-namespace:Certify.ACMESharpCompat;assembly=Certify.Core"
-             xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Core"
+             xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Core.Models"
              xmlns:res="clr-namespace:Certify.UI.Resources"
              xmlns:Resources="clr-namespace:Certify.UI.Resources"
              x:Class="Certify.UI.Controls.ManagedItemSettings"
@@ -28,7 +28,7 @@
             <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
             <utils:OptionalBooleanToVisibilityConverter True="Collapsed" False="Visible" x:Key="InvBoolVisConverter" />
             <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
-            <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed"/>
+            <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
         </Grid.Resources>
         <StackPanel Orientation="Vertical" Grid.Row="0">
             <Label Content="{Binding SelectedItem.Name}" Margin="8,0,0,2" FontSize="24" FontFamily="Segoe UI Semilight" />
@@ -93,7 +93,7 @@
                             <Button Content="{x:Static Resources:SR.SelectAll}" Command="{Binding SANSelectAllCommand}" Margin="16,0,0,0" />
                             <Button Content="{x:Static Resources:SR.ManagedItemSettings_SelectNone}" Command="{Binding SANSelectNoneCommand}" Margin="8,0,0,0" />
                         </StackPanel>
-                        <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" 
+                        <DataGrid AutoGenerateColumns="False" CanUserAddRows="False"
                                   ScrollViewer.CanContentScroll="True"
                                   VirtualizingPanel.IsVirtualizing="True"
                                   ScrollViewer.VerticalScrollBarVisibility="Auto"

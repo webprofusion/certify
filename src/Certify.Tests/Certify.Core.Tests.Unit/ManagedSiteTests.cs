@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Certify.Models;
 
 namespace Certify.Core.Tests.Unit
 {
@@ -22,13 +23,13 @@ namespace Certify.Core.Tests.Unit
             for (var i = 0; i < numTestManagedSites; i++)
             {
                 var testname = Guid.NewGuid().ToString();
-                var site = new Models.ManagedSite
+                var site = new ManagedSite
                 {
                     Id = Guid.NewGuid().ToString(),
                     Name = testname,
                     GroupId = "test",
 
-                    RequestConfig = new Models.CertRequestConfig
+                    RequestConfig = new CertRequestConfig
                     {
                         PrimaryDomain = testname + ".com",
                         ChallengeType = "http-01",
@@ -38,14 +39,14 @@ namespace Certify.Core.Tests.Unit
                         PerformExtensionlessConfigChecks = true,
                         WebsiteRootPath = "c:\\inetpub\\wwwroot"
                     },
-                    ItemType = Models.ManagedItemType.SSL_LetsEncrypt_LocalIIS
+                    ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS
                 };
 
-                site.DomainOptions.Add(new Models.DomainOption { Domain = testname + ".com", IsPrimaryDomain = true, IsSelected = true });
+                site.DomainOptions.Add(new DomainOption { Domain = testname + ".com", IsPrimaryDomain = true, IsSelected = true });
 
                 for (var d = 0; d < numSANsPerSite; d++)
                 {
-                    site.DomainOptions.Add(new Models.DomainOption { Domain = d + "." + testname + ".com", IsPrimaryDomain = false, IsSelected = true });
+                    site.DomainOptions.Add(new DomainOption { Domain = d + "." + testname + ".com", IsPrimaryDomain = false, IsSelected = true });
                 }
 
                 //add new site

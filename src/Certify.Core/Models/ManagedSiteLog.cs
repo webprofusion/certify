@@ -1,5 +1,4 @@
-﻿using Certify.Management;
-using Serilog;
+﻿using Serilog;
 using System;
 using System.Collections.Generic;
 
@@ -21,6 +20,21 @@ namespace Certify.Models
         public DateTime EventDate { get; set; }
         public string Message { get; set; }
         public LogItemType LogItemType { get; set; }
+    }
+
+    public class Util
+    {
+        public const string APPDATASUBFOLDER = "Certify";
+
+        public static string GetAppDataFolder()
+        {
+            var path = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\" + APPDATASUBFOLDER;
+            if (!System.IO.Directory.Exists(path))
+            {
+                System.IO.Directory.CreateDirectory(path);
+            }
+            return path;
+        }
     }
 
     public class ManagedSiteLog

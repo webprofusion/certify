@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Certify.CLI</RootNamespace>
     <AssemblyName>Certify</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
@@ -71,21 +71,17 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Certify.Client\Certify.Client.csproj">
+      <Project>{cec76bb6-5b17-4267-b1ff-5ea0f67eb1c5}</Project>
+      <Name>Certify.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Certify.Core.Models\Certify.Core.Models.csproj">
+      <Project>{50A30C5D-F5D7-4BB1-9EAB-957AF34FBF3D}</Project>
+      <Name>Certify.Core.Models</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Certify.Core\Certify.Core.csproj">
       <Project>{87baa9ca-e0c9-4d3e-8971-55a30134c932}</Project>
       <Name>Certify.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\lib\ACMESharp\ACMESharp\ACMESharp.PKI.Providers.BouncyCastle\ACMESharp.PKI.Providers.BouncyCastle.csproj">
-      <Project>{473bff7d-c7f0-471d-b7a3-19ad9adfdba9}</Project>
-      <Name>ACMESharp.PKI.Providers.BouncyCastle</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\lib\ACMESharp\ACMESharp\ACMESharp.Vault\ACMESharp.Vault.csproj">
-      <Project>{65b4c6e0-27a0-445c-adac-9d8308e2e4a6}</Project>
-      <Name>ACMESharp.Vault</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\lib\ACMESharp\ACMESharp\ACMESharp\ACMESharp.csproj">
-      <Project>{d551234b-0a8d-4dee-8178-a81998df0edb}</Project>
-      <Name>ACMESharp</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Certify.Models;
 
 namespace Certify.Core.Tests.Unit
 {
@@ -24,15 +25,15 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public void CheckMultipleVersions()
         {
-            Certify.Models.AppVersion v2_0_13 = new Models.AppVersion() { Major = 2, Minor = 0, Patch = 13 };
+            Certify.Models.AppVersion v2_0_13 = new AppVersion() { Major = 2, Minor = 0, Patch = 13 };
 
-            Certify.Models.AppVersion v2_1_1 = new Models.AppVersion() { Major = 2, Minor = 1, Patch = 1 };
+            Certify.Models.AppVersion v2_1_1 = new AppVersion() { Major = 2, Minor = 1, Patch = 1 };
 
-            Certify.Models.AppVersion v2_1_2 = new Models.AppVersion() { Major = 2, Minor = 1, Patch = 2 };
+            Certify.Models.AppVersion v2_1_2 = new AppVersion() { Major = 2, Minor = 1, Patch = 2 };
 
-            Certify.Models.AppVersion v2_2_2 = new Models.AppVersion() { Major = 2, Minor = 2, Patch = 2 };
+            Certify.Models.AppVersion v2_2_2 = new AppVersion() { Major = 2, Minor = 2, Patch = 2 };
 
-            Certify.Models.AppVersion v3_1_1 = new Models.AppVersion() { Major = 3, Minor = 1, Patch = 2 };
+            Certify.Models.AppVersion v3_1_1 = new AppVersion() { Major = 3, Minor = 1, Patch = 2 };
 
             var isNewer = Certify.Models.AppVersion.IsOtherVersionNewer(v2_1_1, v2_0_13);
             Assert.IsFalse(isNewer, "Older version is not newer than current");
