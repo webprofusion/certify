@@ -25,7 +25,7 @@ namespace Certify.UI
             }
         }
 
-        protected override void OnStartup(StartupEventArgs e)
+        protected async override void OnStartup(StartupEventArgs e)
         {
             /*
             // get the current app style (theme and accent) from the application you can then use the
@@ -42,15 +42,28 @@ namespace Certify.UI
             //System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("zh-HANS");
 
             // upgrade assembly version of saved settings (if required)
-            Certify.Properties.Settings.Default.UpgradeSettingsVersion(); // deprecated
-            Certify.Management.SettingsManager.LoadAppSettings();
+            //Certify.Properties.Settings.Default.UpgradeSettingsVersion(); // deprecated
+            //Certify.Management.SettingsManager.LoadAppSettings();
 
             AppDomain currentDomain = AppDomain.CurrentDomain;
             currentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             base.OnStartup(e);
 
-            MainViewModel.LoadSettings();
+            // MainViewModel.LoadSettings();
+
+            await Dispatcher.InvokeAsync(async () =>
+            {
+                // FIXME: async blocking
+                MainViewModel.Preferences = await MainViewModel.CertifyClient.GetPreferences();
+
+                var list = await MainViewModel.CertifyClient.GetManagedSites(new Models.ManagedSiteFilter());
+                MainViewModel.ManagedSites = new System.Collections.ObjectModel.ObservableCollection<Models.ManagedSite>(list);
+
+
+                //init telemetry if enabled
+                InitTelemetry();
+            });
 
             //check version capabilities
             MainViewModel.PluginManager = new Management.PluginManager();
@@ -66,8 +79,6 @@ namespace Certify.UI
                 }
             }
 
-            //init telemetry if enabled
-            InitTelemetry();
         }
 
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -84,7 +95,7 @@ namespace Certify.UI
 
         private void InitTelemetry()
         {
-            if (Management.CoreAppSettings.Current.EnableAppTelematics)
+            if (MainViewModel.Preferences.EnableAppTelematics)
             {
                 tc = new Certify.Management.Util().InitTelemetry();
                 tc.TrackEvent("Start");

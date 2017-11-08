@@ -24,9 +24,23 @@ namespace Certify.UI.ViewModel
         //public static AppModel AppViewModel = new DesignViewModel(); // for UI testing
         public static AppModel AppViewModel = AppModel.GetModel();
 
+        public AppModel()
+        {
+            /*if (!(this is DesignViewModel))
+            {
+               // certifyManager = new CertifyManager();
+            }*/
+            CertifyClient = new CertifyServiceClient();
+            ProgressResults = new ObservableCollection<RequestProgressState>();
+
+            this.ImportedManagedSites = new ObservableCollection<ManagedSite>();
+            this.ManagedSites = new ObservableCollection<ManagedSite>();
+        }
+
         public const int ProductTypeId = 1;
 
-        private CertifyManager certifyManager = null;
+        //private CertifyManager certifyManager = null;
+        internal ICertifyClient CertifyClient = null;
 
         public PluginManager PluginManager { get; set; }
 
@@ -40,6 +54,8 @@ namespace Certify.UI.ViewModel
 
             System.Windows.MessageBox.Show(exp.Message);
         }
+
+        public Preferences Preferences { get; set; }
 
         #region properties
 
@@ -69,28 +85,9 @@ namespace Certify.UI.ViewModel
 
         internal virtual void LoadVaultTree()
         {
-            VaultTree = new List<VaultItem>()
-            {
-                new VaultItem
-                {
-                    Name = "Registrations",
-                    Children = new List<VaultItem>(certifyManager.GetContactRegistrations())
-                },
-                new VaultItem
-                {
-                    Name = "Identifiers",
-                    Children = new List<VaultItem>(certifyManager.GeDomainIdentifiers())
-                },
-                new VaultItem
-                {
-                    Name = "Certificates",
-                    Children = new List<VaultItem>(certifyManager.GetCertificates())
-                }
-            };
-            PrimaryContactEmail = VaultTree.First(i => i.Name == "Registrations")
-                .Children.FirstOrDefault()?.Name;
-            ACMESummary = certifyManager.GetAcmeSummary();
-            VaultSummary = certifyManager.GetVaultSummary();
+            PrimaryContactEmail = CertifyClient.GetPrimaryContact().Result;
+            //ACMESummary = certifyManager.GetAcmeSummary();
+            //VaultSummary = certifyManager.GetVaultSummary();
         }
 
         /// <summary>
@@ -102,7 +99,8 @@ namespace Certify.UI.ViewModel
         {
             get
             {
-                return certifyManager.HasRegisteredContacts();
+                // FIXME: this property is async, either cache or reduce reliance
+                return Task.Run(() => CertifyClient.GetPrimaryContact()).Result != null;
             }
         }
 
@@ -142,15 +140,8 @@ namespace Certify.UI.ViewModel
         {
             get
             {
-                //get list of sites from IIS
-                if (certifyManager.IsIISAvailable)
-                {
-                    return certifyManager.GetPrimaryWebSites(CoreAppSettings.Current.IgnoreStoppedSites);
-                }
-                else
-                {
-                    return new List<SiteBindingItem>();
-                }
+                //get list of sites from IIS. FIXME: this is async and we should gather this at startup (or on refresh) instead
+                return Task.Run(() => CertifyClient.GetServerSiteList(StandardServerTypes.IIS)).Result;
             }
         }
 
@@ -163,22 +154,16 @@ namespace Certify.UI.ViewModel
 
         internal void AddContactRegistration(ContactRegistration reg)
         {
-            // in practise only one registered contact is used, so remove alternatives to avoid cert
-            // processing picking up the wrong one
-            certifyManager.RemoveAllContacts();
-
-            if (certifyManager.AddRegisteredContact(reg))
-            {
-                //refresh content from vault
-                LoadVaultTree();
-            }
+            // FIXME: async blocking
+            var addedOk = Task.Run(() => CertifyClient.SetPrimaryContact(reg)).Result;
+            // TODO: report errors
             RaisePropertyChanged(nameof(HasRegisteredContacts));
         }
 
         // Certify-supported challenge types
         public IEnumerable<string> ChallengeTypes { get; set; } = new string[] {
-            ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP,
-            ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI
+            SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
+            SupportedChallengeTypes.CHALLENGE_TYPE_SNI
         };
 
         public IEnumerable<string> WebhookTriggerTypes => Webhook.TriggerTypes;
@@ -281,49 +266,47 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public AppModel()
-        {
-            if (!(this is DesignViewModel))
-            {
-                certifyManager = new CertifyManager();
-            }
-            ProgressResults = new ObservableCollection<RequestProgressState>();
-        }
+        // FIXME: async blocking
+        public virtual bool IsIISAvailable => Task.Run(() => CertifyClient.IsServerAvailable(StandardServerTypes.IIS)).Result;
 
-        public virtual bool IsIISAvailable => certifyManager.IsIISAvailable;
-        public virtual Version IISVersion => certifyManager.IISVersion;
+        public virtual Version IISVersion => Task.Run(() => CertifyClient.GetServerVersion(StandardServerTypes.IIS)).Result;
 
         public void PreviewImport(bool sanMergeMode)
         {
-            AppViewModel.IsImportSANMergeMode = sanMergeMode;
-            //we have no managed sites, offer to import them from vault if we have one
-            var importedSites = certifyManager.ImportManagedSitesFromVault(sanMergeMode);
-            ImportedManagedSites = new ObservableCollection<ManagedSite>(importedSites);
+            /* AppViewModel.IsImportSANMergeMode = sanMergeMode;
+             //we have no managed sites, offer to import them from vault if we have one
+             var importedSites = certifyManager.ImportManagedSitesFromVault(sanMergeMode);
+             ImportedManagedSites = new ObservableCollection<ManagedSite>(importedSites);*/
         }
 
         public virtual void LoadSettings()
         {
-            this.ManagedSites = new ObservableCollection<ManagedSite>(certifyManager.GetManagedSites());
-            this.ImportedManagedSites = new ObservableCollection<ManagedSite>();
+            // FIXME: async blocking
+            this.Preferences = Task.Run(() => CertifyClient.GetPreferences()).Result;
 
-            /*if (this.ManagedSites.Any())
-            {
-                //preselect the first managed site
-                //  this.SelectedItem = this.ManagedSites[0];
-
-                //test state
-                BeginTrackingProgress(new RequestProgressState { CurrentState = RequestState.InProgress, IsStarted = true, Message = "Registering Domain Identifier", ManagedItem = ManagedSites[0] });
-                BeginTrackingProgress(new RequestProgressState { CurrentState = RequestState.Error, IsStarted = true, Message = "Rate Limited", ManagedItem = ManagedSites[0] });
-            }*/
+            this.ManagedSites = new ObservableCollection<ManagedSite>();
         }
 
         public virtual void SaveSettings()
         {
-            certifyManager.SaveManagedSites(ManagedSites.ToList());
+            // CertifyClient..SaveManagedSites(ManagedSites.ToList());
+            foreach (var d in ManagedSites.Where(s => s.Deleted))
+            {
+                if (d.Id != null) CertifyClient.DeleteManagedSite(d.Id);
+            }
+            // TODO: Identify updated sites and save them?
+            /* foreach (var u in ManagedSites.Where(s => s.Updated))
+             {
+                 CertifyClient.UpdateManagedSiteu);
+             }*/
+
+            // remove deleted managed sites from view model
             foreach (var site in ManagedSites.Where(s => s.Deleted).ToList())
             {
                 ManagedSites.Remove(site);
             }
+
+            // refresh observable
             ManagedSites = new ObservableCollection<ManagedSite>(ManagedSites);
         }
 
@@ -380,9 +363,7 @@ namespace Certify.UI.ViewModel
                 }
             }
 
-            var results = await certifyManager.PerformRenewalAllManagedSites(autoRenewalsOnly, itemTrackers);
-            //TODO: store results in log
-            //return results;
+            await CertifyClient.BeginAutoRenewal();
         }
 
         public void AddOrUpdateManagedSite(ManagedSite item)
@@ -476,7 +457,7 @@ namespace Certify.UI.ViewModel
             managedSite.RequestConfig.PerformAutomatedCertBinding = true;
             managedSite.RequestConfig.PerformAutoConfig = true;
             managedSite.RequestConfig.EnableFailureNotifications = true;
-            managedSite.RequestConfig.ChallengeType = ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP;
+            managedSite.RequestConfig.ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP;
             managedSite.IncludeInAutoRenew = true;
             managedSite.DomainOptions.Clear();
             foreach (var option in GetDomainOptionsFromSite(siteId))
@@ -496,7 +477,8 @@ namespace Certify.UI.ViewModel
 
         protected virtual IEnumerable<DomainOption> GetDomainOptionsFromSite(string siteId)
         {
-            return certifyManager.GetDomainOptionsFromSite(siteId);
+            // FIXME: async blocking
+            return Task.Run(() => CertifyClient.GetServerSiteDomains(siteId)).Result;
         }
 
         public async void BeginCertificateRequest(string managedItemId)
@@ -516,38 +498,44 @@ namespace Certify.UI.ViewModel
                 BeginTrackingProgress(progressState);
 
                 var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
-                var result = await certifyManager.PerformCertificateRequest(managedSite, progressIndicator);
 
+                // start request
+                await CertifyClient.BeginCertificateRequest(managedSite.Id);
+
+                // begin polling for status updates
+                var status = await CertifyClient.CheckCertificateRequest(managedSite.Id);
                 if (progressIndicator != null)
                 {
                     var progress = (IProgress<RequestProgressState>)progressIndicator;
-
-                    if (result.IsSuccess)
-                    {
-                        progress.Report(new RequestProgressState { CurrentState = RequestState.Success, Message = result.Message });
-                    }
-                    else
-                    {
-                        progress.Report(new RequestProgressState { CurrentState = RequestState.Error, Message = result.Message });
-                    }
+                    progress.Report(new RequestProgressState { CurrentState = RequestState.Running, Message = status });
                 }
+                /* var result = await certifyManager.PerformCertificateRequest(managedSite, progressIndicator);
+
+                 if (progressIndicator != null)
+                 {
+                     var progress = (IProgress<RequestProgressState>)progressIndicator;
+
+                     if (result.IsSuccess)
+                     {
+                         progress.Report(new RequestProgressState { CurrentState = RequestState.Success, Message = result.Message });
+                     }
+                     else
+                     {
+                         progress.Report(new RequestProgressState { CurrentState = RequestState.Error, Message = result.Message });
+                     }
+                 }*/
             }
         }
 
         public async Task<APIResult> TestChallengeResponse(ManagedSite managedSite)
         {
-            return await certifyManager.TestChallenge(managedSite, isPreviewMode: true);
+            return await CertifyClient.TestChallengeConfiguration(managedSite);
         }
 
         public async Task<APIResult> RevokeSelectedItem()
         {
             var managedSite = SelectedItem;
-            var result = await certifyManager.RevokeCertificate(managedSite);
-            if (result.IsOK)
-            {
-                AddOrUpdateManagedSite(managedSite);
-            }
-            return result;
+            return await CertifyClient.RevokeManageSiteCertificate(managedSite.Id);
         }
 
         private void BeginTrackingProgress(RequestProgressState state)

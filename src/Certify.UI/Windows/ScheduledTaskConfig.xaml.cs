@@ -18,8 +18,8 @@ namespace Certify.UI.Windows
             InitializeComponent();
             //check if scheduled task already configured
 
-            var certifyManager = new Certify.Management.CertifyManager();
-            TaskConfigured = certifyManager.IsWindowsScheduledTaskPresent();
+            var taskScheduler = new Shared.TaskScheduler();
+            TaskConfigured = taskScheduler.IsWindowsScheduledTaskPresent();
 
             if (TaskConfigured)
             {
@@ -33,8 +33,8 @@ namespace Certify.UI.Windows
             //create/update scheduled task
             if (!String.IsNullOrEmpty(Username.Text) && (!String.IsNullOrEmpty(Password.Password)))
             {
-                var certifyManager = new Certify.Management.CertifyManager();
-                if (certifyManager.CreateWindowsScheduledTask(Username.Text, Password.Password))
+                var taskScheduler = new Shared.TaskScheduler();
+                if (taskScheduler.CreateWindowsScheduledTask(Username.Text, Password.Password))
                 {
                     MessageBox.Show(SR.ScheduledTaskConfig_TaskCreated);
                     this.Close();

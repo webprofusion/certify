@@ -10,8 +10,7 @@
              xmlns:Custom="http://metro.mahapps.com/winfx/xaml/controls"
              xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
              xmlns:utils="clr-namespace:Certify.UI.Utils"
-             xmlns:acme="clr-namespace:Certify.ACMESharpCompat;assembly=Certify.Core"
-             xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Core.Models"
+             xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Models"
              xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
              x:Class="Certify.UI.Controls.ManagedItemSettings"
              mc:Ignorable="d" Width="697.442" Height="425.672"
@@ -128,7 +127,7 @@
                                 <Style>
                                     <Setter Property="StackPanel.Visibility" Value="Collapsed" />
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static acme:ACMESharpUtils.CHALLENGE_TYPE_HTTP}">
+                                        <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static model:SupportedChallengeTypes.CHALLENGE_TYPE_HTTP}">
                                             <Setter Property="StackPanel.Visibility" Value="Visible" />
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -151,7 +150,7 @@
                                 <Style>
                                     <Setter Property="StackPanel.Visibility" Value="Collapsed" />
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static acme:ACMESharpUtils.CHALLENGE_TYPE_SNI}">
+                                        <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static model:SupportedChallengeTypes.CHALLENGE_TYPE_SNI}">
                                             <Setter Property="StackPanel.Visibility" Value="Visible" />
                                         </DataTrigger>
                                     </Style.Triggers>

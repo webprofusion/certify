@@ -12,7 +12,7 @@ using System.Windows;
 namespace Certify.UI
 {
     /// <summary>
-    /// Mock data view model for use in the XAML designer in Visual Studio
+    /// Mock data view model for use in the XAML designer in Visual Studio 
     /// </summary>
     public class DesignViewModel : ViewModel.AppModel
     {
@@ -53,7 +53,7 @@ namespace Certify.UI
                     DateExpiry = DateTime.Now.AddDays(60 - 5 * i),
                     RequestConfig = new CertRequestConfig()
                     {
-                        ChallengeType = ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI,
+                        ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_SNI,
                         PerformAutomatedCertBinding = true,
                         PreRequestPowerShellScript = @"c:\inetpub\scripts\pre-req-script.ps1",
                         PostRequestPowerShellScript = @"c:\inetpub\scripts\post-req-script.ps1",
@@ -99,7 +99,7 @@ namespace Certify.UI
             ManagedSites = new ObservableCollection<ManagedSite>(ManagedSites);
         }
 
-        public override List<SiteBindingItem> WebSiteList => 
+        public override List<SiteBindingItem> WebSiteList =>
             Enumerable.Range(1, 20).Select(i => new SiteBindingItem()
             {
                 SiteId = i.ToString(),
@@ -110,7 +110,7 @@ namespace Certify.UI
             .ToList();
 
         public override bool IsIISAvailable => true;
-        public override Version IISVersion => new Version(10,0);
+        public override Version IISVersion => new Version(10, 0);
         public override bool HasRegisteredContacts => true;
 
         protected override IEnumerable<DomainOption> GetDomainOptionsFromSite(string siteId)

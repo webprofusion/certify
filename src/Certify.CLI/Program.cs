@@ -168,7 +168,7 @@ namespace Certify.CLI
             System.Console.WriteLine("\n");
         }
 
-        internal async Task<System.Collections.Generic.List<CertificateRequestResult>> PerformAutoRenew()
+        internal async Task PerformAutoRenew()
         {
             if (_tc == null) InitTelematics();
             if (_tc != null)
@@ -180,8 +180,8 @@ namespace Certify.CLI
             System.Console.WriteLine("\nPerforming Auto Renewals..\n");
 
             //go through list of items configured for auto renew, perform renewal and report the result
-            var results = await _certifyClient.PerformRenewalAllManagedSites();
-
+            await _certifyClient.BeginAutoRenewal();
+            /*
             foreach (var r in results)
             {
                 if (r.ManagedItem != null)
@@ -214,12 +214,12 @@ namespace Certify.CLI
                 System.Console.WriteLine("Failed:" + results.Where(r => r.IsSuccess == false).Count());
                 Console.ForegroundColor = ConsoleColor.White;
             }
-            return results;
+            return results;*/
         }
 
         internal void ListManagedSites()
         {
-            var managedSites = _certifyClient.GetManagedSites(null, 1000).Result;
+            var managedSites = _certifyClient.GetManagedSites(new ManagedSiteFilter()).Result;
 
             foreach (var site in managedSites)
             {

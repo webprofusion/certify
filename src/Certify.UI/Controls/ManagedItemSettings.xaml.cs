@@ -60,10 +60,10 @@ namespace Certify.UI.Controls
                     return;
                 }
 
-                if (item.RequestConfig.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI &&
+                if (item.RequestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI &&
                     MainViewModel.IISVersion.Major < 8)
                 {
-                    MessageBox.Show(string.Format(SR.ManagedItemSettings_ChallengeNotAvailable, ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI), SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(string.Format(SR.ManagedItemSettings_ChallengeNotAvailable, SupportedChallengeTypes.CHALLENGE_TYPE_SNI), SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 

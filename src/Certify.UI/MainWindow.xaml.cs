@@ -125,7 +125,7 @@ namespace Certify.UI
             }
 
             //check for updates and report result to view model
-            if (Management.CoreAppSettings.Current.CheckForUpdatesAtStartup)
+            if (MainViewModel.Preferences.CheckForUpdatesAtStartup)
             {
                 var updateCheck = await new Certify.Management.Util().CheckForUpdates();
                 if (updateCheck != null && updateCheck.IsNewerVersion)
