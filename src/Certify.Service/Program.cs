@@ -44,6 +44,9 @@ namespace Certify.Service
         public void Configuration(IAppBuilder appBuilder)
         {
             var config = new HttpConfiguration();
+
+            config.MapHttpAttributeRoutes();
+
             config.Routes.MapHttpRoute(
                 name: "DefaultApi",
                 routeTemplate: "api/{controller}/{id}",
@@ -51,7 +54,7 @@ namespace Certify.Service
                 );
 
             config
-              .EnableSwagger(c => c.SingleApiVersion("v1", "A title for your API"))
+              .EnableSwagger(c => c.SingleApiVersion("v1", "Service API for local install of Certify the web"))
               .EnableSwaggerUi();
 
             appBuilder.UseWebApi(config);

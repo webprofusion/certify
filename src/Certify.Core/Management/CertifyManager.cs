@@ -1,6 +1,5 @@
 using Certify.Locales;
 using Certify.Models;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,9 +14,10 @@ namespace Certify.Management
         private IVaultProvider _vaultProvider = null;
         private IISManager _iisManager = null;
 
-        private const string SCHEDULED_TASK_NAME = "Certify Maintenance Task";
-        private const string SCHEDULED_TASK_EXE = "certify.exe";
-        private const string SCHEDULED_TASK_ARGS = "renew";
+        public ManagedSite GetManagedSite(string id)
+        {
+            return _siteManager.GetManagedSite(id);
+        }
 
         public CertifyManager()
         {
@@ -29,6 +29,11 @@ namespace Certify.Management
             _vaultProvider = acmeSharp;
             _siteManager = new ItemManager();
             _iisManager = new IISManager();
+        }
+
+        public ManagedSite UpdateManagedSite(ManagedSite site)
+        {
+            return _siteManager.UpdatedManagedSite(site);
         }
 
         // expose IIS metadata
@@ -54,9 +59,9 @@ namespace Certify.Management
             }
         }
 
-        public List<ManagedSite> GetManagedSites()
+        public List<ManagedSite> GetManagedSites(ManagedSiteFilter filter = null)
         {
-            return this._siteManager.GetManagedSites();
+            return this._siteManager.GetManagedSites(filter);
         }
 
         public List<RegistrationItem> GetContactRegistrations()
@@ -64,7 +69,7 @@ namespace Certify.Management
             return _vaultProvider.GetContactRegistrations();
         }
 
-        public List<IdentifierItem> GeDomainIdentifiers()
+        public List<IdentifierItem> GetDomainIdentifiers()
         {
             return _vaultProvider.GetDomainIdentifiers();
         }
@@ -149,7 +154,20 @@ namespace Certify.Management
 
         public bool AddRegisteredContact(ContactRegistration reg)
         {
-            return _acmeClientProvider.AddNewRegistrationAndAcceptTOS(reg.EmailAddress);
+            // in practise only one registered contact is used, so remove alternatives to avoid cert
+            // processing picking up the wrong one
+            RemoveAllContacts();
+
+            // now attempt to register the new contact
+            if (reg.AgreedToTermsAndConditions)
+            {
+                return _acmeClientProvider.AddNewRegistrationAndAcceptTOS(reg.EmailAddress);
+            }
+            else
+            {
+                // did not agree to terms
+                return false;
+            }
         }
 
         /// <summary>
@@ -880,59 +898,6 @@ namespace Certify.Management
                 //site not identified, assume it is running
                 return true;
             }
-        }
-
-        public bool IsWindowsScheduledTaskPresent()
-        {
-            var taskList = Microsoft.Win32.TaskScheduler.TaskService.Instance.RootFolder.GetTasks();
-            if (taskList.Any(t => t.Name == SCHEDULED_TASK_NAME))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Creates the windows scheduled task to perform renewals, running as the given userid (who
-        /// should be admin level so they can perform cert mgmt and IIS management functions)
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <param name="pwd"></param>
-        /// <returns></returns>
-        public bool CreateWindowsScheduledTask(string userId, string pwd)
-        {
-            // https://taskscheduler.codeplex.com/documentation
-            var taskService = Microsoft.Win32.TaskScheduler.TaskService.Instance;
-            try
-            {
-                var cliPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, SCHEDULED_TASK_EXE);
-
-                //setup auto renewal task, executing as admin using the given username and password
-                var task = taskService.NewTask();
-
-                task.Principal.RunLevel = Microsoft.Win32.TaskScheduler.TaskRunLevel.Highest;
-                task.Actions.Add(new Microsoft.Win32.TaskScheduler.ExecAction(cliPath, SCHEDULED_TASK_ARGS));
-                task.Triggers.Add(new Microsoft.Win32.TaskScheduler.DailyTrigger { DaysInterval = 1 });
-
-                //register/update task
-                taskService.RootFolder.RegisterTaskDefinition(SCHEDULED_TASK_NAME, task, Microsoft.Win32.TaskScheduler.TaskCreation.CreateOrUpdate, userId, pwd, Microsoft.Win32.TaskScheduler.TaskLogonType.Password);
-
-                return true;
-            }
-            catch (Exception exp)
-            {
-                System.Diagnostics.Debug.WriteLine(exp.ToString());
-                //failed to create task
-                return false;
-            }
-        }
-
-        public void DeleteWindowsScheduledTask()
-        {
-            Microsoft.Win32.TaskScheduler.TaskService.Instance.RootFolder.DeleteTask(SCHEDULED_TASK_NAME, exceptionOnNotExists: false);
         }
     }
 }

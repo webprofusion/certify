@@ -82,6 +82,10 @@
       <Project>{87baa9ca-e0c9-4d3e-8971-55a30134c932}</Project>
       <Name>Certify.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.csproj">
+      <Project>{ed48b479-b619-4c16-afa3-83dd3cd89338}</Project>
+      <Name>Certify.Shared</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />

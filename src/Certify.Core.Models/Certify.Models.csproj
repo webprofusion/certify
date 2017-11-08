@@ -7,8 +7,8 @@
     <ProjectGuid>{50A30C5D-F5D7-4BB1-9EAB-957AF34FBF3D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Certify.Core.Models</RootNamespace>
-    <AssemblyName>Certify.Core.Models</AssemblyName>
+    <RootNamespace>Certify</RootNamespace>
+    <AssemblyName>Certify.Models</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>
@@ -64,12 +64,16 @@
     <Compile Include="Models\DomainOption.cs" />
     <Compile Include="Models\ExtendedVaultConfig.cs" />
     <Compile Include="Models\ManagedItem.cs" />
+    <Compile Include="Models\ManagedSiteFilter.cs" />
     <Compile Include="Models\PendingAuthorization.cs" />
     <Compile Include="Models\Plugins\PluginInterfaces.cs" />
+    <Compile Include="Models\Preferences.cs" />
     <Compile Include="Models\RequestProgressState.cs" />
     <Compile Include="Models\Shared\FeedbackReport.cs" />
     <Compile Include="Models\Shared\LicenseCheckResult.cs" />
     <Compile Include="Models\Shared\LicenseKeyInstallResult.cs" />
+    <Compile Include="Models\StandardServerTypes.cs" />
+    <Compile Include="Models\SupportedChallengeTypes.cs" />
     <Compile Include="Models\UpdateCheck.cs" />
     <Compile Include="Models\UpdateMessage.cs" />
     <Compile Include="Models\VaultItem.cs" />

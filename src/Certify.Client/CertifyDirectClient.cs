@@ -1,4 +1,5 @@
-﻿using Certify.Models;
+﻿using Certify.Management;
+using Certify.Models;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -11,32 +12,29 @@ namespace Certify.Client
     /// </summary>
     public class CertifyDirectClient : ICertifyClient
     {
-        public Task<List<ManagedSite>> GetManagedSites(string filter, int maxresults)
+        private CertifyManager _certifyManager = new CertifyManager();
+
+        public Task<List<ManagedSite>> BeginAutoRenewal()
         {
             throw new NotImplementedException();
         }
 
-        public async Task<List<CertificateRequestResult>> PerformRenewalAllManagedSites()
+        public Task BeginCertificateRequest(string managedSiteId)
         {
             throw new NotImplementedException();
         }
 
-        public async Task<ManagedSite> AddOrUpdateManagedSite(ManagedSite site)
+        public Task<string> CheckCertificateRequest(string managedSiteId)
         {
             throw new NotImplementedException();
         }
 
-        public Task<CertificateRequestResult> PerformCertificateRequest(ManagedSite site)
+        public Task<UpdateCheck> CheckForUpdates()
         {
             throw new NotImplementedException();
         }
 
-        public Task<object> GetRequestsInProgress()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> DeleteManagedSite(ManagedSite site)
+        public Task<bool> DeleteManagedSite(string managedSiteId)
         {
             throw new NotImplementedException();
         }
@@ -46,9 +44,69 @@ namespace Certify.Client
             return Task.FromResult(new Management.Util().GetAppVersion().ToString());
         }
 
-        public Task<UpdateCheck> CheckForUpdates()
+        public Task<List<ManagedSite>> GetManagedSite(string managedSiteId)
         {
             throw new NotImplementedException();
+        }
+
+        public Task<List<ManagedSite>> GetManagedSites(ManagedSiteFilter filter)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Preferences> GetPreferences()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> GetPrimaryContact()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<List<DomainOption>> GetServerSiteDomains(string mamagedSiteId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<List<SiteBindingItem>> GetServerSiteList(StandardServerTypes serverType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Version> GetServerVersion(StandardServerTypes serverType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> IsServerAvailable(StandardServerTypes serverType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<APIResult> RevokeManageSiteCertificate(string managedSiteId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> SetPreferences(Preferences preferences)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> SetPrimaryContact(ContactRegistration contact)
+        {
+            return Task.FromResult(_certifyManager.AddRegisteredContact(contact));
+        }
+
+        public Task<APIResult> TestChallengeConfiguration(ManagedSite site)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ManagedSite> UpdateManagedSite(ManagedSite site)
+        {
+            return Task.FromResult(_certifyManager.UpdateManagedSite(site));
         }
     }
 }

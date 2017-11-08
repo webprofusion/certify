@@ -225,7 +225,7 @@ namespace Certify.Management
             return ManagedSites.TryGetValue(siteId, out var retval) ? retval : null;
         }
 
-        public List<ManagedSite> GetManagedSites()
+        public List<ManagedSite> GetManagedSites(ManagedSiteFilter filter = null)
         {
             LoadSettings();
             return new List<ManagedSite>(ManagedSites.Values);
@@ -237,11 +237,13 @@ namespace Certify.Management
             StoreSettings();
         }
 
-        public void UpdatedManagedSite(ManagedSite managedSite, bool loadLatest = true, bool saveAfterUpdate = true)
+        public ManagedSite UpdatedManagedSite(ManagedSite managedSite, bool loadLatest = true, bool saveAfterUpdate = true)
         {
             if (loadLatest) LoadSettings();
             ManagedSites[managedSite.Id] = managedSite;
             if (saveAfterUpdate) StoreSettings();
+
+            return ManagedSites[managedSite.Id];
         }
 
         public void DeleteManagedSite(ManagedSite site)
