@@ -60,7 +60,6 @@ namespace Certify.UI
                 var list = await MainViewModel.CertifyClient.GetManagedSites(new Models.ManagedSiteFilter());
                 MainViewModel.ManagedSites = new System.Collections.ObjectModel.ObservableCollection<Models.ManagedSite>(list);
 
-
                 //init telemetry if enabled
                 InitTelemetry();
             });
@@ -78,7 +77,6 @@ namespace Certify.UI
                     MainViewModel.IsRegisteredVersion = true;
                 }
             }
-
         }
 
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)

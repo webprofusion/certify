@@ -62,6 +62,8 @@ namespace Certify.Client
 
         Task<System.Version> GetServerVersion(StandardServerTypes serverType);
 
+        Task<List<DomainOption>> GetServerSiteDomains(StandardServerTypes serverType, string serverSiteId);
+
         #endregion Server
 
         #region Preferences
@@ -89,8 +91,6 @@ namespace Certify.Client
         Task BeginCertificateRequest(string managedSiteId);
 
         Task<string> CheckCertificateRequest(string managedSiteId);
-
-        Task<List<DomainOption>> GetServerSiteDomains(string mamagedSiteId);
 
         Task<APIResult> TestChallengeConfiguration(ManagedSite site);
 

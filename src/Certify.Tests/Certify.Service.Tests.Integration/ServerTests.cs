@@ -30,5 +30,29 @@ namespace Certify.Service.Tests.Integration
 
             Assert.IsNotNull(result);
         }
+
+        [TestMethod]
+        public async Task TestServerSiteList()
+        {
+            var result = await _client.GetServerSiteList(Models.StandardServerTypes.IIS);
+
+            Assert.IsNotNull(result, "Server Site List returned");
+
+            Assert.IsTrue(result.Count > 0, "Has one or more results");
+        }
+
+        [TestMethod]
+        public async Task TestServerSiteDomains()
+        {
+            var sites = await _client.GetServerSiteList(Models.StandardServerTypes.IIS);
+
+            var site = sites[0];
+
+            var result = await _client.GetServerSiteDomains(Models.StandardServerTypes.IIS, site.SiteId);
+
+            Assert.IsNotNull(result, "Domain Options List returned");
+
+            Assert.IsTrue(result.Count > 0, "Has one or more results");
+        }
     }
 }

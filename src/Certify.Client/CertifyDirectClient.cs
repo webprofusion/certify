@@ -64,7 +64,7 @@ namespace Certify.Client
             throw new NotImplementedException();
         }
 
-        public Task<List<DomainOption>> GetServerSiteDomains(string mamagedSiteId)
+        public Task<List<DomainOption>> GetServerSiteDomains(StandardServerTypes serverType, string serverSiteId)
         {
             throw new NotImplementedException();
         }

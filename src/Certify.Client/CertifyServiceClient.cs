@@ -42,6 +42,8 @@ namespace Certify.Client
 
         #endregion System
 
+        #region Server
+
         public async Task<bool> IsServerAvailable(StandardServerTypes serverType)
         {
             var result = await FetchAsync($"server/isavailable/{serverType}");
@@ -59,6 +61,14 @@ namespace Certify.Client
             var result = await FetchAsync($"server/version/{serverType}");
             return JsonConvert.DeserializeObject<Version>(result);
         }
+
+        public async Task<List<DomainOption>> GetServerSiteDomains(StandardServerTypes serverType, string serverSiteId)
+        {
+            var result = await FetchAsync($"server/sitedomains/{serverType}/{serverSiteId}");
+            return JsonConvert.DeserializeObject<List<DomainOption>>(result);
+        }
+
+        #endregion Server
 
         public async Task<Preferences> GetPreferences()
         {
@@ -118,11 +128,6 @@ namespace Certify.Client
         }
 
         public Task<string> CheckCertificateRequest(string managedSiteId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<List<DomainOption>> GetServerSiteDomains(string mamagedSiteId)
         {
             throw new NotImplementedException();
         }

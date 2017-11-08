@@ -460,7 +460,9 @@ namespace Certify.UI.ViewModel
             managedSite.RequestConfig.ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP;
             managedSite.IncludeInAutoRenew = true;
             managedSite.DomainOptions.Clear();
-            foreach (var option in GetDomainOptionsFromSite(siteId))
+
+            var domainOptions = GetDomainOptionsFromSite(siteId);
+            foreach (var option in domainOptions )
             {
                 managedSite.DomainOptions.Add(option);
             }
@@ -478,7 +480,7 @@ namespace Certify.UI.ViewModel
         protected virtual IEnumerable<DomainOption> GetDomainOptionsFromSite(string siteId)
         {
             // FIXME: async blocking
-            return Task.Run(() => CertifyClient.GetServerSiteDomains(siteId)).Result;
+            return Task.Run(() => CertifyClient.GetServerSiteDomains(StandardServerTypes.IIS, siteId)).Result;
         }
 
         public async void BeginCertificateRequest(string managedItemId)
