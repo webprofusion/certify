@@ -208,6 +208,24 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to http://localhost:9696.
+        /// </summary>
+        public static string LocalServiceBaseURI {
+            get {
+                return ResourceManager.GetString("LocalServiceBaseURI", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to http://localhost:9695.
+        /// </summary>
+        public static string LocalServiceBaseURIDebug {
+            get {
+                return ResourceManager.GetString("LocalServiceBaseURIDebug", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Certify the web - SSL/TLS Certificate Manager.
         /// </summary>
         public static string LongAppName {

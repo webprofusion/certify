@@ -13,5 +13,7 @@ namespace Certify.Models
 
         // filter results to just those sites which will be included in the next auto renewal
         public bool IncludeOnlyNextAutoRenew { get; set; }
+
+        public int MaxResults { get; set; } = 0;
     }
 }

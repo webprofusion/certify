@@ -7,12 +7,66 @@ using System.Threading.Tasks;
 
 namespace Certify.Management
 {
-    public class CertifyManager
+    public interface ICertifyManager
+    {
+        Task<bool> IsServerTypeAvailable(StandardServerTypes serverType);
+
+        Task<Version> GetServerTypeVersion(StandardServerTypes serverType);
+
+        ManagedSite GetManagedSite(string id);
+
+        Task<bool> LoadSettingsAsync(bool skipIfLoaded);
+
+        ManagedSite UpdateManagedSite(ManagedSite site);
+
+        List<ManagedSite> GetManagedSites(ManagedSiteFilter filter = null);
+
+        List<RegistrationItem> GetContactRegistrations();
+
+        List<IdentifierItem> GetDomainIdentifiers();
+
+        List<CertificateItem> GetCertificates();
+
+        void PerformVaultCleanup();
+
+        bool HasRegisteredContacts();
+
+        Task<APIResult> TestChallenge(ManagedSite managedSite, bool isPreviewMode);
+
+        Task<APIResult> RevokeCertificate(ManagedSite managedSite);
+
+        Task<CertificateRequestResult> PerformDummyCertificateRequest(ManagedSite managedSite, IProgress<RequestProgressState> progress = null);
+
+        void DeleteManagedSite(string id);
+
+        Task<bool> AddRegisteredContact(ContactRegistration reg);
+
+        void RemoveExtraContacts(string email);
+
+        void RemoveAllContacts();
+
+        List<SiteBindingItem> GetPrimaryWebSites(bool ignoreStoppedSites);
+
+        string GetAcmeSummary();
+
+        string GetVaultSummary();
+
+        Task<CertificateRequestResult> PerformCertificateRequest(ManagedSite managedSite, IProgress<RequestProgressState> progress = null);
+
+        List<DomainOption> GetDomainOptionsFromSite(string siteId);
+
+        List<ManagedSite> ImportManagedSitesFromVault(bool mergeSitesAsSan = false);
+
+        Task<List<CertificateRequestResult>> PerformRenewalAllManagedSites(bool autoRenewalOnly = true, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null);
+    }
+
+    public class CertifyManager : ICertifyManager
     {
         private ItemManager _siteManager = null;
         private IACMEClientProvider _acmeClientProvider = null;
         private IVaultProvider _vaultProvider = null;
         private IISManager _iisManager = null;
+        public bool IsSingleInstanceMode { get; set; } = true; //if true we make assumptions about how often to load settings etc
 
         public ManagedSite GetManagedSite(string id)
         {
@@ -29,6 +83,14 @@ namespace Certify.Management
             _vaultProvider = acmeSharp;
             _siteManager = new ItemManager();
             _iisManager = new IISManager();
+
+            if (IsSingleInstanceMode) _siteManager.LoadSettings();
+        }
+
+        public async Task<bool> LoadSettingsAsync(bool skipIfLoaded)
+        {
+            await _siteManager.LoadSettingsAsync(skipIfLoaded);
+            return true;
         }
 
         public ManagedSite UpdateManagedSite(ManagedSite site)
@@ -152,7 +214,7 @@ namespace Certify.Management
             }
         }
 
-        public bool AddRegisteredContact(ContactRegistration reg)
+        public async Task<bool> AddRegisteredContact(ContactRegistration reg)
         {
             // in practise only one registered contact is used, so remove alternatives to avoid cert
             // processing picking up the wrong one
@@ -161,6 +223,8 @@ namespace Certify.Management
             // now attempt to register the new contact
             if (reg.AgreedToTermsAndConditions)
             {
+                // FIXME: async blocking
+
                 return _acmeClientProvider.AddNewRegistrationAndAcceptTOS(reg.EmailAddress);
             }
             else
@@ -596,8 +660,8 @@ namespace Certify.Management
                         }
                         // run webhook triggers, if set
                         if ((config.WebhookTrigger == Webhook.ON_SUCCESS && result.IsSuccess) ||
-                            (config.WebhookTrigger == Webhook.ON_ERROR && !result.IsSuccess) ||
-                            (config.WebhookTrigger == Webhook.ON_SUCCESS_OR_ERROR))
+                        (config.WebhookTrigger == Webhook.ON_ERROR && !result.IsSuccess) ||
+                        (config.WebhookTrigger == Webhook.ON_SUCCESS_OR_ERROR))
                         {
                             try
                             {
@@ -898,6 +962,24 @@ namespace Certify.Management
                 //site not identified, assume it is running
                 return true;
             }
+        }
+
+        public async Task<bool> IsServerTypeAvailable(StandardServerTypes serverType)
+        {
+            if (serverType == StandardServerTypes.IIS)
+            {
+                return await this._iisManager.IsIISAvailableAsync();
+            }
+            return false;
+        }
+
+        public async Task<Version> GetServerTypeVersion(StandardServerTypes serverType)
+        {
+            if (serverType == StandardServerTypes.IIS)
+            {
+                return await this._iisManager.GetIisVersionAsync();
+            }
+            return null;
         }
     }
 }

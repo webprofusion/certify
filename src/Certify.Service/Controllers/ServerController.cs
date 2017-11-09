@@ -1,20 +1,28 @@
 ﻿using Certify.Models;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Web.Http;
 
 namespace Certify.Service
 {
     [RoutePrefix("api/server")]
-    public class ServerController : ApiController
+    public class ServerController : Controllers.ControllerBase
     {
-        private Management.CertifyManager _certifyManager = new Certify.Management.CertifyManager();
+        private Management.ICertifyManager _certifyManager = null;
+
+        public ServerController(Management.ICertifyManager manager)
+        {
+            _certifyManager = manager;
+        }
 
         [HttpGet, Route("isavailable/{serverType}")]
-        public bool IsServerAvailable(StandardServerTypes serverType)
+        public async Task<bool> IsServerAvailable(StandardServerTypes serverType)
         {
+            DebugLog();
+
             if (serverType == StandardServerTypes.IIS)
             {
-                return _certifyManager.IsIISAvailable;
+                return await _certifyManager.IsServerTypeAvailable(serverType);
             }
             else
             {
@@ -42,11 +50,11 @@ namespace Certify.Service
         }
 
         [HttpGet, Route("version/{serverType}")]
-        public System.Version GetServerVersion(StandardServerTypes serverType)
+        public async Task<System.Version> GetServerVersion(StandardServerTypes serverType)
         {
             if (serverType == StandardServerTypes.IIS)
             {
-                return _certifyManager.IISVersion;
+                return await _certifyManager.GetServerTypeVersion(serverType);
             }
             else
             {

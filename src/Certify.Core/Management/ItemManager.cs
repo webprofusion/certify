@@ -29,6 +29,7 @@ namespace Certify.Management
 
         private Dictionary<string, ManagedSite> ManagedSites { get; set; }
         public string StorageSubfolder = ""; //if specifed will be appended to AppData path as subfolder to load/save to
+        public bool IsSingleInstanceMode { get; set; } = true; //if true, access to this resource is centralised so we can make assumptions about when reload of settings is required etc
 
         public ItemManager()
         {
@@ -100,6 +101,14 @@ namespace Certify.Management
 
         public void LoadSettings()
         {
+            Task.Run(() => LoadSettingsAsync());
+        }
+
+        public async Task LoadSettingsAsync(bool skipIfLoaded = false)
+        {
+            if (skipIfLoaded && ManagedSites.Any()) return;
+
+            //FIXME: convert to async all the way down
             UpgradeSettings();
 
             var watch = Stopwatch.StartNew();
@@ -222,15 +231,28 @@ namespace Certify.Management
 
         public ManagedSite GetManagedSite(string siteId)
         {
+            if (ManagedSites == null || !ManagedSites.Any()) Debug.WriteLine("No managed sites loaded. Can't get by id");
             return ManagedSites.TryGetValue(siteId, out var retval) ? retval : null;
         }
 
         public List<ManagedSite> GetManagedSites(ManagedSiteFilter filter = null)
         {
-            LoadSettings();
-            return new List<ManagedSite>(ManagedSites.Values);
+            // Don't reload settings unless we need to or we are unsure if any items have changed
+            if (!ManagedSites.Any() || IsSingleInstanceMode == false) LoadSettings();
+
+            // filter and convert dictionary to list TODO: use db instead of in memory filter?
+            var items = ManagedSites.Values.AsEnumerable();
+            if (filter != null)
+            {
+                if (!String.IsNullOrEmpty(filter.Keyword)) items = items.Where(i => i.Name.ToLowerInvariant().Contains(filter.Keyword.ToLowerInvariant()));
+
+                //TODO: IncludeOnlyNextAutoRenew
+                if (filter.MaxResults > 0) items = items.Take(filter.MaxResults);
+            }
+            return new List<ManagedSite>(items);
         }
 
+        // FIXME: we should avoid saving all managed sites
         public void UpdatedManagedSites(List<ManagedSite> managedSites)
         {
             ManagedSites = managedSites.ToDictionary(site => site.Id);

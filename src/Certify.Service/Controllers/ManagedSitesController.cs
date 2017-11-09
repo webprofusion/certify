@@ -6,20 +6,31 @@ using System.Web.Http;
 namespace Certify.Service
 {
     [RoutePrefix("api/managedsites")]
-    public class ManagedSitesController : ApiController
+    public class ManagedSitesController : Controllers.ControllerBase
     {
-        private Management.CertifyManager _certifyManager = new Certify.Management.CertifyManager();
+        private Management.ICertifyManager _certifyManager = null;
+
+        public ManagedSitesController(Management.ICertifyManager manager)
+        {
+            _certifyManager = manager;
+        }
 
         // Get List of Top N Managed Sites, filtered by title
         [HttpPost, Route("search")]
-        public List<ManagedSite> Search(ManagedSiteFilter filter)
+        public async Task<List<ManagedSite>> Search(ManagedSiteFilter filter)
         {
-            return _certifyManager.GetManagedSites();
+            DebugLog();
+
+            await _certifyManager.LoadSettingsAsync(skipIfLoaded: true);
+            return _certifyManager.GetManagedSites(filter);
         }
 
-        [HttpGet]
-        public ManagedSite GetById(string id)
+        [HttpGet, Route("{id}")]
+        public async Task<ManagedSite> GetById(string id)
         {
+            DebugLog(id);
+
+            await _certifyManager.LoadSettingsAsync(skipIfLoaded: true);
             return _certifyManager.GetManagedSite(id);
         }
 
@@ -27,20 +38,26 @@ namespace Certify.Service
         [HttpPost]
         public ManagedSite Update(ManagedSite site)
         {
+            DebugLog();
+
             return _certifyManager.UpdateManagedSite(site);
         }
 
         [HttpDelete]
         public bool Delete(string id)
         {
+            DebugLog();
+
             _certifyManager.DeleteManagedSite(id);
 
             return true;
         }
 
-        [HttpPost]
+        [HttpPost, Route("testconfig")]
         public async Task<APIResult> TestChallengeResponse(ManagedSite site)
         {
+            DebugLog();
+
             return await _certifyManager.TestChallenge(site, isPreviewMode: true);
         }
 
@@ -48,10 +65,12 @@ namespace Certify.Service
         /// Begin auto renew process and return list of included sites 
         /// </summary>
         /// <returns></returns>
-        [HttpGet]
+        [HttpPost, Route("autorenew")]
         public List<ManagedSite> BeginAutoRenewal()
         {
-            // TODO: progress tracking events
+            DebugLog();
+
+            // TODO: progress tracking events, background queue processing
             var list = _certifyManager.GetManagedSites(new ManagedSiteFilter { IncludeOnlyNextAutoRenew = true });
 
             _certifyManager.PerformRenewalAllManagedSites(true, null);
@@ -59,24 +78,31 @@ namespace Certify.Service
             return list;
         }
 
-        [HttpGet]
-        public void BeginCertificateRequest(string managedSiteId)
+        [HttpGet, Route("renewcert/{managedSiteId}")]
+        public bool BeginCertificateRequest(string managedSiteId)
         {
+            DebugLog();
+
             var managedSite = _certifyManager.GetManagedSite(managedSiteId);
-            // TODO: progress tracking events
+            // TODO: progress tracking events, background queue
             _certifyManager.PerformCertificateRequest(managedSite, null);
+            return true;
         }
 
-        [HttpGet]
+        [HttpGet, Route("requeststatus/{managedSiteId}")]
         public string CheckCertificateRequest(string managedSiteId)
         {
+            DebugLog();
+
             //TODO: check current status of request in progress
             return "Unknown";
         }
 
-        [HttpGet]
+        [HttpGet, Route("revoke/{managedSiteId}")]
         public async Task<APIResult> RevokeCertificate(string managedSiteId)
         {
+            DebugLog();
+
             var managedSite = _certifyManager.GetManagedSite(managedSiteId);
             var result = await _certifyManager.RevokeCertificate(managedSite);
             return result;

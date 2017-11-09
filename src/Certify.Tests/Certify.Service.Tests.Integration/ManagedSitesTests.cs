@@ -24,5 +24,19 @@ namespace Certify.Service.Tests.Integration
 
             Assert.IsNotNull(result, $"Fetched {result.Count} managed sites");
         }
+
+        [TestMethod]
+        public async Task TestGetManagedSite()
+        {
+            //get full list
+            var filter = new ManagedSiteFilter { MaxResults = 10 };
+            var results = await _client.GetManagedSites(filter);
+
+            Assert.IsTrue(results.Count > 0, "Got one or more managed sites");
+
+            //attempt to get single item
+            var site = await _client.GetManagedSite(results[0].Id);
+            Assert.IsNotNull(site, $"Fetched single managed site details");
+        }
     }
 }

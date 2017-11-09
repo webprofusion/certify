@@ -40,6 +40,24 @@ namespace Certify.Management
             }
         }
 
+        public async Task<bool> IsIISAvailableAsync()
+        {
+            // FIXME: blocking async
+            var isAvailable = false;
+            using (var srv = GetDefaultServerManager())
+            {
+                if (srv != null) isAvailable = true;
+            }
+            return await Task.FromResult(isAvailable);
+        }
+
+        public async Task<Version> GetIisVersionAsync()
+        {
+            // FIXME: blocking async
+
+            return await Task.FromResult(GetIisVersion());
+        }
+
         public Version GetIisVersion()
         {
             //http://stackoverflow.com/questions/446390/how-to-detect-iis-version-using-c
