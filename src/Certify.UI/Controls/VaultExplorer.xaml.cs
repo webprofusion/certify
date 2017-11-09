@@ -16,7 +16,7 @@ using System.Windows.Shapes;
 namespace Certify.UI.Controls
 {
     /// <summary>
-    /// Interaction logic for VaultExplorer.xaml
+    /// Interaction logic for VaultExplorer.xaml 
     /// </summary>
     public partial class VaultExplorer : UserControl
     {
@@ -37,7 +37,7 @@ namespace Certify.UI.Controls
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
             //refresh vault content
-            MainViewModel.LoadVaultTree();
+            //MainViewModel.LoadVaultTree();
 
             vaultTreeView.Items.Clear();
             foreach (var i in MainViewModel.VaultTree)

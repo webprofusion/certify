@@ -33,12 +33,6 @@ namespace Certify.UI
             }
         }
 
-        internal override void LoadVaultTree()
-        {
-            List<VaultItem> tree = new List<VaultItem>();
-            VaultTree = tree;
-        }
-
         private void GenerateMockData()
         {
             // generate 20 mock sites

@@ -37,7 +37,7 @@ namespace Certify.UI.Controls
             this.SettingsTab.SelectedIndex = 0;
         }
 
-        private void Button_Save(object sender, RoutedEventArgs e)
+        private async void Button_Save(object sender, RoutedEventArgs e)
         {
             if (MainViewModel.SelectedItem.IsChanged)
             {
@@ -91,7 +91,7 @@ namespace Certify.UI.Controls
                 }
                 else
                 {
-                    // clear out saved values if settng webhook to NONE
+                    // clear out saved values if setting webhook to NONE
                     item.RequestConfig.WebhookUrl = null;
                     item.RequestConfig.WebhookMethod = null;
                     item.RequestConfig.WebhookContentType = null;
@@ -101,7 +101,7 @@ namespace Certify.UI.Controls
                 //save changes
 
                 //creating new managed item
-                MainViewModel.SaveManagedItemChanges();
+                await MainViewModel.SaveManagedItemChanges();
             }
             else
             {
@@ -128,27 +128,20 @@ namespace Certify.UI.Controls
             MainViewModel.SelectedItem = MainViewModel.ManagedSites.FirstOrDefault();
         }
 
-        private void Button_RequestCertificate(object sender, RoutedEventArgs e)
+        private async void Button_RequestCertificate(object sender, RoutedEventArgs e)
         {
             if (MainViewModel.SelectedItem != null)
             {
                 if (MainViewModel.SelectedItem.IsChanged)
                 {
                     //save changes
-                    MainViewModel.SaveManagedItemChanges();
+                    await MainViewModel.SaveManagedItemChanges();
                 }
 
                 //begin request
                 MainViewModel.MainUITabIndex = (int)MainWindow.PrimaryUITabs.CurrentProgress;
 
-                if (MainViewModel.BeginCertificateRequestCommand.CanExecute((MainViewModel.SelectedItem.Id)))
-                {
-                    Application.Current.Dispatcher.BeginInvoke(new Action(
-    () =>
-    {
-        MainViewModel.BeginCertificateRequestCommand.Execute(MainViewModel.SelectedItem.Id);
-    }));
-                }
+                await MainViewModel.BeginCertificateRequest(MainViewModel.SelectedItem.Id);
             }
         }
 

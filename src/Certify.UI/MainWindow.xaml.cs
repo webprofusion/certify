@@ -125,7 +125,7 @@ namespace Certify.UI
             }
 
             //check for updates and report result to view model
-            if (MainViewModel.Preferences.CheckForUpdatesAtStartup)
+            /*if (MainViewModel.Preferences.CheckForUpdatesAtStartup)
             {
                 var updateCheck = await new Certify.Management.Util().CheckForUpdates();
                 if (updateCheck != null && updateCheck.IsNewerVersion)
@@ -133,7 +133,7 @@ namespace Certify.UI
                     MainViewModel.UpdateCheckResult = updateCheck;
                     MainViewModel.IsUpdateAvailable = true;
                 }
-            }
+            }*/
         }
 
         private void ButtonUpdateAvailable_Click(object sender, RoutedEventArgs e)

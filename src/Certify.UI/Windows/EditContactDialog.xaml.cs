@@ -17,7 +17,7 @@ using System.Windows.Shapes;
 namespace Certify.UI.Windows
 {
     /// <summary>
-    /// Interaction logic for EditContactDialog.xaml
+    /// Interaction logic for EditContactDialog.xaml 
     /// </summary>
     public partial class EditContactDialog
     {
@@ -46,7 +46,7 @@ namespace Certify.UI.Windows
             this.Close();
         }
 
-        private void Save_Click(object sender, RoutedEventArgs e)
+        private async void Save_Click(object sender, RoutedEventArgs e)
         {
             //add/update contact
             bool isValidEmail = true;
@@ -75,16 +75,20 @@ namespace Certify.UI.Windows
             if (Item.AgreedToTermsAndConditions)
             {
                 Mouse.OverrideCursor = Cursors.Wait;
-                if (MainViewModel.AddContactCommand.CanExecute((Item)))
-                {
-                    Application.Current.Dispatcher.BeginInvoke(new Action(
-                        () =>
-                        {
-                            MainViewModel.AddContactCommand.Execute(Item);
-                        }));
 
-                    Mouse.OverrideCursor = Cursors.Arrow;
+                bool addedOK = await MainViewModel.AddContactRegistration(Item);
+
+                Mouse.OverrideCursor = Cursors.Arrow;
+
+                if (addedOK)
+                {
+                    MainViewModel.PrimaryContactEmail = await MainViewModel.CertifyClient.GetPrimaryContact();
                     this.Close();
+                }
+                else
+                {
+                    // FIXME: specific error message or a general try again message
+                    MessageBox.Show(Certify.Locales.SR.New_Contact_EmailError);
                 }
             }
             else

@@ -42,6 +42,8 @@ namespace Certify.UI.Controls
             //TODO: we could now bind to Preferences
             _prefs = await MainViewModel.CertifyClient.GetPreferences();
 
+            MainViewModel.PrimaryContactEmail = await MainViewModel.CertifyClient.GetPrimaryContact();
+
             //MainViewModel.LoadVaultTree();
             this.CheckForUpdatesCheckbox.IsChecked = _prefs.CheckForUpdatesAtStartup;
             this.EnableTelematicsCheckbox.IsChecked = _prefs.EnableAppTelematics;
@@ -72,7 +74,7 @@ namespace Certify.UI.Controls
             d.ShowDialog();
 
             //refresh primary contact
-            MainViewModel.LoadVaultTree();
+            //MainViewModel.LoadVaultTree();
         }
 
         private void SettingsUpdated(object sender, RoutedEventArgs e)

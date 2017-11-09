@@ -12,7 +12,7 @@ using System.Windows.Input;
 namespace Certify.UI.Controls
 {
     /// <summary>
-    /// Interaction logic for ManagedSites.xaml
+    /// Interaction logic for ManagedSites.xaml 
     /// </summary>
     public partial class ManagedSites
     {
@@ -68,8 +68,8 @@ namespace Certify.UI.Controls
             defaultView.Refresh();
             if (lvManagedSites.SelectedIndex == -1 && MainViewModel.SelectedItem != null)
             {
-                // if the data model's selected item has come into view after 
-                // filter box text changed, select the item in the list
+                // if the data model's selected item has come into view after filter box text
+                // changed, select the item in the list
                 if (defaultView.Filter(MainViewModel.SelectedItem))
                 {
                     lvManagedSites.SelectedItem = MainViewModel.SelectedItem;
@@ -113,7 +113,7 @@ namespace Certify.UI.Controls
         }
 
         private void SelectAndFocus(object obj)
-        {  
+        {
             MainViewModel.SelectedItem = obj as ManagedSite;
             if (lvManagedSites.Items.Count > 0 && lvManagedSites.Items.Contains(MainViewModel.SelectedItem))
             {
@@ -191,9 +191,10 @@ namespace Certify.UI.Controls
         }
 
         private int lastSelectedIndex = -1;
+
         private void lvManagedSites_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (MainViewModel.SelectedItem != null && 
+            if (MainViewModel.SelectedItem != null &&
                 !MainViewModel.ManagedSites.Contains(MainViewModel.SelectedItem))
             {
                 if (lvManagedSites.Items.Count == 0)

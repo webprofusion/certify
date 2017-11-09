@@ -83,13 +83,6 @@ namespace Certify.UI.ViewModel
         /// </summary>
         public ObservableCollection<ManagedSite> ImportedManagedSites { get; set; }
 
-        internal virtual void LoadVaultTree()
-        {
-            PrimaryContactEmail = CertifyClient.GetPrimaryContact().Result;
-            //ACMESummary = certifyManager.GetAcmeSummary();
-            //VaultSummary = certifyManager.GetVaultSummary();
-        }
-
         /// <summary>
         /// If true, import from vault/iis scan will merge multi domain sites into one managed site 
         /// </summary>
@@ -145,19 +138,24 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        internal void SaveManagedItemChanges()
+        internal async Task<bool> SaveManagedItemChanges()
         {
             UpdateManagedSiteSettings();
-            AddOrUpdateManagedSite(SelectedItem);
+
+            var updatedOK = await AddOrUpdateManagedSite(SelectedItem);
+
             RaisePropertyChanged(nameof(IsSelectedItemValid));
+
+            return updatedOK;
         }
 
-        internal void AddContactRegistration(ContactRegistration reg)
+        internal async Task<bool> AddContactRegistration(ContactRegistration reg)
         {
-            // FIXME: async blocking
-            var addedOk = Task.Run(() => CertifyClient.SetPrimaryContact(reg)).Result;
+            var addedOk = await CertifyClient.SetPrimaryContact(reg);
+
             // TODO: report errors
             RaisePropertyChanged(nameof(HasRegisteredContacts));
+            return addedOk;
         }
 
         // Certify-supported challenge types
@@ -282,23 +280,31 @@ namespace Certify.UI.ViewModel
         public virtual void LoadSettings()
         {
             // FIXME: async blocking
-            this.Preferences = Task.Run(() => CertifyClient.GetPreferences()).Result;
+            Task.Run(() => LoadSettingsAsync());
+        }
 
-            this.ManagedSites = new ObservableCollection<ManagedSite>();
+        public async virtual Task LoadSettingsAsync()
+        {
+            this.Preferences = await CertifyClient.GetPreferences();
+
+            var list = await CertifyClient.GetManagedSites(new Models.ManagedSiteFilter());
+
+            ManagedSites = new System.Collections.ObjectModel.ObservableCollection<Models.ManagedSite>(list);
         }
 
         public virtual void SaveSettings()
         {
+            /*
             // CertifyClient..SaveManagedSites(ManagedSites.ToList());
             foreach (var d in ManagedSites.Where(s => s.Deleted))
             {
                 if (d.Id != null) CertifyClient.DeleteManagedSite(d.Id);
             }
             // TODO: Identify updated sites and save them?
-            /* foreach (var u in ManagedSites.Where(s => s.Updated))
+            foreach (var u in ManagedSites.Where(s => s.Updated))
              {
                  CertifyClient.UpdateManagedSiteu);
-             }*/
+             }
 
             // remove deleted managed sites from view model
             foreach (var site in ManagedSites.Where(s => s.Deleted).ToList())
@@ -308,6 +314,7 @@ namespace Certify.UI.ViewModel
 
             // refresh observable
             ManagedSites = new ObservableCollection<ManagedSite>(ManagedSites);
+            */
         }
 
         public bool ConfirmDiscardUnsavedChanges()
@@ -366,18 +373,21 @@ namespace Certify.UI.ViewModel
             await CertifyClient.BeginAutoRenewal();
         }
 
-        public void AddOrUpdateManagedSite(ManagedSite item)
+        public async Task<bool> AddOrUpdateManagedSite(ManagedSite item)
         {
-            int index = ManagedSites.ToList().FindIndex(s => s.Id == item.Id);
+            var updatedManagedSite = await CertifyClient.UpdateManagedSite(item);
+
+            // add/update site in our local cache
+            int index = ManagedSites.ToList().FindIndex(s => s.Id == updatedManagedSite.Id);
             if (index == -1)
             {
-                ManagedSites.Add(item);
+                ManagedSites.Add(updatedManagedSite);
             }
             else
             {
                 ManagedSites[index] = item;
             }
-            SaveSettings();
+            return true;
         }
 
         public virtual void DeleteManagedSite(ManagedSite selectedItem)
@@ -462,7 +472,7 @@ namespace Certify.UI.ViewModel
             managedSite.DomainOptions.Clear();
 
             var domainOptions = GetDomainOptionsFromSite(siteId);
-            foreach (var option in domainOptions )
+            foreach (var option in domainOptions)
             {
                 managedSite.DomainOptions.Add(option);
             }
@@ -483,7 +493,7 @@ namespace Certify.UI.ViewModel
             return Task.Run(() => CertifyClient.GetServerSiteDomains(StandardServerTypes.IIS, siteId)).Result;
         }
 
-        public async void BeginCertificateRequest(string managedItemId)
+        public async Task BeginCertificateRequest(string managedItemId)
         {
             //begin request process
             var managedSite = ManagedSites.FirstOrDefault(s => s.Id == managedItemId);
@@ -558,11 +568,7 @@ namespace Certify.UI.ViewModel
 
         public ICommand SANSelectAllCommand => new RelayCommand<object>(SANSelectAll);
         public ICommand SANSelectNoneCommand => new RelayCommand<object>(SANSelectNone);
-
-        public ICommand AddContactCommand => new RelayCommand<ContactRegistration>(AddContactRegistration, this);
-
         public ICommand PopulateManagedSiteSettingsCommand => new RelayCommand<string>(PopulateManagedSiteSettings);
-        public ICommand BeginCertificateRequestCommand => new RelayCommand<string>(BeginCertificateRequest);
         public ICommand RenewAllCommand => new RelayCommand<bool>(RenewAll);
 
         #endregion commands

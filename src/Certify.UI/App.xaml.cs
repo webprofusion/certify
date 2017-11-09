@@ -50,19 +50,10 @@ namespace Certify.UI
 
             base.OnStartup(e);
 
-            // MainViewModel.LoadSettings();
+            await MainViewModel.LoadSettingsAsync();
 
-            await Dispatcher.InvokeAsync(async () =>
-            {
-                // FIXME: async blocking
-                MainViewModel.Preferences = await MainViewModel.CertifyClient.GetPreferences();
-
-                var list = await MainViewModel.CertifyClient.GetManagedSites(new Models.ManagedSiteFilter());
-                MainViewModel.ManagedSites = new System.Collections.ObjectModel.ObservableCollection<Models.ManagedSite>(list);
-
-                //init telemetry if enabled
-                InitTelemetry();
-            });
+            //init telemetry if enabled
+            InitTelemetry();
 
             //check version capabilities
             MainViewModel.PluginManager = new Management.PluginManager();
