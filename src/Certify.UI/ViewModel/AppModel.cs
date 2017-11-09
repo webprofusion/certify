@@ -129,15 +129,6 @@ namespace Certify.UI.ViewModel
 
         public bool IsRegisteredVersion { get; set; }
 
-        public virtual List<SiteBindingItem> WebSiteList
-        {
-            get
-            {
-                //get list of sites from IIS. FIXME: this is async and we should gather this at startup (or on refresh) instead
-                return Task.Run(() => CertifyClient.GetServerSiteList(StandardServerTypes.IIS)).Result;
-            }
-        }
-
         internal async Task<bool> SaveManagedItemChanges()
         {
             UpdateManagedSiteSettings();
@@ -288,7 +279,7 @@ namespace Certify.UI.ViewModel
             this.Preferences = await CertifyClient.GetPreferences();
 
             var list = await CertifyClient.GetManagedSites(new Models.ManagedSiteFilter());
-
+            foreach (var i in list) i.IsChanged = false;
             ManagedSites = new System.Collections.ObjectModel.ObservableCollection<Models.ManagedSite>(list);
         }
 

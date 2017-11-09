@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using WinForms = System.Windows.Forms;
 using System.Windows.Input;
 using Certify.Locales;
+using System.Collections.ObjectModel;
 
 namespace Certify.UI.Controls
 {
@@ -18,6 +19,8 @@ namespace Certify.UI.Controls
     /// </summary>
     public partial class ManagedItemSettings : UserControl
     {
+        public ObservableCollection<SiteBindingItem> WebSiteList { get; set; }
+
         protected Certify.UI.ViewModel.AppModel MainViewModel
         {
             get
@@ -30,11 +33,19 @@ namespace Certify.UI.Controls
         {
             InitializeComponent();
             this.MainViewModel.PropertyChanged += MainViewModel_PropertyChanged;
+
+            WebSiteList = new ObservableCollection<SiteBindingItem>();
         }
 
-        private void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private async void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            this.SettingsTab.SelectedIndex = 0;
+            if (e.PropertyName == "SelectedItem")
+            {
+                this.SettingsTab.SelectedIndex = 0;
+
+                //get list of sites from IIS. FIXME: this is async and we should gather this at startup (or on refresh) instead
+                WebSiteList = new ObservableCollection<SiteBindingItem>(await MainViewModel.CertifyClient.GetServerSiteList(StandardServerTypes.IIS));
+            }
         }
 
         private async void Button_Save(object sender, RoutedEventArgs e)

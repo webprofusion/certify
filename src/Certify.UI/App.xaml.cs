@@ -50,7 +50,16 @@ namespace Certify.UI
 
             base.OnStartup(e);
 
-            await MainViewModel.LoadSettingsAsync();
+            try
+            {
+                await MainViewModel.LoadSettingsAsync();
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Certify SSL Manager service is not started. Please restart the service.");
+                App.Current.Shutdown();
+                return;
+            }
 
             //init telemetry if enabled
             InitTelemetry();

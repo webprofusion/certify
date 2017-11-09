@@ -93,15 +93,15 @@ namespace Certify.UI
             ManagedSites = new ObservableCollection<ManagedSite>(ManagedSites);
         }
 
-        public override List<SiteBindingItem> WebSiteList =>
-            Enumerable.Range(1, 20).Select(i => new SiteBindingItem()
-            {
-                SiteId = i.ToString(),
-                SiteName = $"Website {i}",
-                PhysicalPath = $@"c:\inetpub\wwwroot\website{i}",
-                IsEnabled = true
-            })
-            .ToList();
+        /* public override List<SiteBindingItem> WebSiteList =>
+             Enumerable.Range(1, 20).Select(i => new SiteBindingItem()
+             {
+                 SiteId = i.ToString(),
+                 SiteName = $"Website {i}",
+                 PhysicalPath = $@"c:\inetpub\wwwroot\website{i}",
+                 IsEnabled = true
+             })
+             .ToList();*/
 
         public override bool IsIISAvailable => true;
         public override Version IISVersion => new Version(10, 0);
