@@ -78,7 +78,7 @@ namespace Certify.Client
 
         Task<List<ManagedSite>> GetManagedSites(ManagedSiteFilter filter);
 
-        Task<List<ManagedSite>> GetManagedSite(string managedSiteId);
+        Task<ManagedSite> GetManagedSite(string managedSiteId);
 
         Task<ManagedSite> UpdateManagedSite(ManagedSite site);
 
@@ -88,7 +88,7 @@ namespace Certify.Client
 
         Task<List<ManagedSite>> BeginAutoRenewal();
 
-        Task BeginCertificateRequest(string managedSiteId);
+        Task<bool> BeginCertificateRequest(string managedSiteId);
 
         Task<string> CheckCertificateRequest(string managedSiteId);
 

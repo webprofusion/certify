@@ -12,19 +12,35 @@ namespace Certify.Client
     public class CertifyServiceClient : ICertifyClient
     {
         private HttpClient _client = new HttpClient();
-        private string baseUri = "http://localhost:9696/api/";
+#if DEBUG
+        private string _baseUri = Certify.Locales.ConfigResources.LocalServiceBaseURIDebug + "/api/";
+#else
+         private string _baseUri = Certify.Locales.ConfigResources.LocalServiceBaseURI+"/api/";
+#endif
 
         private async Task<string> FetchAsync(string endpoint)
         {
-            var response = await _client.GetAsync(baseUri + endpoint);
+            var response = await _client.GetAsync(_baseUri + endpoint);
             return await response.Content.ReadAsStringAsync();
         }
 
         private async Task<HttpResponseMessage> PostAsync(string endpoint, object data)
         {
-            var json = JsonConvert.SerializeObject(data);
-            var content = new StringContent(json, System.Text.UnicodeEncoding.UTF8, "application/json");
-            return await _client.PostAsync(baseUri + endpoint, content);
+            if (data != null)
+            {
+                var json = JsonConvert.SerializeObject(data);
+                var content = new StringContent(json, System.Text.UnicodeEncoding.UTF8, "application/json");
+                return await _client.PostAsync(_baseUri + endpoint, content);
+            }
+            else
+            {
+                return await _client.PostAsync(_baseUri + endpoint, new StringContent(""));
+            }
+        }
+
+        private async Task<HttpResponseMessage> DeleteAsync(string endpoint)
+        {
+            return await _client.DeleteAsync(_baseUri + endpoint);
         }
 
         #region System
@@ -70,6 +86,8 @@ namespace Certify.Client
 
         #endregion Server
 
+        #region Preferences
+
         public async Task<Preferences> GetPreferences()
         {
             var result = await FetchAsync("preferences/");
@@ -82,12 +100,14 @@ namespace Certify.Client
             return true;
         }
 
+        #endregion Preferences
+
         #region Managed Sites
 
         public async Task<List<ManagedSite>> GetManagedSites(ManagedSiteFilter filter)
         {
             var response = await PostAsync("managedsites/search/", filter);
-
+            var sites = await response.Content.ReadAsStringAsync();
             var serializer = new JsonSerializer();
             using (StreamReader sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
             using (JsonTextReader reader = new JsonTextReader(sr))
@@ -97,44 +117,58 @@ namespace Certify.Client
             }
         }
 
-        public async Task<List<ManagedSite>> GetManagedSite(string managedSiteId)
+        public async Task<ManagedSite> GetManagedSite(string managedSiteId)
         {
-            throw new NotImplementedException();
+            var result = await FetchAsync($"managedsites/{managedSiteId}");
+            return JsonConvert.DeserializeObject<ManagedSite>(result);
         }
 
-        public Task<ManagedSite> UpdateManagedSite(ManagedSite site)
+        public async Task<ManagedSite> UpdateManagedSite(ManagedSite site)
         {
-            throw new NotImplementedException();
+            var response = await PostAsync("managedsites/update/", site);
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<ManagedSite>(json);
         }
 
         public async Task<bool> DeleteManagedSite(string managedSiteId)
         {
-            throw new NotImplementedException();
+            var response = await DeleteAsync("managedsites/delete/{managedSiteId}");
+            return JsonConvert.DeserializeObject<bool>(await response.Content.ReadAsStringAsync());
         }
 
-        public Task<APIResult> RevokeManageSiteCertificate(string managedSiteId)
+        public async Task<APIResult> RevokeManageSiteCertificate(string managedSiteId)
         {
-            throw new NotImplementedException();
+            var response = await FetchAsync($"managedsites/revoke/{managedSiteId}");
+            return JsonConvert.DeserializeObject<APIResult>(response);
         }
 
-        public Task<List<ManagedSite>> BeginAutoRenewal()
+        public async Task<List<ManagedSite>> BeginAutoRenewal()
         {
-            throw new NotImplementedException();
+            var response = await PostAsync("managedsites/autorenew", null);
+            var serializer = new JsonSerializer();
+            using (StreamReader sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
+            using (JsonTextReader reader = new JsonTextReader(sr))
+            {
+                var managedSiteList = serializer.Deserialize<List<ManagedSite>>(reader);
+                return managedSiteList;
+            }
         }
 
-        public Task BeginCertificateRequest(string managedSiteId)
+        public async Task<bool> BeginCertificateRequest(string managedSiteId)
         {
-            throw new NotImplementedException();
+            var response = await FetchAsync($"managedsites/renewcert/{managedSiteId}");
+            return JsonConvert.DeserializeObject<bool>(response);
         }
 
-        public Task<string> CheckCertificateRequest(string managedSiteId)
+        public async Task<string> CheckCertificateRequest(string managedSiteId)
         {
-            throw new NotImplementedException();
+            return await FetchAsync($"managedsites/requeststatus/{managedSiteId}");
         }
 
-        public Task<APIResult> TestChallengeConfiguration(ManagedSite site)
+        public async Task<APIResult> TestChallengeConfiguration(ManagedSite site)
         {
-            throw new NotImplementedException();
+            var response = await PostAsync($"managedsites/testconfig", site);
+            return JsonConvert.DeserializeObject<APIResult>(await response.Content.ReadAsStringAsync());
         }
 
         #endregion Managed Sites

@@ -19,7 +19,7 @@ namespace Certify.Client
             throw new NotImplementedException();
         }
 
-        public Task BeginCertificateRequest(string managedSiteId)
+        public Task<bool> BeginCertificateRequest(string managedSiteId)
         {
             throw new NotImplementedException();
         }
@@ -41,10 +41,10 @@ namespace Certify.Client
 
         public Task<string> GetAppVersion()
         {
-            return Task.FromResult(new Management.Util().GetAppVersion().ToString());
+            throw new NotImplementedException();
         }
 
-        public Task<List<ManagedSite>> GetManagedSite(string managedSiteId)
+        public Task<ManagedSite> GetManagedSite(string managedSiteId)
         {
             throw new NotImplementedException();
         }
@@ -94,9 +94,9 @@ namespace Certify.Client
             throw new NotImplementedException();
         }
 
-        public Task<bool> SetPrimaryContact(ContactRegistration contact)
+        public async Task<bool> SetPrimaryContact(ContactRegistration contact)
         {
-            return Task.FromResult(_certifyManager.AddRegisteredContact(contact));
+            return await _certifyManager.AddRegisteredContact(contact);
         }
 
         public Task<APIResult> TestChallengeConfiguration(ManagedSite site)
