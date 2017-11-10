@@ -302,14 +302,14 @@ namespace Certify.UI.ViewModel
             */
         }
 
-        public bool ConfirmDiscardUnsavedChanges()
+        public async Task<bool> ConfirmDiscardUnsavedChanges()
         {
             if (SelectedItem?.IsChanged ?? false)
             {
                 //user needs to save or discard changes before changing selection
                 if (MessageBox.Show(SR.ManagedSites_UnsavedWarning, SR.Alert, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
                 {
-                    DiscardChanges();
+                    await DiscardChanges();
                 }
                 else
                 {

@@ -52,7 +52,7 @@ namespace Certify.UI.Controls
             );
         }
 
-        private void ListViewItem_InteractionEvent(object sender, InputEventArgs e)
+        private async void ListViewItem_InteractionEvent(object sender, InputEventArgs e)
         {
             var item = (ListViewItem)sender;
             var ctrl = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
@@ -60,7 +60,7 @@ namespace Certify.UI.Controls
             site = site == MainViewModel.SelectedItem && ctrl ? null : site;
             if (MainViewModel.SelectedItem != site)
             {
-                if (MainViewModel.ConfirmDiscardUnsavedChanges())
+                if (await MainViewModel.ConfirmDiscardUnsavedChanges())
                 {
                     SelectAndFocus(site);
                 }
@@ -83,7 +83,7 @@ namespace Certify.UI.Controls
             }
         }
 
-        private void TxtFilter_PreviewKeyDown(object sender, KeyEventArgs e)
+        private async void TxtFilter_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) ResetFilter();
             if (e.Key == Key.Enter || e.Key == Key.Down)
@@ -96,7 +96,7 @@ namespace Certify.UI.Controls
 
                     // if navigating away, confirm discard
                     if (item != MainViewModel.SelectedItem &&
-                        !MainViewModel.ConfirmDiscardUnsavedChanges())
+                        !await MainViewModel.ConfirmDiscardUnsavedChanges())
                     {
                         return;
                     }
@@ -188,7 +188,7 @@ namespace Certify.UI.Controls
             }
             if (next != MainViewModel.SelectedItem)
             {
-                if (MainViewModel.ConfirmDiscardUnsavedChanges())
+                if (await MainViewModel.ConfirmDiscardUnsavedChanges())
                 {
                     SelectAndFocus(next);
                 }

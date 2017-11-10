@@ -31,25 +31,27 @@ namespace Certify.UI
         {
             get
             {
-                if (MainViewModel!=null && MainViewModel.ManagedSites != null)
+                if (MainViewModel != null && MainViewModel.ManagedSites != null)
                 {
                     return MainViewModel.ManagedSites.Count;
-                } else
+                }
+                else
                 {
                     return 0;
                 }
             }
         }
+
         public MainWindow()
         {
             InitializeComponent();
             DataContext = MainViewModel;
         }
 
-        private void Button_NewCertificate(object sender, RoutedEventArgs e)
+        private async void Button_NewCertificate(object sender, RoutedEventArgs e)
         {
             // save or discard site changes before creating a new site/certificate
-            if (!MainViewModel.ConfirmDiscardUnsavedChanges()) return;
+            if (!await MainViewModel.ConfirmDiscardUnsavedChanges()) return;
 
             //present new managed item (certificate request) UI
             if (!MainViewModel.IsRegisteredVersion && MainViewModel.ManagedSites != null && MainViewModel.ManagedSites.Count >= 5)
@@ -65,10 +67,10 @@ namespace Certify.UI
             MainViewModel.SelectedItem = new Certify.Models.ManagedSite();
         }
 
-        private void Button_RenewAll(object sender, RoutedEventArgs e)
+        private async void Button_RenewAll(object sender, RoutedEventArgs e)
         {
             // save or discard site changes before creating a new site/certificate
-            if (!MainViewModel.ConfirmDiscardUnsavedChanges()) return;
+            if (!await MainViewModel.ConfirmDiscardUnsavedChanges()) return;
 
             //present new renew all confirmation
             if (MessageBox.Show(SR.MainWindow_RenewAllConfirm, SR.Renew_All, MessageBoxButton.YesNo) == MessageBoxResult.Yes)
@@ -120,8 +122,10 @@ namespace Certify.UI
             }
         }
 
-        private async void MetroWindow_ContentRendered(object sender, EventArgs e)
+        private void MetroWindow_ContentRendered(object sender, EventArgs e)
         {
+            //FIXME: both these checks cause async blocks
+
             //warn if IIS not detected
 
             if (!MainViewModel.IsIISAvailable)
@@ -162,10 +166,10 @@ namespace Certify.UI
             }
         }
 
-        private void MetroWindow_Closing(object sender, CancelEventArgs e)
+        private async void MetroWindow_Closing(object sender, CancelEventArgs e)
         {
             // allow cancelling exit to save changes
-            if (!MainViewModel.ConfirmDiscardUnsavedChanges()) e.Cancel = true;
+            if (!await MainViewModel.ConfirmDiscardUnsavedChanges()) e.Cancel = true;
         }
     }
 }

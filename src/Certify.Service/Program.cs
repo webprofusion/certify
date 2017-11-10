@@ -52,7 +52,7 @@ namespace Certify.Service
 #if DEBUG
             _webApp = WebApp.Start<StartOwin>(Certify.Locales.ConfigResources.LocalServiceBaseURIDebug);
 #else
-          _webApp = WebApp.Start<StartOwin>(Certify.Locales.ConfigResources.LocalServiceBaseURI);
+            _webApp = WebApp.Start<StartOwin>(Certify.Locales.ConfigResources.LocalServiceBaseURI);
 #endif
         }
 
@@ -82,11 +82,11 @@ namespace Certify.Service
                 routeTemplate: "api/{controller}/{id}",
                 defaults: new { id = RouteParameter.Optional }
                 );
-
+#if DEBUG
             config
               .EnableSwagger(c => c.SingleApiVersion("v1", "Service API for local install of Certify the web"))
               .EnableSwaggerUi();
-
+#endif
             appBuilder.UseWebApi(config);
         }
     }
