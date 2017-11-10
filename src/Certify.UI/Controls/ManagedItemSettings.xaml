@@ -69,7 +69,8 @@
                 <DockPanel Margin="12,12,12,0" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Visibility="{Binding SelectedItem.Id, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
                         <Label Width="136" Content="{x:Static Resources:SR.ManagedItemSettings_SelectIISSite}" />
-                        <ComboBox ItemsSource="{Binding WebSiteList}" SelectedItem="{Binding SelectedWebSite}"  DisplayMemberPath="SiteName" Width="225" SelectionChanged="Website_SelectionChanged" />
+                        <ComboBox x:Name="WebsiteDropdown"  ItemsSource="{Binding WebSiteList, UpdateSourceTrigger=Default}" SelectedItem="{Binding SelectedWebSite}"  DisplayMemberPath="SiteName" Width="225" SelectionChanged="Website_SelectionChanged" />
+                        <fa:ImageAwesome x:Name="SiteQueryInProgress" Margin="4,0,0,0" Visibility="Hidden" Icon="Refresh" Height="16" Spin="True" SpinDuration="1" />
                     </StackPanel>
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
                         <Label Width="136" Content="{x:Static Resources:SR.ManagedItemSettings_DisplayName}" />

@@ -155,9 +155,9 @@ namespace Certify.Management
                     return (int)response.StatusCode >= 200 && (int)response.StatusCode < 300;
                 }
             }
-            catch (Exception)
+            catch (Exception exp)
             {
-                System.Diagnostics.Debug.WriteLine("Failed to check url for access");
+                System.Diagnostics.Debug.WriteLine("Failed to check url for access (" + url + "): " + exp.ToString());
                 return false;
             }
             finally

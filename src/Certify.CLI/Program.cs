@@ -22,6 +22,11 @@ namespace Certify.CLI
 #endif
 
             var p = new CertifyCLI();
+            Task.Run(async () =>
+            {
+                await p.LoadPreferences();
+            });
+
             p.ShowVersion();
 
             if (args.Length == 0)
@@ -70,6 +75,7 @@ namespace Certify.CLI
         private readonly IdnMapping _idnMapping = new IdnMapping();
         private TelemetryClient _tc = null;
         private ICertifyClient _certifyClient = null;
+        private Preferences _prefs = new Preferences();
 
         public CertifyCLI()
         {
@@ -77,25 +83,28 @@ namespace Certify.CLI
             _certifyClient = new CertifyDirectClient();
 #else
             _certifyClient = new CertifyServiceClient();
+
 #endif
+        }
+
+        public async Task LoadPreferences()
+        {
+            _prefs = await _certifyClient.GetPreferences();
         }
 
         private bool IsTelematicsEnabled()
         {
-            return false;
-            //return  CoreAppSettings.Current.EnableAppTelematics
+            return _prefs.EnableAppTelematics;
         }
 
         private string GetInstrumentationKey()
         {
-            return "";
-            //return  Certify.Properties.Resources.AIInstrumentationKey;
+            return Certify.Locales.ConfigResources.AIInstrumentationKey;
         }
 
-        private string GetAppVersion()
+        private async Task<string> GetAppVersion()
         {
-            string version = _certifyClient.GetAppVersion().Result;
-            return version;
+            return await _certifyClient.GetAppVersion();
         }
 
         private string GetAppWebsiteURL()
@@ -116,7 +125,7 @@ namespace Certify.CLI
                 // Set session data:
 
                 _tc.Context.Session.Id = Guid.NewGuid().ToString();
-                _tc.Context.Component.Version = GetAppVersion();
+                _tc.Context.Component.Version = GetAppVersion().Result;
                 _tc.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
                 _tc.TrackEvent("StartCLI");
             }
@@ -180,7 +189,15 @@ namespace Certify.CLI
             System.Console.WriteLine("\nPerforming Auto Renewals..\n");
 
             //go through list of items configured for auto renew, perform renewal and report the result
-            await _certifyClient.BeginAutoRenewal();
+            var siteList = await _certifyClient.BeginAutoRenewal();
+
+            foreach (var s in siteList)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                System.Console.WriteLine(s.Name);
+            }
+
+            Console.ForegroundColor = ConsoleColor.White;
             /*
             foreach (var r in results)
             {
@@ -223,37 +240,10 @@ namespace Certify.CLI
 
             foreach (var site in managedSites)
             {
-                string status = "Status Not Polled";
-                /* var siteIISInfo = iisManager.GetSiteById(site.GroupId);
-                 string status = "Running";
-                 if (!iisManager.IsSiteRunning(site.GroupId))
-                 {
-                     status = "Not Running";
-                 }*/
-
                 Console.ForegroundColor = ConsoleColor.White;
 
-                Console.WriteLine($"{site.Name},{status},{site.DateExpiry}");
+                Console.WriteLine($"{site.Name},{site.DateExpiry}");
             }
-#if DIRECTCLIENT
-            var siteManager = new ItemManager();
-            siteManager.LoadSettings();
-
-            var managedSites = siteManager.GetManagedSites();
-            IISManager iisManager = new IISManager();
-            foreach (var site in managedSites)
-            {
-                var siteIISInfo = iisManager.GetSiteById(site.GroupId);
-                string status = "Running";
-                if (!iisManager.IsSiteRunning(site.GroupId))
-                {
-                    status = "Not Running";
-                }
-                Console.ForegroundColor = ConsoleColor.White;
-
-                Console.WriteLine($"{site.Name},{status},{site.DateExpiry}");
-            }
-#endif
         }
 
         /*

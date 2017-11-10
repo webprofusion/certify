@@ -107,13 +107,16 @@ namespace Certify.UI
         public override Version IISVersion => new Version(10, 0);
         public override bool HasRegisteredContacts => true;
 
-        protected override IEnumerable<DomainOption> GetDomainOptionsFromSite(string siteId)
+        protected async override Task<IEnumerable<DomainOption>> GetDomainOptionsFromSite(string siteId)
         {
-            return Enumerable.Range(1, 50).Select(i => new DomainOption()
+            return await Task.Run(() =>
             {
-                Domain = $"www{i}.domain.example.org",
-                IsPrimaryDomain = i == 1,
-                IsSelected = true
+                return Enumerable.Range(1, 50).Select(i => new DomainOption()
+                {
+                    Domain = $"www{i}.domain.example.org",
+                    IsPrimaryDomain = i == 1,
+                    IsSelected = true
+                });
             });
         }
     }

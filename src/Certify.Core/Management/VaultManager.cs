@@ -835,6 +835,9 @@ namespace Certify
                             {
                                 result.IsOK = false;
                                 result.FailedItemSummary.Add($"Config checks failed to verify http://{domain} is both publicly accessible and can serve extensionless files e.g. {challengeFileUrl}");
+
+                                // don't check any more after first failure
+                                break;
                             }
                         }
                     }

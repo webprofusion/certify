@@ -45,6 +45,7 @@ namespace Certify.UI.Controls
 
                 //get list of sites from IIS. FIXME: this is async and we should gather this at startup (or on refresh) instead
                 WebSiteList = new ObservableCollection<SiteBindingItem>(await MainViewModel.CertifyClient.GetServerSiteList(StandardServerTypes.IIS));
+                WebsiteDropdown.ItemsSource = WebSiteList;
             }
         }
 
@@ -165,15 +166,15 @@ namespace Certify.UI.Controls
             }
         }
 
-        private void Website_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void Website_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (MainViewModel.SelectedWebSite != null)
             {
                 string siteId = MainViewModel.SelectedWebSite.SiteId;
-                if (MainViewModel.PopulateManagedSiteSettingsCommand.CanExecute(siteId))
-                {
-                    MainViewModel.PopulateManagedSiteSettingsCommand.Execute(siteId);
-                }
+
+                SiteQueryInProgress.Visibility = Visibility.Visible;
+                await MainViewModel.PopulateManagedSiteSettings(siteId);
+                SiteQueryInProgress.Visibility = Visibility.Hidden;
             }
         }
 

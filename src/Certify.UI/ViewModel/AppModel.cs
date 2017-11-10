@@ -135,7 +135,10 @@ namespace Certify.UI.ViewModel
 
             var updatedOK = await AddOrUpdateManagedSite(SelectedItem);
 
+            if (updatedOK) SelectedItem.IsChanged = false;
+
             RaisePropertyChanged(nameof(IsSelectedItemValid));
+            RaisePropertyChanged(nameof(SelectedItem));
 
             return updatedOK;
         }
@@ -362,6 +365,9 @@ namespace Certify.UI.ViewModel
             }
 
             await CertifyClient.BeginAutoRenewal();
+
+            // now continue to poll status of current request. should this just be a query for all
+            // current requests?
         }
 
         public async Task<bool> AddOrUpdateManagedSite(ManagedSite item)
@@ -370,15 +376,8 @@ namespace Certify.UI.ViewModel
             updatedManagedSite.IsChanged = false;
 
             // add/update site in our local cache
-            int index = ManagedSites.ToList().FindIndex(s => s.Id == updatedManagedSite.Id);
-            if (index == -1)
-            {
-                ManagedSites.Add(updatedManagedSite);
-            }
-            else
-            {
-                ManagedSites[index] = updatedManagedSite;
-            }
+            await UpdatedCachedManagedSite(item.Id);
+
             return true;
         }
 
@@ -448,7 +447,7 @@ namespace Certify.UI.ViewModel
             item.ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS;
         }
 
-        private void PopulateManagedSiteSettings(string siteId)
+        public async Task PopulateManagedSiteSettings(string siteId)
         {
             ValidationError = null;
             var managedSite = SelectedItem;
@@ -469,7 +468,7 @@ namespace Certify.UI.ViewModel
             managedSite.IncludeInAutoRenew = true;
             managedSite.DomainOptions.Clear();
 
-            var domainOptions = GetDomainOptionsFromSite(siteId);
+            var domainOptions = await GetDomainOptionsFromSite(siteId);
             foreach (var option in domainOptions)
             {
                 managedSite.DomainOptions.Add(option);
@@ -485,10 +484,9 @@ namespace Certify.UI.ViewModel
             RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
         }
 
-        protected virtual IEnumerable<DomainOption> GetDomainOptionsFromSite(string siteId)
+        protected async virtual Task<IEnumerable<DomainOption>> GetDomainOptionsFromSite(string siteId)
         {
-            // FIXME: async blocking
-            return Task.Run(() => CertifyClient.GetServerSiteDomains(StandardServerTypes.IIS, siteId)).Result;
+            return await CertifyClient.GetServerSiteDomains(StandardServerTypes.IIS, siteId);
         }
 
         public async Task BeginCertificateRequest(string managedItemId)
@@ -527,6 +525,8 @@ namespace Certify.UI.ViewModel
                     if (status.CurrentState == RequestState.Error || status.CurrentState == RequestState.Success)
                     {
                         isCompleted = true;
+                        // reload current status of managed site
+                        await UpdatedCachedManagedSite(managedSite.Id);
                     }
                     else
                     {
@@ -550,6 +550,25 @@ namespace Certify.UI.ViewModel
                          progress.Report(new RequestProgressState { CurrentState = RequestState.Error, Message = result.Message });
                      }
                  }*/
+            }
+        }
+
+        /// <summary>
+        /// Update our current copy of the 
+        /// </summary>
+        /// <param name="managedSite"></param>
+        private async Task UpdatedCachedManagedSite(string managedSiteId)
+        {
+            var existing = ManagedSites.FirstOrDefault(i => i.Id == managedSiteId);
+            var newItem = await CertifyClient.GetManagedSite(managedSiteId);
+            if (existing != null)
+            {
+                var index = ManagedSites.IndexOf(existing);
+                ManagedSites[index] = newItem;
+            }
+            else
+            {
+                ManagedSites.Add(newItem);
             }
         }
 
@@ -582,7 +601,6 @@ namespace Certify.UI.ViewModel
 
         public ICommand SANSelectAllCommand => new RelayCommand<object>(SANSelectAll);
         public ICommand SANSelectNoneCommand => new RelayCommand<object>(SANSelectNone);
-        public ICommand PopulateManagedSiteSettingsCommand => new RelayCommand<string>(PopulateManagedSiteSettings);
         public ICommand RenewAllCommand => new RelayCommand<bool>(RenewAll);
 
         #endregion commands
