@@ -78,7 +78,7 @@ namespace Certify.UI
 
         private string MockDataStore;
 
-        public override void LoadSettings()
+        public void LoadSettings()
         {
             var mockSites = JsonConvert.DeserializeObject<List<ManagedSite>>(MockDataStore);
             foreach (var site in mockSites) site.IsChanged = false;

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Certify.Client
 {
+#if DIRECTCLIENT
     /// <summary>
     /// This version of the client is a direct reference to Certify.Core, for gradual code migration
     /// to CertifyServiceClient
@@ -104,9 +105,10 @@ namespace Certify.Client
             throw new NotImplementedException();
         }
 
-        public Task<ManagedSite> UpdateManagedSite(ManagedSite site)
+        public async Task<ManagedSite> UpdateManagedSite(ManagedSite site)
         {
-            return Task.FromResult(_certifyManager.UpdateManagedSite(site));
+            return await _certifyManager.UpdateManagedSite(site);
         }
     }
+#endif
 }

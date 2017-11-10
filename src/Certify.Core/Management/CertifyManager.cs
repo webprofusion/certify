@@ -2,6 +2,7 @@ using Certify.Locales;
 using Certify.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -13,13 +14,15 @@ namespace Certify.Management
 
         Task<Version> GetServerTypeVersion(StandardServerTypes serverType);
 
-        ManagedSite GetManagedSite(string id);
-
         Task<bool> LoadSettingsAsync(bool skipIfLoaded);
 
-        ManagedSite UpdateManagedSite(ManagedSite site);
+        Task<ManagedSite> GetManagedSite(string id);
 
-        List<ManagedSite> GetManagedSites(ManagedSiteFilter filter = null);
+        Task<List<ManagedSite>> GetManagedSites(ManagedSiteFilter filter = null);
+
+        Task<ManagedSite> UpdateManagedSite(ManagedSite site);
+
+        Task DeleteManagedSite(string id);
 
         List<RegistrationItem> GetContactRegistrations();
 
@@ -36,8 +39,6 @@ namespace Certify.Management
         Task<APIResult> RevokeCertificate(ManagedSite managedSite);
 
         Task<CertificateRequestResult> PerformDummyCertificateRequest(ManagedSite managedSite, IProgress<RequestProgressState> progress = null);
-
-        void DeleteManagedSite(string id);
 
         Task<bool> AddRegisteredContact(ContactRegistration reg);
 
@@ -58,6 +59,8 @@ namespace Certify.Management
         List<ManagedSite> ImportManagedSitesFromVault(bool mergeSitesAsSan = false);
 
         Task<List<CertificateRequestResult>> PerformRenewalAllManagedSites(bool autoRenewalOnly = true, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null);
+
+        Task<List<ManagedSite>> PreviewManagedSites(StandardServerTypes serverType);
     }
 
     public class CertifyManager : ICertifyManager
@@ -67,11 +70,6 @@ namespace Certify.Management
         private IVaultProvider _vaultProvider = null;
         private IISManager _iisManager = null;
         public bool IsSingleInstanceMode { get; set; } = true; //if true we make assumptions about how often to load settings etc
-
-        public ManagedSite GetManagedSite(string id)
-        {
-            return _siteManager.GetManagedSite(id);
-        }
 
         public CertifyManager()
         {
@@ -83,19 +81,22 @@ namespace Certify.Management
             _vaultProvider = acmeSharp;
             _siteManager = new ItemManager();
             _iisManager = new IISManager();
-
-            if (IsSingleInstanceMode) _siteManager.LoadSettings();
         }
 
         public async Task<bool> LoadSettingsAsync(bool skipIfLoaded)
         {
-            await _siteManager.LoadSettingsAsync(skipIfLoaded);
+            await _siteManager.LoadAllManagedItems(skipIfLoaded);
             return true;
         }
 
-        public ManagedSite UpdateManagedSite(ManagedSite site)
+        public async Task<ManagedSite> GetManagedSite(string id)
         {
-            return _siteManager.UpdatedManagedSite(site);
+            return await _siteManager.GetManagedSite(id);
+        }
+
+        public async Task<ManagedSite> UpdateManagedSite(ManagedSite site)
+        {
+            return await _siteManager.UpdatedManagedSite(site);
         }
 
         // expose IIS metadata
@@ -103,27 +104,9 @@ namespace Certify.Management
 
         public Version IISVersion => _iisManager.GetIisVersion();
 
-        /// <summary>
-        /// Check if we have one or more managed sites setup 
-        /// </summary>
-        public bool HasManagedSites
+        public async Task<List<ManagedSite>> GetManagedSites(ManagedSiteFilter filter = null)
         {
-            get
-            {
-                if (_siteManager.GetManagedSites().Count > 0)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-        }
-
-        public List<ManagedSite> GetManagedSites(ManagedSiteFilter filter = null)
-        {
-            return this._siteManager.GetManagedSites(filter);
+            return await this._siteManager.GetManagedSites(filter, true);
         }
 
         public List<RegistrationItem> GetContactRegistrations()
@@ -139,12 +122,6 @@ namespace Certify.Management
         public List<CertificateItem> GetCertificates()
         {
             return _vaultProvider.GetCertificates();
-        }
-
-        public void SaveManagedSites(List<ManagedSite> managedSites)
-        {
-            this._siteManager.UpdatedManagedSites(managedSites);
-            // this._siteManager.StoreSettings();
         }
 
         public void PerformVaultCleanup()
@@ -205,12 +182,12 @@ namespace Certify.Management
             });
         }
 
-        public void DeleteManagedSite(string id)
+        public async Task DeleteManagedSite(string id)
         {
-            var site = _siteManager.GetManagedSite(id);
+            var site = await _siteManager.GetManagedSite(id);
             if (site != null)
             {
-                this._siteManager.DeleteManagedSite(site);
+                await this._siteManager.DeleteManagedSite(site);
             }
         }
 
@@ -594,7 +571,7 @@ namespace Certify.Management
                                     //all done
                                     LogMessage(managedSite.Id, CoreSR.CertifyManager_CompleteRequestAndUpdateBinding, LogItemType.CertificateRequestSuccessful);
 
-                                    _siteManager.UpdatedManagedSite(managedSite);
+                                    await _siteManager.UpdatedManagedSite(managedSite);
 
                                     result.IsSuccess = true;
                                     result.Message = string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
@@ -610,7 +587,7 @@ namespace Certify.Management
                             {
                                 //user has opted for manual binding of certificate
 
-                                _siteManager.UpdatedManagedSite(managedSite);
+                                await _siteManager.UpdatedManagedSite(managedSite);
 
                                 result.IsSuccess = true;
                                 result.Message = string.Format(CoreSR.CertifyManager_CertificateCreatedForBinding, pfxPath);
@@ -849,9 +826,9 @@ namespace Certify.Management
 
             bool testModeOnly = false;
 
-            _siteManager.LoadSettings();
+            await _siteManager.LoadAllManagedItems();
 
-            IEnumerable<ManagedSite> sites = _siteManager.GetManagedSites();
+            IEnumerable<ManagedSite> sites = await _siteManager.GetManagedSites(new ManagedSiteFilter { IncludeOnlyNextAutoRenew = true });
 
             if (autoRenewalOnly)
             {
@@ -876,7 +853,7 @@ namespace Certify.Management
                 bool isSiteRunning = true;
                 if (!CoreAppSettings.Current.IgnoreStoppedSites)
                 {
-                    isSiteRunning = IsManagedSiteRunning(s.Id);
+                    isSiteRunning = await IsManagedSiteRunning(s.Id);
                 }
 
                 if (isRenewalRequired && isSiteRunning)
@@ -949,9 +926,9 @@ namespace Certify.Management
             }
         }
 
-        private bool IsManagedSiteRunning(string id, IISManager iis = null)
+        private async Task<bool> IsManagedSiteRunning(string id, IISManager iis = null)
         {
-            var managedSite = _siteManager.GetManagedSite(id);
+            var managedSite = await _siteManager.GetManagedSite(id);
             if (managedSite != null)
             {
                 if (iis == null) iis = _iisManager;
@@ -980,6 +957,51 @@ namespace Certify.Management
                 return await this._iisManager.GetIisVersionAsync();
             }
             return null;
+        }
+
+        /// <summary>
+        /// For current configured environment, show preview of recommended site management (for
+        /// local IIS, scan sites and recommend actions)
+        /// </summary>
+        /// <returns></returns>
+        public Task<List<ManagedSite>> PreviewManagedSites(StandardServerTypes serverType)
+        {
+            List<ManagedSite> sites = new List<ManagedSite>();
+
+            // FIXME: IIS query is not async
+            if (serverType == StandardServerTypes.IIS)
+            {
+                try
+                {
+                    var iisSites = new IISManager().GetSiteBindingList(ignoreStoppedSites: CoreAppSettings.Current.IgnoreStoppedSites).OrderBy(s => s.SiteId).ThenBy(s => s.Host);
+
+                    var siteIds = iisSites.GroupBy(x => x.SiteId);
+
+                    foreach (var s in siteIds)
+                    {
+                        ManagedSite managedSite = new ManagedSite { Id = s.Key };
+                        managedSite.ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS;
+                        managedSite.TargetHost = "localhost";
+                        managedSite.Name = iisSites.First(i => i.SiteId == s.Key).SiteName;
+
+                        //TODO: replace site binding with domain options
+                        //managedSite.SiteBindings = new List<ManagedSiteBinding>();
+
+                        foreach (var binding in s)
+                        {
+                            var managedBinding = new ManagedSiteBinding { Hostname = binding.Host, IP = binding.IP, Port = binding.Port, UseSNI = true, CertName = "Certify_" + binding.Host };
+                            // managedSite.SiteBindings.Add(managedBinding);
+                        }
+                        sites.Add(managedSite);
+                    }
+                }
+                catch (Exception)
+                {
+                    //can't read sites
+                    Debug.WriteLine("Can't get IIS site list.");
+                }
+            }
+            return Task.FromResult(sites);
         }
     }
 }

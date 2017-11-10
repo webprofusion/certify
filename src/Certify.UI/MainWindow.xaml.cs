@@ -27,6 +27,19 @@ namespace Certify.UI
             }
         }
 
+        public int NumManagedSites
+        {
+            get
+            {
+                if (MainViewModel!=null && MainViewModel.ManagedSites != null)
+                {
+                    return MainViewModel.ManagedSites.Count;
+                } else
+                {
+                    return 0;
+                }
+            }
+        }
         public MainWindow()
         {
             InitializeComponent();

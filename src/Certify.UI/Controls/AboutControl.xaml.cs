@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace Certify.UI.Controls
 {
@@ -48,7 +49,9 @@ namespace Certify.UI.Controls
 
         private async void UpdateCheck_Click(object sender, RoutedEventArgs e)
         {
+            Mouse.OverrideCursor = Cursors.Wait;
             await PerformCheckForUpdates(silent: false);
+            Mouse.OverrideCursor = Cursors.Arrow;
         }
 
         private async Task PerformCheckForUpdates(bool silent)

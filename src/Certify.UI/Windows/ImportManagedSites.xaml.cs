@@ -11,7 +11,7 @@ using System.Windows;
 namespace Certify.UI.Windows
 {
     /// <summary>
-    /// Interaction logic for ImportManagedSites.xaml
+    /// Interaction logic for ImportManagedSites.xaml 
     /// </summary>
     public partial class ImportManagedSites
     {
@@ -28,7 +28,7 @@ namespace Certify.UI.Windows
         {
             MainViewModel.ManagedSites = new ObservableCollection<ManagedSite>(MainViewModel.ImportedManagedSites);
 
-            MainViewModel.SaveSettings();
+            //MainViewModel.SaveSettings();
             this.Close();
         }
 

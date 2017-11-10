@@ -7,6 +7,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 
 namespace Certify.UI
 {
@@ -50,6 +51,7 @@ namespace Certify.UI
 
             base.OnStartup(e);
 
+            Mouse.OverrideCursor = Cursors.AppStarting;
             try
             {
                 await MainViewModel.LoadSettingsAsync();
@@ -60,6 +62,8 @@ namespace Certify.UI
                 App.Current.Shutdown();
                 return;
             }
+
+            Mouse.OverrideCursor = Cursors.Arrow;
 
             //init telemetry if enabled
             InitTelemetry();

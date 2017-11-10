@@ -268,12 +268,6 @@ namespace Certify.UI.ViewModel
              ImportedManagedSites = new ObservableCollection<ManagedSite>(importedSites);*/
         }
 
-        public virtual void LoadSettings()
-        {
-            // FIXME: async blocking
-            Task.Run(() => LoadSettingsAsync());
-        }
-
         public async virtual Task LoadSettingsAsync()
         {
             this.Preferences = await CertifyClient.GetPreferences();
@@ -326,7 +320,7 @@ namespace Certify.UI.ViewModel
             return true;
         }
 
-        public void DiscardChanges()
+        public async Task DiscardChanges()
         {
             if (SelectedItem?.IsChanged ?? false)
             {
@@ -336,7 +330,13 @@ namespace Certify.UI.ViewModel
                 }
                 else
                 {
-                    LoadSettings();
+                    // replace current item with saved version
+
+                    /*ManagedSites.Remove(SelectedItem);
+                    var item = await CertifyClient.GetManagedSite(SelectedItem.Id);
+                    ManagedSites.Add(item);
+                    SelectedItem = item;*/
+                    await LoadSettingsAsync();
                 }
             }
         }
@@ -367,6 +367,7 @@ namespace Certify.UI.ViewModel
         public async Task<bool> AddOrUpdateManagedSite(ManagedSite item)
         {
             var updatedManagedSite = await CertifyClient.UpdateManagedSite(item);
+            updatedManagedSite.IsChanged = false;
 
             // add/update site in our local cache
             int index = ManagedSites.ToList().FindIndex(s => s.Id == updatedManagedSite.Id);
@@ -376,12 +377,12 @@ namespace Certify.UI.ViewModel
             }
             else
             {
-                ManagedSites[index] = item;
+                ManagedSites[index] = updatedManagedSite;
             }
             return true;
         }
 
-        public virtual void DeleteManagedSite(ManagedSite selectedItem)
+        public async Task<bool> DeleteManagedSite(ManagedSite selectedItem)
         {
             var existing = ManagedSites.FirstOrDefault(s => s.Id == selectedItem.Id);
             if (existing != null)
@@ -389,9 +390,15 @@ namespace Certify.UI.ViewModel
                 if (MessageBox.Show(SR.ManagedItemSettings_ConfirmDelete, SR.ConfirmDelete, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
                 {
                     existing.Deleted = true;
-                    SaveSettings();
+                    var deletedOK = await CertifyClient.DeleteManagedSite(selectedItem.Id);
+                    if (deletedOK)
+                    {
+                        ManagedSites.Remove(existing);
+                    }
+                    return deletedOK;
                 }
             }
+            return false;
         }
 
         public void SANSelectAll(object o)

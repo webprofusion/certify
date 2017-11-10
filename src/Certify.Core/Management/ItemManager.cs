@@ -1,13 +1,11 @@
 ﻿using Certify.Models;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Certify.Management
@@ -21,227 +19,211 @@ namespace Certify.Management
     {
         public const string ITEMMANAGERCONFIG = "manageditems";
 
-        /// <summary>
-        /// If true, one or more of our managed sites are hosted within a Local IIS server on the
-        /// same machine
-        /// </summary>
-        public bool EnableLocalIISMode { get; set; } //TODO: driven by config
-
-        private Dictionary<string, ManagedSite> ManagedSites { get; set; }
+        private Dictionary<string, ManagedSite> ManagedSitesCache { get; set; }
         public string StorageSubfolder = ""; //if specifed will be appended to AppData path as subfolder to load/save to
         public bool IsSingleInstanceMode { get; set; } = true; //if true, access to this resource is centralised so we can make assumptions about when reload of settings is required etc
 
         public ItemManager()
         {
-            EnableLocalIISMode = true;
-            ManagedSites = new Dictionary<string, ManagedSite>();
+            ManagedSitesCache = new Dictionary<string, ManagedSite>();
         }
 
-        public void StoreSettings()
+        private string GetDbPath()
+        {
+            string appDataPath = Util.GetAppDataFolder(StorageSubfolder);
+            return Path.Combine(appDataPath, $"{ITEMMANAGERCONFIG}.db");
+        }
+
+        /// <summary>
+        /// Perform a full backup and save of the current set of managed sites 
+        /// </summary>
+        public async Task StoreSettings()
         {
             var watch = Stopwatch.StartNew();
-            string appDataPath = Util.GetAppDataFolder(StorageSubfolder);
 
-            lock (ITEMMANAGERCONFIG)
+            var path = GetDbPath();
+
+            //create database if it doesn't exist
+            if (!File.Exists(path))
             {
-                var path = Path.Combine(appDataPath, $"{ITEMMANAGERCONFIG}.db");
-
-                //backup settings file
-                if (!File.Exists(path))
+                using (var db = new SQLiteConnection($"Data Source={path}"))
                 {
-                    SQLiteConnection.CreateFile(path);
-                    using (var target = new SQLiteConnection($"Data Source={path}"))
+                    await db.OpenAsync();
+                    using (var cmd = new SQLiteCommand("CREATE TABLE manageditem (id TEXT NOT NULL UNIQUE PRIMARY KEY, json TEXT NOT NULL)", db))
                     {
-                        target.Open();
-                        using (var cmd = new SQLiteCommand("CREATE TABLE manageditem (id TEXT NOT NULL UNIQUE PRIMARY KEY, json TEXT NOT NULL)", target))
-                        {
-                            cmd.ExecuteNonQuery();
-                        }
+                        await cmd.ExecuteNonQueryAsync();
                     }
                 }
+            }
 
-                // save modified items into settings database
-                using (var target = new SQLiteConnection($"Data Source={path}"))
+            // save all new/modified items into settings database
+            using (var db = new SQLiteConnection($"Data Source={path}"))
+            {
+                await db.OpenAsync();
+                using (var tran = db.BeginTransaction())
                 {
-                    target.Open();
-                    using (var tran = target.BeginTransaction())
+                    foreach (var deleted in ManagedSitesCache.Values.Where(s => s.Deleted).ToList())
                     {
-                        foreach (var deleted in ManagedSites.Values.Where(s => s.Deleted).ToList())
+                        using (var cmd = new SQLiteCommand("DELETE FROM manageditem WHERE id=@id", db))
                         {
-                            using (var cmd = new SQLiteCommand("DELETE FROM manageditem WHERE id=@id", target))
-                            {
-                                cmd.Parameters.Add(new SQLiteParameter("@id", deleted.Id));
-                                cmd.ExecuteNonQuery();
-                            }
-                            ManagedSites.Remove(deleted.Id);
+                            cmd.Parameters.Add(new SQLiteParameter("@id", deleted.Id));
+                            await cmd.ExecuteNonQueryAsync();
                         }
-                        foreach (var changed in ManagedSites.Values.Where(s => s.IsChanged))
-                        {
-                            using (var cmd = new SQLiteCommand("INSERT OR REPLACE INTO manageditem (id,json) VALUES (@id,@json)", target))
-                            {
-                                cmd.Parameters.Add(new SQLiteParameter("@id", changed.Id));
-                                cmd.Parameters.Add(new SQLiteParameter("@json", JsonConvert.SerializeObject(changed)));
-                                cmd.ExecuteNonQuery();
-                            }
-                            changed.IsChanged = false;
-                        }
-                        tran.Commit();
+                        ManagedSitesCache.Remove(deleted.Id);
                     }
+                    foreach (var changed in ManagedSitesCache.Values.Where(s => s.IsChanged))
+                    {
+                        using (var cmd = new SQLiteCommand("INSERT OR REPLACE INTO manageditem (id,json) VALUES (@id,@json)", db))
+                        {
+                            cmd.Parameters.Add(new SQLiteParameter("@id", changed.Id));
+                            cmd.Parameters.Add(new SQLiteParameter("@json", JsonConvert.SerializeObject(changed)));
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+                        changed.IsChanged = false;
+                    }
+                    tran.Commit();
                 }
             }
 
             // reset IsChanged as all items have been persisted
-            Debug.WriteLine($"StoreSettings[Sqlite] took {watch.ElapsedMilliseconds}ms for {ManagedSites.Count} records");
+            Debug.WriteLine($"StoreSettings[SQLite] took {watch.ElapsedMilliseconds}ms for {ManagedSitesCache.Count} records");
         }
 
-        public void DeleteAllManagedSites()
+        public async Task DeleteAllManagedSites()
         {
-            foreach (var site in ManagedSites.Values) site.Deleted = true;
+            foreach (var site in ManagedSitesCache.Values)
+            {
+                site.Deleted = true;
+                await DeleteManagedSite(site);
+            }
         }
 
-        public void LoadSettings()
+        public async Task LoadAllManagedItems(bool skipIfLoaded = false)
         {
-            Task.Run(() => LoadSettingsAsync());
-        }
+            if (skipIfLoaded && ManagedSitesCache.Any()) return;
 
-        public async Task LoadSettingsAsync(bool skipIfLoaded = false)
-        {
-            if (skipIfLoaded && ManagedSites.Any()) return;
-
-            //FIXME: convert to async all the way down
-            UpgradeSettings();
+            await UpgradeSettings();
 
             var watch = Stopwatch.StartNew();
             // FIXME: this method should be async and called only when absolutely required, these
             //        files can be hundreds of megabytes
-            string appDataPath = Util.GetAppDataFolder(StorageSubfolder);
-            var path = Path.Combine(appDataPath, $"{ITEMMANAGERCONFIG}.db");
-
+            var path = GetDbPath();
             if (File.Exists(path))
             {
-                lock (ITEMMANAGERCONFIG)
+                var managedSites = new List<ManagedSite>();
+                using (var db = new SQLiteConnection($"Data Source={path}"))
+                using (var cmd = new SQLiteCommand("SELECT json FROM manageditem", db))
                 {
-                    var managedSites = new List<ManagedSite>();
-                    using (var target = new SQLiteConnection($"Data Source={path}"))
-                    using (var cmd = new SQLiteCommand("SELECT json FROM manageditem", target))
+                    await db.OpenAsync();
+                    using (var reader = await cmd.ExecuteReaderAsync())
                     {
-                        target.Open();
-                        using (var reader = cmd.ExecuteReader())
+                        while (await reader.ReadAsync())
                         {
-                            while (reader.Read())
-                            {
-                                managedSites.Add(JsonConvert.DeserializeObject<ManagedSite>((string)reader["json"]));
-                            }
+                            managedSites.Add(JsonConvert.DeserializeObject<ManagedSite>((string)reader["json"]));
                         }
                     }
-                    foreach (var site in managedSites) site.IsChanged = false;
-                    ManagedSites = managedSites.ToDictionary(s => s.Id);
                 }
+
+                foreach (var site in managedSites) site.IsChanged = false;
+                ManagedSitesCache = managedSites.ToDictionary(s => s.Id);
             }
             else
             {
-                ManagedSites = new Dictionary<string, ManagedSite>();
+                ManagedSitesCache = new Dictionary<string, ManagedSite>();
             }
-            Debug.WriteLine($"LoadSettings[Sqlite] took {watch.ElapsedMilliseconds}ms for {ManagedSites.Count} records");
+            Debug.WriteLine($"LoadSettings[SQLite] took {watch.ElapsedMilliseconds}ms for {ManagedSitesCache.Count} records");
         }
 
-        private void UpgradeSettings()
+        private async Task UpgradeSettings()
         {
             var watch = Stopwatch.StartNew();
             string appDataPath = Util.GetAppDataFolder(StorageSubfolder);
             var json = Path.Combine(appDataPath, $"{ITEMMANAGERCONFIG}.json");
             var db = Path.Combine(appDataPath, $"{ITEMMANAGERCONFIG}.db");
+
             if (File.Exists(json) && !File.Exists(db))
             {
-                lock (ITEMMANAGERCONFIG)
+                // read managed sites using tokenize stream, this is useful for large files
+                var serializer = new JsonSerializer();
+                using (StreamReader sr = new StreamReader(json))
+                using (JsonTextReader reader = new JsonTextReader(sr))
                 {
-                    // read managed sites using tokenize stream, this is useful for large files
-                    var serializer = new JsonSerializer();
-                    using (StreamReader sr = new StreamReader(json))
-                    using (JsonTextReader reader = new JsonTextReader(sr))
+                    var managedSiteList = serializer.Deserialize<List<ManagedSite>>(reader);
+
+                    //safety check, if any dupe id's exists (which they shouldn't but the test data set did) make Id unique in the set.
+                    var duplicateKeys = managedSiteList.GroupBy(x => x.Id).Where(group => group.Count() > 1).Select(group => group.Key);
+                    foreach (var dupeKey in duplicateKeys)
                     {
-                        var managedSiteList = serializer.Deserialize<List<ManagedSite>>(reader);
-
-                        //safety check, if any dupe id's exists (which they shouldn't but the test data set did) make Id unique in the set.
-                        var duplicateKeys = managedSiteList.GroupBy(x => x.Id).Where(group => group.Count() > 1).Select(group => group.Key);
-                        foreach (var dupeKey in duplicateKeys)
+                        var count = 0;
+                        foreach (var i in managedSiteList.Where(m => m.Id == dupeKey))
                         {
-                            var count = 0;
-                            foreach (var i in managedSiteList.Where(m => m.Id == dupeKey))
-                            {
-                                i.Id = i.Id + "_" + count;
-                                count++;
-                            }
+                            i.Id = i.Id + "_" + count;
+                            count++;
                         }
-
-                        ManagedSites = managedSiteList.ToDictionary(s => s.Id);
                     }
+
+                    ManagedSitesCache = managedSiteList.ToDictionary(s => s.Id);
                 }
 
-                StoreSettings(); // upgrade to SQLite db storage
+                await StoreSettings(); // upgrade to SQLite db storage
                 File.Delete($"{json}.bak");
                 File.Move(json, $"{json}.bak");
-                Debug.WriteLine($"UpgradeSettings[Json->Sqlite] took {watch.ElapsedMilliseconds}ms for {ManagedSites.Count} records");
+                Debug.WriteLine($"UpgradeSettings[Json->SQLite] took {watch.ElapsedMilliseconds}ms for {ManagedSitesCache.Count} records");
             }
         }
 
-        /// <summary>
-        /// For current configured environment, show preview of recommended site management (for
-        /// local IIS, scan sites and recommend actions)
-        /// </summary>
-        /// <returns></returns>
-        public List<ManagedSite> Preview()
+        private async Task<ManagedSite> LoadManagedSite(string siteId)
         {
-            List<ManagedSite> sites = new List<ManagedSite>();
+            ManagedSite managedSite = null;
 
-            if (EnableLocalIISMode)
+            using (var db = new SQLiteConnection($"Data Source={GetDbPath()}"))
+            using (var cmd = new SQLiteCommand("SELECT json FROM manageditem WHERE id=@id", db))
             {
-                try
+                cmd.Parameters.Add(new SQLiteParameter("@id", siteId));
+
+                db.Open();
+                using (var reader = await cmd.ExecuteReaderAsync())
                 {
-                    var iisSites = new IISManager().GetSiteBindingList(ignoreStoppedSites: CoreAppSettings.Current.IgnoreStoppedSites).OrderBy(s => s.SiteId).ThenBy(s => s.Host);
-
-                    var siteIds = iisSites.GroupBy(x => x.SiteId);
-
-                    foreach (var s in siteIds)
+                    if (await reader.ReadAsync())
                     {
-                        ManagedSite managedSite = new ManagedSite { Id = s.Key };
-                        managedSite.ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS;
-                        managedSite.TargetHost = "localhost";
-                        managedSite.Name = iisSites.First(i => i.SiteId == s.Key).SiteName;
-
-                        //TODO: replace site binding with domain options
-                        //managedSite.SiteBindings = new List<ManagedSiteBinding>();
-
-                        foreach (var binding in s)
-                        {
-                            var managedBinding = new ManagedSiteBinding { Hostname = binding.Host, IP = binding.IP, Port = binding.Port, UseSNI = true, CertName = "Certify_" + binding.Host };
-                            // managedSite.SiteBindings.Add(managedBinding);
-                        }
-                        sites.Add(managedSite);
+                        managedSite = JsonConvert.DeserializeObject<ManagedSite>((string)reader["json"]);
+                        managedSite.IsChanged = false;
+                        ManagedSitesCache[managedSite.Id] = managedSite;
                     }
                 }
-                catch (Exception)
-                {
-                    //can't read sites
-                    Debug.WriteLine("Can't get IIS site list.");
-                }
             }
-            return sites;
+
+            return managedSite;
         }
 
-        public ManagedSite GetManagedSite(string siteId)
+        public async Task<ManagedSite> GetManagedSite(string siteId)
         {
-            if (ManagedSites == null || !ManagedSites.Any()) Debug.WriteLine("No managed sites loaded. Can't get by id");
-            return ManagedSites.TryGetValue(siteId, out var retval) ? retval : null;
+            ManagedSite result = null;
+            if (ManagedSitesCache == null || !ManagedSitesCache.Any())
+            {
+                Debug.WriteLine("GetManagedSite: No managed sites loaded, will load item directly.");
+            }
+            else
+            {
+                // try to get cached version
+                result = ManagedSitesCache.TryGetValue(siteId, out var retval) ? retval : null;
+            }
+
+            // if we don't have cached copy of info, load it from db
+            if (result == null)
+            {
+                result = await LoadManagedSite(siteId);
+            }
+            return result;
         }
 
-        public List<ManagedSite> GetManagedSites(ManagedSiteFilter filter = null)
+        public async Task<List<ManagedSite>> GetManagedSites(ManagedSiteFilter filter = null, bool reloadAll = true)
         {
             // Don't reload settings unless we need to or we are unsure if any items have changed
-            if (!ManagedSites.Any() || IsSingleInstanceMode == false) LoadSettings();
+            if (!ManagedSitesCache.Any() || IsSingleInstanceMode == false || reloadAll) await LoadAllManagedItems();
 
             // filter and convert dictionary to list TODO: use db instead of in memory filter?
-            var items = ManagedSites.Values.AsEnumerable();
+            var items = ManagedSitesCache.Values.AsEnumerable();
             if (filter != null)
             {
                 if (!String.IsNullOrEmpty(filter.Keyword)) items = items.Where(i => i.Name.ToLowerInvariant().Contains(filter.Keyword.ToLowerInvariant()));
@@ -252,27 +234,49 @@ namespace Certify.Management
             return new List<ManagedSite>(items);
         }
 
-        // FIXME: we should avoid saving all managed sites
-        public void UpdatedManagedSites(List<ManagedSite> managedSites)
+        public async Task<ManagedSite> UpdatedManagedSite(ManagedSite managedSite, bool saveAfterUpdate = true)
         {
-            ManagedSites = managedSites.ToDictionary(site => site.Id);
-            StoreSettings();
+            ManagedSitesCache[managedSite.Id] = managedSite;
+
+            if (saveAfterUpdate)
+            {
+                using (var db = new SQLiteConnection($"Data Source={GetDbPath()}"))
+                {
+                    db.Open();
+                    using (var tran = db.BeginTransaction())
+                    {
+                        using (var cmd = new SQLiteCommand("INSERT OR REPLACE INTO manageditem (id,json) VALUES (@id,@json)", db))
+                        {
+                            cmd.Parameters.Add(new SQLiteParameter("@id", managedSite.Id));
+                            cmd.Parameters.Add(new SQLiteParameter("@json", JsonConvert.SerializeObject(managedSite)));
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+                        tran.Commit();
+                    }
+                }
+            }
+
+            return ManagedSitesCache[managedSite.Id];
         }
 
-        public ManagedSite UpdatedManagedSite(ManagedSite managedSite, bool loadLatest = true, bool saveAfterUpdate = true)
+        public async Task DeleteManagedSite(ManagedSite site)
         {
-            if (loadLatest) LoadSettings();
-            ManagedSites[managedSite.Id] = managedSite;
-            if (saveAfterUpdate) StoreSettings();
-
-            return ManagedSites[managedSite.Id];
-        }
-
-        public void DeleteManagedSite(ManagedSite site)
-        {
-            LoadSettings();
-            ManagedSites.Remove(site.Id);
-            StoreSettings();
+            // save modified items into settings database
+            using (var db = new SQLiteConnection($"Data Source={GetDbPath()}"))
+            {
+                db.Open();
+                using (var tran = db.BeginTransaction())
+                {
+                    using (var cmd = new SQLiteCommand("DELETE FROM manageditem WHERE id=@id", db))
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@id", site.Id));
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                    tran.Commit();
+                    Debug.WriteLine($"DeleteManagedSite: Completed {site.Id}");
+                    ManagedSitesCache.Remove(site.Id);
+                }
+            }
         }
     }
 }

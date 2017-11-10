@@ -113,6 +113,7 @@ namespace Certify.Client
             using (JsonTextReader reader = new JsonTextReader(sr))
             {
                 var managedSiteList = serializer.Deserialize<List<ManagedSite>>(reader);
+                foreach (var s in managedSiteList) s.IsChanged = false;
                 return managedSiteList;
             }
         }
@@ -120,19 +121,21 @@ namespace Certify.Client
         public async Task<ManagedSite> GetManagedSite(string managedSiteId)
         {
             var result = await FetchAsync($"managedsites/{managedSiteId}");
-            return JsonConvert.DeserializeObject<ManagedSite>(result);
+            var site= JsonConvert.DeserializeObject<ManagedSite>(result);
+            site.IsChanged = false;
+            return site;
         }
 
         public async Task<ManagedSite> UpdateManagedSite(ManagedSite site)
         {
-            var response = await PostAsync("managedsites/update/", site);
+            var response = await PostAsync("managedsites/update", site);
             var json = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<ManagedSite>(json);
         }
 
         public async Task<bool> DeleteManagedSite(string managedSiteId)
         {
-            var response = await DeleteAsync("managedsites/delete/{managedSiteId}");
+            var response = await DeleteAsync($"managedsites/delete/{managedSiteId}");
             return JsonConvert.DeserializeObject<bool>(await response.Content.ReadAsStringAsync());
         }
 

@@ -26,7 +26,7 @@ namespace Certify.UI.Controls
             SetFilter(); // start listening
             MainViewModel.PropertyChanged += (obj, args) =>
             {
-                if (args.PropertyName == "ManagedSites" &&
+                if (args.PropertyName == "ManagedSites" || args.PropertyName == "SelectedItem" &&
                     MainViewModel.ManagedSites != null)
                 {
                     SetFilter(); // reset listeners when ManagedSites are reset
@@ -44,6 +44,12 @@ namespace Certify.UI.Controls
                     (((Models.ManagedSite)item).DomainOptions?.Any(d => d.Domain.IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1) ?? false) ||
                     (((Models.ManagedSite)item).Comments ?? "").IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1);
             };
+
+            //sort by name ascending
+            CollectionViewSource.GetDefaultView(MainViewModel.ManagedSites).SortDescriptions.Clear();
+            CollectionViewSource.GetDefaultView(MainViewModel.ManagedSites).SortDescriptions.Add(
+                new System.ComponentModel.SortDescription("Name", System.ComponentModel.ListSortDirection.Ascending)
+            );
         }
 
         private void ListViewItem_InteractionEvent(object sender, InputEventArgs e)
@@ -126,7 +132,7 @@ namespace Certify.UI.Controls
             }
         }
 
-        private void ListViewItem_PreviewKeyDown(object sender, KeyEventArgs e)
+        private async void ListViewItem_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape)
             {
@@ -135,7 +141,7 @@ namespace Certify.UI.Controls
             }
             if (e.Key == Key.Delete && lvManagedSites.SelectedItem != null)
             {
-                MainViewModel.DeleteManagedSite(MainViewModel.SelectedItem);
+                await MainViewModel.DeleteManagedSite(MainViewModel.SelectedItem);
                 if (lvManagedSites.Items.Count > 0)
                 {
                     SelectAndFocus(lvManagedSites.SelectedItem);

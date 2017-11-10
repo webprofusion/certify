@@ -120,7 +120,7 @@ namespace Certify.UI.Controls
             }
         }
 
-        private void Button_DiscardChanges(object sender, RoutedEventArgs e)
+        private async void Button_DiscardChanges(object sender, RoutedEventArgs e)
         {
             //if new item, discard and select first item in managed sites
             if (MainViewModel.SelectedItem.Id == null)
@@ -130,7 +130,7 @@ namespace Certify.UI.Controls
             else
             {
                 //reload settings for managed sites, discard changes
-                MainViewModel.DiscardChanges();
+                await MainViewModel.DiscardChanges();
             }
         }
 
@@ -156,9 +156,9 @@ namespace Certify.UI.Controls
             }
         }
 
-        private void Button_Delete(object sender, RoutedEventArgs e)
+        private async void Button_Delete(object sender, RoutedEventArgs e)
         {
-            MainViewModel.DeleteManagedSite(MainViewModel.SelectedItem);
+            await MainViewModel.DeleteManagedSite(MainViewModel.SelectedItem);
             if (MainViewModel.SelectedItem?.Id == null)
             {
                 MainViewModel.SelectedItem = MainViewModel.ManagedSites.FirstOrDefault();

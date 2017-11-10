@@ -21,8 +21,7 @@ namespace Certify.Service
         {
             DebugLog();
 
-            await _certifyManager.LoadSettingsAsync(skipIfLoaded: true);
-            return _certifyManager.GetManagedSites(filter);
+            return await _certifyManager.GetManagedSites(filter);
         }
 
         [HttpGet, Route("{id}")]
@@ -30,25 +29,24 @@ namespace Certify.Service
         {
             DebugLog(id);
 
-            await _certifyManager.LoadSettingsAsync(skipIfLoaded: true);
-            return _certifyManager.GetManagedSite(id);
+            return await _certifyManager.GetManagedSite(id);
         }
 
         //add or update managed site
-        [HttpPost]
-        public ManagedSite Update(ManagedSite site)
+        [HttpPost, Route("update")]
+        public async Task<ManagedSite> Update(ManagedSite site)
         {
             DebugLog();
 
-            return _certifyManager.UpdateManagedSite(site);
+            return await _certifyManager.UpdateManagedSite(site);
         }
 
-        [HttpDelete]
-        public bool Delete(string id)
+        [HttpDelete, Route("delete/{managedSiteId}")]
+        public async Task<bool> Delete(string managedSiteId)
         {
             DebugLog();
 
-            _certifyManager.DeleteManagedSite(id);
+            await _certifyManager.DeleteManagedSite(managedSiteId);
 
             return true;
         }
@@ -66,24 +64,25 @@ namespace Certify.Service
         /// </summary>
         /// <returns></returns>
         [HttpPost, Route("autorenew")]
-        public List<ManagedSite> BeginAutoRenewal()
+        public async Task<List<ManagedSite>> BeginAutoRenewal()
         {
             DebugLog();
 
             // TODO: progress tracking events, background queue processing
-            var list = _certifyManager.GetManagedSites(new ManagedSiteFilter { IncludeOnlyNextAutoRenew = true });
+            var list = await _certifyManager.GetManagedSites(new ManagedSiteFilter { IncludeOnlyNextAutoRenew = true });
 
+            //we do not await here, instead the task currently continues after the request
             _certifyManager.PerformRenewalAllManagedSites(true, null);
 
             return list;
         }
 
         [HttpGet, Route("renewcert/{managedSiteId}")]
-        public bool BeginCertificateRequest(string managedSiteId)
+        public async Task<bool> BeginCertificateRequest(string managedSiteId)
         {
             DebugLog();
 
-            var managedSite = _certifyManager.GetManagedSite(managedSiteId);
+            var managedSite = await _certifyManager.GetManagedSite(managedSiteId);
             // TODO: progress tracking events, background queue
             _certifyManager.PerformCertificateRequest(managedSite, null);
             return true;
@@ -103,7 +102,7 @@ namespace Certify.Service
         {
             DebugLog();
 
-            var managedSite = _certifyManager.GetManagedSite(managedSiteId);
+            var managedSite = await _certifyManager.GetManagedSite(managedSiteId);
             var result = await _certifyManager.RevokeCertificate(managedSite);
             return result;
         }
