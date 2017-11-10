@@ -513,12 +513,28 @@ namespace Certify.UI.ViewModel
                 await CertifyClient.BeginCertificateRequest(managedSite.Id);
 
                 // begin polling for status updates
-                var status = await CertifyClient.CheckCertificateRequest(managedSite.Id);
-                if (progressIndicator != null)
+                bool isCompleted = false;
+                while (!isCompleted)
                 {
-                    var progress = (IProgress<RequestProgressState>)progressIndicator;
-                    progress.Report(new RequestProgressState { CurrentState = RequestState.Running, Message = status });
+                    var status = await CertifyClient.CheckCertificateRequest(managedSite.Id);
+
+                    if (progressIndicator != null)
+                    {
+                        status.ManagedItem = managedSite;
+                        var progress = (IProgress<RequestProgressState>)progressIndicator;
+                        progress.Report(status);
+                    }
+                    if (status.CurrentState == RequestState.Error || status.CurrentState == RequestState.Success)
+                    {
+                        isCompleted = true;
+                    }
+                    else
+                    {
+                        // wait before polling status again
+                        await Task.Delay(500);
+                    }
                 }
+
                 /* var result = await certifyManager.PerformCertificateRequest(managedSite, progressIndicator);
 
                  if (progressIndicator != null)

@@ -8,6 +8,7 @@ namespace Certify.Models
 {
     public enum RequestState
     {
+        NotRunning,
         Running,
         Error,
         Success

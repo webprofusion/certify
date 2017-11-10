@@ -1,4 +1,5 @@
 ﻿using Certify.Models;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Web.Http;
@@ -83,18 +84,29 @@ namespace Certify.Service
             DebugLog();
 
             var managedSite = await _certifyManager.GetManagedSite(managedSiteId);
+
             // TODO: progress tracking events, background queue
-            _certifyManager.PerformCertificateRequest(managedSite, null);
+
+            RequestProgressState progressState = new RequestProgressState();
+            progressState.ManagedItem = managedSite;
+
+            var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
+
+            //begin monitoring progress
+            _certifyManager.BeginTrackingProgress(progressState);
+
+            //begin request
+            _certifyManager.PerformCertificateRequest(managedSite, progressIndicator);
             return true;
         }
 
         [HttpGet, Route("requeststatus/{managedSiteId}")]
-        public string CheckCertificateRequest(string managedSiteId)
+        public RequestProgressState CheckCertificateRequest(string managedSiteId)
         {
             DebugLog();
 
             //TODO: check current status of request in progress
-            return "Unknown";
+            return _certifyManager.GetRequestProgressState(managedSiteId);
         }
 
         [HttpGet, Route("revoke/{managedSiteId}")]

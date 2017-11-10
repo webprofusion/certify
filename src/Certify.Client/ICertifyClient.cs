@@ -90,7 +90,7 @@ namespace Certify.Client
 
         Task<bool> BeginCertificateRequest(string managedSiteId);
 
-        Task<string> CheckCertificateRequest(string managedSiteId);
+        Task<RequestProgressState> CheckCertificateRequest(string managedSiteId);
 
         Task<APIResult> TestChallengeConfiguration(ManagedSite site);
 

@@ -121,7 +121,7 @@ namespace Certify.Client
         public async Task<ManagedSite> GetManagedSite(string managedSiteId)
         {
             var result = await FetchAsync($"managedsites/{managedSiteId}");
-            var site= JsonConvert.DeserializeObject<ManagedSite>(result);
+            var site = JsonConvert.DeserializeObject<ManagedSite>(result);
             site.IsChanged = false;
             return site;
         }
@@ -163,9 +163,10 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<bool>(response);
         }
 
-        public async Task<string> CheckCertificateRequest(string managedSiteId)
+        public async Task<RequestProgressState> CheckCertificateRequest(string managedSiteId)
         {
-            return await FetchAsync($"managedsites/requeststatus/{managedSiteId}");
+            string json = await FetchAsync($"managedsites/requeststatus/{managedSiteId}");
+            return JsonConvert.DeserializeObject<RequestProgressState>(json);
         }
 
         public async Task<APIResult> TestChallengeConfiguration(ManagedSite site)
