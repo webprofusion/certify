@@ -94,6 +94,7 @@ namespace Certify.Management
 
         public static Models.Preferences ToPreferences()
         {
+            LoadAppSettings();
             Models.Preferences prefs = new Models.Preferences();
 
             prefs.CheckForUpdatesAtStartup = CoreAppSettings.Current.CheckForUpdatesAtStartup;
