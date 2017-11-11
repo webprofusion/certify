@@ -66,6 +66,8 @@ namespace Certify.Management
         Task<List<ManagedSite>> PreviewManagedSites(StandardServerTypes serverType);
 
         RequestProgressState GetRequestProgressState(string managedSiteId);
+
+        event Action<RequestProgressState> OnRequestProgressStateUpdated;
     }
 
     public class CertifyManager : ICertifyManager
@@ -76,6 +78,8 @@ namespace Certify.Management
         private IISManager _iisManager = null;
         public bool IsSingleInstanceMode { get; set; } = true; //if true we make assumptions about how often to load settings etc
         private ObservableCollection<RequestProgressState> _progressResults { get; set; }
+
+        public event Action<RequestProgressState> OnRequestProgressStateUpdated;
 
         public CertifyManager()
         {
@@ -99,6 +103,8 @@ namespace Certify.Management
                 _progressResults.Remove(existing);
             }
             _progressResults.Add(state);
+
+            if (OnRequestProgressStateUpdated != null) OnRequestProgressStateUpdated(state);
         }
 
         public async Task<bool> LoadSettingsAsync(bool skipIfLoaded)

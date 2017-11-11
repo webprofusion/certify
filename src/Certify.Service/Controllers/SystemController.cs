@@ -15,6 +15,13 @@ namespace Certify.Service
             _certifyManager = manager;
         }
 
+        [HttpGet, Route("test")]
+        public string TestStatusStream()
+        {
+            CertifyOwinHost.CertifyStatusHub.HubContext.Clients.All.SendMessage("hello", "from status");
+            return "OK";
+        }
+
         [HttpGet, Route("appversion")]
         public string GetAppVersion()
         {

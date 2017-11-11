@@ -1,4 +1,5 @@
 ﻿using Certify.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -45,6 +46,18 @@ namespace Certify.Client
         BeginCertificateRequest(managedsite id) - Begins a single manage site certificate request
         CheckCertificateRequest(managedsite id) - poll until completed/failed or timeout
         */
+
+        #region Status
+
+        event Action<string, string> OnMessageFromService;
+
+        event Action<RequestProgressState> OnRequestProgressStateUpdated;
+
+        event Action<ManagedSite> OnManagedSiteUpdated;
+
+        Task ConnectStatusStreamAsync();
+
+        #endregion Status
 
         #region System
 

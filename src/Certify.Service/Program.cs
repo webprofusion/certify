@@ -8,6 +8,9 @@ using System.Web.Http;
 using Topshelf;
 using LightInject.WebApi;
 using LightInject;
+using Microsoft.AspNet.SignalR;
+using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Certify.Service
 {
@@ -50,7 +53,7 @@ namespace Certify.Service
         public void Start()
         {
 #if DEBUG
-            _webApp = WebApp.Start<StartOwin>(Certify.Locales.ConfigResources.LocalServiceBaseURIDebug);
+            _webApp = WebApp.Start<CertifyOwinHost>(Certify.Locales.ConfigResources.LocalServiceBaseURIDebug);
 #else
             _webApp = WebApp.Start<StartOwin>(Certify.Locales.ConfigResources.LocalServiceBaseURI);
 #endif
@@ -62,7 +65,7 @@ namespace Certify.Service
         }
     }
 
-    public class StartOwin
+    public class CertifyOwinHost
     {
         public void Configuration(IAppBuilder appBuilder)
         {
@@ -88,6 +91,49 @@ namespace Certify.Service
               .EnableSwaggerUi();
 #endif
             appBuilder.UseWebApi(config);
+
+            appBuilder.MapSignalR("/api/status", new HubConfiguration());
+        }
+
+        public class CertifyStatusHub : Hub
+        {
+            /// <summary>
+            /// static instance reference for other parts of service to call in to 
+            /// </summary>
+            public static IHubContext HubContext
+            {
+                get
+                {
+                    if (_context == null) _context = GlobalHost.ConnectionManager.GetHubContext<CertifyStatusHub>();
+                    return _context;
+                }
+            }
+
+            private static IHubContext _context = null;
+
+            public override Task OnConnected()
+            {
+                Debug.WriteLine("Client connect to status stream..");
+
+                return base.OnConnected();
+            }
+
+            public override Task OnDisconnected(bool stopCalled)
+            {
+                Debug.WriteLine("Client disconnected from status stream..");
+                return base.OnDisconnected(stopCalled);
+            }
+
+            public void SendRequestProgressState(Certify.Models.RequestProgressState state)
+            {
+                Debug.WriteLine("Sending progress state..");
+                Clients.All.RequestProgressStateUpdated(state);
+            }
+
+            public void Send(string name, string message)
+            {
+                Clients.All.SendMessage(name, message);
+            }
         }
     }
 }

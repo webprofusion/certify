@@ -1,4 +1,5 @@
 ﻿using Certify.Models;
+using Microsoft.AspNet.SignalR.Client;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,42 @@ namespace Certify.Client
 #else
          private string _baseUri = Certify.Locales.ConfigResources.LocalServiceBaseURI+"/api/";
 #endif
+
+        #region Status (SignalR)
+
+        public event Action<RequestProgressState> OnRequestProgressStateUpdated;
+
+        public event Action<ManagedSite> OnManagedSiteUpdated;
+
+        public event Action<string, string> OnMessageFromService;
+
+        public event Action OnConnectionReconnecting;
+
+        public event Action OnConnectionReconnected;
+
+        public event Action OnConnectionClosed;
+
+        private IHubProxy hubProxy;
+        private HubConnection connection;
+        private string url = Certify.Locales.ConfigResources.LocalServiceBaseURIDebug + "/api/" + "status";
+
+        public async Task ConnectStatusStreamAsync()
+        {
+            connection = new HubConnection(url);
+            hubProxy = connection.CreateHubProxy("CertifyStatusHub");
+
+            hubProxy.On<ManagedSite>("ManagedSiteUpdated", (u) => OnManagedSiteUpdated?.Invoke(u));
+            hubProxy.On<RequestProgressState>("SendRequestProgressState", (s) => OnRequestProgressStateUpdated?.Invoke(s));
+            hubProxy.On<string, string>("SendMessage", (a, b) => OnMessageFromService?.Invoke(a, b));
+
+            connection.Reconnecting += OnConnectionReconnecting;
+            connection.Reconnected += OnConnectionReconnected;
+            connection.Closed += OnConnectionClosed;
+
+            await connection.Start();
+        }
+
+        #endregion Status (SignalR)
 
         private async Task<string> FetchAsync(string endpoint)
         {

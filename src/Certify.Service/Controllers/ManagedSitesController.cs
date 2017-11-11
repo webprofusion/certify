@@ -93,6 +93,13 @@ namespace Certify.Service
             var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
 
             //begin monitoring progress
+
+            _certifyManager.OnRequestProgressStateUpdated += (RequestProgressState obj) =>
+            {
+                // notify client(s) of status updates
+                CertifyOwinHost.CertifyStatusHub.HubContext.Clients.All.SendRequestProgressState(obj);
+            };
+
             _certifyManager.BeginTrackingProgress(progressState);
 
             //begin request

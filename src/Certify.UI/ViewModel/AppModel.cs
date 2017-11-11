@@ -278,6 +278,16 @@ namespace Certify.UI.ViewModel
             var list = await CertifyClient.GetManagedSites(new Models.ManagedSiteFilter());
             foreach (var i in list) i.IsChanged = false;
             ManagedSites = new System.Collections.ObjectModel.ObservableCollection<Models.ManagedSite>(list);
+
+            // connect to status api stream & handgle events
+            await CertifyClient.ConnectStatusStreamAsync();
+            CertifyClient.OnMessageFromService += CertifyClient_SendMessage;
+            CertifyClient.OnRequestProgressStateUpdated += UpdateRequestTrackingProgress;
+        }
+
+        private void CertifyClient_SendMessage(string arg1, string arg2)
+        {
+            MessageBox.Show($"Received: {arg1} {arg2}");
         }
 
         public virtual void SaveSettings()
@@ -359,7 +369,7 @@ namespace Certify.UI.ViewModel
                         itemTrackers.Add(s.Id, new Progress<RequestProgressState>(progressState.ProgressReport));
 
                         //begin monitoring progress
-                        BeginTrackingProgress(progressState);
+                        UpdateRequestTrackingProgress(progressState);
                     }
                 }
             }
@@ -503,7 +513,7 @@ namespace Certify.UI.ViewModel
                 progressState.ManagedItem = managedSite;
 
                 //begin monitoring progress
-                BeginTrackingProgress(progressState);
+                UpdateRequestTrackingProgress(progressState);
 
                 var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
 
@@ -511,7 +521,7 @@ namespace Certify.UI.ViewModel
                 await CertifyClient.BeginCertificateRequest(managedSite.Id);
 
                 // begin polling for status updates
-                bool isCompleted = false;
+                /*bool isCompleted = false;
                 while (!isCompleted)
                 {
                     var status = await CertifyClient.CheckCertificateRequest(managedSite.Id);
@@ -533,7 +543,7 @@ namespace Certify.UI.ViewModel
                         // wait before polling status again
                         await Task.Delay(500);
                     }
-                }
+                }*/
 
                 /* var result = await certifyManager.PerformCertificateRequest(managedSite, progressIndicator);
 
@@ -583,16 +593,26 @@ namespace Certify.UI.ViewModel
             return await CertifyClient.RevokeManageSiteCertificate(managedSite.Id);
         }
 
-        private void BeginTrackingProgress(RequestProgressState state)
+        private void UpdateRequestTrackingProgress(RequestProgressState state)
         {
-            var existing = ProgressResults.FirstOrDefault(p => p.ManagedItem.Id == state.ManagedItem.Id);
-            if (existing != null)
+            App.Current.Dispatcher.Invoke((Action)delegate
             {
-                ProgressResults.Remove(existing);
-            }
-            ProgressResults.Add(state);
+                var existing = ProgressResults.FirstOrDefault(p => p.ManagedItem.Id == state.ManagedItem.Id);
 
-            RaisePropertyChanged(nameof(HasRequestsInProgress));
+                if (existing != null)
+                {
+                    //replace state of progress request
+                    var index = ProgressResults.IndexOf(existing);
+                    ProgressResults[index] = state;
+                }
+                else
+                {
+                    ProgressResults.Add(state);
+                }
+
+                RaisePropertyChanged(nameof(HasRequestsInProgress));
+                RaisePropertyChanged(nameof(ProgressResults));
+            });
         }
 
         #endregion methods
