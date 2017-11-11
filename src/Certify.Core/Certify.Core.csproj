@@ -211,6 +211,7 @@
     <Compile Include="Resources.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="Utils\SRDescription.cs" />
+    <Compile Include="Utils\X509ExtensionUtilities.cs" />
     <EmbeddedResource Include="CoreSR.es-ES.resx">
       <DependentUpon>CoreSR.resx</DependentUpon>
     </EmbeddedResource>
