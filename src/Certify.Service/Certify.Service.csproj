@@ -104,6 +104,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="APIHost.cs" />
+    <Compile Include="StatusHub.cs" />
     <Compile Include="Controllers\ContactController.cs" />
     <Compile Include="Controllers\ControllerBase.cs" />
     <Compile Include="Controllers\PreferencesController.cs" />

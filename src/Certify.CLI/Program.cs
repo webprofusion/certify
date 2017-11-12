@@ -189,16 +189,9 @@ namespace Certify.CLI
             System.Console.WriteLine("\nPerforming Auto Renewals..\n");
 
             //go through list of items configured for auto renew, perform renewal and report the result
-            var siteList = await _certifyClient.BeginAutoRenewal();
-
-            foreach (var s in siteList)
-            {
-                Console.ForegroundColor = ConsoleColor.DarkYellow;
-                System.Console.WriteLine(s.Name);
-            }
-
+            var results = await _certifyClient.BeginAutoRenewal();
             Console.ForegroundColor = ConsoleColor.White;
-            /*
+
             foreach (var r in results)
             {
                 if (r.ManagedItem != null)
@@ -231,7 +224,6 @@ namespace Certify.CLI
                 System.Console.WriteLine("Failed:" + results.Where(r => r.IsSuccess == false).Count());
                 Console.ForegroundColor = ConsoleColor.White;
             }
-            return results;*/
         }
 
         internal void ListManagedSites()

@@ -354,32 +354,6 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public async void RenewAll(bool autoRenewalsOnly)
-        {
-            //FIXME: currently user can run renew all again while renewals are still in progress
-
-            Dictionary<string, Progress<RequestProgressState>> itemTrackers = new Dictionary<string, Progress<RequestProgressState>>();
-            foreach (var s in ManagedSites)
-            {
-                if ((autoRenewalsOnly && s.IncludeInAutoRenew) || !autoRenewalsOnly)
-                {
-                    var progressState = new RequestProgressState { ManagedItem = s };
-                    if (!itemTrackers.ContainsKey(s.Id))
-                    {
-                        itemTrackers.Add(s.Id, new Progress<RequestProgressState>(progressState.ProgressReport));
-
-                        //begin monitoring progress
-                        UpdateRequestTrackingProgress(progressState);
-                    }
-                }
-            }
-
-            await CertifyClient.BeginAutoRenewal();
-
-            // now continue to poll status of current request. should this just be a query for all
-            // current requests?
-        }
-
         public async Task<bool> AddOrUpdateManagedSite(ManagedSite item)
         {
             var updatedManagedSite = await CertifyClient.UpdateManagedSite(item);
@@ -509,8 +483,7 @@ namespace Certify.UI.ViewModel
                 MainUITabIndex = (int)MainWindow.PrimaryUITabs.CurrentProgress;
 
                 //add request to observable list of progress state
-                RequestProgressState progressState = new RequestProgressState();
-                progressState.ManagedItem = managedSite;
+                RequestProgressState progressState = new RequestProgressState(RequestState.Running, "Starting..", managedSite);
 
                 //begin monitoring progress
                 UpdateRequestTrackingProgress(progressState);
@@ -518,49 +491,34 @@ namespace Certify.UI.ViewModel
                 var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
 
                 // start request
-                await CertifyClient.BeginCertificateRequest(managedSite.Id);
-
-                // begin polling for status updates
-                /*bool isCompleted = false;
-                while (!isCompleted)
-                {
-                    var status = await CertifyClient.CheckCertificateRequest(managedSite.Id);
-
-                    if (progressIndicator != null)
-                    {
-                        status.ManagedItem = managedSite;
-                        var progress = (IProgress<RequestProgressState>)progressIndicator;
-                        progress.Report(status);
-                    }
-                    if (status.CurrentState == RequestState.Error || status.CurrentState == RequestState.Success)
-                    {
-                        isCompleted = true;
-                        // reload current status of managed site
-                        await UpdatedCachedManagedSite(managedSite.Id);
-                    }
-                    else
-                    {
-                        // wait before polling status again
-                        await Task.Delay(500);
-                    }
-                }*/
-
-                /* var result = await certifyManager.PerformCertificateRequest(managedSite, progressIndicator);
-
-                 if (progressIndicator != null)
-                 {
-                     var progress = (IProgress<RequestProgressState>)progressIndicator;
-
-                     if (result.IsSuccess)
-                     {
-                         progress.Report(new RequestProgressState { CurrentState = RequestState.Success, Message = result.Message });
-                     }
-                     else
-                     {
-                         progress.Report(new RequestProgressState { CurrentState = RequestState.Error, Message = result.Message });
-                     }
-                 }*/
+                var result = await CertifyClient.BeginCertificateRequest(managedSite.Id);
             }
+        }
+
+        public async void RenewAll(bool autoRenewalsOnly)
+        {
+            //FIXME: currently user can run renew all again while renewals are still in progress
+
+            Dictionary<string, Progress<RequestProgressState>> itemTrackers = new Dictionary<string, Progress<RequestProgressState>>();
+            foreach (var s in ManagedSites)
+            {
+                if ((autoRenewalsOnly && s.IncludeInAutoRenew) || !autoRenewalsOnly)
+                {
+                    var progressState = new RequestProgressState(RequestState.Running, "Starting..", s);
+                    if (!itemTrackers.ContainsKey(s.Id))
+                    {
+                        itemTrackers.Add(s.Id, new Progress<RequestProgressState>(progressState.ProgressReport));
+
+                        //begin monitoring progress
+                        UpdateRequestTrackingProgress(progressState);
+                    }
+                }
+            }
+
+            await CertifyClient.BeginAutoRenewal();
+
+            // now continue to poll status of current request. should this just be a query for all
+            // current requests?
         }
 
         /// <summary>

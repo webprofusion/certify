@@ -18,7 +18,7 @@ namespace Certify.Service
         [HttpGet, Route("test")]
         public string TestStatusStream()
         {
-            CertifyOwinHost.CertifyStatusHub.HubContext.Clients.All.SendMessage("hello", "from status");
+            StatusHub.HubContext.Clients.All.SendMessage("hello", "from status");
             return "OK";
         }
 

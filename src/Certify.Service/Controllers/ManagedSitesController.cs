@@ -65,17 +65,17 @@ namespace Certify.Service
         /// </summary>
         /// <returns></returns>
         [HttpPost, Route("autorenew")]
-        public async Task<List<ManagedSite>> BeginAutoRenewal()
+        public async Task<List<CertificateRequestResult>> BeginAutoRenewal()
         {
             DebugLog();
 
-            // TODO: progress tracking events, background queue processing
-            var list = await _certifyManager.GetManagedSites(new ManagedSiteFilter { IncludeOnlyNextAutoRenew = true });
-
+            /* _certifyManager.OnRequestProgressStateUpdated += (RequestProgressState obj) =>
+             {
+                 // notify client(s) of status updates
+                 StatusHub.HubContext.Clients.All.SendRequestProgressState(obj);
+             };*/
             //we do not await here, instead the task currently continues after the request
-            _certifyManager.PerformRenewalAllManagedSites(true, null);
-
-            return list;
+            return await _certifyManager.PerformRenewalAllManagedSites(true, null);
         }
 
         [HttpGet, Route("renewcert/{managedSiteId}")]
@@ -87,23 +87,21 @@ namespace Certify.Service
 
             // TODO: progress tracking events, background queue
 
-            RequestProgressState progressState = new RequestProgressState();
-            progressState.ManagedItem = managedSite;
+            RequestProgressState progressState = new RequestProgressState(RequestState.Running, "Starting..", managedSite);
 
             var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
 
             //begin monitoring progress
-
-            _certifyManager.OnRequestProgressStateUpdated += (RequestProgressState obj) =>
-            {
-                // notify client(s) of status updates
-                CertifyOwinHost.CertifyStatusHub.HubContext.Clients.All.SendRequestProgressState(obj);
-            };
-
             _certifyManager.BeginTrackingProgress(progressState);
 
+            /* _certifyManager.OnRequestProgressStateUpdated += (RequestProgressState obj) =>
+             {
+                 // notify client(s) of status updates
+                 StatusHub.HubContext.Clients.All.SendRequestProgressState(obj);
+             };*/
+
             //begin request
-            _certifyManager.PerformCertificateRequest(managedSite, progressIndicator);
+            await _certifyManager.PerformCertificateRequest(managedSite, progressIndicator);
             return true;
         }
 

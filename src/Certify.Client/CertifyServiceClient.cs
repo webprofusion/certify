@@ -35,12 +35,12 @@ namespace Certify.Client
 
         private IHubProxy hubProxy;
         private HubConnection connection;
-        private string url = Certify.Locales.ConfigResources.LocalServiceBaseURIDebug + "/api/" + "status";
+        private string url = Certify.Locales.ConfigResources.LocalServiceBaseURIDebug + "/api/status";
 
         public async Task ConnectStatusStreamAsync()
         {
             connection = new HubConnection(url);
-            hubProxy = connection.CreateHubProxy("CertifyStatusHub");
+            hubProxy = connection.CreateHubProxy("StatusHub");
 
             hubProxy.On<ManagedSite>("ManagedSiteUpdated", (u) => OnManagedSiteUpdated?.Invoke(u));
             hubProxy.On<RequestProgressState>("SendRequestProgressState", (s) => OnRequestProgressStateUpdated?.Invoke(s));
@@ -182,15 +182,15 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<APIResult>(response);
         }
 
-        public async Task<List<ManagedSite>> BeginAutoRenewal()
+        public async Task<List<CertificateRequestResult>> BeginAutoRenewal()
         {
             var response = await PostAsync("managedsites/autorenew", null);
             var serializer = new JsonSerializer();
             using (StreamReader sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
             using (JsonTextReader reader = new JsonTextReader(sr))
             {
-                var managedSiteList = serializer.Deserialize<List<ManagedSite>>(reader);
-                return managedSiteList;
+                var results = serializer.Deserialize<List<CertificateRequestResult>>(reader);
+                return results;
             }
         }
 

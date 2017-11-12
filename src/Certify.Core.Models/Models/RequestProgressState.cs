@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Certify.Models
 {
@@ -17,7 +14,21 @@ namespace Certify.Models
     public class RequestProgressState : BindableBase
     {
         public ManagedItem ManagedItem { get; set; }
-        public bool IsRunning { get; set; }
+
+        public RequestProgressState(RequestState currentState, string msg, ManagedItem item)
+        {
+            CurrentState = currentState;
+            Message = msg;
+            ManagedItem = item;
+        }
+
+        public bool IsRunning
+        {
+            get
+            {
+                return CurrentState == RequestState.Running ? true : false;
+            }
+        }
 
         public RequestState CurrentState { get; set; }
 
@@ -39,15 +50,6 @@ namespace Certify.Models
             this.CurrentState = state.CurrentState;
             this.Message = state.Message;
             this.Result = state.Result;
-
-            if (CurrentState != RequestState.Running)
-            {
-                if (IsRunning != false) IsRunning = false;
-            }
-            else
-            {
-                if (IsRunning != true) IsRunning = true;
-            }
 
 #if DEBUG
             System.Diagnostics.Debug.WriteLine(ManagedItem.Name + ": " + CurrentState.ToString() + (Message != null ? ", " + Message : ""));

@@ -1,16 +1,9 @@
 ﻿using Microsoft.Owin.Hosting;
-using Owin;
-using Swashbuckle.Application;
 using System;
 using System.Linq;
 using System.Net.Http;
-using System.Web.Http;
 using Topshelf;
 using LightInject.WebApi;
-using LightInject;
-using Microsoft.AspNet.SignalR;
-using System.Threading.Tasks;
-using System.Diagnostics;
 
 namespace Certify.Service
 {
@@ -53,7 +46,7 @@ namespace Certify.Service
         public void Start()
         {
 #if DEBUG
-            _webApp = WebApp.Start<CertifyOwinHost>(Certify.Locales.ConfigResources.LocalServiceBaseURIDebug);
+            _webApp = WebApp.Start<APIHost>(Certify.Locales.ConfigResources.LocalServiceBaseURIDebug);
 #else
             _webApp = WebApp.Start<StartOwin>(Certify.Locales.ConfigResources.LocalServiceBaseURI);
 #endif
@@ -62,78 +55,6 @@ namespace Certify.Service
         public void Stop()
         {
             _webApp.Dispose();
-        }
-    }
-
-    public class CertifyOwinHost
-    {
-        public void Configuration(IAppBuilder appBuilder)
-        {
-            var config = new HttpConfiguration();
-
-            // inject single CertifyManager for service to use
-            var container = new ServiceContainer();
-            container.RegisterApiControllers();
-            container.EnableWebApi(config);
-
-            container.Register<Management.ICertifyManager, Management.CertifyManager>(new PerContainerLifetime());
-
-            config.MapHttpAttributeRoutes();
-
-            config.Routes.MapHttpRoute(
-                name: "DefaultApi",
-                routeTemplate: "api/{controller}/{id}",
-                defaults: new { id = RouteParameter.Optional }
-                );
-#if DEBUG
-            config
-              .EnableSwagger(c => c.SingleApiVersion("v1", "Service API for local install of Certify the web"))
-              .EnableSwaggerUi();
-#endif
-            appBuilder.UseWebApi(config);
-
-            appBuilder.MapSignalR("/api/status", new HubConfiguration());
-        }
-
-        public class CertifyStatusHub : Hub
-        {
-            /// <summary>
-            /// static instance reference for other parts of service to call in to 
-            /// </summary>
-            public static IHubContext HubContext
-            {
-                get
-                {
-                    if (_context == null) _context = GlobalHost.ConnectionManager.GetHubContext<CertifyStatusHub>();
-                    return _context;
-                }
-            }
-
-            private static IHubContext _context = null;
-
-            public override Task OnConnected()
-            {
-                Debug.WriteLine("Client connect to status stream..");
-
-                return base.OnConnected();
-            }
-
-            public override Task OnDisconnected(bool stopCalled)
-            {
-                Debug.WriteLine("Client disconnected from status stream..");
-                return base.OnDisconnected(stopCalled);
-            }
-
-            public void SendRequestProgressState(Certify.Models.RequestProgressState state)
-            {
-                Debug.WriteLine("Sending progress state..");
-                Clients.All.RequestProgressStateUpdated(state);
-            }
-
-            public void Send(string name, string message)
-            {
-                Clients.All.SendMessage(name, message);
-            }
         }
     }
 }

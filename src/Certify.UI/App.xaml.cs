@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -56,9 +57,10 @@ namespace Certify.UI
             {
                 await MainViewModel.LoadSettingsAsync();
             }
-            catch (Exception)
+            catch (Exception exp)
             {
                 MessageBox.Show("Certify SSL Manager service is not started. Please restart the service.");
+                Debug.WriteLine(exp.ToString());
                 App.Current.Shutdown();
                 return;
             }

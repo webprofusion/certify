@@ -99,7 +99,7 @@ namespace Certify.Client
 
         Task<APIResult> RevokeManageSiteCertificate(string managedSiteId);
 
-        Task<List<ManagedSite>> BeginAutoRenewal();
+        Task<List<CertificateRequestResult>> BeginAutoRenewal();
 
         Task<bool> BeginCertificateRequest(string managedSiteId);
 
