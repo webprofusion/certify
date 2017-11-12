@@ -34,7 +34,7 @@ namespace Certify
         public List<ActionLogItem> ActionLogs { get; }
         private NetworkUtils NetUtil;
 
-        internal const string VAULT_LOCK = "CertifyVault";
+        internal static object VAULT_LOCK = new Guid("d776b116-5695-4c3a-94c5-e67b7714fb28");
 
         private readonly IdnMapping idnMapping = new IdnMapping();
 
