@@ -53,6 +53,26 @@ namespace Certify.Models
         public DateTime? DateExpiry { get; set; }
         public DateTime? DateRenewed { get; set; }
 
+        /// <summary>
+        /// Date we last attempted renewal 
+        /// </summary>
+        public DateTime? DateLastRenewalAttempt { get; set; }
+
+        /// <summary>
+        /// Status of most recent renewal attempt 
+        /// </summary>
+        public RequestState? LastRenewalStatus { get; set; }
+
+        /// <summary>
+        /// Count of renewal failures since last success 
+        /// </summary>
+        public int RenewalFailureCount { get; set; }
+
+        /// <summary>
+        /// Message from last failed renewal attempt 
+        /// </summary>
+        public string RenewalFailureMessage { get; set; }
+
         public string CertificateId { get; set; }
         public string CertificatePath { get; set; }
         public bool CertificateRevoked { get; set; }

@@ -587,7 +587,7 @@ namespace Certify.Management
                                 managedSite.CertificateRevoked = false;
 
                                 //ensure certificate contains all the requested domains
-                                var subjectNames = certInfo.GetNameInfo(System.Security.Cryptography.X509Certificates.X509NameType.UpnName, false);
+                                //var subjectNames = certInfo.GetNameInfo(System.Security.Cryptography.X509Certificates.X509NameType.UpnName, false);
 
                                 //FIXME: LogMessage(managedSite.Id, "New certificate contains following domains: " + subjectNames, LogItemType.GeneralInfo);
                             }
@@ -606,7 +606,7 @@ namespace Certify.Management
                                     //all done
                                     LogMessage(managedSite.Id, CoreSR.CertifyManager_CompleteRequestAndUpdateBinding, LogItemType.CertificateRequestSuccessful);
 
-                                    await _siteManager.UpdatedManagedSite(managedSite);
+                                    await UpdateManagedSiteStatus(managedSite, RequestState.Success);
 
                                     result.IsSuccess = true;
                                     result.Message = string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
@@ -614,7 +614,10 @@ namespace Certify.Management
                                 }
                                 else
                                 {
+                                    // something broke
                                     result.Message = string.Format(CoreSR.CertifyManager_CertificateInstallFailed, pfxPath);
+                                    await UpdateManagedSiteStatus(managedSite, RequestState.Error, result.Message);
+
                                     LogMessage(managedSite.Id, result.Message, LogItemType.GeneralError);
                                 }
                             }
@@ -622,25 +625,30 @@ namespace Certify.Management
                             {
                                 //user has opted for manual binding of certificate
 
-                                await _siteManager.UpdatedManagedSite(managedSite);
-
                                 result.IsSuccess = true;
                                 result.Message = string.Format(CoreSR.CertifyManager_CertificateCreatedForBinding, pfxPath);
                                 LogMessage(managedSite.Id, result.Message, LogItemType.CertificateRequestSuccessful);
-
+                                await UpdateManagedSiteStatus(managedSite, RequestState.Success, result.Message);
                                 ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedSite));
                             }
                         }
                         else
                         {
+                            // certificate request failed
+
                             result.Message = string.Format(CoreSR.CertifyManager_LetsEncryptServiceTimeout, certRequestResult.ErrorMessage ?? "");
+                            await UpdateManagedSiteStatus(managedSite, RequestState.Error, result.Message);
                             LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
                             ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedSite));
                         }
                     }
                     else
                     {
+                        //failed to validate all identifiers
                         result.Message = string.Format(CoreSR.CertifyManager_ValidationForChallengeNotSuccess, (failureSummaryMessage != null ? failureSummaryMessage : ""));
+
+                        await UpdateManagedSiteStatus(managedSite, RequestState.Error, result.Message);
+
                         LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
                         ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedSite));
                     }
@@ -650,10 +658,15 @@ namespace Certify.Management
                 }
                 catch (Exception exp)
                 {
+                    // overall exception thrown during process
+
                     result.IsSuccess = false;
                     result.Message = string.Format(Certify.Locales.CoreSR.CertifyManager_RequestFailed, managedSite.Name, exp.Message, exp);
                     LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
                     ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedSite));
+
+                    await UpdateManagedSiteStatus(managedSite, RequestState.Error, result.Message);
+
                     //LogMessage(managedSite.Id, String.Join("\r\n", _vaultProvider.GetActionSummary())); FIXME: needs to be filtered in managed site
                     System.Diagnostics.Debug.WriteLine(exp.ToString());
                 }
@@ -692,8 +705,28 @@ namespace Certify.Management
                         }
                     }
                 }
+
                 return result;
             });
+        }
+
+        private async Task UpdateManagedSiteStatus(ManagedSite managedSite, RequestState status, string msg = null)
+        {
+            managedSite.DateLastRenewalAttempt = DateTime.UtcNow;
+
+            if (status == RequestState.Success)
+            {
+                managedSite.RenewalFailureCount = 0;
+                managedSite.LastRenewalStatus = RequestState.Success;
+            }
+            else
+            {
+                managedSite.RenewalFailureMessage = msg;
+                managedSite.RenewalFailureCount++;
+                managedSite.LastRenewalStatus = RequestState.Error;
+            }
+
+            await _siteManager.UpdatedManagedSite(managedSite);
         }
 
         public List<DomainOption> GetDomainOptionsFromSite(string siteId)
