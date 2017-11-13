@@ -114,10 +114,13 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<List<SiteBindingItem>>(result);
         }
 
-        public async Task<Version> GetServerVersion(StandardServerTypes serverType)
+        public async Task<System.Version> GetServerVersion(StandardServerTypes serverType)
         {
             var result = await FetchAsync($"server/version/{serverType}");
-            return JsonConvert.DeserializeObject<Version>(result);
+
+            var versionString = JsonConvert.DeserializeObject<string>(result, new Newtonsoft.Json.Converters.VersionConverter());
+            var version = Version.Parse(versionString);
+            return version;
         }
 
         public async Task<List<DomainOption>> GetServerSiteDomains(StandardServerTypes serverType, string serverSiteId)

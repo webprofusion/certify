@@ -125,11 +125,6 @@ namespace Certify.Management
             return await _siteManager.UpdatedManagedSite(site);
         }
 
-        // expose IIS metadata
-        public bool IsIISAvailable => _iisManager?.IsIISAvailable ?? false;
-
-        public Version IISVersion => _iisManager.GetIisVersion();
-
         public async Task<List<ManagedSite>> GetManagedSites(ManagedSiteFilter filter = null)
         {
             return await this._siteManager.GetManagedSites(filter, true);
@@ -900,7 +895,7 @@ namespace Certify.Management
 
             this._isRenewAllInProgress = true;
             //currently the vault won't let us run parallel requests due to file locks
-            bool performRequestsInParallel = true;
+            bool performRequestsInParallel = false;
 
             bool testModeOnly = false;
 

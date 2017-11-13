@@ -5,10 +5,10 @@ namespace Certify.Models
 {
     public enum RequestState
     {
-        NotRunning,
-        Running,
-        Error,
-        Success
+        NotRunning=0,
+        Running=1,
+        Error=2,
+        Success=3
     }
 
     public class RequestProgressState : BindableBase

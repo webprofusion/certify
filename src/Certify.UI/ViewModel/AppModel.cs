@@ -261,9 +261,25 @@ namespace Certify.UI.ViewModel
         }
 
         // FIXME: async blocking
-        public virtual bool IsIISAvailable => Task.Run(() => CertifyClient.IsServerAvailable(StandardServerTypes.IIS)).Result;
+        public virtual bool IsIISAvailable { get; set; }
 
-        public virtual Version IISVersion => Task.Run(() => CertifyClient.GetServerVersion(StandardServerTypes.IIS)).Result;
+        public virtual Version IISVersion { get; set; }
+
+        /// <summary>
+        /// check if Server type (e.g. IIS) is available, if so also populates IISVersion 
+        /// </summary>
+        /// <param name="serverType"></param>
+        /// <returns></returns>
+        public async Task<bool> CheckServerAvailability(StandardServerTypes serverType)
+        {
+            IsIISAvailable = await CertifyClient.IsServerAvailable(StandardServerTypes.IIS);
+
+            if (IsIISAvailable)
+            {
+                IISVersion = await CertifyClient.GetServerVersion(StandardServerTypes.IIS);
+            }
+            return IsIISAvailable;
+        }
 
         public void PreviewImport(bool sanMergeMode)
         {
@@ -599,8 +615,8 @@ namespace Certify.UI.ViewModel
 
                 if (existing != null)
                 {
-                //replace state of progress request
-                var index = ProgressResults.IndexOf(existing);
+                    //replace state of progress request
+                    var index = ProgressResults.IndexOf(existing);
                     ProgressResults[index] = state;
                 }
                 else

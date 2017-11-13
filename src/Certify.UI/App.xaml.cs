@@ -1,4 +1,5 @@
-﻿using MahApps.Metro;
+﻿using Certify.Locales;
+using MahApps.Metro;
 using Microsoft.ApplicationInsights;
 using System;
 using System.Collections.Generic;
@@ -86,6 +87,43 @@ namespace Certify.UI
                 {
                     MainViewModel.IsRegisteredVersion = true;
                 }
+            }
+
+            if (!MainViewModel.IsServiceAvailable) return;
+
+            //check for any startup actions required such as vault import
+
+            /* if (!this.MainViewModel.ManagedSites.Any())
+             {
+                 //if we have a vault, preview import.
+                 this.MainViewModel.PreviewImport(sanMergeMode: true);
+             }*/
+
+            // check if IIS is available, if so also populates IISVersion
+            await MainViewModel.CheckServerAvailability(Models.StandardServerTypes.IIS);
+
+            if (MainViewModel.IsIISAvailable)
+            {
+                if (MainViewModel.ImportedManagedSites.Any())
+                {
+                    //show import ui
+                    var d = new Windows.ImportManagedSites();
+                    d.ShowDialog();
+                }
+            }
+            else
+            {
+                //warn if IIS not detected
+                MessageBox.Show(SR.MainWindow_IISNotAvailable);
+            }
+
+            //FIXME:  checks cause async blocks
+            if (!MainViewModel.HasRegisteredContacts)
+            {
+                //start by registering
+                MessageBox.Show(SR.MainWindow_GetStartGuideWithNewCert);
+                var d = new Windows.EditContactDialog { };
+                d.ShowDialog();
             }
         }
 

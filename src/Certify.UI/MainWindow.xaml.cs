@@ -97,31 +97,6 @@ namespace Certify.UI
 
         private void MetroWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            if (!MainViewModel.IsServiceAvailable) return;
-
-            //check for any startup actions required such as vault import
-
-            /* if (!this.MainViewModel.ManagedSites.Any())
-             {
-                 //if we have a vault, preview import.
-                 this.MainViewModel.PreviewImport(sanMergeMode: true);
-             }*/
-
-            if (MainViewModel.IsIISAvailable)
-            {
-                if (MainViewModel.ImportedManagedSites.Any())
-                {
-                    //show import ui
-                    var d = new Windows.ImportManagedSites { Owner = this };
-                    d.ShowDialog();
-                }
-            }
-            else
-            {
-                //warn if IIS not detected
-                MessageBox.Show(SR.MainWindow_IISNotAvailable);
-            }
-
             if (!MainViewModel.IsRegisteredVersion)
             {
                 this.Title += SR.MainWindow_TitleTrialPostfix;
@@ -130,17 +105,6 @@ namespace Certify.UI
 
         private void MetroWindow_ContentRendered(object sender, EventArgs e)
         {
-            if (!MainViewModel.IsServiceAvailable) return;
-
-            //FIXME:  checks cause async blocks
-            if (!MainViewModel.HasRegisteredContacts)
-            {
-                //start by registering
-                MessageBox.Show(SR.MainWindow_GetStartGuideWithNewCert);
-                var d = new Windows.EditContactDialog { Owner = this };
-                d.ShowDialog();
-            }
-
             //check for updates and report result to view model
             /*if (MainViewModel.Preferences.CheckForUpdatesAtStartup)
             {

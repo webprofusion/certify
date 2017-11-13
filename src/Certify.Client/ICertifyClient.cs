@@ -73,7 +73,7 @@ namespace Certify.Client
 
         Task<List<SiteBindingItem>> GetServerSiteList(StandardServerTypes serverType);
 
-        Task<System.Version> GetServerVersion(StandardServerTypes serverType);
+        Task<Version> GetServerVersion(StandardServerTypes serverType);
 
         Task<List<DomainOption>> GetServerSiteDomains(StandardServerTypes serverType, string serverSiteId);
 

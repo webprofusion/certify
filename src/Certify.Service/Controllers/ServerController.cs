@@ -50,11 +50,12 @@ namespace Certify.Service
         }
 
         [HttpGet, Route("version/{serverType}")]
-        public async Task<System.Version> GetServerVersion(StandardServerTypes serverType)
+        public async Task<string> GetServerVersion(StandardServerTypes serverType)
         {
             if (serverType == StandardServerTypes.IIS)
             {
-                return await _certifyManager.GetServerTypeVersion(serverType);
+                var version = await _certifyManager.GetServerTypeVersion(serverType);
+                return version.ToString();
             }
             else
             {
