@@ -230,7 +230,7 @@ namespace Certify.Management
             {
                 // FIXME: async blocking
 
-                return _acmeClientProvider.AddNewRegistrationAndAcceptTOS(reg.EmailAddress);
+                return await Task.FromResult(_acmeClientProvider.AddNewRegistrationAndAcceptTOS(reg.EmailAddress));
             }
             else
             {

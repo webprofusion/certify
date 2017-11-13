@@ -95,17 +95,17 @@ namespace Certify.UI
             d.ShowDialog();
         }
 
-        private async void MetroWindow_Loaded(object sender, RoutedEventArgs e)
+        private void MetroWindow_Loaded(object sender, RoutedEventArgs e)
         {
             if (!MainViewModel.IsServiceAvailable) return;
 
             //check for any startup actions required such as vault import
 
-            if (!this.MainViewModel.ManagedSites.Any())
-            {
-                //if we have a vault, preview import.
-                this.MainViewModel.PreviewImport(sanMergeMode: true);
-            }
+            /* if (!this.MainViewModel.ManagedSites.Any())
+             {
+                 //if we have a vault, preview import.
+                 this.MainViewModel.PreviewImport(sanMergeMode: true);
+             }*/
 
             if (MainViewModel.IsIISAvailable)
             {
@@ -118,6 +118,7 @@ namespace Certify.UI
             }
             else
             {
+                //warn if IIS not detected
                 MessageBox.Show(SR.MainWindow_IISNotAvailable);
             }
 
@@ -125,11 +126,9 @@ namespace Certify.UI
             {
                 this.Title += SR.MainWindow_TitleTrialPostfix;
             }
-
-            //warn if IIS not detected
         }
 
-        private async void MetroWindow_ContentRendered(object sender, EventArgs e)
+        private void MetroWindow_ContentRendered(object sender, EventArgs e)
         {
             if (!MainViewModel.IsServiceAvailable) return;
 
