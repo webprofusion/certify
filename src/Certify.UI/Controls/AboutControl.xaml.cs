@@ -49,7 +49,8 @@ namespace Certify.UI.Controls
                 this.lblRegistrationDetails.Text = "";
             }
 
-            if (!string.IsNullOrEmpty(SR.LanguageAuthor))
+            // add details of current languages translator team
+            if (!string.IsNullOrEmpty(SR.LanguageAuthor) && !this.creditLibs.Text.Contains(SR.About_LanguageTranslator))
             {
                 this.creditLibs.Text += Environment.NewLine + SR.About_LanguageTranslator + SR.LanguageAuthor;
             }
