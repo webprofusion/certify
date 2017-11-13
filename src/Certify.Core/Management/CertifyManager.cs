@@ -67,6 +67,8 @@ namespace Certify.Management
 
         RequestProgressState GetRequestProgressState(string managedSiteId);
 
+        Task<bool> PerformPeriodicTasks();
+
         event Action<RequestProgressState> OnRequestProgressStateUpdated;
     }
 
@@ -80,6 +82,8 @@ namespace Certify.Management
         private ObservableCollection<RequestProgressState> _progressResults { get; set; }
 
         public event Action<RequestProgressState> OnRequestProgressStateUpdated;
+
+        private bool _isRenewAllInProgress { get; set; }
 
         public CertifyManager()
         {
@@ -855,6 +859,13 @@ namespace Certify.Management
 
         public async Task<List<CertificateRequestResult>> PerformRenewalAllManagedSites(bool autoRenewalOnly = true, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null)
         {
+            if (_isRenewAllInProgress)
+            {
+                Debug.WriteLine("Renew all is already is progress..");
+                return await Task.FromResult(new List<CertificateRequestResult>());
+            }
+
+            this._isRenewAllInProgress = true;
             //currently the vault won't let us run parallel requests due to file locks
             bool performRequestsInParallel = true;
 
@@ -950,6 +961,7 @@ namespace Certify.Management
             if (!renewalTasks.Any())
             {
                 //nothing to do
+                _isRenewAllInProgress = false;
                 return new List<CertificateRequestResult>();
             }
 
@@ -958,6 +970,7 @@ namespace Certify.Management
                 var results = await Task.WhenAll(renewalTasks);
 
                 //siteManager.StoreSettings();
+                _isRenewAllInProgress = false;
                 return results.ToList();
             }
             else
@@ -968,6 +981,7 @@ namespace Certify.Management
                     results.Add(await t);
                 }
 
+                _isRenewAllInProgress = false;
                 return results;
             }
         }
@@ -1061,6 +1075,17 @@ namespace Certify.Management
             {
                 return progress;
             }
+        }
+
+        /// <summary>
+        /// When called, look for periodic tasks we can perform such as renewal 
+        /// </summary>
+        /// <returns></returns>
+        public async Task<bool> PerformPeriodicTasks()
+        {
+            Debug.WriteLine("Checking for periodic tasks..");
+            await this.PerformRenewalAllManagedSites(true, null);
+            return await Task.FromResult(true);
         }
     }
 }
