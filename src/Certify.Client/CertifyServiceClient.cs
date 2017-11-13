@@ -16,7 +16,7 @@ namespace Certify.Client
 #if DEBUG
         private string _baseUri = Certify.Locales.ConfigResources.LocalServiceBaseURIDebug + "/api/";
 #else
-         private string _baseUri = Certify.Locales.ConfigResources.LocalServiceBaseURI+"/api/";
+        private string _baseUri = Certify.Locales.ConfigResources.LocalServiceBaseURI + "/api/";
 #endif
 
         #region Status (SignalR)
@@ -35,7 +35,12 @@ namespace Certify.Client
 
         private IHubProxy hubProxy;
         private HubConnection connection;
+
+#if DEBUG
         private string url = Certify.Locales.ConfigResources.LocalServiceBaseURIDebug + "/api/status";
+#else
+        private string url = Certify.Locales.ConfigResources.LocalServiceBaseURI + "/api/status";
+#endif
 
         public async Task ConnectStatusStreamAsync()
         {

@@ -228,7 +228,7 @@ namespace Certify.Management
             // now attempt to register the new contact
             if (reg.AgreedToTermsAndConditions)
             {
-                // FIXME: async blocking
+                // FIXME: not fully async
 
                 return await Task.FromResult(_acmeClientProvider.AddNewRegistrationAndAcceptTOS(reg.EmailAddress));
             }

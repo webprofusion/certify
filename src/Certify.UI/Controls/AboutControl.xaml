@@ -5,7 +5,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:Certify.UI.Controls"
              xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-             mc:Ignorable="d" Height="359.514" Width="889.51" MinWidth="650">
+             xmlns:fa="http://schemas.fontawesome.io/icons/"
+             mc:Ignorable="d" Height="359.514" Width="889.51" MinWidth="650" Loaded="UserControl_Loaded">
     <Grid Margin="0,0,11.6,10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition></ColumnDefinition>
@@ -23,5 +24,6 @@
         <Button x:Name="ValidateKey" Content="{x:Static res:SR.AboutControl_EnterKey}" HorizontalAlignment="Left" Margin="0.4,137,0,0" VerticalAlignment="Top" Width="161" Height="27" Grid.Column="1" Click="Button_ApplyRegistrationKey" />
         <Button x:Name="Help" Content="{x:Static res:SR.AboutControl_Support}" HorizontalAlignment="Left" Margin="0.4,42,0,0" VerticalAlignment="Top" Width="161" Height="27" Grid.Column="1" Click="Help_Click" />
         <Button x:Name="Feedback" Content="{x:Static res:SR.AboutControl_SendFeedback}" HorizontalAlignment="Left" Margin="0,195,0,0" VerticalAlignment="Top" Width="161" Height="27" Grid.Column="1" Click="Feedback_Click" />
+        <fa:ImageAwesome Icon="Chain" ToolTip="Service Status" x:Name="ServiceConnected" VerticalAlignment="Bottom" HorizontalAlignment="Right" Foreground="{DynamicResource AccentColorBrush3}" Width="16" Height="23" Grid.Column="1" RenderTransformOrigin="0.453,2.187" Margin="0,0,29.4,10.2" />
     </Grid>
 </UserControl>

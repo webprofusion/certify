@@ -57,7 +57,7 @@ namespace Certify.UI.ViewModel
             System.Windows.MessageBox.Show(exp.Message);
         }
 
-        public Preferences Preferences { get; set; }
+        public Preferences Preferences { get; set; } = new Preferences();
 
         #region properties
 
@@ -280,20 +280,15 @@ namespace Certify.UI.ViewModel
             CertifyClient.OnRequestProgressStateUpdated += UpdateRequestTrackingProgress;
 
             //check service connection
-            try
-            {
-                await CheckServiceAvailable();
-            }
-            catch (Exception)
+            bool serviceAvailable = await CheckServiceAvailable();
+
+            if (!serviceAvailable)
             {
                 Debug.WriteLine("Service not yet available. Waiting a few seconds..");
                 // the service could still be starting up
                 await Task.Delay(5000);
-                try
-                {
-                    await CheckServiceAvailable();
-                }
-                catch (Exception)
+                serviceAvailable = await CheckServiceAvailable();
+                if (!serviceAvailable)
                 {
                     // give up
                     IsServiceAvailable = false;
@@ -604,8 +599,8 @@ namespace Certify.UI.ViewModel
 
                 if (existing != null)
                 {
-                    //replace state of progress request
-                    var index = ProgressResults.IndexOf(existing);
+                //replace state of progress request
+                var index = ProgressResults.IndexOf(existing);
                     ProgressResults[index] = state;
                 }
                 else

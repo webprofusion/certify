@@ -54,15 +54,11 @@ namespace Certify.UI
 
             Mouse.OverrideCursor = Cursors.AppStarting;
 
-            try
-            {
-                await MainViewModel.InitServiceConnections();
+            await MainViewModel.InitServiceConnections();
 
-                if (MainViewModel.IsServiceAvailable) await MainViewModel.LoadSettingsAsync();
-            }
-            catch (Exception exp)
+            if (MainViewModel.IsServiceAvailable)
             {
-                Debug.WriteLine(exp.ToString());
+                await MainViewModel.LoadSettingsAsync();
             }
 
             Mouse.OverrideCursor = Cursors.Arrow;

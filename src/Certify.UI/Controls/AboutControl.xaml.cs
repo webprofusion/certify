@@ -24,12 +24,20 @@ namespace Certify.UI.Controls
         public AboutControl()
         {
             InitializeComponent();
-
-            PopulateAppInfo();
         }
 
         private void PopulateAppInfo()
         {
+            if (MainViewModel.IsServiceAvailable)
+            {
+                this.ServiceConnected.Foreground = System.Windows.Media.Brushes.DarkGreen;
+                this.ServiceConnected.Icon = FontAwesome.WPF.FontAwesomeIcon.Chain;
+            }
+            else
+            {
+                this.ServiceConnected.Foreground = System.Windows.Media.Brushes.Red;
+                this.ServiceConnected.Icon = FontAwesome.WPF.FontAwesomeIcon.ChainBroken;
+            }
             this.lblAppVersion.Text = ConfigResources.AppName + " " + new Certify.Management.Util().GetAppVersion();
 
             if (this.MainViewModel.IsRegisteredVersion)
@@ -107,6 +115,11 @@ namespace Certify.UI.Controls
         {
             var d = new Windows.Feedback("", false);
             d.ShowDialog();
+        }
+
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            PopulateAppInfo();
         }
     }
 }

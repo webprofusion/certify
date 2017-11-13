@@ -7,7 +7,7 @@
     <ProjectGuid>{564BC244-6C8E-43F8-BC8B-3BA8DA93F04F}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>Certify.Service</RootNamespace>
-    <AssemblyName>Certify.Service</AssemblyName>
+    <AssemblyName>CertifySSLManager.Service</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
