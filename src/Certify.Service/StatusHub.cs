@@ -22,7 +22,7 @@ namespace Certify.Service
 
         public override Task OnConnected()
         {
-            Debug.WriteLine("Client connect to status stream..");
+            Debug.WriteLine("Client connected to status stream..");
 
             return base.OnConnected();
         }

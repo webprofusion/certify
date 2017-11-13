@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -46,6 +47,7 @@ namespace Certify.UI.ViewModel
 
         public string CurrentError { get; set; }
         public bool IsError { get; set; }
+        public bool IsServiceAvailable { get; set; } = false;
 
         public void RaiseError(Exception exp)
         {
@@ -271,6 +273,54 @@ namespace Certify.UI.ViewModel
              ImportedManagedSites = new ObservableCollection<ManagedSite>(importedSites);*/
         }
 
+        public async Task InitServiceConnections()
+        {
+            // wire up stream events
+            CertifyClient.OnMessageFromService += CertifyClient_SendMessage;
+            CertifyClient.OnRequestProgressStateUpdated += UpdateRequestTrackingProgress;
+
+            //check service connection
+            try
+            {
+                await CheckServiceAvailable();
+            }
+            catch (Exception)
+            {
+                Debug.WriteLine("Service not yet available. Waiting a few seconds..");
+                // the service could still be starting up
+                await Task.Delay(5000);
+                try
+                {
+                    await CheckServiceAvailable();
+                }
+                catch (Exception)
+                {
+                    // give up
+                    IsServiceAvailable = false;
+                    return;
+                }
+            }
+
+            // connect to status api stream & handle events
+            await CertifyClient.ConnectStatusStreamAsync();
+        }
+
+        public async Task<bool> CheckServiceAvailable()
+        {
+            try
+            {
+                await CertifyClient.GetAppVersion();
+                IsServiceAvailable = true;
+            }
+            catch (Exception)
+            {
+                //service not available
+                IsServiceAvailable = false;
+            }
+
+            return IsServiceAvailable;
+        }
+
         public async virtual Task LoadSettingsAsync()
         {
             this.Preferences = await CertifyClient.GetPreferences();
@@ -278,11 +328,6 @@ namespace Certify.UI.ViewModel
             var list = await CertifyClient.GetManagedSites(new Models.ManagedSiteFilter());
             foreach (var i in list) i.IsChanged = false;
             ManagedSites = new System.Collections.ObjectModel.ObservableCollection<Models.ManagedSite>(list);
-
-            // connect to status api stream & handgle events
-            await CertifyClient.ConnectStatusStreamAsync();
-            CertifyClient.OnMessageFromService += CertifyClient_SendMessage;
-            CertifyClient.OnRequestProgressStateUpdated += UpdateRequestTrackingProgress;
         }
 
         private void CertifyClient_SendMessage(string arg1, string arg2)

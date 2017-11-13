@@ -95,8 +95,10 @@ namespace Certify.UI
             d.ShowDialog();
         }
 
-        private void MetroWindow_Loaded(object sender, RoutedEventArgs e)
+        private async void MetroWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            if (!MainViewModel.IsServiceAvailable) return;
+
             //check for any startup actions required such as vault import
 
             if (!this.MainViewModel.ManagedSites.Any())
@@ -110,29 +112,28 @@ namespace Certify.UI
                 if (MainViewModel.ImportedManagedSites.Any())
                 {
                     //show import ui
-                    Task.Delay(100);
                     var d = new Windows.ImportManagedSites { Owner = this };
                     d.ShowDialog();
                 }
+            }
+            else
+            {
+                MessageBox.Show(SR.MainWindow_IISNotAvailable);
             }
 
             if (!MainViewModel.IsRegisteredVersion)
             {
                 this.Title += SR.MainWindow_TitleTrialPostfix;
             }
-        }
-
-        private void MetroWindow_ContentRendered(object sender, EventArgs e)
-        {
-            //FIXME: both these checks cause async blocks
 
             //warn if IIS not detected
+        }
 
-            if (!MainViewModel.IsIISAvailable)
-            {
-                MessageBox.Show(SR.MainWindow_IISNotAvailable);
-            }
+        private async void MetroWindow_ContentRendered(object sender, EventArgs e)
+        {
+            if (!MainViewModel.IsServiceAvailable) return;
 
+            //FIXME:  checks cause async blocks
             if (!MainViewModel.HasRegisteredContacts)
             {
                 //start by registering

@@ -53,19 +53,27 @@ namespace Certify.UI
             base.OnStartup(e);
 
             Mouse.OverrideCursor = Cursors.AppStarting;
+
             try
             {
-                await MainViewModel.LoadSettingsAsync();
+                await MainViewModel.InitServiceConnections();
+
+                if (MainViewModel.IsServiceAvailable) await MainViewModel.LoadSettingsAsync();
             }
             catch (Exception exp)
             {
-                MessageBox.Show("Certify SSL Manager service is not started. Please restart the service.");
                 Debug.WriteLine(exp.ToString());
-                App.Current.Shutdown();
-                return;
             }
 
             Mouse.OverrideCursor = Cursors.Arrow;
+
+            // quit if service/service client cannot connect
+            if (!MainViewModel.IsServiceAvailable)
+            {
+                MessageBox.Show("Certify SSL Manager service is not started. Please restart the service.");
+                App.Current.Shutdown();
+                return;
+            }
 
             //init telemetry if enabled
             InitTelemetry();

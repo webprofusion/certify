@@ -39,6 +39,8 @@ namespace Certify.UI.Controls
 
         private async Task LoadCurrentSettings()
         {
+            if (!MainViewModel.IsServiceAvailable) return;
+
             //TODO: we could now bind to Preferences
             _prefs = await MainViewModel.CertifyClient.GetPreferences();
 
