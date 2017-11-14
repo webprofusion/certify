@@ -98,13 +98,13 @@ namespace Certify
                     vlt.OpenStorage(initOrOpen: initOrOpen);
                     return;
                 }
-                catch (System.IO.IOException)
+                catch (System.IO.IOException exp)
                 {
                     maxAttempts--;
 #if DEBUG
-                    System.Diagnostics.Debug.WriteLine("Failed to open vault, retrying..");
+                    System.Diagnostics.Debug.WriteLine("Failed to open vault, retrying.." + exp.ToString());
 #endif
-                    Thread.Sleep(200);
+                    Thread.Sleep(500);
                 }
             }
         }
