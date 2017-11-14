@@ -1,9 +1,6 @@
 ﻿using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Certify.Management
 {
@@ -78,7 +75,7 @@ namespace Certify.Management
         #endregion Registry
 
         /// <summary>
-        /// Add/update registry keys to disable insecure SSL/TLS protocols
+        /// Add/update registry keys to disable insecure SSL/TLS protocols 
         /// </summary>
         public void PerformSSLProtocolLockdown()
         {

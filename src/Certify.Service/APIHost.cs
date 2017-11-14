@@ -1,8 +1,8 @@
-﻿using Owin;
+﻿using LightInject;
+using Microsoft.AspNet.SignalR;
+using Owin;
 using Swashbuckle.Application;
 using System.Web.Http;
-using LightInject;
-using Microsoft.AspNet.SignalR;
 
 namespace Certify.Service
 {
@@ -31,7 +31,7 @@ namespace Certify.Service
                 );
 #if DEBUG
             config
-              .EnableSwagger(c => c.SingleApiVersion("v1", "Service API for local install of Certify the web"))
+              .EnableSwagger(c => c.SingleApiVersion("v1", "Service API for local install of Certify SSL Manager"))
               .EnableSwaggerUi();
 #endif
             appBuilder.MapSignalR("/api/status", new HubConfiguration());

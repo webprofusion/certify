@@ -1,7 +1,6 @@
 ﻿using ARSoft.Tools.Net;
 using ARSoft.Tools.Net.Dns;
 using Certify.Locales;
-using Certify.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;

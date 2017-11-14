@@ -1,9 +1,6 @@
 ﻿using Microsoft.Owin.Hosting;
 using System;
-using System.Linq;
-using System.Net.Http;
 using Topshelf;
-using LightInject.WebApi;
 
 namespace Certify.Service
 {
@@ -14,9 +11,13 @@ namespace Certify.Service
             return (int)HostFactory.Run(x =>
             {
                 x.SetDisplayName("Certify SSL Manager Service");
-                x.SetDescription("Certify The Web - SSL Manager Service for IIS");
+                x.SetDescription("Certify SSL/TLS Manager Service");
                 x.StartAutomaticallyDelayed();
-
+#if DEBUG
+                x.SetInstanceName("CertifySSLManager.Service.Debug");
+#else
+                x.SetInstanceName("CertifySSLManager.Service");
+#endif
                 // FIXME: we should offer option during setup to configure this as a service account
                 // account requires admin rights in IIS (and wwwroot etc) and permission to
                 // administer certificates in certificate store
