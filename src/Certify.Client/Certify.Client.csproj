@@ -47,7 +47,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CertifyDirectClient.cs" />
     <Compile Include="CertifyServiceClient.cs" />
     <Compile Include="ICertifyClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

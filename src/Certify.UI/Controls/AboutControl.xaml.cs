@@ -1,6 +1,5 @@
 using Certify.Locales;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -69,8 +68,10 @@ namespace Certify.UI.Controls
 
             if (updateCheck != null)
             {
+                MainViewModel.UpdateCheckResult = updateCheck;
                 if (updateCheck.IsNewerVersion)
                 {
+                    MainViewModel.IsUpdateAvailable = true;
                     var gotoDownload = MessageBox.Show(updateCheck.Message.Body + "\r\nVisit download page now?", ConfigResources.AppName, MessageBoxButton.YesNo);
                     if (gotoDownload == MessageBoxResult.Yes)
                     {

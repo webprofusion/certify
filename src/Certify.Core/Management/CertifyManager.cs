@@ -70,6 +70,8 @@ namespace Certify.Management
         Task<bool> PerformPeriodicTasks();
 
         event Action<RequestProgressState> OnRequestProgressStateUpdated;
+
+        event Action<ManagedSite> OnManagedSiteUpdated;
     }
 
     public class CertifyManager : ICertifyManager
@@ -82,6 +84,8 @@ namespace Certify.Management
         private ObservableCollection<RequestProgressState> _progressResults { get; set; }
 
         public event Action<RequestProgressState> OnRequestProgressStateUpdated;
+
+        public event Action<ManagedSite> OnManagedSiteUpdated;
 
         private bool _isRenewAllInProgress { get; set; }
 

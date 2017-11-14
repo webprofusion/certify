@@ -1,9 +1,10 @@
 using Certify.Locales;
-using System;
+using Microsoft.ApplicationInsights;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 
 namespace Certify.UI
 {
@@ -18,6 +19,8 @@ namespace Certify.UI
 
             CurrentProgress = 1
         }
+
+        private TelemetryClient tc = null;
 
         protected Certify.UI.ViewModel.AppModel MainViewModel
         {
@@ -95,26 +98,136 @@ namespace Certify.UI
             d.ShowDialog();
         }
 
-        private void MetroWindow_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            await PerformAppStartupChecks();
+        }
+
+        private async Task PerformAppStartupChecks()
+        {
+            Mouse.OverrideCursor = Cursors.AppStarting;
+            MainViewModel.IsLoading = true;
+
+            await MainViewModel.InitServiceConnections();
+
+            if (MainViewModel.IsServiceAvailable)
+            {
+                await MainViewModel.LoadSettingsAsync();
+            }
+
+            Mouse.OverrideCursor = Cursors.Arrow;
+
+            // quit if service/service client cannot connect
+            if (!MainViewModel.IsServiceAvailable)
+            {
+                MainViewModel.IsLoading = false;
+                MessageBox.Show("Certify SSL Manager service is not started. Please restart the service.");
+                App.Current.Shutdown();
+                return;
+            }
+
+            //init telemetry if enabled
+            InitTelemetry();
+
+            //check version capabilities
+            MainViewModel.PluginManager = new Management.PluginManager();
+
+            MainViewModel.PluginManager.LoadPlugins();
+
+            var licensingManager = MainViewModel.PluginManager.LicensingManager;
+            if (licensingManager != null)
+            {
+                if (licensingManager.IsInstallRegistered(ViewModel.AppModel.ProductTypeId, Certify.Management.Util.GetAppDataFolder()))
+                {
+                    MainViewModel.IsRegisteredVersion = true;
+                }
+            }
+
+            //check for any startup actions required such as vault import
+
+            /* if (!this.MainViewModel.ManagedSites.Any())
+             {
+                 //if we have a vault, preview import.
+                 this.MainViewModel.PreviewImport(sanMergeMode: true);
+             }*/
+
+            // check if IIS is available, if so also populates IISVersion
+            await MainViewModel.CheckServerAvailability(Models.StandardServerTypes.IIS);
+
+            MainViewModel.IsLoading = false;
+
+            if (MainViewModel.IsIISAvailable)
+            {
+                if (MainViewModel.ImportedManagedSites.Any())
+                {
+                    //show import ui
+                    var d = new Windows.ImportManagedSites();
+                    d.ShowDialog();
+                }
+            }
+            else
+            {
+                //warn if IIS not detected
+                MessageBox.Show(SR.MainWindow_IISNotAvailable);
+            }
+
+            //FIXME:  checks cause async blocks
+            if (!MainViewModel.HasRegisteredContacts)
+            {
+                //start by registering
+                MessageBox.Show(SR.MainWindow_GetStartGuideWithNewCert);
+                var d = new Windows.EditContactDialog { };
+                d.ShowDialog();
+            }
+
             if (!MainViewModel.IsRegisteredVersion)
             {
                 this.Title += SR.MainWindow_TitleTrialPostfix;
             }
-        }
 
-        private void MetroWindow_ContentRendered(object sender, EventArgs e)
-        {
             //check for updates and report result to view model
-            /*if (MainViewModel.Preferences.CheckForUpdatesAtStartup)
+            if (MainViewModel.IsServiceAvailable)
             {
-                var updateCheck = await new Certify.Management.Util().CheckForUpdates();
+                var updateCheck = await MainViewModel.CertifyClient.CheckForUpdates();
+
                 if (updateCheck != null && updateCheck.IsNewerVersion)
                 {
                     MainViewModel.UpdateCheckResult = updateCheck;
                     MainViewModel.IsUpdateAvailable = true;
+
+                    // if update is mandatory (where there is a major bug etc) quit until user updates
+                    if (updateCheck.MustUpdate)
+                    {
+                        // offer to take user to download page
+                        var gotoDownload = MessageBox.Show(updateCheck.Message.Body + "\r\nVisit download page now?", ConfigResources.AppName, MessageBoxButton.YesNo);
+                        if (gotoDownload == MessageBoxResult.Yes)
+                        {
+                            System.Diagnostics.ProcessStartInfo sInfo = new System.Diagnostics.ProcessStartInfo(ConfigResources.AppWebsiteURL);
+                            System.Diagnostics.Process.Start(sInfo);
+                        }
+                        else
+                        {
+                            MessageBox.Show(SR.Update_MandatoryUpdateQuit);
+                        }
+
+                        //quit
+                        App.Current.Shutdown();
+                    }
                 }
-            }*/
+            }
+        }
+
+        private void InitTelemetry()
+        {
+            if (MainViewModel.Preferences.EnableAppTelematics)
+            {
+                tc = new Certify.Management.Util().InitTelemetry();
+                tc.TrackEvent("Start");
+            }
+            else
+            {
+                tc = null;
+            }
         }
 
         private void ButtonUpdateAvailable_Click(object sender, RoutedEventArgs e)

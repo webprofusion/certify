@@ -1,18 +1,6 @@
-﻿using Certify.Management;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Certify.UI.Controls
 {
@@ -46,8 +34,6 @@ namespace Certify.UI.Controls
 
             MainViewModel.PrimaryContactEmail = await MainViewModel.CertifyClient.GetPrimaryContact();
 
-            //MainViewModel.LoadVaultTree();
-            this.CheckForUpdatesCheckbox.IsChecked = _prefs.CheckForUpdatesAtStartup;
             this.EnableTelematicsCheckbox.IsChecked = _prefs.EnableAppTelematics;
             this.EnableProxyAPICheckbox.IsChecked = _prefs.EnableValidationProxyAPI;
 
@@ -84,7 +70,6 @@ namespace Certify.UI.Controls
             if (settingsInitialised)
             {
                 ///capture settings
-                _prefs.CheckForUpdatesAtStartup = (this.CheckForUpdatesCheckbox.IsChecked == true);
                 _prefs.EnableAppTelematics = (this.EnableTelematicsCheckbox.IsChecked == true);
                 _prefs.EnableValidationProxyAPI = (this.EnableProxyAPICheckbox.IsChecked == true);
                 _prefs.EnableDNSValidationChecks = (this.EnableDNSValidationChecks.IsChecked == true);

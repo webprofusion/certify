@@ -12,9 +12,9 @@
         GlowBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1"
         mc:Ignorable="d"
-        Title="Certify SSL/TLS Certificate Management" WindowTransitionsEnabled="False" TitleCaps="False" Height="668" MinWidth="680" MinHeight="400" Width="1009.6" WindowStyle="ToolWindow" Loaded="MetroWindow_Loaded" ContentRendered="MetroWindow_ContentRendered"
+        Title="Certify SSL/TLS Certificate Management" WindowTransitionsEnabled="False" TitleCaps="False" Height="668" MinWidth="680" MinHeight="400" Width="1009.6" WindowStyle="ToolWindow"
         d:DataContext="{d:DesignInstance Type=local:DesignViewModel, IsDesignTimeCreatable=True}"
-        Closing="MetroWindow_Closing">
+        Closing="MetroWindow_Closing" Loaded="Window_Loaded">
 
     <Controls:MetroWindow.Resources>
         <ResourceDictionary>
@@ -53,6 +53,12 @@
                         <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Update_Available}" /></TextBlock>
                     </StackPanel>
                 </Button>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="24,0,0,0"  Visibility="{Binding IsLoading, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+
+                <fa:ImageAwesome x:Name="ConnectingService" Margin="4,0,0,0" Visibility="Visible" Icon="Refresh" Height="12
+                                     " Spin="True" SpinDuration="1" Foreground="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}" />
+                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"><Run Text="Loading.." /></TextBlock>
             </StackPanel>
         </StackPanel>
 

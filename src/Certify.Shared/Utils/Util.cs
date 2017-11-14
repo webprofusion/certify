@@ -1,14 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
+using Certify.Locales;
 using Certify.Models;
 using Microsoft.ApplicationInsights;
-using System.Net;
+using System;
+using System.Collections.Generic;
 using System.IO;
-using Certify.Locales;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace Certify.Management
 {
@@ -53,6 +51,7 @@ namespace Certify.Management
 
         public Version GetAppVersion()
         {
+            // returns the version of Certify.Shared
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             var v = assembly.GetName().Version;
             return v;
@@ -106,9 +105,7 @@ namespace Certify.Management
                      }";*/
 
                     UpdateCheck checkResult = Newtonsoft.Json.JsonConvert.DeserializeObject<UpdateCheck>(json);
-                    checkResult.IsNewerVersion = AppVersion.IsOtherVersionNewer(AppVersion.FromString(appVersion), checkResult.Version);
-
-                    return checkResult;
+                    return CompareVersions(appVersion, checkResult);
                 }
 
                 return new UpdateCheck { IsNewerVersion = false };
@@ -117,6 +114,19 @@ namespace Certify.Management
             {
                 return null;
             }
+        }
+
+        public static UpdateCheck CompareVersions(string appVersion, UpdateCheck checkResult)
+        {
+            checkResult.IsNewerVersion = AppVersion.IsOtherVersionNewer(AppVersion.FromString(appVersion), checkResult.Version);
+
+            // check for mandatory updates
+            if (checkResult.Message != null && checkResult.Message.MandatoryBelowVersion != null)
+            {
+                checkResult.MustUpdate = AppVersion.IsOtherVersionNewer(AppVersion.FromString(appVersion), checkResult.Message.MandatoryBelowVersion);
+            }
+
+            return checkResult;
         }
     }
 }

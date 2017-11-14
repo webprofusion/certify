@@ -587,4 +587,10 @@
   <data name="ExpiryDateConverter_CertificateExpiresIn" xml:space="preserve">
     <value>Expires in {0} days</value>
   </data>
+  <data name="General_Loading" xml:space="preserve">
+    <value>Loading...</value>
+  </data>
+  <data name="Update_MandatoryUpdateQuit" xml:space="preserve">
+    <value>The current app version is no longer supported. Please update to proceed.</value>
+  </data>
 </root>

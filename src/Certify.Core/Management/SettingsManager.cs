@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 
 namespace Certify.Management
 {
@@ -77,7 +76,6 @@ namespace Certify.Management
 
         public static bool FromPreferences(Models.Preferences prefs)
         {
-            CoreAppSettings.Current.CheckForUpdatesAtStartup = prefs.CheckForUpdatesAtStartup;
             CoreAppSettings.Current.EnableAppTelematics = prefs.EnableAppTelematics;
             CoreAppSettings.Current.EnableDNSValidationChecks = prefs.EnableDNSValidationChecks;
             CoreAppSettings.Current.EnableValidationProxyAPI = prefs.EnableValidationProxyAPI;
@@ -94,7 +92,6 @@ namespace Certify.Management
             LoadAppSettings();
             Models.Preferences prefs = new Models.Preferences();
 
-            prefs.CheckForUpdatesAtStartup = CoreAppSettings.Current.CheckForUpdatesAtStartup;
             prefs.EnableAppTelematics = CoreAppSettings.Current.EnableAppTelematics;
             prefs.EnableDNSValidationChecks = CoreAppSettings.Current.EnableDNSValidationChecks;
             prefs.EnableValidationProxyAPI = CoreAppSettings.Current.EnableValidationProxyAPI;

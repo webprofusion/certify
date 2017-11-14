@@ -1,27 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Certify.Models
+﻿namespace Certify.Models
 {
     public class Preferences
     {
-        public bool CheckForUpdatesAtStartup { get; set; }
+        public bool EnableAppTelematics { get; set; } = true;
 
-        public bool EnableAppTelematics { get; set; }
+        public bool IgnoreStoppedSites { get; set; } = false;
 
-        public bool IgnoreStoppedSites { get; set; }
+        public bool EnableValidationProxyAPI { get; set; } = true;
 
-        public bool EnableValidationProxyAPI { get; set; }
+        public bool EnableEFS { get; set; } = false;
 
-        public bool EnableEFS { get; set; }
+        public bool EnableDNSValidationChecks { get; set; } = false;
 
-        public bool EnableDNSValidationChecks { get; set; }
+        public int RenewalIntervalDays { get; set; } = 0;
 
-        public int RenewalIntervalDays { get; set; }
-
-        public int MaxRenewalRequests { get; set; }
+        public int MaxRenewalRequests { get; set; } = 0;
     }
 }

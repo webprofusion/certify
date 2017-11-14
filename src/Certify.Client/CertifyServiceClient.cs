@@ -94,8 +94,16 @@ namespace Certify.Client
 
         public async Task<UpdateCheck> CheckForUpdates()
         {
-            var result = await FetchAsync("system/updatecheck");
-            return JsonConvert.DeserializeObject<UpdateCheck>(result);
+            try
+            {
+                var result = await FetchAsync("system/updatecheck");
+                return JsonConvert.DeserializeObject<UpdateCheck>(result);
+            }
+            catch (Exception)
+            {
+                //could not check for updates
+                return null;
+            }
         }
 
         #endregion System

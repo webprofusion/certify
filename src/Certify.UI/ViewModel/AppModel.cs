@@ -46,6 +46,7 @@ namespace Certify.UI.ViewModel
         public string CurrentError { get; set; }
         public bool IsError { get; set; }
         public bool IsServiceAvailable { get; set; } = false;
+        public bool IsLoading { get; set; } = true;
 
         public void RaiseError(Exception exp)
         {
@@ -294,18 +295,18 @@ namespace Certify.UI.ViewModel
             CertifyClient.OnRequestProgressStateUpdated += UpdateRequestTrackingProgress;
 
             //check service connection
-            bool serviceAvailable = await CheckServiceAvailable();
+            IsServiceAvailable = await CheckServiceAvailable();
 
-            if (!serviceAvailable)
+            if (!IsServiceAvailable)
             {
                 Debug.WriteLine("Service not yet available. Waiting a few seconds..");
+
                 // the service could still be starting up
                 await Task.Delay(5000);
-                serviceAvailable = await CheckServiceAvailable();
-                if (!serviceAvailable)
+                IsServiceAvailable = await CheckServiceAvailable();
+                if (!IsServiceAvailable)
                 {
                     // give up
-                    IsServiceAvailable = false;
                     return;
                 }
             }

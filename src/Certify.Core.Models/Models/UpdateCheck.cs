@@ -1,5 +1,3 @@
-using Certify.Models;
-
 namespace Certify.Models
 {
     public class UpdateCheck
@@ -9,5 +7,7 @@ namespace Certify.Models
         public UpdateMessage Message { get; set; }
 
         public bool IsNewerVersion { get; set; }
+
+        public bool MustUpdate { get; set; }
     }
 }

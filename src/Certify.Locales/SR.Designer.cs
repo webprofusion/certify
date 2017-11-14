@@ -286,6 +286,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Loading....
+        /// </summary>
+        public static string General_Loading {
+            get {
+                return ResourceManager.GetString("General_Loading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Import.
         /// </summary>
         public static string Import {
@@ -1436,6 +1445,15 @@ namespace Certify.Locales {
         public static string Update_Available {
             get {
                 return ResourceManager.GetString("Update_Available", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The current app version is no longer supported. Please update to proceed..
+        /// </summary>
+        public static string Update_MandatoryUpdateQuit {
+            get {
+                return ResourceManager.GetString("Update_MandatoryUpdateQuit", resourceCulture);
             }
         }
         
