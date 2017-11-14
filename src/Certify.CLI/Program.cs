@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Certify.Client;
+using Certify.Models;
+using Microsoft.ApplicationInsights;
+using System;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Microsoft.ApplicationInsights;
-using Certify.Client;
-using Certify.Models;
 
 namespace Certify.CLI
 {
@@ -15,19 +12,22 @@ namespace Certify.CLI
     {
         private static int Main(string[] args)
         {
-            // upgrade assembly version of saved settings (if required)
-#if DIRECTCLIENT
-            Certify.Properties.Settings.Default.UpgradeSettingsVersion(); // deprecated
-            Certify.Management.SettingsManager.LoadAppSettings();
-#endif
-
             var p = new CertifyCLI();
+
+            p.ShowVersion();
+
+            if (!p.IsServiceAvailable().Result)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                System.Console.WriteLine("Certify SSL Manager service not started.");
+                Console.ForegroundColor = ConsoleColor.White;
+                return -1;
+            }
+
             Task.Run(async () =>
             {
                 await p.LoadPreferences();
             });
-
-            p.ShowVersion();
 
             if (args.Length == 0)
             {
@@ -38,21 +38,12 @@ namespace Certify.CLI
             {
                 p.ShowACMEInfo();
 
-                if (args.Contains("cleanup", StringComparer.InvariantCultureIgnoreCase))
-                {
-                    // cleanup vault
-                    p.PerformVaultCleanup();
-                }
-
                 if (args.Contains("renew", StringComparer.InvariantCultureIgnoreCase))
                 {
                     // perform auto renew all
                     var renewalTask = p.PerformAutoRenew();
                     renewalTask.ConfigureAwait(true);
                     renewalTask.Wait();
-
-                    // now perform vault cleanup
-                    p.PerformVaultCleanup();
                 }
 
                 if (args.Contains("list", StringComparer.InvariantCultureIgnoreCase))
@@ -79,12 +70,23 @@ namespace Certify.CLI
 
         public CertifyCLI()
         {
-#if DIRECTCLIENT
-            _certifyClient = new CertifyDirectClient();
-#else
             _certifyClient = new CertifyServiceClient();
+        }
 
-#endif
+        public async Task<bool> IsServiceAvailable()
+        {
+            bool isAvailable = false;
+
+            try
+            {
+                await _certifyClient.GetAppVersion();
+                isAvailable = true;
+            }
+            catch (Exception)
+            {
+                isAvailable = false;
+            }
+            return isAvailable;
         }
 
         public async Task LoadPreferences()
@@ -104,14 +106,19 @@ namespace Certify.CLI
 
         private async Task<string> GetAppVersion()
         {
-            return await _certifyClient.GetAppVersion();
+            try
+            {
+                return await _certifyClient.GetAppVersion();
+            }
+            catch (Exception)
+            {
+                return await Task.FromResult("--- (Service Not Started)");
+            }
         }
 
         private string GetAppWebsiteURL()
         {
-            return "https://certifytheweb.com";
-            // return Certify.Locales.CoreSR.Ap
-            //return Certify.Properties.Resources.AppWebsiteURL;
+            return Certify.Locales.ConfigResources.AppWebsiteURL;
         }
 
         private void InitTelematics()
@@ -134,34 +141,23 @@ namespace Certify.CLI
         internal void ShowVersion()
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
-            System.Console.WriteLine("Certify SSL Manager - CLI v1.1.0. Certify.Core v" + GetAppVersion());
+            System.Console.WriteLine("Certify SSL Manager - CLI v3.0.0. Certify.Core v" + GetAppVersion().Result);
             Console.ForegroundColor = ConsoleColor.White;
             System.Console.WriteLine("For more information see " + GetAppWebsiteURL());
             System.Console.WriteLine("");
         }
 
-        internal void PerformVaultCleanup()
-        {
-            System.Console.WriteLine("Beginning Vault Cleanup..");
-#if DIRECTCLIENT
-            //var certifyManager = new CertifyManager();
-            certifyManager.PerformVaultCleanup();
-#endif
-
-            System.Console.WriteLine("Completed Vault Cleanup..");
-        }
-
         internal void ShowACMEInfo()
         {
-#if DIRECTCLIENT
-            var certifyManager = new CertifyManager();
-            string vaultInfo = certifyManager.GetVaultSummary();
-            string acmeInfo = certifyManager.GetAcmeSummary();
+            /*
+                        var certifyManager = new CertifyManager();
+                        string vaultInfo = certifyManager.GetVaultSummary();
+                        string acmeInfo = certifyManager.GetAcmeSummary();
 
-            Console.ForegroundColor = ConsoleColor.DarkYellow;
-            System.Console.WriteLine("Let's Encrypt ACME API: " + acmeInfo);
-            System.Console.WriteLine("ACMESharp Vault: " + vaultInfo);
-#endif
+                        Console.ForegroundColor = ConsoleColor.DarkYellow;
+                        System.Console.WriteLine("Let's Encrypt ACME API: " + acmeInfo);
+                        System.Console.WriteLine("ACMESharp Vault: " + vaultInfo);
+            */
             System.Console.WriteLine("");
             Console.ForegroundColor = ConsoleColor.White;
         }
@@ -172,7 +168,6 @@ namespace Certify.CLI
             System.Console.WriteLine("Usage: certify <command> \n");
             System.Console.WriteLine("certify renew : renew certificates for all auto renewed managed sites");
             System.Console.WriteLine("certify list : list managed sites and current running/not running status in IIS");
-            System.Console.WriteLine("certify cleanup : cleanup vault entries");
 
             System.Console.WriteLine("\n");
         }
@@ -251,14 +246,13 @@ namespace Certify.CLI
             //Initialize-ACMEVault -BaseURI https://acme-staging.api.letsencrypt.org/
 
             // Get-Module -ListAvailable ACMESharp New-ACMEIdentifier -Dns test7.examplesite.co.uk
-            // -Alias test7_examplesite_co_uk636213616564101276 -Label
-            // Identifier:test7.examplesite.co.uk Complete-ACMEChallenge -Ref
-            // test7_examplesite_co_uk636213616564101276 -ChallengeType http-01 -Handler manual
+            // -Alias test7_examplesite_co_uk636213616564101276 -Label Identifier:test7.examplesite.co.uk
+            // Complete-ACMEChallenge -Ref test7_examplesite_co_uk636213616564101276 -ChallengeType
+            // http-01 -Handler manual
             // -Regenerate Submit-ACMEChallenge -Ref test7_examplesite_co_uk636213616564101276
-            // -Challenge http-01 Update-ACMEIdentifier -Ref
-            // test7_examplesite_co_uk636213616564101276 Update-ACMEIdentifier -Ref
-            // test7_examplesite_co_uk636213616564101276 New-ACMECertificate -Identifier
-            // test7_examplesite_co_uk636213616564101276 -Alias
+            // -Challenge http-01 Update-ACMEIdentifier -Ref test7_examplesite_co_uk636213616564101276
+            // Update-ACMEIdentifier -Ref test7_examplesite_co_uk636213616564101276 New-ACMECertificate
+            // -Identifier test7_examplesite_co_uk636213616564101276 -Alias
             // cert_test7_examplesite_co_uk636213616564101276 -Generate Update-ACMEIdentifier -Ref
             // test7_examplesite_co_uk636213616564101276 Update-ACMEIdentifier -Ref
             // test7_examplesite_co_uk636213616564101276 Get-ACMECertificate -Ref = ac22dbfe - b75f
