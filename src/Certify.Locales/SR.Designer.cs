@@ -423,9 +423,9 @@ namespace Certify.Locales {
         /// <summary>
         ///   Looks up a localized string similar to You are using the trial version of this app. Please purchase a registration key to upgrade. See the Register option on the About tab..
         /// </summary>
-        public static string MainWindow_TrialLimitionReached {
+        public static string MainWindow_TrialLimitationReached {
             get {
-                return ResourceManager.GetString("MainWindow_TrialLimitionReached", resourceCulture);
+                return ResourceManager.GetString("MainWindow_TrialLimitationReached", resourceCulture);
             }
         }
         
@@ -1035,7 +1035,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to To use Certify and the free Let&apos;s Encrypt service to acquire SSL certificates you must first register as a contact..
+        ///   Looks up a localized string similar to To use Certify SSL Manager and the free Let&apos;s Encrypt service to acquire SSL certificates you must first register as a contact..
         /// </summary>
         public static string New_Contact_Tip1 {
             get {

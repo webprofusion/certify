@@ -26,6 +26,7 @@
             <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
             <utils:OptionalBooleanToVisibilityConverter True="Collapsed" False="Visible" x:Key="InvBoolVisConverter" />
             <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
+            <utils:ManagedItemHealthVisibilityConverter x:Key="HealthVisibleConverter" />
             <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
         </Grid.Resources>
         <StackPanel Orientation="Vertical" Grid.Row="0">
@@ -67,6 +68,12 @@
                                  VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
             <TabItem Header="{x:Static Resources:SR.ManagedItemSettings_Tab_Options}" IsSelected="True">
                 <DockPanel Margin="12,12,12,0" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Visibility="{Binding SelectedItem.Health, Converter={StaticResource ResourceKey=HealthVisibleConverter}}" Background="#FF3F3F3F" Margin="0,0,0,8">
+
+                        <fa:ImageAwesome Margin="4" Icon="ExclamationTriangle" Height="16" Foreground="#FFFDFDFD" />
+                        <TextBlock TextWrapping="WrapWithOverflow" Text="{Binding SelectedItem.RenewalFailureMessage}" Margin="4,4,16,4" Foreground="White">
+                        </TextBlock>
+                    </StackPanel>
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Visibility="{Binding SelectedItem.Id, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
                         <Label Width="136" Content="{x:Static Resources:SR.ManagedItemSettings_SelectIISSite}" />
                         <ComboBox x:Name="WebsiteDropdown"  ItemsSource="{Binding WebSiteList, UpdateSourceTrigger=Default}" SelectedItem="{Binding SelectedWebSite}"  DisplayMemberPath="SiteName" Width="225" SelectionChanged="Website_SelectionChanged" />

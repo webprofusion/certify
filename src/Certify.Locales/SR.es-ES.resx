@@ -378,7 +378,7 @@
   <data name="ManagedItemSettings_ConfirmRevokeCertificate" xml:space="preserve">
     <value>¿Está seguro de que desea revocar este certificado?</value>
   </data>
-  <data name="MainWindow_TrialLimitionReached" xml:space="preserve">
+  <data name="MainWindow_TrialLimitationReached" xml:space="preserve">
     <value>Estás usando la versión de prueba de esta aplicación. Por favor, compre una clave de registro para actualizar. Vea la opción Registrar en la pestaña Acerca de.</value>
   </data>
   <data name="MainWindow_RenewAllConfirm" xml:space="preserve">

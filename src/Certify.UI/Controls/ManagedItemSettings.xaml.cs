@@ -1,16 +1,17 @@
+using Certify.Locales;
 using Certify.Management;
 using Certify.Models;
 using Microsoft.Win32;
 using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using WinForms = System.Windows.Forms;
 using System.Windows.Input;
-using Certify.Locales;
-using System.Collections.ObjectModel;
+using WinForms = System.Windows.Forms;
 
 namespace Certify.UI.Controls
 {
@@ -49,71 +50,76 @@ namespace Certify.UI.Controls
             }
         }
 
+        private async Task<bool> ValidateAndSave(ManagedSite item)
+        {
+            if (item.Id == null && MainViewModel.SelectedWebSite == null)
+            {
+                MessageBox.Show(SR.ManagedItemSettings_SelectWebsiteOrCert, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            if (String.IsNullOrEmpty(item.Name))
+            {
+                MessageBox.Show(SR.ManagedItemSettings_NameRequired, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            if (MainViewModel.PrimarySubjectDomain == null)
+            {
+                MessageBox.Show(SR.ManagedItemSettings_NeedPrimaryDomain, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            if (item.RequestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI &&
+                MainViewModel.IISVersion.Major < 8)
+            {
+                MessageBox.Show(string.Format(SR.ManagedItemSettings_ChallengeNotAvailable, SupportedChallengeTypes.CHALLENGE_TYPE_SNI), SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            if (item.RequestConfig.PerformAutomatedCertBinding)
+            {
+                item.RequestConfig.BindingIPAddress = null;
+                item.RequestConfig.BindingPort = null;
+                item.RequestConfig.BindingUseSNI = null;
+            }
+
+            if (!string.IsNullOrEmpty(item.RequestConfig.WebhookTrigger) &&
+                item.RequestConfig.WebhookTrigger != Webhook.ON_NONE)
+            {
+                if (string.IsNullOrEmpty(item.RequestConfig.WebhookUrl) ||
+                    !Uri.TryCreate(item.RequestConfig.WebhookUrl, UriKind.Absolute, out var uri))
+                {
+                    MessageBox.Show(SR.ManagedItemSettings_HookMustBeValidUrl, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                    return false;
+                }
+                if (string.IsNullOrEmpty(item.RequestConfig.WebhookMethod))
+                {
+                    MessageBox.Show(SR.ManagedItemSettings_HookMethodMustBeSet, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                    return false;
+                }
+            }
+            else
+            {
+                // clear out saved values if setting webhook to NONE
+                item.RequestConfig.WebhookUrl = null;
+                item.RequestConfig.WebhookMethod = null;
+                item.RequestConfig.WebhookContentType = null;
+                item.RequestConfig.WebhookContentBody = null;
+            }
+
+            //save changes
+
+            //creating new managed item
+            return await MainViewModel.SaveManagedItemChanges();
+        }
+
         private async void Button_Save(object sender, RoutedEventArgs e)
         {
             if (MainViewModel.SelectedItem.IsChanged)
             {
                 var item = MainViewModel.SelectedItem;
-                if (item.Id == null && MainViewModel.SelectedWebSite == null)
-                {
-                    MessageBox.Show(SR.ManagedItemSettings_SelectWebsiteOrCert, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                if (String.IsNullOrEmpty(item.Name))
-                {
-                    MessageBox.Show(SR.ManagedItemSettings_NameRequired, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                if (MainViewModel.PrimarySubjectDomain == null)
-                {
-                    MessageBox.Show(SR.ManagedItemSettings_NeedPrimaryDomain, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                if (item.RequestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI &&
-                    MainViewModel.IISVersion.Major < 8)
-                {
-                    MessageBox.Show(string.Format(SR.ManagedItemSettings_ChallengeNotAvailable, SupportedChallengeTypes.CHALLENGE_TYPE_SNI), SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                if (item.RequestConfig.PerformAutomatedCertBinding)
-                {
-                    item.RequestConfig.BindingIPAddress = null;
-                    item.RequestConfig.BindingPort = null;
-                    item.RequestConfig.BindingUseSNI = null;
-                }
-
-                if (!string.IsNullOrEmpty(item.RequestConfig.WebhookTrigger) &&
-                    item.RequestConfig.WebhookTrigger != Webhook.ON_NONE)
-                {
-                    if (string.IsNullOrEmpty(item.RequestConfig.WebhookUrl) ||
-                        !Uri.TryCreate(item.RequestConfig.WebhookUrl, UriKind.Absolute, out var uri))
-                    {
-                        MessageBox.Show(SR.ManagedItemSettings_HookMustBeValidUrl, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
-                        return;
-                    }
-                    if (string.IsNullOrEmpty(item.RequestConfig.WebhookMethod))
-                    {
-                        MessageBox.Show(SR.ManagedItemSettings_HookMethodMustBeSet, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
-                        return;
-                    }
-                }
-                else
-                {
-                    // clear out saved values if setting webhook to NONE
-                    item.RequestConfig.WebhookUrl = null;
-                    item.RequestConfig.WebhookMethod = null;
-                    item.RequestConfig.WebhookContentType = null;
-                    item.RequestConfig.WebhookContentBody = null;
-                }
-
-                //save changes
-
-                //creating new managed item
-                await MainViewModel.SaveManagedItemChanges();
+                await ValidateAndSave(item);
             }
             else
             {
@@ -146,8 +152,8 @@ namespace Certify.UI.Controls
             {
                 if (MainViewModel.SelectedItem.IsChanged)
                 {
-                    //save changes
-                    await MainViewModel.SaveManagedItemChanges();
+                    var savedOK = await ValidateAndSave(MainViewModel.SelectedItem);
+                    if (!savedOK) return;
                 }
 
                 //begin request

@@ -169,7 +169,7 @@
     <value>Do you agree to the LetsEncrypt.org Subscriber Agreement? Refer to their website for full details before proceeding. https://letsencrypt.org/repository/</value>
   </data>
   <data name="New_Contact_Tip1" xml:space="preserve">
-    <value>To use Certify and the free Let's Encrypt service to acquire SSL certificates you must first register as a contact.</value>
+    <value>To use Certify SSL Manager and the free Let's Encrypt service to acquire SSL certificates you must first register as a contact.</value>
   </data>
   <data name="New_Contact_Tip2" xml:space="preserve">
     <value>The email address provided may be used to notify you of upcoming certificate renewals if required. Invalid email addresses will be rejected by Let's Encrypt.</value>
@@ -521,7 +521,7 @@
   <data name="ManagedItemSettings_ConfirmRevokeCertificate" xml:space="preserve">
     <value>Are you sure you want to revoke this certificate?</value>
   </data>
-  <data name="MainWindow_TrialLimitionReached" xml:space="preserve">
+  <data name="MainWindow_TrialLimitationReached" xml:space="preserve">
     <value>You are using the trial version of this app. Please purchase a registration key to upgrade. See the Register option on the About tab.</value>
   </data>
   <data name="MainWindow_RenewAllConfirm" xml:space="preserve">
