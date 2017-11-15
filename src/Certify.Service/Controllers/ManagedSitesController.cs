@@ -69,12 +69,6 @@ namespace Certify.Service
         {
             DebugLog();
 
-            /* _certifyManager.OnRequestProgressStateUpdated += (RequestProgressState obj) =>
-             {
-                 // notify client(s) of status updates
-                 StatusHub.HubContext.Clients.All.SendRequestProgressState(obj);
-             };*/
-            //we do not await here, instead the task currently continues after the request
             return await _certifyManager.PerformRenewalAllManagedSites(true, null);
         }
 
@@ -85,20 +79,12 @@ namespace Certify.Service
 
             var managedSite = await _certifyManager.GetManagedSite(managedSiteId);
 
-            // TODO: progress tracking events, background queue
-
             RequestProgressState progressState = new RequestProgressState(RequestState.Running, "Starting..", managedSite);
 
             var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
 
             //begin monitoring progress
             _certifyManager.BeginTrackingProgress(progressState);
-
-            /* _certifyManager.OnRequestProgressStateUpdated += (RequestProgressState obj) =>
-             {
-                 // notify client(s) of status updates
-                 StatusHub.HubContext.Clients.All.SendRequestProgressState(obj);
-             };*/
 
             //begin request
             await _certifyManager.PerformCertificateRequest(managedSite, progressIndicator);

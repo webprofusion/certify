@@ -1,5 +1,8 @@
-﻿using Microsoft.Owin.Hosting;
+﻿using Certify.Locales;
+using Microsoft.Owin.Hosting;
 using System;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Topshelf;
 
 namespace Certify.Service
@@ -8,6 +11,9 @@ namespace Certify.Service
     {
         public static int Main(string[] args)
         {
+            AppDomain currentDomain = AppDomain.CurrentDomain;
+            currentDomain.UnhandledException += CurrentDomain_UnhandledException; ;
+
             return (int)HostFactory.Run(x =>
             {
                 x.SetDisplayName("Certify SSL Manager Service");
@@ -37,6 +43,46 @@ namespace Certify.Service
                     s.WhenStopped(service => service.Stop());
                 });
             });
+        }
+
+        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            // an unhandled exception has caused the service to crash
+
+            if (e.ExceptionObject != null)
+            {
+                //submit diagnostic info if connection available
+                var API_BASE_URI = Locales.ConfigResources.APIBaseURI;
+
+                var client = new HttpClient();
+
+                var jsonRequest = Newtonsoft.Json.JsonConvert.SerializeObject(
+                    new Models.Shared.FeedbackReport
+                    {
+                        EmailAddress = "(service exception)",
+                        Comment = "An unhandled exception has occurred.",
+                        SupportingData = new
+                        {
+                            Framework = Environment.Version.ToString(),
+                            OS = Environment.OSVersion.ToString(),
+                            AppVersion = ConfigResources.AppName + " " + new Certify.Management.Util().GetAppVersion(),
+                            IsException = true
+                        }
+                    });
+
+                var data = new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json");
+                try
+                {
+                    Task.Run(async () =>
+                    {
+                        await client.PostAsync(API_BASE_URI + "submitfeedback", data);
+                    });
+                }
+                catch (Exception exp)
+                {
+                    System.Diagnostics.Debug.WriteLine(exp.ToString());
+                }
+            }
         }
     }
 

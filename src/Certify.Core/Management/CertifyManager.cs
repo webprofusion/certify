@@ -126,7 +126,11 @@ namespace Certify.Management
 
         public async Task<ManagedSite> UpdateManagedSite(ManagedSite site)
         {
-            return await _siteManager.UpdatedManagedSite(site);
+            site = await _siteManager.UpdatedManagedSite(site);
+
+            // report request state to status hub clients
+            OnManagedSiteUpdated?.Invoke(site);
+            return site;
         }
 
         public async Task<List<ManagedSite>> GetManagedSites(ManagedSiteFilter filter = null)
@@ -443,9 +447,11 @@ namespace Certify.Management
                                         (config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI && config.PerformTlsSniBindingConfigChecks && !authorization.TlsSniConfigCheckedOK))
                                     {
                                         //if we failed the config checks, report any errors
-                                        LogMessage(managedSite.Id, string.Format(CoreSR.CertifyManager_FailedPrerequisiteCheck, managedSite.ItemType), LogItemType.CertficateRequestFailed);
+                                        var msg = string.Format(CoreSR.CertifyManager_FailedPrerequisiteCheck, managedSite.ItemType);
+                                        LogMessage(managedSite.Id, msg, LogItemType.CertficateRequestFailed);
+                                        result.Message = msg;
 
-                                        await _siteManager.StoreSettings();
+                                        // TODO: should this be a status save?
 
                                         if (config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP)
                                         {
@@ -458,6 +464,8 @@ namespace Certify.Management
                                         }
 
                                         ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedSite) { Result = result });
+
+                                        await UpdateManagedSiteStatus(managedSite, RequestState.Error, result.Message);
 
                                         break;
                                     }
@@ -480,7 +488,7 @@ namespace Certify.Management
 
                                                 failureSummaryMessage = string.Format(CoreSR.CertifyManager_DomainValidationFailed, domain, errorMsg);
                                                 ReportProgress(progress, new RequestProgressState(RequestState.Error, failureSummaryMessage, managedSite));
-
+                                                await UpdateManagedSiteStatus(managedSite, RequestState.Error, failureSummaryMessage);
                                                 allIdentifiersValidated = false;
                                             }
                                             else
@@ -725,7 +733,10 @@ namespace Certify.Management
                 managedSite.LastRenewalStatus = RequestState.Error;
             }
 
-            await _siteManager.UpdatedManagedSite(managedSite);
+            managedSite = await _siteManager.UpdatedManagedSite(managedSite);
+
+            // report request state to staus hub clients
+            OnManagedSiteUpdated?.Invoke(managedSite);
         }
 
         public List<DomainOption> GetDomainOptionsFromSite(string siteId)
@@ -903,9 +914,9 @@ namespace Certify.Management
 
             bool testModeOnly = false;
 
-            await _siteManager.LoadAllManagedItems();
+            //await _siteManager.LoadAllManagedItems();
 
-            IEnumerable<ManagedSite> sites = await _siteManager.GetManagedSites(new ManagedSiteFilter { IncludeOnlyNextAutoRenew = true });
+            IEnumerable<ManagedSite> sites = await _siteManager.GetManagedSites(new ManagedSiteFilter { IncludeOnlyNextAutoRenew = true }, reloadAll: true);
 
             if (autoRenewalOnly)
             {

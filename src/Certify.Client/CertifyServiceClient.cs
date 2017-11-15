@@ -48,7 +48,7 @@ namespace Certify.Client
             hubProxy = connection.CreateHubProxy("StatusHub");
 
             hubProxy.On<ManagedSite>("ManagedSiteUpdated", (u) => OnManagedSiteUpdated?.Invoke(u));
-            hubProxy.On<RequestProgressState>("SendRequestProgressState", (s) => OnRequestProgressStateUpdated?.Invoke(s));
+            hubProxy.On<RequestProgressState>("RequestProgressStateUpdated", (s) => OnRequestProgressStateUpdated?.Invoke(s));
             hubProxy.On<string, string>("SendMessage", (a, b) => OnMessageFromService?.Invoke(a, b));
 
             connection.Reconnecting += OnConnectionReconnecting;

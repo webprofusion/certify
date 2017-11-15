@@ -318,8 +318,11 @@ namespace Certify.UI.ViewModel
 
         private async void CertifyClient_OnManagedSiteUpdated(ManagedSite obj)
         {
-            // a managed site has been updated, update it in our view
-            await UpdatedCachedManagedSite(obj.Id);
+            await App.Current.Dispatcher.InvokeAsync(async () =>
+              {
+                  // a managed site has been updated, update it in our view
+                  await UpdatedCachedManagedSite(obj);
+              });
         }
 
         public async Task<bool> CheckServiceAvailable()
@@ -408,7 +411,7 @@ namespace Certify.UI.ViewModel
                 else
                 {
                     // add/update site in our local cache
-                    await UpdatedCachedManagedSite(SelectedItem.Id);
+                    await UpdatedCachedManagedSite(SelectedItem, reload:true);
                 }
             }
         }
@@ -419,7 +422,7 @@ namespace Certify.UI.ViewModel
             updatedManagedSite.IsChanged = false;
 
             // add/update site in our local cache
-            await UpdatedCachedManagedSite(item.Id);
+            await UpdatedCachedManagedSite(updatedManagedSite);
 
             return true;
         }
@@ -586,8 +589,19 @@ namespace Certify.UI.ViewModel
         /// <param name="managedSite"></param>
         private async Task UpdatedCachedManagedSite(string managedSiteId)
         {
-            var existing = ManagedSites.FirstOrDefault(i => i.Id == managedSiteId);
-            var newItem = await CertifyClient.GetManagedSite(managedSiteId);
+            
+        }
+
+        private async Task UpdatedCachedManagedSite(ManagedSite managedSite, bool reload=false)
+        {
+            var existing = ManagedSites.FirstOrDefault(i => i.Id == managedSite.Id);
+            var newItem = managedSite;
+
+            // optional reload managed site details (for refresh)
+            if (reload) newItem = await CertifyClient.GetManagedSite(managedSite.Id);
+            newItem.IsChanged = false;
+
+            // update our cached copy of the managed site details
             if (existing != null)
             {
                 var index = ManagedSites.IndexOf(existing);
@@ -599,7 +613,8 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public async Task<APIResult> TestChallengeResponse(ManagedSite managedSite)
+
+            public async Task<APIResult> TestChallengeResponse(ManagedSite managedSite)
         {
             return await CertifyClient.TestChallengeConfiguration(managedSite);
         }

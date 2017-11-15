@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNet.SignalR;
+﻿using Certify.Models;
+using Microsoft.AspNet.SignalR;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -33,21 +34,16 @@ namespace Certify.Service
             return base.OnDisconnected(stopCalled);
         }
 
-        public void SendRequestProgressState(Certify.Models.RequestProgressState state)
+        public static void SendRequestProgressState(RequestProgressState state)
         {
             Debug.WriteLine("Sending progress state..");
-            Clients.All.RequestProgressStateUpdated(state);
+            HubContext.Clients.All.RequestProgressStateUpdated(state);
         }
 
-        public void SendUpdatedManagedSite(Certify.Models.ManagedSite site)
+        public static void SendManagedSiteUpdate(ManagedSite site)
         {
             Debug.WriteLine("Sending updated managed site..");
-            Clients.All.ManagedSiteUpdated(site);
-        }
-
-        public void Send(string name, string message)
-        {
-            Clients.All.SendMessage(name, message);
+            HubContext.Clients.All.ManagedSiteUpdated(site);
         }
     }
 }

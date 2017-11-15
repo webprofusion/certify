@@ -41,13 +41,13 @@ namespace Certify.Service
             currentCertifyManager.OnRequestProgressStateUpdated += (Models.RequestProgressState obj) =>
             {
                 // notify client(s) of status updates
-                StatusHub.HubContext.Clients.All.SendRequestProgressState(obj);
+                StatusHub.SendRequestProgressState(obj);
             };
 
             currentCertifyManager.OnManagedSiteUpdated += (Models.ManagedSite obj) =>
             {
                 // notify client(s) of update to a managed site
-                StatusHub.HubContext.Clients.All.ManagedSiteUpdated(obj);
+                StatusHub.SendManagedSiteUpdate(obj);
             };
 
             // use a timer to poll for periodic jobs (cleanup, renewal etc)

@@ -170,6 +170,15 @@ namespace Certify.Management
                 File.Move(json, $"{json}.bak");
                 Debug.WriteLine($"UpgradeSettings[Json->SQLite] took {watch.ElapsedMilliseconds}ms for {ManagedSitesCache.Count} records");
             }
+            else
+            {
+                if (!File.Exists(db))
+                {
+                    // no setting to upgrade, create the empty database
+                    await StoreSettings();
+                }
+               
+            }
         }
 
         private async Task<ManagedSite> LoadManagedSite(string siteId)
