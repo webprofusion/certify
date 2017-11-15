@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Certify.Management.APIProviders
@@ -13,7 +12,7 @@ namespace Certify.Management.APIProviders
 
         public ACMESharpProvider()
         {
-            _vaultManager = new VaultManager(CoreAppSettings.Current.VaultPath, ACMESharp.Vault.Providers.LocalDiskVault.VAULT);
+            _vaultManager = new VaultManager(CoreAppSettings.Current.VaultPath);
             _vaultManager.UseEFSForSensitiveFiles = false;
         }
 

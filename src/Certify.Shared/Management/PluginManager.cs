@@ -1,14 +1,8 @@
 ﻿using Certify.Models.Plugins;
 using System;
-using System.Collections.Generic;
-using System.Composition;
-using System.Composition.Convention;
 using System.Composition.Hosting;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Certify.Management
 {
@@ -27,9 +21,7 @@ namespace Certify.Management
         {
             try
             {
-                var conventions = new ConventionBuilder();
                 var assembly = Assembly.LoadFrom(Path.Combine(GetPluginFolderPath(), "Licensing.dll"));
-
                 var configuration = new ContainerConfiguration().WithAssembly(assembly);
 
                 using (var container = configuration.CreateContainer())

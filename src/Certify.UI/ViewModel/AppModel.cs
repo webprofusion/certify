@@ -411,7 +411,7 @@ namespace Certify.UI.ViewModel
                 else
                 {
                     // add/update site in our local cache
-                    await UpdatedCachedManagedSite(SelectedItem, reload:true);
+                    await UpdatedCachedManagedSite(SelectedItem, reload: true);
                 }
             }
         }
@@ -583,16 +583,7 @@ namespace Certify.UI.ViewModel
             // current requests?
         }
 
-        /// <summary>
-        /// Update our current copy of the 
-        /// </summary>
-        /// <param name="managedSite"></param>
-        private async Task UpdatedCachedManagedSite(string managedSiteId)
-        {
-            
-        }
-
-        private async Task UpdatedCachedManagedSite(ManagedSite managedSite, bool reload=false)
+        private async Task UpdatedCachedManagedSite(ManagedSite managedSite, bool reload = false)
         {
             var existing = ManagedSites.FirstOrDefault(i => i.Id == managedSite.Id);
             var newItem = managedSite;
@@ -613,8 +604,7 @@ namespace Certify.UI.ViewModel
             }
         }
 
-
-            public async Task<APIResult> TestChallengeResponse(ManagedSite managedSite)
+        public async Task<APIResult> TestChallengeResponse(ManagedSite managedSite)
         {
             return await CertifyClient.TestChallengeConfiguration(managedSite);
         }

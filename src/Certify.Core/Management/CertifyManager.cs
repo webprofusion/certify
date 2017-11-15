@@ -296,17 +296,6 @@ namespace Certify.Management
             }
         }
 
-        private void LogMessage(string managedSiteId, List<string> msgs, LogItemType logType = LogItemType.GeneralInfo)
-        {
-            foreach (var msg in msgs)
-            {
-                if (msg != null)
-                {
-                    LogMessage(managedSiteId, msg, logType);
-                }
-            }
-        }
-
         private void LogMessage(string managedSiteId, string msg, LogItemType logType = LogItemType.GeneralInfo)
         {
             ManagedSiteLog.AppendLog(managedSiteId, new ManagedSiteLogItem
@@ -1090,11 +1079,11 @@ namespace Certify.Management
                         //TODO: replace site binding with domain options
                         //managedSite.SiteBindings = new List<ManagedSiteBinding>();
 
-                        foreach (var binding in s)
-                        {
-                            var managedBinding = new ManagedSiteBinding { Hostname = binding.Host, IP = binding.IP, Port = binding.Port, UseSNI = true, CertName = "Certify_" + binding.Host };
-                            // managedSite.SiteBindings.Add(managedBinding);
-                        }
+                        /* foreach (var binding in s)
+                         {
+                             var managedBinding = new ManagedSiteBinding { Hostname = binding.Host, IP = binding.IP, Port = binding.Port, UseSNI = true, CertName = "Certify_" + binding.Host };
+                             // managedSite.SiteBindings.Add(managedBinding);
+                         }*/
                         sites.Add(managedSite);
                     }
                 }

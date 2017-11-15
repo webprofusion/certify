@@ -33,7 +33,14 @@ namespace Certify.Service
         [HttpGet, Route("sitelist/{serverType}")]
         public List<SiteBindingItem> GetServerSiteList(StandardServerTypes serverType)
         {
-            return _certifyManager.GetPrimaryWebSites(Management.CoreAppSettings.Current.IgnoreStoppedSites);
+            if (serverType == StandardServerTypes.IIS)
+            {
+                return _certifyManager.GetPrimaryWebSites(Management.CoreAppSettings.Current.IgnoreStoppedSites);
+            }
+            else
+            {
+                return new List<SiteBindingItem>();
+            }
         }
 
         [HttpGet, Route("sitedomains/{serverType}/{serverSiteId}")]

@@ -2,7 +2,6 @@
 using Certify.Models;
 using Microsoft.ApplicationInsights;
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -63,7 +62,6 @@ namespace Certify.CLI
 
     internal class CertifyCLI
     {
-        private readonly IdnMapping _idnMapping = new IdnMapping();
         private TelemetryClient _tc = null;
         private ICertifyClient _certifyClient = null;
         private Preferences _prefs = new Preferences();

@@ -29,7 +29,7 @@ namespace Certify
     {
         private VaultInfo vaultConfig;
         internal string vaultFolderPath;
-        private string vaultFilename;
+
         private string vaultProfile = null;
         public List<ActionLogItem> ActionLogs { get; }
         private NetworkUtils NetUtil;
@@ -47,11 +47,10 @@ namespace Certify
 
         #region Vault
 
-        public VaultManager(string vaultFolderPath, string vaultFilename)
+        public VaultManager(string vaultFolderPath)
         {
             Certify.Management.Util.SetSupportedTLSVersions();
             this.vaultFolderPath = vaultFolderPath;
-            this.vaultFilename = vaultFilename;
 
             this.ActionLogs = new List<ActionLogItem>();
             this.ActionLogs.Capacity = 1000;

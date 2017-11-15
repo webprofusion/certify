@@ -1,9 +1,8 @@
-﻿using System;
-using ACMESharp.JOSE;
+﻿using ACMESharp.JOSE;
 using ACMESharp.PKI;
 using ACMESharp.Vault.Model;
+using System;
 using System.IO;
-using System.Net;
 
 /*
  * Port of supporting utls for powershell methods from ACMESharp.POSH: https://github.com/ebekker/ACMESharp
@@ -29,7 +28,6 @@ namespace ACMESharp.POSH.Util
     {
         public static AcmeClient GetClient(VaultInfo Config)
         {
-            var p = Config.Proxy;
             var _Client = new AcmeClient();
 
             _Client.UserAgent = $"Certify/{0} {_Client.UserAgent}";

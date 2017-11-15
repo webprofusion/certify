@@ -381,20 +381,6 @@ namespace Certify.Management
             }
         }
 
-        #endregion IIS
-
-        #region Certificates
-
-        internal static void LogMessage(string managedSiteId, string msg)
-        {
-            ManagedSiteLog.AppendLog(managedSiteId, new ManagedSiteLogItem
-            {
-                EventDate = DateTime.UtcNow,
-                LogItemType = LogItemType.GeneralInfo,
-                Message = msg
-            });
-        }
-
         /// <summary>
         /// Finds the IIS <see cref="Site" /> corresponding to a <see cref="ManagedSite" />. 
         /// </summary>
@@ -419,6 +405,10 @@ namespace Certify.Management
 
             return site;
         }
+
+        #endregion IIS
+
+        #region Certificates
 
         /// <summary>
         /// Creates or updates the htttps bindings associated with the dns names in the current

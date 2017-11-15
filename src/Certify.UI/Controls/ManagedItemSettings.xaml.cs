@@ -10,7 +10,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using WinForms = System.Windows.Forms;
 
 namespace Certify.UI.Controls
@@ -401,16 +400,6 @@ namespace Certify.UI.Controls
                     RevokeCertificateBtn.IsEnabled = true;
                 }
             }
-        }
-
-        private void ScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            // allows mousewheel scrolling while mouse cursor is over the DataGrid
-            // see: https://stackoverflow.com/a/16235785/490657
-            ScrollViewer scv = (ScrollViewer)sender;
-
-            scv.ScrollToVerticalOffset(scv.VerticalOffset - e.Delta / 2);
-            e.Handled = true;
         }
     }
 }

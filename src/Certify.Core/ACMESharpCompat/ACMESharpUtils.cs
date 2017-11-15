@@ -168,7 +168,6 @@ namespace Certify.ACMESharpCompat
                         throw new InvalidOperationException("No registrations found");
 
                     var ri = v.Registrations[0];
-                    var r = ri.Registration;
 
                     if (v.Certificates == null || v.Certificates.Count < 1)
                         throw new InvalidOperationException("No certificates found");
@@ -321,7 +320,6 @@ namespace Certify.ACMESharpCompat
                         throw new InvalidOperationException("No registrations found");
 
                     var ri = v.Registrations[0];
-                    var r = ri.Registration;
 
                     AuthorizationState authzState = null;
                     var ii = new IdentifierInfo
@@ -368,7 +366,6 @@ namespace Certify.ACMESharpCompat
                         throw new InvalidOperationException("No registrations found");
 
                     var ri = v.Registrations[0];
-                    var r = ri.Registration;
 
                     if (v.Identifiers == null || v.Identifiers.Count < 1)
                         throw new InvalidOperationException("No identifiers found");
@@ -427,7 +424,6 @@ namespace Certify.ACMESharpCompat
                         throw new InvalidOperationException("No registrations found");
 
                     var ri = v.Registrations[0];
-                    var r = ri.Registration;
 
                     if (v.Identifiers == null || v.Identifiers.Count < 1)
                         throw new InvalidOperationException("No identifiers found");
@@ -491,7 +487,6 @@ namespace Certify.ACMESharpCompat
                         throw new InvalidOperationException("No registrations found");
 
                     var ri = v.Registrations[0];
-                    var r = ri.Registration;
 
                     if (v.Identifiers == null || v.Identifiers.Count < 1)
                         throw new InvalidOperationException("No identifiers found");
@@ -664,7 +659,6 @@ namespace Certify.ACMESharpCompat
                         throw new InvalidOperationException("No registrations found");
 
                     var ri = v.Registrations[0];
-                    var r = ri.Registration;
 
                     if (v.Identifiers == null || v.Identifiers.Count < 1)
                         throw new InvalidOperationException("No identifiers found");
@@ -800,7 +794,6 @@ namespace Certify.ACMESharpCompat
                         throw new InvalidOperationException("No registrations found");
 
                     var ri = v.Registrations[0];
-                    var r = ri.Registration;
 
                     if (v.Certificates == null || v.Certificates.Count < 1)
                         throw new InvalidOperationException("No certificates found");
@@ -984,27 +977,7 @@ namespace Certify.ACMESharpCompat
                         throw new InvalidOperationException("No registrations found");
 
                     var ri = v.Registrations[0];
-                    var r = ri.Registration;
 
-                    /*  if (string.IsNullOrEmpty(certRef))
-                      {
-                          int seq = 0;
-                          WriteObject(v.Certificates.Values.Select(x => new
-                          {
-                              Seq = seq++,
-                              x.Id,
-                              x.Alias,
-                              x.Label,
-                              x.IdentifierDns,
-                              x.Thumbprint,
-                              x.SerialNumber,
-                              x.IssuerSerialNumber,
-                              x.CertificateRequest,
-                              x.CertificateRequest?.StatusCode,
-                          }), true);
-                      }
-                      else
-                      {*/
                     if (v.Certificates == null || v.Certificates.Count < 1)
                         throw new InvalidOperationException("No certificates found");
 
@@ -1100,9 +1073,6 @@ namespace Certify.ACMESharpCompat
                             }
                         }
                     }
-
-                    /*  WriteObject(ci);
-                  }*/
                 }
             }
         }
@@ -1120,7 +1090,6 @@ namespace Certify.ACMESharpCompat
                         throw new InvalidOperationException("No registrations found");
 
                     var ri = v.Registrations[0];
-                    var r = ri.Registration;
 
                     if (v.Certificates == null || v.Certificates.Count < 1)
                         throw new InvalidOperationException("No certificates found");
