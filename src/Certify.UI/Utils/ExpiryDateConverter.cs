@@ -1,6 +1,5 @@
 using Certify.Locales;
 using System;
-using System.Linq;
 using System.Windows;
 using System.Windows.Data;
 
@@ -53,7 +52,7 @@ namespace Certify.UI.Utils
             {
                 return System.Windows.Media.Brushes.Red;
             }
-            else if (days < 14)
+            else if (days < 30)
             {
                 return System.Windows.Media.Brushes.OrangeRed;
             }

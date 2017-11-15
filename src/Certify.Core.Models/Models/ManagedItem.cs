@@ -22,6 +22,14 @@ namespace Certify.Models
         Ignore
     }
 
+    public enum ManagedItemHealth
+    {
+        Unknown,
+        OK,
+        Warning,
+        Error
+    }
+
     public class ManagedItem : BindableBase
     {
         /// <summary>
@@ -84,6 +92,36 @@ namespace Certify.Models
 
         [JsonIgnore]
         public bool Deleted { get; set; } // do not serialize to settings
+
+        [JsonIgnore]
+        public ManagedItemHealth Health
+        {
+            get
+            {
+                if (LastRenewalStatus == RequestState.Error)
+                {
+                    if (RenewalFailureCount > 5)
+                    {
+                        return ManagedItemHealth.Error;
+                    }
+                    else
+                    {
+                        return ManagedItemHealth.Warning;
+                    }
+                }
+                else
+                {
+                    if (LastRenewalStatus != null)
+                    {
+                        return ManagedItemHealth.OK;
+                    }
+                    else
+                    {
+                        return ManagedItemHealth.Unknown;
+                    }
+                }
+            }
+        }
     }
 
     public class ManagedSite : ManagedItem

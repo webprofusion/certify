@@ -21,6 +21,7 @@
             <utils:EnumConverter x:Key="EnumConverter" />
             <utils:ExpiryDateConverter x:Key="ExpiryDateConverter" />
             <utils:ExpiryDateColourConverter x:Key="ExpiryDateColourConverter" />
+            <utils:ManagedItemHealthColourConverter x:Key="HealthColourConverter" />
         </Grid.Resources>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="240" MaxWidth="400" MinWidth="200"></ColumnDefinition>
@@ -61,7 +62,7 @@
                         <StackPanel Orientation="Vertical" Margin="0,8,0,0">
                             <StackPanel Orientation="Horizontal">
                                 <fa:FontAwesome Icon="Globe" Margin="0,0,8,0" />
-                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,8,0" />
+                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,8,0" Foreground="{Binding Path=Health, Converter={StaticResource HealthColourConverter}}" />
                             </StackPanel>
 
                             <TextBlock Text="{Binding Path=ItemType, Converter={StaticResource EnumConverter}}" Margin="16,0,0,0" FontSize="10" Foreground="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}" />
