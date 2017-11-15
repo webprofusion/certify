@@ -1,5 +1,6 @@
 using Certify.Locales;
 using Microsoft.ApplicationInsights;
+using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -56,13 +57,20 @@ namespace Certify.UI
             // save or discard site changes before creating a new site/certificate
             if (!await MainViewModel.ConfirmDiscardUnsavedChanges()) return;
 
-            //present new managed item (certificate request) UI
             if (!MainViewModel.IsRegisteredVersion && MainViewModel.ManagedSites != null && MainViewModel.ManagedSites.Count >= 5)
             {
-                MessageBox.Show(SR.MainWindow_TrialLimitionReached);
+                MessageBox.Show(SR.MainWindow_TrialLimitationReached);
                 return;
             }
 
+            // check user has registered a contact with LE first
+            if (String.IsNullOrEmpty(MainViewModel.PrimaryContactEmail))
+            {
+                EnsureContactRegistered();
+                return;
+            }
+
+            //present new managed item (certificate request) UI
             //select tab Managed Items
             MainViewModel.MainUITabIndex = (int)PrimaryUITabs.ManagedItems;
             MainViewModel.SelectedWebSite = null;
@@ -171,14 +179,8 @@ namespace Certify.UI
                 MessageBox.Show(SR.MainWindow_IISNotAvailable);
             }
 
-            //FIXME:  checks cause async blocks
-            if (!MainViewModel.HasRegisteredContacts)
-            {
-                //start by registering
-                MessageBox.Show(SR.MainWindow_GetStartGuideWithNewCert);
-                var d = new Windows.EditContactDialog { };
-                d.ShowDialog();
-            }
+            // check if primary contact registered with LE
+            EnsureContactRegistered();
 
             if (!MainViewModel.IsRegisteredVersion)
             {
@@ -214,6 +216,17 @@ namespace Certify.UI
                         App.Current.Shutdown();
                     }
                 }
+            }
+        }
+
+        private void EnsureContactRegistered()
+        {
+            if (!MainViewModel.HasRegisteredContacts)
+            {
+                //start by registering
+                MessageBox.Show(SR.MainWindow_GetStartGuideWithNewCert);
+                var d = new Windows.EditContactDialog { };
+                d.ShowDialog();
             }
         }
 
