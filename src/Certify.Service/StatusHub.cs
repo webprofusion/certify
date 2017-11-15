@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNet.SignalR;
-using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Certify.Service
 {
@@ -37,6 +37,12 @@ namespace Certify.Service
         {
             Debug.WriteLine("Sending progress state..");
             Clients.All.RequestProgressStateUpdated(state);
+        }
+
+        public void SendUpdatedManagedSite(Certify.Models.ManagedSite site)
+        {
+            Debug.WriteLine("Sending updated managed site..");
+            Clients.All.ManagedSiteUpdated(site);
         }
 
         public void Send(string name, string message)

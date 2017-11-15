@@ -293,6 +293,7 @@ namespace Certify.UI.ViewModel
             // wire up stream events
             CertifyClient.OnMessageFromService += CertifyClient_SendMessage;
             CertifyClient.OnRequestProgressStateUpdated += UpdateRequestTrackingProgress;
+            CertifyClient.OnManagedSiteUpdated += CertifyClient_OnManagedSiteUpdated;
 
             //check service connection
             IsServiceAvailable = await CheckServiceAvailable();
@@ -313,6 +314,12 @@ namespace Certify.UI.ViewModel
 
             // connect to status api stream & handle events
             await CertifyClient.ConnectStatusStreamAsync();
+        }
+
+        private async void CertifyClient_OnManagedSiteUpdated(ManagedSite obj)
+        {
+            // a managed site has been updated, update it in our view
+            await UpdatedCachedManagedSite(obj.Id);
         }
 
         public async Task<bool> CheckServiceAvailable()
@@ -336,7 +343,9 @@ namespace Certify.UI.ViewModel
             this.Preferences = await CertifyClient.GetPreferences();
 
             var list = await CertifyClient.GetManagedSites(new Models.ManagedSiteFilter());
+
             foreach (var i in list) i.IsChanged = false;
+
             ManagedSites = new System.Collections.ObjectModel.ObservableCollection<Models.ManagedSite>(list);
         }
 
@@ -398,13 +407,8 @@ namespace Certify.UI.ViewModel
                 }
                 else
                 {
-                    // replace current item with saved version
-
-                    /*ManagedSites.Remove(SelectedItem);
-                    var item = await CertifyClient.GetManagedSite(SelectedItem.Id);
-                    ManagedSites.Add(item);
-                    SelectedItem = item;*/
-                    await LoadSettingsAsync();
+                    // add/update site in our local cache
+                    await UpdatedCachedManagedSite(SelectedItem.Id);
                 }
             }
         }
