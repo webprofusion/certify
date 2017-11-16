@@ -85,7 +85,7 @@ namespace Certify.Core.Tests
             Assert.IsTrue(result.IsSuccess);
 
             //check details of cert, subject alternative name should include domain and expiry must be great than 89 days in the future
-            var managedSites = certifyManager.GetManagedSites();
+            var managedSites = await certifyManager.GetManagedSites();
             var managedSite = managedSites.FirstOrDefault(m => m.Id == dummyManagedSite.Id);
 
             //emsure we have a new managed site
@@ -108,7 +108,7 @@ namespace Certify.Core.Tests
             Assert.IsTrue(expiresInFuture);
 
             // remove managed site
-            certifyManager.DeleteManagedSite(managedSite.Id);
+            await certifyManager.DeleteManagedSite(managedSite.Id);
         }
     }
 }

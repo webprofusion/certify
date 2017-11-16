@@ -1,17 +1,10 @@
+using Certify.Locales;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 
 namespace Certify.UI.Utils
 {
-    using Resources;
-
     public class ExpiryDateConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
@@ -59,7 +52,7 @@ namespace Certify.UI.Utils
             {
                 return System.Windows.Media.Brushes.Red;
             }
-            else if (days < 14)
+            else if (days < 30)
             {
                 return System.Windows.Media.Brushes.OrangeRed;
             }

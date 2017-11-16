@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:res="clr-namespace:Certify.UI.Resources"
+        xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
         xmlns:local="clr-namespace:Certify.UI.Windows"
                             xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         mc:Ignorable="d" TitleCaps="False" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner"

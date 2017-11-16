@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Certify.Management
 {
@@ -77,6 +73,35 @@ namespace Certify.Management
     public class SettingsManager
     {
         private const string COREAPPSETTINGSFILE = "appsettings.json";
+
+        public static bool FromPreferences(Models.Preferences prefs)
+        {
+            CoreAppSettings.Current.EnableAppTelematics = prefs.EnableAppTelematics;
+            CoreAppSettings.Current.EnableDNSValidationChecks = prefs.EnableDNSValidationChecks;
+            CoreAppSettings.Current.EnableValidationProxyAPI = prefs.EnableValidationProxyAPI;
+            CoreAppSettings.Current.IgnoreStoppedSites = prefs.IgnoreStoppedSites;
+            CoreAppSettings.Current.MaxRenewalRequests = prefs.MaxRenewalRequests;
+            CoreAppSettings.Current.RenewalIntervalDays = prefs.RenewalIntervalDays;
+            CoreAppSettings.Current.EnableEFS = prefs.EnableEFS;
+
+            return true;
+        }
+
+        public static Models.Preferences ToPreferences()
+        {
+            LoadAppSettings();
+            Models.Preferences prefs = new Models.Preferences();
+
+            prefs.EnableAppTelematics = CoreAppSettings.Current.EnableAppTelematics;
+            prefs.EnableDNSValidationChecks = CoreAppSettings.Current.EnableDNSValidationChecks;
+            prefs.EnableValidationProxyAPI = CoreAppSettings.Current.EnableValidationProxyAPI;
+            prefs.IgnoreStoppedSites = CoreAppSettings.Current.IgnoreStoppedSites;
+            prefs.MaxRenewalRequests = CoreAppSettings.Current.MaxRenewalRequests;
+            prefs.RenewalIntervalDays = CoreAppSettings.Current.RenewalIntervalDays;
+            prefs.EnableEFS = CoreAppSettings.Current.EnableEFS;
+
+            return prefs;
+        }
 
         public static void SaveAppSettings()
         {

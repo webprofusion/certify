@@ -1,23 +1,13 @@
+using Certify.Locales;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace Certify.UI.Windows
 {
-    using Resources;
-
     /// <summary>
-    /// Interaction logic for ScheduledTaskConfig.xaml
+    /// Interaction logic for ScheduledTaskConfig.xaml 
     /// </summary>
     public partial class ScheduledTaskConfig
     {
@@ -28,8 +18,8 @@ namespace Certify.UI.Windows
             InitializeComponent();
             //check if scheduled task already configured
 
-            var certifyManager = new Certify.Management.CertifyManager();
-            TaskConfigured = certifyManager.IsWindowsScheduledTaskPresent();
+            var taskScheduler = new Shared.TaskScheduler();
+            TaskConfigured = taskScheduler.IsWindowsScheduledTaskPresent();
 
             if (TaskConfigured)
             {
@@ -43,8 +33,8 @@ namespace Certify.UI.Windows
             //create/update scheduled task
             if (!String.IsNullOrEmpty(Username.Text) && (!String.IsNullOrEmpty(Password.Password)))
             {
-                var certifyManager = new Certify.Management.CertifyManager();
-                if (certifyManager.CreateWindowsScheduledTask(Username.Text, Password.Password))
+                var taskScheduler = new Shared.TaskScheduler();
+                if (taskScheduler.CreateWindowsScheduledTask(Username.Text, Password.Password))
                 {
                     MessageBox.Show(SR.ScheduledTaskConfig_TaskCreated);
                     this.Close();

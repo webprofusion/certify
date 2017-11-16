@@ -1,13 +1,12 @@
+using Certify.Models;
 using Microsoft.Web.Administration;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading.Tasks;
-using Certify.Models;
-using System.Globalization;
 
 namespace Certify.Management
 {
@@ -38,6 +37,24 @@ namespace Certify.Management
 
                 return _isIISAvailable;
             }
+        }
+
+        public async Task<bool> IsIISAvailableAsync()
+        {
+            // FIXME: blocking async
+            var isAvailable = false;
+            using (var srv = GetDefaultServerManager())
+            {
+                if (srv != null) isAvailable = true;
+            }
+            return await Task.FromResult(isAvailable);
+        }
+
+        public async Task<Version> GetIisVersionAsync()
+        {
+            // FIXME: blocking async
+
+            return await Task.FromResult(GetIisVersion());
         }
 
         public Version GetIisVersion()
@@ -364,20 +381,6 @@ namespace Certify.Management
             }
         }
 
-        #endregion IIS
-
-        #region Certificates
-
-        internal static void LogMessage(string managedSiteId, string msg)
-        {
-            ManagedSiteLog.AppendLog(managedSiteId, new ManagedSiteLogItem
-            {
-                EventDate = DateTime.UtcNow,
-                LogItemType = LogItemType.GeneralInfo,
-                Message = msg
-            });
-        }
-
         /// <summary>
         /// Finds the IIS <see cref="Site" /> corresponding to a <see cref="ManagedSite" />. 
         /// </summary>
@@ -402,6 +405,10 @@ namespace Certify.Management
 
             return site;
         }
+
+        #endregion IIS
+
+        #region Certificates
 
         /// <summary>
         /// Creates or updates the htttps bindings associated with the dns names in the current

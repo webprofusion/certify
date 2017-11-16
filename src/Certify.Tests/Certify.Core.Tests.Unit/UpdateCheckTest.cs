@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Core.Tests.Unit
@@ -19,20 +19,42 @@ namespace Certify.Core.Tests.Unit
 
             // current version is newer than update version
             Assert.IsFalse(result.IsNewerVersion);
+
+            result = updateChecker.CheckForUpdates("5.1.1").Result;
+
+            // current version is newer than update version
+            Assert.IsFalse(result.IsNewerVersion);
+            Assert.IsFalse(result.MustUpdate, "No mandatory update required");
+
+            //check mandatory update is identified (v3, mandatory update below from 2.2.35)
+            var updateCheckResult = new UpdateCheck
+            {
+                Version = new AppVersion { Major = 3, Minor = 0, Patch = 0 },
+                Message = new UpdateMessage
+                {
+                    MandatoryBelowVersion = new AppVersion { Major = 2, Minor = 2, Patch = 35 }
+                }
+            };
+            var test = Certify.Management.Util.CompareVersions("2.1.1", updateCheckResult);
+            Assert.IsTrue(test.IsNewerVersion, "Update is newer");
+            Assert.IsTrue(test.MustUpdate, "This version must update");
+
+            test = Certify.Management.Util.CompareVersions("2.2.36", updateCheckResult);
+            Assert.IsFalse(test.MustUpdate, "This version can optionally update");
         }
 
         [TestMethod]
         public void CheckMultipleVersions()
         {
-            Certify.Models.AppVersion v2_0_13 = new Models.AppVersion() { Major = 2, Minor = 0, Patch = 13 };
+            Certify.Models.AppVersion v2_0_13 = new AppVersion() { Major = 2, Minor = 0, Patch = 13 };
 
-            Certify.Models.AppVersion v2_1_1 = new Models.AppVersion() { Major = 2, Minor = 1, Patch = 1 };
+            Certify.Models.AppVersion v2_1_1 = new AppVersion() { Major = 2, Minor = 1, Patch = 1 };
 
-            Certify.Models.AppVersion v2_1_2 = new Models.AppVersion() { Major = 2, Minor = 1, Patch = 2 };
+            Certify.Models.AppVersion v2_1_2 = new AppVersion() { Major = 2, Minor = 1, Patch = 2 };
 
-            Certify.Models.AppVersion v2_2_2 = new Models.AppVersion() { Major = 2, Minor = 2, Patch = 2 };
+            Certify.Models.AppVersion v2_2_2 = new AppVersion() { Major = 2, Minor = 2, Patch = 2 };
 
-            Certify.Models.AppVersion v3_1_1 = new Models.AppVersion() { Major = 3, Minor = 1, Patch = 2 };
+            Certify.Models.AppVersion v3_1_1 = new AppVersion() { Major = 3, Minor = 1, Patch = 2 };
 
             var isNewer = Certify.Models.AppVersion.IsOtherVersionNewer(v2_1_1, v2_0_13);
             Assert.IsFalse(isNewer, "Older version is not newer than current");

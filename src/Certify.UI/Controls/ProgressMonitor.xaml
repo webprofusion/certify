@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:Certify.UI.Controls"
                xmlns:fa="http://schemas.fontawesome.io/icons/"
              xmlns:utils="clr-namespace:Certify.UI.Utils"
-             xmlns:res="clr-namespace:Certify.UI.Resources"
+             xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
              mc:Ignorable="d">
 
     <DockPanel>

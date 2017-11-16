@@ -3,6 +3,7 @@ using ACMESharp.Vault.Model;
 using ACMESharp.Vault.Providers;
 using ACMESharp.Vault.Util;
 using Certify.ACMESharpCompat;
+using Certify.Locales;
 using Certify.Management;
 using Certify.Models;
 using Newtonsoft.Json;
@@ -28,12 +29,12 @@ namespace Certify
     {
         private VaultInfo vaultConfig;
         internal string vaultFolderPath;
-        private string vaultFilename;
+
         private string vaultProfile = null;
         public List<ActionLogItem> ActionLogs { get; }
         private NetworkUtils NetUtil;
 
-        internal const string VAULT_LOCK = "CertifyVault";
+        internal static object VAULT_LOCK = new Guid("d776b116-5695-4c3a-94c5-e67b7714fb28");
 
         private readonly IdnMapping idnMapping = new IdnMapping();
 
@@ -46,11 +47,10 @@ namespace Certify
 
         #region Vault
 
-        public VaultManager(string vaultFolderPath, string vaultFilename)
+        public VaultManager(string vaultFolderPath)
         {
             Certify.Management.Util.SetSupportedTLSVersions();
             this.vaultFolderPath = vaultFolderPath;
-            this.vaultFilename = vaultFilename;
 
             this.ActionLogs = new List<ActionLogItem>();
             this.ActionLogs.Capacity = 1000;
@@ -97,13 +97,13 @@ namespace Certify
                     vlt.OpenStorage(initOrOpen: initOrOpen);
                     return;
                 }
-                catch (System.IO.IOException)
+                catch (System.IO.IOException exp)
                 {
                     maxAttempts--;
 #if DEBUG
-                    System.Diagnostics.Debug.WriteLine("Failed to open vault, retrying..");
+                    System.Diagnostics.Debug.WriteLine("Failed to open vault, retrying.." + exp.ToString());
 #endif
-                    Thread.Sleep(200);
+                    Thread.Sleep(500);
                 }
             }
         }
@@ -834,6 +834,9 @@ namespace Certify
                             {
                                 result.IsOK = false;
                                 result.FailedItemSummary.Add($"Config checks failed to verify http://{domain} is both publicly accessible and can serve extensionless files e.g. {challengeFileUrl}");
+
+                                // don't check any more after first failure
+                                break;
                             }
                         }
                     }
@@ -997,7 +1000,7 @@ namespace Certify
 
             // create a web.config for extensionless files, then test it (make a request for the
             // extensionless configcheck file over http)
-            string webConfigContent = Core.Properties.Resources.IISWebConfig;
+            string webConfigContent = ConfigResources.IISWebConfig;
 
             if (!File.Exists(destPath + "\\web.config"))
             {

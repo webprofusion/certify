@@ -4,9 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:Certify.UI.Controls"
-             xmlns:res="clr-namespace:Certify.UI.Resources"
-             mc:Ignorable="d" Height="359.514" Width="889.51" MinWidth="650">
-    <Grid Margin="0,0,11.6,10">
+             xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+             xmlns:fa="http://schemas.fontawesome.io/icons/"
+             mc:Ignorable="d" MinWidth="650" Loaded="UserControl_Loaded" d:DesignWidth="817.6" Height="387.867">
+    <Grid Margin="0,0,12,10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition></ColumnDefinition>
             <ColumnDefinition Width="190"></ColumnDefinition>
@@ -16,12 +17,13 @@
         <TextBlock x:Name="lblRegistrationType" HorizontalAlignment="Left" Margin="10,56,0,0" TextWrapping="Wrap" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5" Height="35" Width="335" Text="{x:Static res:SR.AboutControl_RegistrationTypeLabel}" FontWeight="Bold" />
         <TextBlock x:Name="lblRegistrationDetails" Margin="10,123,9.6,0" TextWrapping="Wrap" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5" Height="64" FontSize="10"><Run Text="{x:Static res:SR.AboutControl_TrialDetailLabel}" /></TextBlock>
         <TextBox x:Name="creditLibs" Margin="10,195,20,10.2" TextWrapping="Wrap" Text="This app makes use of the following Open Source projects. Please refer to each project website for full license details:&#xD;&#xA;&#xD;&#xA;- Let's Encrypt: https://letsencrypt.org&#xA;- ACMESharp: [Mozilla Public License 2.0] https://pkisharp.github.io/ACMESharp-docs/&#xA;- Newtonsoft Json.Net: https://www.newtonsoft.com/json&#xA;- Fontawesome.WPF: https://github.com/charri/Font-Awesome-WPF&#xA;- MahApps.Metro: http://mahapps.com/&#xD;&#xA;- ARSoft.Tools.Net: [Apache License 2.0] https://github.com/alexreinert/ARSoft.Tools.Net" />
-        <Button Content="{x:Static res:SR.AboutControl_CheckForUpdateButton}" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top" Width="161" Click="UpdateCheck_Click" Height="27" Grid.Column="1" />
-        <Button x:Name="Register" Content="{x:Static res:SR.AboutControl_Register}" HorizontalAlignment="Left" Margin="0.4,105,0,0" VerticalAlignment="Top" Width="161" Height="27" Grid.Column="1" Click="Button_Click" />
+        <Button Content="{x:Static res:SR.AboutControl_CheckForUpdateButton}" Margin="0,10,29.6,0" VerticalAlignment="Top" Click="UpdateCheck_Click" Height="27" Grid.Column="1" HorizontalAlignment="Right" Width="151" />
+        <Button x:Name="Register" Content="{x:Static res:SR.AboutControl_Register}" HorizontalAlignment="Right" Margin="0,105,29.6,0" VerticalAlignment="Top" Width="151" Height="27" Grid.Column="1" Click="Button_Click" />
         <TextBlock x:Name="lblAbout" Margin="10,78,20,0" TextWrapping="Wrap" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5" Height="35"><Run Text="Copyright Webprofusion Pty Ltd 2017" /><LineBreak /><Run Text="https://certify" /><Run Text="theweb" /><Run Text=".com" /><LineBreak /><Run /></TextBlock>
         <TextBlock x:Name="lblAppTitle" HorizontalAlignment="Left" Margin="10,0,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="24" RenderTransformOrigin="0.5,0.5" Height="35" Width="335"><Run FontFamily="Segoe UI Semibold" Text="Certify " /><Run FontFamily="Segoe UI Semilight" Text="the web" /></TextBlock>
-        <Button x:Name="ValidateKey" Content="{x:Static res:SR.AboutControl_EnterKey}" HorizontalAlignment="Left" Margin="0.4,137,0,0" VerticalAlignment="Top" Width="161" Height="27" Grid.Column="1" Click="Button_ApplyRegistrationKey" />
-        <Button x:Name="Help" Content="{x:Static res:SR.AboutControl_Support}" HorizontalAlignment="Left" Margin="0.4,42,0,0" VerticalAlignment="Top" Width="161" Height="27" Grid.Column="1" Click="Help_Click" />
-        <Button x:Name="Feedback" Content="{x:Static res:SR.AboutControl_SendFeedback}" HorizontalAlignment="Left" Margin="0,195,0,0" VerticalAlignment="Top" Width="161" Height="27" Grid.Column="1" Click="Feedback_Click" />
+        <Button x:Name="ValidateKey" Content="{x:Static res:SR.AboutControl_EnterKey}" Margin="0,137,29.6,0" VerticalAlignment="Top" Height="27" Grid.Column="1" Click="Button_ApplyRegistrationKey" HorizontalAlignment="Right" Width="151" />
+        <Button x:Name="Help" Content="{x:Static res:SR.AboutControl_Support}" Margin="0,42,29.6,0" VerticalAlignment="Top" Height="27" Grid.Column="1" Click="Help_Click" HorizontalAlignment="Right" Width="151" />
+        <Button x:Name="Feedback" Content="{x:Static res:SR.AboutControl_SendFeedback}" Margin="9.8,195,29.6,0" VerticalAlignment="Top" Height="27" Click="Feedback_Click" Grid.Column="1" />
+        <fa:ImageAwesome Icon="Chain" ToolTip="Service Status" x:Name="ServiceConnected" VerticalAlignment="Bottom" HorizontalAlignment="Right" Foreground="{DynamicResource AccentColorBrush3}" Width="16" Height="23" Grid.Column="1" RenderTransformOrigin="0.453,2.187" Margin="0,0,29.6,10.2" />
     </Grid>
 </UserControl>

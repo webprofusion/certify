@@ -1,6 +1,6 @@
 ﻿using ARSoft.Tools.Net;
 using ARSoft.Tools.Net.Dns;
-using Certify.Models;
+using Certify.Locales;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -119,7 +119,7 @@ namespace Certify.Management
             try
             {
                 var request = WebRequest.Create(!useProxy ? url :
-                    Properties.Resources.APIBaseURI + "testurlaccess?url=" + url);
+                    ConfigResources.APIBaseURI + "testurlaccess?url=" + url);
                 ServicePointManager.ServerCertificateValidationCallback = (obj, cert, chain, errors) =>
                 {
                     // ignore all cert errors when validating URL response
@@ -154,9 +154,9 @@ namespace Certify.Management
                     return (int)response.StatusCode >= 200 && (int)response.StatusCode < 300;
                 }
             }
-            catch (Exception)
+            catch (Exception exp)
             {
-                System.Diagnostics.Debug.WriteLine("Failed to check url for access");
+                System.Diagnostics.Debug.WriteLine("Failed to check url for access (" + url + "): " + exp.ToString());
                 return false;
             }
             finally

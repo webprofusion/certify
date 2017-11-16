@@ -7,13 +7,14 @@
         xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
         xmlns:local="clr-namespace:Certify.UI"
         xmlns:Controls1="clr-namespace:Certify.UI.Controls"
-        xmlns:res="clr-namespace:Certify.UI.Resources"
+        xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
         xmlns:fa="http://schemas.fontawesome.io/icons/" x:Class="Certify.UI.MainWindow"
         GlowBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1"
         mc:Ignorable="d"
-        Title="Certify the web - SSL Certificate Management" WindowTransitionsEnabled="False" TitleCaps="False" Height="668" MinWidth="680" MinHeight="400" Width="1120" WindowStyle="ToolWindow" Loaded="MetroWindow_Loaded" ContentRendered="MetroWindow_ContentRendered"
-        d:DataContext="{d:DesignInstance Type=local:DesignViewModel, IsDesignTimeCreatable=True}">
+        Title="Certify SSL/TLS Certificate Management" WindowTransitionsEnabled="False" TitleCaps="False" Height="668" MinWidth="680" MinHeight="400" Width="1009.6" WindowStyle="ToolWindow"
+        d:DataContext="{d:DesignInstance Type=local:DesignViewModel, IsDesignTimeCreatable=True}"
+        Closing="MetroWindow_Closing" Loaded="Window_Loaded">
 
     <Controls:MetroWindow.Resources>
         <ResourceDictionary>
@@ -53,9 +54,15 @@
                     </StackPanel>
                 </Button>
             </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="24,0,0,0"  Visibility="{Binding IsLoading, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+
+                <fa:ImageAwesome x:Name="ConnectingService" Margin="4,0,0,0" Visibility="Visible" Icon="Refresh" Height="12
+                                     " Spin="True" SpinDuration="1" Foreground="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}" />
+                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"><Run Text="Loading.." /></TextBlock>
+            </StackPanel>
         </StackPanel>
 
-        <TabControl x:Name="MainTabControl" Grid.Row="1" Margin="8,8,8,8"
+        <TabControl x:Name="MainTabControl" Grid.Row="1" Margin="8,8,7.8,7.8"
                                  SelectedIndex="{Binding MainUITabIndex}" HorizontalContentAlignment="Left" VerticalContentAlignment="Stretch"
 
                                  Height="auto">
@@ -64,13 +71,13 @@
                 <Controls1:ManagedSites Width="Auto" Height="Auto" />
             </TabItem>
             <TabItem  Header="{x:Static res:SR.In_Progress}" VerticalContentAlignment="Stretch" HorizontalAlignment="Left" HorizontalContentAlignment="Left" Controls:ControlsHelper.HeaderFontSize="12">
-                <Controls1:ProgressMonitor Width="Auto" Height="Auto" />
+                <Controls1:ProgressMonitor Margin="0,0,0,0.4" />
             </TabItem>
             <TabItem  Header="{x:Static res:SR.Settings}" VerticalContentAlignment="Stretch" HorizontalAlignment="Left" HorizontalContentAlignment="Left" Controls:ControlsHelper.HeaderFontSize="12">
-                <Controls1:Settings  Width="Auto" Height="Auto" />
+                <Controls1:Settings Height="Auto" Margin="0,0,0,0.4" />
             </TabItem>
-            <TabItem Header="{x:Static res:SR.About}" VerticalContentAlignment="Stretch" HorizontalAlignment="Left" HorizontalContentAlignment="Left" Controls:ControlsHelper.HeaderFontSize="12">
-                <Controls1:AboutControl Width="Auto" Height="Auto" />
+            <TabItem Header="{x:Static res:SR.About}" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Left" Controls:ControlsHelper.HeaderFontSize="12">
+                <Controls1:AboutControl Width="Auto" Height="Auto" Margin="0,0,0,0.4" />
             </TabItem>
         </TabControl>
     </Grid>

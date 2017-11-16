@@ -5,7 +5,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Certify.UI.Windows"
-        xmlns:res="clr-namespace:Certify.UI.Resources"
+        xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
         mc:Ignorable="d"
         Title="{x:Static res:SR.Send_Feedback}" Height="333.8" Width="356.8"
         GlowBrush="{DynamicResource AccentColorBrush}"

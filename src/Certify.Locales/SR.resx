@@ -1,0 +1,596 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Registration" xml:space="preserve">
+    <value>Registration</value>
+  </data>
+  <data name="RegistrationEmailAddress" xml:space="preserve">
+    <value>Registered Email Address</value>
+  </data>
+  <data name="LicenseKey" xml:space="preserve">
+    <value>License Key</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ValidateKey" xml:space="preserve">
+    <value>Validate Key</value>
+  </data>
+  <data name="New_Certificate" xml:space="preserve">
+    <value>New Certificate</value>
+  </data>
+  <data name="Renew_All" xml:space="preserve">
+    <value>Renew All</value>
+  </data>
+  <data name="Configure_Auto_Renew" xml:space="preserve">
+    <value>Configure Auto Renew</value>
+  </data>
+  <data name="Update_Available" xml:space="preserve">
+    <value>Update Available</value>
+  </data>
+  <data name="Managed_Sites" xml:space="preserve">
+    <value>Managed Sites</value>
+  </data>
+  <data name="In_Progress" xml:space="preserve">
+    <value>In Progress</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="About" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="Email_Address" xml:space="preserve">
+    <value>Email Address</value>
+  </data>
+  <data name="Yes_I_Agree" xml:space="preserve">
+    <value>Yes, I Agree</value>
+  </data>
+  <data name="Register_Contact" xml:space="preserve">
+    <value>Register Contact</value>
+  </data>
+  <data name="NewContact_AgreeConfirm" xml:space="preserve">
+    <value>Do you agree to the LetsEncrypt.org Subscriber Agreement? Refer to their website for full details before proceeding. https://letsencrypt.org/repository/</value>
+  </data>
+  <data name="New_Contact_Tip1" xml:space="preserve">
+    <value>To use Certify SSL Manager and the free Let's Encrypt service to acquire SSL certificates you must first register as a contact.</value>
+  </data>
+  <data name="New_Contact_Tip2" xml:space="preserve">
+    <value>The email address provided may be used to notify you of upcoming certificate renewals if required. Invalid email addresses will be rejected by Let's Encrypt.</value>
+  </data>
+  <data name="New_Contact" xml:space="preserve">
+    <value>New Contact</value>
+  </data>
+  <data name="Send_Feedback" xml:space="preserve">
+    <value>Send Feedback</value>
+  </data>
+  <data name="Send_Feedback_Tip" xml:space="preserve">
+    <value>Your feedback is important to us. Please let us know how we can improve.</value>
+  </data>
+  <data name="Send_Feedback_Quest" xml:space="preserve">
+    <value>Do you have any suggestions?</value>
+  </data>
+  <data name="Send_Feedback_Email" xml:space="preserve">
+    <value>Your Email Address (if you would like a response):</value>
+  </data>
+  <data name="Send" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="ImportDlg_Title" xml:space="preserve">
+    <value>Certify - Import</value>
+  </data>
+  <data name="ImportDlg_OpTitle" xml:space="preserve">
+    <value>Import Managed Sites</value>
+  </data>
+  <data name="ImportDlg_OpComment" xml:space="preserve">
+    <value>You are upgrading from an older version of Certify. This will create new Managed Sites which you can then edit to adjust the renewal settings etc.</value>
+  </data>
+  <data name="ImportDlg_Merge" xml:space="preserve">
+    <value>Merge multiple domains/certificates per site into one Managed Site</value>
+  </data>
+  <data name="ImportDlg_Skip" xml:space="preserve">
+    <value>Skip Import</value>
+  </data>
+  <data name="Import" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="Send_Feedback_Exception" xml:space="preserve">
+    <value>Oops, something went wrong. Please tell us about it.</value>
+  </data>
+  <data name="Send_Feedback_Success" xml:space="preserve">
+    <value>Thanks, your feedback has now been submitted.</value>
+  </data>
+  <data name="Send_Feedback_Error" xml:space="preserve">
+    <value>Sorry, there was a problem submitting your feedback.</value>
+  </data>
+  <data name="New_Contact_EmailError" xml:space="preserve">
+    <value>Ooops, you forgot to provide a valid email address.</value>
+  </data>
+  <data name="New_Contact_NeedAgree" xml:space="preserve">
+    <value>You need to agree to the latest LetsEncrypt.org Subscriber Agreement.</value>
+  </data>
+  <data name="Registration_NeedEmail" xml:space="preserve">
+    <value>Please enter the email address you used when registering your key.</value>
+  </data>
+  <data name="Registration_NeedKey" xml:space="preserve">
+    <value>Please enter your license key.</value>
+  </data>
+  <data name="Registration_KeyValidationError" xml:space="preserve">
+    <value>There was a problem trying to validate your license key. Please try again or contact support.</value>
+  </data>
+  <data name="Registration_UnableToVerify" xml:space="preserve">
+    <value>There was a problem beginning the license validation process.</value>
+  </data>
+  <data name="ScheduledTaskConfig_AlreadyConfiged" xml:space="preserve">
+    <value>The auto renewal task is already configured. If required you can change the admin user account used to execute the task.</value>
+  </data>
+  <data name="ScheduledTaskConfig_FailedToCreateTask" xml:space="preserve">
+    <value>Failed to create scheduled task with given credentials</value>
+  </data>
+  <data name="ScheduledTaskConfig_TaskCreated" xml:space="preserve">
+    <value>Scheduled task created</value>
+  </data>
+  <data name="ScheduledTaskConfig_PleaseProvideCredential" xml:space="preserve">
+    <value>Please provide the username and password for an admin level user.</value>
+  </data>
+  <data name="ScheduledTaskConfig_WindowTitle" xml:space="preserve">
+    <value>Configure Auto Renewal</value>
+  </data>
+  <data name="ScheduledTaskConfig_UserNameLabel" xml:space="preserve">
+    <value>Username (DOMAIN\User)</value>
+  </data>
+  <data name="ScheduledTaskConfig_Tip" xml:space="preserve">
+    <value>To perform auto renewal of certificates, Certify will create a task in the Windows Task Scheduler. This task needs to run as an Admin level user in order to do certificate management and IIS management tasks.</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
+    <value>This version is free for evaluation and is limited to managing up to 5 websites. To remove this limit please purchase a registration key. If you have previously donated please email apps@webprofusion.com with details of your sponsorship PayPal transaction to obtain a free key. This offer is also open to developers who have PRs accepted for this app on GitHub.</value>
+  </data>
+  <data name="AboutControl_RegistrationTypeLabel" xml:space="preserve">
+    <value>Not Registered</value>
+  </data>
+  <data name="AboutControl_CheckForUpdateButton" xml:space="preserve">
+    <value>Check for Updates..</value>
+  </data>
+  <data name="AboutControl_Register" xml:space="preserve">
+    <value>Register</value>
+  </data>
+  <data name="AboutControl_EnterKey" xml:space="preserve">
+    <value>Enter Key..</value>
+  </data>
+  <data name="AboutControl_Support" xml:space="preserve">
+    <value>Support</value>
+  </data>
+  <data name="AboutControl_SendFeedback" xml:space="preserve">
+    <value>Send Feedback</value>
+  </data>
+  <data name="UpdateCheckLatestVersion" xml:space="preserve">
+    <value>You are using the latest version.</value>
+  </data>
+  <data name="ManagedSites_Filter" xml:space="preserve">
+    <value>Filter...</value>
+  </data>
+  <data name="ManagedSites_NoItemSelectedDesc" xml:space="preserve">
+    <value>Free SSL Certificates provided via the Let's Encrypt service (https://letsencrypt.org).</value>
+  </data>
+  <data name="ManagedSites_NoItemSelectedTip" xml:space="preserve">
+    <value>Select a Managed Site or select New Certificate to begin.</value>
+  </data>
+  <data name="ManagedSites_UnsavedWarning" xml:space="preserve">
+    <value>There are unsaved changes to the selected site. Discard changes?</value>
+  </data>
+  <data name="ProgressMonitor_NoProgress" xml:space="preserve">
+    <value>There are no requests currently in progress.</value>
+  </data>
+  <data name="Settings_PrimaryContact" xml:space="preserve">
+    <value>Primary Contact:</value>
+  </data>
+  <data name="Settings_AutoRenewalInterval" xml:space="preserve">
+    <value>Auto Renewal Interval (Days)</value>
+  </data>
+  <data name="Settings_AutoRenewalRequestLimit" xml:space="preserve">
+    <value>Maximum Auto Renewal Requests Per Session (0 = Unlimited)</value>
+  </data>
+  <data name="Settings_CheckUpdates" xml:space="preserve">
+    <value>Check for updates automatically</value>
+  </data>
+  <data name="Settings_EnableTelemetry" xml:space="preserve">
+    <value>Enable app telemetry (feature usage reporting)</value>
+  </data>
+  <data name="Settings_EnableProxyApiForDomainConfig" xml:space="preserve">
+    <value>Enable proxy API for domain config checks</value>
+  </data>
+  <data name="Settings_EnableEFS" xml:space="preserve">
+    <value>Enable Encrypted File System (EFS) for sensitive files. This option does not work on all versions of Windows.</value>
+  </data>
+  <data name="Settings_IgnoreStoppedSites" xml:space="preserve">
+    <value>Ignore stopped IIS sites for new certificates and renewals</value>
+  </data>
+  <data name="Settings_EnableDnsValidation" xml:space="preserve">
+    <value>Enable DNS Validations checks (Resolution, CAA, DNSSEC)</value>
+  </data>
+  <data name="SaveChanges" xml:space="preserve">
+    <value>Save Changes</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="DiscardChanges" xml:space="preserve">
+    <value>Discard Changes</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="ManagedItemSettings_RequestCertificate" xml:space="preserve">
+    <value>Request Certificate</value>
+  </data>
+  <data name="ManagedItemSettings_EnableAutoRenewal" xml:space="preserve">
+    <value>Enable Auto Renewal</value>
+  </data>
+  <data name="ManagedItemSettings_NotifyPrimaryContactOnRenewalFailure" xml:space="preserve">
+    <value>Notify Primary Contact On Renewal Failure</value>
+  </data>
+  <data name="ManagedItemSettings_NoHostNameBindingWarning" xml:space="preserve">
+    <value>There are no http or https hostname bindings associated with the selected site in IIS. At least one fully qualified hostname (e.g 'github.com') is required to create a certificate.</value>
+  </data>
+  <data name="ManagedItemSettings_Tab_Options" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="ManagedItemSettings_SelectIISSite" xml:space="preserve">
+    <value>Select IIS Site:</value>
+  </data>
+  <data name="ManagedItemSettings_DisplayName" xml:space="preserve">
+    <value>Display Name:</value>
+  </data>
+  <data name="ManagedItemSettings_DomainIncluded" xml:space="preserve">
+    <value>The following selected domains will be included as a single certificate request. The Lets Encrypt service must be able to access all of these domains via port 80 (for HTTP challenges) or port 443 (for TLS-SNI challenges) for the certification process to work.</value>
+  </data>
+  <data name="ManagedItemSettings_SelectDomain" xml:space="preserve">
+    <value>Domains and Subdomains to include:</value>
+  </data>
+  <data name="SelectAll" xml:space="preserve">
+    <value>Select All</value>
+  </data>
+  <data name="ManagedItemSettings_SelectNone" xml:space="preserve">
+    <value>Select None</value>
+  </data>
+  <data name="ManagedItemSettings_Primary" xml:space="preserve">
+    <value>Primary</value>
+  </data>
+  <data name="ManagedItemSettings_Include" xml:space="preserve">
+    <value>Include</value>
+  </data>
+  <data name="ManagedItemSettings_Domain" xml:space="preserve">
+    <value>Domain</value>
+  </data>
+  <data name="Advanced" xml:space="preserve">
+    <value>Advanced</value>
+  </data>
+  <data name="ManagedItemSettings_ChallengeTypes" xml:space="preserve">
+    <value>Challenge Type:</value>
+  </data>
+  <data name="ManagedItemSettings_WebsiteRoot" xml:space="preserve">
+    <value>Website Root Directory</value>
+  </data>
+  <data name="ManagedItemSettings_BrowseFolder" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="ManagedItemSettings_PerformChallengeResponseConfigCheck" xml:space="preserve">
+    <value>Perform challenge response config checks</value>
+  </data>
+  <data name="ManagedItemSettings_PerformWebAppAutoConfig" xml:space="preserve">
+    <value>Perform web application auto config</value>
+  </data>
+  <data name="ManagedItemSettings_BindIP" xml:space="preserve">
+    <value>Bind to Specific IP:</value>
+  </data>
+  <data name="ManagedItemSettings_BindPort" xml:space="preserve">
+    <value>Bind to Specific Port:</value>
+  </data>
+  <data name="ManagedItemSettings_UseSNI" xml:space="preserve">
+    <value>Use SNI (IIS 8+):</value>
+  </data>
+  <data name="ManagedItemSettings_PerRequsetScript" xml:space="preserve">
+    <value>Pre-request PS Script:</value>
+  </data>
+  <data name="Test" xml:space="preserve">
+    <value>Test</value>
+  </data>
+  <data name="Browser" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="ManagedItemSettings_ExportTip" xml:space="preserve">
+    <value>Note: To export this certificate use the Manage Computer Certificates option in Windows. </value>
+  </data>
+  <data name="ManagedItemSettings_OpenLogFile" xml:space="preserve">
+    <value>Open Log File</value>
+  </data>
+  <data name="ManagedItemSettings_ViewCertificate" xml:space="preserve">
+    <value>View Certificate</value>
+  </data>
+  <data name="ManagedItemSettings_CertificateRevokeWarning" xml:space="preserve">
+    <value>WARNING: This certificate has been revoked.</value>
+  </data>
+  <data name="SaveError" xml:space="preserve">
+    <value>Save Error</value>
+  </data>
+  <data name="ManagedItemSettings_SelectWebsiteOrCert" xml:space="preserve">
+    <value>Select the website to create a certificate for.</value>
+  </data>
+  <data name="ManagedItemSettings_NameRequired" xml:space="preserve">
+    <value>A name is required for this item.</value>
+  </data>
+  <data name="ManagedItemSettings_NeedPrimaryDomain" xml:space="preserve">
+    <value>A Primary Domain must be included</value>
+  </data>
+  <data name="ManagedItemSettings_ChallengeNotAvailable" xml:space="preserve">
+    <value>The {0} challenge is only available for IIS versions 8+.</value>
+  </data>
+  <data name="ManagedItemSettings_HookMustBeValidUrl" xml:space="preserve">
+    <value>The Url for the webhook must be set to a valid Url.</value>
+  </data>
+  <data name="ManagedItemSettings_HookMethodMustBeSet" xml:space="preserve">
+    <value>The Method for the webhook must be set.</value>
+  </data>
+  <data name="ManagedItemSettings_NoChanges" xml:space="preserve">
+    <value>No changes were made, skipping save</value>
+  </data>
+  <data name="ConfirmDelete" xml:space="preserve">
+    <value>Confirm Delete</value>
+  </data>
+  <data name="ManagedItemSettings_ConfirmDelete" xml:space="preserve">
+    <value>Are you sure you want to delete this item? Deleting the item will not affect IIS settings etc.</value>
+  </data>
+  <data name="ManagedItemSettings_LogNotCreated" xml:space="preserve">
+    <value>The log file for this item has not been created yet.</value>
+  </data>
+  <data name="ManagedItemSettings_CertificateNotReady" xml:space="preserve">
+    <value>The certificate file for this item has not been created yet.</value>
+  </data>
+  <data name="ChallengeError" xml:space="preserve">
+    <value>Challenge Error</value>
+  </data>
+  <data name="ManagedItemSettings_CannotChallengeWithoutIIS" xml:space="preserve">
+    <value>Cannot check challenges if IIS is not available.</value>
+  </data>
+  <data name="Challenge" xml:space="preserve">
+    <value>Challenge</value>
+  </data>
+  <data name="ManagedItemSettings_ConfigurationCheckOk" xml:space="preserve">
+    <value>Configuration Checked OK</value>
+  </data>
+  <data name="ManagedItemSettings_ConfigurationCheckFailed" xml:space="preserve">
+    <value>Configuration Check Failed:
+{0}</value>
+  </data>
+  <data name="ManagedItemSettings_ChallengeTestFailed" xml:space="preserve">
+    <value>Challenge Test Failed</value>
+  </data>
+  <data name="ManagedItemSettings_WebhookTestFailed" xml:space="preserve">
+    <value>Webhook Test Failed</value>
+  </data>
+  <data name="ManagedItemSettings_WebhookTest" xml:space="preserve">
+    <value>Webhook Test</value>
+  </data>
+  <data name="succeed" xml:space="preserve">
+    <value>succeeded</value>
+  </data>
+  <data name="failed" xml:space="preserve">
+    <value>failed</value>
+  </data>
+  <data name="ManagedItemSettings_WebhookRequestResult" xml:space="preserve">
+    <value>Webhook request {0}: HTTP {1}</value>
+  </data>
+  <data name="ManagedItemSettings_WebhookRequestError" xml:space="preserve">
+    <value>Webhook request error: {0}</value>
+  </data>
+  <data name="Alert" xml:space="preserve">
+    <value>Alert</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="ManagedItemSettings_Certificate_Revoked" xml:space="preserve">
+    <value>Certificate Revoked.</value>
+  </data>
+  <data name="ManagedItemSettings_RevokeCertificateError" xml:space="preserve">
+    <value>Error Revoking Certificate:
+{0}</value>
+  </data>
+  <data name="ManagedItemSettings_ConfirmRevokeCertificate" xml:space="preserve">
+    <value>Are you sure you want to revoke this certificate?</value>
+  </data>
+  <data name="MainWindow_TrialLimitationReached" xml:space="preserve">
+    <value>You are using the trial version of this app. Please purchase a registration key to upgrade. See the Register option on the About tab.</value>
+  </data>
+  <data name="MainWindow_RenewAllConfirm" xml:space="preserve">
+    <value>This will renew certificates for all auto-renewed items. Proceed?</value>
+  </data>
+  <data name="MainWindow_IISNotAvailable" xml:space="preserve">
+    <value>IIS Was not detected on this server, important functionality will be unavailable. If you know IIS is installed and working on this server, please report this error to apps@webprofusion providing details of your server Operating System version and IIS versions</value>
+  </data>
+  <data name="MainWindow_GetStartGuideWithNewCert" xml:space="preserve">
+    <value>Get started by registering a new contact, then you can start requesting certificates.</value>
+  </data>
+  <data name="MainWindow_VisitDownloadPage" xml:space="preserve">
+    <value>Visit download page now?</value>
+  </data>
+  <data name="MainWindow_TitleTrialPostfix" xml:space="preserve">
+    <value> [Free Trial Version]</value>
+  </data>
+  <data name="LanguageAuthor" xml:space="preserve">
+    <value>Certify SSL Manager Contributors （https://certifytheweb.com）</value>
+  </data>
+  <data name="About_LanguageTranslator" xml:space="preserve">
+    <value>Current Language Translator: </value>
+  </data>
+  <data name="Info" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="Comments" xml:space="preserve">
+    <value>Comments: </value>
+  </data>
+  <data name="ManagedItemSettings_RevokeCertificate" xml:space="preserve">
+    <value>Revoke Certificate</value>
+  </data>
+  <data name="ManagedItemSettings_HookUrl" xml:space="preserve">
+    <value>Url:</value>
+  </data>
+  <data name="ManagedItemSettings_HookMethod" xml:space="preserve">
+    <value>Method:</value>
+  </data>
+  <data name="ManagedItemSettings_HookBody" xml:space="preserve">
+    <value>Body:</value>
+  </data>
+  <data name="ManagedItemSettings_HookContentType" xml:space="preserve">
+    <value>ContentType:</value>
+  </data>
+  <data name="ManagedItemSettings_PostRequestScript" xml:space="preserve">
+    <value>Post-request PS Script:</value>
+  </data>
+  <data name="ManagedItemSettings_AutoUpdateBinding" xml:space="preserve">
+    <value>Auto create/update IIS bindings (uses SNI)</value>
+  </data>
+  <data name="ManagedItemSettings_UseSpecificBinding" xml:space="preserve">
+    <value>Use specific IP/Port bindings</value>
+  </data>
+  <data name="ManagedItemSettings_HookTrigger" xml:space="preserve">
+    <value>Webhook Trigger:</value>
+  </data>
+  <data name="ManagedItemSettings_CertificatePathEmpty" xml:space="preserve">
+    <value>Certificate Path: [to be set]</value>
+  </data>
+  <data name="ExpiryDateConverter_NoCurrentCertificate" xml:space="preserve">
+    <value>No current certificate.</value>
+  </data>
+  <data name="ExpiryDateConverter_CertificateExpiresIn" xml:space="preserve">
+    <value>Expires in {0} days</value>
+  </data>
+  <data name="General_Loading" xml:space="preserve">
+    <value>Loading...</value>
+  </data>
+  <data name="Update_MandatoryUpdateQuit" xml:space="preserve">
+    <value>The current app version is no longer supported. Please update to proceed.</value>
+  </data>
+</root>

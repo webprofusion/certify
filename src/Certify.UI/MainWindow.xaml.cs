@@ -1,22 +1,14 @@
+using Certify.Locales;
+using Microsoft.ApplicationInsights;
 using System;
-using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Certify.UI
 {
-    using Resources;
-
     /// <summary>
     /// Interaction logic for MainWindow.xaml 
     /// </summary>
@@ -29,6 +21,8 @@ namespace Certify.UI
             CurrentProgress = 1
         }
 
+        private TelemetryClient tc = null;
+
         protected Certify.UI.ViewModel.AppModel MainViewModel
         {
             get
@@ -37,33 +31,58 @@ namespace Certify.UI
             }
         }
 
+        public int NumManagedSites
+        {
+            get
+            {
+                if (MainViewModel != null && MainViewModel.ManagedSites != null)
+                {
+                    return MainViewModel.ManagedSites.Count;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
+
         public MainWindow()
         {
             InitializeComponent();
-
-            if (!System.ComponentModel.DesignerProperties.GetIsInDesignMode(this))
-            {
-                this.DataContext = MainViewModel;
-            }
+            DataContext = MainViewModel;
         }
 
-        private void Button_NewCertificate(object sender, RoutedEventArgs e)
+        private async void Button_NewCertificate(object sender, RoutedEventArgs e)
         {
-            //present new managed item (certificate request) UI
+            // save or discard site changes before creating a new site/certificate
+            if (!await MainViewModel.ConfirmDiscardUnsavedChanges()) return;
+
             if (!MainViewModel.IsRegisteredVersion && MainViewModel.ManagedSites != null && MainViewModel.ManagedSites.Count >= 5)
             {
-                MessageBox.Show(SR.MainWindow_TrialLimitionReached);
+                MessageBox.Show(SR.MainWindow_TrialLimitationReached);
                 return;
             }
 
+            // check user has registered a contact with LE first
+            if (String.IsNullOrEmpty(MainViewModel.PrimaryContactEmail))
+            {
+                EnsureContactRegistered();
+                return;
+            }
+
+            //present new managed item (certificate request) UI
             //select tab Managed Items
             MainViewModel.MainUITabIndex = (int)PrimaryUITabs.ManagedItems;
             MainViewModel.SelectedWebSite = null;
+            MainViewModel.SelectedItem = null; // deselect site list item
             MainViewModel.SelectedItem = new Certify.Models.ManagedSite();
         }
 
-        private void Button_RenewAll(object sender, RoutedEventArgs e)
+        private async void Button_RenewAll(object sender, RoutedEventArgs e)
         {
+            // save or discard site changes before creating a new site/certificate
+            if (!await MainViewModel.ConfirmDiscardUnsavedChanges()) return;
+
             //present new renew all confirmation
             if (MessageBox.Show(SR.MainWindow_RenewAllConfirm, SR.Renew_All, MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
@@ -87,59 +106,140 @@ namespace Certify.UI
             d.ShowDialog();
         }
 
-        private void MetroWindow_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            await PerformAppStartupChecks();
+        }
+
+        private async Task PerformAppStartupChecks()
+        {
+            Mouse.OverrideCursor = Cursors.AppStarting;
+            MainViewModel.IsLoading = true;
+
+            await MainViewModel.InitServiceConnections();
+
+            if (MainViewModel.IsServiceAvailable)
+            {
+                await MainViewModel.LoadSettingsAsync();
+            }
+
+            Mouse.OverrideCursor = Cursors.Arrow;
+
+            // quit if service/service client cannot connect
+            if (!MainViewModel.IsServiceAvailable)
+            {
+                MainViewModel.IsLoading = false;
+                MessageBox.Show("Certify SSL Manager service is not started. Please restart the service.");
+                App.Current.Shutdown();
+                return;
+            }
+
+            //init telemetry if enabled
+            InitTelemetry();
+
+            //check version capabilities
+            MainViewModel.PluginManager = new Management.PluginManager();
+
+            MainViewModel.PluginManager.LoadPlugins();
+
+            var licensingManager = MainViewModel.PluginManager.LicensingManager;
+            if (licensingManager != null)
+            {
+                if (licensingManager.IsInstallRegistered(ViewModel.AppModel.ProductTypeId, Certify.Management.Util.GetAppDataFolder()))
+                {
+                    MainViewModel.IsRegisteredVersion = true;
+                }
+            }
+
             //check for any startup actions required such as vault import
 
-            if (!this.MainViewModel.ManagedSites.Any())
-            {
-                //if we have a vault, preview import.
-                this.MainViewModel.PreviewImport(sanMergeMode: true);
-            }
+            /* if (!this.MainViewModel.ManagedSites.Any())
+             {
+                 //if we have a vault, preview import.
+                 this.MainViewModel.PreviewImport(sanMergeMode: true);
+             }*/
+
+            // check if IIS is available, if so also populates IISVersion
+            await MainViewModel.CheckServerAvailability(Models.StandardServerTypes.IIS);
+
+            MainViewModel.IsLoading = false;
 
             if (MainViewModel.IsIISAvailable)
             {
                 if (MainViewModel.ImportedManagedSites.Any())
                 {
                     //show import ui
-                    Task.Delay(100);
-                    var d = new Windows.ImportManagedSites { Owner = this };
+                    var d = new Windows.ImportManagedSites();
                     d.ShowDialog();
                 }
             }
+            else
+            {
+                //warn if IIS not detected
+                MessageBox.Show(SR.MainWindow_IISNotAvailable);
+            }
+
+            // check if primary contact registered with LE
+            EnsureContactRegistered();
 
             if (!MainViewModel.IsRegisteredVersion)
             {
                 this.Title += SR.MainWindow_TitleTrialPostfix;
             }
-        }
-
-        private async void MetroWindow_ContentRendered(object sender, EventArgs e)
-        {
-            //warn if IIS not detected
-
-            if (!MainViewModel.IsIISAvailable)
-            {
-                MessageBox.Show(SR.MainWindow_IISNotAvailable);
-            }
-
-            if (!MainViewModel.HasRegisteredContacts)
-            {
-                //start by registering
-                MessageBox.Show(SR.MainWindow_GetStartGuideWithNewCert);
-                var d = new Windows.EditContactDialog { Owner = this };
-                d.ShowDialog();
-            }
 
             //check for updates and report result to view model
-            if (Management.CoreAppSettings.Current.CheckForUpdatesAtStartup)
+            if (MainViewModel.IsServiceAvailable)
             {
-                var updateCheck = await new Certify.Management.Util().CheckForUpdates();
+                var updateCheck = await MainViewModel.CertifyClient.CheckForUpdates();
+
                 if (updateCheck != null && updateCheck.IsNewerVersion)
                 {
                     MainViewModel.UpdateCheckResult = updateCheck;
                     MainViewModel.IsUpdateAvailable = true;
+
+                    // if update is mandatory (where there is a major bug etc) quit until user updates
+                    if (updateCheck.MustUpdate)
+                    {
+                        // offer to take user to download page
+                        var gotoDownload = MessageBox.Show(updateCheck.Message.Body + "\r\nVisit download page now?", ConfigResources.AppName, MessageBoxButton.YesNo);
+                        if (gotoDownload == MessageBoxResult.Yes)
+                        {
+                            System.Diagnostics.ProcessStartInfo sInfo = new System.Diagnostics.ProcessStartInfo(ConfigResources.AppWebsiteURL);
+                            System.Diagnostics.Process.Start(sInfo);
+                        }
+                        else
+                        {
+                            MessageBox.Show(SR.Update_MandatoryUpdateQuit);
+                        }
+
+                        //quit
+                        App.Current.Shutdown();
+                    }
                 }
+            }
+        }
+
+        private void EnsureContactRegistered()
+        {
+            if (!MainViewModel.HasRegisteredContacts)
+            {
+                //start by registering
+                MessageBox.Show(SR.MainWindow_GetStartGuideWithNewCert);
+                var d = new Windows.EditContactDialog { };
+                d.ShowDialog();
+            }
+        }
+
+        private void InitTelemetry()
+        {
+            if (MainViewModel.Preferences.EnableAppTelematics)
+            {
+                tc = new Certify.Management.Util().InitTelemetry();
+                tc.TrackEvent("Start");
+            }
+            else
+            {
+                tc = null;
             }
         }
 
@@ -147,13 +247,19 @@ namespace Certify.UI
         {
             if (MainViewModel.UpdateCheckResult != null)
             {
-                var gotoDownload = MessageBox.Show(MainViewModel.UpdateCheckResult.Message.Body + "\r\n" + SR.MainWindow_VisitDownloadPage, Core.Properties.Resources.AppName, MessageBoxButton.YesNo);
+                var gotoDownload = MessageBox.Show(MainViewModel.UpdateCheckResult.Message.Body + "\r\n" + SR.MainWindow_VisitDownloadPage, ConfigResources.AppName, MessageBoxButton.YesNo);
                 if (gotoDownload == MessageBoxResult.Yes)
                 {
                     System.Diagnostics.ProcessStartInfo sInfo = new System.Diagnostics.ProcessStartInfo(MainViewModel.UpdateCheckResult.Message.DownloadPageURL);
                     System.Diagnostics.Process.Start(sInfo);
                 }
             }
+        }
+
+        private async void MetroWindow_Closing(object sender, CancelEventArgs e)
+        {
+            // allow cancelling exit to save changes
+            if (!await MainViewModel.ConfirmDiscardUnsavedChanges()) e.Cancel = true;
         }
     }
 }

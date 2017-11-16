@@ -1,24 +1,26 @@
+using Certify.Locales;
 using Certify.Management;
 using Certify.Models;
 using Microsoft.Win32;
 using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using WinForms = System.Windows.Forms;
 
 namespace Certify.UI.Controls
 {
-    using Resources;
-    using System.Windows.Input;
-
     /// <summary>
     /// Interaction logic for ManagedItemSettings.xaml 
     /// </summary>
     public partial class ManagedItemSettings : UserControl
     {
+        public ObservableCollection<SiteBindingItem> WebSiteList { get; set; }
+
         protected Certify.UI.ViewModel.AppModel MainViewModel
         {
             get
@@ -31,78 +33,92 @@ namespace Certify.UI.Controls
         {
             InitializeComponent();
             this.MainViewModel.PropertyChanged += MainViewModel_PropertyChanged;
+
+            WebSiteList = new ObservableCollection<SiteBindingItem>();
         }
 
-        private void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private async void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            this.SettingsTab.SelectedIndex = 0;
+            if (e.PropertyName == "SelectedItem")
+            {
+                this.SettingsTab.SelectedIndex = 0;
+
+                //get list of sites from IIS. FIXME: this is async and we should gather this at startup (or on refresh) instead
+                WebSiteList = new ObservableCollection<SiteBindingItem>(await MainViewModel.CertifyClient.GetServerSiteList(StandardServerTypes.IIS));
+                WebsiteDropdown.ItemsSource = WebSiteList;
+            }
         }
 
-        private void Button_Save(object sender, RoutedEventArgs e)
+        private async Task<bool> ValidateAndSave(ManagedSite item)
         {
-            if (this.MainViewModel.SelectedItemHasChanges)
+            if (item.Id == null && MainViewModel.SelectedWebSite == null)
+            {
+                MessageBox.Show(SR.ManagedItemSettings_SelectWebsiteOrCert, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            if (String.IsNullOrEmpty(item.Name))
+            {
+                MessageBox.Show(SR.ManagedItemSettings_NameRequired, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            if (MainViewModel.PrimarySubjectDomain == null)
+            {
+                MessageBox.Show(SR.ManagedItemSettings_NeedPrimaryDomain, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            if (item.RequestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI &&
+                MainViewModel.IISVersion.Major < 8)
+            {
+                MessageBox.Show(string.Format(SR.ManagedItemSettings_ChallengeNotAvailable, SupportedChallengeTypes.CHALLENGE_TYPE_SNI), SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            if (item.RequestConfig.PerformAutomatedCertBinding)
+            {
+                item.RequestConfig.BindingIPAddress = null;
+                item.RequestConfig.BindingPort = null;
+                item.RequestConfig.BindingUseSNI = null;
+            }
+
+            if (!string.IsNullOrEmpty(item.RequestConfig.WebhookTrigger) &&
+                item.RequestConfig.WebhookTrigger != Webhook.ON_NONE)
+            {
+                if (string.IsNullOrEmpty(item.RequestConfig.WebhookUrl) ||
+                    !Uri.TryCreate(item.RequestConfig.WebhookUrl, UriKind.Absolute, out var uri))
+                {
+                    MessageBox.Show(SR.ManagedItemSettings_HookMustBeValidUrl, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                    return false;
+                }
+                if (string.IsNullOrEmpty(item.RequestConfig.WebhookMethod))
+                {
+                    MessageBox.Show(SR.ManagedItemSettings_HookMethodMustBeSet, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                    return false;
+                }
+            }
+            else
+            {
+                // clear out saved values if setting webhook to NONE
+                item.RequestConfig.WebhookUrl = null;
+                item.RequestConfig.WebhookMethod = null;
+                item.RequestConfig.WebhookContentType = null;
+                item.RequestConfig.WebhookContentBody = null;
+            }
+
+            //save changes
+
+            //creating new managed item
+            return await MainViewModel.SaveManagedItemChanges();
+        }
+
+        private async void Button_Save(object sender, RoutedEventArgs e)
+        {
+            if (MainViewModel.SelectedItem.IsChanged)
             {
                 var item = MainViewModel.SelectedItem;
-                if (item.Id == null && MainViewModel.SelectedWebSite == null)
-                {
-                    MessageBox.Show(SR.ManagedItemSettings_SelectWebsiteOrCert, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                if (String.IsNullOrEmpty(item.Name))
-                {
-                    MessageBox.Show(SR.ManagedItemSettings_NameRequired, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                if (MainViewModel.PrimarySubjectDomain == null)
-                {
-                    MessageBox.Show(SR.ManagedItemSettings_NeedPrimaryDomain, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                if (item.RequestConfig.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI &&
-                    MainViewModel.IISVersion.Major < 8)
-                {
-                    MessageBox.Show(string.Format(SR.ManagedItemSettings_ChallengeNotAvailable, ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI), SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                if (item.RequestConfig.PerformAutomatedCertBinding)
-                {
-                    item.RequestConfig.BindingIPAddress = null;
-                    item.RequestConfig.BindingPort = null;
-                    item.RequestConfig.BindingUseSNI = null;
-                }
-
-                if (!string.IsNullOrEmpty(item.RequestConfig.WebhookTrigger) &&
-                    item.RequestConfig.WebhookTrigger != Webhook.ON_NONE)
-                {
-                    if (string.IsNullOrEmpty(item.RequestConfig.WebhookUrl) ||
-                        !Uri.TryCreate(item.RequestConfig.WebhookUrl, UriKind.Absolute, out var uri))
-                    {
-                        MessageBox.Show(SR.ManagedItemSettings_HookMustBeValidUrl, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
-                        return;
-                    }
-                    if (string.IsNullOrEmpty(item.RequestConfig.WebhookMethod))
-                    {
-                        MessageBox.Show(SR.ManagedItemSettings_HookMethodMustBeSet, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
-                        return;
-                    }
-                }
-                else
-                {
-                    // clear out saved values if settng webhook to NONE
-                    item.RequestConfig.WebhookUrl = null;
-                    item.RequestConfig.WebhookMethod = null;
-                    item.RequestConfig.WebhookContentType = null;
-                    item.RequestConfig.WebhookContentBody = null;
-                }
-
-                //save changes
-
-                //creating new managed item
-                MainViewModel.SaveManagedItemChanges();
+                await ValidateAndSave(item);
             }
             else
             {
@@ -110,7 +126,7 @@ namespace Certify.UI.Controls
             }
         }
 
-        private void Button_DiscardChanges(object sender, RoutedEventArgs e)
+        private async void Button_DiscardChanges(object sender, RoutedEventArgs e)
         {
             //if new item, discard and select first item in managed sites
             if (MainViewModel.SelectedItem.Id == null)
@@ -120,75 +136,51 @@ namespace Certify.UI.Controls
             else
             {
                 //reload settings for managed sites, discard changes
-                var currentSiteId = MainViewModel.SelectedItem.Id;
-                MainViewModel.LoadSettings();
-                MainViewModel.SelectedItem = MainViewModel.ManagedSites.FirstOrDefault(m => m.Id == currentSiteId);
+                await MainViewModel.DiscardChanges();
             }
-
-            MainViewModel.MarkAllChangesCompleted();
         }
 
         private void ReturnToDefaultManagedItemView()
         {
-            MainViewModel.SelectFirstOrDefaultItem();
+            MainViewModel.SelectedItem = MainViewModel.ManagedSites.FirstOrDefault();
         }
 
-        private void Button_RequestCertificate(object sender, RoutedEventArgs e)
+        private async void Button_RequestCertificate(object sender, RoutedEventArgs e)
         {
             if (MainViewModel.SelectedItem != null)
             {
                 if (MainViewModel.SelectedItem.IsChanged)
                 {
-                    //save changes
-                    MainViewModel.SaveManagedItemChanges();
+                    var savedOK = await ValidateAndSave(MainViewModel.SelectedItem);
+                    if (!savedOK) return;
                 }
 
                 //begin request
                 MainViewModel.MainUITabIndex = (int)MainWindow.PrimaryUITabs.CurrentProgress;
 
-                if (MainViewModel.BeginCertificateRequestCommand.CanExecute((MainViewModel.SelectedItem.Id)))
-                {
-                    Application.Current.Dispatcher.BeginInvoke(new Action(
-    () =>
-    {
-        MainViewModel.BeginCertificateRequestCommand.Execute(MainViewModel.SelectedItem.Id);
-    }));
-                }
+                await MainViewModel.BeginCertificateRequest(MainViewModel.SelectedItem.Id);
             }
         }
 
-        private void Button_Delete(object sender, RoutedEventArgs e)
+        private async void Button_Delete(object sender, RoutedEventArgs e)
         {
-            if (this.MainViewModel.SelectedItem.Id == null)
+            await MainViewModel.DeleteManagedSite(MainViewModel.SelectedItem);
+            if (MainViewModel.SelectedItem?.Id == null)
             {
-                //item not saved, discard
-                ReturnToDefaultManagedItemView();
-            }
-            else
-            {
-                if (MessageBox.Show(SR.ManagedItemSettings_ConfirmDelete, SR.ConfirmDelete, MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
-                {
-                    this.MainViewModel.DeleteManagedSite(this.MainViewModel.SelectedItem);
-                    ReturnToDefaultManagedItemView();
-                }
+                MainViewModel.SelectedItem = MainViewModel.ManagedSites.FirstOrDefault();
             }
         }
 
-        private void Website_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void Website_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (MainViewModel.SelectedWebSite != null)
             {
                 string siteId = MainViewModel.SelectedWebSite.SiteId;
-                if (MainViewModel.PopulateManagedSiteSettingsCommand.CanExecute(siteId))
-                {
-                    MainViewModel.PopulateManagedSiteSettingsCommand.Execute(siteId);
-                }
-            }
-        }
 
-        private void SANDomain_Toggled(object sender, RoutedEventArgs e)
-        {
-            this.MainViewModel.SelectedItem.IsChanged = true;
+                SiteQueryInProgress.Visibility = Visibility.Visible;
+                await MainViewModel.PopulateManagedSiteSettings(siteId);
+                SiteQueryInProgress.Visibility = Visibility.Hidden;
+            }
         }
 
         private void OpenLogFile_Click(object sender, RoutedEventArgs e)
@@ -408,16 +400,6 @@ namespace Certify.UI.Controls
                     RevokeCertificateBtn.IsEnabled = true;
                 }
             }
-        }
-
-        private void ScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            // allows mousewheel scrolling while mouse cursor is over the DataGrid
-            // see: https://stackoverflow.com/a/16235785/490657
-            ScrollViewer scv = (ScrollViewer)sender;
-            
-            scv.ScrollToVerticalOffset(scv.VerticalOffset - e.Delta/2);
-            e.Handled = true;
         }
     }
 }

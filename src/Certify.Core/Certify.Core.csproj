@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Certify</RootNamespace>
     <AssemblyName>Certify.Core</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
@@ -42,6 +42,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <CodeAnalysisRuleSet>..\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -90,21 +91,15 @@
     <Reference Include="BouncyCastle.Crypto, Version=1.8.1.0, Culture=neutral, PublicKeyToken=0e99375e54769942">
       <HintPath>..\..\packages\BouncyCastle.1.8.1\lib\BouncyCastle.Crypto.dll</HintPath>
     </Reference>
-    <Reference Include="Certes, Version=1.1.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Certes.1.1.2\lib\net45\Certes.dll</HintPath>
+    <Reference Include="CommonServiceLocator, Version=2.0.1.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\CommonServiceLocator.2.0.1\lib\net45\CommonServiceLocator.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.ApplicationInsights, Version=2.4.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Microsoft.ApplicationInsights.2.4.0\lib\net45\Microsoft.ApplicationInsights.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Practices.ServiceLocation, Version=1.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\CommonServiceLocator.1.3\lib\portable-net4+sl5+netcore45+wpa81+wp8\Microsoft.Practices.ServiceLocation.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.Web.Administration, Version=7.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Microsoft.Web.Administration.7.0.0.0\lib\net20\Microsoft.Web.Administration.dll</HintPath>
       <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.Win32.TaskScheduler, Version=2.6.2.0, Culture=neutral, PublicKeyToken=0d013ddd5178a2ae, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\TaskScheduler.2.6.2\lib\net40\Microsoft.Win32.TaskScheduler.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -117,7 +112,7 @@
       <HintPath>..\..\packages\Serilog.2.5.0\lib\net45\Serilog.dll</HintPath>
     </Reference>
     <Reference Include="Serilog.Sinks.File, Version=2.0.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Serilog.Sinks.File.3.2.0\lib\net45\Serilog.Sinks.File.dll</HintPath>
+      <HintPath>..\..\packages\Serilog.Sinks.File.4.0.0\lib\net45\Serilog.Sinks.File.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Composition.AttributedModel, Version=1.0.32.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -137,13 +132,13 @@
     </Reference>
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.SQLite, Version=1.0.106.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Data.SQLite.Core.1.0.106.0\lib\net451\System.Data.SQLite.dll</HintPath>
+    </Reference>
     <Reference Include="System.Diagnostics.DiagnosticSource, Version=4.0.2.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\..\packages\System.Diagnostics.DiagnosticSource.4.4.1\lib\net45\System.Diagnostics.DiagnosticSource.dll</HintPath>
     </Reference>
-    <Reference Include="System.Management.Automation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\System.Management.Automation.6.1.7601.17515\lib\net45\System.Management.Automation.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.ValueTuple, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\..\packages\System.ValueTuple.4.4.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
     </Reference>
@@ -161,74 +156,18 @@
   <ItemGroup>
     <Compile Include="ACMESharpCompat\ACMESharpUtils.cs" />
     <Compile Include="ACMESharpCompat\Helpers.cs" />
-    <Compile Include="CoreSR.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>CoreSR.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Management\APIProviders\CertesProvider.cs" />
     <Compile Include="Management\IACMEClientProvider.cs" />
     <Compile Include="Management\APIProviders\ACMESharpProvider.cs" />
     <Compile Include="Management\CertifyManager.cs" />
     <Compile Include="Management\ItemManager.cs" />
     <Compile Include="Management\IVaultProvider.cs" />
     <Compile Include="Management\NetworkUtils.cs" />
-    <Compile Include="Management\PluginManager.cs" />
-    <Compile Include="Management\PowerShellManager.cs" />
     <Compile Include="Management\SecurityProtocolsManager.cs" />
     <Compile Include="Management\SettingsManager.cs" />
-    <Compile Include="Models\ActionLogItem.cs" />
-    <Compile Include="Models\APIResponses.cs" />
-    <Compile Include="Models\ApiResult.cs" />
-    <Compile Include="Models\AppVersion.cs" />
-    <Compile Include="Models\CertificateAuthority.cs" />
-    <Compile Include="Models\CertificateRequestResult.cs" />
-    <Compile Include="Models\CertRequestConfig.cs" />
-    <Compile Include="Models\DomainOption.cs" />
-    <Compile Include="Models\PendingAuthorization.cs" />
-    <Compile Include="Models\ManagedItem.cs" />
-    <Compile Include="Models\ContactRegistration.cs" />
-    <Compile Include="Models\Plugins\PluginInterfaces.cs" />
-    <Compile Include="Models\RequestProgressState.cs" />
-    <Compile Include="Models\Shared\FeedbackReport.cs" />
-    <Compile Include="Models\Shared\LicenseCheckResult.cs" />
-    <Compile Include="Models\Shared\LicenseKeyInstallResult.cs" />
-    <Compile Include="Models\UpdateMessage.cs" />
-    <Compile Include="Management\CertificateManager.cs" />
     <Compile Include="Management\IISManager.cs" />
-    <Compile Include="Models\UpdateCheck.cs" />
-    <Compile Include="Management\Util.cs" />
-    <Compile Include="Models\ExtendedVaultConfig.cs" />
-    <Compile Include="Models\VaultItem.cs" />
-    <Compile Include="Models\Webhook.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Management\VaultManager.cs" />
-    <Compile Include="Resources.cs" />
     <Compile Include="Settings.cs" />
-    <Compile Include="Utils\SRDescription.cs" />
-    <EmbeddedResource Include="CoreSR.es-ES.resx">
-     <DependentUpon>CoreSR.resx</DependentUpon>
-     </EmbeddedResource>
-    <EmbeddedResource Include="CoreSR.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>CoreSR.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CoreSR.zh-Hans.resx">
-      <DependentUpon>CoreSR.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.es-ES.resx">
-      <DependentUpon>Resources.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
@@ -258,6 +197,18 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Certify.Core.Models\Certify.Models.csproj">
+      <Project>{50a30c5d-f5d7-4bb1-9eab-957af34fbf3d}</Project>
+      <Name>Certify.Models</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj">
+      <Project>{8bcaa93d-18aa-4f62-bcb4-c883cc65c049}</Project>
+      <Name>Certify.Locales</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Certify.Shared\Certify.Shared.csproj">
+      <Project>{ed48b479-b619-4c16-afa3-83dd3cd89338}</Project>
+      <Name>Certify.Shared</Name>
+    </ProjectReference>
     <ProjectReference Include="..\lib\ACMESharp\ACMESharp\ACMESharp.PKI.Providers.BouncyCastle\ACMESharp.PKI.Providers.BouncyCastle.csproj">
       <Project>{473bff7d-c7f0-471d-b7a3-19ad9adfdba9}</Project>
       <Name>ACMESharp.PKI.Providers.BouncyCastle</Name>
@@ -283,13 +234,15 @@
     <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>
-  <Import Project="..\..\packages\Fody.2.1.2\build\netstandard1.0\Fody.targets" Condition="Exists('..\..\packages\Fody.2.1.2\build\netstandard1.0\Fody.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\..\packages\Fody.2.1.2\build\netstandard1.0\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Fody.2.1.2\build\netstandard1.0\Fody.targets'))" />
+    <Error Condition="!Exists('..\..\packages\System.Data.SQLite.Core.1.0.106.0\build\net451\System.Data.SQLite.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\System.Data.SQLite.Core.1.0.106.0\build\net451\System.Data.SQLite.Core.targets'))" />
+    <Error Condition="!Exists('..\..\packages\Fody.2.2.1.0\build\net452\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Fody.2.2.1.0\build\net452\Fody.targets'))" />
   </Target>
+  <Import Project="..\..\packages\System.Data.SQLite.Core.1.0.106.0\build\net451\System.Data.SQLite.Core.targets" Condition="Exists('..\..\packages\System.Data.SQLite.Core.1.0.106.0\build\net451\System.Data.SQLite.Core.targets')" />
+  <Import Project="..\..\packages\Fody.2.2.1.0\build\net452\Fody.targets" Condition="Exists('..\..\packages\Fody.2.2.1.0\build\net452\Fody.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

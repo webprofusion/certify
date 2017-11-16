@@ -10,10 +10,8 @@
              xmlns:Custom="http://metro.mahapps.com/winfx/xaml/controls"
              xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
              xmlns:utils="clr-namespace:Certify.UI.Utils"
-             xmlns:acme="clr-namespace:Certify.ACMESharpCompat;assembly=Certify.Core"
-             xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Core"
-             xmlns:res="clr-namespace:Certify.UI.Resources"
-             xmlns:Resources="clr-namespace:Certify.UI.Resources"
+             xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Models"
+             xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
              x:Class="Certify.UI.Controls.ManagedItemSettings"
              mc:Ignorable="d" Width="697.442" Height="425.672"
              d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}">
@@ -26,8 +24,10 @@
         <Grid.Resources>
             <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
             <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
-            <utils:OptionalBooleanToVisibilityConverter True="Hidden" False="Visible" x:Key="InvBoolVisConverter" />
-            <utils:NullVisibilityConverter x:Key="NullVisConverter" />
+            <utils:OptionalBooleanToVisibilityConverter True="Collapsed" False="Visible" x:Key="InvBoolVisConverter" />
+            <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
+            <utils:ManagedItemHealthVisibilityConverter x:Key="HealthVisibleConverter" />
+            <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
         </Grid.Resources>
         <StackPanel Orientation="Vertical" Grid.Row="0">
             <Label Content="{Binding SelectedItem.Name}" Margin="8,0,0,2" FontSize="24" FontFamily="Segoe UI Semilight" />
@@ -67,50 +67,58 @@
         <dragablz:TabablzControl x:Name="SettingsTab" Margin="8" Grid.Row="2" FixedHeaderCount="3"
                                  VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
             <TabItem Header="{x:Static Resources:SR.ManagedItemSettings_Tab_Options}" IsSelected="True">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
-                    <StackPanel Margin="12" Orientation="Vertical" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullVisConverter}}">
-                        <StackPanel Orientation="Horizontal" Visibility="{Binding IsWebsiteSelectable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
-                            <Label Width="136" Content="{x:Static Resources:SR.ManagedItemSettings_SelectIISSite}" />
-                            <ComboBox ItemsSource="{Binding WebSiteList}" SelectedItem="{Binding SelectedWebSite}"  DisplayMemberPath="SiteName" Width="225" SelectionChanged="Website_SelectionChanged" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <Label Width="136" Content="{x:Static Resources:SR.ManagedItemSettings_DisplayName}" />
-                            <TextBox Text="{Binding SelectedItem.Name, UpdateSourceTrigger=PropertyChanged}" Width="225" />
-                        </StackPanel>
-                        <StackPanel Orientation="Vertical" Margin="136,8,0,0">
-                            <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_EnableAutoRenewal}" IsChecked="{Binding SelectedItem.IncludeInAutoRenew}" />
-                            <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_NotifyPrimaryContactOnRenewalFailure}" IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" />
-                        </StackPanel>
-                        <StackPanel x:Name="NoBindings" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" Orientation="Vertical"  Margin="0,8,0,0">
-                            <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="8,0" FontWeight="Bold" FontFamily="Segoe UI Semibold" Foreground="#FFEA1010"><Run Text="{x:Static Resources:SR.ManagedItemSettings_NoHostNameBindingWarning}" /></TextBlock>
-                        </StackPanel>
-                        <StackPanel x:Name="DomainOptions" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=BoolToVisConverter}}" Orientation="Vertical" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
-                            <StackPanel Orientation="Vertical" Margin="0,8,8,8" HorizontalAlignment="Left">
-                                <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="8,0,0,0" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" FontWeight="Bold" FontFamily="Segoe UI Semibold"><Run Text="{x:Static Resources:SR.ManagedItemSettings_DomainIncluded}" /></TextBlock>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,8,8">
-                                <Label Content="{x:Static Resources:SR.ManagedItemSettings_SelectDomain}" />
-                                <Button Content="{x:Static Resources:SR.SelectAll}" Command="{Binding SANSelectAllCommand}" Margin="16,0,0,0" />
-                                <Button Content="{x:Static Resources:SR.ManagedItemSettings_SelectNone}" Command="{Binding SANSelectNoneCommand}" Margin="8,0,0,0" />
-                            </StackPanel>
-                            <DockPanel>
-                                <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" ItemsSource="{Binding SelectedItem.DomainOptions}">
-                                    <DataGrid.Columns>
-                                        <DataGridTemplateColumn Header="{x:Static Resources:SR.ManagedItemSettings_Primary}">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <RadioButton GroupName="PrimaryDomainGroup" IsChecked="{Binding IsPrimaryDomain, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" />
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        <DataGridCheckBoxColumn Header="{x:Static Resources:SR.ManagedItemSettings_Include}" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
-                                        <DataGridTextColumn Header="{x:Static Resources:SR.ManagedItemSettings_Domain}" Binding="{Binding Domain, UpdateSourceTrigger=PropertyChanged}" Width="*" IsReadOnly="True" />
-                                    </DataGrid.Columns>
-                                </DataGrid>
-                            </DockPanel>
-                        </StackPanel>
+                <DockPanel Margin="12,12,12,0" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Visibility="{Binding SelectedItem.Health, Converter={StaticResource ResourceKey=HealthVisibleConverter}}" Background="#FF3F3F3F" Margin="0,0,0,8">
+
+                        <fa:ImageAwesome Margin="4" Icon="ExclamationTriangle" Height="16" Foreground="#FFFDFDFD" />
+                        <TextBlock TextWrapping="WrapWithOverflow" Text="{Binding SelectedItem.RenewalFailureMessage}" Margin="4,4,16,4" Foreground="White">
+                        </TextBlock>
                     </StackPanel>
-                </ScrollViewer>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Visibility="{Binding SelectedItem.Id, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
+                        <Label Width="136" Content="{x:Static Resources:SR.ManagedItemSettings_SelectIISSite}" />
+                        <ComboBox x:Name="WebsiteDropdown"  ItemsSource="{Binding WebSiteList, UpdateSourceTrigger=Default}" SelectedItem="{Binding SelectedWebSite}"  DisplayMemberPath="SiteName" Width="225" SelectionChanged="Website_SelectionChanged" />
+                        <fa:ImageAwesome x:Name="SiteQueryInProgress" Margin="4,0,0,0" Visibility="Hidden" Icon="Refresh" Height="16" Spin="True" SpinDuration="1" />
+                    </StackPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                        <Label Width="136" Content="{x:Static Resources:SR.ManagedItemSettings_DisplayName}" />
+                        <TextBox Text="{Binding SelectedItem.Name, UpdateSourceTrigger=PropertyChanged}" Width="225" />
+                    </StackPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Margin="136,8,0,0">
+                        <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_EnableAutoRenewal}" IsChecked="{Binding SelectedItem.IncludeInAutoRenew}" />
+                        <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_NotifyPrimaryContactOnRenewalFailure}" IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" />
+                    </StackPanel>
+                    <StackPanel DockPanel.Dock="Top" x:Name="NoBindings" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" Orientation="Vertical"  Margin="0,8,0,0">
+                        <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="8,0" FontWeight="Bold" FontFamily="Segoe UI Semibold" Foreground="#FFEA1010"><Run Text="{x:Static Resources:SR.ManagedItemSettings_NoHostNameBindingWarning}" /></TextBlock>
+                    </StackPanel>
+                    <DockPanel DockPanel.Dock="Bottom" x:Name="DomainOptions" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=BoolToVisConverter}}" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Margin="0,8,0,0">
+                        <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Margin="0,8,8,8" HorizontalAlignment="Left">
+                            <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="8,0,0,0" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" FontWeight="Bold" FontFamily="Segoe UI Semibold"><Run Text="{x:Static Resources:SR.ManagedItemSettings_DomainIncluded}" /></TextBlock>
+                        </StackPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,8,8">
+                            <Label Content="{x:Static Resources:SR.ManagedItemSettings_SelectDomain}" />
+                            <Button Content="{x:Static Resources:SR.SelectAll}" Command="{Binding SANSelectAllCommand}" Margin="16,0,0,0" />
+                            <Button Content="{x:Static Resources:SR.ManagedItemSettings_SelectNone}" Command="{Binding SANSelectNoneCommand}" Margin="8,0,0,0" />
+                        </StackPanel>
+                        <DataGrid AutoGenerateColumns="False" CanUserAddRows="False"
+                                  ScrollViewer.CanContentScroll="True"
+                                  VirtualizingPanel.IsVirtualizing="True"
+                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                  ItemsSource="{Binding SelectedItem.DomainOptions}">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="{x:Static Resources:SR.ManagedItemSettings_Primary}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <RadioButton GroupName="PrimaryDomainGroup" IsChecked="{Binding IsPrimaryDomain, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridCheckBoxColumn Header="{x:Static Resources:SR.ManagedItemSettings_Include}" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
+                                <DataGridTextColumn Header="{x:Static Resources:SR.ManagedItemSettings_Domain}" Binding="{Binding Domain, UpdateSourceTrigger=PropertyChanged}" Width="*" IsReadOnly="True" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </DockPanel>
             </TabItem>
             <TabItem Header="{x:Static Resources:SR.Advanced}" IsSelected="True">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
@@ -127,7 +135,7 @@
                                 <Style>
                                     <Setter Property="StackPanel.Visibility" Value="Collapsed" />
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static acme:ACMESharpUtils.CHALLENGE_TYPE_HTTP}">
+                                        <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static model:SupportedChallengeTypes.CHALLENGE_TYPE_HTTP}">
                                             <Setter Property="StackPanel.Visibility" Value="Visible" />
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -150,7 +158,7 @@
                                 <Style>
                                     <Setter Property="StackPanel.Visibility" Value="Collapsed" />
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static acme:ACMESharpUtils.CHALLENGE_TYPE_SNI}">
+                                        <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static model:SupportedChallengeTypes.CHALLENGE_TYPE_SNI}">
                                             <Setter Property="StackPanel.Visibility" Value="Visible" />
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -163,7 +171,7 @@
 
                         <StackPanel Orientation="Vertical" Margin="4,16,0,0">
                             <RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" GroupName="BindingType" Content="{x:Static Resources:SR.ManagedItemSettings_AutoUpdateBinding}" />
-                            <RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType" Content="{x:Static Resources:SR.ManagedItemSettings_UseSpecificBinding}" />
+                            <RadioButton IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Mode=OneWay, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType" Content="{x:Static Resources:SR.ManagedItemSettings_UseSpecificBinding}" />
                         </StackPanel>
 
                         <StackPanel Orientation="Vertical" IsEnabled="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" Margin="32,8,0,0">
@@ -284,7 +292,7 @@
                             </TextBox>
                         </DockPanel>
                         <Button x:Name="OpenLogFile" Content="{x:Static Resources:SR.ManagedItemSettings_OpenLogFile}" Click="OpenLogFile_Click" />
-                        <Label x:Name="CertPath" Content="{Binding SelectedItem.CertificatePath, TargetNullValue={x:Static res:SR.ManagedItemSettings_CertificatePathEmpty}}" />
+                        <Label x:Name="CertPath" Content="{Binding SelectedItem.CertificatePath, TargetNullValue={x:Static Resources:SR.ManagedItemSettings_CertificatePathEmpty}}" />
                         <Button x:Name="OpenCertificateFile" Content="{x:Static Resources:SR.ManagedItemSettings_ViewCertificate}" Click="OpenCertificateFile_Click" />
                         <Label Content="{x:Static Resources:SR.ManagedItemSettings_ExportTip}" />
                         <Border>

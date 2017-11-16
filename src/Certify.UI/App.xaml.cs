@@ -1,11 +1,4 @@
-﻿using MahApps.Metro;
-using Microsoft.ApplicationInsights;
-using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System;
 using System.Windows;
 
 namespace Certify.UI
@@ -15,8 +8,6 @@ namespace Certify.UI
     /// </summary>
     public partial class App : Application
     {
-        private TelemetryClient tc = null;
-
         protected Certify.UI.ViewModel.AppModel MainViewModel
         {
             get
@@ -42,32 +33,13 @@ namespace Certify.UI
             //System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("zh-HANS");
 
             // upgrade assembly version of saved settings (if required)
-            Certify.Properties.Settings.Default.UpgradeSettingsVersion(); // deprecated
-            Certify.Management.SettingsManager.LoadAppSettings();
+            //Certify.Properties.Settings.Default.UpgradeSettingsVersion(); // deprecated
+            //Certify.Management.SettingsManager.LoadAppSettings();
 
             AppDomain currentDomain = AppDomain.CurrentDomain;
             currentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             base.OnStartup(e);
-
-            MainViewModel.LoadSettings();
-
-            //check version capabilities
-            MainViewModel.PluginManager = new Management.PluginManager();
-
-            MainViewModel.PluginManager.LoadPlugins();
-
-            var licensingManager = MainViewModel.PluginManager.LicensingManager;
-            if (licensingManager != null)
-            {
-                if (licensingManager.IsInstallRegistered(ViewModel.AppModel.ProductTypeId, Certify.Management.Util.GetAppDataFolder()))
-                {
-                    MainViewModel.IsRegisteredVersion = true;
-                }
-            }
-
-            //init telemetry if enabled
-            InitTelemetry();
         }
 
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -80,19 +52,6 @@ namespace Certify.UI
 
             var d = new Windows.Feedback(feedbackMsg, isException: true);
             d.ShowDialog();
-        }
-
-        private void InitTelemetry()
-        {
-            if (Management.CoreAppSettings.Current.EnableAppTelematics)
-            {
-                tc = new Certify.Management.Util().InitTelemetry();
-                tc.TrackEvent("Start");
-            }
-            else
-            {
-                tc = null;
-            }
         }
     }
 }
