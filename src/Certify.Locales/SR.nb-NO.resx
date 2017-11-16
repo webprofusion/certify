@@ -1,0 +1,581 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="LicenseKey" xml:space="preserve">
+    <value>Lisensnøkkel</value>
+  </data>
+  <data name="Registration" xml:space="preserve">
+    <value>Registrering</value>
+  </data>
+  <data name="RegistrationEmailAddress" xml:space="preserve">
+    <value>Registrert e-postadresse</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Avbryt</value>
+  </data>
+  <data name="New_Certificate" xml:space="preserve">
+    <value>Nytt sertifikat</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Innstillinger</value>
+  </data>
+  <data name="ValidateKey" xml:space="preserve">
+    <value>Validér nøkkel</value>
+  </data>
+  <data name="Renew_All" xml:space="preserve">
+    <value>Forny alle</value>
+  </data>
+  <data name="Configure_Auto_Renew" xml:space="preserve">
+    <value>Konfigurer autofornying</value>
+  </data>
+  <data name="Update_Available" xml:space="preserve">
+    <value>Oppdater alle tilgjengelige</value>
+  </data>
+  <data name="In_Progress" xml:space="preserve">
+    <value>Pågår</value>
+  </data>
+  <data name="About" xml:space="preserve">
+    <value>Om</value>
+  </data>
+  <data name="Email_Address" xml:space="preserve">
+    <value>E-postadresse</value>
+  </data>
+  <data name="Yes_I_Agree" xml:space="preserve">
+    <value>Ja, jeg aksepterer</value>
+  </data>
+  <data name="Register_Contact" xml:space="preserve">
+    <value>Registrer kontakt</value>
+  </data>
+  <data name="NewContact_AgreeConfirm" xml:space="preserve">
+    <value>Godtar du LetsEncrypt.org-abonnentavtalen? Se på deres hjemmeside for full detaljer før du fortsetter. https://letsencrypt.org/repository/</value>
+  </data>
+  <data name="New_Contact_Tip1" xml:space="preserve">
+    <value>For å bruke Certify og Let's Encrypt-tjenesten for å skaffe SSL-sertifikater må du først registrere deg som kontaktperson.</value>
+  </data>
+  <data name="New_Contact_Tip2" xml:space="preserve">
+    <value>E-postadressen som er oppgitt, kan brukes til å varsle deg om kommende sertifikatfornyelser hvis nødvendig. Ugyldige e-postadresser blir avvist av Let's Encrypt.</value>
+  </data>
+  <data name="New_Contact" xml:space="preserve">
+    <value>Ny kontakt</value>
+  </data>
+  <data name="Send_Feedback" xml:space="preserve">
+    <value>Send tilbakemelding</value>
+  </data>
+  <data name="Send_Feedback_Tip" xml:space="preserve">
+    <value>Din tilbakemelding er viktig for oss. Gi oss beskjed om hvordan vi kan forbedre oss.</value>
+  </data>
+  <data name="Send_Feedback_Quest" xml:space="preserve">
+    <value>Har du noen forslag?</value>
+  </data>
+  <data name="Send_Feedback_Email" xml:space="preserve">
+    <value>Din e-postadresse (hvis du ønsker svar):</value>
+  </data>
+  <data name="Send" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="ImportDlg_Title" xml:space="preserve">
+    <value>Certify - Import</value>
+  </data>
+  <data name="ImportDlg_OpTitle" xml:space="preserve">
+    <value>Importer administrerte nettsteder</value>
+  </data>
+  <data name="ImportDlg_OpComment" xml:space="preserve">
+    <value>Du oppgraderer fra en eldre versjon av Certify. Dette vil opprette nye administrerte nettsteder som du deretter kan redigere for å justere fornyelsesinnstillingene etc.</value>
+  </data>
+  <data name="ImportDlg_Merge" xml:space="preserve">
+    <value>Slå sammen flere domener / sertifikater per nettsted til ett administrert nettsted</value>
+  </data>
+  <data name="ImportDlg_Skip" xml:space="preserve">
+    <value>Hopp over importering</value>
+  </data>
+  <data name="Import" xml:space="preserve">
+    <value>Importer</value>
+  </data>
+  <data name="Send_Feedback_Exception" xml:space="preserve">
+    <value>Oisann, noe gikk galt. Send oss gjerne en tilbakemelding</value>
+  </data>
+  <data name="Send_Feedback_Success" xml:space="preserve">
+    <value>Takk! Tilbakemeldingen din er nå sendt</value>
+  </data>
+  <data name="Send_Feedback_Error" xml:space="preserve">
+    <value>Ops... Det oppsto en feil da vi skulle sende tilbakemeldingen</value>
+  </data>
+  <data name="New_Contact_EmailError" xml:space="preserve">
+    <value>Der glemte du e-postadressen gitt...</value>
+  </data>
+  <data name="New_Contact_NeedAgree" xml:space="preserve">
+    <value>Du må godta den nyeste LetsEncrypt.org-abonnementsavtalen.</value>
+  </data>
+  <data name="Registration_NeedEmail" xml:space="preserve">
+    <value>Vennligst skriv inn e-postadressen du brukte når du registrerte nøkkelen.</value>
+  </data>
+  <data name="Registration_NeedKey" xml:space="preserve">
+    <value>Vennligst skriv inn lisensnøkkelen.</value>
+  </data>
+  <data name="Registration_KeyValidationError" xml:space="preserve">
+    <value>Det oppsto et problem med å validere lisensnøkkelen. Vennligst prøv igjen eller kontakt support.</value>
+  </data>
+  <data name="Registration_UnableToVerify" xml:space="preserve">
+    <value>Det oppstod et problem med godkjenningsprosessen for lisensen.</value>
+  </data>
+  <data name="ScheduledTaskConfig_AlreadyConfiged" xml:space="preserve">
+    <value>Den automatiske fornyelsesoppgaven er allerede konfigurert. Om nødvendig kan du endre admin brukerkontoen som brukes til å utføre oppgaven.</value>
+  </data>
+  <data name="ScheduledTaskConfig_FailedToCreateTask" xml:space="preserve">
+    <value>Kunne ikke opprette planlagt oppgave med nåværende bruker</value>
+  </data>
+  <data name="ScheduledTaskConfig_TaskCreated" xml:space="preserve">
+    <value>Planlagt oppgave opprettet</value>
+  </data>
+  <data name="ScheduledTaskConfig_PleaseProvideCredential" xml:space="preserve">
+    <value>Vennligst logg inn som administrator</value>
+  </data>
+  <data name="ScheduledTaskConfig_WindowTitle" xml:space="preserve">
+    <value>Konfigurer automatisk fornyelse</value>
+  </data>
+  <data name="ScheduledTaskConfig_UserNameLabel" xml:space="preserve">
+    <value>Brukernavn (DOMENE\Bruker)</value>
+  </data>
+  <data name="ScheduledTaskConfig_Tip" xml:space="preserve">
+    <value>For å utføre automatisk fornyelse av sertifikater, vil Certify opprette en oppgave i Windows Task Scheduler. Denne oppgaven må kjøre som administrator for brukernivå for å kunne utføre sertifiseringsadministrasjon og IIS-administrasjonsoppgaver.</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Passord</value>
+  </data>
+  <data name="AboutControl_RegistrationTypeLabel" xml:space="preserve">
+    <value>Ikke registrert</value>
+  </data>
+  <data name="AboutControl_CheckForUpdateButton" xml:space="preserve">
+    <value>Se etter oppdateringer...</value>
+  </data>
+  <data name="AboutControl_Register" xml:space="preserve">
+    <value>Registrer</value>
+  </data>
+  <data name="AboutControl_EnterKey" xml:space="preserve">
+    <value>Skriv inn nøkkel...</value>
+  </data>
+  <data name="AboutControl_Support" xml:space="preserve">
+    <value>Support</value>
+  </data>
+  <data name="AboutControl_SendFeedback" xml:space="preserve">
+    <value>Send tilbakemelding</value>
+  </data>
+  <data name="UpdateCheckLatestVersion" xml:space="preserve">
+    <value>Du har siste versjon</value>
+  </data>
+  <data name="ManagedSites_Filter" xml:space="preserve">
+    <value>Filter...</value>
+  </data>
+  <data name="ManagedSites_NoItemSelectedDesc" xml:space="preserve">
+    <value>Gratis SSL-sertifikater levert via Let's Encrypt-tjenesten (https://letsencrypt.org).</value>
+  </data>
+  <data name="ManagedSites_NoItemSelectedTip" xml:space="preserve">
+    <value>Velg et administrert nettsted, eller velg nytt sertifikat for å begynne.</value>
+  </data>
+  <data name="ManagedSites_UnsavedWarning" xml:space="preserve">
+    <value>Det er endringer på det valgte nettstedet som ikke er lagret. Forkaste endringer?</value>
+  </data>
+  <data name="ProgressMonitor_NoProgress" xml:space="preserve">
+    <value>Ingen pågående forespørsler.</value>
+  </data>
+  <data name="Settings_PrimaryContact" xml:space="preserve">
+    <value>Hovedkontakt:</value>
+  </data>
+  <data name="Settings_AutoRenewalInterval" xml:space="preserve">
+    <value>Automatisk fornyelsesintervall (dager)</value>
+  </data>
+  <data name="Settings_AutoRenewalRequestLimit" xml:space="preserve">
+    <value>Maksimale forespørsler om automatisk fornyelse per økt (0 = Ubegrenset)</value>
+  </data>
+  <data name="Settings_CheckUpdates" xml:space="preserve">
+    <value>Se etter oppdateringer automatisk</value>
+  </data>
+  <data name="Settings_EnableTelemetry" xml:space="preserve">
+    <value>Aktiver funksjonsrapportering (app-telemetri)</value>
+  </data>
+  <data name="Settings_EnableProxyApiForDomainConfig" xml:space="preserve">
+    <value>Aktiver proxy-API for domenekonfeksjonskontroller</value>
+  </data>
+  <data name="Settings_EnableEFS" xml:space="preserve">
+    <value>Aktiver kryptert filsystem (EFS) for sensitive filer. Dette alternativet virker ikke på alle versjoner av Windows.</value>
+  </data>
+  <data name="Settings_IgnoreStoppedSites" xml:space="preserve">
+    <value>Ignorer inaktive/stoppede IIS-nettsteder for nye sertifikater og fornyelser</value>
+  </data>
+  <data name="Settings_EnableDnsValidation" xml:space="preserve">
+    <value>Aktiver DNS Valideringssjekker (Resolution, CAA, DNSSEC)</value>
+  </data>
+  <data name="SaveChanges" xml:space="preserve">
+    <value>Lagre endringer</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Lagre</value>
+  </data>
+  <data name="DiscardChanges" xml:space="preserve">
+    <value>Avbryt endringer</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Slett</value>
+  </data>
+  <data name="ManagedItemSettings_RequestCertificate" xml:space="preserve">
+    <value>Forespør sertifikat</value>
+  </data>
+  <data name="ManagedItemSettings_EnableAutoRenewal" xml:space="preserve">
+    <value>Aktiver automatisk fornyelse</value>
+  </data>
+  <data name="ManagedItemSettings_NotifyPrimaryContactOnRenewalFailure" xml:space="preserve">
+    <value>Informer hovedkontakt om feil ved fornyelse</value>
+  </data>
+  <data name="ManagedItemSettings_NoHostNameBindingWarning" xml:space="preserve">
+    <value>Det er ingen http- eller https-vertsnavnbinding knyttet til det valgte nettstedet i IIS. Minst ett fullt kvalifisert vertsnavn (for eksempel 'github.com') kreves for å opprette et sertifikat.</value>
+  </data>
+  <data name="ManagedItemSettings_Tab_Options" xml:space="preserve">
+    <value>Valg</value>
+  </data>
+  <data name="ManagedItemSettings_SelectIISSite" xml:space="preserve">
+    <value>Velg IIS-nettsted</value>
+  </data>
+  <data name="ManagedItemSettings_DisplayName" xml:space="preserve">
+    <value>Visningsnavn</value>
+  </data>
+  <data name="ManagedItemSettings_DomainIncluded" xml:space="preserve">
+    <value>Følgende utvalgte domener vil bli inkludert som en enkelt sertifikatforespørsel. Lets Encrypt-tjenesten må kunne få tilgang til alle disse domenene via port 80 (for HTTP-utfordringer) eller port 443 (for TLS-SNI-utfordringer) for sertifiseringsprosessen til å fungere.</value>
+  </data>
+  <data name="ManagedItemSettings_SelectDomain" xml:space="preserve">
+    <value>Domener og underdomener for å inkludere:</value>
+  </data>
+  <data name="SelectAll" xml:space="preserve">
+    <value>Velg alle</value>
+  </data>
+  <data name="ManagedItemSettings_Primary" xml:space="preserve">
+    <value>Hoved</value>
+  </data>
+  <data name="ManagedItemSettings_Include" xml:space="preserve">
+    <value>Inkluder</value>
+  </data>
+  <data name="ManagedItemSettings_Domain" xml:space="preserve">
+    <value>Domene</value>
+  </data>
+  <data name="Advanced" xml:space="preserve">
+    <value>Avansert</value>
+  </data>
+  <data name="ManagedItemSettings_SelectNone" xml:space="preserve">
+    <value>Ikke velg noen</value>
+  </data>
+  <data name="ManagedItemSettings_ChallengeTypes" xml:space="preserve">
+    <value>Utfordringstype:</value>
+  </data>
+  <data name="ManagedItemSettings_WebsiteRoot" xml:space="preserve">
+    <value>Nettstedets rotkatalog</value>
+  </data>
+  <data name="ManagedItemSettings_BrowseFolder" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="ManagedItemSettings_PerformChallengeResponseConfigCheck" xml:space="preserve">
+    <value>Utfør utfordringsreaksjonskontrollkontroller</value>
+  </data>
+  <data name="ManagedItemSettings_PerformWebAppAutoConfig" xml:space="preserve">
+    <value>Automatisk konfigurasjon</value>
+  </data>
+  <data name="ManagedItemSettings_BindIP" xml:space="preserve">
+    <value>Bind til spesifikk IP:</value>
+  </data>
+  <data name="ManagedItemSettings_BindPort" xml:space="preserve">
+    <value>Bind til spesifikk port:</value>
+  </data>
+  <data name="ManagedItemSettings_UseSNI" xml:space="preserve">
+    <value>Bruk SNI (IIS 8+)</value>
+  </data>
+  <data name="Test" xml:space="preserve">
+    <value>Test</value>
+  </data>
+  <data name="Browser" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="ManagedItemSettings_ExportTip" xml:space="preserve">
+    <value>Merk: For å eksportere dette sertifikatet, bruk alternativet Manage Computer Certificates i Windows.</value>
+  </data>
+  <data name="ManagedItemSettings_OpenLogFile" xml:space="preserve">
+    <value>Åpne loggfil</value>
+  </data>
+  <data name="ManagedItemSettings_ViewCertificate" xml:space="preserve">
+    <value>Vis sertifikat</value>
+  </data>
+  <data name="ManagedItemSettings_CertificateRevokeWarning" xml:space="preserve">
+    <value>ADVARSEL: Dette sertifikatet er tilbakekalt.</value>
+  </data>
+  <data name="SaveError" xml:space="preserve">
+    <value>Feil ved lagring</value>
+  </data>
+  <data name="ManagedItemSettings_SelectWebsiteOrCert" xml:space="preserve">
+    <value>Velg nettsiden for å opprette et sertifikat for.</value>
+  </data>
+  <data name="ManagedItemSettings_NameRequired" xml:space="preserve">
+    <value>Et navn kreves for dette elementet.</value>
+  </data>
+  <data name="ManagedItemSettings_NeedPrimaryDomain" xml:space="preserve">
+    <value>Et hoveddomene må inkluderes</value>
+  </data>
+  <data name="ManagedItemSettings_ChallengeNotAvailable" xml:space="preserve">
+    <value>Utfordringen {0} er bare tilgjengelig for IIS-versjon 8 eller nyere.</value>
+  </data>
+  <data name="ManagedItemSettings_HookMustBeValidUrl" xml:space="preserve">
+    <value>Nettadressen til webhook må settes til en gyldig URL.</value>
+  </data>
+  <data name="ManagedItemSettings_HookMethodMustBeSet" xml:space="preserve">
+    <value>Metoden for webhook må settes.</value>
+  </data>
+  <data name="ManagedItemSettings_NoChanges" xml:space="preserve">
+    <value>Ingen endringer ble gjort</value>
+  </data>
+  <data name="ConfirmDelete" xml:space="preserve">
+    <value>Bekreft sletting</value>
+  </data>
+  <data name="ManagedItemSettings_ConfirmDelete" xml:space="preserve">
+    <value>Er du sikker på at du vil slette dette elementet? Slette elementet påvirker ikke IIS-innstillinger, etc.</value>
+  </data>
+  <data name="ManagedItemSettings_LogNotCreated" xml:space="preserve">
+    <value>Loggfilen for dette elementet er ikke opprettet ennå.</value>
+  </data>
+  <data name="ManagedItemSettings_CertificateNotReady" xml:space="preserve">
+    <value>Sertifikatfilen for dette elementet er ikke opprettet ennå.</value>
+  </data>
+  <data name="ChallengeError" xml:space="preserve">
+    <value>Utfordringsfeil</value>
+  </data>
+  <data name="ManagedItemSettings_CannotChallengeWithoutIIS" xml:space="preserve">
+    <value>Du kan ikke bekrefte utfordringene hvis IIS ikke er tilgjengelig.</value>
+  </data>
+  <data name="Challenge" xml:space="preserve">
+    <value>Utfordring</value>
+  </data>
+  <data name="ManagedItemSettings_ConfigurationCheckOk" xml:space="preserve">
+    <value>Konfigurasjon OK</value>
+  </data>
+  <data name="ManagedItemSettings_ConfigurationCheckFailed" xml:space="preserve">
+    <value>Konfigurasjon feilet:
+{0}</value>
+  </data>
+  <data name="ManagedItemSettings_ChallengeTestFailed" xml:space="preserve">
+    <value>Utfordringstest feilet</value>
+  </data>
+  <data name="ManagedItemSettings_WebhookTestFailed" xml:space="preserve">
+    <value>Webhook-test feilet</value>
+  </data>
+  <data name="ManagedItemSettings_WebhookTest" xml:space="preserve">
+    <value>Webhook-test</value>
+  </data>
+  <data name="failed" xml:space="preserve">
+    <value>feilet</value>
+  </data>
+  <data name="succeed" xml:space="preserve">
+    <value>lyktes</value>
+  </data>
+  <data name="ManagedItemSettings_WebhookRequestResult" xml:space="preserve">
+    <value>Webhook-forespørsel {0}: HTTP {1}</value>
+  </data>
+  <data name="ManagedItemSettings_WebhookRequestError" xml:space="preserve">
+    <value>Webhook-forespørselfeil: {0}</value>
+  </data>
+  <data name="Alert" xml:space="preserve">
+    <value>Advarsel</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>Feil</value>
+  </data>
+  <data name="ManagedItemSettings_Certificate_Revoked" xml:space="preserve">
+    <value>Sertifikat tilbakekalt</value>
+  </data>
+  <data name="ManagedItemSettings_RevokeCertificateError" xml:space="preserve">
+    <value>Feil med tilbakekalling av sertifikat:
+{0}</value>
+  </data>
+  <data name="ManagedItemSettings_ConfirmRevokeCertificate" xml:space="preserve">
+    <value>Er du sikker på at du vil tilbakekalle dette sertifikatet?</value>
+  </data>
+  <data name="MainWindow_TrialLimitationReached" xml:space="preserve">
+    <value>Du bruker en prøveversjon av programmet. Vennligst kjøp en registreringsnøkkel for å oppgradere. Se alternativ på under "Om".</value>
+  </data>
+  <data name="MainWindow_RenewAllConfirm" xml:space="preserve">
+    <value>Dette fornyer sertifikater for alle automatisk fornyede elementer. Fortsette?</value>
+  </data>
+  <data name="MainWindow_IISNotAvailable" xml:space="preserve">
+    <value>IIS ble ikke oppdaget på denne serveren, viktig funksjonalitet vil ikke være tilgjengelig. Hvis du vet at IIS er installert og jobber på denne serveren, vennligst rapporter denne feilen til apps@webprofusion, og gi detaljer om serverens operativsystemversjon og IIS-versjoner</value>
+  </data>
+  <data name="MainWindow_GetStartGuideWithNewCert" xml:space="preserve">
+    <value>Kom i gang ved å registrere en ny kontakt, så kan du begynne å be om sertifikater.</value>
+  </data>
+  <data name="MainWindow_VisitDownloadPage" xml:space="preserve">
+    <value>Gå til nedlastingssiden?</value>
+  </data>
+  <data name="MainWindow_TitleTrialPostfix" xml:space="preserve">
+    <value>[Gratis prøveversjon]</value>
+  </data>
+  <data name="LanguageAuthor" xml:space="preserve">
+    <value>j7.no</value>
+  </data>
+  <data name="About_LanguageTranslator" xml:space="preserve">
+    <value>Oversetter:</value>
+  </data>
+  <data name="Info" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="Comments" xml:space="preserve">
+    <value>Kommentar:</value>
+  </data>
+  <data name="ManagedItemSettings_RevokeCertificate" xml:space="preserve">
+    <value>Tilbakekall sertifikat</value>
+  </data>
+  <data name="ManagedItemSettings_HookUrl" xml:space="preserve">
+    <value>URL:</value>
+  </data>
+  <data name="ManagedItemSettings_HookMethod" xml:space="preserve">
+    <value>Metode:</value>
+  </data>
+  <data name="ManagedItemSettings_HookBody" xml:space="preserve">
+    <value>Body:</value>
+  </data>
+  <data name="ManagedItemSettings_HookContentType" xml:space="preserve">
+    <value>ContentType:</value>
+  </data>
+  <data name="ManagedItemSettings_AutoUpdateBinding" xml:space="preserve">
+    <value>Automatisk opprett/oppdater IIS-bindinger (bruker SNI)</value>
+  </data>
+  <data name="ManagedItemSettings_UseSpecificBinding" xml:space="preserve">
+    <value>Benytt spesifikk IP/port-bindinger</value>
+  </data>
+  <data name="ManagedItemSettings_HookTrigger" xml:space="preserve">
+    <value>Webhook trigger</value>
+  </data>
+  <data name="ManagedItemSettings_CertificatePathEmpty" xml:space="preserve">
+    <value>Sertifikatsti: [skal settes]</value>
+  </data>
+  <data name="ExpiryDateConverter_NoCurrentCertificate" xml:space="preserve">
+    <value>Ingen nåværende sertifikat.</value>
+  </data>
+  <data name="ExpiryDateConverter_CertificateExpiresIn" xml:space="preserve">
+    <value>Utløper om {0} dag(er)</value>
+  </data>
+  <data name="General_Loading" xml:space="preserve">
+    <value>Laster...</value>
+  </data>
+</root>
