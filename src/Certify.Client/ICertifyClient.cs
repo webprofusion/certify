@@ -1,8 +1,6 @@
 ﻿using Certify.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Certify.Client
@@ -100,6 +98,8 @@ namespace Certify.Client
         Task<APIResult> RevokeManageSiteCertificate(string managedSiteId);
 
         Task<List<CertificateRequestResult>> BeginAutoRenewal();
+
+        Task<CertificateRequestResult> ReapplyCertificateBindings(string managedSiteId);
 
         Task<bool> BeginCertificateRequest(string managedSiteId);
 

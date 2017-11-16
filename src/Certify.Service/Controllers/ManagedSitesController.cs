@@ -109,5 +109,20 @@ namespace Certify.Service
             var result = await _certifyManager.RevokeCertificate(managedSite);
             return result;
         }
+
+        [HttpGet, Route("reapply/{managedSiteId}")]
+        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedSiteId)
+        {
+            DebugLog();
+
+            var managedSite = await _certifyManager.GetManagedSite(managedSiteId);
+
+            RequestProgressState progressState = new RequestProgressState(RequestState.Running, "Starting..", managedSite);
+            //begin monitoring progress
+            _certifyManager.BeginTrackingProgress(progressState);
+
+            var result = await _certifyManager.ReapplyCertificateBindings(managedSite);
+            return result;
+        }
     }
 }

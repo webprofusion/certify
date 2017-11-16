@@ -294,6 +294,8 @@
                         <Button x:Name="OpenLogFile" Content="{x:Static Resources:SR.ManagedItemSettings_OpenLogFile}" Click="OpenLogFile_Click" />
                         <Label x:Name="CertPath" Content="{Binding SelectedItem.CertificatePath, TargetNullValue={x:Static Resources:SR.ManagedItemSettings_CertificatePathEmpty}}" />
                         <Button x:Name="OpenCertificateFile" Content="{x:Static Resources:SR.ManagedItemSettings_ViewCertificate}" Click="OpenCertificateFile_Click" />
+                        <Button x:Name="ReapplyCertBindings" Content="Re-apply Certificate Bindings" Margin="4,4
+                                ,0,0" Click="ReapplyCertBindings_Click" />
                         <Label Content="{x:Static Resources:SR.ManagedItemSettings_ExportTip}" />
                         <Border>
                             <Border.Style>

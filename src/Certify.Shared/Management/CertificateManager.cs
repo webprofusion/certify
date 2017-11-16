@@ -14,10 +14,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Certify.Management
 {
@@ -95,6 +94,20 @@ namespace Certify.Management
             return StoreCertificate(certificate);
         }
 
+        public static X509Certificate2 GetCertificateFromStore(string subjectName)
+        {
+            X509Certificate2 cert = null;
+            var store = GetDefaultStore();
+            store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
+            X509Certificate2Collection results = store.Certificates.Find(X509FindType.FindBySubjectName, subjectName, false);
+            if (results.Count > 0)
+            {
+                cert = results[0];
+            }
+            store.Close();
+            return cert;
+        }
+
         public static X509Certificate2 StoreCertificate(X509Certificate2 certificate)
         {
             var store = GetDefaultStore();
@@ -113,6 +126,79 @@ namespace Certify.Management
             store.Close();
         }
 
+        /// <summary>
+        /// For IIS to use a certificate it's process user must be able to encrypt outgoing traffic,
+        /// so it needs the private key for our certificate. If a system user creates the certificate
+        /// the default permission may not allow access to the private key.
+        /// </summary>
+        /// <param name="cert"> cert including private key </param>
+        /// <param name="accountName"> user to grant read access for </param>
+        public static void GrantUserAccessToCertificatePrivateKey(X509Certificate2 cert, string accountName)
+        {
+            RSACryptoServiceProvider rsa = cert.PrivateKey as RSACryptoServiceProvider;
+
+            if (rsa != null)
+            {
+                string privateKeyPath = GetMachineKeyLocation(rsa.CspKeyContainerInfo.UniqueKeyContainerName);
+
+                FileInfo file = new FileInfo(privateKeyPath + "\\" + rsa.CspKeyContainerInfo.UniqueKeyContainerName);
+
+                var fs = file.GetAccessControl();
+
+                var account = new System.Security.Principal.NTAccount(accountName);
+                fs.AddAccessRule(new FileSystemAccessRule(account, FileSystemRights.Read, AccessControlType.Allow));
+
+                file.SetAccessControl(fs);
+            }
+        }
+
+        public static FileSecurity GetUserAccessInfoForCertificatePrivateKey(X509Certificate2 cert)
+        {
+            RSACryptoServiceProvider rsa = cert.PrivateKey as RSACryptoServiceProvider;
+
+            if (rsa != null)
+            {
+                string privateKeyPath = GetMachineKeyLocation(rsa.CspKeyContainerInfo.UniqueKeyContainerName);
+
+                FileInfo file = new FileInfo(privateKeyPath + "\\" + rsa.CspKeyContainerInfo.UniqueKeyContainerName);
+
+                return file.GetAccessControl();
+            }
+            return null;
+        }
+
+        private static string GetMachineKeyLocation(string keyFileName)
+        {
+            string appDataPath =
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            string machineKeyPath = appDataPath + @"\Microsoft\Crypto\RSA\MachineKeys";
+            string[] fileList = Directory.GetFiles(machineKeyPath, keyFileName);
+
+            // if we have results, use this path
+            if (fileList.Any())
+            {
+                return machineKeyPath;
+            }
+
+            //if no results from common app data path, try alternative
+            appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            machineKeyPath = appDataPath + @"\Microsoft\Crypto\RSA\";
+            fileList = Directory.GetDirectories(machineKeyPath);
+            if (fileList.Any())
+            {
+                foreach (string filename in fileList)
+                {
+                    var dirList = Directory.GetFiles(filename, keyFileName);
+                    if (dirList.Any())
+                    {
+                        return filename;
+                    }
+                }
+            }
+            //Could not access private key file.
+            return null;
+        }
+
         public static X509Store GetDefaultStore()
         {
             return new X509Store(StoreName.My, StoreLocation.LocalMachine);
@@ -122,13 +208,13 @@ namespace Certify.Management
         /// Remove old certificates we have created previously (based on a matching prefix string,
         /// compared to our new certificate)
         /// </summary>
-        /// <param name="certificate">The new cert to keep</param>
-        /// <param name="hostPrefix">The cert friendly name prefix to match certs to clean up</param>
+        /// <param name="certificate"> The new cert to keep </param>
+        /// <param name="hostPrefix"> The cert friendly name prefix to match certs to clean up </param>
         public static void CleanupCertificateDuplicates(X509Certificate2 certificate, string hostPrefix)
         {
             // TODO: remove distinction, this is legacy from the old version which didn't have a
             //       clear app specific prefix
-            bool requireCertifySpecificCerts = false;
+            bool requireCertifySpecificCerts = true;
 
             if (certificate.FriendlyName.Length < 10) return;
 
@@ -141,7 +227,7 @@ namespace Certify.Management
                 //TODO: add tests for this then remove the check because these two branches are the same, obviously not as intended
                 if (requireCertifySpecificCerts)
                 {
-                    if (c.FriendlyName.StartsWith(hostPrefix, StringComparison.InvariantCulture) && c.GetCertHashString() != certificate.GetCertHashString())
+                    if (c.FriendlyName.StartsWith(hostPrefix, StringComparison.InvariantCulture) && c.FriendlyName.Contains("[Certify]") && c.GetCertHashString() != certificate.GetCertHashString())
                     {
                         //going to remove certs with same friendly name
                         certsToRemove.Add(c);

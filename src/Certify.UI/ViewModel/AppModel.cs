@@ -583,6 +583,11 @@ namespace Certify.UI.ViewModel
             // current requests?
         }
 
+        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId)
+        {
+            return await CertifyClient.ReapplyCertificateBindings(managedItemId);
+        }
+
         private async Task UpdatedCachedManagedSite(ManagedSite managedSite, bool reload = false)
         {
             var existing = ManagedSites.FirstOrDefault(i => i.Id == managedSite.Id);

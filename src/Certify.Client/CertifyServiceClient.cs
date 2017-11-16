@@ -228,6 +228,12 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<APIResult>(await response.Content.ReadAsStringAsync());
         }
 
+        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedSiteId)
+        {
+            var response = await FetchAsync($"managedsites/reapply/{managedSiteId}");
+            return JsonConvert.DeserializeObject<CertificateRequestResult>(response);
+        }
+
         #endregion Managed Sites
 
         #region Contacts

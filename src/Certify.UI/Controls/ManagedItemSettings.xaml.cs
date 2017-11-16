@@ -212,10 +212,16 @@ namespace Certify.UI.Controls
             {
                 //open file
                 var cert = CertificateManager.LoadCertificate(certPath);
+
                 if (cert != null)
                 {
+                    var test = cert.PrivateKey.KeyExchangeAlgorithm;
+                    System.Diagnostics.Debug.WriteLine(test.ToString());
+
                     X509Certificate2UI.DisplayCertificate(cert);
                 }
+
+                //MessageBox.Show(Newtonsoft.Json.JsonConvert.SerializeObject(cert.PrivateKey, Newtonsoft.Json.Formatting.Indented));
             }
             else
             {
@@ -398,6 +404,17 @@ namespace Certify.UI.Controls
                 finally
                 {
                     RevokeCertificateBtn.IsEnabled = true;
+                }
+            }
+        }
+
+        private async void ReapplyCertBindings_Click(object sender, RoutedEventArgs e)
+        {
+            if (!String.IsNullOrEmpty(MainViewModel.SelectedItem.CertificatePath))
+            {
+                if (MessageBox.Show("Re-apply certificate to website bindings?", "Confirm Re-Apply?", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
+                {
+                    await MainViewModel.ReapplyCertificateBindings(MainViewModel.SelectedItem.Id);
                 }
             }
         }

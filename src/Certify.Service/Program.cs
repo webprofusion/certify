@@ -20,9 +20,9 @@ namespace Certify.Service
                 x.SetDescription("Certify SSL/TLS Manager Service");
                 x.StartAutomaticallyDelayed();
 #if DEBUG
-                x.SetInstanceName("CertifySSLManager.Service.Debug");
+                x.SetInstanceName("Debug");
 #else
-                x.SetInstanceName("CertifySSLManager.Service");
+               // x.SetInstanceName("CertifySSLManager.Service");
 #endif
                 // FIXME: we should offer option during setup to configure this as a service account
                 // account requires admin rights in IIS (and wwwroot etc) and permission to

@@ -55,6 +55,8 @@ namespace Certify.Management
 
         void BeginTrackingProgress(RequestProgressState state);
 
+        Task<CertificateRequestResult> ReapplyCertificateBindings(ManagedSite managedSite, IProgress<RequestProgressState> progress = null);
+
         Task<CertificateRequestResult> PerformCertificateRequest(ManagedSite managedSite, IProgress<RequestProgressState> progress = null);
 
         List<DomainOption> GetDomainOptionsFromSite(string siteId);
@@ -304,6 +306,40 @@ namespace Certify.Management
                 LogItemType = LogItemType.GeneralInfo,
                 Message = msg
             });
+        }
+
+        public async Task<CertificateRequestResult> ReapplyCertificateBindings(ManagedSite managedSite, IProgress<RequestProgressState> progress = null)
+        {
+            var result = new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = "" };
+            var config = managedSite.RequestConfig;
+            var pfxPath = managedSite.CertificatePath;
+
+            if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS && config.PerformAutomatedCertBinding)
+            {
+                ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding, managedSite));
+
+                // Install certificate into certificate store and bind to IIS site
+                if (_iisManager.InstallCertForRequest(managedSite, pfxPath, cleanupCertStore: true))
+                {
+                    //all done
+                    LogMessage(managedSite.Id, CoreSR.CertifyManager_CompleteRequestAndUpdateBinding, LogItemType.CertificateRequestSuccessful);
+
+                    await UpdateManagedSiteStatus(managedSite, RequestState.Success);
+
+                    result.IsSuccess = true;
+                    result.Message = string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
+                    ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedSite));
+                }
+                else
+                {
+                    // something broke
+                    result.Message = string.Format(CoreSR.CertifyManager_CertificateInstallFailed, pfxPath);
+                    await UpdateManagedSiteStatus(managedSite, RequestState.Error, result.Message);
+
+                    LogMessage(managedSite.Id, result.Message, LogItemType.GeneralError);
+                }
+            }
+            return result;
         }
 
         public async Task<CertificateRequestResult> PerformCertificateRequest(ManagedSite managedSite, IProgress<RequestProgressState> progress = null)
