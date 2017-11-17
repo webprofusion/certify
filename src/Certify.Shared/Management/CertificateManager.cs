@@ -87,6 +87,7 @@ namespace Certify.Management
 
         public static X509Certificate2 StoreCertificate(string host, string pfxFile)
         {
+            // https://support.microsoft.com/en-gb/help/950090/installing-a-pfx-file-using-x509certificate-from-a-standard--net-appli
             var certificate = new X509Certificate2(pfxFile, "", X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
             certificate.GetExpirationDateString();
             certificate.FriendlyName = host + " [Certify] - " + certificate.GetEffectiveDateString() + " to " + certificate.GetExpirationDateString();
