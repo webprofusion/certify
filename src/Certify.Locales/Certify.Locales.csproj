@@ -62,10 +62,18 @@
     <Compile Include="Utils\SRDescription.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="ConfigResources.es-ES.resx">
+      <DependentUpon>ConfigResources.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ConfigResources.nb-NO.resx">
+      <DependentUpon>ConfigResources.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="CoreSR.es-ES.resx">
       <DependentUpon>CoreSR.resx</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="CoreSR.nb-NO.resx" />
+    <EmbeddedResource Include="CoreSR.nb-NO.resx">
+      <DependentUpon>CoreSR.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="CoreSR.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>CoreSR.Designer.cs</LastGenOutput>
@@ -73,15 +81,15 @@
     <EmbeddedResource Include="CoreSR.zh-Hans.resx">
       <DependentUpon>CoreSR.resx</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources.es-ES.resx">
-      <DependentUpon>ConfigResources.resx</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="ConfigResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>ConfigResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="SR.es-ES.resx">
+      <DependentUpon>SR.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SR.nb-NO.resx">
       <DependentUpon>SR.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SR.resx">
