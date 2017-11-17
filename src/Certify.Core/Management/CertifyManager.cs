@@ -314,7 +314,7 @@ namespace Certify.Management
             var config = managedSite.RequestConfig;
             var pfxPath = managedSite.CertificatePath;
 
-            if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS && config.PerformAutomatedCertBinding)
+            if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS)
             {
                 ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding, managedSite));
 
@@ -628,7 +628,7 @@ namespace Certify.Management
                                 LogMessage(managedSite.Id, "Failed to parse certificate dates", LogItemType.GeneralError);
                             }
 
-                            if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS && config.PerformAutomatedCertBinding)
+                            if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS)
                             {
                                 ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding, managedSite));
 
