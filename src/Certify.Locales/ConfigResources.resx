@@ -138,11 +138,11 @@ This software uses the following Open Source software (or significant portions o
   </data>
   <data name="AppUpdateCheckURI" xml:space="preserve">
     <value>https://certifytheweb.com/downloads/version.json</value>
-    <comment>Where to check for latest version</comment>
+    <comment>Do not translate</comment>
   </data>
   <data name="AppWebsiteURL" xml:space="preserve">
     <value>https://certifytheweb.com</value>
-  </data>
+  <comment>Do not translate</comment></data>
   <data name="GettingStartedExistingVault" xml:space="preserve">
     <value>Get Started: Browse the Vault on the left to see current certificate information.</value>
   </data>
@@ -169,10 +169,10 @@ This software uses the following Open Source software (or significant portions o
     &lt;/authorization&gt;
   &lt;/system.web&gt;
 &lt;/configuration&gt;</value>
-  </data>
+  <comment>Do not translate</comment></data>
   <data name="AIInstrumentationKey" xml:space="preserve">
     <value>63154103-66ba-4636-8c6b-7081084daa0e</value>
-  </data>
+  <comment>Do not translate</comment></data>
   <data name="IISWebConfigAlt" xml:space="preserve">
     <value>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 
@@ -189,7 +189,7 @@ This software uses the following Open Source software (or significant portions o
     &lt;/authorization&gt;
   &lt;/system.web&gt;
 &lt;/configuration&gt;</value>
-  </data>
+  <comment>Do not translate</comment></data>
   <data name="IISWebConfigAlt2" xml:space="preserve">
     <value>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 
@@ -210,10 +210,10 @@ This software uses the following Open Source software (or significant portions o
     &lt;/authorization&gt;
   &lt;/system.web&gt;
 &lt;/configuration&gt;</value>
-  </data>
+  <comment>Do not translate</comment></data>
   <data name="APIBaseURI" xml:space="preserve">
     <value>https://certifytheweb.com/api/</value>
-    <comment>Used to communication with proxy API</comment>
+    <comment>Do not translate - Used to communication with proxy API</comment>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
@@ -221,10 +221,10 @@ This software uses the following Open Source software (or significant portions o
   </data>
   <data name="LocalServiceBaseURI" xml:space="preserve">
     <value>http://localhost:9696</value>
-    <comment>Used to communication to local service</comment>
+    <comment>Do not translate - Used to communication to local service</comment>
   </data>
   <data name="LocalServiceBaseURIDebug" xml:space="preserve">
     <value>http://localhost:9695</value>
-    <comment>Used to communication to local service (debug)</comment>
+    <comment>Do not translate - Used to communication to local service (debug)</comment>
   </data>
 </root>

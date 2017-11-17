@@ -142,10 +142,4 @@ Este software utiliza el siguiente software de código abierto (o porciones sign
 - Algunos iconos de Font Awesome por Dave Gandy - http://fontawesome.io
 - OpenSSL (https://github.com/openssl-net/openssl-net)</value>
   </data>
-  <data name="AppWebsiteURL" xml:space="preserve">
-    <value>https://certifytheweb.com</value>
-  </data>
-  <data name="AppUpdateCheckURI" xml:space="preserve">
-    <value>https://certifytheweb.com/downloads/version.json</value>
-  </data>
 </root>

@@ -65,6 +65,7 @@
     <EmbeddedResource Include="CoreSR.es-ES.resx">
       <DependentUpon>CoreSR.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="CoreSR.nb-NO.resx" />
     <EmbeddedResource Include="CoreSR.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>CoreSR.Designer.cs</LastGenOutput>
