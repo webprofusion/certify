@@ -12,11 +12,13 @@ using Org.BouncyCastle.Utilities;
 using Org.BouncyCastle.X509;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 
 namespace Certify.Management
 {
@@ -85,14 +87,45 @@ namespace Certify.Management
             return cert;
         }
 
-        public static X509Certificate2 StoreCertificate(string host, string pfxFile)
+        public static async Task<X509Certificate2> StoreCertificate(string host, string pfxFile, bool isRetry = false)
         {
             // https://support.microsoft.com/en-gb/help/950090/installing-a-pfx-file-using-x509certificate-from-a-standard--net-appli
             var certificate = new X509Certificate2(pfxFile, "", X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
             certificate.GetExpirationDateString();
             certificate.FriendlyName = host + " [Certify] - " + certificate.GetEffectiveDateString() + " to " + certificate.GetExpirationDateString();
 
-            return StoreCertificate(certificate);
+            var cert = StoreCertificate(certificate);
+
+            await Task.Delay(500);
+
+            // now check if cert is accessible and private key is OK (in some cases cert is not
+            // storing properly)
+            var storedCert = GetCertificateByThumbprint(cert.Thumbprint);
+
+            if (!isRetry)
+            {
+                // hack/workaround - importing cert from system account causes private key to be
+                // transient. Re-import the same cert fixes it. re -try apply
+                return await StoreCertificate(host, pfxFile, isRetry: true);
+            }
+
+            if (storedCert == null)
+            {
+                throw new Exception("Certificate not found in store!");
+            }
+            else
+            {
+                try
+                {
+                    var k = storedCert.PrivateKey.KeyExchangeAlgorithm;
+                    Debug.WriteLine(k);
+                    return storedCert;
+                }
+                catch (Exception)
+                {
+                    throw new Exception("Certificate Private Key not available!");
+                }
+            }
         }
 
         public static X509Certificate2 GetCertificateFromStore(string subjectName)
@@ -101,6 +134,20 @@ namespace Certify.Management
             var store = GetDefaultStore();
             store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
             X509Certificate2Collection results = store.Certificates.Find(X509FindType.FindBySubjectName, subjectName, false);
+            if (results.Count > 0)
+            {
+                cert = results[0];
+            }
+            store.Close();
+            return cert;
+        }
+
+        public static X509Certificate2 GetCertificateByThumbprint(string thumbprint)
+        {
+            X509Certificate2 cert = null;
+            var store = GetDefaultStore();
+            store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
+            X509Certificate2Collection results = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, false);
             if (results.Count > 0)
             {
                 cert = results[0];

@@ -418,7 +418,7 @@ namespace Certify.Management
         /// <param name="pfxPath"></param>
         /// <param name="cleanupCertStore"></param>
         /// <returns></returns>
-        internal bool InstallCertForRequest(ManagedSite managedSite, string pfxPath, bool cleanupCertStore)
+        internal async Task<bool> InstallCertForRequest(ManagedSite managedSite, string pfxPath, bool cleanupCertStore)
         {
             var requestConfig = managedSite.RequestConfig;
 
@@ -428,7 +428,7 @@ namespace Certify.Management
             }
 
             //store cert against primary domain
-            var storedCert = CertificateManager.StoreCertificate(requestConfig.PrimaryDomain, pfxPath);
+            var storedCert = await CertificateManager.StoreCertificate(requestConfig.PrimaryDomain, pfxPath);
 
             if (storedCert != null)
             {
@@ -451,6 +451,8 @@ namespace Certify.Management
 
                     if (site != null)
                     {
+                        //TODO: if the binding fails we should report it, requires reporting a list of binding results
+
                         //create/update binding and associate new cert
                         //if any binding elements configured, use those, otherwise auto bind using defaults and SNI
                         InstallCertificateforBinding(site, storedCert, hostname,

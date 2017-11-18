@@ -319,7 +319,7 @@ namespace Certify.Management
                 ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding, managedSite));
 
                 // Install certificate into certificate store and bind to IIS site
-                if (_iisManager.InstallCertForRequest(managedSite, pfxPath, cleanupCertStore: true))
+                if (await _iisManager.InstallCertForRequest(managedSite, pfxPath, cleanupCertStore: true))
                 {
                     //all done
                     LogMessage(managedSite.Id, CoreSR.CertifyManager_CompleteRequestAndUpdateBinding, LogItemType.CertificateRequestSuccessful);
@@ -633,7 +633,7 @@ namespace Certify.Management
                                 ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding, managedSite));
 
                                 // Install certificate into certificate store and bind to IIS site
-                                if (_iisManager.InstallCertForRequest(managedSite, pfxPath, cleanupCertStore: true))
+                                if (await _iisManager.InstallCertForRequest(managedSite, pfxPath, cleanupCertStore: true))
                                 {
                                     //all done
                                     LogMessage(managedSite.Id, CoreSR.CertifyManager_CompleteRequestAndUpdateBinding, LogItemType.CertificateRequestSuccessful);
