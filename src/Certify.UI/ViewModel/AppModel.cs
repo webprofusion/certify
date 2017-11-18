@@ -161,20 +161,24 @@ namespace Certify.UI.ViewModel
 
         public IEnumerable<string> WebhookTriggerTypes => Webhook.TriggerTypes;
 
-        public List<IPAddress> HostIPAddresses
+        public List<string> HostIPAddresses
         {
             get
             {
                 try
                 {
-                    //return list of ipv4 network IPs
+                    //return list of ipv4 network IPs as strings
                     IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
-                    return hostEntry.AddressList.Where(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).ToList();
+                    var list = hostEntry.AddressList.Where(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                        .Select(a => a.ToString())
+                        .ToList();
+                    list.Insert(0, "*"); //add wildcard option
+                    return list;
                 }
                 catch (Exception)
                 {
                     //return empty list
-                    return new List<IPAddress>();
+                    return new List<string>();
                 }
             }
         }

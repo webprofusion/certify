@@ -457,6 +457,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Note: these setting only apply to new https bindings, existing bindings are only updated with the new certificate..
+        /// </summary>
+        public static string ManagedItemSettings_BindingNote {
+            get {
+                return ResourceManager.GetString("ManagedItemSettings_BindingNote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Bind to Specific IP:.
         /// </summary>
         public static string ManagedItemSettings_BindIP {
