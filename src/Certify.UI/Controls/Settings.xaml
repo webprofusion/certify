@@ -29,17 +29,16 @@
                 <Controls:NumericUpDown x:Name="RenewalIntervalDays" Minimum = "1"  Maximum = "60" Interval = "1" Width="100" ValueChanged="RenewalIntervalDays_ValueChanged" />
                 <Label Content="{x:Static res:SR.Settings_AutoRenewalInterval}" Width="340" Margin="4,0,0,0" />
             </StackPanel>
-            <StackPanel Orientation="Horizontal" Margin="0,8,0,8
-                        ">
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,8">
                 <Controls:NumericUpDown x:Name="RenewalMaxRequests" Minimum = "0"  Maximum = "100" Interval = "1" Width="100" ValueChanged="RenewalMaxRequests_ValueChanged" />
                 <Label Content="{x:Static res:SR.Settings_AutoRenewalRequestLimit}" Width="340" Margin="4,0,0,0" />
             </StackPanel>
-            <CheckBox x:Name="CheckForUpdatesCheckbox" Content="{x:Static res:SR.Settings_CheckUpdates}" Checked="SettingsUpdated" Unchecked="SettingsUpdated" Margin="0,4,0,0" />
             <CheckBox x:Name="EnableTelematicsCheckbox" Content="{x:Static res:SR.Settings_EnableTelemetry}" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
             <CheckBox x:Name="EnableProxyAPICheckbox" Content="{x:Static res:SR.Settings_EnableProxyApiForDomainConfig}" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
             <CheckBox x:Name="EnableEFS" Content="{x:Static res:SR.Settings_EnableEFS}" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
             <CheckBox x:Name="IgnoreStoppedSites" Content="{x:Static res:SR.Settings_IgnoreStoppedSites}" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
             <CheckBox x:Name="EnableDNSValidationChecks" Content="{x:Static res:SR.Settings_EnableDnsValidation}" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
+
             <Button x:Name="Save" Content="{x:Static res:SR.SaveChanges}" Click="Save_Click" Width="160" HorizontalAlignment="Right" Margin="0,8,0,0" />
         </StackPanel>
     </StackPanel>

@@ -62,7 +62,7 @@
             </StackPanel>
         </StackPanel>
 
-        <TabControl x:Name="MainTabControl" Grid.Row="1" Margin="8,8,7.8,7.8"
+        <TabControl x:Name="MainTabControl" Grid.Row="1" Margin="8,8,8,8"
                                  SelectedIndex="{Binding MainUITabIndex}" HorizontalContentAlignment="Left" VerticalContentAlignment="Stretch"
 
                                  Height="auto">
