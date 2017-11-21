@@ -124,7 +124,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                     <StackPanel Margin="12">
                         <StackPanel Orientation="Horizontal">
-                            <Label Width="100" Content="{x:Static Resources:SR.ManagedItemSettings_ChallengeTypes}" />
+                            <Label Width="160" Content="{x:Static Resources:SR.ManagedItemSettings_ChallengeTypes}" />
                             <ComboBox ItemsSource="{Binding ChallengeTypes}" SelectedItem="{Binding SelectedItem.RequestConfig.ChallengeType}" Width="225" />
                             <Button Name="Button_TestChallenge" Content="{x:Static Resources:SR.Test}" Margin="4,0,0,0" Click="TestChallenge_Click" />
                             <fa:ImageAwesome x:Name="TestInProgress" Margin="4,0,0,0" Visibility="Hidden" Icon="Refresh" Height="16" Spin="True" SpinDuration="1" />
@@ -142,7 +142,7 @@
                                 </Style>
                             </StackPanel.Style>
                             <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                <Label Width="155" Content="{x:Static Resources:SR.ManagedItemSettings_WebsiteRoot}" />
+                                <Label Width="160" Content="{x:Static Resources:SR.ManagedItemSettings_WebsiteRoot}" />
                                 <TextBox Text="{Binding SelectedItem.RequestConfig.WebsiteRootPath}" Width="350" />
                                 <Button Name="Button_WebRoot" Content="{x:Static Resources:SR.ManagedItemSettings_BrowseFolder}" Margin="4,0,0,0" Click="DirectoryBrowse_Click" />
                             </StackPanel>
@@ -177,7 +177,7 @@
                         <StackPanel Orientation="Vertical" IsEnabled="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" Margin="32,8,0,0">
                             <StackPanel Orientation="Horizontal">
                                 <Label Width="131" Content="{x:Static Resources:SR.ManagedItemSettings_BindIP}" />
-                                <ComboBox ItemsSource="{Binding HostIPAddresses}" SelectedValuePath="{Binding}" SelectedItem="{Binding SelectedItem.RequestConfig.BindingIPAddress}" Width="225" />
+                                <ComboBox ItemsSource="{Binding HostIPAddresses}" DisplayMemberPath="Description" SelectedValue="{Binding SelectedItem.RequestConfig.BindingIPAddress}" SelectedValuePath="IPAddress" Width="225" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <Label Width="131" Content="{x:Static Resources:SR.ManagedItemSettings_BindPort}" />
@@ -188,7 +188,6 @@
                                 <CheckBox IsChecked="{Binding SelectedItem.RequestConfig.BindingUseSNI}"></CheckBox>
                             </StackPanel>
                             <Label Content="{x:Static Resources:SR.ManagedItemSettings_BindingNote}" />
-                            
                         </StackPanel>
 
                         <StackPanel Orientation="Vertical" Margin="0,16,0,0">
@@ -293,11 +292,10 @@
                                 </TextBox.Text>
                             </TextBox>
                         </DockPanel>
-                        <Button x:Name="OpenLogFile" Content="{x:Static Resources:SR.ManagedItemSettings_OpenLogFile}" Click="OpenLogFile_Click" />
+                        <Button x:Name="OpenLogFile" Content="{x:Static Resources:SR.ManagedItemSettings_OpenLogFile}" Click="OpenLogFile_Click" Width="250" HorizontalAlignment="Right" />
                         <Label x:Name="CertPath" Content="{Binding SelectedItem.CertificatePath, TargetNullValue={x:Static Resources:SR.ManagedItemSettings_CertificatePathEmpty}}" />
-                        <Button x:Name="OpenCertificateFile" Content="{x:Static Resources:SR.ManagedItemSettings_ViewCertificate}" Click="OpenCertificateFile_Click" />
-                        <Button x:Name="ReapplyCertBindings" Content="Re-apply Certificate Bindings" Margin="4,4
-                                ,0,0" Click="ReapplyCertBindings_Click" />
+                        <Button x:Name="OpenCertificateFile" Content="{x:Static Resources:SR.ManagedItemSettings_ViewCertificate}" Click="OpenCertificateFile_Click" Width="250" HorizontalAlignment="Right" />
+                        <Button x:Name="ReapplyCertBindings" Content="{x:Static Resources:SR.ManagedItemSettings_ReapplyCertificate}" Click="ReapplyCertBindings_Click" Width="250" Margin="0,4,0,0" HorizontalAlignment="Right" />
                         <Label Content="{x:Static Resources:SR.ManagedItemSettings_ExportTip}" />
                         <Border>
                             <Border.Style>
@@ -310,7 +308,7 @@
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
-                            <Button x:Name="RevokeCertificateBtn" Content="{x:Static Resources:SR.ManagedItemSettings_RevokeCertificate}" Click="RevokeCertificateBtn_Click" Background="#FFFFC7C7" />
+                            <Button x:Name="RevokeCertificateBtn" Content="{x:Static Resources:SR.ManagedItemSettings_RevokeCertificate}" Click="RevokeCertificateBtn_Click" Background="#FFFFC7C7" Width="250" HorizontalAlignment="Right" />
                         </Border>
                         <Border>
                             <Border.Style>

@@ -43,14 +43,18 @@ namespace Certify.UI.Controls
             {
                 this.SettingsTab.SelectedIndex = 0;
 
-                //get list of sites from IIS. FIXME: this is async and we should gather this at startup (or on refresh) instead
-                WebSiteList = new ObservableCollection<SiteBindingItem>(await MainViewModel.CertifyClient.GetServerSiteList(StandardServerTypes.IIS));
-                WebsiteDropdown.ItemsSource = WebSiteList;
-
-                //always check use SNI even if we later clear it
-                if (MainViewModel.SelectedItem.RequestConfig.BindingUseSNI == null)
+                if (MainViewModel.SelectedItem != null)
                 {
-                    MainViewModel.SelectedItem.RequestConfig.BindingUseSNI = true;
+                    //get list of sites from IIS. FIXME: this is async and we should gather this at startup (or on refresh) instead
+                    WebSiteList = new ObservableCollection<SiteBindingItem>(await MainViewModel.CertifyClient.GetServerSiteList(StandardServerTypes.IIS));
+                    WebsiteDropdown.ItemsSource = WebSiteList;
+
+                    //always check use SNI even if we later clear it
+                    if (MainViewModel.SelectedItem.RequestConfig.BindingUseSNI == null)
+                    {
+                        MainViewModel.SelectedItem.RequestConfig.BindingUseSNI = true;
+                        MainViewModel.SelectedItem.IsChanged = false;
+                    }
                 }
             }
         }
@@ -221,8 +225,8 @@ namespace Certify.UI.Controls
 
                 if (cert != null)
                 {
-                    var test = cert.PrivateKey.KeyExchangeAlgorithm;
-                    System.Diagnostics.Debug.WriteLine(test.ToString());
+                    //var test = cert.PrivateKey.KeyExchangeAlgorithm;
+                    // System.Diagnostics.Debug.WriteLine(test.ToString());
 
                     X509Certificate2UI.DisplayCertificate(cert);
                 }

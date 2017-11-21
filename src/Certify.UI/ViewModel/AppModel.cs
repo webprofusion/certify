@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -161,24 +160,22 @@ namespace Certify.UI.ViewModel
 
         public IEnumerable<string> WebhookTriggerTypes => Webhook.TriggerTypes;
 
-        public List<string> HostIPAddresses
+        public List<IPAddressOption> HostIPAddresses
         {
             get
             {
                 try
                 {
-                    //return list of ipv4 network IPs as strings
-                    IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
-                    var list = hostEntry.AddressList.Where(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                        .Select(a => a.ToString())
-                        .ToList();
-                    list.Insert(0, "*"); //add wildcard option
-                    return list;
+                    var ipAddressOptions = Certify.Utils.Networking.GetIPAddresses();
+
+                    ipAddressOptions.Insert(0, new IPAddressOption { Description = "* (All Unassigned)", IPAddress = "*", IsIPv6 = false }); //add wildcard option
+
+                    return ipAddressOptions;
                 }
                 catch (Exception)
                 {
                     //return empty list
-                    return new List<string>();
+                    return new List<IPAddressOption>();
                 }
             }
         }
@@ -345,6 +342,10 @@ namespace Certify.UI.ViewModel
             return IsServiceAvailable;
         }
 
+        /// <summary>
+        /// Load initial settings including preferences, list of managed sites, primary contact 
+        /// </summary>
+        /// <returns></returns>
         public async virtual Task LoadSettingsAsync()
         {
             this.Preferences = await CertifyClient.GetPreferences();
@@ -354,6 +355,8 @@ namespace Certify.UI.ViewModel
             foreach (var i in list) i.IsChanged = false;
 
             ManagedSites = new System.Collections.ObjectModel.ObservableCollection<Models.ManagedSite>(list);
+
+            PrimaryContactEmail = await CertifyClient.GetPrimaryContact();
         }
 
         private void CertifyClient_SendMessage(string arg1, string arg2)
