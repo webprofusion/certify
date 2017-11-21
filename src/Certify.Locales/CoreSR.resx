@@ -202,4 +202,7 @@ Check you have https SNI bindings for your site
   <data name="CertifyManager_RegisterDomainIdentity" xml:space="preserve">
     <value>Registering Domain Identifiers</value>
   </data>
+  <data name="CertifyManager_RenewalOnHold" xml:space="preserve">
+    <value>Previous renewals failed: {0}. Renewal will be attempted within 48hrs.</value>
+  </data>
 </root>

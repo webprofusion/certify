@@ -458,7 +458,8 @@ namespace Certify.Management
                         InstallCertificateforBinding(site, storedCert, hostname,
                             sslPort: !String.IsNullOrWhiteSpace(requestConfig.BindingPort) ? int.Parse(requestConfig.BindingPort) : 443,
                             useSNI: (requestConfig.BindingUseSNI != null ? (bool)requestConfig.BindingUseSNI : true),
-                            ipAddress: !String.IsNullOrWhiteSpace(requestConfig.BindingIPAddress) ? requestConfig.BindingIPAddress : null
+                            ipAddress: !String.IsNullOrWhiteSpace(requestConfig.BindingIPAddress) ? requestConfig.BindingIPAddress : null,
+                            alwaysRecreateBindings: requestConfig.AlwaysRecreateBindings
                             );
                     }
                 }
@@ -489,9 +490,11 @@ namespace Certify.Management
             using (var iisManager = GetDefaultServerManager())
             {
                 var site = iisManager.Sites.FirstOrDefault(s => s.Id.ToString() == managedSite.GroupId);
+
                 if (site != null)
                 {
                     string internationalHost = host == "" ? "" : _idnMapping.GetUnicode(host);
+
                     var binding = site.Bindings.Where(b =>
                         b.Host == internationalHost &&
                         b.Protocol == "https"
@@ -516,12 +519,12 @@ namespace Certify.Management
         /// <param name="sslPort"></param>
         /// <param name="useSNI"></param>
         /// <param name="ipAddress"></param>
-        public bool InstallCertificateforBinding(ManagedSite managedSite, X509Certificate2 certificate, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null)
+        public bool InstallCertificateforBinding(ManagedSite managedSite, X509Certificate2 certificate, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null, bool alwaysRecreateBindings = false)
         {
             var site = FindManagedSite(managedSite);
             if (site == null) return false;
 
-            return InstallCertificateforBinding(site, certificate, host, sslPort, useSNI, ipAddress);
+            return InstallCertificateforBinding(site, certificate, host, sslPort, useSNI, ipAddress, alwaysRecreateBindings);
         }
 
         /// <summary>
@@ -534,7 +537,7 @@ namespace Certify.Management
         /// <param name="sslPort"></param>
         /// <param name="useSNI"></param>
         /// <param name="ipAddress"></param>
-        public bool InstallCertificateforBinding(Site site, X509Certificate2 certificate, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null)
+        public bool InstallCertificateforBinding(Site site, X509Certificate2 certificate, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null, bool alwaysRecreateBindings = false)
         {
             var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
             store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
@@ -564,11 +567,13 @@ namespace Certify.Management
                     else
                     {
                         //add new https binding at default port "<ip>:port:hostDnsName";
-                        string bindingSpec = (ipAddress != null ? ipAddress : "*") +
+                        string bindingSpec = (!String.IsNullOrEmpty(ipAddress) ? ipAddress : "*") +
                             ":" + sslPort + ":" + internationalHost;
+
                         var iisBinding = siteToUpdate.Bindings.Add(bindingSpec, certificate.GetCertHash(), store.Name);
 
                         iisBinding.Protocol = "https";
+
                         if (useSNI)
                         {
                             try

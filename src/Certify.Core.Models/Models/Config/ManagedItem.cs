@@ -43,6 +43,11 @@ namespace Certify.Models
         public string GroupId { get; set; }
 
         /// <summary>
+        /// If set, this is an identifier for the host to group multiple sets of managed sites across servers
+        /// </summary>
+        public string InstanceId { get; set; }
+
+        /// <summary>
         /// Display name for this item, for easier reference 
         /// </summary>
         public string Name { get; set; }

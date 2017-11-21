@@ -596,4 +596,7 @@
   <data name="ManagedItemSettings_BindingNote" xml:space="preserve">
     <value>Note: these setting only apply to new https bindings, existing bindings are only updated with the new certificate.</value>
   </data>
+  <data name="ManagedItemSettings_ReapplyCertificate" xml:space="preserve">
+    <value>Re-apply Certificate to Bindings</value>
+  </data>
 </root>

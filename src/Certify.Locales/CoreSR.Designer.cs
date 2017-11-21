@@ -227,6 +227,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Previous renewals failed: {0}. Renewal will be attempted within 48hrs..
+        /// </summary>
+        public static string CertifyManager_RenewalOnHold {
+            get {
+                return ResourceManager.GetString("CertifyManager_RenewalOnHold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Requesting Validation from Let&apos;s Encrypt: {0}.
         /// </summary>
         public static string CertifyManager_ReqestValidationFromLetsEncrypt {

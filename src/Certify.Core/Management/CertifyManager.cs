@@ -27,6 +27,8 @@ namespace Certify.Management
 
         List<RegistrationItem> GetContactRegistrations();
 
+        string GetPrimaryContactEmail();
+
         List<IdentifierItem> GetDomainIdentifiers();
 
         List<CertificateItem> GetCertificates();
@@ -91,6 +93,8 @@ namespace Certify.Management
 
         private bool _isRenewAllInProgress { get; set; }
 
+        private PluginManager PluginManager { get; set; }
+
         public CertifyManager()
         {
             Certify.Management.Util.SetSupportedTLSVersions();
@@ -103,6 +107,9 @@ namespace Certify.Management
             _iisManager = new IISManager();
 
             _progressResults = new ObservableCollection<RequestProgressState>();
+
+            PluginManager = new PluginManager();
+            PluginManager.LoadPlugins();
         }
 
         public void BeginTrackingProgress(RequestProgressState state)
@@ -760,8 +767,14 @@ namespace Certify.Management
 
             managedSite = await _siteManager.UpdatedManagedSite(managedSite);
 
-            // report request state to staus hub clients
+            // report request state to status hub clients
             OnManagedSiteUpdated?.Invoke(managedSite);
+
+            //if reporting enabled, send report
+            if (managedSite.RequestConfig?.EnableFailureNotifications == true)
+            {
+                await ReportManagedSiteStatus(managedSite);
+            }
         }
 
         public List<DomainOption> GetDomainOptionsFromSite(string siteId)
@@ -913,7 +926,7 @@ namespace Certify.Management
             return sites;
         }
 
-        public static bool IsRenewalRequired(ManagedSite s, int renewalIntervalDays)
+        public static bool IsRenewalRequired(ManagedSite s, int renewalIntervalDays, bool checkFailureStatus = false)
         {
             // if we know the last renewal date, check whether we should renew again, otherwise
             // assume it's more than 30 days ago by default and attempt renewal
@@ -922,6 +935,30 @@ namespace Certify.Management
 
             bool isRenewalRequired = Math.Abs(timeSinceLastRenewal.TotalDays) > renewalIntervalDays;
 
+            // if renewal is required but we have previously failed, scale the frequency of renewal
+            // attempts to a minimum of once per 24hrs.
+            if (isRenewalRequired && checkFailureStatus)
+            {
+                if (s.LastRenewalStatus == RequestState.Error)
+                {
+                    // our last attempt failed, check how many failures we've had to decide whether
+                    // we should attempt now, Scale wait time based on how many attempts we've made.
+                    // Max 48hrs between attempts
+                    if (s.DateLastRenewalAttempt != null)
+                    {
+                        var hoursWait = 48;
+                        if (s.RenewalFailureCount > 0 && s.RenewalFailureCount < 48)
+                        {
+                            hoursWait = s.RenewalFailureCount;
+                        }
+                        var nextAttemptByDate = s.DateLastRenewalAttempt.Value.AddHours(hoursWait);
+                        if (DateTime.UtcNow < nextAttemptByDate)
+                        {
+                            isRenewalRequired = false;
+                        }
+                    }
+                }
+            }
             return isRenewalRequired;
         }
 
@@ -973,6 +1010,14 @@ namespace Certify.Management
 
                 // determine if this site requires renewal
                 bool isRenewalRequired = IsRenewalRequired(s, renewalIntervalDays);
+                bool isRenewalOnHold = false;
+                if (isRenewalRequired)
+                {
+                    //check if we have renewal failures, if so wait a bit longer
+                    isRenewalOnHold = IsRenewalRequired(s, renewalIntervalDays, checkFailureStatus: true);
+
+                    if (isRenewalOnHold) isRenewalRequired = false;
+                }
 
                 //if we care about stopped sites being stopped, check for that
                 bool isSiteRunning = true;
@@ -1013,6 +1058,13 @@ namespace Certify.Management
                     {
                         //TODO: show this as warning rather than success
                         msg = CoreSR.CertifyManager_SiteStopped;
+                    }
+
+                    if (isRenewalOnHold)
+                    {
+                        //TODO: show this as warning rather than success
+
+                        msg = String.Format(CoreSR.CertifyManager_RenewalOnHold, s.RenewalFailureCount);
                     }
 
                     if (progressTrackers != null)
@@ -1154,6 +1206,48 @@ namespace Certify.Management
             Debug.WriteLine("Checking for periodic tasks..");
             await this.PerformRenewalAllManagedSites(true, null);
             return await Task.FromResult(true);
+        }
+
+        /// <summary>
+        /// If enabled in the request config, report status of the renewal 
+        /// </summary>
+        /// <param name="managedSite"></param>
+        /// <returns></returns>
+        private async Task ReportManagedSiteStatus(ManagedSite managedSite)
+        {
+            if (this.PluginManager != null && this.PluginManager.DashboardClient != null)
+            {
+                var report = new Models.Shared.RenewalStatusReport
+                {
+                    InstanceId = CoreAppSettings.Current.InstanceId,
+                    MachineName = Environment.MachineName,
+                    PrimaryContactEmail = GetPrimaryContactEmail(),
+                    ManagedSite = managedSite,
+                    AppVersion = new Management.Util().GetAppVersion().ToString()
+                };
+                try
+                {
+                    await this.PluginManager.DashboardClient.ReportRenewalStatusAsync(report);
+                }
+                catch (Exception)
+                {
+                    // failed to report status
+                    LogMessage(managedSite.Id, "Failed send renewal status report.", LogItemType.GeneralWarning);
+                }
+            }
+        }
+
+        public string GetPrimaryContactEmail()
+        {
+            var contacts = GetContactRegistrations();
+            if (contacts.Any())
+            {
+                return contacts.FirstOrDefault()?.Name.Replace("mailto:", "");
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

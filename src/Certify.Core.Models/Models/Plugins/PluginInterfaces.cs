@@ -1,9 +1,5 @@
 ﻿using Certify.Models.Shared;
 using Registration.Core.Models.Shared;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Certify.Models.Plugins
@@ -21,5 +17,18 @@ namespace Certify.Models.Plugins
 
     public interface IDomainValidationType
     {
+    }
+
+    public interface IDashboardClient
+    {
+        Task<bool> SubmitFeedbackAsync(FeedbackReport feedback);
+
+        Task<bool> ReportRenewalStatusAsync(RenewalStatusReport report);
+
+        Task<bool> ReportServerStatusAsync();
+
+        Task<bool> SignInAsync(string email, string pwd);
+
+        Task<bool> RegisterInstance(RegisteredInstance instance);
     }
 }

@@ -1,6 +1,4 @@
 ﻿using Certify.Models;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
 
@@ -21,15 +19,7 @@ namespace Certify.Service
         {
             DebugLog();
 
-            var contacts = _certifyManager.GetContactRegistrations();
-            if (contacts.Any())
-            {
-                return contacts.FirstOrDefault()?.Name.Replace("mailto:", "");
-            }
-            else
-            {
-                return null;
-            }
+            return _certifyManager.GetPrimaryContactEmail();
         }
 
         [HttpPost, Route("primary")]

@@ -1,6 +1,7 @@
 using Certify.Locales;
 using Certify.Models;
 using Microsoft.ApplicationInsights;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,18 +27,23 @@ namespace Certify.Management
                 Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
                 APPDATASUBFOLDER
             };
+
             if (subFolder != null) parts.Add(subFolder);
+
             var path = Path.Combine(parts.ToArray());
+
             if (!Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);
             }
+
             return path;
         }
 
         public TelemetryClient InitTelemetry()
         {
             var tc = new TelemetryClient();
+
             tc.Context.InstrumentationKey = ConfigResources.AIInstrumentationKey;
             tc.InstrumentationKey = ConfigResources.AIInstrumentationKey;
 
@@ -46,6 +52,7 @@ namespace Certify.Management
             tc.Context.Session.Id = Guid.NewGuid().ToString();
             tc.Context.Component.Version = GetAppVersion().ToString();
             tc.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
+
             return tc;
         }
 
@@ -53,6 +60,7 @@ namespace Certify.Management
         {
             // returns the version of Certify.Shared
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+
             var v = assembly.GetName().Version;
             return v;
         }
@@ -70,18 +78,6 @@ namespace Certify.Management
 
         public async Task<UpdateCheck> CheckForUpdates(string appVersion)
         {
-            /* AppVersion v1 = new AppVersion { Major = 1, Minor = 0, Patch = 1 };
-             AppVersion v2 = new AppVersion { Major = 1, Minor = 0, Patch = 2 };
-             bool isNewer = AppVersion.IsOtherVersionNewer(v1, v2);
-
-             v2.Patch = 1;
-             isNewer = AppVersion.IsOtherVersionNewer(v1, v2);
-             v2.Major = 2;
-             isNewer = AppVersion.IsOtherVersionNewer(v1, v2);
-             v2.Major = 1;
-             v2.Minor = 1;
-             isNewer = AppVersion.IsOtherVersionNewer(v1, v2);*/
-
             //get app version
             try
             {
@@ -127,6 +123,42 @@ namespace Certify.Management
             }
 
             return checkResult;
+        }
+
+        /// <summary>
+        /// From https://docs.microsoft.com/en-us/dotnet/framework/migration-guide/how-to-determine-which-versions-are-installed#net_d 
+        /// </summary>
+        /// <returns></returns>
+        public static string GetDotNetVersion()
+        {
+            const string subkey = @"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\";
+
+            using (RegistryKey ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey(subkey))
+            {
+                if (ndpKey != null && ndpKey.GetValue("Release") != null)
+                {
+                    return GetDotNetVersion((int)ndpKey.GetValue("Release"));
+                }
+                else
+                {
+                    return ".NET Version not detected.";
+                }
+            }
+        }
+
+        private static string GetDotNetVersion(int releaseKey)
+        {
+            if (releaseKey >= 460798) return "4.7 or later";
+            if (releaseKey >= 394802) return "4.6.2";
+            if (releaseKey >= 394254) return "4.6.1";
+            if (releaseKey >= 393295) return "4.6";
+            if (releaseKey >= 379893) return "4.5.2";
+            if (releaseKey >= 378675) return "4.5.1";
+            if (releaseKey >= 378389) return "4.5";
+
+            // This code should never execute. A non-null release key should mean that 4.5 or later
+            // is installed.
+            return "No 4.5 or later version detected";
         }
     }
 }

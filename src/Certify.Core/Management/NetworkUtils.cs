@@ -119,12 +119,14 @@ namespace Certify.Management
             try
             {
                 var request = WebRequest.Create(!useProxy ? url :
-                    ConfigResources.APIBaseURI + "testurlaccess?url=" + url);
+                    ConfigResources.APIBaseURI + "configcheck/testurl?url=" + url);
+
                 ServicePointManager.ServerCertificateValidationCallback = (obj, cert, chain, errors) =>
                 {
                     // ignore all cert errors when validating URL response
                     return true;
                 };
+
                 var response = (HttpWebResponse)request.GetResponse();
 
                 //if checking via proxy, examine result

@@ -21,6 +21,7 @@ namespace Certify.Management
             this.MaxRenewalRequests = 0;
             this.LegacySettingsUpgraded = false;
             this.VaultPath = @"C:\ProgramData\ACMESharp";
+            this.InstanceId = Guid.NewGuid().ToString();
         }
 
         public static CoreAppSettings Current
@@ -68,6 +69,11 @@ namespace Certify.Management
         public bool LegacySettingsUpgraded { get; set; }
 
         public string VaultPath { get; set; }
+
+        /// <summary>
+        /// If user opts for renewal failure reporting, generated instance id is used to group results 
+        /// </summary>
+        public string InstanceId { get; set; }
     }
 
     public class SettingsManager
@@ -124,6 +130,11 @@ namespace Certify.Management
                 {
                     string configData = System.IO.File.ReadAllText(path);
                     CoreAppSettings.Current = Newtonsoft.Json.JsonConvert.DeserializeObject<CoreAppSettings>(configData);
+
+                    if (String.IsNullOrEmpty(CoreAppSettings.Current.InstanceId))
+                    {
+                        CoreAppSettings.Current.InstanceId = Guid.NewGuid().ToString();
+                    }
                 }
             }
             else
@@ -142,6 +153,7 @@ namespace Certify.Management
                 CoreAppSettings.Current.VaultPath = oldProps.VaultPath;
 
                 CoreAppSettings.Current.LegacySettingsUpgraded = true;
+                CoreAppSettings.Current.InstanceId = Guid.NewGuid().ToString();
                 SaveAppSettings();
             }
         }

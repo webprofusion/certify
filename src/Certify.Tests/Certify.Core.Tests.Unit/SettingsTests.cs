@@ -1,13 +1,34 @@
-﻿using System;
+﻿using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Threading.Tasks;
-using Certify.Models;
+using System;
 
 namespace Certify.Core.Tests.Unit
 {
     [TestClass]
     public class SettingsTest
     {
+        [TestMethod, Description("Ensure a site which should be renewed correctly requires renewa, where failure has previously occurred")]
+        public void TestCheckAutoRenewalPeriodRequiredWithFailures()
+        {
+            // setup
+            var renewalPeriodDays = 14;
+            var managedSite = new ManagedSite
+            {
+                IncludeInAutoRenew = true,
+                DateRenewed = DateTime.Now.AddDays(-15),
+                DateExpiry = DateTime.Now.AddDays(60),
+                DateLastRenewalAttempt = DateTime.Now.AddHours(-1),
+                LastRenewalStatus = RequestState.Error,
+                RenewalFailureCount = 2
+            };
+
+            // perform check
+            var isRenewalRequired = Management.CertifyManager.IsRenewalRequired(managedSite, renewalPeriodDays, true);
+
+            // assert result
+            Assert.IsTrue(isRenewalRequired, "Renewal should be required");
+        }
+
         [TestMethod, Description("Ensure a site which should be renewed correctly requires renewal")]
         public void TestCheckAutoRenewalPeriodRequired()
         {

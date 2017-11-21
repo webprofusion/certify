@@ -827,6 +827,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Re-apply Certificate to Bindings.
+        /// </summary>
+        public static string ManagedItemSettings_ReapplyCertificate {
+            get {
+                return ResourceManager.GetString("ManagedItemSettings_ReapplyCertificate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Request Certificate.
         /// </summary>
         public static string ManagedItemSettings_RequestCertificate {

@@ -34,16 +34,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\..\..\CertifyMisc\Certify.Plugins\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="PropertyChanged, Version=2.1.4.0, Culture=neutral, PublicKeyToken=ee3ee20bcf148ddd, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\PropertyChanged.Fody.2.1.4\lib\netstandard1.0\PropertyChanged.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\..\CertifyMisc\Certify.Plugins\packages\PropertyChanged.Fody.2.1.4\lib\netstandard1.0\PropertyChanged.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.ValueTuple, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\System.ValueTuple.4.4.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+      <HintPath>..\..\..\CertifyMisc\Certify.Plugins\packages\System.ValueTuple.4.4.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -53,39 +52,40 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Models\ActionLogItem.cs" />
-    <Compile Include="Models\APIResponses.cs" />
-    <Compile Include="Models\ApiResult.cs" />
-    <Compile Include="Models\AppVersion.cs" />
-    <Compile Include="Models\BindableBase.cs" />
+    <Compile Include="Models\Util\ActionLogItem.cs" />
+    <Compile Include="Models\Shared\APIResponses.cs" />
+    <Compile Include="Models\Util\ApiResult.cs" />
+    <Compile Include="Models\Util\AppVersion.cs" />
+    <Compile Include="Models\Util\BindableBase.cs" />
     <Compile Include="Models\CertificateAuthority.cs" />
     <Compile Include="Models\CertificateRequestResult.cs" />
-    <Compile Include="Models\CertRequestConfig.cs" />
+    <Compile Include="Models\Config\CertRequestConfig.cs" />
     <Compile Include="Models\ContactRegistration.cs" />
-    <Compile Include="Models\DomainOption.cs" />
-    <Compile Include="Models\ExtendedVaultConfig.cs" />
-    <Compile Include="Models\ManagedItem.cs" />
-    <Compile Include="Models\ManagedSiteFilter.cs" />
+    <Compile Include="Models\Config\DomainOption.cs" />
+    <Compile Include="Models\Config\ExtendedVaultConfig.cs" />
+    <Compile Include="Models\Util\IPAddressOption.cs" />
+    <Compile Include="Models\Config\ManagedItem.cs" />
+    <Compile Include="Models\Util\ManagedSiteFilter.cs" />
     <Compile Include="Models\PendingAuthorization.cs" />
     <Compile Include="Models\Plugins\PluginInterfaces.cs" />
-    <Compile Include="Models\Preferences.cs" />
+    <Compile Include="Models\Config\Preferences.cs" />
     <Compile Include="Models\RequestProgressState.cs" />
     <Compile Include="Models\Shared\FeedbackReport.cs" />
     <Compile Include="Models\Shared\LicenseCheckResult.cs" />
     <Compile Include="Models\Shared\LicenseKeyInstallResult.cs" />
-    <Compile Include="Models\StandardServerTypes.cs" />
-    <Compile Include="Models\SupportedChallengeTypes.cs" />
-    <Compile Include="Models\UpdateCheck.cs" />
-    <Compile Include="Models\UpdateMessage.cs" />
-    <Compile Include="Models\VaultItem.cs" />
-    <Compile Include="Models\Webhook.cs" />
+    <Compile Include="Models\Shared\RegisteredInstance.cs" />
+    <Compile Include="Models\Shared\RenewalStatusReport.cs" />
+    <Compile Include="Models\Util\StandardServerTypes.cs" />
+    <Compile Include="Models\Util\SupportedChallengeTypes.cs" />
+    <Compile Include="Models\Util\UpdateCheck.cs" />
+    <Compile Include="Models\Util\UpdateMessage.cs" />
+    <Compile Include="Models\Config\VaultItem.cs" />
+    <Compile Include="Models\Util\Webhook.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="FodyWeavers.xml" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj">
@@ -100,5 +100,7 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\..\packages\Fody.2.2.1.0\build\net452\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Fody.2.2.1.0\build\net452\Fody.targets'))" />
+    <Error Condition="!Exists('..\..\..\CertifyMisc\Certify.Plugins\packages\Fody.2.2.1.0\build\net452\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\CertifyMisc\Certify.Plugins\packages\Fody.2.2.1.0\build\net452\Fody.targets'))" />
   </Target>
+  <Import Project="..\..\..\CertifyMisc\Certify.Plugins\packages\Fody.2.2.1.0\build\net452\Fody.targets" Condition="Exists('..\..\..\CertifyMisc\Certify.Plugins\packages\Fody.2.2.1.0\build\net452\Fody.targets')" />
 </Project>

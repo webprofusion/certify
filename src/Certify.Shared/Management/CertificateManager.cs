@@ -99,7 +99,7 @@ namespace Certify.Management
             await Task.Delay(500);
 
             // now check if cert is accessible and private key is OK (in some cases cert is not
-            // storing properly)
+            // storing private key properly)
             var storedCert = GetCertificateByThumbprint(cert.Thumbprint);
 
             if (!isRetry)

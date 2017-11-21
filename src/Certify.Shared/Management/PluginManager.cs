@@ -1,6 +1,7 @@
 ﻿using Certify.Models.Plugins;
 using System;
 using System.Composition.Hosting;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
@@ -9,6 +10,7 @@ namespace Certify.Management
     public class PluginManager
     {
         public ILicensingManager LicensingManager { get; set; }
+        public IDashboardClient DashboardClient { get; set; }
 
         private string GetPluginFolderPath()
         {
@@ -17,22 +19,24 @@ namespace Certify.Management
             return path;
         }
 
-        private void LoadLicensingManager()
+        private object LoadPlugin(string dllFileName, Type interfaceType)
         {
             try
             {
-                var assembly = Assembly.LoadFrom(Path.Combine(GetPluginFolderPath(), "Licensing.dll"));
+                var assembly = Assembly.LoadFrom(Path.Combine(GetPluginFolderPath(), dllFileName));
                 var configuration = new ContainerConfiguration().WithAssembly(assembly);
 
                 using (var container = configuration.CreateContainer())
                 {
-                    LicensingManager = container.GetExport<ILicensingManager>();
+                    object plugin = container.GetExport(interfaceType);
+                    return plugin;
                 }
             }
             catch (Exception exp)
             {
                 PluginLog(exp.ToString());
             }
+            return null;
         }
 
         public void PluginLog(string msg)
@@ -51,9 +55,13 @@ namespace Certify.Management
 
         public void LoadPlugins()
         {
-            LoadLicensingManager();
+            var s = Stopwatch.StartNew();
 
-            //TODO: validation/ installation plugins
+            LicensingManager = LoadPlugin("Licensing.dll", typeof(ILicensingManager)) as ILicensingManager;
+            DashboardClient = LoadPlugin("DashboardClient.dll", typeof(IDashboardClient)) as IDashboardClient;
+            s.Stop();
+
+            Debug.WriteLine($"Plugin load took {s.ElapsedMilliseconds}ms");
         }
     }
 }

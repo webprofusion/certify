@@ -1,37 +1,29 @@
-﻿using PropertyChanged;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Certify.Models
+﻿namespace Certify.Models
 {
     public class CertRequestConfig : BindableBase
     {
         /// <summary>
-        /// Primary subject domain for our SSL Cert request
+        /// Primary subject domain for our SSL Cert request 
         /// </summary>
         public string PrimaryDomain { get; set; }
 
         /// <summary>
-        /// Optional subject alternative names for our SSL Cert request
+        /// Optional subject alternative names for our SSL Cert request 
         /// </summary>
         public string[] SubjectAlternativeNames { get; set; }
 
         /// <summary>
-        /// Root path for our website content, used when responding to file based challenges
+        /// Root path for our website content, used when responding to file based challenges 
         /// </summary>
         public string WebsiteRootPath { get; set; }
 
         /// <summary>
-        /// If required, a specific IP address to bind to when creating/updating this binding
+        /// If required, a specific IP address to bind to when creating/updating this binding 
         /// </summary>
         public string BindingIPAddress { get; set; }
 
         /// <summary>
-        /// Optional specific port to bind SSL to. Defaults to 443.
+        /// Optional specific port to bind SSL to. Defaults to 443. 
         /// </summary>
         public string BindingPort { get; set; }
 
@@ -54,13 +46,12 @@ namespace Certify.Models
         public bool PerformExtensionlessConfigChecks { get; set; }
 
         /// <summary>
-        /// If true, perform an automated check that the web host is configured to respond to
-        /// tls sni requests
+        /// If true, perform an automated check that the web host is configured to respond to tls sni requests
         /// </summary>
         public bool PerformTlsSniBindingConfigChecks { get; set; }
 
         /// <summary>
-        /// If true, attempt to automatically configure the web host/web aplication as required
+        /// If true, attempt to automatically configure the web host/web aplication as required 
         /// </summary>
         public bool PerformAutoConfig { get; set; }
 
@@ -71,48 +62,53 @@ namespace Certify.Models
         public bool PerformAutomatedCertBinding { get; set; }
 
         /// <summary>
+        /// If true, existings https bindings for the cert we are renewing will be removed and replaced 
+        /// </summary>
+        public bool AlwaysRecreateBindings { get; set; } = false;
+
+        /// <summary>
         /// If true, indicates that Certify should attempt to send failure notifications if an
         /// automated renewal request fails
         /// </summary>
         public bool EnableFailureNotifications { get; set; }
 
         /// <summary>
-        /// In the case of Lets Encrypt, the challenge type this request will use (eg. http-01)
+        /// In the case of Lets Encrypt, the challenge type this request will use (eg. http-01) 
         /// </summary>
         public string ChallengeType { get; set; }
 
         /// <summary>
-        /// The trigger for the webhook (None, Success, Error)
+        /// The trigger for the webhook (None, Success, Error) 
         /// </summary>
         public string WebhookTrigger { get; set; } = Webhook.ON_NONE;
 
         /// <summary>
-        /// The http method for the webhook request
+        /// The http method for the webhook request 
         /// </summary>
         public string WebhookMethod { get; set; }
 
         /// <summary>
-        /// The http url for the webhook request
+        /// The http url for the webhook request 
         /// </summary>
         public string WebhookUrl { get; set; }
 
         /// <summary>
-        /// The http content type header for the webhook request
+        /// The http content type header for the webhook request 
         /// </summary>
         public string WebhookContentType { get; set; }
 
         /// <summary>
-        /// The http body template for the webhook request
+        /// The http body template for the webhook request 
         /// </summary>
         public string WebhookContentBody { get; set; }
 
         /// <summary>
-        /// PowerShell script to run before executing certificate request
+        /// PowerShell script to run before executing certificate request 
         /// </summary>
         public string PreRequestPowerShellScript { get; set; }
 
         /// <summary>
-        /// PowerShell script to run before executing certificate request
+        /// PowerShell script to run before executing certificate request 
         /// </summary>
         public string PostRequestPowerShellScript { get; set; }
     }

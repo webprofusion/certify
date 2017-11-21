@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.Win32.TaskScheduler;
+using System;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Certify.Shared
 {
@@ -14,7 +12,7 @@ namespace Certify.Shared
 
         public bool IsWindowsScheduledTaskPresent()
         {
-            var taskList = Microsoft.Win32.TaskScheduler.TaskService.Instance.RootFolder.GetTasks();
+            var taskList = TaskService.Instance.RootFolder.GetTasks();
             if (taskList.Any(t => t.Name == SCHEDULED_TASK_NAME))
             {
                 return true;

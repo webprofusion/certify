@@ -22,7 +22,7 @@ namespace Certify.Service
 #if DEBUG
                 x.SetInstanceName("Debug");
 #else
-               // x.SetInstanceName("CertifySSLManager.Service");
+                // x.SetInstanceName("CertifySSLManager.Service");
 #endif
                 // FIXME: we should offer option during setup to configure this as a service account
                 // account requires admin rights in IIS (and wwwroot etc) and permission to
@@ -52,6 +52,7 @@ namespace Certify.Service
             if (e.ExceptionObject != null)
             {
                 //submit diagnostic info if connection available
+
                 var API_BASE_URI = Locales.ConfigResources.APIBaseURI;
 
                 var client = new HttpClient();
@@ -61,9 +62,11 @@ namespace Certify.Service
                     {
                         EmailAddress = "(service exception)",
                         Comment = "An unhandled exception has occurred.",
+                        IsException = true,
+                        AppVersion = ConfigResources.AppName + " " + new Certify.Management.Util().GetAppVersion(),
                         SupportingData = new
                         {
-                            Framework = Environment.Version.ToString(),
+                            Framework = Certify.Management.Util.GetDotNetVersion(),
                             OS = Environment.OSVersion.ToString(),
                             AppVersion = ConfigResources.AppName + " " + new Certify.Management.Util().GetAppVersion(),
                             IsException = true
@@ -75,7 +78,7 @@ namespace Certify.Service
                 {
                     Task.Run(async () =>
                     {
-                        await client.PostAsync(API_BASE_URI + "submitfeedback", data);
+                        await client.PostAsync(API_BASE_URI + "feedback/submit", data);
                     });
                 }
                 catch (Exception exp)

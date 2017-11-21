@@ -12,13 +12,7 @@ namespace Certify.UI.Controls
     /// </summary>
     public partial class AboutControl : UserControl
     {
-        protected Certify.UI.ViewModel.AppModel MainViewModel
-        {
-            get
-            {
-                return ViewModel.AppModel.AppViewModel;
-            }
-        }
+        protected Certify.UI.ViewModel.AppModel MainViewModel => ViewModel.AppModel.AppViewModel;
 
         public AboutControl()
         {

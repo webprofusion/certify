@@ -38,7 +38,7 @@
       <HintPath>..\..\packages\Microsoft.ApplicationInsights.2.4.0\lib\net45\Microsoft.ApplicationInsights.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Win32.TaskScheduler, Version=2.6.5.0, Culture=neutral, PublicKeyToken=c416bc1b32d97233, processorArchitecture=MSIL">
-      <HintPath>..\..\..\CertifyMisc\Certify.Plugins\Licensing\packages\TaskScheduler.2.6.5\lib\net452\Microsoft.Win32.TaskScheduler.dll</HintPath>
+      <HintPath>..\..\packages\TaskScheduler.2.6.5\lib\net452\Microsoft.Win32.TaskScheduler.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -88,6 +88,7 @@
     <Compile Include="Management\PluginManager.cs" />
     <Compile Include="Management\PowerShellManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\Networking.cs" />
     <Compile Include="Utils\TaskScheduler.cs" />
     <Compile Include="Utils\Util.cs" />
     <Compile Include="Utils\X509ExtensionUtilities.cs" />
@@ -102,7 +103,7 @@
       <Name>Certify.Models</Name>
     </ProjectReference>
     <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj">
-      <Project>{8bcaa93d-18aa-4f62-bcb4-c883cc65c049}</Project>
+      <Project>{8BCAA93D-18AA-4F62-BCB4-C883CC65C049}</Project>
       <Name>Certify.Locales</Name>
     </ProjectReference>
   </ItemGroup>

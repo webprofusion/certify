@@ -70,7 +70,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://certifytheweb.com/api/.
+        ///   Looks up a localized string similar to https://api.certifytheweb.com/v1/.
         /// </summary>
         public static string APIBaseURI {
             get {
