@@ -1,9 +1,7 @@
 using Certify.Locales;
 using System;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
 using System.Windows;
+using System.Windows.Input;
 
 namespace Certify.UI.Windows
 {
@@ -14,6 +12,8 @@ namespace Certify.UI.Windows
     {
         public string FeedbackMessage { get; set; }
         public bool IsException { get; set; }
+
+        protected Certify.UI.ViewModel.AppModel MainViewModel => ViewModel.AppModel.AppViewModel;
 
         public Feedback(string feedbackMsg, bool isException)
         {
@@ -47,46 +47,43 @@ namespace Certify.UI.Windows
             Submit.IsEnabled = false;
 
             //submit feedback if connection available
-            var API_BASE_URI = ConfigResources.APIBaseURI;
 
-            //AppDomain.CurrentDomain.SetupInformation.ConfigurationFile
-
-            var client = new HttpClient();
-
-            var jsonRequest = Newtonsoft.Json.JsonConvert.SerializeObject(
-                new Models.Shared.FeedbackReport
-                {
-                    EmailAddress = EmailAddress.Text,
-                    Comment = Comment.Text,
-                    SupportingData = new
-                    {
-                        Framework = Environment.Version.ToString(),
-                        OS = Environment.OSVersion.ToString(),
-                        AppVersion = ConfigResources.AppName + " " + new Certify.Management.Util().GetAppVersion(),
-                        IsException = this.IsException
-                    }
-                });
-
-            var data = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
-            try
+            var feedbackReport = new Models.Shared.FeedbackReport
             {
-                var response = await client.PostAsync(API_BASE_URI + "submitfeedback", data);
-                if (response.IsSuccessStatusCode)
+                EmailAddress = EmailAddress.Text,
+                Comment = Comment.Text,
+                SupportingData = new
+                {
+                    OS = Environment.OSVersion.ToString(),
+                    AppVersion = ConfigResources.AppName + " " + new Certify.Management.Util().GetAppVersion(),
+                    IsException = this.IsException
+                }
+            };
+
+            if (MainViewModel.PluginManager.DashboardClient != null)
+            {
+                Mouse.OverrideCursor = Cursors.Wait;
+                var submittedOK = await MainViewModel.PluginManager.DashboardClient.SubmitFeedbackAsync(feedbackReport);
+
+                Mouse.OverrideCursor = Cursors.Arrow;
+
+                if (submittedOK)
                 {
                     MessageBox.Show(SR.Send_Feedback_Success);
-
                     this.Close();
                     return;
                 }
+                else
+                {
+                    MessageBox.Show(SR.Send_Feedback_Error);
+                }
             }
-            catch (Exception exp)
+            else
             {
-                System.Diagnostics.Debug.WriteLine(exp.ToString());
+                //failed
+                MessageBox.Show(SR.Send_Feedback_Error);
             }
-
             Submit.IsEnabled = true;
-            //failed
-            MessageBox.Show(SR.Send_Feedback_Error);
         }
     }
 }
