@@ -105,6 +105,7 @@ namespace Certify.Management
             prefs.MaxRenewalRequests = CoreAppSettings.Current.MaxRenewalRequests;
             prefs.RenewalIntervalDays = CoreAppSettings.Current.RenewalIntervalDays;
             prefs.EnableEFS = CoreAppSettings.Current.EnableEFS;
+            prefs.InstanceId = CoreAppSettings.Current.InstanceId;
 
             return prefs;
         }

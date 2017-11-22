@@ -8,7 +8,7 @@ namespace Certify.Models.Plugins
     {
         Task<LicenseCheckResult> Validate(int productTypeId, string email, string key);
 
-        Task<LicenseKeyInstallResult> RegisterInstall(int productTypeId, string email, string key, string machineName);
+        Task<LicenseKeyInstallResult> RegisterInstall(int productTypeId, string email, string key, RegisteredInstance instance);
 
         bool FinaliseInstall(int productTypeId, LicenseKeyInstallResult result, string settingsPath);
 

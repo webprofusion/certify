@@ -15,5 +15,6 @@
         public int RenewalIntervalDays { get; set; } = 0;
 
         public int MaxRenewalRequests { get; set; } = 0;
+        public string InstanceId { get; set; }
     }
 }

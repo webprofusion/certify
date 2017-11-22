@@ -46,7 +46,13 @@ namespace Certify.UI.Windows
                     var validationResult = await licensingManager.Validate(productTypeId, email, key);
                     if (validationResult.IsValid)
                     {
-                        var installRegistration = await licensingManager.RegisterInstall(productTypeId, email, key, System.Environment.MachineName);
+                        var instance = new Models.Shared.RegisteredInstance
+                        {
+                            InstanceId = ViewModel.AppModel.AppViewModel.Preferences.InstanceId,
+                            AppVersion = new Management.Util().GetAppVersion().ToString()
+                        };
+
+                        var installRegistration = await licensingManager.RegisterInstall(productTypeId, email, key, instance);
 
                         Mouse.OverrideCursor = Cursors.Arrow;
                         if (installRegistration.IsSuccess)
