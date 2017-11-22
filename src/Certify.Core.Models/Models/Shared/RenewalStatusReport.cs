@@ -1,4 +1,6 @@
-﻿namespace Certify.Models.Shared
+﻿using System;
+
+namespace Certify.Models.Shared
 {
     public class RenewalStatusReport
     {
@@ -7,5 +9,6 @@
         public ManagedSite ManagedSite { get; set; }
         public string PrimaryContactEmail { get; set; }
         public string AppVersion { get; set; }
+        public DateTime? DateReported { get; set; }
     }
 }
