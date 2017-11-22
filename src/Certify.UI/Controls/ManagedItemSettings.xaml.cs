@@ -48,13 +48,6 @@ namespace Certify.UI.Controls
                     //get list of sites from IIS. FIXME: this is async and we should gather this at startup (or on refresh) instead
                     WebSiteList = new ObservableCollection<SiteBindingItem>(await MainViewModel.CertifyClient.GetServerSiteList(StandardServerTypes.IIS));
                     WebsiteDropdown.ItemsSource = WebSiteList;
-
-                    //always check use SNI even if we later clear it
-                    if (MainViewModel.SelectedItem.RequestConfig.BindingUseSNI == null)
-                    {
-                        MainViewModel.SelectedItem.RequestConfig.BindingUseSNI = true;
-                        MainViewModel.SelectedItem.IsChanged = false;
-                    }
                 }
             }
         }
@@ -91,6 +84,14 @@ namespace Certify.UI.Controls
                 item.RequestConfig.BindingIPAddress = null;
                 item.RequestConfig.BindingPort = null;
                 item.RequestConfig.BindingUseSNI = null;
+            }
+            else
+            {
+                //always select Use SNI unless it's specifically set to false
+                if (item.RequestConfig.BindingUseSNI == null)
+                {
+                    item.RequestConfig.BindingUseSNI = true;
+                }
             }
 
             if (!string.IsNullOrEmpty(item.RequestConfig.WebhookTrigger) &&
