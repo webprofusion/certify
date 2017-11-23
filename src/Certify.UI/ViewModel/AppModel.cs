@@ -57,6 +57,14 @@ namespace Certify.UI.ViewModel
 
         public Preferences Preferences { get; set; } = new Preferences();
 
+        internal async Task SetInstanceRegistered()
+        {
+            var prefs = await CertifyClient.GetPreferences();
+            prefs.IsInstanceRegistered = true;
+            await CertifyClient.SetPreferences(prefs);
+            this.Preferences = prefs;
+        }
+
         #region properties
 
         /// <summary>

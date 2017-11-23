@@ -599,4 +599,28 @@
   <data name="ManagedItemSettings_ReapplyCertificate" xml:space="preserve">
     <value>Re-apply Certificate to Bindings</value>
   </data>
+  <data name="Dashboard_Register" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Dashboard_Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="GettingStarted_AddToDashboard" xml:space="preserve">
+    <value>Add to Reporting Dashboard</value>
+  </data>
+  <data name="GettingStarted_Dashboard" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="GettingStarted_DashboardIntro" xml:space="preserve">
+    <value>You can use the reporting dashboard to easily view certificate renewal status across one or more servers and to control your notification preferences.</value>
+  </data>
+  <data name="GettingStarted_ViewDashboard" xml:space="preserve">
+    <value>View Dashboard</value>
+  </data>
+  <data name="Dashboard_NewAccount" xml:space="preserve">
+    <value>Create a new account</value>
+  </data>
+  <data name="Dashboard_AddIntro" xml:space="preserve">
+    <value>To add this server to your dashboard, provide your https://certifytheweb.com/profile sign in details or register a new account:</value>
+  </data>
 </root>

@@ -114,6 +114,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Controls\GettingStarted.xaml.cs">
+      <DependentUpon>GettingStarted.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Utils\ExpiryDateConverter.cs" />
     <Compile Include="Utils\ManagedItemHealthVisibilityConverter.cs" />
     <Compile Include="Utils\ManagedItemHealthColourConverter.cs" />
@@ -124,6 +127,9 @@
     <Compile Include="Windows\ImportManagedSites.xaml.cs">
       <DependentUpon>ImportManagedSites.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Windows\AddToDashboard.xaml.cs">
+      <DependentUpon>AddToDashboard.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Windows\Registration.xaml.cs">
       <DependentUpon>Registration.xaml</DependentUpon>
     </Compile>
@@ -131,6 +137,10 @@
       <DependentUpon>ScheduledTaskConfig.xaml</DependentUpon>
     </Compile>
     <Page Include="Controls\AboutControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\GettingStarted.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -195,6 +205,10 @@
     <Page Include="Windows\ImportManagedSites.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Windows\AddToDashboard.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Windows\Registration.xaml">
       <SubType>Designer</SubType>

@@ -29,6 +29,6 @@ namespace Certify.Models.Plugins
 
         Task<bool> SignInAsync(string email, string pwd);
 
-        Task<bool> RegisterInstance(RegisteredInstance instance);
+        Task<bool> RegisterInstance(RegisteredInstance instance, string email, string pwd, bool createAccount);
     }
 }

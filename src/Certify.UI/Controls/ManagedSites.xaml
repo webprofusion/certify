@@ -74,12 +74,10 @@
         </Grid>
         <GridSplitter Grid.Column="1" Width="10" HorizontalAlignment="Stretch" Background="White" />
         <Grid Grid.Column="2">
+          
             <local:ManagedItemSettings Visibility="{Binding SelectedItem, Converter={StaticResource NullCollapsedConverter}}" BorderBrush="{DynamicResource WindowTitleColorBrush}" Margin="0,10,0,0" Width="Auto" Height="Auto" />
             <StackPanel Visibility="{Binding SelectedItem, Converter={StaticResource NullVisibleConverter}}" Margin="16,0,0,0" Height="Auto">
-                <StackPanel Margin="6,8"  Height="Auto" MinHeight="300" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
-                    <TextBlock TextWrapping="Wrap" FontSize="36" Margin="16,16,0,16"  FontFamily="Segoe UI Light"><Run FontWeight="Bold" FontFamily="Segoe UI Semibold" Text="Certify" /><Run Text=" the " /><Run Text="w" /><Run Text="eb" /></TextBlock>
-                    <TextBlock TextWrapping="Wrap" Margin="16,0,0,0" FontSize="14" FontFamily="Segoe UI Light"><Run Text="{x:Static res:SR.ManagedSites_NoItemSelectedDesc}" /><LineBreak /><Run /><Run /><LineBreak /><Run Text="{x:Static res:SR.ManagedSites_NoItemSelectedTip}" /><Run Text="&#x9;" /></TextBlock>
-                </StackPanel>
+                <local:GettingStarted></local:GettingStarted>
             </StackPanel>
         </Grid>
     </Grid>

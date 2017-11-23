@@ -1,0 +1,43 @@
+<Controls:MetroWindow x:Class="Certify.UI.Windows.AddToDashboard"
+        xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+
+        xmlns:local="clr-namespace:Certify.UI.Windows"
+
+    xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+
+        mc:Ignorable="d"
+        Title="{x:Static res:SR.GettingStarted_AddToDashboard}" Height="360" Width="480"
+        GlowBrush="{DynamicResource AccentColorBrush}" ResizeMode="NoResize"
+        BorderThickness="1" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner">
+    <StackPanel Orientation="Vertical" Margin="8">
+        <Grid Margin="0,0,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200*" />
+                <ColumnDefinition Width="243*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" Grid.ColumnSpan="2" TextWrapping="Wrap" Margin="8,8,0,0" ><Run Text="{x:Static res:SR.Dashboard_AddIntro}" /></TextBlock>
+
+            <Label Grid.Row="1" Grid.Column="0" Content="{x:Static res:SR.RegistrationEmailAddress}" HorizontalAlignment="Left" />
+            <TextBox Grid.Row="1" Grid.Column="1" x:Name="EmailAddress" TextWrapping="Wrap" Text="" VerticalAlignment="Bottom" />
+            <Label Grid.Row="2" Grid.Column="0" Content="{x:Static res:SR.Password}" HorizontalAlignment="Left" VerticalAlignment="Top" />
+            <TextBox Grid.Row="2" Grid.Column="1"  x:Name="Password" TextWrapping="Wrap" Text="" />
+            <CheckBox Grid.Row="3" Grid.Column="1" x:Name="CreateNewAccount" Content="{x:Static res:SR.Dashboard_NewAccount}" />
+        </Grid>
+        <StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="ValidateKey" Content="{x:Static res:SR.OK}"  VerticalAlignment="Bottom" Click="ValidateKey_Click" Grid.Column="1" />
+                <Button x:Name="Cancel" Content="{x:Static res:SR.Cancel}" HorizontalAlignment="Left"  VerticalAlignment="Bottom"  Click="Cancel_Click" />
+            </StackPanel>
+        </StackPanel>
+    </StackPanel>
+</Controls:MetroWindow>

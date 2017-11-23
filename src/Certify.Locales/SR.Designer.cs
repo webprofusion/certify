@@ -223,6 +223,42 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to To add this server to your dashboard, provide your https://certifytheweb.com/profile sign in details or register a new account:.
+        /// </summary>
+        public static string Dashboard_AddIntro {
+            get {
+                return ResourceManager.GetString("Dashboard_AddIntro", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create a new account.
+        /// </summary>
+        public static string Dashboard_NewAccount {
+            get {
+                return ResourceManager.GetString("Dashboard_NewAccount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Password.
+        /// </summary>
+        public static string Dashboard_Password {
+            get {
+                return ResourceManager.GetString("Dashboard_Password", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add.
+        /// </summary>
+        public static string Dashboard_Register {
+            get {
+                return ResourceManager.GetString("Dashboard_Register", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete.
         /// </summary>
         public static string Delete {
@@ -291,6 +327,42 @@ namespace Certify.Locales {
         public static string General_Loading {
             get {
                 return ResourceManager.GetString("General_Loading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add to Reporting Dashboard.
+        /// </summary>
+        public static string GettingStarted_AddToDashboard {
+            get {
+                return ResourceManager.GetString("GettingStarted_AddToDashboard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dashboard.
+        /// </summary>
+        public static string GettingStarted_Dashboard {
+            get {
+                return ResourceManager.GetString("GettingStarted_Dashboard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You can use the reporting dashboard to easily view certificate renewal status across one or more servers and to control your notification preferences..
+        /// </summary>
+        public static string GettingStarted_DashboardIntro {
+            get {
+                return ResourceManager.GetString("GettingStarted_DashboardIntro", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to View Dashboard.
+        /// </summary>
+        public static string GettingStarted_ViewDashboard {
+            get {
+                return ResourceManager.GetString("GettingStarted_ViewDashboard", resourceCulture);
             }
         }
         

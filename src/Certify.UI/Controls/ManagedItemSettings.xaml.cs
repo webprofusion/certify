@@ -429,5 +429,10 @@ namespace Certify.UI.Controls
                 }
             }
         }
+
+        private void Dismiss_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel.SelectedItem = null;
+        }
     }
 }

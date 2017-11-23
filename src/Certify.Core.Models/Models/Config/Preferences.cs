@@ -1,6 +1,6 @@
 ﻿namespace Certify.Models
 {
-    public class Preferences
+    public class Preferences : BindableBase
     {
         public bool EnableAppTelematics { get; set; } = true;
 
@@ -15,6 +15,11 @@
         public int RenewalIntervalDays { get; set; } = 0;
 
         public int MaxRenewalRequests { get; set; } = 0;
+
         public string InstanceId { get; set; }
+
+        public bool IsInstanceRegistered { get; set; } = false;
+
+        public string Language { get; set; }
     }
 }

@@ -68,12 +68,22 @@ namespace Certify.Management
 
         public bool LegacySettingsUpgraded { get; set; }
 
+        /// <summary>
+        /// If true, this instance has been added to server dashboard 
+        /// </summary>
+        public bool IsInstanceRegistered { get; set; }
+
         public string VaultPath { get; set; }
 
         /// <summary>
         /// If user opts for renewal failure reporting, generated instance id is used to group results 
         /// </summary>
         public string InstanceId { get; set; }
+
+        /// <summary>
+        /// If set, specifies the UI language preference 
+        /// </summary>
+        public string Language { get; set; }
     }
 
     public class SettingsManager
@@ -89,6 +99,8 @@ namespace Certify.Management
             CoreAppSettings.Current.MaxRenewalRequests = prefs.MaxRenewalRequests;
             CoreAppSettings.Current.RenewalIntervalDays = prefs.RenewalIntervalDays;
             CoreAppSettings.Current.EnableEFS = prefs.EnableEFS;
+            CoreAppSettings.Current.IsInstanceRegistered = prefs.IsInstanceRegistered;
+            CoreAppSettings.Current.Language = prefs.Language;
 
             return true;
         }
@@ -106,6 +118,8 @@ namespace Certify.Management
             prefs.RenewalIntervalDays = CoreAppSettings.Current.RenewalIntervalDays;
             prefs.EnableEFS = CoreAppSettings.Current.EnableEFS;
             prefs.InstanceId = CoreAppSettings.Current.InstanceId;
+            prefs.IsInstanceRegistered = CoreAppSettings.Current.IsInstanceRegistered;
+            prefs.Language = CoreAppSettings.Current.Language;
 
             return prefs;
         }
@@ -154,6 +168,9 @@ namespace Certify.Management
                 CoreAppSettings.Current.VaultPath = oldProps.VaultPath;
 
                 CoreAppSettings.Current.LegacySettingsUpgraded = true;
+                CoreAppSettings.Current.IsInstanceRegistered = false;
+                CoreAppSettings.Current.Language = null;
+
                 CoreAppSettings.Current.InstanceId = Guid.NewGuid().ToString();
                 SaveAppSettings();
             }
