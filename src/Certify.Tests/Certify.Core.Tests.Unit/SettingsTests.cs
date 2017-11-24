@@ -17,7 +17,7 @@ namespace Certify.Core.Tests.Unit
                 IncludeInAutoRenew = true,
                 DateRenewed = DateTime.Now.AddDays(-15),
                 DateExpiry = DateTime.Now.AddDays(60),
-                DateLastRenewalAttempt = DateTime.Now.AddHours(-1),
+                DateLastRenewalAttempt = DateTime.Now.AddHours(-12),
                 LastRenewalStatus = RequestState.Error,
                 RenewalFailureCount = 2
             };

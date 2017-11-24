@@ -292,14 +292,14 @@ namespace Certify.Management
             return _vaultProvider.GetVaultSummary();
         }
 
-        private void ReportProgress(IProgress<RequestProgressState> progress, RequestProgressState state)
+        private void ReportProgress(IProgress<RequestProgressState> progress, RequestProgressState state, bool logThisEvent = true)
         {
             if (progress != null) progress.Report(state);
 
             // report request state to staus hub clients
             OnRequestProgressStateUpdated?.Invoke(state);
 
-            if (state.ManagedItem != null)
+            if (state.ManagedItem != null && logThisEvent)
             {
                 LogMessage(state.ManagedItem.Id, state.Message, LogItemType.GeneralWarning);
             }
@@ -944,7 +944,7 @@ namespace Certify.Management
                     // our last attempt failed, check how many failures we've had to decide whether
                     // we should attempt now, Scale wait time based on how many attempts we've made.
                     // Max 48hrs between attempts
-                    if (s.DateLastRenewalAttempt != null)
+                    if (s.DateLastRenewalAttempt != null && s.RenewalFailureCount > 0)
                     {
                         var hoursWait = 48;
                         if (s.RenewalFailureCount > 0 && s.RenewalFailureCount < 48)
@@ -952,7 +952,7 @@ namespace Certify.Management
                             hoursWait = s.RenewalFailureCount;
                         }
                         var nextAttemptByDate = s.DateLastRenewalAttempt.Value.AddHours(hoursWait);
-                        if (DateTime.UtcNow < nextAttemptByDate)
+                        if (DateTime.Now < nextAttemptByDate)
                         {
                             isRenewalRequired = false;
                         }
@@ -1053,6 +1053,7 @@ namespace Certify.Management
                 else
                 {
                     var msg = CoreSR.CertifyManager_SkipRenewalOk;
+                    bool logThisEvent = false;
 
                     if (isRenewalRequired && !isSiteRunning)
                     {
@@ -1065,16 +1066,15 @@ namespace Certify.Management
                         //TODO: show this as warning rather than success
 
                         msg = String.Format(CoreSR.CertifyManager_RenewalOnHold, s.RenewalFailureCount);
+                        logThisEvent = true;
                     }
 
                     if (progressTrackers != null)
                     {
                         //send progress back to report skip
                         var progress = (IProgress<RequestProgressState>)progressTrackers[s.Id];
-                        ReportProgress(progress, new RequestProgressState(RequestState.Success, msg, s));
+                        ReportProgress(progress, new RequestProgressState(RequestState.Success, msg, s), logThisEvent);
                     }
-
-                    ManagedSiteLog.AppendLog(s.Id, new ManagedSiteLogItem { EventDate = DateTime.UtcNow, LogItemType = LogItemType.GeneralInfo, Message = msg + s.Name });
                 }
             }
 
