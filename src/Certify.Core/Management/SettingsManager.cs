@@ -21,7 +21,7 @@ namespace Certify.Management
             this.MaxRenewalRequests = 0;
             this.LegacySettingsUpgraded = false;
             this.VaultPath = @"C:\ProgramData\ACMESharp";
-            this.InstanceId = Guid.NewGuid().ToString();
+            this.InstanceId = null;
         }
 
         public static CoreAppSettings Current
@@ -145,11 +145,6 @@ namespace Certify.Management
                 {
                     string configData = System.IO.File.ReadAllText(path);
                     CoreAppSettings.Current = Newtonsoft.Json.JsonConvert.DeserializeObject<CoreAppSettings>(configData);
-
-                    if (String.IsNullOrEmpty(CoreAppSettings.Current.InstanceId))
-                    {
-                        CoreAppSettings.Current.InstanceId = Guid.NewGuid().ToString();
-                    }
                 }
             }
             else
@@ -171,6 +166,13 @@ namespace Certify.Management
                 CoreAppSettings.Current.IsInstanceRegistered = false;
                 CoreAppSettings.Current.Language = null;
 
+                CoreAppSettings.Current.InstanceId = Guid.NewGuid().ToString();
+                SaveAppSettings();
+            }
+
+            // if instance id not yet set, create it now and save
+            if (String.IsNullOrEmpty(CoreAppSettings.Current.InstanceId))
+            {
                 CoreAppSettings.Current.InstanceId = Guid.NewGuid().ToString();
                 SaveAppSettings();
             }
