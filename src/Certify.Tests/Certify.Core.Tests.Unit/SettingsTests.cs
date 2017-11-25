@@ -27,6 +27,22 @@ namespace Certify.Core.Tests.Unit
 
             // assert result
             Assert.IsTrue(isRenewalRequired, "Renewal should be required");
+
+            managedSite = new ManagedSite
+            {
+                IncludeInAutoRenew = true,
+                DateRenewed = DateTime.Now.AddDays(-15),
+                DateExpiry = DateTime.Now.AddDays(60),
+                DateLastRenewalAttempt = null,
+                LastRenewalStatus = null,
+                RenewalFailureCount = 0
+            };
+
+            // perform check
+            isRenewalRequired = Management.CertifyManager.IsRenewalRequired(managedSite, renewalPeriodDays, true);
+
+            // assert result
+            Assert.IsTrue(isRenewalRequired, "Site with no previous status - Renewal should be required");
         }
 
         [TestMethod, Description("Ensure a site which should be renewed correctly requires renewal")]

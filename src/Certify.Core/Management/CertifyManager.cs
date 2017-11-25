@@ -1014,7 +1014,7 @@ namespace Certify.Management
                 if (isRenewalRequired)
                 {
                     //check if we have renewal failures, if so wait a bit longer
-                    isRenewalOnHold = IsRenewalRequired(s, renewalIntervalDays, checkFailureStatus: true);
+                    isRenewalOnHold = !IsRenewalRequired(s, renewalIntervalDays, checkFailureStatus: true);
 
                     if (isRenewalOnHold) isRenewalRequired = false;
                 }
