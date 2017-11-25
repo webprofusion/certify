@@ -17,7 +17,7 @@ namespace Certify.UI.Windows
         private async void ValidateKey_Click(object sender, RoutedEventArgs e)
         {
             var email = EmailAddress.Text?.Trim().ToLower();
-            var pwd = Password.Text?.Trim();
+            var pwd = Password.Password.Trim();
 
             if (String.IsNullOrEmpty(email))
             {
@@ -55,6 +55,7 @@ namespace Certify.UI.Windows
                     {
                         ViewModel.AppModel.AppViewModel.SetInstanceRegistered();
                         MessageBox.Show("Server registration completed.");
+                        this.Close();
                     }
                     else
                     {

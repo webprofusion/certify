@@ -30,7 +30,7 @@
             <Label Grid.Row="1" Grid.Column="0" Content="{x:Static res:SR.RegistrationEmailAddress}" HorizontalAlignment="Left" />
             <TextBox Grid.Row="1" Grid.Column="1" x:Name="EmailAddress" TextWrapping="Wrap" Text="" VerticalAlignment="Bottom" />
             <Label Grid.Row="2" Grid.Column="0" Content="{x:Static res:SR.Password}" HorizontalAlignment="Left" VerticalAlignment="Top" />
-            <TextBox Grid.Row="2" Grid.Column="1"  x:Name="Password" TextWrapping="Wrap" Text="" />
+            <PasswordBox  Grid.Row="2" Grid.Column="1"  x:Name="Password" />
             <CheckBox Grid.Row="3" Grid.Column="1" x:Name="CreateNewAccount" Content="{x:Static res:SR.Dashboard_NewAccount}" />
         </Grid>
         <StackPanel>
