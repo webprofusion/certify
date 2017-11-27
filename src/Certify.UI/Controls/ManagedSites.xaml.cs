@@ -14,6 +14,7 @@ namespace Certify.UI.Controls
     public partial class ManagedSites
     {
         protected ViewModel.AppModel MainViewModel => ViewModel.AppModel.AppViewModel;
+        private string _sortOrder { get; set; } = "NameAsc";
 
         public ManagedSites()
         {
@@ -44,9 +45,20 @@ namespace Certify.UI.Controls
 
             //sort by name ascending
             CollectionViewSource.GetDefaultView(MainViewModel.ManagedSites).SortDescriptions.Clear();
-            CollectionViewSource.GetDefaultView(MainViewModel.ManagedSites).SortDescriptions.Add(
-                new System.ComponentModel.SortDescription("Name", System.ComponentModel.ListSortDirection.Ascending)
-            );
+
+            if (_sortOrder == "NameAsc")
+            {
+                CollectionViewSource.GetDefaultView(MainViewModel.ManagedSites).SortDescriptions.Add(
+                   new System.ComponentModel.SortDescription("Name", System.ComponentModel.ListSortDirection.Ascending)
+               );
+            }
+
+            if (_sortOrder == "ExpiryDateAsc")
+            {
+                CollectionViewSource.GetDefaultView(MainViewModel.ManagedSites).SortDescriptions.Add(
+                   new System.ComponentModel.SortDescription("DateExpiry", System.ComponentModel.ListSortDirection.Ascending)
+               );
+            }
         }
 
         private async void ListViewItem_InteractionEvent(object sender, InputEventArgs e)
@@ -235,6 +247,15 @@ namespace Certify.UI.Controls
             }
         }
 
-       
+        private void SetListSortOrder_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem)
+            {
+                var menu = sender as MenuItem;
+
+                _sortOrder = menu.Tag.ToString();
+                SetFilter();
+            }
+        }
     }
 }

@@ -5,12 +5,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
              xmlns:local="clr-namespace:Certify.UI.Controls"
-             xmlns:certifyui="clr-namespace:Certify.UI"
+             xmlns:certifyui="clr-namespace:Certify.UI;assembly=Certify.UI"
              xmlns:System="clr-namespace:System;assembly=mscorlib"
              xmlns:fa="http://schemas.fontawesome.io/icons/"
              xmlns:utils="clr-namespace:Certify.UI.Utils" x:Class="Certify.UI.Controls.ManagedSites"
              xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-             mc:Ignorable="d" Width="970" Height="487"
+
+    mc:Ignorable="d" Width="970" Height="487"
              Loaded="UserControl_OnLoaded"
              d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}">
 
@@ -31,11 +32,12 @@
 
         <Grid Grid.Column="0" Margin="0,10,0,0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="28">
-                </RowDefinition>
+                <RowDefinition Height="28"></RowDefinition>
                 <RowDefinition Height="*"></RowDefinition>
             </Grid.RowDefinitions>
+
             <TextBox Grid.Row="0" Name="txtFilter" TextChanged="TxtFilter_TextChanged" PreviewKeyDown="TxtFilter_PreviewKeyDown" Controls:TextBoxHelper.Watermark="{x:Static res:SR.ManagedSites_Filter}" Controls:TextBoxHelper.ClearTextButton="True"></TextBox>
+
             <ListView Grid.Row="1" Name="lvManagedSites"
                       ItemsSource="{Binding ManagedSites}"
                       SelectedItem="{Binding SelectedItem, Mode=OneWay}"
@@ -45,6 +47,14 @@
                       VirtualizingPanel.IsVirtualizing="True"
                       ScrollViewer.VerticalScrollBarVisibility="Auto"
                       ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                <ListView.ContextMenu>
+                    <ContextMenu x:Name="ListContextMenu" PlacementRectangle="{Binding RelativeSource={RelativeSource Self}}">
+                        <MenuItem Header="Sort By Name" Tag="NameAsc" Click="SetListSortOrder_Click">
+                        </MenuItem>
+                        <MenuItem Header="Sort By Expiry Date" Tag="ExpiryDateAsc" Click="SetListSortOrder_Click">
+                        </MenuItem>
+                    </ContextMenu>
+                </ListView.ContextMenu>
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem">
                         <EventSetter Event="PreviewMouseLeftButtonDown" Handler="ListViewItem_InteractionEvent" />
@@ -74,7 +84,7 @@
         </Grid>
         <GridSplitter Grid.Column="1" Width="10" HorizontalAlignment="Stretch" Background="White" />
         <Grid Grid.Column="2">
-          
+
             <local:ManagedItemSettings Visibility="{Binding SelectedItem, Converter={StaticResource NullCollapsedConverter}}" BorderBrush="{DynamicResource WindowTitleColorBrush}" Margin="0,10,0,0" Width="Auto" Height="Auto" />
             <StackPanel Visibility="{Binding SelectedItem, Converter={StaticResource NullVisibleConverter}}" Margin="16,0,0,0" Height="Auto">
                 <local:GettingStarted></local:GettingStarted>
