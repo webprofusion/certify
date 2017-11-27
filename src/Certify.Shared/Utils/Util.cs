@@ -82,7 +82,7 @@ namespace Certify.Management
             try
             {
                 HttpClient client = new HttpClient();
-                var response = await client.GetAsync(ConfigResources.AppUpdateCheckURI + "?v=" + appVersion);
+                var response = await client.GetAsync(ConfigResources.APIBaseURI + "update?version=" + appVersion);
                 if (response.IsSuccessStatusCode)
                 {
                     string json = await response.Content.ReadAsStringAsync();
