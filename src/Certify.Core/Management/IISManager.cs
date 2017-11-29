@@ -582,8 +582,9 @@ namespace Certify.Management
                             }
                             catch (Exception)
                             {
-                                ; ;
-                                System.Diagnostics.Debug.WriteLine("Cannot apply SNI SSL Flag");
+                                // failed to enable SNI
+                                store.Close();
+                                return false;
                             }
                         }
                     }

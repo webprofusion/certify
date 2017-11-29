@@ -653,7 +653,7 @@ namespace Certify.Management
                                 }
                                 else
                                 {
-                                    // something broke
+                                    // we failed to install this cert or create/update the https binding
                                     result.Message = string.Format(CoreSR.CertifyManager_CertificateInstallFailed, pfxPath);
                                     await UpdateManagedSiteStatus(managedSite, RequestState.Error, result.Message);
 
