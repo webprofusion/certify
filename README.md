@@ -56,6 +56,6 @@ git submodule update --init --recursive --remote
 > - The app needs to run as Administrator, otherwise it cannot access IIS, write to the IIS website root paths or manage the windows certificate store.
 
 > **Note:**  For testing you will require a publicly accessible IP mapped to the domain/subdomain you want to test with. The Let's Encrypt service will need to be able to access your test site remotely via HTTP in order to complete authorisation challenges.
-
+> The app consists of a UI and background service. The background service must be running for the UI to operatre. The develop/debug you can configure Visual Studio to launch both the UI and Service - Right Click the Solution > Properties> Startup Project, Set Certify.UI and Certify.Service to 'Start', then debug as normal. 
 apps {at} webprofusion.com
 
