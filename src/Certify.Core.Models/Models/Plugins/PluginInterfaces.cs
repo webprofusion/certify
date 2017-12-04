@@ -13,6 +13,8 @@ namespace Certify.Models.Plugins
         bool FinaliseInstall(int productTypeId, LicenseKeyInstallResult result, string settingsPath);
 
         bool IsInstallRegistered(int productTypeId, string settingsPath);
+
+        Task<bool> IsInstallActive(int productTypeId, string settingsPath);
     }
 
     public interface IDomainValidationType
