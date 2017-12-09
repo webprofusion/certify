@@ -484,8 +484,7 @@ namespace Certify.UI.ViewModel
             //if no primary domain need to go back and select one
             if (primaryDomain == null) throw new ArgumentException("Primary subject domain must be set.");
 
-            var _idnMapping = new System.Globalization.IdnMapping();
-            config.PrimaryDomain = _idnMapping.GetAscii(primaryDomain.Domain); // ACME service requires international domain names in ascii mode
+            config.PrimaryDomain = primaryDomain.Domain;
 
             //apply remaining selected domains as subject alternative names
             config.SubjectAlternativeNames =

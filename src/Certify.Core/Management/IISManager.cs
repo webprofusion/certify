@@ -410,6 +410,14 @@ namespace Certify.Management
 
         #region Certificates
 
+        private string ToUnicodeString(string input)
+        {
+            //if string already has (non-ascii range) unicode characters return original
+            if (input.Any(c => c > 255)) return input;
+
+            return _idnMapping.GetUnicode(input);
+        }
+
         /// <summary>
         /// Creates or updates the htttps bindings associated with the dns names in the current
         /// request config, using the requested port/ips or autobinding
@@ -435,10 +443,16 @@ namespace Certify.Management
                 var site = FindManagedSite(managedSite);
 
                 //get list of domains we need to create/update https bindings for
-                List<string> dnsHosts = new List<string> { requestConfig.PrimaryDomain };
+                List<string> dnsHosts = new List<string> {
+                    ToUnicodeString(requestConfig.PrimaryDomain)
+                };
                 if (requestConfig.SubjectAlternativeNames != null)
                 {
-                    dnsHosts.AddRange(requestConfig.SubjectAlternativeNames);
+                    foreach (var san in requestConfig.SubjectAlternativeNames)
+                    {
+                        dnsHosts.Add(ToUnicodeString(san));
+                    }
+                    //dnsHosts.AddRange(requestConfig.SubjectAlternativeNames);
                 }
 
                 dnsHosts = dnsHosts.Distinct().ToList();
@@ -555,7 +569,7 @@ namespace Certify.Management
 
                 if (siteToUpdate != null)
                 {
-                    string internationalHost = host == "" ? "" : _idnMapping.GetUnicode(host);
+                    string internationalHost = host == "" ? "" : ToUnicodeString(host);
                     var existingBinding = (from b in siteToUpdate.Bindings where b.Host == internationalHost && b.Protocol == "https" select b).FirstOrDefault();
 
                     if (existingBinding != null)
