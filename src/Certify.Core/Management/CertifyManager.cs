@@ -1,5 +1,6 @@
 using Certify.Locales;
 using Certify.Models;
+using Microsoft.ApplicationInsights;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -73,6 +74,8 @@ namespace Certify.Management
 
         Task<bool> PerformPeriodicTasks();
 
+        Task<bool> PerformDailyTasks();
+
         event Action<RequestProgressState> OnRequestProgressStateUpdated;
 
         event Action<ManagedSite> OnManagedSiteUpdated;
@@ -95,6 +98,8 @@ namespace Certify.Management
 
         private PluginManager PluginManager { get; set; }
 
+        private TelemetryClient _tc = null;
+
         public CertifyManager()
         {
             Certify.Management.Util.SetSupportedTLSVersions();
@@ -110,6 +115,11 @@ namespace Certify.Management
 
             PluginManager = new PluginManager();
             PluginManager.LoadPlugins();
+
+            if (CoreAppSettings.Current.EnableAppTelematics)
+            {
+                _tc = new Certify.Management.Util().InitTelemetry();
+            }
         }
 
         public void BeginTrackingProgress(RequestProgressState state)
@@ -188,6 +198,8 @@ namespace Certify.Management
 
         public async Task<APIResult> RevokeCertificate(ManagedSite managedSite)
         {
+            if (_tc != null) _tc.TrackEvent("RevokeCertificate");
+
             var result = await _vaultProvider.RevokeCertificate(managedSite);
             if (result.IsOK)
             {
@@ -317,6 +329,8 @@ namespace Certify.Management
 
         public async Task<CertificateRequestResult> ReapplyCertificateBindings(ManagedSite managedSite, IProgress<RequestProgressState> progress = null)
         {
+            if (_tc != null) _tc.TrackEvent("ReapplyCertBindings");
+
             var result = new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = "" };
             var config = managedSite.RequestConfig;
             var pfxPath = managedSite.CertificatePath;
@@ -775,6 +789,8 @@ namespace Certify.Management
             {
                 await ReportManagedSiteStatus(managedSite);
             }
+
+            if (_tc != null) _tc.TrackEvent("UpdateManagedSitesStatus_" + status.ToString());
         }
 
         public List<DomainOption> GetDomainOptionsFromSite(string siteId)
@@ -1205,6 +1221,15 @@ namespace Certify.Management
         {
             Debug.WriteLine("Checking for periodic tasks..");
             await this.PerformRenewalAllManagedSites(true, null);
+            return await Task.FromResult(true);
+        }
+
+        public async Task<bool> PerformDailyTasks()
+        {
+            Debug.WriteLine("Checking for daily tasks..");
+
+            if (_tc != null) _tc.TrackEvent("ServiceDailyTaskCheck");
+
             return await Task.FromResult(true);
         }
 

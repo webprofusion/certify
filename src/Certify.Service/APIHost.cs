@@ -9,6 +9,7 @@ namespace Certify.Service
     public partial class APIHost
     {
         private System.Timers.Timer _timer;
+        private System.Timers.Timer _dailyTimer;
         private ServiceContainer _container;
 
         public void Configuration(IAppBuilder appBuilder)
@@ -51,9 +52,23 @@ namespace Certify.Service
             };
 
             // use a timer to poll for periodic jobs (cleanup, renewal etc)
-            _timer = new System.Timers.Timer(60 * 60 * 1000);// * 60 * 1000); // every 60 minutes
+            _timer = new System.Timers.Timer(60 * 60 * 1000);// every 60 minutes
             _timer.Elapsed += _timer_Elapsed;
             _timer.Start();
+
+            // use a timer to poll for periodic jobs (cleanup, renewal etc)
+            _dailyTimer = new System.Timers.Timer(24 * 60 * 60 * 1000);// every 24 hrs
+            _dailyTimer.Elapsed += _dailyTimer_Elapsed;
+            _dailyTimer.Start();
+        }
+
+        private async void _dailyTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            var currentCertifyManager = _container.GetInstance<Management.ICertifyManager>();
+            if (currentCertifyManager != null)
+            {
+                await currentCertifyManager.PerformDailyTasks();
+            }
         }
 
         private async void _timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
