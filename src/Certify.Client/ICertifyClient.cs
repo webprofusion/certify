@@ -101,7 +101,7 @@ namespace Certify.Client
 
         Task<CertificateRequestResult> ReapplyCertificateBindings(string managedSiteId);
 
-        Task<bool> BeginCertificateRequest(string managedSiteId);
+        Task<CertificateRequestResult> BeginCertificateRequest(string managedSiteId);
 
         Task<RequestProgressState> CheckCertificateRequest(string managedSiteId);
 

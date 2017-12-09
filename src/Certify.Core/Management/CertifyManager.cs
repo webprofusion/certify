@@ -365,7 +365,13 @@ namespace Certify.Management
 
         public async Task<CertificateRequestResult> PerformCertificateRequest(ManagedSite managedSite, IProgress<RequestProgressState> progress = null)
         {
-            // FIXME: refactor into different concerns, there's way too much being done here
+            // Perform pre-request checks and scripting hooks, invoke main request process, then
+            // perform an post request scripting hooks
+
+            // this is a pre-request validation check (http-01), we repeat this later but this one
+            // prevents registering a new identifier with LE before we start (and potential rate
+            // limiting). The place in the request pipeline could be made configurable as this is a
+            // matter of preference
             if (managedSite.RequestConfig.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP && managedSite.RequestConfig.PerformExtensionlessConfigChecks)
             {
                 ReportProgress(progress,
@@ -375,392 +381,388 @@ namespace Certify.Management
                 var testResult = await TestChallenge(managedSite, isPreviewMode: false);
                 if (!testResult.IsOK)
                 {
-                    return new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = String.Join("; ", testResult.FailedItemSummary), Result = testResult.Result };
+                    string msg = String.Join("; ", testResult.FailedItemSummary);
+                    ReportProgress(progress, new RequestProgressState(RequestState.Error, msg, managedSite) { Result = testResult });
+
+                    await UpdateManagedSiteStatus(managedSite, RequestState.Error, msg);
+                    return new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = msg, Result = testResult.Result };
                 }
             }
 
-            return await Task.Run(async () =>
-            {
-                // start with a failure result, set to success when succeeding
-                var result = new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = "" };
+            // start with a failure result, set to success when succeeding
+            var result = new CertificateRequestResult { ManagedItem = managedSite, IsSuccess = false, Message = "" };
 
-                var config = managedSite.RequestConfig;
-                try
+            var config = managedSite.RequestConfig;
+            try
+            {
+                // run pre-request script, if set
+                if (!string.IsNullOrEmpty(config.PreRequestPowerShellScript))
                 {
-                    // run pre-request script, if set
-                    if (!string.IsNullOrEmpty(config.PreRequestPowerShellScript))
+                    try
+                    {
+                        string scriptOutput = await PowerShellManager.RunScript(result, config.PreRequestPowerShellScript);
+                        LogMessage(managedSite.Id, $"Pre-Request Script output: \n{scriptOutput}");
+                    }
+                    catch (Exception ex)
+                    {
+                        LogMessage(managedSite.Id, $"Pre-Request Script error:\n{ex.Message}");
+                    }
+                }
+
+                // if the script has requested the certificate request to be aborted, skip the request
+                if (result.Abort)
+                {
+                    LogMessage(managedSite.Id, $"Certificate Request Aborted: {managedSite.Name}");
+                    result.Message = Certify.Locales.CoreSR.CertificateRequestWasAbortedByPSScript;
+                }
+                else
+                {
+                    await PerformCertificateRequestProcessing(managedSite, progress, result, config);
+                }
+
+                // Goto label for aborted certificate request
+                // CertRequestAborted: { }
+            }
+            catch (Exception exp)
+            {
+                // overall exception thrown during process
+
+                result.IsSuccess = false;
+                result.Message = string.Format(Certify.Locales.CoreSR.CertifyManager_RequestFailed, managedSite.Name, exp.Message, exp);
+                LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
+                ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedSite));
+
+                await UpdateManagedSiteStatus(managedSite, RequestState.Error, result.Message);
+
+                //LogMessage(managedSite.Id, String.Join("\r\n", _vaultProvider.GetActionSummary())); FIXME: needs to be filtered in managed site
+                System.Diagnostics.Debug.WriteLine(exp.ToString());
+            }
+            finally
+            {
+                // if the request was not aborted, perform post-request actions
+                if (!result.Abort)
+                {
+                    // run post-request script, if set
+                    if (!string.IsNullOrEmpty(config.PostRequestPowerShellScript))
                     {
                         try
                         {
-                            string scriptOutput = await PowerShellManager.RunScript(result, config.PreRequestPowerShellScript);
-                            LogMessage(managedSite.Id, $"Pre-Request Script output: \n{scriptOutput}");
+                            string scriptOutput = await PowerShellManager.RunScript(result, config.PostRequestPowerShellScript);
+                            LogMessage(managedSite.Id, $"Post-Request Script output:\n{scriptOutput}");
                         }
                         catch (Exception ex)
                         {
-                            LogMessage(managedSite.Id, $"Pre-Request Script error:\n{ex.Message}");
+                            LogMessage(managedSite.Id, $"Post-Request Script error: {ex.Message}");
                         }
                     }
 
-                    // if the script has requested the certificate request to be aborted, skip the request
-                    if (result.Abort)
+                    // run webhook triggers, if set
+                    if (
+                        (config.WebhookTrigger == Webhook.ON_SUCCESS && result.IsSuccess) ||
+                        (config.WebhookTrigger == Webhook.ON_ERROR && !result.IsSuccess) ||
+                        (config.WebhookTrigger == Webhook.ON_SUCCESS_OR_ERROR)
+                    )
                     {
-                        LogMessage(managedSite.Id, $"Certificate Request Aborted: {managedSite.Name}");
-                        result.Message = Certify.Locales.CoreSR.CertificateRequestWasAbortedByPSScript;
-                        goto CertRequestAborted;
+                        try
+                        {
+                            var (success, code) = await Webhook.SendRequest(config, result.IsSuccess);
+                            LogMessage(managedSite.Id, $"Webhook invoked: Url: {config.WebhookUrl}, Success: {success}, StatusCode: {code}");
+                        }
+                        catch (Exception ex)
+                        {
+                            LogMessage(managedSite.Id, $"Webhook error: {ex.Message}");
+                        }
                     }
+                }
+            }
 
-                    LogMessage(managedSite.Id, $"Beginning Certificate Request Process: {managedSite.Name}");
+            return result;
+        }
 
-                    //enable or disable EFS flag on private key certs based on preference
-                    if (CoreAppSettings.Current.EnableEFS)
-                    {
-                        _vaultProvider.EnableSensitiveFileEncryption();
-                    }
+        private async Task PerformCertificateRequestProcessing(ManagedSite managedSite, IProgress<RequestProgressState> progress, CertificateRequestResult result, CertRequestConfig config)
+        {
+            // proceed with the request
+            LogMessage(managedSite.Id, $"Beginning Certificate Request Process: {managedSite.Name}");
 
-                    //primary domain and each subject alternative name must now be registered as an identifier with LE and validated
-                    ReportProgress(progress,
-                        new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RegisterDomainIdentity, managedSite)
+            //enable or disable EFS flag on private key certs based on preference
+            if (CoreAppSettings.Current.EnableEFS)
+            {
+                _vaultProvider.EnableSensitiveFileEncryption();
+            }
+
+            //primary domain and each subject alternative name must now be registered as an identifier with LE and validated
+            ReportProgress(progress,
+                new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RegisterDomainIdentity, managedSite)
+            );
+
+            List<string> allDomains = new List<string> { config.PrimaryDomain };
+
+            if (config.SubjectAlternativeNames != null) allDomains.AddRange(config.SubjectAlternativeNames);
+
+            // begin by assuming all identifiers are valid
+            bool allIdentifiersValidated = true;
+
+            if (config.ChallengeType == null) config.ChallengeType = ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP;
+
+            List<PendingAuthorization> identifierAuthorizations = new List<PendingAuthorization>();
+            string failureSummaryMessage = null;
+
+            var distinctDomains = allDomains.Distinct();
+
+            // perform validation process for each domain
+            foreach (var domain in distinctDomains)
+            {
+                //begin authorization process (register identifier, request authorization if not already given)
+                var domainIdentifierId = _vaultProvider.ComputeDomainIdentifierId(domain);
+
+                LogMessage(managedSite.Id, $"Attempting Domain Validation: {domain}", LogItemType.CertificateRequestStarted);
+
+                ReportProgress(progress,
+                    new RequestProgressState(RequestState.Running, string.Format(Certify.Locales.CoreSR.CertifyManager_RegisteringAndValidatingX0, domain), managedSite)
                     );
 
-                    //await Task.Delay(200); //allow UI update, we should we using async calls instead
+                // begin authorization by registering the domain identifier. This may return an
+                // already validated authorization or we may still have to complete the authorization
+                // challenge. When rate limits are encountered, this step may fail.
+                var authorization = _vaultProvider.BeginRegistrationAndValidation(config, domainIdentifierId, challengeType: config.ChallengeType, domain: domain);
 
-                    List<string> allDomains = new List<string> { config.PrimaryDomain };
-
-                    if (config.SubjectAlternativeNames != null) allDomains.AddRange(config.SubjectAlternativeNames);
-
-                    // begin by assuming all identifiers are valid
-                    bool allIdentifiersValidated = true;
-
-                    if (config.ChallengeType == null) config.ChallengeType = ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP;
-
-                    List<PendingAuthorization> identifierAuthorizations = new List<PendingAuthorization>();
-                    var distinctDomains = allDomains.Distinct();
-
-                    string failureSummaryMessage = null;
-
-                    // perform validation process for each domain
-                    foreach (var domain in distinctDomains)
+                if (authorization != null && authorization.Identifier != null)
+                {
+                    // check if authorization is pending, it may already be valid if an existing
+                    // authorization was reused
+                    if (authorization.Identifier.IsAuthorizationPending)
                     {
-                        //begin authorization process (register identifier, request authorization if not already given)
-                        var domainIdentifierId = _vaultProvider.ComputeDomainIdentifierId(domain);
-
-                        LogMessage(managedSite.Id, $"Attempting Domain Validation: {domain}", LogItemType.CertificateRequestStarted);
-
-                        ReportProgress(progress,
-                            new RequestProgressState(RequestState.Running, string.Format(Certify.Locales.CoreSR.CertifyManager_RegisteringAndValidatingX0, domain), managedSite)
+                        if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS)
+                        {
+                            ReportProgress(progress,
+                                new RequestProgressState(
+                                    RequestState.Running,
+                                    string.Format(Certify.Locales.CoreSR.CertifyManager_PerformingChallengeResponseViaIISX0, domain),
+                                    managedSite
+                                )
                             );
 
-                        //TODO: make operations async and yield IO of vault
-                        /*var authorization = await Task.Run(() =>
-                        {
-                            return vaultManager.BeginRegistrationAndValidation(config, identifierAlias, challengeType: config.ChallengeType, domain: domain);
-                        });*/
+                            // ask LE to check our answer to their authorization challenge (http-01
+                            // or tls-sni-01), LE will then attempt to fetch our answer, if all
+                            // accessible and correct (authorized) LE will then allow us to request a certificate
+                            authorization = _vaultProvider.PerformIISAutomatedChallengeResponse(_iisManager, managedSite, authorization);
 
-                        // begin authorization by registering the domain identifier. This may return
-                        // an already validated authorization or we may still have to complete the
-                        // authorization challenge. When rate limits are encountered, this step may fail.
-                        var authorization = _vaultProvider.BeginRegistrationAndValidation(config, domainIdentifierId, challengeType: config.ChallengeType, domain: domain);
-
-                        if (authorization != null && authorization.Identifier != null)
-                        {
-                            // check if authorization is pending, it may already be valid if an
-                            // existing authorization was reused
-                            if (authorization.Identifier.IsAuthorizationPending)
+                            // pass authorization log items onto main log
+                            /*authorization.LogItems?.ForEach((msg) =>
                             {
-                                if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS)
+                                if (msg != null) LogMessage(managedSite.Id, msg, LogItemType.GeneralInfo);
+                            });*/
+
+                            if ((config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP && config.PerformExtensionlessConfigChecks && !authorization.ExtensionlessConfigCheckedOK) ||
+                                (config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI && config.PerformTlsSniBindingConfigChecks && !authorization.TlsSniConfigCheckedOK))
+                            {
+                                //if we failed the config checks, report any errors
+                                var msg = string.Format(CoreSR.CertifyManager_FailedPrerequisiteCheck, managedSite.ItemType);
+                                LogMessage(managedSite.Id, msg, LogItemType.CertficateRequestFailed);
+                                result.Message = msg;
+
+                                // TODO: should this be a status save?
+
+                                if (config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP)
                                 {
-                                    ReportProgress(progress,
-                                        new RequestProgressState(
-                                            RequestState.Running,
-                                            string.Format(Certify.Locales.CoreSR.CertifyManager_PerformingChallengeResponseViaIISX0, domain),
-                                            managedSite
-                                        )
-                                    );
+                                    result.Message = string.Format(CoreSR.CertifyManager_AutomateConfigurationCheckFailed_HTTP, domain);
+                                }
 
-                                    // ask LE to check our answer to their authorization challenge
-                                    // (http-01 or tls-sni-01), LE will then attempt to fetch our
-                                    // answer, if all accessible and correct (authorized) LE will
-                                    // then allow us to request a certificate
-                                    authorization = _vaultProvider.PerformIISAutomatedChallengeResponse(_iisManager, managedSite, authorization);
+                                if (config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI)
+                                {
+                                    result.Message = Certify.Locales.CoreSR.CertifyManager_AutomateConfigurationCheckFailed_SNI;
+                                }
 
-                                    // pass authorization log items onto main log
-                                    /*authorization.LogItems?.ForEach((msg) =>
+                                ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedSite) { Result = result });
+
+                                await UpdateManagedSiteStatus(managedSite, RequestState.Error, result.Message);
+
+                                break;
+                            }
+                            else
+                            {
+                                ReportProgress(progress, new RequestProgressState(RequestState.Running, string.Format(CoreSR.CertifyManager_ReqestValidationFromLetsEncrypt, domain), managedSite));
+
+                                try
+                                {
+                                    //ask LE to validate our challenge response
+                                    _vaultProvider.SubmitChallenge(domainIdentifierId, config.ChallengeType);
+
+                                    bool identifierValidated = _vaultProvider.CompleteIdentifierValidationProcess(authorization.Identifier.Alias);
+
+                                    if (!identifierValidated)
                                     {
-                                        if (msg != null) LogMessage(managedSite.Id, msg, LogItemType.GeneralInfo);
-                                    });*/
+                                        var identifierInfo = _vaultProvider.GetDomainIdentifier(domain);
+                                        var errorMsg = identifierInfo?.ValidationError;
+                                        var errorType = identifierInfo?.ValidationErrorType;
 
-                                    if ((config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP && config.PerformExtensionlessConfigChecks && !authorization.ExtensionlessConfigCheckedOK) ||
-                                        (config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI && config.PerformTlsSniBindingConfigChecks && !authorization.TlsSniConfigCheckedOK))
-                                    {
-                                        //if we failed the config checks, report any errors
-                                        var msg = string.Format(CoreSR.CertifyManager_FailedPrerequisiteCheck, managedSite.ItemType);
-                                        LogMessage(managedSite.Id, msg, LogItemType.CertficateRequestFailed);
-                                        result.Message = msg;
-
-                                        // TODO: should this be a status save?
-
-                                        if (config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_HTTP)
-                                        {
-                                            result.Message = string.Format(CoreSR.CertifyManager_AutomateConfigurationCheckFailed_HTTP, domain);
-                                        }
-
-                                        if (config.ChallengeType == ACMESharpCompat.ACMESharpUtils.CHALLENGE_TYPE_SNI)
-                                        {
-                                            result.Message = Certify.Locales.CoreSR.CertifyManager_AutomateConfigurationCheckFailed_SNI;
-                                        }
-
-                                        ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedSite) { Result = result });
-
-                                        await UpdateManagedSiteStatus(managedSite, RequestState.Error, result.Message);
-
-                                        break;
+                                        failureSummaryMessage = string.Format(CoreSR.CertifyManager_DomainValidationFailed, domain, errorMsg);
+                                        ReportProgress(progress, new RequestProgressState(RequestState.Error, failureSummaryMessage, managedSite));
+                                        await UpdateManagedSiteStatus(managedSite, RequestState.Error, failureSummaryMessage);
+                                        allIdentifiersValidated = false;
                                     }
                                     else
                                     {
-                                        ReportProgress(progress, new RequestProgressState(RequestState.Running, string.Format(CoreSR.CertifyManager_ReqestValidationFromLetsEncrypt, domain), managedSite));
+                                        ReportProgress(progress, new RequestProgressState(RequestState.Running, string.Format(CoreSR.CertifyManager_DomainValidationCompleted, domain), managedSite));
 
-                                        try
-                                        {
-                                            //ask LE to validate our challenge response
-                                            _vaultProvider.SubmitChallenge(domainIdentifierId, config.ChallengeType);
-
-                                            bool identifierValidated = _vaultProvider.CompleteIdentifierValidationProcess(authorization.Identifier.Alias);
-
-                                            if (!identifierValidated)
-                                            {
-                                                var identifierInfo = _vaultProvider.GetDomainIdentifier(domain);
-                                                var errorMsg = identifierInfo?.ValidationError;
-                                                var errorType = identifierInfo?.ValidationErrorType;
-
-                                                failureSummaryMessage = string.Format(CoreSR.CertifyManager_DomainValidationFailed, domain, errorMsg);
-                                                ReportProgress(progress, new RequestProgressState(RequestState.Error, failureSummaryMessage, managedSite));
-                                                await UpdateManagedSiteStatus(managedSite, RequestState.Error, failureSummaryMessage);
-                                                allIdentifiersValidated = false;
-                                            }
-                                            else
-                                            {
-                                                ReportProgress(progress, new RequestProgressState(RequestState.Running, string.Format(CoreSR.CertifyManager_DomainValidationCompleted, domain), managedSite));
-
-                                                identifierAuthorizations.Add(authorization);
-                                            }
-                                        }
-                                        finally
-                                        {
-                                            // clean up challenge answers
-                                            // (.well-known/acme-challenge/* files for http-01 or iis
-                                            // bindings for tls-sni-01)
-                                            authorization.Cleanup();
-                                        }
+                                        identifierAuthorizations.Add(authorization);
                                     }
                                 }
-                            }
-                            else
-                            {
-                                // we already have a completed authorization, check it's valid
-                                if (authorization.Identifier.Status == "valid")
+                                finally
                                 {
-                                    LogMessage(managedSite.Id, string.Format(CoreSR.CertifyManager_DomainValidationSkipVerifed, domain));
-
-                                    identifierAuthorizations.Add(new PendingAuthorization { Identifier = authorization.Identifier });
-                                }
-                                else
-                                {
-                                    var errorMsg = "";
-                                    if (authorization?.Identifier != null)
-                                    {
-                                        errorMsg = authorization.Identifier.ValidationError;
-                                        var errorType = authorization.Identifier.ValidationErrorType;
-                                    }
-
-                                    failureSummaryMessage = $"Domain validation failed: {domain} \r\n{errorMsg}";
-
-                                    LogMessage(managedSite.Id, string.Format(CoreSR.CertifyManager_DomainValidationFailed, domain));
-
-                                    allIdentifiersValidated = false;
+                                    // clean up challenge answers (.well-known/acme-challenge/* files
+                                    // for http-01 or iis bindings for tls-sni-01)
+                                    authorization.Cleanup();
                                 }
                             }
-                        }
-                        else
-                        {
-                            // could not begin authorization : TODO: pass error from authorization
-                            // step to UI
-
-                            var lastActionLogItem = _vaultProvider.GetLastActionLogItem();
-                            var actionLogMsg = "";
-                            if (lastActionLogItem != null)
-                            {
-                                actionLogMsg = lastActionLogItem.ToString();
-                            }
-
-                            LogMessage(managedSite.Id, $"Could not begin authorization for domain with Let's Encrypt: { domain } {(authorization?.AuthorizationError != null ? authorization?.AuthorizationError : "Could not register domain identifier")} - {actionLogMsg}");
-
-                            /*if (authorization != null && authorization.LogItems != null)
-                            {
-                                LogMessage(managedSite.Id, authorization.LogItems);
-                            }*/
-                            allIdentifiersValidated = false;
-                        }
-
-                        // abandon authorization attempts if one of our domains has failed verification
-                        if (!allIdentifiersValidated) break;
-                    }
-
-                    //check if all identifiers have a valid authorization
-                    if (identifierAuthorizations.Count != distinctDomains.Count())
-                    {
-                        allIdentifiersValidated = false;
-                    }
-
-                    if (allIdentifiersValidated)
-                    {
-                        string primaryDnsIdentifier = identifierAuthorizations.First().Identifier.Alias;
-                        string[] alternativeDnsIdentifiers = identifierAuthorizations.Select(i => i.Identifier.Alias).ToArray();
-
-                        ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RequestCertificate, managedSite));
-
-                        // Perform CSR request
-                        // FIXME: make call async
-                        var certRequestResult = _vaultProvider.PerformCertificateRequestProcess(primaryDnsIdentifier, alternativeDnsIdentifiers);
-
-                        if (certRequestResult.IsSuccess)
-                        {
-                            ReportProgress(progress, new RequestProgressState(RequestState.Success, CoreSR.CertifyManager_CompleteRequest, managedSite));
-
-                            string pfxPath = certRequestResult.Result.ToString();
-
-                            // update managed site summary
-                            try
-                            {
-                                var certInfo = CertificateManager.LoadCertificate(pfxPath);
-                                managedSite.DateStart = certInfo.NotBefore;
-                                managedSite.DateExpiry = certInfo.NotAfter;
-                                managedSite.DateRenewed = DateTime.Now;
-
-                                managedSite.CertificatePath = pfxPath;
-                                managedSite.CertificateRevoked = false;
-
-                                //ensure certificate contains all the requested domains
-                                //var subjectNames = certInfo.GetNameInfo(System.Security.Cryptography.X509Certificates.X509NameType.UpnName, false);
-
-                                //FIXME: LogMessage(managedSite.Id, "New certificate contains following domains: " + subjectNames, LogItemType.GeneralInfo);
-                            }
-                            catch (Exception)
-                            {
-                                LogMessage(managedSite.Id, "Failed to parse certificate dates", LogItemType.GeneralError);
-                            }
-
-                            if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS)
-                            {
-                                ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding, managedSite));
-
-                                // Install certificate into certificate store and bind to IIS site
-                                if (await _iisManager.InstallCertForRequest(managedSite, pfxPath, cleanupCertStore: true))
-                                {
-                                    //all done
-                                    LogMessage(managedSite.Id, CoreSR.CertifyManager_CompleteRequestAndUpdateBinding, LogItemType.CertificateRequestSuccessful);
-
-                                    await UpdateManagedSiteStatus(managedSite, RequestState.Success);
-
-                                    result.IsSuccess = true;
-                                    result.Message = string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
-                                    ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedSite));
-                                }
-                                else
-                                {
-                                    // we failed to install this cert or create/update the https binding
-                                    result.Message = string.Format(CoreSR.CertifyManager_CertificateInstallFailed, pfxPath);
-                                    await UpdateManagedSiteStatus(managedSite, RequestState.Error, result.Message);
-
-                                    LogMessage(managedSite.Id, result.Message, LogItemType.GeneralError);
-                                }
-                            }
-                            else
-                            {
-                                //user has opted for manual binding of certificate
-
-                                result.IsSuccess = true;
-                                result.Message = string.Format(CoreSR.CertifyManager_CertificateCreatedForBinding, pfxPath);
-                                LogMessage(managedSite.Id, result.Message, LogItemType.CertificateRequestSuccessful);
-                                await UpdateManagedSiteStatus(managedSite, RequestState.Success, result.Message);
-                                ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedSite));
-                            }
-                        }
-                        else
-                        {
-                            // certificate request failed
-
-                            result.Message = string.Format(CoreSR.CertifyManager_LetsEncryptServiceTimeout, certRequestResult.ErrorMessage ?? "");
-                            await UpdateManagedSiteStatus(managedSite, RequestState.Error, result.Message);
-                            LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
-                            ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedSite));
                         }
                     }
                     else
                     {
-                        //failed to validate all identifiers
-                        result.Message = string.Format(CoreSR.CertifyManager_ValidationForChallengeNotSuccess, (failureSummaryMessage != null ? failureSummaryMessage : ""));
+                        // we already have a completed authorization, check it's valid
+                        if (authorization.Identifier.Status == "valid")
+                        {
+                            LogMessage(managedSite.Id, string.Format(CoreSR.CertifyManager_DomainValidationSkipVerifed, domain));
 
-                        await UpdateManagedSiteStatus(managedSite, RequestState.Error, result.Message);
+                            identifierAuthorizations.Add(new PendingAuthorization { Identifier = authorization.Identifier });
+                        }
+                        else
+                        {
+                            var errorMsg = "";
+                            if (authorization?.Identifier != null)
+                            {
+                                errorMsg = authorization.Identifier.ValidationError;
+                                var errorType = authorization.Identifier.ValidationErrorType;
+                            }
 
-                        LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
-                        ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedSite));
+                            failureSummaryMessage = $"Domain validation failed: {domain} \r\n{errorMsg}";
+
+                            LogMessage(managedSite.Id, string.Format(CoreSR.CertifyManager_DomainValidationFailed, domain));
+
+                            allIdentifiersValidated = false;
+                        }
+                    }
+                }
+                else
+                {
+                    // could not begin authorization
+
+                    var lastActionLogItem = _vaultProvider.GetLastActionLogItem();
+                    var actionLogMsg = "";
+                    if (lastActionLogItem != null)
+                    {
+                        actionLogMsg = lastActionLogItem.ToString();
                     }
 
-                    // Goto label for aborted certificate request
-                    CertRequestAborted: { }
-                }
-                catch (Exception exp)
-                {
-                    // overall exception thrown during process
+                    LogMessage(managedSite.Id, $"Could not begin authorization for domain with Let's Encrypt: { domain } {(authorization?.AuthorizationError != null ? authorization?.AuthorizationError : "Could not register domain identifier")} - {actionLogMsg}");
 
-                    result.IsSuccess = false;
-                    result.Message = string.Format(Certify.Locales.CoreSR.CertifyManager_RequestFailed, managedSite.Name, exp.Message, exp);
+                    allIdentifiersValidated = false;
+                }
+
+                // abandon authorization attempts if one of our domains has failed verification
+                if (!allIdentifiersValidated) break;
+            }
+
+            //check if all identifiers have a valid authorization
+            if (identifierAuthorizations.Count != distinctDomains.Count())
+            {
+                allIdentifiersValidated = false;
+            }
+
+            if (allIdentifiersValidated)
+            {
+                string primaryDnsIdentifier = identifierAuthorizations.First().Identifier.Alias;
+                string[] alternativeDnsIdentifiers = identifierAuthorizations.Select(i => i.Identifier.Alias).ToArray();
+
+                ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RequestCertificate, managedSite));
+
+                // Perform CSR request
+                // FIXME: make call async
+                var certRequestResult = _vaultProvider.PerformCertificateRequestProcess(primaryDnsIdentifier, alternativeDnsIdentifiers);
+
+                if (certRequestResult.IsSuccess)
+                {
+                    ReportProgress(progress, new RequestProgressState(RequestState.Success, CoreSR.CertifyManager_CompleteRequest, managedSite));
+
+                    string pfxPath = certRequestResult.Result.ToString();
+
+                    // update managed site summary
+                    try
+                    {
+                        var certInfo = CertificateManager.LoadCertificate(pfxPath);
+                        managedSite.DateStart = certInfo.NotBefore;
+                        managedSite.DateExpiry = certInfo.NotAfter;
+                        managedSite.DateRenewed = DateTime.Now;
+
+                        managedSite.CertificatePath = pfxPath;
+                        managedSite.CertificateRevoked = false;
+
+                        //ensure certificate contains all the requested domains
+                        //var subjectNames = certInfo.GetNameInfo(System.Security.Cryptography.X509Certificates.X509NameType.UpnName, false);
+
+                        //FIXME: LogMessage(managedSite.Id, "New certificate contains following domains: " + subjectNames, LogItemType.GeneralInfo);
+                    }
+                    catch (Exception)
+                    {
+                        LogMessage(managedSite.Id, "Failed to parse certificate dates", LogItemType.GeneralError);
+                    }
+
+                    if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS)
+                    {
+                        ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding, managedSite));
+
+                        // Install certificate into certificate store and bind to IIS site
+                        if (await _iisManager.InstallCertForRequest(managedSite, pfxPath, cleanupCertStore: true))
+                        {
+                            //all done
+                            LogMessage(managedSite.Id, CoreSR.CertifyManager_CompleteRequestAndUpdateBinding, LogItemType.CertificateRequestSuccessful);
+
+                            await UpdateManagedSiteStatus(managedSite, RequestState.Success);
+
+                            result.IsSuccess = true;
+                            result.Message = string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
+                            ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedSite));
+                        }
+                        else
+                        {
+                            // we failed to install this cert or create/update the https binding
+                            result.Message = string.Format(CoreSR.CertifyManager_CertificateInstallFailed, pfxPath);
+                            await UpdateManagedSiteStatus(managedSite, RequestState.Error, result.Message);
+
+                            LogMessage(managedSite.Id, result.Message, LogItemType.GeneralError);
+                        }
+                    }
+                    else
+                    {
+                        //user has opted for manual binding of certificate
+
+                        result.IsSuccess = true;
+                        result.Message = string.Format(CoreSR.CertifyManager_CertificateCreatedForBinding, pfxPath);
+                        LogMessage(managedSite.Id, result.Message, LogItemType.CertificateRequestSuccessful);
+                        await UpdateManagedSiteStatus(managedSite, RequestState.Success, result.Message);
+                        ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedSite));
+                    }
+                }
+                else
+                {
+                    // certificate request failed
+
+                    result.Message = string.Format(CoreSR.CertifyManager_LetsEncryptServiceTimeout, certRequestResult.ErrorMessage ?? "");
+                    await UpdateManagedSiteStatus(managedSite, RequestState.Error, result.Message);
                     LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
                     ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedSite));
-
-                    await UpdateManagedSiteStatus(managedSite, RequestState.Error, result.Message);
-
-                    //LogMessage(managedSite.Id, String.Join("\r\n", _vaultProvider.GetActionSummary())); FIXME: needs to be filtered in managed site
-                    System.Diagnostics.Debug.WriteLine(exp.ToString());
                 }
-                finally
-                {
-                    // if the request was not aborted, perform post-request actions
-                    if (!result.Abort)
-                    {
-                        // run post-request script, if set
-                        if (!string.IsNullOrEmpty(config.PostRequestPowerShellScript))
-                        {
-                            try
-                            {
-                                string scriptOutput = await PowerShellManager.RunScript(result, config.PostRequestPowerShellScript);
-                                LogMessage(managedSite.Id, $"Post-Request Script output:\n{scriptOutput}");
-                            }
-                            catch (Exception ex)
-                            {
-                                LogMessage(managedSite.Id, $"Post-Request Script error: {ex.Message}");
-                            }
-                        }
-                        // run webhook triggers, if set
-                        if ((config.WebhookTrigger == Webhook.ON_SUCCESS && result.IsSuccess) ||
-                    (config.WebhookTrigger == Webhook.ON_ERROR && !result.IsSuccess) ||
-                    (config.WebhookTrigger == Webhook.ON_SUCCESS_OR_ERROR))
-                        {
-                            try
-                            {
-                                var (success, code) = await Webhook.SendRequest(config, result.IsSuccess);
-                                LogMessage(managedSite.Id, $"Webhook invoked: Url: {config.WebhookUrl}, Success: {success}, StatusCode: {code}");
-                            }
-                            catch (Exception ex)
-                            {
-                                LogMessage(managedSite.Id, $"Webhook error: {ex.Message}");
-                            }
-                        }
-                    }
-                }
+            }
+            else
+            {
+                //failed to validate all identifiers
+                result.Message = string.Format(CoreSR.CertifyManager_ValidationForChallengeNotSuccess, (failureSummaryMessage != null ? failureSummaryMessage : ""));
 
-                return result;
-            });
+                await UpdateManagedSiteStatus(managedSite, RequestState.Error, result.Message);
+
+                LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
+                ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedSite));
+            }
         }
 
         private async Task UpdateManagedSiteStatus(ManagedSite managedSite, RequestState status, string msg = null)

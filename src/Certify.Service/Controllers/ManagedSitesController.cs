@@ -73,7 +73,7 @@ namespace Certify.Service
         }
 
         [HttpGet, Route("renewcert/{managedSiteId}")]
-        public async Task<bool> BeginCertificateRequest(string managedSiteId)
+        public async Task<CertificateRequestResult> BeginCertificateRequest(string managedSiteId)
         {
             DebugLog();
 
@@ -87,8 +87,8 @@ namespace Certify.Service
             _certifyManager.BeginTrackingProgress(progressState);
 
             //begin request
-            await _certifyManager.PerformCertificateRequest(managedSite, progressIndicator);
-            return true;
+            var result = await _certifyManager.PerformCertificateRequest(managedSite, progressIndicator);
+            return result;
         }
 
         [HttpGet, Route("requeststatus/{managedSiteId}")]

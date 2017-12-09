@@ -210,10 +210,10 @@ namespace Certify.Client
             }
         }
 
-        public async Task<bool> BeginCertificateRequest(string managedSiteId)
+        public async Task<CertificateRequestResult> BeginCertificateRequest(string managedSiteId)
         {
             var response = await FetchAsync($"managedsites/renewcert/{managedSiteId}");
-            return JsonConvert.DeserializeObject<bool>(response);
+            return JsonConvert.DeserializeObject<CertificateRequestResult>(response);
         }
 
         public async Task<RequestProgressState> CheckCertificateRequest(string managedSiteId)
