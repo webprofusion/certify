@@ -1314,11 +1314,20 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to To perform auto renewal of certificates, Certify will create a task in the Windows Task Scheduler. This task needs to run as an Admin level user in order to do certificate management and IIS management tasks..
+        ///   Looks up a localized string similar to To perform auto renewal of certificates, a task will be created in the Windows Task Scheduler. This task needs to run as an Admin level user in order to do certificate management and IIS management tasks..
         /// </summary>
         public static string ScheduledTaskConfig_Tip {
             get {
                 return ResourceManager.GetString("ScheduledTaskConfig_Tip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use Background Service (runs as Local System).
+        /// </summary>
+        public static string ScheduledTaskConfig_UseBackgroundService {
+            get {
+                return ResourceManager.GetString("ScheduledTaskConfig_UseBackgroundService", resourceCulture);
             }
         }
         
@@ -1328,6 +1337,15 @@ namespace Certify.Locales {
         public static string ScheduledTaskConfig_UserNameLabel {
             get {
                 return ResourceManager.GetString("ScheduledTaskConfig_UserNameLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use a Scheduled Task (runs as specified user).
+        /// </summary>
+        public static string ScheduledTaskConfig_UseScheduledTask {
+            get {
+                return ResourceManager.GetString("ScheduledTaskConfig_UseScheduledTask", resourceCulture);
             }
         }
         

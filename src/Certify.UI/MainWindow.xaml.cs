@@ -27,7 +27,7 @@ namespace Certify.UI
         {
             get
             {
-                return UI.ViewModel.AppModel.AppViewModel;
+                return UI.ViewModel.AppModel.Current;
             }
         }
 
@@ -59,7 +59,7 @@ namespace Certify.UI
 
             if (MainViewModel.IsRegisteredVersion)
             {
-                var licensingManager = ViewModel.AppModel.AppViewModel.PluginManager?.LicensingManager;
+                var licensingManager = ViewModel.AppModel.Current.PluginManager?.LicensingManager;
 
                 if (licensingManager != null && !await licensingManager.IsInstallActive(ViewModel.AppModel.ProductTypeId, Management.Util.GetAppDataFolder()))
                 {

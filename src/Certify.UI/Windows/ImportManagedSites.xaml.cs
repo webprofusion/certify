@@ -15,7 +15,7 @@ namespace Certify.UI.Windows
     /// </summary>
     public partial class ImportManagedSites
     {
-        protected AppModel MainViewModel { get => AppModel.AppViewModel; }
+        protected AppModel MainViewModel { get => AppModel.Current; }
 
         public ImportManagedSites()
         {

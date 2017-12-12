@@ -84,6 +84,12 @@ namespace Certify.Management
         /// If set, specifies the UI language preference 
         /// </summary>
         public string Language { get; set; }
+
+        /// <summary>
+        /// If true the background service will periodically perform auto renewals, otherwise auto
+        /// renewal requires a scheduled task
+        /// </summary>
+        public bool UseBackgroundServiceAutoRenewal { get; set; } = true;
     }
 
     public class SettingsManager
@@ -101,7 +107,7 @@ namespace Certify.Management
             CoreAppSettings.Current.EnableEFS = prefs.EnableEFS;
             CoreAppSettings.Current.IsInstanceRegistered = prefs.IsInstanceRegistered;
             CoreAppSettings.Current.Language = prefs.Language;
-
+            CoreAppSettings.Current.UseBackgroundServiceAutoRenewal = prefs.UseBackgroundServiceAutoRenewal;
             return true;
         }
 
@@ -120,7 +126,7 @@ namespace Certify.Management
             prefs.InstanceId = CoreAppSettings.Current.InstanceId;
             prefs.IsInstanceRegistered = CoreAppSettings.Current.IsInstanceRegistered;
             prefs.Language = CoreAppSettings.Current.Language;
-
+            prefs.UseBackgroundServiceAutoRenewal = CoreAppSettings.Current.UseBackgroundServiceAutoRenewal;
             return prefs;
         }
 
@@ -165,6 +171,7 @@ namespace Certify.Management
                 CoreAppSettings.Current.LegacySettingsUpgraded = true;
                 CoreAppSettings.Current.IsInstanceRegistered = false;
                 CoreAppSettings.Current.Language = null;
+                CoreAppSettings.Current.UseBackgroundServiceAutoRenewal = true;
 
                 CoreAppSettings.Current.InstanceId = Guid.NewGuid().ToString();
                 SaveAppSettings();

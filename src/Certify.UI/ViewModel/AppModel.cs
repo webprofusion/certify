@@ -20,7 +20,7 @@ namespace Certify.UI.ViewModel
         /// Provide single static instance of model for all consumers 
         /// </summary>
         //public static AppModel AppViewModel = new DesignViewModel(); // for UI testing
-        public static AppModel AppViewModel = AppModel.GetModel();
+        public static AppModel Current = AppModel.GetModel();
 
         public AppModel()
         {
@@ -56,6 +56,12 @@ namespace Certify.UI.ViewModel
         }
 
         public Preferences Preferences { get; set; } = new Preferences();
+
+        internal async Task SetPreferences(Preferences prefs)
+        {
+            await CertifyClient.SetPreferences(prefs);
+            Preferences = prefs;
+        }
 
         internal async Task SetInstanceRegistered()
         {

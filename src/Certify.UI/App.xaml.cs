@@ -12,7 +12,7 @@ namespace Certify.UI
         {
             get
             {
-                return UI.ViewModel.AppModel.AppViewModel;
+                return UI.ViewModel.AppModel.Current;
             }
         }
 

@@ -40,7 +40,7 @@
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Renew_All}" /></TextBlock>
                 </StackPanel>
             </Button>
-            <Button Height="32" Margin="8,0,0,5" Click="Button_ScheduledTaskConfig" Visibility="Collapsed">
+            <Button Height="32" Margin="8,0,0,5" Click="Button_ScheduledTaskConfig">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome Icon="Calendar" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Configure_Auto_Renew}" /></TextBlock>

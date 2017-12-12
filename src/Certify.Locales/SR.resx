@@ -256,7 +256,7 @@
     <value>Username (DOMAIN\User)</value>
   </data>
   <data name="ScheduledTaskConfig_Tip" xml:space="preserve">
-    <value>To perform auto renewal of certificates, Certify will create a task in the Windows Task Scheduler. This task needs to run as an Admin level user in order to do certificate management and IIS management tasks.</value>
+    <value>To perform auto renewal of certificates, a task will be created in the Windows Task Scheduler. This task needs to run as an Admin level user in order to do certificate management and IIS management tasks.</value>
   </data>
   <data name="OK" xml:space="preserve">
     <value>OK</value>
@@ -622,5 +622,11 @@
   </data>
   <data name="Dashboard_AddIntro" xml:space="preserve">
     <value>To add this server to your dashboard, provide your https://certifytheweb.com/profile sign in details or register a new account:</value>
+  </data>
+  <data name="ScheduledTaskConfig_UseBackgroundService" xml:space="preserve">
+    <value>Use Background Service (runs as Local System)</value>
+  </data>
+  <data name="ScheduledTaskConfig_UseScheduledTask" xml:space="preserve">
+    <value>Use a Scheduled Task (runs as specified user)</value>
   </data>
 </root>

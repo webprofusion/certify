@@ -27,7 +27,7 @@ namespace Certify.UI.Windows
         {
             get
             {
-                return ViewModel.AppModel.AppViewModel;
+                return ViewModel.AppModel.Current;
             }
         }
 

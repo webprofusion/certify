@@ -1,7 +1,6 @@
 ﻿using Certify.Models;
 using System;
 using System.Globalization;
-using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
@@ -18,7 +17,7 @@ namespace Certify.UI.Controls
         {
             get
             {
-                return UI.ViewModel.AppModel.AppViewModel;
+                return UI.ViewModel.AppModel.Current;
             }
         }
 

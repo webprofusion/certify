@@ -13,7 +13,7 @@ namespace Certify.UI.Controls
     /// </summary>
     public partial class ManagedSites
     {
-        protected ViewModel.AppModel MainViewModel => ViewModel.AppModel.AppViewModel;
+        protected ViewModel.AppModel MainViewModel => ViewModel.AppModel.Current;
         private string _sortOrder { get; set; } = "NameAsc";
 
         public ManagedSites()

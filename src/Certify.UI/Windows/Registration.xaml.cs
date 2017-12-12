@@ -37,7 +37,7 @@ namespace Certify.UI.Windows
             ValidateKey.IsEnabled = false;
             Mouse.OverrideCursor = Cursors.Wait;
 
-            var licensingManager = ViewModel.AppModel.AppViewModel.PluginManager?.LicensingManager;
+            var licensingManager = ViewModel.AppModel.Current.PluginManager?.LicensingManager;
 
             if (licensingManager != null)
             {
@@ -48,7 +48,7 @@ namespace Certify.UI.Windows
                     {
                         var instance = new Models.Shared.RegisteredInstance
                         {
-                            InstanceId = ViewModel.AppModel.AppViewModel.Preferences.InstanceId,
+                            InstanceId = ViewModel.AppModel.Current.Preferences.InstanceId,
                             AppVersion = new Management.Util().GetAppVersion().ToString()
                         };
 
@@ -60,7 +60,7 @@ namespace Certify.UI.Windows
                             var settingsPath = Util.GetAppDataFolder();
                             if (licensingManager.FinaliseInstall(productTypeId, installRegistration, settingsPath))
                             {
-                                ViewModel.AppModel.AppViewModel.IsRegisteredVersion = true;
+                                ViewModel.AppModel.Current.IsRegisteredVersion = true;
                                 MessageBox.Show(installRegistration.Message);
 
                                 this.Close();

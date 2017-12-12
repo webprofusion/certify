@@ -6,18 +6,30 @@
         xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
         xmlns:local="clr-namespace:Certify.UI.Windows"
                             xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
-        mc:Ignorable="d" TitleCaps="False" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner"
-        Title="{x:Static res:SR.ScheduledTaskConfig_WindowTitle}" Height="222.689" Width="414.285"
+                      xmlns:utils="clr-namespace:Certify.UI.Utils"
+                      xmlns:fa="http://schemas.fontawesome.io/icons/"
+                      mc:Ignorable="d" TitleCaps="False" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner"
+        Title="{x:Static res:SR.ScheduledTaskConfig_WindowTitle}" Height="272.129" Width="466.633"
                        GlowBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1" ResizeMode="NoResize">
     <Grid>
-        <TextBox x:Name="Username" HorizontalAlignment="Left" Height="23" Margin="177,74,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="219" />
-        <PasswordBox x:Name="Password" HorizontalAlignment="Left" Margin="177,106,0,0" VerticalAlignment="Top" Width="219" />
-        <Button x:Name="OK" Content="{x:Static res:SR.OK}" HorizontalAlignment="Left" Margin="323,156,0,0" VerticalAlignment="Top" Width="75" Click="OK_Click" />
-        <Button x:Name="Cancel" Content="{x:Static res:SR.Cancel}" HorizontalAlignment="Left" Margin="243,156,0,0" VerticalAlignment="Top" Width="75" Click="Cancel_Click" />
-        <Label Content="{x:Static res:SR.ScheduledTaskConfig_UserNameLabel}" HorizontalAlignment="Left" Margin="10,74,0,0" VerticalAlignment="Top" />
-        <Label Content="{x:Static res:SR.Password}" HorizontalAlignment="Left" Margin="10,110,0,0" VerticalAlignment="Top" />
+        <Grid.Resources>
+            <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
+            <utils:OptionalBooleanToVisibilityConverter True="Visible" False="Collapsed" x:Key="BoolVisConverter" />
+            <utils:OptionalBooleanToVisibilityConverter True="Collapsed" False="Visible" x:Key="InvBoolVisConverter" />
+        </Grid.Resources>
+        <TextBox x:Name="Username" IsEnabled="{Binding UseBackgroundService, Converter={StaticResource ResourceKey=InvBoolConverter}}" HorizontalAlignment="Left" Height="23" Margin="221,124,0,0" TextWrapping="Wrap"  VerticalAlignment="Top" Width="219" />
+        <PasswordBox x:Name="Password" IsEnabled="{Binding UseBackgroundService, Converter={StaticResource ResourceKey=InvBoolConverter}}" HorizontalAlignment="Left" Margin="221,156,0,0" VerticalAlignment="Top" Width="219" />
+        <Button x:Name="OK" Content="{x:Static res:SR.OK}" HorizontalAlignment="Left" Margin="283,202,0,0" VerticalAlignment="Top" Width="75" Click="OK_Click" />
+        <Button x:Name="Cancel" Content="{x:Static res:SR.Cancel}" HorizontalAlignment="Left" Margin="363,202,0,0" VerticalAlignment="Top" Width="75" Click="Cancel_Click" />
+        <Label Content="{x:Static res:SR.ScheduledTaskConfig_UserNameLabel}" HorizontalAlignment="Left" Margin="54,123,0,0" VerticalAlignment="Top" />
 
-        <TextBlock x:Name="AutoRenewPrompt" HorizontalAlignment="Left" Margin="10,10,10,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="384"><Run Text="{x:Static res:SR.ScheduledTaskConfig_Tip}" /><LineBreak /><Run /></TextBlock>
+        <Label Content="{x:Static res:SR.Password}" HorizontalAlignment="Left" Margin="54,160,0,0" VerticalAlignment="Top" />
+
+        <TextBlock x:Name="AutoRenewPrompt" Visibility="{Binding TaskConfigured, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" IsEnabled="{Binding UseBackgroundService, Converter={StaticResource ResourceKey=InvBoolConverter}}" HorizontalAlignment="Left" Margin="54,64,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="384" FontSize="10"><Run Text="{x:Static res:SR.ScheduledTaskConfig_Tip}" /></TextBlock>
+        <TextBlock x:Name="TextTaskConfigured" Visibility="{Binding TaskConfigured, Converter={StaticResource ResourceKey=BoolVisConverter}}" IsEnabled="{Binding UseBackgroundService, Converter={StaticResource ResourceKey=InvBoolConverter}}" HorizontalAlignment="Left" Margin="54,64,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="384" FontSize="10"><Run Text="{x:Static res:SR.ScheduledTaskConfig_AlreadyConfiged}" /></TextBlock>
+
+        <RadioButton Content="{x:Static res:SR.ScheduledTaskConfig_UseBackgroundService}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" GroupName="RenewalPref" Name="RadioUseBackgroundService" IsChecked="{Binding UseBackgroundService, UpdateSourceTrigger=PropertyChanged}" />
+        <RadioButton Content="{x:Static res:SR.ScheduledTaskConfig_UseScheduledTask}" HorizontalAlignment="Left" Margin="10,42,0,0" VerticalAlignment="Top" GroupName="RenewalPref"  Name="RadioUseScheduledTask" IsChecked="{Binding UseBackgroundService, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource ResourceKey=InvBoolConverter}}" />
     </Grid>
 </Controls:MetroWindow>

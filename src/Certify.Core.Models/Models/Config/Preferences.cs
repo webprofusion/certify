@@ -21,5 +21,7 @@
         public bool IsInstanceRegistered { get; set; } = false;
 
         public string Language { get; set; }
+
+        public bool UseBackgroundServiceAutoRenewal { get; set; } = true;
     }
 }

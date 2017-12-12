@@ -1222,13 +1222,22 @@ namespace Certify.Management
         public async Task<bool> PerformPeriodicTasks()
         {
             Debug.WriteLine("Checking for periodic tasks..");
-            await this.PerformRenewalAllManagedSites(true, null);
+
+            SettingsManager.LoadAppSettings();
+
+            if (CoreAppSettings.Current.UseBackgroundServiceAutoRenewal)
+            {
+                await this.PerformRenewalAllManagedSites(true, null);
+            }
+
             return await Task.FromResult(true);
         }
 
         public async Task<bool> PerformDailyTasks()
         {
             Debug.WriteLine("Checking for daily tasks..");
+
+            SettingsManager.LoadAppSettings();
 
             if (_tc != null) _tc.TrackEvent("ServiceDailyTaskCheck");
 
