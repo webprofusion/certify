@@ -57,7 +57,9 @@ namespace Certify.UI.Windows
                     OS = Environment.OSVersion.ToString(),
                     AppVersion = ConfigResources.AppName + " " + new Certify.Management.Util().GetAppVersion(),
                     IsException = this.IsException
-                }
+                },
+                AppVersion = ConfigResources.AppName + " " + new Certify.Management.Util().GetAppVersion(),
+                IsException = IsException
             };
 
             if (MainViewModel.PluginManager.DashboardClient != null)

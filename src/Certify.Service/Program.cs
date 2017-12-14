@@ -61,7 +61,7 @@ namespace Certify.Service
                     new Models.Shared.FeedbackReport
                     {
                         EmailAddress = "(service exception)",
-                        Comment = "An unhandled exception has occurred.",
+                        Comment = "An unhandled service exception has occurred.: " + ((Exception)e.ExceptionObject).ToString(),
                         IsException = true,
                         AppVersion = ConfigResources.AppName + " " + new Certify.Management.Util().GetAppVersion(),
                         SupportingData = new
