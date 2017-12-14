@@ -42,6 +42,11 @@ namespace Certify.Client
         private string url = Certify.Locales.ConfigResources.LocalServiceBaseURI + "/api/status";
 #endif
 
+        public CertifyServiceClient()
+        {
+            _client.Timeout = new TimeSpan(0, 20, 0); // 20 min timeout on service api calls
+        }
+
         public async Task ConnectStatusStreamAsync()
         {
             connection = new HubConnection(url);
