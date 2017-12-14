@@ -15,7 +15,7 @@ namespace Certify.Models
 
         public APIResult()
         {
-            IsOK = true;
+            IsOK = false;
             FailedItemSummary = new List<string>();
         }
     }

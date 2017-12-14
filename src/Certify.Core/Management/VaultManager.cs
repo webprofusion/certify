@@ -768,7 +768,7 @@ namespace Certify
                 ActionLogs.Clear(); // reset action logs
 
                 var requestConfig = managedSite.RequestConfig;
-                var result = new APIResult();
+                var result = new APIResult { IsOK = true };
                 var domains = new List<string> { requestConfig.PrimaryDomain };
 
                 if (requestConfig.SubjectAlternativeNames != null)
