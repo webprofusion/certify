@@ -155,7 +155,7 @@ namespace Certify.Models
         /// <summary>
         /// List of configured domains this managed site will include (primary subject or SAN) 
         /// </summary>
-        public ObservableCollection<DomainOption> DomainOptions { get; private set; }
+        public ObservableCollection<DomainOption> DomainOptions { get; set; }
 
         /// <summary>
         /// Configuration options for this request 

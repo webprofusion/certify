@@ -147,6 +147,9 @@ namespace Certify.Management
             var path = appDataPath + "\\" + COREAPPSETTINGSFILE;
             if (System.IO.File.Exists(path))
             {
+                //ensure permissions
+
+                //load content
                 lock (COREAPPSETTINGSFILE)
                 {
                     string configData = System.IO.File.ReadAllText(path);

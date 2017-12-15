@@ -629,4 +629,7 @@
   <data name="ScheduledTaskConfig_UseScheduledTask" xml:space="preserve">
     <value>Use a Scheduled Task (runs as specified user)</value>
   </data>
+  <data name="ManagedItemsSettings_RefreshDomains" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
 </root>

@@ -477,6 +477,37 @@ namespace Certify.UI.ViewModel
             SelectedItem?.DomainOptions.ToList().ForEach(opt => opt.IsSelected = false);
         }
 
+        public async Task<bool> SANRefresh()
+        {
+            //requery list of domains from IIS and refresh Domain Options in Selected Item, leave existing items checked
+            if (SelectedItem != null)
+            {
+                var opts = await GetDomainOptionsFromSite(SelectedItem.GroupId);
+                if (opts != null && opts.Any())
+                {
+                    //reselect options
+                    foreach (var currentOpt in SelectedItem?.DomainOptions)
+                    {
+                        opts.Where(opt => opt.Domain == currentOpt.Domain).ToList().ForEach(opt =>
+                        {
+                            if (currentOpt.IsPrimaryDomain)
+                            {
+                                opt.IsPrimaryDomain = currentOpt.IsPrimaryDomain;
+                                opt.IsSelected = true;
+                            }
+                            else
+                            {
+                                opt.IsSelected = currentOpt.IsSelected;
+                            }
+                        });
+                    }
+
+                    SelectedItem.DomainOptions = new ObservableCollection<DomainOption>(opts);
+                }
+            }
+            return true;
+        }
+
         /// <summary>
         /// For the given set of options get a new CertRequestConfig to store 
         /// </summary>

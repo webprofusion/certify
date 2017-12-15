@@ -1053,6 +1053,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Refresh.
+        /// </summary>
+        public static string ManagedItemsSettings_RefreshDomains {
+            get {
+                return ResourceManager.GetString("ManagedItemsSettings_RefreshDomains", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Filter....
         /// </summary>
         public static string ManagedSites_Filter {

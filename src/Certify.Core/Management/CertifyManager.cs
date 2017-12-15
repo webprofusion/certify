@@ -858,7 +858,7 @@ namespace Certify.Management
                 }
             }
 
-            return domainOptions;
+            return domainOptions.OrderByDescending(d => d.IsPrimaryDomain).ThenBy(d => d.Domain).ToList();
         }
 
         public List<ManagedSite> ImportManagedSitesFromVault(bool mergeSitesAsSan = false)

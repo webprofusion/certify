@@ -434,5 +434,10 @@ namespace Certify.UI.Controls
         {
             MainViewModel.SelectedItem = null;
         }
+
+        private async void RefreshSanList_Click(object sender, RoutedEventArgs e)
+        {
+            await MainViewModel.SANRefresh();
+        }
     }
 }

@@ -53,7 +53,7 @@ namespace Certify.UI.Windows
 
                     if (resultOK)
                     {
-                        ViewModel.AppModel.Current.SetInstanceRegistered();
+                        await ViewModel.AppModel.Current.SetInstanceRegistered();
                         MessageBox.Show("Server registration completed.");
                         this.Close();
                     }
