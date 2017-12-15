@@ -3,6 +3,7 @@ using Certify.Management;
 using Certify.Models;
 using Microsoft.ApplicationInsights;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -56,6 +57,13 @@ namespace Certify.CLI
                 {
                     p.RunCertDiagnostics();
                 }
+
+                if (args.Contains("importcsv", StringComparer.InvariantCultureIgnoreCase))
+                {
+                    var importTask = p.ImportCSV(args);
+                    importTask.ConfigureAwait(true);
+                    importTask.Wait();
+                }
             }
 
 #if DEBUG
@@ -70,6 +78,7 @@ namespace Certify.CLI
         private TelemetryClient _tc = null;
         private ICertifyClient _certifyClient = null;
         private Preferences _prefs = new Preferences();
+        private PluginManager _pluginManager { get; set; }
 
         public CertifyCLI()
         {
@@ -90,6 +99,26 @@ namespace Certify.CLI
                 isAvailable = false;
             }
             return isAvailable;
+        }
+
+        private void InitPlugins()
+        {
+            _pluginManager = new Management.PluginManager();
+
+            _pluginManager.LoadPlugins();
+        }
+
+        private bool IsRegistered()
+        {
+            var licensingManager = _pluginManager.LicensingManager;
+            if (licensingManager != null)
+            {
+                if (licensingManager.IsInstallRegistered(1, Certify.Management.Util.GetAppDataFolder()))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public async Task LoadPreferences()
@@ -291,6 +320,71 @@ namespace Certify.CLI
 
         internal void CheckCertAccess()
         {
+        }
+
+        internal async Task ImportCSV(string[] args)
+        {
+            InitPlugins();
+            if (!IsRegistered())
+            {
+                Console.WriteLine("Import is only available in the registered version of this application.");
+            }
+
+            var filename = args[args.Length - 1];
+
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("Importing CSV: " + filename);
+
+            var currentManagedSites = await _certifyClient.GetManagedSites(new ManagedSiteFilter() { });
+            var rows = System.IO.File.ReadAllLines(filename);
+            foreach (var row in rows)
+            {
+                // SiteId, Name, Domain;Domain2;Domain3
+                string[] values = row.Split(',');
+                string siteId = values[0].Trim();
+                string siteName = values[1].Trim();
+                string[] domains = values[2].Trim().Split(';');
+
+                var newManagedSite = new ManagedSite();
+                newManagedSite.Id = Guid.NewGuid().ToString();
+                newManagedSite.GroupId = siteId;
+                newManagedSite.Name = siteName;
+                newManagedSite.IncludeInAutoRenew = true;
+                newManagedSite.ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS;
+                newManagedSite.RequestConfig.ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP;
+                newManagedSite.RequestConfig.PerformAutoConfig = true;
+                newManagedSite.RequestConfig.PerformChallengeFileCopy = true;
+                newManagedSite.RequestConfig.PerformExtensionlessConfigChecks = true;
+                newManagedSite.RequestConfig.PerformTlsSniBindingConfigChecks = true;
+                newManagedSite.RequestConfig.PerformAutomatedCertBinding = true;
+                newManagedSite.RequestConfig.EnableFailureNotifications = true;
+
+                bool isPrimaryDomain = true;
+                List<string> sans = new List<string>();
+                foreach (var d in domains)
+                {
+                    if (!String.IsNullOrWhiteSpace(d))
+                    {
+                        newManagedSite.DomainOptions.Add(new DomainOption { Domain = d.Trim(), IsPrimaryDomain = isPrimaryDomain, IsSelected = true, Title = d });
+
+                        if (isPrimaryDomain)
+                        {
+                            newManagedSite.RequestConfig.PrimaryDomain = d.Trim();
+                        }
+
+                        sans.Add(d.Trim());
+
+                        isPrimaryDomain = false;
+                    }
+                }
+                newManagedSite.RequestConfig.SubjectAlternativeNames = sans.ToArray();
+
+                // TODO:check for dupes
+
+                // add managed site
+                Console.WriteLine("Creating Managed Site: " + newManagedSite.Name);
+                await _certifyClient.UpdateManagedSite(newManagedSite);
+            }
         }
 
         /*
