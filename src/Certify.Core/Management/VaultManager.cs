@@ -1104,9 +1104,16 @@ namespace Certify
                 //still pending or failed
                 System.Diagnostics.Debug.WriteLine("LE Authorization problem: " + identiferStatus.Authorization.Status);
 
-                var failedChallenge = identiferStatus.Authorization.Challenges.FirstOrDefault(c => c.ChallengePart.Error != null);
-                // throw new Exception(String.Join("\r\n", failedChallenge.ChallengePart.Error));
-                LogAction(String.Join("\r\n", failedChallenge.ChallengePart.Error));
+                try
+                {
+                    var failedChallenge = identiferStatus.Authorization.Challenges.FirstOrDefault(c => c.ChallengePart.Error != null);
+                    // throw new Exception(String.Join("\r\n", failedChallenge.ChallengePart.Error));
+                    LogAction(String.Join("\r\n", failedChallenge.ChallengePart.Error));
+                }
+                catch (Exception exp)
+                {
+                    LogAction(exp.ToString());
+                }
 
                 return false;
             }
