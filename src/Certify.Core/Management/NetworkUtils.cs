@@ -158,8 +158,17 @@ namespace Certify.Management
             }
             catch (Exception exp)
             {
-                System.Diagnostics.Debug.WriteLine("Failed to check url for access (" + url + "): " + exp.ToString());
-                return false;
+                if (useProxy)
+                {
+                    // failed to call proxy API (maybe offline?), let's try a local check
+                    return CheckURL(url, false);
+                }
+                else
+                {
+                    // failed to check URL locally
+                    System.Diagnostics.Debug.WriteLine("Failed to check url for access (" + url + "): " + exp.ToString());
+                    return false;
+                }
             }
             finally
             {
