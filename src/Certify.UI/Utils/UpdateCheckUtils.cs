@@ -22,6 +22,7 @@ namespace Certify.UI.Utils
                     p.StartInfo.UseShellExecute = false;
                     p.StartInfo.RedirectStandardOutput = true;
                     p.StartInfo.RedirectStandardError = true;
+                    p.StartInfo.Arguments = "/SILENT";
                     p.Start();
 
                     //stop certify.service
