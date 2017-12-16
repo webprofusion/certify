@@ -46,6 +46,7 @@ namespace Certify.UI.ViewModel
         public bool IsError { get; set; }
         public bool IsServiceAvailable { get; set; } = false;
         public bool IsLoading { get; set; } = true;
+        public bool IsUpdateInProgress { get; set; } = false;
 
         public void RaiseError(Exception exp)
         {

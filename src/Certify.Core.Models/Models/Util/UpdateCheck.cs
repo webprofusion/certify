@@ -9,5 +9,6 @@ namespace Certify.Models
         public bool IsNewerVersion { get; set; }
 
         public bool MustUpdate { get; set; }
+        public string UpdateFilePath { get; set; }
     }
 }

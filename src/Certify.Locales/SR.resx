@@ -632,4 +632,10 @@
   <data name="ManagedItemsSettings_RefreshDomains" xml:space="preserve">
     <value>Refresh</value>
   </data>
+  <data name="Update_DownloadNow" xml:space="preserve">
+    <value>Would you like to automatically download the update? You will be notified when it is ready to apply.</value>
+  </data>
+  <data name="Update_ReadyToApply" xml:space="preserve">
+    <value>A new update is ready to apply. Would you like to install it now?</value>
+  </data>
 </root>

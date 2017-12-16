@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace Certify.Management
@@ -123,6 +125,203 @@ namespace Certify.Management
             }
 
             return checkResult;
+        }
+
+        public string GetFileSHA256(Stream stream)
+        {
+            using (var bufferedStream = new BufferedStream(stream, 1024 * 32))
+            {
+                var sha = new System.Security.Cryptography.SHA256Managed();
+                byte[] checksum = sha.ComputeHash(bufferedStream);
+                return BitConverter.ToString(checksum).Replace("-", String.Empty).ToLower();
+            }
+        }
+
+        /// <summary>
+        /// Gets the certificate the file is signed with. 
+        /// </summary>
+        /// <param name="filename">
+        /// The path of the signed file from which to create the X.509 certificate.
+        /// </param>
+        /// <returns> The certificate the file is signed with </returns>
+        public X509Certificate2 GetFileCertificate(string filename)
+        {
+            // https://blogs.msdn.microsoft.com/windowsmobile/2006/05/17/programmatically-checking-the-authenticode-signature-on-a-file/
+            X509Certificate2 cert = null;
+            try
+            {
+                cert = new X509Certificate2(X509Certificate.CreateFromSignedFile(filename));
+
+                X509Chain chain = new X509Chain();
+                X509ChainPolicy chainPolicy = new X509ChainPolicy()
+                {
+                    RevocationMode = X509RevocationMode.Online,
+                    RevocationFlag = X509RevocationFlag.EntireChain
+                };
+                chain.ChainPolicy = chainPolicy;
+
+                if (chain.Build(cert))
+                {
+                    foreach (X509ChainElement chainElement in chain.ChainElements)
+                    {
+                        foreach (X509ChainStatus chainStatus in chainElement.ChainElementStatus)
+                        {
+                            System.Diagnostics.Debug.WriteLine(chainStatus.StatusInformation);
+                        }
+                    }
+                }
+                else
+                {
+                    throw new Exception("Could not build cert chain");
+                }
+            }
+            catch (CryptographicException e)
+            {
+                Console.WriteLine("Error {0} : {1}", e.GetType(), e.Message);
+                Console.WriteLine("Couldn't parse the certificate." +
+                                  "Be sure it is a X.509 certificate");
+                return null;
+            }
+            return cert;
+        }
+
+        public bool VerifyUpdateFile(string tempFile, string expectedHash, bool throwOnDeviation = true)
+        {
+            bool signatureVerified = false;
+            bool hashVerified = false;
+
+            //get verified signed file cert
+            var cert = GetFileCertificate(tempFile);
+
+            //ensure cert subject
+            if (!(cert != null && cert.SubjectName.Name.StartsWith("CN=Webprofusion Pty Ltd, O=Webprofusion Pty Ltd")))
+            {
+                if (throwOnDeviation)
+                {
+                    throw new Exception("Downloaded file failed digital signature check.");
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                signatureVerified = true;
+            }
+
+            //verify file SHA256
+            string computedSHA256 = null;
+            using (Stream stream = new FileStream(tempFile, FileMode.Open, FileAccess.Read, FileShare.Read, 8192, true))
+            {
+                computedSHA256 = GetFileSHA256(stream);
+            }
+
+            if (expectedHash.ToLower() == computedSHA256)
+            {
+                hashVerified = true;
+            }
+            else
+            {
+                if (throwOnDeviation)
+                {
+                    throw new Exception("Downloaded file failed SHA256 hash check");
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            if (hashVerified && signatureVerified)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public async Task<UpdateCheck> DownloadUpdate()
+        {
+            string pathname = Path.GetTempPath();
+
+            var result = await CheckForUpdates();
+
+            if (result.IsNewerVersion)
+            {
+                HttpClient client = new HttpClient();
+
+                //https://github.com/dotnet/corefx/issues/6849
+                var tempFile = Path.Combine(new string[] { pathname, "CertifySSL_" + result.Version.ToString() + "_Setup.tmp" });
+                var setupFile = tempFile.Replace(".tmp", ".exe");
+
+                bool downloadVerified = false;
+                if (File.Exists(setupFile))
+                {
+                    // file already downloaded, see if it's already valid
+                    if (VerifyUpdateFile(setupFile, result.Message.SHA256, throwOnDeviation: false))
+                    {
+                        downloadVerified = true;
+                    }
+                }
+
+                if (!downloadVerified)
+                {
+                    // download and verify new setup
+                    using (HttpResponseMessage response = client.GetAsync(result.Message.DownloadFileURL, HttpCompletionOption.ResponseHeadersRead).Result)
+                    {
+                        response.EnsureSuccessStatusCode();
+
+                        using (Stream contentStream = await response.Content.ReadAsStreamAsync(), fileStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true))
+                        {
+                            var totalRead = 0L;
+                            var totalReads = 0L;
+                            var buffer = new byte[8192];
+                            var isMoreToRead = true;
+
+                            do
+                            {
+                                var read = await contentStream.ReadAsync(buffer, 0, buffer.Length);
+                                if (read == 0)
+                                {
+                                    isMoreToRead = false;
+                                }
+                                else
+                                {
+                                    await fileStream.WriteAsync(buffer, 0, read);
+
+                                    totalRead += read;
+                                    totalReads += 1;
+
+                                    if (totalReads % 512 == 0)
+                                    {
+                                        Console.WriteLine(string.Format("total bytes downloaded so far: {0:n0}", totalRead));
+                                    }
+                                }
+                            }
+                            while (isMoreToRead);
+                            fileStream.Close();
+                        }
+                    }
+
+                    // verify temp file
+                    if (!downloadVerified && VerifyUpdateFile(tempFile, result.Message.SHA256, throwOnDeviation: true))
+                    {
+                        downloadVerified = true;
+                        if (File.Exists(setupFile)) File.Delete(setupFile); //delete existing file
+                        File.Move(tempFile, setupFile); // final setup file
+                    }
+                }
+
+                if (downloadVerified)
+                {
+                    // setup is ready to run
+                    result.UpdateFilePath = setupFile;
+                }
+            }
+            return result;
         }
 
         /// <summary>

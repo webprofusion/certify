@@ -12,6 +12,11 @@ namespace Certify.Models
         public int Minor { get; set; }
         public int Patch { get; set; }
 
+        public override string ToString()
+        {
+            return $"{Major}.{Minor}.{Patch}";
+        }
+
         public static AppVersion FromString(string version)
         {
             string[] versionComponents = version.Split('.');

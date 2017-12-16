@@ -52,7 +52,9 @@ namespace Certify.UI.Controls
         private async void UpdateCheck_Click(object sender, RoutedEventArgs e)
         {
             Mouse.OverrideCursor = Cursors.Wait;
+
             await PerformCheckForUpdates(silent: false);
+
             Mouse.OverrideCursor = Cursors.Arrow;
         }
 
@@ -66,6 +68,7 @@ namespace Certify.UI.Controls
                 if (updateCheck.IsNewerVersion)
                 {
                     MainViewModel.IsUpdateAvailable = true;
+
                     var gotoDownload = MessageBox.Show(updateCheck.Message.Body + "\r\nVisit download page now?", ConfigResources.AppName, MessageBoxButton.YesNo);
                     if (gotoDownload == MessageBoxResult.Yes)
                     {

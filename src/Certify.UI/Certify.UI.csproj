@@ -120,6 +120,7 @@
     <Compile Include="Utils\ExpiryDateConverter.cs" />
     <Compile Include="Utils\ManagedItemHealthVisibilityConverter.cs" />
     <Compile Include="Utils\ManagedItemHealthColourConverter.cs" />
+    <Compile Include="Utils\UpdateCheckUtils.cs" />
     <Compile Include="ViewModel\DesignViewModel.cs" />
     <Compile Include="Windows\Feedback.xaml.cs">
       <DependentUpon>Feedback.xaml</DependentUpon>

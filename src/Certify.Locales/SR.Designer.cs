@@ -1566,11 +1566,29 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Would you like to automatically download the update? You will be notified when it is ready to apply..
+        /// </summary>
+        public static string Update_DownloadNow {
+            get {
+                return ResourceManager.GetString("Update_DownloadNow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The current app version is no longer supported. Please update to proceed..
         /// </summary>
         public static string Update_MandatoryUpdateQuit {
             get {
                 return ResourceManager.GetString("Update_MandatoryUpdateQuit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A new update is ready to apply. Would you like to install it now?.
+        /// </summary>
+        public static string Update_ReadyToApply {
+            get {
+                return ResourceManager.GetString("Update_ReadyToApply", resourceCulture);
             }
         }
         

@@ -49,7 +49,7 @@
             <StackPanel Orientation="Horizontal" Visibility="{Binding IsUpdateAvailable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
                 <Button x:Name="ButtonUpdateAvailable" Height="32" Margin="8,0,0,5" Background="GreenYellow" Click="ButtonUpdateAvailable_Click">
                     <StackPanel Orientation="Horizontal">
-                        <fa:ImageAwesome Icon="Superpowers" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                        <fa:ImageAwesome Name="UpdateIcon" Icon="Superpowers" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
                         <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Update_Available}" /></TextBlock>
                     </StackPanel>
                 </Button>

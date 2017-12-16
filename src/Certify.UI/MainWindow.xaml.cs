@@ -207,6 +207,7 @@ namespace Certify.UI
                     MainViewModel.UpdateCheckResult = updateCheck;
                     MainViewModel.IsUpdateAvailable = true;
 
+                    //TODO: move this to UpdateCheckUtils and share with update from About page
                     // if update is mandatory (where there is a major bug etc) quit until user updates
                     if (updateCheck.MustUpdate)
                     {
@@ -253,15 +254,32 @@ namespace Certify.UI
             }
         }
 
-        private void ButtonUpdateAvailable_Click(object sender, RoutedEventArgs e)
+        private async void ButtonUpdateAvailable_Click(object sender, RoutedEventArgs e)
         {
+            if (MainViewModel.IsUpdateInProgress) return;
+
             if (MainViewModel.UpdateCheckResult != null)
             {
-                var gotoDownload = MessageBox.Show(MainViewModel.UpdateCheckResult.Message.Body + "\r\n" + SR.MainWindow_VisitDownloadPage, ConfigResources.AppName, MessageBoxButton.YesNo);
-                if (gotoDownload == MessageBoxResult.Yes)
+                // offer to start download and notify when ready to apply
+                if (MessageBox.Show(MainViewModel.UpdateCheckResult.Message.Body + "\r\n" + SR.Update_DownloadNow, ConfigResources.AppName, MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                 {
-                    System.Diagnostics.ProcessStartInfo sInfo = new System.Diagnostics.ProcessStartInfo(MainViewModel.UpdateCheckResult.Message.DownloadPageURL);
-                    System.Diagnostics.Process.Start(sInfo);
+                    MainViewModel.IsUpdateInProgress = true;
+                    UpdateIcon.Spin = true;
+                    UpdateIcon.SpinDuration = 1;
+
+                    MainViewModel.UpdateCheckResult = await new Utils.UpdateCheckUtils().UpdateWithDownload();
+                    MainViewModel.IsUpdateInProgress = false;
+                    UpdateIcon.Spin = false;
+                }
+                else
+                {
+                    // otherwise offer to go to download page
+                    var gotoDownload = MessageBox.Show(MainViewModel.UpdateCheckResult.Message.Body + "\r\n" + SR.MainWindow_VisitDownloadPage, ConfigResources.AppName, MessageBoxButton.YesNo);
+                    if (gotoDownload == MessageBoxResult.Yes)
+                    {
+                        System.Diagnostics.ProcessStartInfo sInfo = new System.Diagnostics.ProcessStartInfo(MainViewModel.UpdateCheckResult.Message.DownloadPageURL);
+                        System.Diagnostics.Process.Start(sInfo);
+                    }
                 }
             }
         }
