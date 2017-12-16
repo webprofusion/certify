@@ -26,7 +26,7 @@ If you have the main Certify SSL Manager UI open you will see the sites being ad
 Performing the same import twice will create duplicates so you should backup your c:\programdata\certify\manageditems.db first in case you need to restore it.
 
 # Scripting to create a CSV file
-You may find a powershell command such as the following useful as a starting place:
+You may find a powershell command such as the following useful as a starting place (Note: help wanted on a better script):
 ```PS
 Get-WebBinding | % {
     $name = $_.ItemXPath -replace '(?:.*?)name=''([^'']*)(?:.*)', '$1'
