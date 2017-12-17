@@ -1023,7 +1023,14 @@ namespace Certify
                     {
                         this.LogAction($"Pre-config check failed: Auto-config will overwrite existing config: {destPath}\\web.config");
                         // didn't work, try our default config
-                        System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
+                        try
+                        {
+                            System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
+                        }
+                        catch (System.IO.IOException)
+                        {
+                            this.LogAction($"Failed to update alternative web config: {destPath}\\web.config");
+                        }
 
                         if (NetUtil.CheckURL($"http://{domain}/{httpChallenge.FilePath}"))
                         {
