@@ -112,20 +112,33 @@ namespace Certify.Management
             {
                 var managedSites = new List<ManagedSite>();
                 using (var db = new SQLiteConnection($"Data Source={path}"))
-                using (var cmd = new SQLiteCommand("SELECT json FROM manageditem", db))
+                using (var cmd = new SQLiteCommand("SELECT id, json FROM manageditem", db))
                 {
                     await db.OpenAsync();
                     using (var reader = await cmd.ExecuteReaderAsync())
                     {
                         while (await reader.ReadAsync())
                         {
-                            managedSites.Add(JsonConvert.DeserializeObject<ManagedSite>((string)reader["json"]));
+                            string itemId = (string)reader["id"];
+
+                            var managedSite = JsonConvert.DeserializeObject<ManagedSite>((string)reader["json"]);
+
+                            // in some cases users may have previously manipulated the id, causing
+                            // duplicates. Correct the ID here (database Id is unique):
+                            if (managedSite.Id != itemId)
+                            {
+                                managedSite.Id = itemId;
+                                Debug.WriteLine("LoadSettings: Corrected managed site id: " + managedSite.Name);
+                            }
+
+                            managedSites.Add(managedSite);
                         }
                     }
                 }
 
                 foreach (var site in managedSites) site.IsChanged = false;
-                ManagedSitesCache = managedSites.ToDictionary(s => s.Id);
+
+                ManagedSitesCache = managedSites.ToDictionary(s => s.Id); ;
             }
             else
             {
@@ -177,7 +190,6 @@ namespace Certify.Management
                     // no setting to upgrade, create the empty database
                     await StoreSettings();
                 }
-               
             }
         }
 
