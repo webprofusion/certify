@@ -506,7 +506,7 @@ namespace Certify
                 ACMESharpUtils.NewRegistration(null, new string[] { contact }, acceptTOS: true);
                 return true;
             }
-            catch (System.Net.WebException exp)
+            catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.ToString());
                 return false;
