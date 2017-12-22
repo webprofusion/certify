@@ -695,6 +695,7 @@ namespace Certify.Management
                         managedSite.DateRenewed = DateTime.Now;
 
                         managedSite.CertificatePath = pfxPath;
+                        managedSite.CertificateThumbprintHash = certInfo.Thumbprint;
                         managedSite.CertificateRevoked = false;
 
                         //ensure certificate contains all the requested domains
