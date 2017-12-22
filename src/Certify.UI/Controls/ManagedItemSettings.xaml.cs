@@ -94,7 +94,7 @@ namespace Certify.UI.Controls
                 }
 
                 // if user has chosen to bind SNI with a specific IP, warn and confirm save
-                if (item.RequestConfig.BindingUseSNI == true && !String.IsNullOrEmpty(item.RequestConfig.BindingIPAddress))
+                if (item.RequestConfig.BindingUseSNI == true && !String.IsNullOrEmpty(item.RequestConfig.BindingIPAddress) && item.RequestConfig.BindingIPAddress != "*")
                 {
                     if (MessageBox.Show(SR.ManagedItemSettings_InvalidSNI, SR.SaveError, MessageBoxButton.YesNoCancel, MessageBoxImage.Warning) != MessageBoxResult.Yes)
                     {
