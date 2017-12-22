@@ -88,6 +88,7 @@ namespace Certify.Models
 
         public string CertificateId { get; set; }
         public string CertificatePath { get; set; }
+        public string CertificateThumbprintHash { get; set; }
         public bool CertificateRevoked { get; set; }
 
         public override string ToString()

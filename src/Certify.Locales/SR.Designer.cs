@@ -791,6 +791,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You are attempting to create an SNI binding that also has a specific bound IP address. It is recommended that SNI bindings use All Unassigned instead. Do you wish to continue saving?.
+        /// </summary>
+        public static string ManagedItemSettings_InvalidSNI {
+            get {
+                return ResourceManager.GetString("ManagedItemSettings_InvalidSNI", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The log file for this item has not been created yet..
         /// </summary>
         public static string ManagedItemSettings_LogNotCreated {

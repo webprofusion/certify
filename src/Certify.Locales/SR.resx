@@ -638,4 +638,7 @@
   <data name="Update_ReadyToApply" xml:space="preserve">
     <value>A new update is ready to apply. Would you like to install it now?</value>
   </data>
+  <data name="ManagedItemSettings_InvalidSNI" xml:space="preserve">
+    <value>You are attempting to create an SNI binding that also has a specific bound IP address. It is recommended that SNI bindings use All Unassigned instead. Do you wish to continue saving?</value>
+  </data>
 </root>
