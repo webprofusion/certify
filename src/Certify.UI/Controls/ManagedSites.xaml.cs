@@ -65,15 +65,18 @@ namespace Certify.UI.Controls
         {
             var item = (ListViewItem)sender;
             var ctrl = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
-            var site = (ManagedSite)item.DataContext;
-            site = site == MainViewModel.SelectedItem && ctrl ? null : site;
-            if (MainViewModel.SelectedItem != site)
+            if (item != null && item.DataContext != null && item.DataContext is ManagedSite)
             {
-                if (await MainViewModel.ConfirmDiscardUnsavedChanges())
+                var site = (ManagedSite)item.DataContext;
+                site = site == MainViewModel.SelectedItem && ctrl ? null : site;
+                if (MainViewModel.SelectedItem != site)
                 {
-                    SelectAndFocus(site);
+                    if (await MainViewModel.ConfirmDiscardUnsavedChanges())
+                    {
+                        SelectAndFocus(site);
+                    }
+                    e.Handled = true;
                 }
-                e.Handled = true;
             }
         }
 
