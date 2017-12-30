@@ -131,7 +131,18 @@ namespace Certify.Management
         {
             using (var bufferedStream = new BufferedStream(stream, 1024 * 32))
             {
-                var sha = new System.Security.Cryptography.SHA256Managed();
+                SHA256 sha = null;
+
+                try
+                {
+                    sha = (SHA256)new System.Security.Cryptography.SHA256Managed();
+                }
+                catch (System.InvalidOperationException)
+                {
+                    // if creating managed SHA256 fails may be FIPS validation, try SHA256Cng
+                    sha = (SHA256)new System.Security.Cryptography.SHA256Cng();
+                }
+
                 byte[] checksum = sha.ComputeHash(bufferedStream);
                 return BitConverter.ToString(checksum).Replace("-", String.Empty).ToLower();
             }
@@ -270,42 +281,49 @@ namespace Certify.Management
                 if (!downloadVerified)
                 {
                     // download and verify new setup
-                    using (HttpResponseMessage response = client.GetAsync(result.Message.DownloadFileURL, HttpCompletionOption.ResponseHeadersRead).Result)
+                    try
                     {
-                        response.EnsureSuccessStatusCode();
-
-                        using (Stream contentStream = await response.Content.ReadAsStreamAsync(), fileStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true))
+                        using (HttpResponseMessage response = client.GetAsync(result.Message.DownloadFileURL, HttpCompletionOption.ResponseHeadersRead).Result)
                         {
-                            var totalRead = 0L;
-                            var totalReads = 0L;
-                            var buffer = new byte[8192];
-                            var isMoreToRead = true;
+                            response.EnsureSuccessStatusCode();
 
-                            do
+                            using (Stream contentStream = await response.Content.ReadAsStreamAsync(), fileStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true))
                             {
-                                var read = await contentStream.ReadAsync(buffer, 0, buffer.Length);
-                                if (read == 0)
-                                {
-                                    isMoreToRead = false;
-                                }
-                                else
-                                {
-                                    await fileStream.WriteAsync(buffer, 0, read);
+                                var totalRead = 0L;
+                                var totalReads = 0L;
+                                var buffer = new byte[8192];
+                                var isMoreToRead = true;
 
-                                    totalRead += read;
-                                    totalReads += 1;
-
-                                    if (totalReads % 512 == 0)
+                                do
+                                {
+                                    var read = await contentStream.ReadAsync(buffer, 0, buffer.Length);
+                                    if (read == 0)
                                     {
-                                        Console.WriteLine(string.Format("total bytes downloaded so far: {0:n0}", totalRead));
+                                        isMoreToRead = false;
+                                    }
+                                    else
+                                    {
+                                        await fileStream.WriteAsync(buffer, 0, read);
+
+                                        totalRead += read;
+                                        totalReads += 1;
+
+                                        if (totalReads % 512 == 0)
+                                        {
+                                            Console.WriteLine(string.Format("total bytes downloaded so far: {0:n0}", totalRead));
+                                        }
                                     }
                                 }
+                                while (isMoreToRead);
+                                fileStream.Close();
                             }
-                            while (isMoreToRead);
-                            fileStream.Close();
                         }
                     }
-
+                    catch (Exception exp)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Failed to download update: " + exp.ToString());
+                        downloadVerified = false;
+                    }
                     // verify temp file
                     if (!downloadVerified && VerifyUpdateFile(tempFile, result.Message.SHA256, throwOnDeviation: true))
                     {
