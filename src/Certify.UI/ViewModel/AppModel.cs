@@ -647,17 +647,21 @@ namespace Certify.UI.ViewModel
 
             // optional reload managed site details (for refresh)
             if (reload) newItem = await CertifyClient.GetManagedSite(managedSite.Id);
-            newItem.IsChanged = false;
 
-            // update our cached copy of the managed site details
-            if (existing != null)
+            if (newItem != null)
             {
-                var index = ManagedSites.IndexOf(existing);
-                ManagedSites[index] = newItem;
-            }
-            else
-            {
-                ManagedSites.Add(newItem);
+                newItem.IsChanged = false;
+
+                // update our cached copy of the managed site details
+                if (existing != null)
+                {
+                    var index = ManagedSites.IndexOf(existing);
+                    ManagedSites[index] = newItem;
+                }
+                else
+                {
+                    ManagedSites.Add(newItem);
+                }
             }
         }
 

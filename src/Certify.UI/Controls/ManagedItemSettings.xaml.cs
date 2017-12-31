@@ -158,12 +158,14 @@ namespace Certify.UI.Controls
             {
                 //reload settings for managed sites, discard changes
                 await MainViewModel.DiscardChanges();
+
+                ReturnToDefaultManagedItemView();
             }
         }
 
         private void ReturnToDefaultManagedItemView()
         {
-            MainViewModel.SelectedItem = MainViewModel.ManagedSites.FirstOrDefault();
+            MainViewModel.SelectedItem = null;
         }
 
         private async void Button_RequestCertificate(object sender, RoutedEventArgs e)

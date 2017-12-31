@@ -180,7 +180,7 @@ namespace Certify.Client
         {
             var result = await FetchAsync($"managedsites/{managedSiteId}");
             var site = JsonConvert.DeserializeObject<ManagedSite>(result);
-            site.IsChanged = false;
+            if (site != null) site.IsChanged = false;
             return site;
         }
 
