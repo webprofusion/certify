@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Certify.Models;
+using System;
 using System.Threading.Tasks;
 
 namespace Certify.Core.Tests.Unit
@@ -58,7 +58,7 @@ namespace Certify.Core.Tests.Unit
             Assert.IsNull(managedSite, "Managed site deleted");
         }
 
-        [TestMethod, Description("Ensure a large number of managed sites can be create, saved and loaded")]
+        [Ignore, TestMethod, Description("Ensure a large number of managed sites can be create, saved and loaded")]
         public async Task TestCheckLargeManagedSiteSettingSave()
         {
             var managedSiteSettings = new Management.ItemManager();
