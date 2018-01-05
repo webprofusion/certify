@@ -981,21 +981,39 @@ namespace Certify
 
             if (!Directory.Exists(destPath))
             {
-                Directory.CreateDirectory(destPath);
+                try
+                {
+                    Directory.CreateDirectory(destPath);
+                }
+                catch (Exception)
+                {
+                    // failed to create directory, probably permissions or may be invalid config
+                    this.LogAction($"Pre-config check failed: Could not create directory: {destPath}");
+                    return () => { return false; };
+                }
             }
 
             // copy challenge response to web folder /.well-known/acme-challenge. Check if it already
             // exists (as in 'configcheck' file) as can cause conflicts.
             if (!File.Exists(destFile))
             {
-                File.WriteAllText(destFile, httpChallenge.FileContent);
+                try
+                {
+                    File.WriteAllText(destFile, httpChallenge.FileContent);
+                }
+                catch (Exception)
+                {
+                    // failed to create configcheck file, probably permissions or may be invalid config
+                    this.LogAction($"Pre-config check failed: Could not create file: {destFile}");
+                    return () => { return false; };
+                }
             }
 
             // configure cleanup - should this be configurable? Because in some case many sites
             // renewing may all point to the same web root, we keep the configcheck file
             pendingAuth.Cleanup = () =>
             {
-                if (!destFile.EndsWith("configcheck")) File.Delete(destFile);
+                if (!destFile.EndsWith("configcheck") && File.Exists(destFile)) File.Delete(destFile);
             };
 
             // create a web.config for extensionless files, then test it (make a request for the
@@ -1062,9 +1080,11 @@ namespace Certify
             {
                 z[i] = sha256.ComputeHash(z[i - 1]);
             }
+
             // generate certs and install iis bindings
             var cleanupQueue = new List<Action>();
             var checkQueue = new List<Func<bool>>();
+
             foreach (string hex in z.Select(b =>
                 BitConverter.ToString(b).Replace("-", "").ToLower()))
             {
@@ -1073,7 +1093,9 @@ namespace Certify
 
                 var x509 = CertificateManager.GenerateTlsSni01Certificate(sni);
                 CertificateManager.StoreCertificate(x509);
-                iisManager.InstallCertificateforBinding(managedSite, x509, sni);
+                var certStoreName = CertificateManager.GetDefaultStore().Name;
+
+                iisManager.InstallCertificateforBinding(certStoreName, x509.GetCertHash(), managedSite, sni);
 
                 // add check to the queue
                 checkQueue.Add(() => NetUtil.CheckSNI(domain, sni));
