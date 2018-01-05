@@ -12,7 +12,6 @@ using Org.BouncyCastle.Utilities;
 using Org.BouncyCastle.X509;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
@@ -87,7 +86,7 @@ namespace Certify.Management
             return cert;
         }
 
-        public static async Task<X509Certificate2> StoreCertificate(string host, string pfxFile, bool isRetry = false)
+        public static async Task<X509Certificate2> StoreCertificate(string host, string pfxFile, bool isRetry = false, bool enableRetryBehaviour = true)
         {
             // https://support.microsoft.com/en-gb/help/950090/installing-a-pfx-file-using-x509certificate-from-a-standard--net-appli
             var certificate = new X509Certificate2(pfxFile, "", X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
@@ -102,12 +101,15 @@ namespace Certify.Management
             // storing private key properly)
             var storedCert = GetCertificateByThumbprint(cert.Thumbprint);
 
-            if (!isRetry)
+            if (enableRetryBehaviour)
             {
-                // hack/workaround - importing cert from system account causes private key to be
-                // transient. Re-import the same cert fixes it. re -try apply .net dev on why
-                // re-import helps with private key: https://stackoverflow.com/questions/40892512/add-a-generated-certificate-to-the-store-and-update-an-iis-site-binding
-                return await StoreCertificate(host, pfxFile, isRetry: true);
+                if (!isRetry)
+                {
+                    // hack/workaround - importing cert from system account causes private key to be
+                    // transient. Re-import the same cert fixes it. re -try apply .net dev on why
+                    // re-import helps with private key: https://stackoverflow.com/questions/40892512/add-a-generated-certificate-to-the-store-and-update-an-iis-site-binding
+                    return await StoreCertificate(host, pfxFile, isRetry: true);
+                }
             }
 
             if (storedCert == null)
@@ -118,9 +120,14 @@ namespace Certify.Management
             {
                 try
                 {
-                    var k = storedCert.PrivateKey.KeyExchangeAlgorithm;
-                    Debug.WriteLine(k);
-                    return storedCert;
+                    if (!storedCert.HasPrivateKey)
+                    {
+                        throw new Exception("Private key not available.");
+                    }
+                    else
+                    {
+                        return storedCert;
+                    }
                 }
                 catch (Exception)
                 {

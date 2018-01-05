@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace Certify.Management
@@ -21,6 +20,8 @@ namespace Certify.Management
         private readonly IdnMapping _idnMapping = new IdnMapping();
 
         private bool _isIISAvailable { get; set; }
+
+        private bool _enableCertDoubleImportBehaviour { get; set; } = true;
 
         public bool IsIISAvailable
         {
@@ -112,29 +113,33 @@ namespace Certify.Management
             return srv;
         }
 
-        public IEnumerable<Site> GetSites(ServerManager iisManager, bool includeOnlyStartedSites)
+        public IEnumerable<Site> GetSites(ServerManager iisManager, bool includeOnlyStartedSites, string siteId = null)
         {
             try
             {
+                var siteList = iisManager.Sites.AsQueryable();
+                if (siteId != null) siteList = siteList.Where(s => s.Id.ToString() == siteId);
+
                 if (includeOnlyStartedSites)
                 {
                     //s.State may throw a com exception for sites in an invalid state.
+                    Func<Site, bool> isSiteStarted = (s) =>
+                         {
+                             try
+                             {
+                                 return s.State == ObjectState.Started;
+                             }
+                             catch (Exception)
+                             {
+                                 return false;
+                             }
+                         };
 
-                    return iisManager.Sites.Where(s =>
-                    {
-                        try
-                        {
-                            return s.State == ObjectState.Started;
-                        }
-                        catch (Exception)
-                        {
-                            return false;
-                        }
-                    });
+                    return siteList.Where(s => isSiteStarted(s));
                 }
                 else
                 {
-                    return iisManager.Sites;
+                    return siteList;
                 }
             }
             catch (Exception)
@@ -210,9 +215,8 @@ namespace Certify.Management
             {
                 if (iisManager != null)
                 {
-                    var sites = GetSites(iisManager, ignoreStoppedSites);
+                    var sites = GetSites(iisManager, ignoreStoppedSites, siteId);
 
-                    if (siteId != null) sites = sites.Where(s => s.Id.ToString() == siteId);
                     foreach (var site in sites)
                     {
                         foreach (var binding in site.Bindings.OrderByDescending(b => b?.EndPoint?.Port))
@@ -349,8 +353,10 @@ namespace Certify.Management
             using (var iisManager = GetDefaultServerManager())
             {
                 Site siteToRemove = iisManager.Sites[siteName];
-
-                iisManager.Sites.Remove(siteToRemove);
+                if (siteToRemove != null)
+                {
+                    iisManager.Sites.Remove(siteToRemove);
+                }
                 iisManager.CommitChanges();
             }
         }
@@ -436,16 +442,19 @@ namespace Certify.Management
             }
 
             //store cert against primary domain
-            var storedCert = await CertificateManager.StoreCertificate(requestConfig.PrimaryDomain, pfxPath);
+            string certStoreName = CertificateManager.GetDefaultStore().Name;
+            var storedCert = await CertificateManager.StoreCertificate(requestConfig.PrimaryDomain, pfxPath, isRetry: false, enableRetryBehaviour: _enableCertDoubleImportBehaviour);
 
             if (storedCert != null)
             {
+                var certHash = storedCert.GetCertHash();
                 var site = FindManagedSite(managedSite);
 
                 //get list of domains we need to create/update https bindings for
                 List<string> dnsHosts = new List<string> {
                     ToUnicodeString(requestConfig.PrimaryDomain)
                 };
+
                 if (requestConfig.SubjectAlternativeNames != null)
                 {
                     foreach (var san in requestConfig.SubjectAlternativeNames)
@@ -469,7 +478,7 @@ namespace Certify.Management
 
                         //create/update binding and associate new cert
                         //if any binding elements configured, use those, otherwise auto bind using defaults and SNI
-                        InstallCertificateforBinding(site, storedCert, hostname,
+                        InstallCertificateforBinding(certStoreName, certHash, site, hostname,
                             sslPort: !String.IsNullOrWhiteSpace(requestConfig.BindingPort) ? int.Parse(requestConfig.BindingPort) : 443,
                             useSNI: (requestConfig.BindingUseSNI != null ? (bool)requestConfig.BindingUseSNI : true),
                             ipAddress: !String.IsNullOrWhiteSpace(requestConfig.BindingIPAddress) ? requestConfig.BindingIPAddress : null,
@@ -533,12 +542,12 @@ namespace Certify.Management
         /// <param name="sslPort"></param>
         /// <param name="useSNI"></param>
         /// <param name="ipAddress"></param>
-        public bool InstallCertificateforBinding(ManagedSite managedSite, X509Certificate2 certificate, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null, bool alwaysRecreateBindings = false)
+        public bool InstallCertificateforBinding(string certStoreName, byte[] certificateHash, ManagedSite managedSite, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null, bool alwaysRecreateBindings = false)
         {
             var site = FindManagedSite(managedSite);
             if (site == null) return false;
 
-            return InstallCertificateforBinding(site, certificate, host, sslPort, useSNI, ipAddress, alwaysRecreateBindings);
+            return InstallCertificateforBinding(certStoreName, certificateHash, site, host, sslPort, useSNI, ipAddress, alwaysRecreateBindings);
         }
 
         /// <summary>
@@ -551,11 +560,8 @@ namespace Certify.Management
         /// <param name="sslPort"></param>
         /// <param name="useSNI"></param>
         /// <param name="ipAddress"></param>
-        public bool InstallCertificateforBinding(Site site, X509Certificate2 certificate, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null, bool alwaysRecreateBindings = false)
+        public bool InstallCertificateforBinding(string certStoreName, byte[] certificateHash, Site site, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null, bool alwaysRecreateBindings = false)
         {
-            var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
-            store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
-
             using (var iisManager = GetDefaultServerManager())
             {
                 if (GetIisVersion().Major < 8)
@@ -575,8 +581,8 @@ namespace Certify.Management
                     if (existingBinding != null)
                     {
                         // Update existing https Binding
-                        existingBinding.CertificateHash = certificate.GetCertHash();
-                        existingBinding.CertificateStoreName = store.Name;
+                        existingBinding.CertificateHash = certificateHash;
+                        existingBinding.CertificateStoreName = certStoreName;
                     }
                     else
                     {
@@ -584,7 +590,7 @@ namespace Certify.Management
                         string bindingSpec = (!String.IsNullOrEmpty(ipAddress) ? ipAddress : "*") +
                             ":" + sslPort + ":" + internationalHost;
 
-                        var iisBinding = siteToUpdate.Bindings.Add(bindingSpec, certificate.GetCertHash(), store.Name);
+                        var iisBinding = siteToUpdate.Bindings.Add(bindingSpec, certificateHash, certStoreName);
 
                         iisBinding.Protocol = "https";
 
@@ -597,7 +603,6 @@ namespace Certify.Management
                             catch (Exception)
                             {
                                 // failed to enable SNI
-                                store.Close();
                                 return false;
                             }
                         }
@@ -610,7 +615,6 @@ namespace Certify.Management
                 }
 
                 iisManager.CommitChanges();
-                store.Close();
 
                 return true;
             }
