@@ -672,7 +672,7 @@ namespace Certify
             catch (Exception exp)
             {
                 // failed to register the domain identifier with LE (rate limit or CAA fail?)
-                LogAction("NewIdentifier", exp.ToString());
+                LogAction("NewIdentifier [" + domain + "]", exp.ToString());
                 return new PendingAuthorization { AuthorizationError = exp.ToString() };
             }
 

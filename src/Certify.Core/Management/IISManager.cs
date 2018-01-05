@@ -131,7 +131,8 @@ namespace Certify.Management
                              }
                              catch (Exception)
                              {
-                                 return false;
+                                 // if we get an exception testing state, assume site is running
+                                 return true;
                              }
                          };
 
@@ -226,7 +227,10 @@ namespace Certify.Management
                             //ignore bindings which are not http or https
                             if (bindingDetails.Protocol?.ToLower().StartsWith("http") == true)
                             {
-                                result.Add(bindingDetails);
+                                if (!String.IsNullOrEmpty(bindingDetails.Host) && bindingDetails.Host.Contains("."))
+                                {
+                                    result.Add(bindingDetails);
+                                }
                             }
                         }
                     }

@@ -43,7 +43,8 @@ namespace Certify.UI.Controls
             {
                 this.SettingsTab.SelectedIndex = 0;
 
-                if (MainViewModel.SelectedItem != null)
+                // ie only need the list of sites for new managed sites, existing ones are already set
+                if (MainViewModel.SelectedItem != null && MainViewModel.SelectedItem.Id == null)
                 {
                     //get list of sites from IIS. FIXME: this is async and we should gather this at startup (or on refresh) instead
                     WebSiteList = new ObservableCollection<SiteBindingItem>(await MainViewModel.CertifyClient.GetServerSiteList(StandardServerTypes.IIS));
