@@ -16,7 +16,6 @@ namespace Certify.Management
     {
         #region IIS
 
-        // private readonly bool _showOnlyStartedWebsites = Properties.Settings.Default.ShowOnlyStartedWebsites;
         private readonly IdnMapping _idnMapping = new IdnMapping();
 
         private bool _isIISAvailable { get; set; }
@@ -227,7 +226,7 @@ namespace Certify.Management
                             //ignore bindings which are not http or https
                             if (bindingDetails.Protocol?.ToLower().StartsWith("http") == true)
                             {
-                                //if (!String.IsNullOrEmpty(bindingDetails.Host) && bindingDetails.Host.Contains("."))
+                                if (!String.IsNullOrEmpty(bindingDetails.Host) && bindingDetails.Host.Contains("."))
                                 {
                                     result.Add(bindingDetails);
                                 }
