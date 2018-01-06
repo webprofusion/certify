@@ -654,7 +654,8 @@ namespace Certify.Management
                         actionLogMsg = lastActionLogItem.ToString();
                     }
 
-                    LogMessage(managedSite.Id, $"Could not begin authorization for domain with Let's Encrypt: { domain } {(authorization?.AuthorizationError != null ? authorization?.AuthorizationError : "Could not register domain identifier")} - {actionLogMsg}");
+                    LogMessage(managedSite.Id, $"Could not begin authorization for domain with Let's Encrypt: [{ domain }] {(authorization?.AuthorizationError != null ? authorization?.AuthorizationError : "Could not register domain identifier")} - {actionLogMsg}");
+                    failureSummaryMessage = $"[{domain}] : {authorization?.AuthorizationError}";
 
                     allIdentifiersValidated = false;
                 }

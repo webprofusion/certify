@@ -669,6 +669,15 @@ namespace Certify
             {
                 var authState = ACMESharpUtils.NewIdentifier(identifierAlias, idnMapping.GetAscii(domain));
             }
+            catch (ACMESharp.AcmeClient.AcmeWebException exp)
+            {
+                //if we don't know the problem details, report the whole exception
+                if (exp.Response?.ProblemDetail == null) throw exp;
+
+                // failed to register the domain identifier with LE (invalid, rate limit or CAA fail?)
+                LogAction("NewIdentifier [" + domain + "]", exp.Response.ProblemDetail.OrignalContent);
+                return new PendingAuthorization { AuthorizationError = $"{exp.Response.ProblemDetail.Detail} : {exp.Response.ProblemDetail.Type}" };
+            }
             catch (Exception exp)
             {
                 // failed to register the domain identifier with LE (rate limit or CAA fail?)

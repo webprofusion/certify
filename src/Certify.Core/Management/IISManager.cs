@@ -227,7 +227,7 @@ namespace Certify.Management
                             //ignore bindings which are not http or https
                             if (bindingDetails.Protocol?.ToLower().StartsWith("http") == true)
                             {
-                                if (!String.IsNullOrEmpty(bindingDetails.Host) && bindingDetails.Host.Contains("."))
+                                //if (!String.IsNullOrEmpty(bindingDetails.Host) && bindingDetails.Host.Contains("."))
                                 {
                                     result.Add(bindingDetails);
                                 }
