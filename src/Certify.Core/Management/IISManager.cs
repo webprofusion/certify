@@ -590,25 +590,49 @@ namespace Certify.Management
                     else
                     {
                         //add new https binding at default port "<ip>:port:hostDnsName";
-                        string bindingSpec = (!String.IsNullOrEmpty(ipAddress) ? ipAddress : "*") +
-                            ":" + sslPort + ":" + internationalHost;
+                        string bindingSpec = $"{(!String.IsNullOrEmpty(ipAddress) ? ipAddress : " * ")}:{sslPort}:{internationalHost}";
 
-                        var iisBinding = siteToUpdate.Bindings.Add(bindingSpec, certificateHash, certStoreName);
+                        /*
+                    var iisBinding = siteToUpdate.Bindings.Add(bindingSpec, certificateHash, certStoreName);
 
-                        iisBinding.Protocol = "https";
+                    iisBinding.Protocol = "https";
+
+                    if (useSNI)
+                    {
+                        try
+                        {
+                            iisBinding["sslFlags"] = 1; //enable sni
+                        }
+                        catch (Exception)
+                        {
+                            // failed to enable SNI
+                            return false;
+                        }
+                    }*/
+
+                        var binding = siteToUpdate.Bindings.CreateElement();
+
+                        // Set binding values
+                        binding.Protocol = "https";
+                        binding.BindingInformation = bindingSpec;
+                        binding.CertificateStoreName = certStoreName;
+                        binding.CertificateHash = certificateHash;
 
                         if (useSNI)
                         {
                             try
                             {
-                                iisBinding["sslFlags"] = 1; //enable sni
+                                binding["sslFlags"] = 1; // enable SNI
                             }
                             catch (Exception)
                             {
-                                // failed to enable SNI
+                                //faield to set requested SNI flag
                                 return false;
                             }
                         }
+
+                        // Add the binding to the site
+                        siteToUpdate.Bindings.Add(binding);
                     }
                 }
                 else

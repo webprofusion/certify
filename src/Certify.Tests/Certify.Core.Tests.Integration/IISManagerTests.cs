@@ -3,8 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Net;
 
 namespace Certify.Core.Tests
 {
@@ -99,6 +98,25 @@ namespace Certify.Core.Tests
             iisManager.CreateSite("MSMQTest", "localhost", PrimaryIISRoot, null, protocol: "net.msmq", ipAddress: null, port: null);
 
             var sites = iisManager.GetSiteBindingList(false);
+        }
+
+        [TestMethod]
+        public void TestCreateFixedIPBindings()
+        {
+            var testName = testSiteName + "FixedIP";
+            var testDomainName = "FixedIPtest.com";
+            if (iisManager.SiteExists(testName))
+            {
+                iisManager.DeleteSite(testName);
+            }
+
+            var ipAddress =
+            Dns.GetHostEntry(Dns.GetHostName()).AddressList[0].ToString();
+            iisManager.CreateSite(testName, testDomainName, PrimaryIISRoot, "DefaultAppPool", "http", ipAddress);
+
+            Assert.IsTrue(iisManager.SiteExists(testSiteName));
+            var site = iisManager.GetSiteByDomain(testDomainName);
+            Assert.IsTrue(site.Bindings.Any(b => b.Host == testDomainName && b.BindingInformation.Contains(ipAddress)));
         }
 
         [TestMethod]
