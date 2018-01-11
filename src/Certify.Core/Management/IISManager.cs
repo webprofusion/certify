@@ -590,7 +590,7 @@ namespace Certify.Management
                     else
                     {
                         //add new https binding at default port "<ip>:port:hostDnsName";
-                        string bindingSpec = $"{(!String.IsNullOrEmpty(ipAddress) ? ipAddress : " * ")}:{sslPort}:{internationalHost}";
+                        string bindingSpec = $"{(!String.IsNullOrEmpty(ipAddress) ? ipAddress : "*")}:{sslPort}:{internationalHost}";
 
                         /*
                     var iisBinding = siteToUpdate.Bindings.Add(bindingSpec, certificateHash, certStoreName);
@@ -626,7 +626,7 @@ namespace Certify.Management
                             }
                             catch (Exception)
                             {
-                                //faield to set requested SNI flag
+                                //failed to set requested SNI flag
                                 return false;
                             }
                         }

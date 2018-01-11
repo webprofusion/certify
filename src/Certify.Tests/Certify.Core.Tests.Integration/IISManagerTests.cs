@@ -140,6 +140,24 @@ namespace Certify.Core.Tests
         }
 
         [TestMethod]
+        public void TestLongBinding()
+        {
+            var testName = testSiteName + "LongBinding";
+            var testDomainName = "86098fca1cae7442046562057b1ea940.f3368e3a3240d27430a814c46f7b2c5d.acme.invalid";
+            if (iisManager.SiteExists(testName))
+            {
+                iisManager.DeleteSite(testName);
+            }
+            iisManager.CreateSite(testName, testDomainName, PrimaryIISRoot, null);
+            var site = iisManager.GetSiteByDomain(testDomainName);
+            var certStoreName = "MY";
+            var cert = CertificateManager.GetCertificatesFromStore().First();
+            iisManager.InstallCertificateforBinding(certStoreName, cert.GetCertHash(), site, testDomainName);
+
+            Assert.IsTrue(iisManager.SiteExists(testName));
+        }
+
+        [TestMethod]
         public void TestPrimarySites()
         {
             //get all sites
