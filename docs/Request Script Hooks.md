@@ -2,6 +2,8 @@
 
 Certify is extendable via PowerShell scripts which can be configured to run before or after the Certificate Request. The scripts are provided a parameter `$result` which contains the status and details of the site whose certificate is being requested. You may execute any commands that the user running the test script has access to, including creating new processes, or using other command line tools.
 
+A common use for script hooks is to use your new certificate for services other than IIS websites, such as Microsoft Exchange, RDP Gateway, FTP servers and other services.
+
 ## Script Basics
 
 Here is a sample script which demonstrates a few commonly accessed pieces of information:
@@ -23,6 +25,9 @@ $result.ManagedItem.RequestConfig.WebsiteRootPath   # ex: "C:\inetpub\wwwroot"
 
 # the path to the created/renewed certificate PFX file
 $result.MangagedItem.CertificatePath   # ex: "C:\ProgramData\ACMESharp\sysVault\99-ASSET\cert_ident8cf8bd9c-all.pfx"
+
+# the certificate thumbprint
+$result.ManagedItem.CertificateThumbprintHash # ex: "78b1080a1bf5e7fc0bbb0c0614fc4a18932db5f9"
 
 # set to $true in a pre-request hook to prevent the certificate from 
 # being requested (has no effect in post-request hooks)
@@ -93,6 +98,13 @@ certutil -f -p Certify -exportpfx $pfx.SerialNumber $tempfile
 certutil -delstore my $pfx.SerialNumber
 certutil -p Certify -csp "Microsoft RSA SChannel Cryptographic Provider" -importpfx $tempfile
 remove-item $tempfile
+```
+
+### Example: Enable certificate for Exchange 2013 / 2016 services on same server
+
+```PowerShell
+param($result)
+Enable-ExchangeCertificate -Thumbprint $result.ManagedItem.CertificateThumbprintHash -Services POP,IMAP,SMTP,IIS
 ```
 
 ### Example: update Remote Desktop Role Certificates
