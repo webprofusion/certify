@@ -484,7 +484,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to  [Free Trial Version].
+        ///   Looks up a localized string similar to  [Community Edition].
         /// </summary>
         public static string MainWindow_TitleTrialPostfix {
             get {
