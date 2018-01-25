@@ -280,6 +280,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y "$(TargetDir)$(TargetName).dll" "$(SolutionDir)\src\Certify.Service\bin\$(Configuration)\plugins\$(TargetName).dll"</PostBuildEvent>
+    <PostBuildEvent>REM copy /Y "$(TargetDir)$(TargetName).dll" "$(SolutionDir)\src\Certify.Service\bin\$(Configuration)\plugins\$(TargetName).dll"</PostBuildEvent>
   </PropertyGroup>
 </Project>
