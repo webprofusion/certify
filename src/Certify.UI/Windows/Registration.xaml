@@ -7,7 +7,7 @@
         xmlns:local="clr-namespace:Certify.UI.Windows"
         xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
         mc:Ignorable="d"
-        Title="Add to Dashboard" Height="201.6" Width="363.6"
+        Title="{x:Static res:SR.Registration}" Height="201.6" Width="363.6"
         GlowBrush="{DynamicResource AccentColorBrush}" ResizeMode="NoResize"
         BorderThickness="1" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner">
     <Grid Margin="0,0,0,-19">
