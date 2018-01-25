@@ -61,6 +61,12 @@ namespace Certify.UI.Controls
                 return false;
             }
 
+            if (item.Id == null && item.RequestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
+            {
+                MessageBox.Show("Sorry, the tls-sni-01 challenge type is not longer supported by Let's Encrypt for new certificates.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
             if (String.IsNullOrEmpty(item.Name))
             {
                 MessageBox.Show(SR.ManagedItemSettings_NameRequired, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
