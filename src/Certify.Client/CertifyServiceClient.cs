@@ -12,7 +12,7 @@ namespace Certify.Client
     // This version of the client communicates with the Certify.Service instance on the local machine
     public class CertifyServiceClient : ICertifyClient
     {
-        private HttpClient _client = new HttpClient();
+        private HttpClient _client;
 #if DEBUG
         private string _baseUri = Certify.Locales.ConfigResources.LocalServiceBaseURIDebug + "/api/";
 #else
@@ -44,12 +44,15 @@ namespace Certify.Client
 
         public CertifyServiceClient()
         {
+            // use windows authentication
+            _client = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true });
             _client.Timeout = new TimeSpan(0, 20, 0); // 20 min timeout on service api calls
         }
 
         public async Task ConnectStatusStreamAsync()
         {
             connection = new HubConnection(url);
+            connection.Credentials = System.Net.CredentialCache.DefaultCredentials;
             hubProxy = connection.CreateHubProxy("StatusHub");
 
             hubProxy.On<ManagedSite>("ManagedSiteUpdated", (u) => OnManagedSiteUpdated?.Invoke(u));

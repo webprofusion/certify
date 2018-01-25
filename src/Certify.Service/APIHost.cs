@@ -2,6 +2,7 @@
 using Microsoft.AspNet.SignalR;
 using Owin;
 using Swashbuckle.Application;
+using System.Net;
 using System.Web.Http;
 
 namespace Certify.Service
@@ -15,6 +16,10 @@ namespace Certify.Service
         public void Configuration(IAppBuilder appBuilder)
         {
             var config = new HttpConfiguration();
+
+            // enable windows auth credentials
+            Microsoft.Owin.Host.HttpListener.OwinHttpListener listener = (Microsoft.Owin.Host.HttpListener.OwinHttpListener)appBuilder.Properties["Microsoft.Owin.Host.HttpListener.OwinHttpListener"];
+            listener.Listener.AuthenticationSchemes = AuthenticationSchemes.IntegratedWindowsAuthentication;
 
             // inject single CertifyManager for service to use
             _container = new ServiceContainer();

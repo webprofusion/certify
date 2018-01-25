@@ -1,10 +1,24 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
+using System.Security.Principal;
 using System.Web.Http;
+using System.Web.Http.Controllers;
 
 namespace Certify.Service.Controllers
 {
+    public class CustomAuthCheckAttribute : AuthorizeAttribute
+    {
+        protected override bool IsAuthorized(HttpActionContext actionContext)
+        {
+            System.Security.Principal.WindowsPrincipal user = actionContext.RequestContext.Principal as System.Security.Principal.WindowsPrincipal;
+            if (user.IsInRole(WindowsBuiltInRole.Administrator)) return true;
+            if (user.IsInRole(WindowsBuiltInRole.PowerUser)) return true;
+
+            return base.IsAuthorized(actionContext);
+        }
+    }
+
+    [CustomAuthCheck]
     public class ControllerBase : ApiController
     {
         public void DebugLog(string msg = null,
