@@ -35,6 +35,8 @@ namespace Certify.UI.Controls
             this.MainViewModel.PropertyChanged += MainViewModel_PropertyChanged;
 
             WebSiteList = new ObservableCollection<SiteBindingItem>();
+
+            ChallengeProviderList.ItemsSource = Models.Config.ChallengeProviders.Providers.Where(p => p.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
         }
 
         private async void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -61,7 +63,7 @@ namespace Certify.UI.Controls
                 return false;
             }
 
-            if (item.Id == null && item.RequestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
+ 			if (item.Id == null && item.RequestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
             {
                 MessageBox.Show("Sorry, the tls-sni-01 challenge type is not longer supported by Let's Encrypt for new certificates.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
@@ -73,8 +75,19 @@ namespace Certify.UI.Controls
                 return false;
             }
 
+            // check primary domain is also checked
+            if (MainViewModel.PrimarySubjectDomain != null && MainViewModel.SelectedItem.DomainOptions.Any())
+            {
+                var primaryDomain = MainViewModel.SelectedItem.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain);
+                if (primaryDomain != null && !primaryDomain.IsSelected)
+                {
+                    primaryDomain.IsSelected = true;
+                }
+            }
+
             if (MainViewModel.PrimarySubjectDomain == null)
             {
+                // if we still can't decide on the primary domain ask user to define it
                 MessageBox.Show(SR.ManagedItemSettings_NeedPrimaryDomain, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
@@ -133,6 +146,18 @@ namespace Certify.UI.Controls
                 item.RequestConfig.WebhookMethod = null;
                 item.RequestConfig.WebhookContentType = null;
                 item.RequestConfig.WebhookContentBody = null;
+            }
+
+            // if DNS etc provider in use, store the selected provider
+            if (ChallengeProviderList.SelectedItem != null)
+            {
+                item.RequestConfig.ChallengeProvider = ((Models.Config.ChallengeProvider)ChallengeProviderList.SelectedItem).Id;
+            }
+
+            //if stored credential required, store selection
+            if (StoredCredentialList.SelectedItem != null)
+            {
+                item.RequestConfig.ChallengeCredentialKey = ((Models.Config.StoredCredential)StoredCredentialList.SelectedItem).StorageKey;
             }
 
             //save changes
@@ -392,9 +417,9 @@ namespace Certify.UI.Controls
                     return;
                 }
                 bool forSuccess = config.WebhookTrigger == Webhook.ON_SUCCESS;
-                var (success, status) = await Webhook.SendRequest(config, forSuccess);
-                string completed = success ? SR.succeed : SR.failed;
-                MessageBox.Show(string.Format(SR.ManagedItemSettings_WebhookRequestResult, completed, status), SR.ManagedItemSettings_WebhookTest, MessageBoxButton.OK, MessageBoxImage.Information);
+                var webhookResult = await Webhook.SendRequest(config, forSuccess);
+                string completed = webhookResult.Success ? SR.succeed : SR.failed;
+                MessageBox.Show(string.Format(SR.ManagedItemSettings_WebhookRequestResult, completed, webhookResult.StatusCode), SR.ManagedItemSettings_WebhookTest, MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
@@ -457,6 +482,10 @@ namespace Certify.UI.Controls
         private async void RefreshSanList_Click(object sender, RoutedEventArgs e)
         {
             await MainViewModel.SANRefresh();
+        }
+
+        private void AddStoredCredential_Click(object sender, RoutedEventArgs e)
+        {
         }
     }
 }

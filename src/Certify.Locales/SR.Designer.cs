@@ -223,6 +223,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add/Update Stored Credential.
+        /// </summary>
+        public static string Credentials_EditCredential {
+            get {
+                return ResourceManager.GetString("Credentials_EditCredential", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to To add this server to your dashboard, provide your https://certifytheweb.com/profile sign in details or register a new account:.
         /// </summary>
         public static string Dashboard_AddIntro {

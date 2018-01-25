@@ -159,17 +159,17 @@ namespace Certify.Management
             else
             {
                 // no core app settings yet, migrate from old settings
-                Certify.Properties.Settings.Default.Reload();
-                var oldProps = Certify.Properties.Settings.Default;
-                CoreAppSettings.Current.CheckForUpdatesAtStartup = oldProps.CheckForUpdatesAtStartup;
-                CoreAppSettings.Current.EnableAppTelematics = oldProps.EnableAppTelematics;
-                CoreAppSettings.Current.EnableDNSValidationChecks = oldProps.EnableDNSValidationChecks;
-                CoreAppSettings.Current.EnableEFS = oldProps.EnableEFS;
-                CoreAppSettings.Current.EnableValidationProxyAPI = oldProps.EnableValidationProxyAPI;
-                CoreAppSettings.Current.IgnoreStoppedSites = oldProps.ShowOnlyStartedWebsites;
-                CoreAppSettings.Current.RenewalIntervalDays = oldProps.RenewalIntervalDays;
-                CoreAppSettings.Current.MaxRenewalRequests = oldProps.MaxRenewalRequests;
-                CoreAppSettings.Current.VaultPath = oldProps.VaultPath;
+                //Certify.Properties.Settings.Default.Reload();
+                //var oldProps = Certify.Properties.Settings.Default;
+                /* CoreAppSettings.Current.CheckForUpdatesAtStartup = oldProps.CheckForUpdatesAtStartup;
+                 CoreAppSettings.Current.EnableAppTelematics = oldProps.EnableAppTelematics;
+                 CoreAppSettings.Current.EnableDNSValidationChecks = oldProps.EnableDNSValidationChecks;
+                 CoreAppSettings.Current.EnableEFS = oldProps.EnableEFS;
+                 CoreAppSettings.Current.EnableValidationProxyAPI = oldProps.EnableValidationProxyAPI;
+                 CoreAppSettings.Current.IgnoreStoppedSites = oldProps.ShowOnlyStartedWebsites;
+                 CoreAppSettings.Current.RenewalIntervalDays = oldProps.RenewalIntervalDays;
+                 CoreAppSettings.Current.MaxRenewalRequests = oldProps.MaxRenewalRequests;
+                 CoreAppSettings.Current.VaultPath = oldProps.VaultPath;*/
 
                 CoreAppSettings.Current.LegacySettingsUpgraded = true;
                 CoreAppSettings.Current.IsInstanceRegistered = false;

@@ -1,4 +1,5 @@
 ﻿using Certify.Models;
+using Certify.Models.Config;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -85,6 +86,16 @@ namespace Certify.Client
 
         #endregion Preferences
 
+        #region Credentials
+
+        Task<List<StoredCredential>> GetCredentials();
+
+        Task<bool> UpdateCredentials(StoredCredential credential);
+
+        Task<bool> DeleteCredential(string credentialKey);
+
+        #endregion Credentials
+
         #region Managed Sites
 
         Task<List<ManagedSite>> GetManagedSites(ManagedSiteFilter filter);
@@ -95,7 +106,7 @@ namespace Certify.Client
 
         Task<bool> DeleteManagedSite(string managedSiteId);
 
-        Task<APIResult> RevokeManageSiteCertificate(string managedSiteId);
+        Task<StatusMessage> RevokeManageSiteCertificate(string managedSiteId);
 
         Task<List<CertificateRequestResult>> BeginAutoRenewal();
 
@@ -105,7 +116,7 @@ namespace Certify.Client
 
         Task<RequestProgressState> CheckCertificateRequest(string managedSiteId);
 
-        Task<APIResult> TestChallengeConfiguration(ManagedSite site);
+        Task<StatusMessage> TestChallengeConfiguration(ManagedSite site);
 
         #endregion Managed Sites
 

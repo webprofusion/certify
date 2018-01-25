@@ -135,7 +135,7 @@ namespace Certify.Management
 
                 try
                 {
-                    sha = (SHA256)new System.Security.Cryptography.SHA256Managed();
+                    sha = System.Security.Cryptography.SHA256.Create();
                 }
                 catch (System.InvalidOperationException)
                 {

@@ -53,7 +53,7 @@ namespace Certify.Service
         }
 
         [HttpPost, Route("testconfig")]
-        public async Task<APIResult> TestChallengeResponse(ManagedSite site)
+        public async Task<StatusMessage> TestChallengeResponse(ManagedSite site)
         {
             DebugLog();
 
@@ -101,7 +101,7 @@ namespace Certify.Service
         }
 
         [HttpGet, Route("revoke/{managedSiteId}")]
-        public async Task<APIResult> RevokeCertificate(string managedSiteId)
+        public async Task<StatusMessage> RevokeCertificate(string managedSiteId)
         {
             DebugLog();
 

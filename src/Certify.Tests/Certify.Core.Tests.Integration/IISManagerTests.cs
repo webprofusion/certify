@@ -1,4 +1,5 @@
 ﻿using Certify.Management;
+using Certify.Management.Servers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -13,13 +14,16 @@ namespace Certify.Core.Tests
     /// </summary>
     public class IISManagerTests : IntegrationTestBase, IDisposable
     {
-        private IISManager iisManager;
+        private ServerProviderIIS iisManager;
         private string testSiteName = "Test2CertRequest";
-        private string testSiteDomain = "integration2." + PrimaryTestDomain;
+        private string testSiteDomain = "test.com";
 
         public IISManagerTests()
         {
-            iisManager = new IISManager();
+            iisManager = new ServerProviderIIS();
+
+            // see integration test base for env variable
+            testSiteDomain = "integration2." + PrimaryTestDomain;
 
             //perform setup for IIS
             SetupIIS();
@@ -60,7 +64,7 @@ namespace Certify.Core.Tests
         [TestMethod]
         public void TestIISVersionCheck()
         {
-            var version = iisManager.GetIisVersion();
+            var version = iisManager.GetServerVersion();
             Assert.IsTrue(version.Major >= 7);
         }
 

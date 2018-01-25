@@ -9,37 +9,72 @@
              xmlns:fa="http://schemas.fontawesome.io/icons/" xmlns:ViewModel="clr-namespace:Certify.UI.ViewModel" x:Class="Certify.UI.Controls.Settings"
              mc:Ignorable="d"
              xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-             d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}" Loaded="UserControl_Loaded">
+             d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}" Loaded="UserControl_Loaded" Height="420.042" Width="885.537">
 
     <StackPanel Orientation="Vertical" Margin="0,8,0,16">
-
-        <StackPanel Orientation="Horizontal" Margin="8,0,10,0" Height="32">
-            <Button Click="Button_NewContact" Margin="0
+        <TabControl x:Name="MainTabControl"  Margin="8,8,8,8" HorizontalContentAlignment="Left" VerticalContentAlignment="Stretch"   Height="auto">
+            <TabItem  Header="Settings" IsSelected="True" Controls:ControlsHelper.HeaderFontSize="12">
+                <StackPanel Orientation="Vertical" Margin="0,8,0,16">
+                    <StackPanel Orientation="Horizontal" Margin="8,0,10,0" Height="32">
+                        <Button Click="Button_NewContact" Margin="0
                     ,0,0,0">
-                <StackPanel Orientation="Horizontal">
-                    <fa:ImageAwesome Icon="Flag" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
-                    <TextBlock Margin="6,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.New_Contact}" /></TextBlock>
-                </StackPanel>
-            </Button>
-            <Label Content="{x:Static res:SR.Settings_PrimaryContact}" />
-            <Label Content="{Binding PrimaryContactEmail}" />
-        </StackPanel>
-        <StackPanel Orientation="Vertical" Margin="8,8,10,0">
-            <StackPanel Orientation="Horizontal" Margin="0,8">
-                <Controls:NumericUpDown x:Name="RenewalIntervalDays" Minimum = "1"  Maximum = "60" Interval = "1" Width="100" ValueChanged="RenewalIntervalDays_ValueChanged" />
-                <Label Content="{x:Static res:SR.Settings_AutoRenewalInterval}" Width="340" Margin="4,0,0,0" />
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Margin="0,8,0,8">
-                <Controls:NumericUpDown x:Name="RenewalMaxRequests" Minimum = "0"  Maximum = "100" Interval = "1" Width="100" ValueChanged="RenewalMaxRequests_ValueChanged" />
-                <Label Content="{x:Static res:SR.Settings_AutoRenewalRequestLimit}" Width="340" Margin="4,0,0,0" />
-            </StackPanel>
-            <CheckBox x:Name="EnableTelematicsCheckbox" Content="{x:Static res:SR.Settings_EnableTelemetry}" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
-            <CheckBox x:Name="EnableProxyAPICheckbox" Content="{x:Static res:SR.Settings_EnableProxyApiForDomainConfig}" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
-            <CheckBox x:Name="EnableEFS" Content="{x:Static res:SR.Settings_EnableEFS}" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
-            <CheckBox x:Name="IgnoreStoppedSites" Content="{x:Static res:SR.Settings_IgnoreStoppedSites}" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
-            <CheckBox x:Name="EnableDNSValidationChecks" Content="{x:Static res:SR.Settings_EnableDnsValidation}" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
+                            <StackPanel Orientation="Horizontal">
+                                <fa:ImageAwesome Icon="Flag" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                                <TextBlock Margin="6,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.New_Contact}" /></TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <Label Content="{x:Static res:SR.Settings_PrimaryContact}" />
+                        <Label Content="{Binding PrimaryContactEmail}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" Margin="8,8,10,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,8">
+                            <Controls:NumericUpDown x:Name="RenewalIntervalDays" Minimum = "1"  Maximum = "60" Interval = "1" Width="100" ValueChanged="RenewalIntervalDays_ValueChanged" />
+                            <Label Content="{x:Static res:SR.Settings_AutoRenewalInterval}" Width="340" Margin="4,0,0,0" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,8">
+                            <Controls:NumericUpDown x:Name="RenewalMaxRequests" Minimum = "0"  Maximum = "100" Interval = "1" Width="100" ValueChanged="RenewalMaxRequests_ValueChanged" />
+                            <Label Content="{x:Static res:SR.Settings_AutoRenewalRequestLimit}" Width="340" Margin="4,0,0,0" />
+                        </StackPanel>
+                        <CheckBox x:Name="EnableTelematicsCheckbox" Content="{x:Static res:SR.Settings_EnableTelemetry}" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
+                        <CheckBox x:Name="EnableProxyAPICheckbox" Content="{x:Static res:SR.Settings_EnableProxyApiForDomainConfig}" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
+                        <CheckBox x:Name="EnableEFS" Content="{x:Static res:SR.Settings_EnableEFS}" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
+                        <CheckBox x:Name="IgnoreStoppedSites" Content="{x:Static res:SR.Settings_IgnoreStoppedSites}" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
+                        <CheckBox x:Name="EnableDNSValidationChecks" Content="{x:Static res:SR.Settings_EnableDnsValidation}" Unchecked="SettingsUpdated" Checked="SettingsUpdated" Margin="0,4,0,0" />
 
-            <Button x:Name="Save" Content="{x:Static res:SR.SaveChanges}" Click="Save_Click" Width="160" HorizontalAlignment="Right" Margin="0,8,0,0" />
-        </StackPanel>
+                        <Button x:Name="Save" Content="{x:Static res:SR.SaveChanges}" Click="Save_Click" Width="160" HorizontalAlignment="Right" Margin="0,8,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </TabItem>
+            <TabItem  Header="Stored Credentials"  Controls:ControlsHelper.HeaderFontSize="12">
+
+                <Grid MinHeight="300">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="64" />
+                        <RowDefinition Height="32" />
+                        <RowDefinition Height="64*" />
+                        <RowDefinition Height="48" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Margin="8" TextWrapping="Wrap">Stored Credentials are saved API Keys or password for providers (DNS etc). Multiple managed sites can re-use the same stored credentials as required. These credentials are stored locally and protected using the Windows Data Protection APIs.</TextBlock>
+                    <Button Grid.Row="1" x:Name="AddStoredCredential" Width="200" Content="Add New Stored Credential" Click="AddStoredCredential_Click" HorizontalAlignment="Right" />
+                    <ListView Grid.Row="2" x:Name="CredentialsList" Background="{DynamicResource {x:Static SystemColors.AppWorkspaceBrush}}" SelectionChanged="CredentialsList_SelectionChanged" SelectionMode="Single">
+
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+
+                                <StackPanel Orientation="Horizontal">
+                                    <fa:FontAwesome Icon="Compass" Margin="0,0,8,0" />
+                                    <TextBlock Text="{Binding Title}" FontWeight="Bold" Margin="0,0,8,0" />
+                                    <TextBlock Text="{Binding DateCreated}" FontWeight="Bold" Margin="0,0,8,0" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                    <StackPanel Grid.Row="3"  Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,8" VerticalAlignment="Top">
+                        <Button x:Name="ModifyStoredCredential" Width="128" Content="Modify" HorizontalAlignment="Right" Margin="0,0,8,0" Click="ModifyStoredCredential_Click" VerticalAlignment="Top" />
+                        <Button  x:Name="DeleteStoredCredential" Width="128" Content="Delete" HorizontalAlignment="Right" Margin="0,0,8,0" Click="DeleteStoredCredential_Click" VerticalAlignment="Top" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+        </TabControl>
     </StackPanel>
 </UserControl>

@@ -244,10 +244,16 @@ namespace Certify.Management
             if (!ManagedSitesCache.Any() || IsSingleInstanceMode == false || reloadAll) await LoadAllManagedItems();
 
             // filter and convert dictionary to list TODO: use db instead of in memory filter?
-            var items = ManagedSitesCache.Values.AsEnumerable();
+            var items = ManagedSitesCache.Values.AsQueryable();
             if (filter != null)
             {
                 if (!String.IsNullOrEmpty(filter.Keyword)) items = items.Where(i => i.Name.ToLowerInvariant().Contains(filter.Keyword.ToLowerInvariant()));
+
+                if (!String.IsNullOrEmpty(filter.ChallengeType)) items = items.Where(i => i.RequestConfig.ChallengeType == filter.ChallengeType);
+
+                if (!String.IsNullOrEmpty(filter.ChallengeProvider)) items = items.Where(i => i.RequestConfig.ChallengeProvider == filter.ChallengeProvider);
+
+                if (!String.IsNullOrEmpty(filter.StoredCredentialKey)) items = items.Where(i => i.RequestConfig.ChallengeCredentialKey == filter.StoredCredentialKey);
 
                 //TODO: IncludeOnlyNextAutoRenew
                 if (filter.MaxResults > 0) items = items.Take(filter.MaxResults);

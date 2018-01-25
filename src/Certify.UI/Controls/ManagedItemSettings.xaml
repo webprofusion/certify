@@ -171,6 +171,31 @@
                                 <Style>
                                     <Setter Property="StackPanel.Visibility" Value="Collapsed" />
                                     <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static model:SupportedChallengeTypes.CHALLENGE_TYPE_DNS}">
+                                            <Setter Property="StackPanel.Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Label Width="160" Content="API Provider:" />
+                                <StackPanel Orientation="Vertical">
+                                    <ComboBox x:Name="ChallengeProviderList" DisplayMemberPath="Title" Width="255" SelectedValuePath="Id" SelectedValue="{Binding SelectedItem.RequestConfig.ChallengeProvider}" />
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                        <ComboBox x:Name="StoredCredentialList" Width="225" ItemsSource="{Binding StoredCredentials}" DisplayMemberPath="Title" SelectedValuePath="StorageKey" SelectedValue="{Binding SelectedItem.RequestConfig.ChallengeCredentialKey}" />
+
+                                        <Button x:Name="AddStoredCredential" Margin="8,0,0,0" Content="New" Click="AddStoredCredential_Click">
+                                        </Button>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style>
+                                    <Setter Property="StackPanel.Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
                                         <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static model:SupportedChallengeTypes.CHALLENGE_TYPE_SNI}">
                                             <Setter Property="StackPanel.Visibility" Value="Visible" />
                                         </DataTrigger>

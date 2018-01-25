@@ -2,6 +2,7 @@
 using Certify.Locales;
 using Certify.Management;
 using Certify.Models;
+using Certify.Models.Config;
 using PropertyChanged;
 using System;
 using System.Collections.Generic;
@@ -98,6 +99,8 @@ namespace Certify.UI.ViewModel
         /// </summary>
         public ObservableCollection<ManagedSite> ImportedManagedSites { get; set; }
 
+        public ObservableCollection<StoredCredential> StoredCredentials { get; set; }
+
         /// <summary>
         /// If true, import from vault/iis scan will merge multi domain sites into one managed site 
         /// </summary>
@@ -170,6 +173,7 @@ namespace Certify.UI.ViewModel
         // Certify-supported challenge types
         public IEnumerable<string> ChallengeTypes { get; set; } = new string[] {
             SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
+            SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
             SupportedChallengeTypes.CHALLENGE_TYPE_SNI
         };
 
@@ -202,7 +206,7 @@ namespace Certify.UI.ViewModel
 
         public DomainOption PrimarySubjectDomain
         {
-            get { return SelectedItem?.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain && d.IsSelected); }
+            get { return SelectedItem?.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain); }
             set
             {
                 foreach (var d in SelectedItem.DomainOptions)
@@ -365,13 +369,15 @@ namespace Certify.UI.ViewModel
         {
             this.Preferences = await CertifyClient.GetPreferences();
 
-            var list = await CertifyClient.GetManagedSites(new Models.ManagedSiteFilter());
+            List<ManagedSite> list = await CertifyClient.GetManagedSites(new Models.ManagedSiteFilter());
 
             foreach (var i in list) i.IsChanged = false;
 
             ManagedSites = new System.Collections.ObjectModel.ObservableCollection<Models.ManagedSite>(list);
 
             PrimaryContactEmail = await CertifyClient.GetPrimaryContact();
+
+            await RefreshStoredCredentialsList();
         }
 
         private void CertifyClient_SendMessage(string arg1, string arg2)
@@ -519,10 +525,15 @@ namespace Certify.UI.ViewModel
             var config = item.RequestConfig;
             var primaryDomain = item.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain == true);
 
-            //if no primary domain need to go back and select one
-            if (primaryDomain == null) throw new ArgumentException("Primary subject domain must be set.");
-
-            config.PrimaryDomain = primaryDomain.Domain;
+            if (!String.IsNullOrEmpty(item.WildcardDomain))
+            {
+                config.PrimaryDomain = item.WildcardDomain.Trim().ToLower();
+            }
+            else
+            {
+                //if no primary domain need to go back and select one
+                if (primaryDomain == null) throw new ArgumentException("Primary subject domain must be set.");
+            }
 
             //apply remaining selected domains as subject alternative names
             config.SubjectAlternativeNames =
@@ -665,12 +676,12 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public async Task<APIResult> TestChallengeResponse(ManagedSite managedSite)
+        public async Task<StatusMessage> TestChallengeResponse(ManagedSite managedSite)
         {
             return await CertifyClient.TestChallengeConfiguration(managedSite);
         }
 
-        public async Task<APIResult> RevokeSelectedItem()
+        public async Task<StatusMessage> RevokeSelectedItem()
         {
             var managedSite = SelectedItem;
             return await CertifyClient.RevokeManageSiteCertificate(managedSite.Id);
@@ -696,6 +707,28 @@ namespace Certify.UI.ViewModel
                 RaisePropertyChanged(nameof(HasRequestsInProgress));
                 RaisePropertyChanged(nameof(ProgressResults));
             });
+        }
+
+        public async Task<bool> UpdateCredential(StoredCredential credential)
+        {
+            var result = await CertifyClient.UpdateCredentials(credential);
+            await RefreshStoredCredentialsList();
+
+            return result;
+        }
+
+        public async Task<bool> DeleteCredential(string credentialKey)
+        {
+            var result = await CertifyClient.DeleteCredential(credentialKey);
+            await RefreshStoredCredentialsList();
+
+            return result;
+        }
+
+        public async Task RefreshStoredCredentialsList()
+        {
+            var list = await CertifyClient.GetCredentials();
+            StoredCredentials = new System.Collections.ObjectModel.ObservableCollection<Models.Config.StoredCredential>(list);
         }
 
         #endregion methods
