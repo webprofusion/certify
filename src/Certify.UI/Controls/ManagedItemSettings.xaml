@@ -17,7 +17,7 @@
              d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="38"></RowDefinition>
+            <RowDefinition Height="0"></RowDefinition>
             <RowDefinition Height="32"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
@@ -29,13 +29,15 @@
             <utils:ManagedItemHealthVisibilityConverter x:Key="HealthVisibleConverter" />
             <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
         </Grid.Resources>
-        <StackPanel Orientation="Vertical" Grid.Row="0">
+
+        <!-- managed item summary title and close button -->
+        <StackPanel Orientation="Vertical" Grid.Row="0" Visibility="Collapsed">
             <Grid Margin="0,0,4,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"></ColumnDefinition>
                     <ColumnDefinition Width="32"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
-                <Label Grid.Column="0" Content="{Binding SelectedItem.Name}" Margin="8,0,0,2" FontSize="24" FontFamily="Segoe UI Semilight" />
+                <Label Grid.Column="0" Content="{Binding SelectedItem.Name}" Margin="8,0,0,2" FontSize="24" FontFamily="Segoe UI Semilight" Padding="5,0" />
                 <Button Grid.Column="1" x:Name="Dismiss" Click="Dismiss_Click" ToolTip="Dismiss" Background="White" Margin="4,4,0,4" VerticalAlignment="Top" BorderBrush="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
                     <StackPanel Orientation="Horizontal">
                         <fa:ImageAwesome Grid.Column="1" Height="16" Width="16" Icon="WindowClose" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}" />
@@ -45,6 +47,8 @@
 
             <Label Content="{Binding ValidationError}" Margin="8,0,0,0" />
         </StackPanel>
+
+        <!-- save/request buttons-->
         <StackPanel Orientation="Horizontal" Height="32" Grid.Row="1">
 
             <Button  IsEnabled="{Binding SelectedItem.IsChanged}" Click="Button_Save" Margin="8,0,0,0">
@@ -76,61 +80,60 @@
             </Button>
         </StackPanel>
 
+        <!--settings tabs-->
         <dragablz:TabablzControl x:Name="SettingsTab" Margin="8" Grid.Row="2" FixedHeaderCount="3"
                                  VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
             <TabItem Header="{x:Static Resources:SR.ManagedItemSettings_Tab_Options}" IsSelected="True">
-                <DockPanel Margin="12,12,12,0" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
-                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Visibility="{Binding SelectedItem.Health, Converter={StaticResource ResourceKey=HealthVisibleConverter}}" Background="#FF3F3F3F" Margin="0,0,0,8">
 
-                        <fa:ImageAwesome Margin="4" Icon="ExclamationTriangle" Height="16" Foreground="#FFFDFDFD" />
-                        <TextBlock TextWrapping="WrapWithOverflow" Text="{Binding SelectedItem.RenewalFailureMessage}" Margin="4,4,16,4" Foreground="White">
-                        </TextBlock>
-                    </StackPanel>
-                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Visibility="{Binding SelectedItem.Id, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
-                        <Label Width="136" Content="{x:Static Resources:SR.ManagedItemSettings_SelectIISSite}" />
-                        <ComboBox x:Name="WebsiteDropdown"  ItemsSource="{Binding WebSiteList, UpdateSourceTrigger=Default}" SelectedItem="{Binding SelectedWebSite}"  DisplayMemberPath="SiteName" Width="225" SelectionChanged="Website_SelectionChanged" />
-                        <fa:ImageAwesome x:Name="SiteQueryInProgress" Margin="4,0,0,0" Visibility="Hidden" Icon="Refresh" Height="16" Spin="True" SpinDuration="1" />
-                    </StackPanel>
-                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                        <Label Width="136" Content="{x:Static Resources:SR.ManagedItemSettings_DisplayName}" />
-                        <TextBox Text="{Binding SelectedItem.Name, UpdateSourceTrigger=PropertyChanged}" Width="225" />
-                    </StackPanel>
-                    <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Margin="136,8,0,0">
-                        <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_EnableAutoRenewal}" IsChecked="{Binding SelectedItem.IncludeInAutoRenew}" />
-                        <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_NotifyPrimaryContactOnRenewalFailure}" IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" />
-                    </StackPanel>
-                    <StackPanel DockPanel.Dock="Top" x:Name="NoBindings" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" Orientation="Vertical"  Margin="0,8,0,0">
-                        <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="8,0" FontWeight="Bold" FontFamily="Segoe UI Semibold" Foreground="#FFEA1010"><Run Text="{x:Static Resources:SR.ManagedItemSettings_NoHostNameBindingWarning}" /></TextBlock>
-                    </StackPanel>
-                    <DockPanel DockPanel.Dock="Bottom" x:Name="DomainOptions" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=BoolToVisConverter}}" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Margin="0,8,0,0">
-                        <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Margin="0,8,8,8" HorizontalAlignment="Left">
-                            <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="8,0,0,0" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" FontWeight="Bold" FontFamily="Segoe UI Semibold"><Run Text="{x:Static Resources:SR.ManagedItemSettings_DomainIncluded}" /></TextBlock>
+                <!--general settings and domain options-->
+                <DockPanel Margin="12,12,12,0" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
+
+                    <StackPanel DockPanel.Dock="Top" x:Name="GeneralOptions" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Margin="2,0,0,0">
+                        <!-- Renewal warning messages-->
+                        <StackPanel Orientation="Horizontal" Visibility="{Binding SelectedItem.Health, Converter={StaticResource ResourceKey=HealthVisibleConverter}}" Background="#FF3F3F3F" Margin="0,0,0,8">
+                            <fa:ImageAwesome Margin="4" Icon="ExclamationTriangle" Height="16" Foreground="#FFFDFDFD" />
+                            <TextBlock TextWrapping="WrapWithOverflow" Text="{Binding SelectedItem.RenewalFailureMessage}" Margin="4,4,16,4" Foreground="White">
+                            </TextBlock>
                         </StackPanel>
-                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,8,8">
-                            <Label Content="{x:Static Resources:SR.ManagedItemSettings_SelectDomain}" />
-                            <Button Content="{x:Static Resources:SR.SelectAll}" Command="{Binding SANSelectAllCommand}" Margin="16,0,0,0" />
-                            <Button Content="{x:Static Resources:SR.ManagedItemSettings_SelectNone}" Command="{Binding SANSelectNoneCommand}" Margin="8,0,0,0" />
-                            <Button Content="{x:Static Resources:SR.ManagedItemsSettings_RefreshDomains}" Name="RefreshSanList" Click="RefreshSanList_Click" Margin="8,0,0,0" />
+
+                        <!-- Managed Item display name-->
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,8,0,0">
+                            <Label Width="136" Content="{x:Static Resources:SR.ManagedItemSettings_DisplayName}" />
+                            <TextBox Text="{Binding SelectedItem.Name, UpdateSourceTrigger=PropertyChanged}" Width="225" />
                         </StackPanel>
-                        <DataGrid AutoGenerateColumns="False" CanUserAddRows="False"
-                                  ScrollViewer.CanContentScroll="True"
-                                  VirtualizingPanel.IsVirtualizing="True"
-                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                                  ItemsSource="{Binding SelectedItem.DomainOptions}">
-                            <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="{x:Static Resources:SR.ManagedItemSettings_Primary}">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <RadioButton GroupName="PrimaryDomainGroup" IsChecked="{Binding IsPrimaryDomain, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridCheckBoxColumn Header="{x:Static Resources:SR.ManagedItemSettings_Include}" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
-                                <DataGridTextColumn Header="{x:Static Resources:SR.ManagedItemSettings_Domain}" Binding="{Binding Domain, UpdateSourceTrigger=PropertyChanged}" Width="*" IsReadOnly="True" />
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </DockPanel>
+
+                        <!-- General Options-->
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,8,0,4">
+                            <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_EnableAutoRenewal}" IsChecked="{Binding SelectedItem.IncludeInAutoRenew}" Margin="136,0,8,0" />
+                            <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_NotifyPrimaryContactOnRenewalFailure}" IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <ScrollViewer DockPanel.Dock="Bottom">
+                        <!-- domain options-->
+                        <StackPanel Margin="0,8,0,0">
+                            <TextBlock Style="{StaticResource Subheading}" >Domains and Validation</TextBlock>
+
+                            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                                <TextBlock Padding="4,4,4,4"  TextWrapping="WrapWithOverflow" VerticalAlignment="Top"  Margin="8,0" FontWeight="Normal" FontFamily="Segoe UI" HorizontalAlignment="Left"><Run Text="Which domains do you want to include in your certificate and how will you validate your control of them? You can select domain from hostname bindings on an existing website and/or add domains manually. These must all be domains where you can validate control either via DNS or by creating a required file on the website." /></TextBlock>
+                                <Button Style="{DynamicResource MetroCircleButtonStyle}" Width="32" Height="32">
+                                    <fa:ImageAwesome Icon="Question" Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                                </Button>
+                            </StackPanel>
+
+                            <dragablz:TabablzControl x:Name="DomainsTab" Margin="8" FixedHeaderCount="3"
+                                 VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                                <TabItem Header="Domains" IsSelected="True">
+
+                                    <local:ManagedItemSettingsDomains Visibility="Visible" Margin="0,8,0,0" />
+                                </TabItem>
+                                <TabItem Header="Validation" IsSelected="True">
+
+                                    <local:ManagedItemSettingsValidation Visibility="Visible" Margin="0,8,0,0" />
+                                </TabItem>
+                            </dragablz:TabablzControl>
+                        </StackPanel>
+                    </ScrollViewer>
                 </DockPanel>
             </TabItem>
             <TabItem Header="{x:Static Resources:SR.Advanced}" IsSelected="True">

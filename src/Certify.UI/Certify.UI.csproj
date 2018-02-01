@@ -86,6 +86,12 @@
     <Compile Include="Controls\GettingStarted.xaml.cs">
       <DependentUpon>GettingStarted.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ManagedItemSettingsValidation.xaml.cs">
+      <DependentUpon>ManagedItemSettingsValidation.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ManagedItemSettingsDomains.xaml.cs">
+      <DependentUpon>ManagedItemSettingsDomains.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Utils\ExpiryDateConverter.cs" />
     <Compile Include="Utils\ManagedItemHealthVisibilityConverter.cs" />
     <Compile Include="Utils\ManagedItemHealthColourConverter.cs" />
@@ -116,6 +122,14 @@
     <Page Include="Controls\GettingStarted.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ManagedItemSettingsValidation.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\ManagedItemSettingsDomains.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Controls\ManagedItemSettings.xaml">
       <SubType>Designer</SubType>
@@ -289,7 +303,7 @@
       <Version>0.0.3.197</Version>
     </PackageReference>
     <PackageReference Include="Fody">
-      <Version>2.3.22</Version>
+      <Version>2.3.23</Version>
     </PackageReference>
     <PackageReference Include="FontAwesome.WPF">
       <Version>4.7.0.9</Version>

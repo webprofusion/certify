@@ -94,7 +94,7 @@ namespace Certify.Core.Management.Challenges
             try
             {
                 var start = new ProcessStartInfo();
-
+                //FIXME: remove hard coded test paths
                 start.FileName = @"C:\ProgramData\Certify\python-embedded\python.exe";
 
                 start.WorkingDirectory = @"D:\Work\GIT\certify\src\Certify.UI\bin\Debug\Scripts\Python\";

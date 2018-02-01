@@ -525,15 +525,8 @@ namespace Certify.UI.ViewModel
             var config = item.RequestConfig;
             var primaryDomain = item.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain == true);
 
-            if (!String.IsNullOrEmpty(item.WildcardDomain))
-            {
-                config.PrimaryDomain = item.WildcardDomain.Trim().ToLower();
-            }
-            else
-            {
-                //if no primary domain need to go back and select one
-                if (primaryDomain == null) throw new ArgumentException("Primary subject domain must be set.");
-            }
+            //if no primary domain need to go back and select one
+            if (primaryDomain == null) throw new ArgumentException("Primary subject domain must be set.");
 
             //apply remaining selected domains as subject alternative names
             config.SubjectAlternativeNames =

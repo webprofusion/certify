@@ -1,0 +1,102 @@
+<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
+             xmlns:local="clr-namespace:Certify.UI.Controls"
+             xmlns:certifyui="clr-namespace:Certify.UI"
+             xmlns:fa="http://schemas.fontawesome.io/icons/"
+             xmlns:Custom="http://metro.mahapps.com/winfx/xaml/controls"
+             xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+             xmlns:utils="clr-namespace:Certify.UI.Utils"
+             xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Models"
+             xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+             x:Class="Certify.UI.Controls.ManagedItemSettingsValidation"
+             mc:Ignorable="d" Width="697.442" Height="425.672"
+             d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}">
+    <StackPanel Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Margin="0">
+
+        <StackPanel.Resources>
+            <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+            <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
+            <utils:OptionalBooleanToVisibilityConverter True="Collapsed" False="Visible" x:Key="InvBoolVisConverter" />
+            <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
+            <utils:ManagedItemHealthVisibilityConverter x:Key="HealthVisibleConverter" />
+            <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
+        </StackPanel.Resources>
+
+        <!--Validation-->
+
+        <StackPanel Orientation="Horizontal">
+            <Label Width="160" Content="{x:Static Resources:SR.ManagedItemSettings_ChallengeTypes}" />
+            <ComboBox ItemsSource="{Binding ChallengeTypes}" SelectedItem="{Binding SelectedItem.RequestConfig.ChallengeType}" Width="225" />
+            <Button Name="Button_TestChallenge" Content="{x:Static Resources:SR.Test}" Margin="4,0,0,0" Click="TestChallenge_Click" />
+            <fa:ImageAwesome x:Name="TestInProgress" Margin="4,0,0,0" Visibility="Hidden" Icon="Refresh" Height="16" Spin="True" SpinDuration="1" />
+        </StackPanel>
+
+        <StackPanel>
+            <StackPanel.Style>
+                <Style>
+                    <Setter Property="StackPanel.Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static model:SupportedChallengeTypes.CHALLENGE_TYPE_HTTP}">
+                            <Setter Property="StackPanel.Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                <Label Width="160" Content="{x:Static Resources:SR.ManagedItemSettings_WebsiteRoot}" />
+                <TextBox Text="{Binding SelectedItem.RequestConfig.WebsiteRootPath}" Width="350" />
+                <Button Name="Button_WebRoot" Content="{x:Static Resources:SR.ManagedItemSettings_BrowseFolder}" Margin="4,0,0,0" Click="DirectoryBrowse_Click" />
+            </StackPanel>
+
+            <StackPanel Orientation="Vertical" Margin="4,8,0,0">
+                <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_PerformChallengeResponseConfigCheck}" IsChecked="{Binding SelectedItem.RequestConfig.PerformExtensionlessConfigChecks}" />
+                <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_PerformWebAppAutoConfig}" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutoConfig}" />
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel>
+            <StackPanel.Style>
+                <Style>
+                    <Setter Property="StackPanel.Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static model:SupportedChallengeTypes.CHALLENGE_TYPE_DNS}">
+                            <Setter Property="StackPanel.Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                <Label Width="160" Content="API Provider:" />
+                <StackPanel Orientation="Vertical">
+                    <ComboBox x:Name="ChallengeProviderList" DisplayMemberPath="Title" Width="255" SelectedValuePath="Id" SelectedValue="{Binding SelectedItem.RequestConfig.ChallengeProvider}" />
+
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <ComboBox x:Name="StoredCredentialList" Width="225" ItemsSource="{Binding StoredCredentials}" DisplayMemberPath="Title" SelectedValuePath="StorageKey" SelectedValue="{Binding SelectedItem.RequestConfig.ChallengeCredentialKey}" />
+
+                        <Button x:Name="AddStoredCredential" Margin="8,0,0,0" Content="New" Click="AddStoredCredential_Click">
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+        <StackPanel>
+            <StackPanel.Style>
+                <Style>
+                    <Setter Property="StackPanel.Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static model:SupportedChallengeTypes.CHALLENGE_TYPE_SNI}">
+                            <Setter Property="StackPanel.Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+            <StackPanel Orientation="Vertical" Margin="4,8,0,0">
+                <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_PerformChallengeResponseConfigCheck}" IsChecked="{Binding SelectedItem.RequestConfig.PerformTlsSniBindingConfigChecks}" />
+            </StackPanel>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

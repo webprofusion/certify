@@ -3,7 +3,6 @@ using Certify.Management;
 using Certify.Models;
 using Microsoft.Win32;
 using System;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -19,8 +18,6 @@ namespace Certify.UI.Controls
     /// </summary>
     public partial class ManagedItemSettings : UserControl
     {
-        public ObservableCollection<SiteBindingItem> WebSiteList { get; set; }
-
         protected Certify.UI.ViewModel.AppModel MainViewModel
         {
             get
@@ -34,8 +31,6 @@ namespace Certify.UI.Controls
             InitializeComponent();
             this.MainViewModel.PropertyChanged += MainViewModel_PropertyChanged;
 
-            WebSiteList = new ObservableCollection<SiteBindingItem>();
-
             ChallengeProviderList.ItemsSource = Models.Config.ChallengeProviders.Providers.Where(p => p.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
         }
 
@@ -44,14 +39,6 @@ namespace Certify.UI.Controls
             if (e.PropertyName == "SelectedItem")
             {
                 this.SettingsTab.SelectedIndex = 0;
-
-                // ie only need the list of sites for new managed sites, existing ones are already set
-                if (MainViewModel.SelectedItem != null && MainViewModel.SelectedItem.Id == null)
-                {
-                    //get list of sites from IIS. FIXME: this is async and we should gather this at startup (or on refresh) instead
-                    WebSiteList = new ObservableCollection<SiteBindingItem>(await MainViewModel.CertifyClient.GetServerSiteList(StandardServerTypes.IIS));
-                    WebsiteDropdown.ItemsSource = WebSiteList;
-                }
             }
         }
 
@@ -63,7 +50,7 @@ namespace Certify.UI.Controls
                 return false;
             }
 
- 			if (item.Id == null && item.RequestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
+            if (item.Id == null && item.RequestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
             {
                 MessageBox.Show("Sorry, the tls-sni-01 challenge type is not longer supported by Let's Encrypt for new certificates.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
@@ -223,18 +210,6 @@ namespace Certify.UI.Controls
             if (MainViewModel.SelectedItem?.Id == null)
             {
                 MainViewModel.SelectedItem = MainViewModel.ManagedSites.FirstOrDefault();
-            }
-        }
-
-        private async void Website_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (MainViewModel.SelectedWebSite != null)
-            {
-                string siteId = MainViewModel.SelectedWebSite.SiteId;
-
-                SiteQueryInProgress.Visibility = Visibility.Visible;
-                await MainViewModel.PopulateManagedSiteSettings(siteId);
-                SiteQueryInProgress.Visibility = Visibility.Hidden;
             }
         }
 
@@ -477,11 +452,6 @@ namespace Certify.UI.Controls
         private void Dismiss_Click(object sender, RoutedEventArgs e)
         {
             MainViewModel.SelectedItem = null;
-        }
-
-        private async void RefreshSanList_Click(object sender, RoutedEventArgs e)
-        {
-            await MainViewModel.SANRefresh();
         }
 
         private void AddStoredCredential_Click(object sender, RoutedEventArgs e)

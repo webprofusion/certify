@@ -17,6 +17,16 @@
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Accents/BaseLight.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Accents/Green.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <!--Heading-->
+            <Style TargetType="TextBlock" x:Key="Subheading">
+                <Setter Property="HorizontalAlignment" Value="Left" />
+                <Setter Property="FontFamily" Value="Segoe UI Semibold" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="Padding" Value="4" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+
+                <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
+            </Style>
             <Style TargetType="{x:Type Controls:WindowButtonCommands}"
                    BasedOn="{StaticResource MahApps.Metro.Styles.WindowButtonCommands.Win10}" />
         </ResourceDictionary>
