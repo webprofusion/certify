@@ -20,7 +20,7 @@ namespace Certify.UI.Utils
             catch (Exception exp)
             {
                 //could not complete or verify download
-                MessageBox.Show("Sorry, the update could not be downloaded. Please try again later.");
+                MessageBox.Show(SR.Update_DownloadFailed);
                 System.Diagnostics.Debug.WriteLine(exp.ToString());
                 return null;
             }

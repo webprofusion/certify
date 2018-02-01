@@ -644,4 +644,7 @@
   <data name="Credentials_EditCredential" xml:space="preserve">
     <value>Add/Update Stored Credential</value>
   </data>
+  <data name="Update_DownloadFailed" xml:space="preserve">
+    <value>Sorry, the update could not be downloaded. Please try again later.</value>
+  </data>
 </root>

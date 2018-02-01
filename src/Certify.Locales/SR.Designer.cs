@@ -1584,6 +1584,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Sorry, the update could not be downloaded. Please try again later..
+        /// </summary>
+        public static string Update_DownloadFailed {
+            get {
+                return ResourceManager.GetString("Update_DownloadFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Would you like to automatically download the update? You will be notified when it is ready to apply..
         /// </summary>
         public static string Update_DownloadNow {

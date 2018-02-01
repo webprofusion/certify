@@ -22,13 +22,37 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Update="ConfigResources.es-ES.resx">
+      <DependentUpon>ConfigResources.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="ConfigResources.nb-NO.resx">
+      <DependentUpon>ConfigResources.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="CoreSR.es-ES.resx">
+      <DependentUpon>CoreSR.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="CoreSR.nb-NO.resx">
+      <DependentUpon>CoreSR.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="CoreSR.zh-Hans.resx">
+      <DependentUpon>CoreSR.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <EmbeddedResource Update="SR.es-ES.resx">
+      <DependentUpon>SR.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="SR.nb-NO.resx">
+      <DependentUpon>SR.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Update="SR.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>SR.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="SR.zh-Hans.resx">
+      <DependentUpon>SR.resx</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
 
