@@ -62,12 +62,6 @@ namespace Certify.Models
         /// </summary>
         public ManagedItemType ItemType { get; set; }
 
-        /// <summary>
-        /// If true, this manage item controls renewal for a wildcard domain (instead of a list of DomainOptions). 
-        /// </summary>
-        public bool IsWildcardDomain { get; set; }
-
-        public string WildcardDomain { get; set; }
         public DateTime? DateStart { get; set; }
         public DateTime? DateExpiry { get; set; }
         public DateTime? DateRenewed { get; set; }
