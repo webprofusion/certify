@@ -1,0 +1,128 @@
+<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
+             xmlns:local="clr-namespace:Certify.UI.Controls"
+             xmlns:manageditem="clr-namespace:Certify.UI.Controls.ManagedItem"
+             xmlns:certifyui="clr-namespace:Certify.UI"
+             xmlns:fa="http://schemas.fontawesome.io/icons/"
+             xmlns:Custom="http://metro.mahapps.com/winfx/xaml/controls"
+             xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+             xmlns:utils="clr-namespace:Certify.UI.Utils"
+             xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Models"
+             xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+             x:Class="Certify.UI.Controls.ManagedItem.Settings"
+             mc:Ignorable="d" Width="697.442" Height="425.672"
+             d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}" Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32"></RowDefinition>
+            <RowDefinition Height="32"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid.Resources>
+            <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+            <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
+            <utils:OptionalBooleanToVisibilityConverter True="Collapsed" False="Visible" x:Key="InvBoolVisConverter" />
+            <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
+            <utils:ManagedItemHealthVisibilityConverter x:Key="HealthVisibleConverter" />
+            <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
+        </Grid.Resources>
+
+        <!-- managed item summary title and close button -->
+        <StackPanel Orientation="Vertical" Grid.Row="0" Visibility="Visible">
+            <Grid Margin="0,0,4,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
+                    <ColumnDefinition Width="32"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Style="{StaticResource Subheading}" Text="{Binding SelectedItem.Name}" Margin="4,0,0,4" />
+                <Button Grid.Column="1" x:Name="Dismiss" Click="Dismiss_Click" ToolTip="Dismiss" Background="White" Margin="4,4,0,4" VerticalAlignment="Top" BorderBrush="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
+                    <StackPanel Orientation="Horizontal">
+                        <fa:ImageAwesome Grid.Column="1" Height="16" Width="16" Icon="WindowClose" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <Label Content="{Binding ValidationError}" Margin="8,0,0,0" />
+        </StackPanel>
+
+        <!-- save/request buttons-->
+        <StackPanel Orientation="Horizontal" Height="32" Grid.Row="1">
+
+            <Button  IsEnabled="{Binding SelectedItem.IsChanged}" Click="Button_Save" Margin="8,0,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Save" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.Save}" /></TextBlock>
+                </StackPanel>
+            </Button>
+
+            <Button  IsEnabled="{Binding SelectedItem.IsChanged}" Click="Button_DiscardChanges" Margin="8,0,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Undo" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.DiscardChanges}" /></TextBlock>
+                </StackPanel>
+            </Button>
+
+            <Button Click="Button_Delete" Margin="8,0,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Trash" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.Delete}" /></TextBlock>
+                </StackPanel>
+            </Button>
+
+            <Button IsEnabled="{Binding IsSelectedItemValid}" Click="Button_RequestCertificate" Margin="16,0,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Play" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.ManagedItemSettings_RequestCertificate}" /></TextBlock>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        <DockPanel Grid.Row="2">
+            <!-- Renewal warning messages-->
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Visibility="{Binding SelectedItem.Health, Converter={StaticResource ResourceKey=HealthVisibleConverter}}" Background="#FF3F3F3F" Margin="0,8,0,8">
+                <fa:ImageAwesome Margin="4" Icon="ExclamationTriangle" Height="16" Foreground="#FFFDFDFD" />
+                <TextBlock TextWrapping="Wrap" Text="{Binding SelectedItem.RenewalFailureMessage}" Margin="4,4,16,4" Foreground="White">
+                </TextBlock>
+            </StackPanel>
+
+            <!-- Managed Item display name-->
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,8,0,0">
+                <Label Width="100" Content="{x:Static Resources:SR.ManagedItemSettings_DisplayName}" />
+                <TextBox Text="{Binding SelectedItem.Name, UpdateSourceTrigger=PropertyChanged}" Width="302" />
+            </StackPanel>
+
+            <!--settings tabs-->
+
+            <!--general settings and domain options-->
+            <DockPanel Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
+
+                <dragablz:TabablzControl x:Name="SettingsTab" Margin="8" FixedHeaderCount="3"
+                                 VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
+
+                    <TabItem Header="Certificate Domains" IsSelected="True">
+                        <manageditem:CertificateDomains Visibility="Visible" Margin="0,8,0,0" />
+                    </TabItem>
+
+                    <TabItem Header="Authorization">
+                        <manageditem:DomainAuthorization Visibility="Visible" Margin="0,8,0,0" />
+                    </TabItem>
+
+                    <TabItem Header="Deployment">
+                        <manageditem:Deployment Visibility="Visible" Margin="0,8,0,0" />
+                    </TabItem>
+
+                    <TabItem Header="Scripting Hooks">
+                        <manageditem:ScriptHooks Visibility="Visible" Margin="0,8,0,0" />
+                    </TabItem>
+                    <TabItem Header="Misc. Options">
+                        <manageditem:MiscOptions Visibility="Visible" Margin="0,8,0,0" />
+                    </TabItem>
+                </dragablz:TabablzControl>
+            </DockPanel>
+        </DockPanel>
+    </Grid>
+</UserControl>

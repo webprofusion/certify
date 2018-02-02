@@ -86,11 +86,20 @@
     <Compile Include="Controls\GettingStarted.xaml.cs">
       <DependentUpon>GettingStarted.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ManagedItemSettingsValidation.xaml.cs">
-      <DependentUpon>ManagedItemSettingsValidation.xaml</DependentUpon>
+    <Compile Include="Controls\ManagedItem\MiscOptions.xaml.cs">
+      <DependentUpon>MiscOptions.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ManagedItemSettingsDomains.xaml.cs">
-      <DependentUpon>ManagedItemSettingsDomains.xaml</DependentUpon>
+    <Compile Include="Controls\ManagedItem\Deployment.xaml.cs">
+      <DependentUpon>Deployment.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ManagedItem\ScriptHooks.xaml.cs">
+      <DependentUpon>ScriptHooks.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ManagedItem\DomainAuthorization.xaml.cs">
+      <DependentUpon>DomainAuthorization.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ManagedItem\CertificateDomains.xaml.cs">
+      <DependentUpon>CertificateDomains.xaml</DependentUpon>
     </Compile>
     <Compile Include="Utils\ExpiryDateConverter.cs" />
     <Compile Include="Utils\ManagedItemHealthVisibilityConverter.cs" />
@@ -123,15 +132,27 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Controls\ManagedItemSettingsValidation.xaml">
+    <Page Include="Controls\ManagedItem\MiscOptions.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\ManagedItemSettingsDomains.xaml">
+    <Page Include="Controls\ManagedItem\Deployment.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ManagedItem\ScriptHooks.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\ManagedItemSettings.xaml">
+    <Page Include="Controls\ManagedItem\DomainAuthorization.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\ManagedItem\CertificateDomains.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\ManagedItem\Settings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -162,8 +183,8 @@
     <Compile Include="Controls\AboutControl.xaml.cs">
       <DependentUpon>AboutControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ManagedItemSettings.xaml.cs">
-      <DependentUpon>ManagedItemSettings.xaml</DependentUpon>
+    <Compile Include="Controls\ManagedItem\Settings.xaml.cs">
+      <DependentUpon>Settings.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\ManagedSites.xaml.cs">
       <DependentUpon>ManagedSites.xaml</DependentUpon>

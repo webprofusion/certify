@@ -12,10 +12,10 @@
              xmlns:utils="clr-namespace:Certify.UI.Utils"
              xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Models"
              xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-             x:Class="Certify.UI.Controls.ManagedItemSettingsValidation"
-             mc:Ignorable="d" Width="697.442" Height="425.672"
+             x:Class="Certify.UI.Controls.ManagedItem.DomainAuthorization"
+             mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}">
-    <StackPanel Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Margin="0">
+    <StackPanel Margin="8,0,8,0">
 
         <StackPanel.Resources>
             <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
@@ -26,7 +26,25 @@
             <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
         </StackPanel.Resources>
 
-        <!--Validation-->
+        <!--Authorization Types-->
+        <StackPanel>
+            <TextBlock Style="{StaticResource Subheading}">About Domain Authorization</TextBlock>
+            <TextBlock TextWrapping="Wrap">
+                <Run>In order for a certificate to be issued you must prove you control the domains you are requesting in your certificate. If any included domain fails authorization the certificate request cannot be completed.</Run>
+                <LineBreak></LineBreak>
+                <LineBreak></LineBreak>
+                <Run>You can choose between validation over HTTP (port 80), or via DNS:</Run>
+                <LineBreak></LineBreak>
+                            <LineBreak></LineBreak>
+                <Run> - For HTTP validation the app will automatically create the validation file required. Your website must answer http requests on port 80 (redirections permitted) and serve extensionless content from the .well-known/acme-challenge/ path.</Run>
+                <LineBreak></LineBreak>
+                            <LineBreak></LineBreak>
+
+                <Run> - For DNS validation the app will automatically create a TXT record in the DNS zone of your domain(s) as an answer to the authorization challenge. The DNS provider for your domain(s) must provide an API and be supported by this app.</Run>
+            </TextBlock>
+        </StackPanel>
+
+        <TextBlock Style="{StaticResource Subheading}">Select Authorization Challenge Type</TextBlock>
 
         <StackPanel Orientation="Horizontal">
             <Label Width="160" Content="{x:Static Resources:SR.ManagedItemSettings_ChallengeTypes}" />

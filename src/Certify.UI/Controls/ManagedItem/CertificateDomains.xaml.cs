@@ -5,24 +5,18 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Certify.UI.Controls
+namespace Certify.UI.Controls.ManagedItem
 {
     /// <summary>
-    /// Interaction logic for ManagedItemSettings.xaml 
+    /// Interaction logic for CertificateDomains.xaml 
     /// </summary>
-    public partial class ManagedItemSettingsDomains : UserControl
+    public partial class CertificateDomains : UserControl
     {
         public ObservableCollection<SiteBindingItem> WebSiteList { get; set; }
 
-        protected Certify.UI.ViewModel.AppModel MainViewModel
-        {
-            get
-            {
-                return UI.ViewModel.AppModel.Current;
-            }
-        }
+        protected Certify.UI.ViewModel.AppModel MainViewModel => UI.ViewModel.AppModel.Current;
 
-        public ManagedItemSettingsDomains()
+        public CertificateDomains()
         {
             InitializeComponent();
             this.MainViewModel.PropertyChanged += MainViewModel_PropertyChanged;

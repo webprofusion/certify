@@ -12,7 +12,7 @@
              xmlns:utils="clr-namespace:Certify.UI.Utils"
              xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Models"
              xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-             x:Class="Certify.UI.Controls.ManagedItemSettingsDomains"
+             x:Class="Certify.UI.Controls.ManagedItem.CertificateDomains"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}" BorderBrush="{DynamicResource {x:Static SystemColors.GradientActiveCaptionBrushKey}}">
     <Grid>
@@ -29,7 +29,12 @@
         </Grid.Resources>
 
         <DockPanel Margin="0,0,0,0" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}" Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
-
+            <DockPanel DockPanel.Dock="Top"  Width="Auto">
+                <Button DockPanel.Dock="Right" Style="{DynamicResource MetroCircleButtonStyle}" Width="32" Height="32">
+                    <fa:ImageAwesome Icon="Question" Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                </Button>
+                <TextBlock DockPanel.Dock="Left" Padding="0,0,0,0"  TextWrapping="WrapWithOverflow" VerticalAlignment="Top"  Margin="8,0" FontWeight="Normal" FontFamily="Segoe UI" HorizontalAlignment="Left"><Run Text="Which domains do you want to include in your certificate? You can select the domains from existing hostname bindings on an website or add domains manually. These must all be domains where you can validate control either via DNS or by creating a required file on the website (see the Authorization tab)." /></TextBlock>
+            </DockPanel>
             <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,4,0,0">
                 <Label Width="160" Content="{x:Static Resources:SR.ManagedItemSettings_SelectIISSite}" />
                 <ComboBox x:Name="WebsiteDropdown"  ItemsSource="{Binding WebSiteList, UpdateSourceTrigger=Default}" SelectedItem="{Binding SelectedWebSite}"  DisplayMemberPath="SiteName" Width="225" SelectionChanged="Website_SelectionChanged" />
@@ -47,9 +52,6 @@
                 <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="8,0" FontWeight="Bold" FontFamily="Segoe UI Semibold" Foreground="#FFEA1010"><Run Text="{x:Static Resources:SR.ManagedItemSettings_NoHostNameBindingWarning}" /></TextBlock>
             </StackPanel>
             <DockPanel DockPanel.Dock="Bottom" x:Name="DomainOptions" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=BoolToVisConverter}}" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Margin="0,8,0,0">
-                <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Margin="0,8,8,8" HorizontalAlignment="Left">
-                    <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="8,0,0,0" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" FontWeight="Bold" FontFamily="Segoe UI Semibold"><Run Text="{x:Static Resources:SR.ManagedItemSettings_DomainIncluded}" /></TextBlock>
-                </StackPanel>
 
                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,8,8">
                     <Label Content="{x:Static Resources:SR.ManagedItemSettings_SelectDomain}" />
@@ -57,7 +59,7 @@
                     <Button Content="{x:Static Resources:SR.ManagedItemSettings_SelectNone}" Command="{Binding SANSelectNoneCommand}" Margin="8,0,0,0" />
                     <Button Content="{x:Static Resources:SR.ManagedItemsSettings_RefreshDomains}" Name="RefreshSanList" Click="RefreshSanList_Click" Margin="8,0,0,0" />
                 </StackPanel>
-                <DataGrid AutoGenerateColumns="False" CanUserAddRows="False"
+                <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" SelectionMode="Single"
                                   ScrollViewer.CanContentScroll="True"
                                   VirtualizingPanel.IsVirtualizing="True"
                                   ScrollViewer.VerticalScrollBarVisibility="Auto"
@@ -74,6 +76,11 @@
                         <DataGridCheckBoxColumn Header="{x:Static Resources:SR.ManagedItemSettings_Include}" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
                         <DataGridTextColumn Header="{x:Static Resources:SR.ManagedItemSettings_Domain}" Binding="{Binding Domain, UpdateSourceTrigger=PropertyChanged}" Width="*" IsReadOnly="True" />
                     </DataGrid.Columns>
+                    <DataGrid.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="IsHitTestVisible" Value="False" />
+                        </Style>
+                    </DataGrid.CellStyle>
                 </DataGrid>
             </DockPanel>
         </DockPanel>

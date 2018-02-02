@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
              xmlns:local="clr-namespace:Certify.UI.Controls"
+             xmlns:manageditem="clr-namespace:Certify.UI.Controls.ManagedItem"
              xmlns:certifyui="clr-namespace:Certify.UI;assembly=Certify.UI"
              xmlns:System="clr-namespace:System;assembly=mscorlib"
              xmlns:fa="http://schemas.fontawesome.io/icons/"
@@ -85,7 +86,7 @@
         <GridSplitter Grid.Column="1" Width="10" HorizontalAlignment="Stretch" Background="White" />
         <Grid Grid.Column="2">
 
-            <local:ManagedItemSettings Visibility="{Binding SelectedItem, Converter={StaticResource NullCollapsedConverter}}" BorderBrush="{DynamicResource WindowTitleColorBrush}" Margin="0,10,0,0" Width="Auto" Height="Auto" />
+            <manageditem:Settings Visibility="{Binding SelectedItem, Converter={StaticResource NullCollapsedConverter}}" BorderBrush="{DynamicResource WindowTitleColorBrush}" Margin="0,10,0,0" Width="Auto" Height="Auto" />
             <StackPanel Visibility="{Binding SelectedItem, Converter={StaticResource NullVisibleConverter}}" Margin="16,0,0,0" Height="Auto">
                 <local:GettingStarted></local:GettingStarted>
             </StackPanel>

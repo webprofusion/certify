@@ -1,0 +1,118 @@
+<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
+             xmlns:local="clr-namespace:Certify.UI.Controls"
+             xmlns:certifyui="clr-namespace:Certify.UI"
+             xmlns:fa="http://schemas.fontawesome.io/icons/"
+             xmlns:Custom="http://metro.mahapps.com/winfx/xaml/controls"
+             xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+             xmlns:utils="clr-namespace:Certify.UI.Utils"
+             xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Models"
+             xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+             x:Class="Certify.UI.Controls.ManagedItem.ScriptHooks"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}">
+    <StackPanel Background="{DynamicResource {x:Static SystemColors.ControlBrush}}" Margin="8,8,8,8">
+        <TextBlock Style="{StaticResource Subheading}">About Scripting</TextBlock>
+
+        <TextBlock  Text="You can optionally specify scripts or webhooks to call. Scripts can happen before or after the certificate request and are especially useful if you need to update other services after your certificate has been renewed." TextWrapping="Wrap" />
+
+        <StackPanel Orientation="Vertical" Margin="0,16,0,0">
+            <TextBlock Style="{StaticResource Subheading}">PowerShell Scripts</TextBlock>
+
+            <StackPanel Orientation="Horizontal">
+                <Label Width="155" Content="{x:Static Resources:SR.ManagedItemSettings_PerRequsetScript}" />
+                <TextBox Text="{Binding SelectedItem.RequestConfig.PreRequestPowerShellScript}" Width="350" />
+                <Button Name="Button_PreRequest" Content="{x:Static Resources:SR.Browser}" Margin="4,0,0,0" Click="FileBrowse_Click" />
+                <Button Name="Button_TestPreRequest" Content="{x:Static Resources:SR.Test}" Margin="4,0,0,0" Click="TestScript_Click" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <Label Width="155" Content="{x:Static Resources:SR.ManagedItemSettings_PostRequestScript}" />
+                <TextBox Text="{Binding SelectedItem.RequestConfig.PostRequestPowerShellScript}" Width="350" />
+                <Button Name="Button_PostRequest" Content="{x:Static Resources:SR.Browser}" Margin="4,0,0,0" Click="FileBrowse_Click" />
+                <Button Name="Button_TestPostRequest" Content="{x:Static Resources:SR.Test}" Margin="4,0,0,0" Click="TestScript_Click" />
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel Orientation="Vertical" Margin="0,16,0,0">
+            <TextBlock Style="{StaticResource Subheading}">Webhooks</TextBlock>
+
+            <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                <Label Width="155" Content="{x:Static Resources:SR.ManagedItemSettings_HookTrigger}" />
+                <ComboBox ItemsSource="{Binding WebhookTriggerTypes}" SelectedItem="{Binding SelectedItem.RequestConfig.WebhookTrigger}" Width="150" />
+                <Border>
+                    <Border.Style>
+                        <Style>
+                            <Setter Property="Border.Visibility" Value="Visible" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedItem.RequestConfig.WebhookTrigger}" Value="{x:Static model:Webhook.ON_NONE}">
+                                    <Setter Property="Border.Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <Button Name="Button_TestWebhook" Content="{x:Static Resources:SR.Test}" Margin="4,0,0,0" Click="TestWebhook_Click" />
+                </Border>
+            </StackPanel>
+            <StackPanel Background="#efefef" Margin="46,8,12,12" Width="520" HorizontalAlignment="Left">
+                <StackPanel.Style>
+                    <Style>
+                        <Setter Property="StackPanel.Visibility" Value="Visible" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedItem.RequestConfig.WebhookTrigger}" Value="{x:Static model:Webhook.ON_NONE}">
+                                <Setter Property="StackPanel.Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <Grid Margin="8,8,12,8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="100" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" Content="{x:Static Resources:SR.ManagedItemSettings_HookUrl}" />
+                    <TextBox Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Controls:TextBoxHelper.Watermark="https://example.org/api/controller?domain=$PrimaryDomain" Text="{Binding SelectedItem.RequestConfig.WebhookUrl}" Margin="0,0,0,4" />
+
+                    <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" Content="{x:Static Resources:SR.ManagedItemSettings_HookMethod}" />
+                    <ComboBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" ItemsSource="{x:Static model:Webhook.Methods}" SelectedItem="{Binding SelectedItem.RequestConfig.WebhookMethod}" Width="100" Margin="0,0,0,4" />
+
+                    <Grid Grid.Row="2" Grid.ColumnSpan="2" Margin="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.Style>
+                            <Style>
+                                <Setter Property="Grid.Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedItem.RequestConfig.WebhookMethod}" Value="{x:Static model:Webhook.METHOD_POST}">
+                                        <Setter Property="StackPanel.Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+
+                        <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" Content="{x:Static Resources:SR.ManagedItemSettings_HookContentType}" />
+                        <TextBox Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" Controls:TextBoxHelper.Watermark="application/json" Width="200" Text="{Binding SelectedItem.RequestConfig.WebhookContentType}" Margin="0,0,0,4" />
+
+                        <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" Content="{x:Static Resources:SR.ManagedItemSettings_HookBody}" />
+                        <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Height="150" Text="{Binding SelectedItem.RequestConfig.WebhookContentBody}" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,4" Controls:TextBoxHelper.Watermark="{x:Static model:Webhook.DEFAULT_BODY}" />
+                    </Grid>
+                </Grid>
+            </StackPanel>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

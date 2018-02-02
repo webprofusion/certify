@@ -6,22 +6,16 @@ using System.Windows;
 using System.Windows.Controls;
 using WinForms = System.Windows.Forms;
 
-namespace Certify.UI.Controls
+namespace Certify.UI.Controls.ManagedItem
 {
     /// <summary>
-    /// Interaction logic for ManagedItemSettings.xaml 
+    /// Interaction logic for DomainAuthorization.xaml 
     /// </summary>
-    public partial class ManagedItemSettingsValidation : UserControl
+    public partial class DomainAuthorization : UserControl
     {
-        protected Certify.UI.ViewModel.AppModel MainViewModel
-        {
-            get
-            {
-                return UI.ViewModel.AppModel.Current;
-            }
-        }
+        protected Certify.UI.ViewModel.AppModel MainViewModel => UI.ViewModel.AppModel.Current;
 
-        public ManagedItemSettingsValidation()
+        public DomainAuthorization()
         {
             InitializeComponent();
 
