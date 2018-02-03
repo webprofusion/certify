@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 
 namespace Certify.UI.Controls.ManagedItem
 {
@@ -22,6 +23,16 @@ namespace Certify.UI.Controls.ManagedItem
             this.MainViewModel.PropertyChanged += MainViewModel_PropertyChanged;
 
             WebSiteList = new ObservableCollection<SiteBindingItem>();
+        }
+
+        private void SetFilter()
+        {
+            CollectionViewSource.GetDefaultView(MainViewModel.SelectedItem.DomainOptions).Filter = (item) =>
+            {
+                string filter = DomainFilter.Text.Trim();
+                return filter == "" || filter.Split(';').Where(f => f.Trim() != "").Any(f =>
+                    ((Models.DomainOption)item).Domain.IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1);
+            };
         }
 
         private async void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -100,6 +111,25 @@ namespace Certify.UI.Controls.ManagedItem
                     ManualDomains.Text = "";
                 }
             }
+        }
+
+        private void DataGrid_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            // auto toggle item included/not included
+            var dg = (DataGrid)sender;
+            if (dg.SelectedItem != null)
+            {
+                var opt = (DomainOption)dg.SelectedItem;
+                opt.IsSelected = !opt.IsSelected;
+            }
+        }
+
+        private void DomainFilter_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            SetFilter();
+
+            //var defaultView = CollectionViewSource.GetDefaultView(DomainOptionsList.DataContext);
+            //defaultView.Refresh();
         }
     }
 }

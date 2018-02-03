@@ -58,13 +58,15 @@
                     <Button Content="{x:Static Resources:SR.SelectAll}" Command="{Binding SANSelectAllCommand}" Margin="16,0,0,0" />
                     <Button Content="{x:Static Resources:SR.ManagedItemSettings_SelectNone}" Command="{Binding SANSelectNoneCommand}" Margin="8,0,0,0" />
                     <Button Content="{x:Static Resources:SR.ManagedItemsSettings_RefreshDomains}" Name="RefreshSanList" Click="RefreshSanList_Click" Margin="8,0,0,0" />
+                    <Label Content="Filter:" />
+                    <TextBox x:Name="DomainFilter" TextChanged="DomainFilter_TextChanged" Width="120" Controls:TextBoxHelper.Watermark="e.g. example; example1; example2;" />
                 </StackPanel>
-                <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" SelectionMode="Single"
+                <DataGrid x:Name="DomainOptionsList" AutoGenerateColumns="False" CanUserAddRows="False" SelectionMode="Single"
                                   ScrollViewer.CanContentScroll="True"
                                   VirtualizingPanel.IsVirtualizing="True"
                                   ScrollViewer.VerticalScrollBarVisibility="Auto"
                                   ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                                  ItemsSource="{Binding SelectedItem.DomainOptions}">
+                                  ItemsSource="{Binding SelectedItem.DomainOptions}" MouseLeftButtonUp="DataGrid_MouseLeftButtonUp">
                     <DataGrid.Columns>
                         <DataGridTemplateColumn Header="{x:Static Resources:SR.ManagedItemSettings_Primary}">
                             <DataGridTemplateColumn.CellTemplate>
@@ -76,11 +78,6 @@
                         <DataGridCheckBoxColumn Header="{x:Static Resources:SR.ManagedItemSettings_Include}" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
                         <DataGridTextColumn Header="{x:Static Resources:SR.ManagedItemSettings_Domain}" Binding="{Binding Domain, UpdateSourceTrigger=PropertyChanged}" Width="*" IsReadOnly="True" />
                     </DataGrid.Columns>
-                    <DataGrid.CellStyle>
-                        <Style TargetType="{x:Type DataGridCell}">
-                            <Setter Property="IsHitTestVisible" Value="False" />
-                        </Style>
-                    </DataGrid.CellStyle>
                 </DataGrid>
             </DockPanel>
         </DockPanel>
