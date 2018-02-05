@@ -15,7 +15,7 @@ namespace Certify.Management
     {
         public const string CREDENTIALSTORE = "cred";
 
-        public string StorageSubfolder = ""; //if specified will be appended to AppData path as subfolder to load/save to
+        public string StorageSubfolder = "credentials"; //if specified will be appended to AppData path as subfolder to load/save to
         private const string PROTECTIONENTROPY = "Certify.Credentials";
 
         private string GetDbPath()

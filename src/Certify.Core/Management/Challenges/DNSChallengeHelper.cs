@@ -24,6 +24,13 @@ namespace Certify.Core.Management.Challenges
 
     public class DNSChallengeHelper
     {
+        private string _pythonPath = "";
+
+        public DNSChallengeHelper()
+        {
+            _pythonPath = Certify.Management.Util.GetAppDataFolder("python-embedded") + "\\python.exe";
+        }
+
         public async Task<ChallengeHelperResult> CompleteDNSChallenge(ManagedSite managedsite, string domain, string txtRecordName, string txtRecordValue)
         {
             // for a given managed site configuration, attempt to complete the required challenge by
@@ -95,9 +102,9 @@ namespace Certify.Core.Management.Challenges
             {
                 var start = new ProcessStartInfo();
                 //FIXME: remove hard coded test paths
-                start.FileName = @"C:\ProgramData\Certify\python-embedded\python.exe";
+                start.FileName = _pythonPath;
 
-                start.WorkingDirectory = @"D:\Work\GIT\certify\src\Certify.UI\bin\Debug\Scripts\Python\";
+                start.WorkingDirectory = Environment.CurrentDirectory + "Scripts\\Python\\";
                 start.Arguments = string.Format("{0}", args);
                 start.UseShellExecute = false;
                 start.RedirectStandardOutput = true;
