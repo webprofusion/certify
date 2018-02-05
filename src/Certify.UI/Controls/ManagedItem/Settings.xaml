@@ -100,28 +100,31 @@
             <!--general settings and domain options-->
             <DockPanel Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
 
-                <dragablz:TabablzControl x:Name="SettingsTab" Margin="8" FixedHeaderCount="3"
+                <Controls:MetroTabControl x:Name="SettingsTab" Margin="8" Controls:TabControlHelper.Underlined="TabPanel"
                                  VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
 
-                    <TabItem Header="Certificate Domains" IsSelected="True">
+                    <TabItem Header="Certificate Domains" IsSelected="True" Controls:ControlsHelper.HeaderFontSize="12" Margin="0" MinWidth="130">
                         <manageditem:CertificateDomains Visibility="Visible" Margin="0,8,0,0" />
                     </TabItem>
 
-                    <TabItem Header="Authorization">
+                    <TabItem Header="Authorization" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100" Margin="0,0,17,0">
                         <manageditem:DomainAuthorization Visibility="Visible" Margin="0,8,0,0" />
                     </TabItem>
 
-                    <TabItem Header="Deployment">
+                    <TabItem Header="Deployment" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
                         <manageditem:Deployment Visibility="Visible" Margin="0,8,0,0" />
                     </TabItem>
 
-                    <TabItem Header="Scripting Hooks">
+                    <TabItem Header="Scripting Hooks"  Controls:ControlsHelper.HeaderFontSize="12" MinWidth="110">
                         <manageditem:ScriptHooks Visibility="Visible" Margin="0,8,0,0" />
                     </TabItem>
-                    <TabItem Header="Misc. Options">
+                    <TabItem Header="Other Options" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
                         <manageditem:MiscOptions Visibility="Visible" Margin="0,8,0,0" />
                     </TabItem>
-                </dragablz:TabablzControl>
+                    <TabItem Header="Preview" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
+                        <manageditem:Preview Visibility="Visible" Margin="0,8,0,0" />
+                    </TabItem>
+                </Controls:MetroTabControl>
             </DockPanel>
         </DockPanel>
     </Grid>

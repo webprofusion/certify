@@ -131,5 +131,9 @@ namespace Certify.UI.Controls.ManagedItem
             //var defaultView = CollectionViewSource.GetDefaultView(DomainOptionsList.DataContext);
             //defaultView.Refresh();
         }
+
+        private void NextButton_Click(object sender, RoutedEventArgs e)
+        {
+        }
     }
 }

@@ -14,25 +14,103 @@
              xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
              x:Class="Certify.UI.Controls.ManagedItem.DomainAuthorization"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}">
-    <StackPanel Margin="8,0,8,0">
+             d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}" Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
+    <ScrollViewer>
+        <StackPanel Margin="8,0,8,8">
 
-        <StackPanel.Resources>
-            <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
-            <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
-            <utils:OptionalBooleanToVisibilityConverter True="Collapsed" False="Visible" x:Key="InvBoolVisConverter" />
-            <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
-            <utils:ManagedItemHealthVisibilityConverter x:Key="HealthVisibleConverter" />
-            <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
-        </StackPanel.Resources>
+            <StackPanel.Resources>
+                <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+                <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
+                <utils:OptionalBooleanToVisibilityConverter True="Collapsed" False="Visible" x:Key="InvBoolVisConverter" />
+                <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
+                <utils:ManagedItemHealthVisibilityConverter x:Key="HealthVisibleConverter" />
+                <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
+            </StackPanel.Resources>
 
-        <!--Authorization Types-->
-        <StackPanel>
-            <TextBlock Style="{StaticResource Subheading}">About Domain Authorization</TextBlock>
-            <TextBlock TextWrapping="Wrap">
+            <!--Authorization Types-->
+            <StackPanel>
+                <TextBlock Style="{StaticResource Subheading}">About Domain Authorization</TextBlock>
+                <TextBlock TextWrapping="Wrap">
                 <Run>In order for a certificate to be issued you must prove you control the domains you are requesting in your certificate. If any included domain fails authorization the certificate request cannot be completed.</Run>
-                <LineBreak></LineBreak>
-                <LineBreak></LineBreak>
+                </TextBlock>
+            </StackPanel>
+
+            <TextBlock Style="{StaticResource Subheading}">Select Authorization Challenge Type</TextBlock>
+
+            <StackPanel Orientation="Horizontal">
+                <Label Width="160" Content="{x:Static Resources:SR.ManagedItemSettings_ChallengeTypes}" />
+                <ComboBox ItemsSource="{Binding ChallengeTypes}" SelectedItem="{Binding SelectedItem.RequestConfig.ChallengeType}" Width="225" />
+                <Button Name="Button_TestChallenge" Content="{x:Static Resources:SR.Test}" Margin="4,0,0,0" Click="TestChallenge_Click" />
+                <fa:ImageAwesome x:Name="TestInProgress" Margin="4,0,0,0" Visibility="Hidden" Icon="Refresh" Height="16" Spin="True" SpinDuration="1" />
+            </StackPanel>
+
+            <StackPanel>
+                <StackPanel.Style>
+                    <Style>
+                        <Setter Property="StackPanel.Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static model:SupportedChallengeTypes.CHALLENGE_TYPE_HTTP}">
+                                <Setter Property="StackPanel.Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <Label Width="160" Content="{x:Static Resources:SR.ManagedItemSettings_WebsiteRoot}" />
+                    <TextBox Text="{Binding SelectedItem.RequestConfig.WebsiteRootPath}" Width="350" />
+                    <Button Name="Button_WebRoot" Content="{x:Static Resources:SR.ManagedItemSettings_BrowseFolder}" Margin="4,0,0,0" Click="DirectoryBrowse_Click" />
+                </StackPanel>
+
+                <StackPanel Orientation="Vertical" Margin="4,8,0,0">
+                    <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_PerformChallengeResponseConfigCheck}" IsChecked="{Binding SelectedItem.RequestConfig.PerformExtensionlessConfigChecks}" />
+                    <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_PerformWebAppAutoConfig}" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutoConfig}" />
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel>
+                <StackPanel.Style>
+                    <Style>
+                        <Setter Property="StackPanel.Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static model:SupportedChallengeTypes.CHALLENGE_TYPE_DNS}">
+                                <Setter Property="StackPanel.Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <Label Width="160" Content="API Provider:" />
+                    <StackPanel Orientation="Vertical">
+                        <ComboBox x:Name="ChallengeProviderList" DisplayMemberPath="Title" SelectedValuePath="Id"  SelectedValue="{Binding SelectedItem.RequestConfig.ChallengeProvider}" Margin="0,0,0,8" />
+
+                        <StackPanel Orientation="Horizontal">
+                            <ComboBox x:Name="StoredCredentialList" Width="225" Margin="0,0,8,0" ItemsSource="{Binding StoredCredentials}" DisplayMemberPath="Title" SelectedValuePath="StorageKey" SelectedValue="{Binding SelectedItem.RequestConfig.ChallengeCredentialKey}" />
+
+                            <Button x:Name="AddStoredCredential"  Content="New" Click="AddStoredCredential_Click">
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+            <StackPanel>
+                <StackPanel.Style>
+                    <Style>
+                        <Setter Property="StackPanel.Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static model:SupportedChallengeTypes.CHALLENGE_TYPE_SNI}">
+                                <Setter Property="StackPanel.Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <StackPanel Orientation="Vertical" Margin="4,8,0,0">
+                    <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_PerformChallengeResponseConfigCheck}" IsChecked="{Binding SelectedItem.RequestConfig.PerformTlsSniBindingConfigChecks}" />
+                </StackPanel>
+            </StackPanel>
+            <Expander Header="More Info.." Background="{DynamicResource {x:Static SystemColors.InactiveCaptionBrushKey}}" BorderBrush="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" Margin="8,16" Controls:ControlsHelper.ContentCharacterCasing="Normal">
+                <TextBlock TextWrapping="Wrap">
+
                 <Run>You can choose between validation over HTTP (port 80), or via DNS:</Run>
                 <LineBreak></LineBreak>
                             <LineBreak></LineBreak>
@@ -41,80 +119,8 @@
                             <LineBreak></LineBreak>
 
                 <Run> - For DNS validation the app will automatically create a TXT record in the DNS zone of your domain(s) as an answer to the authorization challenge. The DNS provider for your domain(s) must provide an API and be supported by this app.</Run>
-            </TextBlock>
+                </TextBlock>
+            </Expander>
         </StackPanel>
-
-        <TextBlock Style="{StaticResource Subheading}">Select Authorization Challenge Type</TextBlock>
-
-        <StackPanel Orientation="Horizontal">
-            <Label Width="160" Content="{x:Static Resources:SR.ManagedItemSettings_ChallengeTypes}" />
-            <ComboBox ItemsSource="{Binding ChallengeTypes}" SelectedItem="{Binding SelectedItem.RequestConfig.ChallengeType}" Width="225" />
-            <Button Name="Button_TestChallenge" Content="{x:Static Resources:SR.Test}" Margin="4,0,0,0" Click="TestChallenge_Click" />
-            <fa:ImageAwesome x:Name="TestInProgress" Margin="4,0,0,0" Visibility="Hidden" Icon="Refresh" Height="16" Spin="True" SpinDuration="1" />
-        </StackPanel>
-
-        <StackPanel>
-            <StackPanel.Style>
-                <Style>
-                    <Setter Property="StackPanel.Visibility" Value="Collapsed" />
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static model:SupportedChallengeTypes.CHALLENGE_TYPE_HTTP}">
-                            <Setter Property="StackPanel.Visibility" Value="Visible" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </StackPanel.Style>
-            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                <Label Width="160" Content="{x:Static Resources:SR.ManagedItemSettings_WebsiteRoot}" />
-                <TextBox Text="{Binding SelectedItem.RequestConfig.WebsiteRootPath}" Width="350" />
-                <Button Name="Button_WebRoot" Content="{x:Static Resources:SR.ManagedItemSettings_BrowseFolder}" Margin="4,0,0,0" Click="DirectoryBrowse_Click" />
-            </StackPanel>
-
-            <StackPanel Orientation="Vertical" Margin="4,8,0,0">
-                <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_PerformChallengeResponseConfigCheck}" IsChecked="{Binding SelectedItem.RequestConfig.PerformExtensionlessConfigChecks}" />
-                <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_PerformWebAppAutoConfig}" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutoConfig}" />
-            </StackPanel>
-        </StackPanel>
-
-        <StackPanel>
-            <StackPanel.Style>
-                <Style>
-                    <Setter Property="StackPanel.Visibility" Value="Collapsed" />
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static model:SupportedChallengeTypes.CHALLENGE_TYPE_DNS}">
-                            <Setter Property="StackPanel.Visibility" Value="Visible" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </StackPanel.Style>
-            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                <Label Width="160" Content="API Provider:" />
-                <StackPanel Orientation="Vertical">
-                    <ComboBox x:Name="ChallengeProviderList" DisplayMemberPath="Title" Width="255" SelectedValuePath="Id" SelectedValue="{Binding SelectedItem.RequestConfig.ChallengeProvider}" />
-
-                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                        <ComboBox x:Name="StoredCredentialList" Width="225" ItemsSource="{Binding StoredCredentials}" DisplayMemberPath="Title" SelectedValuePath="StorageKey" SelectedValue="{Binding SelectedItem.RequestConfig.ChallengeCredentialKey}" />
-
-                        <Button x:Name="AddStoredCredential" Margin="8,0,0,0" Content="New" Click="AddStoredCredential_Click">
-                        </Button>
-                    </StackPanel>
-                </StackPanel>
-            </StackPanel>
-        </StackPanel>
-        <StackPanel>
-            <StackPanel.Style>
-                <Style>
-                    <Setter Property="StackPanel.Visibility" Value="Collapsed" />
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding SelectedItem.RequestConfig.ChallengeType}" Value="{x:Static model:SupportedChallengeTypes.CHALLENGE_TYPE_SNI}">
-                            <Setter Property="StackPanel.Visibility" Value="Visible" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </StackPanel.Style>
-            <StackPanel Orientation="Vertical" Margin="4,8,0,0">
-                <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_PerformChallengeResponseConfigCheck}" IsChecked="{Binding SelectedItem.RequestConfig.PerformTlsSniBindingConfigChecks}" />
-            </StackPanel>
-        </StackPanel>
-    </StackPanel>
+    </ScrollViewer>
 </UserControl>

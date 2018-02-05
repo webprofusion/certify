@@ -528,6 +528,8 @@ namespace Certify.UI.ViewModel
             //if no primary domain need to go back and select one
             if (primaryDomain == null) throw new ArgumentException("Primary subject domain must be set.");
 
+            config.PrimaryDomain = primaryDomain.Domain.Trim();
+
             //apply remaining selected domains as subject alternative names
             config.SubjectAlternativeNames =
                 item.DomainOptions.Where(dm => dm.IsSelected == true)

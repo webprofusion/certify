@@ -23,7 +23,7 @@
     </Controls:MetroWindow.Resources>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="56"></RowDefinition>
+            <RowDefinition Height="48"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,8,8,0" VerticalAlignment="Top">
@@ -62,18 +62,18 @@
             </StackPanel>
         </StackPanel>
 
-        <TabControl x:Name="MainTabControl" Grid.Row="1" Margin="8,8,8,8"
+        <TabControl x:Name="MainTabControl" Grid.Row="1" Margin="8,8,8,8" Controls:TabControlHelper.Underlined="TabPanel" Controls:TabControlHelper.UnderlineBrush="WhiteSmoke"
                                  SelectedIndex="{Binding MainUITabIndex}" HorizontalContentAlignment="Left" VerticalContentAlignment="Stretch"
 
                                  Height="auto">
 
-            <TabItem  Header="{x:Static res:SR.Managed_Sites}" IsSelected="True" Controls:ControlsHelper.HeaderFontSize="12">
+            <TabItem  Header="{x:Static res:SR.Managed_Sites}" IsSelected="True" Controls:ControlsHelper.HeaderFontSize="12" Controls:ControlsHelper.HeaderMargin="0,0,8,0">
                 <Controls1:ManagedSites Width="Auto" Height="Auto" />
             </TabItem>
-            <TabItem  Header="{x:Static res:SR.In_Progress}" VerticalContentAlignment="Stretch" HorizontalAlignment="Left" HorizontalContentAlignment="Left" Controls:ControlsHelper.HeaderFontSize="12">
+            <TabItem  Header="{x:Static res:SR.In_Progress}" VerticalContentAlignment="Stretch" HorizontalAlignment="Left" HorizontalContentAlignment="Left" Controls:ControlsHelper.HeaderFontSize="12" Controls:ControlsHelper.HeaderMargin="0,0,8,0">
                 <Controls1:ProgressMonitor Margin="0,0,0,0.4" />
             </TabItem>
-            <TabItem  Header="{x:Static res:SR.Settings}" VerticalContentAlignment="Stretch" HorizontalAlignment="Left" HorizontalContentAlignment="Left" Controls:ControlsHelper.HeaderFontSize="12">
+            <TabItem  Header="{x:Static res:SR.Settings}" VerticalContentAlignment="Stretch" HorizontalAlignment="Left" HorizontalContentAlignment="Left" Controls:ControlsHelper.HeaderFontSize="12" Controls:ControlsHelper.HeaderMargin="0,0,8,0">
                 <Controls1:Settings Height="Auto" Margin="0,0,0,0.4" />
             </TabItem>
             <TabItem Header="{x:Static res:SR.About}" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Left" Controls:ControlsHelper.HeaderFontSize="12">
