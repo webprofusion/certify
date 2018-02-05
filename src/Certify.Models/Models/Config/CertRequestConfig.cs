@@ -121,5 +121,10 @@
         /// Id/key for the stored credential we need to use with the Challenge Provider 
         /// </summary>
         public string ChallengeCredentialKey { get; set; }
+
+        /// <summary>
+        /// Key algorithm type for CSR signing. Default is RS256 
+        /// </summary>
+        public string CSRKeyAlg { get; set; }
     }
 }

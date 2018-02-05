@@ -159,11 +159,12 @@ namespace Certify.Providers.Certes
         public async Task<PendingAuthorization> BeginRegistrationAndValidation(CertRequestConfig config, string domainIdentifierId, string challengeType, string domain)
         {
             //if no alternative domain specified, use the primary domain as the subject
+            List<String> domainOrders = new List<string>();
+
             if (domain == null) domain = config.PrimaryDomain;
 
             try
             {
-                List<String> domainOrders = new List<string>();
                 domainOrders.Add(domain);
 
                 var order = await _acme.NewOrder(domainOrders);
@@ -387,7 +388,18 @@ namespace Certify.Providers.Certes
             var order = await orderContext.Resource();
 
             // order.Generate()
-            var csrKey = KeyFactory.NewKey(KeyAlgorithm.RS256);
+
+            // generate temp keypair for signing CSR var csrKey = KeyFactory.NewKey(KeyAlgorithm.RS256);
+            var keyAlg = KeyAlgorithm.RS256;
+            if (!String.IsNullOrEmpty(config.CSRKeyAlg))
+            {
+                if (config.CSRKeyAlg == "RS256") keyAlg = KeyAlgorithm.RS256;
+                if (config.CSRKeyAlg == "ECDSA256") keyAlg = KeyAlgorithm.ES256;
+                if (config.CSRKeyAlg == "ECDSA384") keyAlg = KeyAlgorithm.ES384;
+            }
+
+            var csrKey = KeyFactory.NewKey(keyAlg);
+
             var csr = new CsrInfo
             {
                 CommonName = config.PrimaryDomain
