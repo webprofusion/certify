@@ -108,9 +108,12 @@ namespace Certify.UI.Controls.ManagedItem
             }
         }
 
-        private void UserControl_RequestBringIntoView(object sender, System.Windows.RequestBringIntoViewEventArgs e)
+        private void UserControl_IsVisibleChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)
         {
-            UpdatePreview();
+            if (this.IsVisible)
+            {
+                UpdatePreview();
+            }
         }
     }
 }

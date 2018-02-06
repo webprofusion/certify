@@ -108,7 +108,7 @@
                     <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_PerformChallengeResponseConfigCheck}" IsChecked="{Binding SelectedItem.RequestConfig.PerformTlsSniBindingConfigChecks}" />
                 </StackPanel>
             </StackPanel>
-            <Expander Header="More Info.." Background="{DynamicResource {x:Static SystemColors.InactiveCaptionBrushKey}}" BorderBrush="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" Margin="8,16" Controls:ControlsHelper.ContentCharacterCasing="Normal">
+            <Expander Header="More Info.." Background="#CCF4F4F4" BorderBrush="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" Margin="8,16" Controls:ControlsHelper.ContentCharacterCasing="Normal">
                 <TextBlock TextWrapping="Wrap">
 
                 <Run>You can choose between validation over HTTP (port 80), or via DNS:</Run>

@@ -274,4 +274,7 @@
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>REM -- TODO: copy scripts folder to Integration tests build</PostBuildEvent>
+  </PropertyGroup>
 </Project>

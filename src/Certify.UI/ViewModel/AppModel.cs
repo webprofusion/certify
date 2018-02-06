@@ -115,6 +115,21 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        public bool HasSelectedItemWebsiteSelection
+        {
+            get
+            {
+                if (SelectedItem != null && SelectedItem.GroupId != null)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
         public bool HasSelectedItemDomainOptions
         {
             get

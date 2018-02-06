@@ -14,7 +14,7 @@
                 <GradientStop Color="#FFD4CFCF" Offset="0.511" />
             </LinearGradientBrush>
         </DockPanel.Background>
-        <controls:FlipView x:Name="QuickStartFlipView" Margin="16,0" IsBannerEnabled="False">
+        <controls:FlipView x:Name="QuickStartFlipView" MouseOverGlowEnabled="False" Margin="16,0" IsBannerEnabled="False">
 
             <controls:FlipViewItem>
                 <DockPanel>

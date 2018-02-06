@@ -24,7 +24,7 @@
                             </StackPanel>
                         </Button>
                         <Label Content="{x:Static res:SR.Settings_PrimaryContact}" />
-                        <Label Content="{Binding PrimaryContactEmail}" />
+                        <TextBlock Margin="4,5,0,0" Text="{Binding PrimaryContactEmail}" HorizontalAlignment="Center" VerticalAlignment="Top" FontWeight="Bold" />
                     </StackPanel>
                     <StackPanel Orientation="Vertical" Margin="8,8,10,0">
                         <StackPanel Orientation="Horizontal" Margin="0,8">
