@@ -20,7 +20,27 @@
             <TextBlock Style="{StaticResource Subheading}">About Scripting</TextBlock>
 
             <TextBlock  Text="You can optionally specify scripts or webhooks to call. Scripts can happen before or after the certificate request and are especially useful if you need to update other services after your certificate has been renewed." TextWrapping="Wrap" />
+            <StackPanel>
+                <TextBlock Text="There are also a number of preset scripts for common tasks such as enabling a certificate in MS Exchange:" Margin="0,8,0,0"></TextBlock>
+                <Expander Header="Example Scripts" Margin="0,8,0,0" ExpandDirection="Right">
+                    <ItemsControl  x:Name="PresetScripts" Margin="16,0,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,0,0,8">
 
+                                    <DockPanel>
+                                        <Button DockPanel.Dock="Left" Width="80" Content="Select" Click="Button_Click" CommandParameter="{Binding}"></Button>
+                                        <StackPanel DockPanel.Dock="Left" Margin="16,0,0,0">
+                                            <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
+                                            <TextBlock DockPanel.Dock="Left" Text="{Binding Description}" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Expander>
+            </StackPanel>
             <StackPanel Orientation="Vertical" Margin="0,16,0,0">
                 <TextBlock Style="{StaticResource Subheading}">PowerShell Scripts</TextBlock>
 

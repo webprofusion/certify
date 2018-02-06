@@ -56,7 +56,7 @@
                 <StackPanel DockPanel.Dock="Top" x:Name="NoBindings" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" Orientation="Vertical"  Margin="0,4,0,0">
                     <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="8,0" FontWeight="Bold" FontFamily="Segoe UI Semibold" Foreground="#FFEA1010"><Run Text="{x:Static Resources:SR.ManagedItemSettings_NoHostNameBindingWarning}" /></TextBlock>
                 </StackPanel>
-                <DockPanel DockPanel.Dock="Bottom" x:Name="DomainOptions" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=BoolToVisConverter}}" Background="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}" Margin="0,8,0,0">
+                <DockPanel DockPanel.Dock="Bottom" x:Name="DomainOptions" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=BoolToVisConverter}}" Margin="0,8,0,0">
 
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,4,0,4">
                         <Label Content="{x:Static Resources:SR.ManagedItemSettings_SelectDomain}" />

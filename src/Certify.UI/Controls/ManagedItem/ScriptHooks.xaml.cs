@@ -1,8 +1,10 @@
 using Certify.Locales;
 using Certify.Management;
 using Certify.Models;
+using Certify.Models.Config;
 using Microsoft.Win32;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -20,6 +22,28 @@ namespace Certify.UI.Controls.ManagedItem
         public ScriptHooks()
         {
             InitializeComponent();
+
+            LoadScriptPresets();
+        }
+
+        private string GetPresetScriptPath()
+        {
+            return Environment.CurrentDirectory + "\\scripts\\common";
+        }
+
+        private void LoadScriptPresets()
+        {
+            try
+            {
+                var path = GetPresetScriptPath() + "\\index.json";
+                if (File.Exists(path))
+                {
+                    var json = File.ReadAllText(path);
+                    var index = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Certify.Models.Config.ScriptPreset>>(json);
+                    this.PresetScripts.ItemsSource = index;
+                }
+            }
+            catch (Exception) { }
         }
 
         private void DirectoryBrowse_Click(object sender, EventArgs e)
@@ -129,6 +153,30 @@ namespace Certify.UI.Controls.ManagedItem
             finally
             {
                 Button_TestWebhook.IsEnabled = true;
+            }
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            // get selected preset script
+            var button = e.Source as System.Windows.Controls.Button;
+            var config = MainViewModel.SelectedItem.RequestConfig;
+
+            if (button.CommandParameter != null)
+            {
+                ScriptPreset preset = button.CommandParameter as ScriptPreset;
+                string presetFilePath = GetPresetScriptPath() + "\\" + preset.File;
+                if (preset.Language == "PowerShell")
+                {
+                    if (preset.Usage == "PreRequest")
+                    {
+                        config.PreRequestPowerShellScript = presetFilePath;
+                    }
+                    if (preset.Usage == "PostRequest")
+                    {
+                        config.PostRequestPowerShellScript = presetFilePath;
+                    }
+                }
             }
         }
     }

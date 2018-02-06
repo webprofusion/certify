@@ -15,58 +15,56 @@
                 <utils:OptionalBooleanToVisibilityConverter True="Collapsed" False="Visible" x:Key="InvBoolVisConverter" />
             </DockPanel.Resources>
 
-            <StackPanel Margin="0,0,0,16">
-                <Border  DockPanel.Dock="Top" Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}" Padding="0,0,0,16" Margin="8,0,8,8" CornerRadius="4" BorderThickness="2">
-                    <Border.BorderBrush>
-                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                            <GradientStop Color="#FFE7E7E7" Offset="1" />
-                            <GradientStop Color="#FFE8E8E8" Offset="0.003" />
-                        </LinearGradientBrush>
-                    </Border.BorderBrush>
+            <Border  DockPanel.Dock="Top" Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}" Padding="0,0,0,16" Margin="8,0,8,8" CornerRadius="4" BorderThickness="2">
+                <Border.BorderBrush>
+                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                        <GradientStop Color="#FFE7E7E7" Offset="1" />
+                        <GradientStop Color="#FFE8E8E8" Offset="0.003" />
+                    </LinearGradientBrush>
+                </Border.BorderBrush>
 
-                    <StackPanel>
+                <StackPanel>
 
-                        <Border Margin="0,0,0,16" Padding="0,0,0,8" BorderThickness="0" Background="#FF565656">
-                            <StackPanel>
-                                <TextBlock TextWrapping="Wrap" FontSize="36" Margin="16,0,0,8"  FontFamily="Segoe UI Light" Foreground="White"><Run FontWeight="Bold" FontFamily="Segoe UI Semibold" Text="Certify" /><Run Text=" the web" /></TextBlock>
-                                <TextBlock TextWrapping="Wrap" Foreground="White" Margin="16,0,0,0"><Run Text="{x:Static res:SR.ManagedSites_NoItemSelectedDesc}" /></TextBlock>
-                            </StackPanel>
-                        </Border>
-
-                        <StackPanel  Orientation="Vertical" MinHeight="20">
-                            <TextBlock TextWrapping="Wrap" Margin="16,8,0,16" FontSize="20" FontFamily="Segoe UI Light" HorizontalAlignment="Left" VerticalAlignment="Top"><Run Text="Getting Started" /></TextBlock>
-
-                            <TextBlock TextWrapping="Wrap" Margin="16,0,0,0" Foreground="#FF2C2B2B"><Run Text="{x:Static res:SR.ManagedSites_NoItemSelectedTip}" /><Run Text="&#x9;" /></TextBlock>
+                    <Border Margin="0,0,0,16" Padding="0,0,0,8" BorderThickness="0" Background="#FF565656">
+                        <StackPanel>
+                            <TextBlock TextWrapping="Wrap" FontSize="36" Margin="16,0,0,8"  FontFamily="Segoe UI Light" Foreground="White"><Run FontWeight="Bold" FontFamily="Segoe UI Semibold" Text="Certify" /><Run Text=" the web" /></TextBlock>
+                            <TextBlock TextWrapping="Wrap" Foreground="White" Margin="16,0,0,0"><Run Text="{x:Static res:SR.ManagedSites_NoItemSelectedDesc}" /></TextBlock>
                         </StackPanel>
-                        <Expander Header="Quick Start Guide" Custom:ControlsHelper.HeaderFontSize="14" Margin="16,8,16,16" ExpandDirection="Down" Background="#CCF4F4F4" BorderBrush="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
+                    </Border>
 
-                            <local:QuickStart BorderThickness="2" Margin="16,8" BorderBrush="{DynamicResource {x:Static SystemColors.MenuBrushKey}}" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
-                        </Expander>
+                    <StackPanel  Orientation="Vertical" MinHeight="20">
+                        <TextBlock TextWrapping="Wrap" Margin="16,8,0,16" FontSize="20" FontFamily="Segoe UI Light" HorizontalAlignment="Left" VerticalAlignment="Top"><Run Text="Getting Started" /></TextBlock>
 
-                        <StackPanel x:Name="Dashboard">
+                        <TextBlock TextWrapping="Wrap" Margin="16,0,0,0" Foreground="#FF2C2B2B"><Run Text="{x:Static res:SR.ManagedSites_NoItemSelectedTip}" /><Run Text="&#x9;" /></TextBlock>
+                    </StackPanel>
+                    <Expander Header="Quick Start Guide" Custom:ControlsHelper.HeaderFontSize="14" Margin="16,8,16,16" ExpandDirection="Down" Background="#CCF4F4F4" BorderBrush="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
 
-                            <TextBlock TextWrapping="Wrap" Margin="16,8,0,16" FontSize="20" FontFamily="Segoe UI Light" HorizontalAlignment="Left" VerticalAlignment="Top"><Run Text="{x:Static res:SR.GettingStarted_Dashboard}" /></TextBlock>
+                        <local:QuickStart BorderThickness="2" Margin="16,8" BorderBrush="{DynamicResource {x:Static SystemColors.MenuBrushKey}}" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
+                    </Expander>
 
-                            <TextBlock TextWrapping="Wrap" Margin="16,0,16,16" FontSize="14" FontFamily="Segoe UI Light" ><Run Text="{x:Static res:SR.GettingStarted_DashboardIntro}" /></TextBlock>
-                            <StackPanel Orientation="Horizontal">
+                    <StackPanel x:Name="Dashboard">
 
-                                <Button Visibility="{Binding Preferences.IsInstanceRegistered, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" x:Name="AddToDashboard" Width="180"  HorizontalAlignment="Left" Margin="16,0,0,0" Click="AddToDashboard_Click">
-                                    <StackPanel Orientation="Horizontal">
-                                        <fa:ImageAwesome Height="16" Icon="PlusCircle" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="#FF6BB039" Margin="0" />
-                                        <TextBlock HorizontalAlignment="Center" Margin="8,0,0,0"><Run Text="{x:Static res:SR.GettingStarted_AddToDashboard}" /></TextBlock>
-                                    </StackPanel>
-                                </Button>
-                                <Button x:Name="ViewDashboard" Width="180"  HorizontalAlignment="Left" Margin="16,0,0,0" Click="ViewDashboard_Click">
-                                    <StackPanel Orientation="Horizontal">
-                                        <fa:ImageAwesome Height="16" Icon="Leaf" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="#FF6BB039" Margin="0" />
-                                        <TextBlock HorizontalAlignment="Center" Margin="8,0,0,0"><Run Text="{x:Static res:SR.GettingStarted_ViewDashboard}" /></TextBlock>
-                                    </StackPanel>
-                                </Button>
-                            </StackPanel>
+                        <TextBlock TextWrapping="Wrap" Margin="16,8,0,16" FontSize="20" FontFamily="Segoe UI Light" HorizontalAlignment="Left" VerticalAlignment="Top"><Run Text="{x:Static res:SR.GettingStarted_Dashboard}" /></TextBlock>
+
+                        <TextBlock TextWrapping="Wrap" Margin="16,0,16,16" FontSize="14" FontFamily="Segoe UI Light" ><Run Text="{x:Static res:SR.GettingStarted_DashboardIntro}" /></TextBlock>
+                        <StackPanel Orientation="Horizontal">
+
+                            <Button Visibility="{Binding Preferences.IsInstanceRegistered, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" x:Name="AddToDashboard" Width="180"  HorizontalAlignment="Left" Margin="16,0,0,0" Click="AddToDashboard_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <fa:ImageAwesome Height="16" Icon="PlusCircle" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="#FF6BB039" Margin="0" />
+                                    <TextBlock HorizontalAlignment="Center" Margin="8,0,0,0"><Run Text="{x:Static res:SR.GettingStarted_AddToDashboard}" /></TextBlock>
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="ViewDashboard" Width="180"  HorizontalAlignment="Left" Margin="16,0,0,0" Click="ViewDashboard_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <fa:ImageAwesome Height="16" Icon="Leaf" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="#FF6BB039" Margin="0" />
+                                    <TextBlock HorizontalAlignment="Center" Margin="8,0,0,0"><Run Text="{x:Static res:SR.GettingStarted_ViewDashboard}" /></TextBlock>
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
                     </StackPanel>
-                </Border>
-            </StackPanel>
+                </StackPanel>
+            </Border>
         </DockPanel>
     </ScrollViewer>
 </UserControl>
