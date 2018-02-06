@@ -14,7 +14,7 @@
              xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
              x:Class="Certify.UI.Controls.ManagedItem.CertificateDomains"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}" BorderBrush="{DynamicResource {x:Static SystemColors.GradientActiveCaptionBrushKey}}">
+             d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"></RowDefinition>
@@ -28,7 +28,7 @@
             <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
         </Grid.Resources>
         <ScrollViewer>
-            <DockPanel Margin="8,0,8,8" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}" Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
+            <DockPanel Margin="8,0,8,8" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
                 <DockPanel DockPanel.Dock="Top"  Width="Auto">
                     <TextBlock DockPanel.Dock="Top" Padding="0,0,0,0"  TextWrapping="WrapWithOverflow" VerticalAlignment="Top"  Margin="8,0" FontWeight="Normal" FontFamily="Segoe UI" HorizontalAlignment="Left"><Run Text="Select domains from existing hostname bindings on an website or add the domains manually. These must all be domains where you can validate control either via DNS or by creating a temporary file on the website (see the Authorization tab)." /></TextBlock>
                     <TextBlock DockPanel.Dock="Top" Padding="0,0,0,0"  TextWrapping="WrapWithOverflow" VerticalAlignment="Top"  Margin="8,8,8,0" FontWeight="Normal" FontFamily="Segoe UI" HorizontalAlignment="Left"><Run Text="You can then select " /><Run FontWeight="Bold" Text="Request Certificate " /><Run Text="above or refer to the Authorization and Deployment tabs for more options." /></TextBlock>

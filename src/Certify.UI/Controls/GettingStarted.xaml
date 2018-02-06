@@ -10,12 +10,12 @@
              xmlns:Custom="http://metro.mahapps.com/winfx/xaml/controls" x:Class="Certify.UI.Controls.GettingStarted"
              mc:Ignorable="d">
     <ScrollViewer>
-        <DockPanel Margin="6,8" LastChildFill="True"  Height="Auto" MinHeight="600" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+        <DockPanel Margin="6,8" LastChildFill="True"  Height="Auto" MinHeight="600">
             <DockPanel.Resources>
                 <utils:OptionalBooleanToVisibilityConverter True="Collapsed" False="Visible" x:Key="InvBoolVisConverter" />
             </DockPanel.Resources>
 
-            <Border  DockPanel.Dock="Top" Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}" Padding="0,0,0,16" Margin="8,0,8,8" CornerRadius="4" BorderThickness="2">
+            <Border  DockPanel.Dock="Top" Padding="0,0,0,16" Margin="8,0,8,8" CornerRadius="4" BorderThickness="2">
                 <Border.BorderBrush>
                     <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                         <GradientStop Color="#FFE7E7E7" Offset="1" />
@@ -35,9 +35,9 @@
                     <StackPanel  Orientation="Vertical" MinHeight="20">
                         <TextBlock TextWrapping="Wrap" Margin="16,8,0,16" FontSize="20" FontFamily="Segoe UI Light" HorizontalAlignment="Left" VerticalAlignment="Top"><Run Text="Getting Started" /></TextBlock>
 
-                        <TextBlock TextWrapping="Wrap" Margin="16,0,0,0" Foreground="#FF2C2B2B"><Run Text="{x:Static res:SR.ManagedSites_NoItemSelectedTip}" /><Run Text="&#x9;" /></TextBlock>
+                        <TextBlock TextWrapping="Wrap" Margin="16,0,0,0"><Run Text="{x:Static res:SR.ManagedSites_NoItemSelectedTip}" /><Run Text="&#x9;" /></TextBlock>
                     </StackPanel>
-                    <Expander Header="Quick Start Guide" Custom:ControlsHelper.HeaderFontSize="14" Margin="16,8,16,16" ExpandDirection="Down" Background="#CCF4F4F4" BorderBrush="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
+                    <Expander Header="Quick Start Guide" Custom:ControlsHelper.HeaderFontSize="14" Margin="16,8,16,16" ExpandDirection="Down" Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}" BorderBrush="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
 
                         <local:QuickStart BorderThickness="2" Margin="16,8" BorderBrush="{DynamicResource {x:Static SystemColors.MenuBrushKey}}" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
                     </Expander>

@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:Certify.UI.Controls.ManagedItem"
              xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
               xmlns:utils="clr-namespace:Certify.UI.Utils"
-             mc:Ignorable="d" Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
+             mc:Ignorable="d">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
         <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
