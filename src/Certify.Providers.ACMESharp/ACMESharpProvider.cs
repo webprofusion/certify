@@ -113,9 +113,13 @@ namespace Certify.Providers
             _vaultManager.UseEFSForSensitiveFiles = true;
         }
 
-        public async Task<PendingAuthorization> BeginRegistrationAndValidation(CertRequestConfig config, string domainIdentifierId, string challengeType, string domain)
+        public async Task<List<PendingAuthorization>> BeginRegistrationAndValidation(CertRequestConfig config, string domainIdentifierId, string challengeType, string domain)
         {
-            return await Task.FromResult(_vaultManager.BeginRegistrationAndValidation(config, domainIdentifierId, challengeType, domain));
+            var result = await Task.FromResult(_vaultManager.BeginRegistrationAndValidation(config, domainIdentifierId, challengeType, domain));
+
+            // the v1 ACME API request identifiers individual, v2 orders them all at once, hence
+            // marshalling the results
+            return new List<PendingAuthorization> { result };
         }
 
         public async Task<StatusMessage> SubmitChallenge(string domainIdentifierId, string challengeType, AuthorizationChallengeItem attemptedChallenge)

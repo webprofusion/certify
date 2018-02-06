@@ -136,7 +136,7 @@ namespace Certify.Core.Tests
                     PerformExtensionlessConfigChecks = true,
                     WebsiteRootPath = testSitePath,
                     ChallengeProvider = "DNS01.API.Route53",
-                    ChallengeCredentialKey = "fbbafa6f-eafd-4d92-9986-72bd8067f372" //TODO: make configurable
+                    ChallengeCredentialKey = "789731c9-5748-456a-b4cc-6464df3f393d" //TODO: make configurable
                 },
                 ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS
             };
@@ -207,7 +207,7 @@ namespace Certify.Core.Tests
                     PerformExtensionlessConfigChecks = true,
                     WebsiteRootPath = testSitePath,
                     ChallengeProvider = "DNS01.API.Route53",
-                    ChallengeCredentialKey = "fbbafa6f-eafd-4d92-9986-72bd8067f372" //TODO: make configurable
+                    ChallengeCredentialKey = "789731c9-5748-456a-b4cc-6464df3f393d" //TODO: make configurable
                 },
                 ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS
             };

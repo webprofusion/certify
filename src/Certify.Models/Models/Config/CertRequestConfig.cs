@@ -126,5 +126,11 @@
         /// Key algorithm type for CSR signing. Default is RS256 
         /// </summary>
         public string CSRKeyAlg { get; set; }
+
+        /// <summary>
+        /// Binding target matching strategy e.g. matching bindings on target IIS site, all bindings
+        /// on site etc
+        /// </summary>
+        public string DeploymentMode { get; set; }
     }
 }

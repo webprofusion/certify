@@ -104,7 +104,7 @@ namespace Certify.Core.Management.Challenges
                 //FIXME: remove hard coded test paths
                 start.FileName = _pythonPath;
 
-                start.WorkingDirectory = Environment.CurrentDirectory + "Scripts\\Python\\";
+                start.WorkingDirectory = Environment.CurrentDirectory + "\\Scripts\\Python\\";
                 start.Arguments = string.Format("{0}", args);
                 start.UseShellExecute = false;
                 start.RedirectStandardOutput = true;

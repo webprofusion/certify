@@ -107,6 +107,7 @@
     <Compile Include="Controls\QuickStart.xaml.cs">
       <DependentUpon>QuickStart.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Utils\DeploymentModeCheckedConverter.cs" />
     <Compile Include="Utils\CSRAlgCheckedConverter.cs" />
     <Compile Include="Utils\ExpiryDateConverter.cs" />
     <Compile Include="Utils\ManagedItemHealthVisibilityConverter.cs" />

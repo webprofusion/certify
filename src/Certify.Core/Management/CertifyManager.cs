@@ -524,27 +524,31 @@ namespace Certify.Management
             var distinctDomains = allDomains.Distinct();
 
             // perform validation process for each domain
+
+            //begin authorization process (register identifier, request authorization if not already given)
+            // var domainIdentifierId = _acmeClientProvider.ComputeDomainIdentifierId(domain);
+
+            // begin authorization by registering the domain identifier. This may return an already
+            // validated authorization or we may still have to complete the authorization challenge.
+            // When rate limits are encountered, this step may fail.
+            var authorizations = await _acmeClientProvider.BeginRegistrationAndValidation(config, null, challengeType: config.ChallengeType, domain: null);
+
             foreach (var domain in distinctDomains)
             {
-                //begin authorization process (register identifier, request authorization if not already given)
-                var domainIdentifierId = _acmeClientProvider.ComputeDomainIdentifierId(domain);
+                var auth = authorizations.First(a => a.Identifier.Dns == domain);
 
-                LogMessage(managedSite.Id, $"Attempting Domain Validation: {domain}", LogItemType.CertificateRequestStarted);
-
-                ReportProgress(progress,
-                    new RequestProgressState(RequestState.Running, string.Format(Certify.Locales.CoreSR.CertifyManager_RegisteringAndValidatingX0, domain), managedSite)
-                    );
-
-                // begin authorization by registering the domain identifier. This may return an
-                // already validated authorization or we may still have to complete the authorization
-                // challenge. When rate limits are encountered, this step may fail.
-                var authorization = await _acmeClientProvider.BeginRegistrationAndValidation(config, domainIdentifierId, challengeType: config.ChallengeType, domain: domain);
-
+                var authorization = auth;
                 if (authorization != null && authorization.Identifier != null)
                 {
+                    LogMessage(managedSite.Id, $"Attempting Domain Validation: {domain}", LogItemType.CertificateRequestStarted);
+
+                    ReportProgress(progress,
+                        new RequestProgressState(RequestState.Running, string.Format(Certify.Locales.CoreSR.CertifyManager_RegisteringAndValidatingX0, domain), managedSite)
+                        );
+
                     // check if authorization is pending, it may already be valid if an existing
                     // authorization was reused
-                    if (authorization.Identifier.IsAuthorizationPending)
+                    if (auth.Identifier.IsAuthorizationPending)
                     {
                         if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS)
                         {
@@ -594,7 +598,7 @@ namespace Certify.Management
                                 try
                                 {
                                     //ask LE to validate our challenge response
-                                    var submissionStatus = await _acmeClientProvider.SubmitChallenge(domainIdentifierId, config.ChallengeType, authorization.AttemptedChallenge);
+                                    var submissionStatus = await _acmeClientProvider.SubmitChallenge(null, config.ChallengeType, authorization.AttemptedChallenge);
 
                                     if (submissionStatus.IsOK)
                                     {

@@ -1,4 +1,5 @@
 ﻿using Certify.Models.Config;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Certify.Models.Plugins
@@ -13,7 +14,7 @@ namespace Certify.Models.Plugins
 
         string ComputeDomainIdentifierId(string domain);
 
-        Task<PendingAuthorization> BeginRegistrationAndValidation(CertRequestConfig config, string domainIdentifierId, string challengeType, string domain);
+        Task<List<PendingAuthorization>> BeginRegistrationAndValidation(CertRequestConfig config, string domainIdentifierId, string challengeType, string domain);
 
         Task<StatusMessage> SubmitChallenge(string domainIdentifierId, string challengeType, AuthorizationChallengeItem attemptedChallenge);
 
