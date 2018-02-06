@@ -520,7 +520,7 @@ namespace Certify.Providers.Certes
 
         public void DeleteContactRegistration(string id)
         {
-            throw new NotImplementedException();
+            // do nothing for this provider
         }
 
         public string GetVaultSummary()

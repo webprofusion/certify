@@ -115,7 +115,7 @@
                         <manageditem:Deployment Visibility="Visible" Margin="0,8,0,0" />
                     </TabItem>
 
-                    <TabItem Header="Scripting"  Controls:ControlsHelper.HeaderFontSize="12" MinWidth="110">
+                    <TabItem Header="Scripting"  Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
                         <manageditem:ScriptHooks Visibility="Visible" Margin="0,8,0,0" />
                     </TabItem>
                     <TabItem Header="Other Options" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
