@@ -493,12 +493,16 @@ namespace Certify.Management.Servers
 
                         //create/update binding and associate new cert
                         //if any binding elements configured, use those, otherwise auto bind using defaults and SNI
-                        InstallCertificateforBinding(certStoreName, certHash, site, hostname,
+                        InstallCertificateforBinding(
+                            certStoreName,
+                            certHash,
+                            site,
+                            hostname,
                             sslPort: !String.IsNullOrWhiteSpace(requestConfig.BindingPort) ? int.Parse(requestConfig.BindingPort) : 443,
                             useSNI: (requestConfig.BindingUseSNI != null ? (bool)requestConfig.BindingUseSNI : true),
                             ipAddress: !String.IsNullOrWhiteSpace(requestConfig.BindingIPAddress) ? requestConfig.BindingIPAddress : null,
                             alwaysRecreateBindings: requestConfig.AlwaysRecreateBindings
-                            );
+                        );
                     }
                 }
 
@@ -608,24 +612,6 @@ namespace Certify.Management.Servers
                         {
                             //add new https binding at default port "<ip>:port:hostDnsName";
                             string bindingSpec = $"{(!String.IsNullOrEmpty(ipAddress) ? ipAddress : "*")}:{sslPort}:{internationalHost}";
-
-                            /*
-                        var iisBinding = siteToUpdate.Bindings.Add(bindingSpec, certificateHash, certStoreName);
-
-                        iisBinding.Protocol = "https";
-
-                        if (useSNI)
-                        {
-                            try
-                            {
-                                iisBinding["sslFlags"] = 1; //enable sni
-                            }
-                            catch (Exception)
-                            {
-                                // failed to enable SNI
-                                return false;
-                            }
-                        }*/
 
                             var binding = siteToUpdate.Bindings.CreateElement();
 
