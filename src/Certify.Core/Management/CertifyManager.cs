@@ -535,7 +535,7 @@ namespace Certify.Management
 
             foreach (var domain in distinctDomains)
             {
-                var auth = authorizations.First(a => a.Identifier.Dns == domain);
+                var auth = authorizations.FirstOrDefault(a => a.Identifier?.Dns == domain);
 
                 var authorization = auth;
                 if (authorization != null && authorization.Identifier != null)

@@ -197,16 +197,22 @@ namespace Certify.Management.Servers
             return result.OrderBy(s => s.SiteName).ToList();
         }
 
-        public void AddSiteBindings(string siteId, List<string> domains)
+        public void AddSiteBindings(string siteId, List<string> domains, int port = 80)
         {
             lock (_iisAPILock)
             {
                 using (var iisManager = GetDefaultServerManager())
                 {
                     var site = iisManager.Sites.FirstOrDefault(s => s.Id == long.Parse(siteId));
+
+                    var currentBindings = site.Bindings.ToList();
+
                     foreach (var d in domains)
                     {
-                        site.Bindings.Add("*:80:" + d, "http");
+                        if (!currentBindings.Any(c => c.Host == d))
+                        {
+                            site.Bindings.Add("*:" + port + ":" + d, "http");
+                        }
                     }
                     iisManager.CommitChanges();
                 }
@@ -319,8 +325,10 @@ namespace Certify.Management.Servers
         /// <param name="hostname"></param>
         /// <param name="phyPath"></param>
         /// <param name="appPoolName"></param>
-        public void CreateSite(string siteName, string hostname, string phyPath, string appPoolName, string protocol = "http", string ipAddress = "*", int? port = 80)
+        public Site CreateSite(string siteName, string hostname, string phyPath, string appPoolName, string protocol = "http", string ipAddress = "*", int? port = 80)
         {
+            Site result = null;
+
             lock (_iisAPILock)
             {
                 using (var iisManager = GetDefaultServerManager())
@@ -331,7 +339,7 @@ namespace Certify.Management.Servers
                         + (port != null ? (port + ":") : "")
                         + hostname;
 
-                    iisManager.Sites.Add(siteName, protocol, bindingInformation, phyPath);
+                    result = iisManager.Sites.Add(siteName, protocol, bindingInformation, phyPath);
                     if (appPoolName != null)
                     {
                         iisManager.Sites[siteName].ApplicationDefaults.ApplicationPoolName = appPoolName;
@@ -345,6 +353,8 @@ namespace Certify.Management.Servers
                     iisManager.CommitChanges();
                 }
             }
+
+            return result;
         }
 
         /// <summary>
@@ -463,7 +473,6 @@ namespace Certify.Management.Servers
             if (storedCert != null)
             {
                 var certHash = storedCert.GetCertHash();
-                var site = FindManagedSite(managedSite);
 
                 //get list of domains we need to create/update https bindings for
                 List<string> dnsHosts = new List<string> {
@@ -476,48 +485,121 @@ namespace Certify.Management.Servers
                     {
                         dnsHosts.Add(ToUnicodeString(san));
                     }
-                    //dnsHosts.AddRange(requestConfig.SubjectAlternativeNames);
                 }
 
                 dnsHosts = dnsHosts.Distinct().ToList();
 
-                // add/update required bindings for each dns hostname
-                foreach (var hostname in dnsHosts)
+                // depending on our deployment mode we decide which sites/bindings to update:
+
+                if (
+                        (SupportedDeploymentModes.SingleSiteBindingsMatchingDomains.ToString()
+                        == managedSite.RequestConfig.DeploymentMode)
+                        || String.IsNullOrEmpty(managedSite.RequestConfig.DeploymentMode)
+                    )
                 {
-                    //match dns host to IIS site
-                    if (String.IsNullOrWhiteSpace(hostname)) throw new ArgumentException("InstallCertForRequest: Invalid (empty) DNS hostname supplied");
-
-                    if (site != null)
-                    {
-                        //TODO: if the binding fails we should report it, requires reporting a list of binding results
-
-                        //create/update binding and associate new cert
-                        //if any binding elements configured, use those, otherwise auto bind using defaults and SNI
-                        InstallCertificateforBinding(
-                            certStoreName,
-                            certHash,
-                            site,
-                            hostname,
-                            sslPort: !String.IsNullOrWhiteSpace(requestConfig.BindingPort) ? int.Parse(requestConfig.BindingPort) : 443,
-                            useSNI: (requestConfig.BindingUseSNI != null ? (bool)requestConfig.BindingUseSNI : true),
-                            ipAddress: !String.IsNullOrWhiteSpace(requestConfig.BindingIPAddress) ? requestConfig.BindingIPAddress : null,
-                            alwaysRecreateBindings: requestConfig.AlwaysRecreateBindings
-                        );
-                    }
+                    // SingleSiteBindingsMatchingDomains
+                    DeploySingleSiteMatchingDomains(managedSite, requestConfig, certStoreName, certHash, dnsHosts);
+                }
+                else if (SupportedDeploymentModes.SingleSiteAllBindings.ToString() == managedSite.RequestConfig.DeploymentMode)
+                {
+                    // SingleSiteAllBindings
+                    DeploySingleSiteAllBindings(managedSite, requestConfig, certStoreName, certHash, dnsHosts);
+                }
+                else if (SupportedDeploymentModes.AllSitesBindingsMatchingDomains.ToString() == managedSite.RequestConfig.DeploymentMode)
+                {
+                }
+                else if (SupportedDeploymentModes.AllSitesAllBindings.ToString() == managedSite.RequestConfig.DeploymentMode)
+                {
                 }
 
+                // if required, cleanup old certs we are replacing
                 if (cleanupCertStore)
                 {
                     //remove old certs for this primary domain
                     CertificateManager.CleanupCertificateDuplicates(storedCert, requestConfig.PrimaryDomain);
                 }
 
+                // deployment tasks completed
+
                 return true;
             }
             else
             {
+                // failed to store certificate, no deployment
                 return false;
             }
+        }
+
+        private void DeploySingleSiteMatchingDomains(ManagedSite managedSite, CertRequestConfig requestConfig, string certStoreName, byte[] certHash, List<string> dnsHosts)
+        {
+            // SingleSiteBindingsMatchingDomains default deployment mode: match a single site (based
+            // on ID), update bindings for matching domains
+
+            var site = FindManagedSite(managedSite);
+
+            // add/update required bindings for each dns hostname
+            foreach (var hostname in dnsHosts)
+            {
+                //match dns host to IIS site
+                if (String.IsNullOrWhiteSpace(hostname)) throw new ArgumentException("InstallCertForRequest: Invalid (empty) DNS hostname supplied");
+
+                if (site != null)
+                {
+                    //TODO: if the binding fails we should report it, requires reporting a list of binding results
+
+                    //create/update binding and associate new cert
+                    //if any binding elements configured, use those, otherwise auto bind using defaults and SNI
+                    InstallCertificateforBinding(
+                        certStoreName,
+                        certHash,
+                        site,
+                        hostname,
+                        sslPort: !String.IsNullOrWhiteSpace(requestConfig.BindingPort) ? int.Parse(requestConfig.BindingPort) : 443,
+                        useSNI: (requestConfig.BindingUseSNI != null ? (bool)requestConfig.BindingUseSNI : true),
+                        ipAddress: !String.IsNullOrWhiteSpace(requestConfig.BindingIPAddress) ? requestConfig.BindingIPAddress : null,
+                        alwaysRecreateBindings: requestConfig.AlwaysRecreateBindings
+                    );
+                }
+            }
+        }
+
+        private void DeploySingleSiteAllBindings(ManagedSite managedSite, CertRequestConfig requestConfig, string certStoreName, byte[] certHash, List<string> dnsHosts)
+        {
+            // SingleSiteAllBindings : match a single site (based on ID), update/create https version
+            // of all bindings
+
+            var site = FindManagedSite(managedSite);
+
+            var existingBindings = site.Bindings.ToList();
+
+            // for each http binding create or update an https binding
+            foreach (var b in existingBindings)
+            {
+                //if binding is http and there is no https binding, create one
+                string hostname = b.Host;
+
+                // install the cert for this binding if the hostname matches, or we have a matching
+                // wildcard, or if there is no hostname specified in the binding
+
+                // TODO: add wildcard match
+                if (String.IsNullOrEmpty(hostname) || dnsHosts.Contains(hostname))
+                {
+                    //create/update binding and associate new cert
+                    //if any binding elements configured, use those, otherwise auto bind using defaults and SNI
+                    InstallCertificateforBinding(
+                        certStoreName,
+                        certHash,
+                        site,
+                        hostname,
+                        sslPort: !String.IsNullOrWhiteSpace(requestConfig.BindingPort) ? int.Parse(requestConfig.BindingPort) : 443,
+                        useSNI: (requestConfig.BindingUseSNI != null ? (bool)requestConfig.BindingUseSNI : true),
+                        ipAddress: !String.IsNullOrWhiteSpace(requestConfig.BindingIPAddress) ? requestConfig.BindingIPAddress : null,
+                        alwaysRecreateBindings: requestConfig.AlwaysRecreateBindings
+                    );
+                }
+            }
+
+            //
         }
 
         /// <summary>
@@ -621,7 +703,7 @@ namespace Certify.Management.Servers
                             binding.CertificateStoreName = certStoreName;
                             binding.CertificateHash = certificateHash;
 
-                            if (useSNI)
+                            if (!String.IsNullOrEmpty(internationalHost) && useSNI)
                             {
                                 try
                                 {
