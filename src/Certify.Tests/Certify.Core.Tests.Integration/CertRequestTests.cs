@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace Certify.Core.Tests
@@ -175,7 +176,7 @@ namespace Certify.Core.Tests
         {
             // attempt to request a cert for many domains
 
-            int numDomains = 100;
+            int numDomains = 101;
 
             List<string> domainList = new List<string>();
             for (var i = 0; i < numDomains; i++)
@@ -220,7 +221,7 @@ namespace Certify.Core.Tests
                 // check details of cert, subject alternative name should include domain and expiry
                 // must be great than 89 days in the future
 
-                Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");
+                Assert.IsTrue(result.IsSuccess, $"Certificate Request Not Completed: {result.Message}");
             }
             finally
             {
@@ -305,62 +306,70 @@ namespace Certify.Core.Tests
             iisManager.CreateSite(testWildcardSiteName, "test" + testStr + "." + PrimaryTestDomain, PrimaryIISRoot, "DefaultAppPool", port: testSiteHttpPort);
             var site = iisManager.GetSiteByDomain("test" + testStr + "." + PrimaryTestDomain);
 
-            var dummyManagedSite = new ManagedSite
+            ManagedSite managedSite = null;
+            X509Certificate2 certInfo = null;
+
+            try
             {
-                Id = Guid.NewGuid().ToString(),
-                Name = testWildcardSiteName,
-                GroupId = site.Id.ToString(),
-                RequestConfig = new CertRequestConfig
+                var dummyManagedSite = new ManagedSite
                 {
-                    PrimaryDomain = wildcardDomain,
-                    ChallengeType = "dns-01",
-                    PerformAutoConfig = true,
-                    PerformAutomatedCertBinding = true,
-                    PerformChallengeFileCopy = true,
-                    PerformExtensionlessConfigChecks = true,
-                    WebsiteRootPath = testSitePath,
-                    ChallengeProvider = "DNS01.API.Route53",
-                    ChallengeCredentialKey = "789731c9-5748-456a-b4cc-6464df3f393d" //TODO: make configurable
-                },
-                ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS
-            };
+                    Id = Guid.NewGuid().ToString(),
+                    Name = testWildcardSiteName,
+                    GroupId = site.Id.ToString(),
+                    RequestConfig = new CertRequestConfig
+                    {
+                        PrimaryDomain = wildcardDomain,
+                        ChallengeType = "dns-01",
+                        PerformAutoConfig = true,
+                        PerformAutomatedCertBinding = true,
+                        PerformChallengeFileCopy = true,
+                        PerformExtensionlessConfigChecks = true,
+                        WebsiteRootPath = testSitePath,
+                        ChallengeProvider = "DNS01.API.Route53",
+                        ChallengeCredentialKey = "789731c9-5748-456a-b4cc-6464df3f393d" //TODO: make configurable
+                    },
+                    ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS
+                };
 
-            var result = await certifyManager.PerformCertificateRequest(dummyManagedSite);
+                var result = await certifyManager.PerformCertificateRequest(dummyManagedSite);
 
-            //ensure cert request was successful
-            Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");
+                //ensure cert request was successful
+                Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");
 
-            //check details of cert, subject alternative name should include domain and expiry must be great than 89 days in the future
-            var managedSites = await certifyManager.GetManagedSites();
-            var managedSite = managedSites.FirstOrDefault(m => m.Id == dummyManagedSite.Id);
+                //check details of cert, subject alternative name should include domain and expiry must be great than 89 days in the future
+                var managedSites = await certifyManager.GetManagedSites();
+                managedSite = managedSites.FirstOrDefault(m => m.Id == dummyManagedSite.Id);
 
-            //emsure we have a new managed site
-            Assert.IsNotNull(managedSite);
+                //emsure we have a new managed site
+                Assert.IsNotNull(managedSite);
 
-            //have cert file details
-            Assert.IsNotNull(managedSite.CertificatePath);
+                //have cert file details
+                Assert.IsNotNull(managedSite.CertificatePath);
 
-            var fileExists = System.IO.File.Exists(managedSite.CertificatePath);
-            Assert.IsTrue(fileExists);
+                var fileExists = System.IO.File.Exists(managedSite.CertificatePath);
+                Assert.IsTrue(fileExists);
 
-            //check cert is correct
-            var certInfo = CertificateManager.LoadCertificate(managedSite.CertificatePath);
-            Assert.IsNotNull(certInfo);
+                //check cert is correct
+                certInfo = CertificateManager.LoadCertificate(managedSite.CertificatePath);
+                Assert.IsNotNull(certInfo);
 
-            bool isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
-            Assert.IsTrue(isRecentlyCreated);
+                bool isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
+                Assert.IsTrue(isRecentlyCreated);
 
-            bool expiresInFuture = (certInfo.NotAfter - DateTime.UtcNow).TotalDays >= 89;
-            Assert.IsTrue(expiresInFuture);
+                bool expiresInFuture = (certInfo.NotAfter - DateTime.UtcNow).TotalDays >= 89;
+                Assert.IsTrue(expiresInFuture);
+            }
+            finally
+            {
+                // remove managed site
+                if (managedSite != null) await certifyManager.DeleteManagedSite(managedSite.Id);
 
-            // remove managed site
-            await certifyManager.DeleteManagedSite(managedSite.Id);
+                // remove IIS site
+                iisManager.DeleteSite(testWildcardSiteName);
 
-            // remove IIS site
-            iisManager.DeleteSite(testWildcardSiteName);
-
-            // cleanup certificate
-            CertificateManager.RemoveCertificate(certInfo);
+                // cleanup certificate
+                if (certInfo != null) CertificateManager.RemoveCertificate(certInfo);
+            }
         }
     }
 }
