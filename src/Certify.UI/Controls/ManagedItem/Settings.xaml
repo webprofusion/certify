@@ -83,10 +83,12 @@
 
         <DockPanel Grid.Row="2">
             <!-- Renewal warning messages-->
-            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Visibility="{Binding SelectedItem.Health, Converter={StaticResource ResourceKey=HealthVisibleConverter}}" Background="#FF3F3F3F" Margin="0,8,0,8">
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" MaxHeight="120" Visibility="{Binding SelectedItem.Health, Converter={StaticResource ResourceKey=HealthVisibleConverter}}" Background="#FF3F3F3F" Margin="0,8,0,8">
                 <fa:ImageAwesome Margin="4" Icon="ExclamationTriangle" Height="16" Foreground="#FFFDFDFD" />
-                <TextBlock TextWrapping="Wrap" Text="{Binding SelectedItem.RenewalFailureMessage}" Margin="4,4,16,4" Foreground="White">
-                </TextBlock>
+                <ScrollViewer>
+                    <TextBlock TextWrapping="Wrap" Text="{Binding SelectedItem.RenewalFailureMessage}" Margin="4,4,16,4" Foreground="White">
+                    </TextBlock>
+                </ScrollViewer>
             </StackPanel>
 
             <!-- Managed Item display name-->
