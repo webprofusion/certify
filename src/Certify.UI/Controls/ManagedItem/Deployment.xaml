@@ -12,9 +12,8 @@
         <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
         <utils:OptionalBooleanToVisibilityConverter True="Collapsed" False="Visible" x:Key="InvBoolVisConverter" />
         <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
-        <utils:ManagedItemHealthVisibilityConverter x:Key="HealthVisibleConverter" />
+        <utils:EnumConverter x:Key="EnumConverter" />
         <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
-        <utils:DeploymentModeCheckedConverter x:Key="DeploymentModeConverter" />
     </UserControl.Resources>
     <ScrollViewer>
         <DockPanel LastChildFill="True" Margin="8,0,8,8">
@@ -22,14 +21,32 @@
             <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Certificate Deployment</TextBlock>
 
             <TextBlock DockPanel.Dock="Top" Text="Choose how to apply the certificate:" Margin="0,0,0,8" />
-            <StackPanel DockPanel.Dock="Top" Margin="8,0,0,0">
-                <RadioButton GroupName="DeploymentMode" Margin="0,0,0,4" IsChecked="{Binding SelectedItem.RequestConfig.DeploymentMode, Converter={StaticResource DeploymentModeConverter}, ConverterParameter=Certify.Models.SupportedDeploymentModes.SingleSiteBindingsMatchingDomains}" Content="Apply to matching hostname bindings on selected website (default)." />
-                <RadioButton GroupName="DeploymentMode" Margin="0,0,0,4" IsChecked="{Binding SelectedItem.RequestConfig.DeploymentMode, Converter={StaticResource DeploymentModeConverter}, ConverterParameter=Certify.Models.SupportedDeploymentModes.SingleSiteAllBindings}" Content="Apply to all bindings on selected website, including where hostname is not specified." />
-                <RadioButton GroupName="DeploymentMode" Margin="0,0,0,4" IsChecked="{Binding SelectedItem.RequestConfig.DeploymentMode, Converter={StaticResource DeploymentModeConverter}, ConverterParameter=Certify.Models.SupportedDeploymentModes.AllSitesBindingsMatchingDomains}" Content="Apply to matching hostname bindings on all websites." HorizontalAlignment="Left" Width="712" />
-                <RadioButton GroupName="DeploymentMode" Margin="0,0,0,4" IsChecked="{Binding SelectedItem.RequestConfig.DeploymentMode, Converter={StaticResource DeploymentModeConverter}, ConverterParameter=Certify.Models.SupportedDeploymentModes.NoDeployment}" Content="No deployment." />
+            <StackPanel DockPanel.Dock="Top">
+                <StackPanel Orientation="Horizontal">
+                    <Label Width="130" Content="Deploy to:"></Label>
+                    <ComboBox  x:Name="DeploymentSiteOptions" DisplayMemberPath="Title" SelectedValuePath="Value" SelectedValue="{Binding SelectedItem.RequestConfig.DeploymentSiteOption, Converter={StaticResource EnumConverter} }">
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Width="130" Content="Binding Add/Update:"></Label>
+                    <ComboBox  x:Name="DeploymentBindingUpdates" DisplayMemberPath="Title" SelectedValuePath="Value" SelectedValue="{Binding SelectedItem.RequestConfig.DeploymentBindingOption,  Converter={StaticResource EnumConverter} }" Margin="0,4,0,0">
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Width="130" Content="Matching any of:"></Label>
+                    <StackPanel>
+                        <CheckBox IsChecked="{Binding SelectedItem.RequestConfig.DeploymentBindingMatchHostname}" DockPanel.Dock="Top" Content="Hostname matches certificate domains" Margin="0,4,0,0">
+                        </CheckBox>
+                        <CheckBox  IsChecked="{Binding SelectedItem.RequestConfig.DeploymentBindingBlankHostname}" DockPanel.Dock="Top" Content="Hostname not specified (IP only or All Unassigned)" Margin="0,4,0,0">
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding SelectedItem.RequestConfig.DeploymentBindingReplacePrevious}" DockPanel.Dock="Top"  Content="Existing binding uses old version of same certificate" Margin="0,4,0,0">
+                        </CheckBox>
+                    </StackPanel>
+                </StackPanel>
             </StackPanel>
-            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">IIS Binding Settings</TextBlock>
 
+            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">IIS Binding Settings</TextBlock>
+            <TextBlock DockPanel.Dock="Top" Text="If one or more new https bindings need to be created, the following settings will be used:"></TextBlock>
             <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Margin="8,4,0,0">
                 <RadioButton Margin="0,0,0,4" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" GroupName="BindingType" Content="{x:Static Resources:SR.ManagedItemSettings_AutoUpdateBinding}" />
                 <RadioButton Margin="0,0,0,4" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Mode=OneWay, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType" Content="{x:Static Resources:SR.ManagedItemSettings_UseSpecificBinding}" />

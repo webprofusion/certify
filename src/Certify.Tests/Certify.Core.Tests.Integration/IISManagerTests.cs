@@ -1,10 +1,13 @@
 ﻿using Certify.Management;
 using Certify.Management.Servers;
+using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace Certify.Core.Tests
 {
@@ -17,6 +20,9 @@ namespace Certify.Core.Tests
         private ServerProviderIIS iisManager;
         private string testSiteName = "Test2CertRequest";
         private string testSiteDomain = "test.com";
+        private int testSiteHttpPort = 81;
+
+        private string testSitePath = "c:\\inetpub\\wwwroot";
 
         public IISManagerTests()
         {
@@ -171,6 +177,105 @@ namespace Certify.Core.Tests
             //get all sites excluding stopped sites
             sites = iisManager.GetPrimarySites(includeOnlyStartedSites: true);
             Assert.IsTrue(sites.Any());
+        }
+
+        [TestMethod, TestCategory("MegaTest")]
+        public async Task TestBindingMatch()
+        {
+            // create test site with mix of hostname and IP only bindings
+            var testStr = Guid.NewGuid().ToString().Substring(0, 6);
+            PrimaryTestDomain = $"test-{testStr}." + PrimaryTestDomain;
+
+            string testBindingSiteName = "TestAllBinding_" + testStr;
+
+            var testSiteDomain = "test" + testStr + "." + PrimaryTestDomain;
+
+            if (iisManager.SiteExists(testBindingSiteName))
+            {
+                iisManager.DeleteSite(testBindingSiteName);
+            }
+
+            // create site with IP all unassigned, no hostname
+            var site = iisManager.CreateSite(testBindingSiteName, "", PrimaryIISRoot, "DefaultAppPool", port: testSiteHttpPort);
+
+            // add another hostname binding (matching cert and not matching cert)
+            List<string> testDomains = new List<string> { testSiteDomain, "label1." + testSiteDomain, "nested.label." + testSiteDomain };
+            iisManager.AddSiteBindings(site.Id.ToString(), testDomains, testSiteHttpPort);
+
+            // get fresh instance of site since updates
+            site = iisManager.GetSiteById(site.Id.ToString());
+
+            Assert.AreEqual(site.Name, testBindingSiteName);
+            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var managedSite = new ManagedSite
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = testSiteName,
+                GroupId = site.Id.ToString(),
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = testSiteDomain,
+                    ChallengeType = "http-01",
+                    PerformAutoConfig = true,
+                    PerformAutomatedCertBinding = true,
+                    PerformChallengeFileCopy = true,
+                    PerformExtensionlessConfigChecks = true,
+                    WebsiteRootPath = testSitePath,
+                    DeploymentSiteOption = DeploymentOption.SingleSite
+                },
+                ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS,
+                CertificatePath = dummyCertPath
+            };
+
+            await iisManager.InstallCertForRequest(managedSite, dummyCertPath, false, false);
+
+            // get cert info to compare hash
+            var certInfo = CertificateManager.LoadCertificate(managedSite.CertificatePath);
+
+            // check IIS site bindings
+            site = iisManager.GetSiteById(site.Id.ToString());
+            var finalBindings = site.Bindings.ToList();
+
+            try
+            {
+                foreach (var b in finalBindings)
+                {
+                    if (b.Protocol == "https")
+                    {
+                        // check this item is one we should have included (is matching domain or has
+                        // no hostname)
+                        bool shouldBeIncluded = false;
+
+                        if (!String.IsNullOrEmpty(b.Host))
+                        {
+                            if (testDomains.Contains(b.Host))
+                            {
+                                shouldBeIncluded = true;
+                            }
+                        }
+                        else
+                        {
+                            shouldBeIncluded = true;
+                        }
+
+                        bool isCertMatch = StructuralComparisons.StructuralEqualityComparer.Equals(b.CertificateHash, certInfo.GetCertHash());
+
+                        if (shouldBeIncluded)
+                        {
+                            Assert.IsTrue(isCertMatch, "Binding should have been updated with cert hash but was not.");
+                        }
+                        else
+                        {
+                            Assert.IsFalse(isCertMatch, "Binding should not have been updated with cert hash but was.");
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                // clean up IIS either way
+                iisManager.DeleteSite(testBindingSiteName);
+            }
         }
     }
 }
