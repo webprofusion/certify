@@ -128,9 +128,28 @@
         public string CSRKeyAlg { get; set; }
 
         /// <summary>
-        /// Binding target matching strategy e.g. matching bindings on target IIS site, all bindings
-        /// on site etc
+        /// Deployment site options (single/all etc) 
         /// </summary>
-        public string DeploymentMode { get; set; }
+        public DeploymentOption DeploymentSiteOption { get; set; } = DeploymentOption.SingleSite;
+
+        /// <summary>
+        /// Binding options: Add/Update or Update 
+        /// </summary>
+        public DeploymentBindingOption DeploymentBindingOption { get; set; } = DeploymentBindingOption.AddOrUpdate;
+
+        /// <summary>
+        /// If true, apply cert to matching hostnames (default = true) 
+        /// </summary>
+        public bool DeploymentBindingMatchHostname { get; set; } = true;
+
+        /// <summary>
+        /// If true, apply cert where hostname in binding is blank (default = false) 
+        /// </summary>
+        public bool DeploymentBindingBlankHostname { get; set; } = false;
+
+        /// <summary>
+        /// If true, apply cert where binding has certificatehash set to the old certificate 
+        /// </summary>
+        public bool DeploymentBindingReplacePrevious { get; set; } = false;
     }
 }

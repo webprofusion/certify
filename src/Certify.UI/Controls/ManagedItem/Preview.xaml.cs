@@ -1,18 +1,13 @@
-﻿using System;
+﻿using Certify.Models;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Controls;
 
 namespace Certify.UI.Controls.ManagedItem
 {
-    public class PreviewStep
-    {
-        public string Title { get; set; }
-        public string Category { get; set; }
-        public string Description { get; set; }
-    }
-
     /// <summary>
     /// Interaction logic for Preview.xaml 
     /// </summary>
@@ -20,21 +15,21 @@ namespace Certify.UI.Controls.ManagedItem
     {
         protected Certify.UI.ViewModel.AppModel MainViewModel => UI.ViewModel.AppModel.Current;
 
-        private ObservableCollection<PreviewStep> Steps { get; set; }
+        private ObservableCollection<ActionStep> Steps { get; set; }
 
         public Preview()
         {
             InitializeComponent();
 
-            Steps = new ObservableCollection<PreviewStep>();
+            Steps = new ObservableCollection<ActionStep>();
         }
 
-        private void UpdatePreview()
+        private async Task UpdatePreview()
         {
             // generate preview
             if (MainViewModel.SelectedItem != null)
             {
-                List<PreviewStep> steps = new List<PreviewStep>();
+                List<ActionStep> steps = new List<ActionStep>();
                 try
                 {
                     var item = MainViewModel.SelectedItem;
@@ -54,11 +49,11 @@ namespace Certify.UI.Controls.ManagedItem
                         }
                     }
 
-                    steps.Add(new PreviewStep { Title = "Summary", Description = certDescription });
+                    steps.Add(new ActionStep { Title = "Summary", Description = certDescription });
 
                     // validation steps
                     string validationDescription = $"Attempt authorization using the {item.RequestConfig.ChallengeType} challenge type.";
-                    steps.Add(new PreviewStep { Title = $"{stepIndex}. Domain Validation", Description = validationDescription });
+                    steps.Add(new ActionStep { Title = $"{stepIndex}. Domain Validation", Description = validationDescription });
                     stepIndex++;
 
                     // if using http-01, describe steps
@@ -68,43 +63,53 @@ namespace Certify.UI.Controls.ManagedItem
                     // pre request scripting steps
                     if (!String.IsNullOrEmpty(item.RequestConfig.PreRequestPowerShellScript))
                     {
-                        steps.Add(new PreviewStep { Title = $"{stepIndex}. Pre-Request Powershell", Description = $"Execute PowerShell Script" });
+                        steps.Add(new ActionStep { Title = $"{stepIndex}. Pre-Request Powershell", Description = $"Execute PowerShell Script" });
                         stepIndex++;
                     }
 
                     // cert request step
                     string certRequest = $"Certificate Signing Request {item.RequestConfig.CSRKeyAlg}.";
-                    steps.Add(new PreviewStep { Title = $"{stepIndex}. Certificate Request", Description = certRequest });
+                    steps.Add(new ActionStep { Title = $"{stepIndex}. Certificate Request", Description = certRequest });
                     stepIndex++;
 
                     // post request scripting steps
                     if (!String.IsNullOrEmpty(item.RequestConfig.PostRequestPowerShellScript))
                     {
-                        steps.Add(new PreviewStep { Title = $"{stepIndex}. Post-Request Powershell", Description = $"Execute PowerShell Script" });
+                        steps.Add(new ActionStep { Title = $"{stepIndex}. Post-Request Powershell", Description = $"Execute PowerShell Script" });
                         stepIndex++;
                     }
 
                     // webhook scripting steps
                     if (!String.IsNullOrEmpty(item.RequestConfig.WebhookUrl))
                     {
-                        steps.Add(new PreviewStep { Title = $"{stepIndex}. Post-Request WebHook", Description = $"Execute WebHook {item.RequestConfig.WebhookUrl}" });
+                        steps.Add(new ActionStep { Title = $"{stepIndex}. Post-Request WebHook", Description = $"Execute WebHook {item.RequestConfig.WebhookUrl}" });
 
                         stepIndex++;
                     }
 
                     // deployment & binding steps
                     string deploymentDescription = $"IIS Binding creation/update with certificate.";
-                    steps.Add(new PreviewStep { Title = $"{stepIndex}. Deployment", Description = deploymentDescription });
+                    var deploymentStep = new ActionStep { Title = $"{stepIndex}. Deployment", Description = deploymentDescription };
+
+                    // add deployment sub-steps (if any)
+                    var bindingRequest = await MainViewModel.ReapplyCertificateBindings(item.Id, true);
+                    if (bindingRequest.Actions != null) deploymentStep.Substeps = bindingRequest.Actions;
+
+                    steps.Add(deploymentStep);
                     stepIndex++;
+
+                    stepIndex = steps.Count;
                 }
                 catch (Exception exp)
                 {
-                    steps.Add(new PreviewStep { Title = "Could not generate preview", Description = $"A problem occurred generating the preview: {exp.Message}" });
+                    steps.Add(new ActionStep { Title = "Could not generate preview", Description = $"A problem occurred generating the preview: {exp.Message}" });
                 }
 
-                Steps = new ObservableCollection<PreviewStep>(steps);
-
-                this.PreviewSteps.ItemsSource = Steps;
+                Steps = new ObservableCollection<ActionStep>(steps);
+                App.Current.Dispatcher.Invoke((Action)delegate
+                {
+                    this.PreviewSteps.ItemsSource = Steps;
+                });
             }
         }
 
@@ -112,7 +117,7 @@ namespace Certify.UI.Controls.ManagedItem
         {
             if (this.IsVisible)
             {
-                UpdatePreview();
+                Task.Run(() => UpdatePreview());
             }
         }
     }

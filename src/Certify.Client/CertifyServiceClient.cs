@@ -237,9 +237,9 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<StatusMessage>(await response.Content.ReadAsStringAsync());
         }
 
-        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedSiteId)
+        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedSiteId, bool isPreviewOnly)
         {
-            var response = await FetchAsync($"managedsites/reapply/{managedSiteId}");
+            var response = await FetchAsync($"managedsites/reapply/{managedSiteId}/{isPreviewOnly}");
             return JsonConvert.DeserializeObject<CertificateRequestResult>(response);
         }
 

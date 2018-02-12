@@ -104,7 +104,7 @@ namespace Certify.UI.Controls.ManagedItem
             {
                 if (MessageBox.Show("Re-apply certificate to website bindings?", "Confirm Re-Apply?", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
                 {
-                    await MainViewModel.ReapplyCertificateBindings(MainViewModel.SelectedItem.Id);
+                    await MainViewModel.ReapplyCertificateBindings(MainViewModel.SelectedItem.Id, false);
                 }
             }
         }

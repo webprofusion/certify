@@ -107,7 +107,6 @@
     <Compile Include="Controls\QuickStart.xaml.cs">
       <DependentUpon>QuickStart.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Utils\DeploymentModeCheckedConverter.cs" />
     <Compile Include="Utils\CSRAlgCheckedConverter.cs" />
     <Compile Include="Utils\ExpiryDateConverter.cs" />
     <Compile Include="Utils\ManagedItemHealthVisibilityConverter.cs" />
@@ -340,7 +339,7 @@
       <Version>0.0.3.197</Version>
     </PackageReference>
     <PackageReference Include="Fody">
-      <Version>2.3.23</Version>
+      <Version>2.3.25</Version>
     </PackageReference>
     <PackageReference Include="FontAwesome.WPF">
       <Version>4.7.0.9</Version>

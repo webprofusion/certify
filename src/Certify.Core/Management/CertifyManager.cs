@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -62,7 +63,7 @@ namespace Certify.Management
 
         void BeginTrackingProgress(RequestProgressState state);
 
-        Task<CertificateRequestResult> ReapplyCertificateBindings(ManagedSite managedSite, IProgress<RequestProgressState> progress = null);
+        Task<CertificateRequestResult> ReapplyCertificateBindings(ManagedSite managedSite, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false);
 
         Task<CertificateRequestResult> PerformCertificateRequest(ManagedSite managedSite, IProgress<RequestProgressState> progress = null);
 
@@ -92,6 +93,7 @@ namespace Certify.Management
         private IVaultProvider _vaultProvider = null;
         private ICertifiedServer _serverProvider = null;
         private ChallengeDiagnostics _challengeDiagnostics = null;
+        private IdnMapping _idnMapping = new IdnMapping();
 
         public bool IsSingleInstanceMode { get; set; } = true; //if true we make assumptions about how often to load settings etc
         private ObservableCollection<RequestProgressState> _progressResults { get; set; }
@@ -105,6 +107,8 @@ namespace Certify.Management
         private PluginManager PluginManager { get; set; }
 
         private TelemetryClient _tc = null;
+
+        private string _acmeAPIProvider = "certes"; //"ACMESharp";
 
         public CertifyManager()
         {
@@ -120,17 +124,22 @@ namespace Certify.Management
 
             // ACME Sharp is both a vault (config storage) provider and ACME client provider
             // TODO: fully convert to plugin
-            /* var acmeSharp = new Certify.Providers.ACMESharpProvider();
-             acmeSharp.InitProvider(CoreAppSettings.Current.VaultPath);
 
-             _acmeClientProvider = acmeSharp;
-             _vaultProvider = acmeSharp;*/
+            if (_acmeAPIProvider == "ACMESharp")
+            {
+                var acmeSharp = new Certify.Providers.ACMESharpProvider();
+                acmeSharp.InitProvider(CoreAppSettings.Current.VaultPath);
 
-            // certes acme provider
-            var certes = new Certify.Providers.Certes.CertesACMEProvider(Management.Util.GetAppDataFolder() + "\\certes");
+                _acmeClientProvider = acmeSharp;
+                _vaultProvider = acmeSharp;
+            }
+            else
+            {
+                var certes = new Certify.Providers.Certes.CertesACMEProvider(Management.Util.GetAppDataFolder() + "\\certes");
 
-            _acmeClientProvider = certes;
-            _vaultProvider = certes;
+                _acmeClientProvider = certes;
+                _vaultProvider = certes;
+            }
 
             // init remaining utilities and optionally enable telematics
             _challengeDiagnostics = new ChallengeDiagnostics(CoreAppSettings.Current.EnableValidationProxyAPI);
@@ -344,7 +353,7 @@ namespace Certify.Management
             });
         }
 
-        public async Task<CertificateRequestResult> ReapplyCertificateBindings(ManagedSite managedSite, IProgress<RequestProgressState> progress = null)
+        public async Task<CertificateRequestResult> ReapplyCertificateBindings(ManagedSite managedSite, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false)
         {
             if (_tc != null) _tc.TrackEvent("ReapplyCertBindings");
 
@@ -354,15 +363,18 @@ namespace Certify.Management
 
             if (managedSite.ItemType == ManagedItemType.SSL_LetsEncrypt_LocalIIS)
             {
-                ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding, managedSite));
+                if (!isPreviewOnly) ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding, managedSite));
 
                 // Install certificate into certificate store and bind to IIS site
-                if (await _serverProvider.InstallCertForRequest(managedSite, pfxPath, cleanupCertStore: true))
+                var actions = await _serverProvider.InstallCertForRequest(managedSite, pfxPath, cleanupCertStore: true, isPreviewOnly: isPreviewOnly);
+                result.Actions = actions;
+
+                if (!actions.Any(a => a.HasError))
                 {
                     //all done
                     LogMessage(managedSite.Id, CoreSR.CertifyManager_CompleteRequestAndUpdateBinding, LogItemType.CertificateRequestSuccessful);
 
-                    await UpdateManagedSiteStatus(managedSite, RequestState.Success);
+                    if (!isPreviewOnly) await UpdateManagedSiteStatus(managedSite, RequestState.Success);
 
                     result.IsSuccess = true;
                     result.Message = string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
@@ -372,7 +384,7 @@ namespace Certify.Management
                 {
                     // certificate install failed
                     result.Message = string.Format(CoreSR.CertifyManager_CertificateInstallFailed, pfxPath);
-                    await UpdateManagedSiteStatus(managedSite, RequestState.Error, result.Message);
+                    if (!isPreviewOnly) await UpdateManagedSiteStatus(managedSite, RequestState.Error, result.Message);
 
                     LogMessage(managedSite.Id, result.Message, LogItemType.GeneralError);
                 }
@@ -535,7 +547,8 @@ namespace Certify.Management
 
             foreach (var domain in distinctDomains)
             {
-                var auth = authorizations.FirstOrDefault(a => a.Identifier?.Dns == domain);
+                var asciiDomain = _idnMapping.GetAscii(domain);
+                var auth = authorizations.FirstOrDefault(a => a.Identifier?.Dns == asciiDomain);
 
                 var authorization = auth;
                 if (authorization != null && authorization.Identifier != null)
@@ -718,6 +731,7 @@ namespace Certify.Management
                         managedSite.DateRenewed = DateTime.Now;
 
                         managedSite.CertificatePath = pfxPath;
+                        managedSite.CertificatePreviousThumbprintHash = managedSite.CertificateThumbprintHash;
                         managedSite.CertificateThumbprintHash = certInfo.Thumbprint;
                         managedSite.CertificateRevoked = false;
 
@@ -736,7 +750,8 @@ namespace Certify.Management
                         ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding, managedSite));
 
                         // Install certificate into certificate store and bind to IIS site
-                        if (await _serverProvider.InstallCertForRequest(managedSite, pfxPath, cleanupCertStore: true))
+                        var actions = await _serverProvider.InstallCertForRequest(managedSite, pfxPath, cleanupCertStore: true, isPreviewOnly: false);
+                        if (!actions.Any(a => a.HasError))
                         {
                             //all done
                             LogMessage(managedSite.Id, CoreSR.CertifyManager_CompleteRequestAndUpdateBinding, LogItemType.CertificateRequestSuccessful);

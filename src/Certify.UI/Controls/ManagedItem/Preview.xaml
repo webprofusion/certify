@@ -18,6 +18,18 @@
                             <StackPanel>
                                 <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
                                 <TextBlock Margin="16,0,0,0" Text="{Binding Description}" />
+                                <ItemsControl x:Name="PreviewSubSteps" Margin="16,0,0,0" ItemsSource="{Binding Substeps}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="16,0,0,5">
+                                                <StackPanel>
+                                                    <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
+                                                    <TextBlock Margin="16,0,0,0" Text="{Binding Description}" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </StackPanel>
                         </Grid>
                     </DataTemplate>

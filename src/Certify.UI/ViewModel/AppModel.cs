@@ -656,9 +656,9 @@ namespace Certify.UI.ViewModel
             // current requests?
         }
 
-        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId)
+        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly)
         {
-            return await CertifyClient.ReapplyCertificateBindings(managedItemId);
+            return await CertifyClient.ReapplyCertificateBindings(managedItemId, isPreviewOnly);
         }
 
         private async Task UpdatedCachedManagedSite(ManagedSite managedSite, bool reload = false)

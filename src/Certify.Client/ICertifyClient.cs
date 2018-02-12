@@ -110,7 +110,7 @@ namespace Certify.Client
 
         Task<List<CertificateRequestResult>> BeginAutoRenewal();
 
-        Task<CertificateRequestResult> ReapplyCertificateBindings(string managedSiteId);
+        Task<CertificateRequestResult> ReapplyCertificateBindings(string managedSiteId, bool isPreviewOnly);
 
         Task<CertificateRequestResult> BeginCertificateRequest(string managedSiteId);
 

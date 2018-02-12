@@ -11,9 +11,9 @@ namespace Certify.Models.Providers
     {
         List<SiteBindingItem> GetSiteBindingList(bool ignoreStoppedSites, string siteId = null);
 
-        Task<bool> InstallCertForRequest(ManagedSite managedSite, string pfxPath, bool cleanupCertStore);
+        Task<List<ActionStep>> InstallCertForRequest(ManagedSite managedSite, string pfxPath, bool cleanupCertStore, bool isPreviewOnly);
 
-        bool InstallCertificateforBinding(string certStoreName, byte[] certificateHash, ManagedSite managedSite, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null, bool alwaysRecreateBindings = false);
+        ActionStep InstallCertificateforBinding(string certStoreName, byte[] certificateHash, ManagedSite managedSite, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null, bool alwaysRecreateBindings = false, bool isPreviewOnly = false);
 
         List<SiteBindingItem> GetPrimarySites(bool ignoreStoppedSites);
 
