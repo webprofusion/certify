@@ -457,11 +457,24 @@ namespace Certify.Providers.Certes
             var csrBytes = builder.Generate();
 
             // send our Certificate Signing Request
-            var certResult = await orderContext.Finalize(csrBytes);
+
+            Order certOrder = null;
+
+            try
+            {
+                certOrder = await orderContext.Finalize(csrBytes);
+            }
+            catch (Exception)
+            {
+                // can get error on finalize if the order is already valid
+                certOrder = await orderContext.Resource();
+
+                LogAction("Order.Finalize", $"Failed to finalize order. Status: {certOrder.Status} ");
+            }
 
             //TODO: should be iterate here until valid or invalid?
 
-            if (certResult.Status == OrderStatus.Valid)
+            if (certOrder.Status == OrderStatus.Valid)
             {
                 // fetch our certificate info
                 var certificateChain = await orderContext.Download();
