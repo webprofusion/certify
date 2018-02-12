@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using Org.BouncyCastle.Crypto.Digests;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,6 +36,7 @@ namespace Certify.Providers.Certes
         private string _settingsFolder = @"c:\programdata\certify\certes\";
         private CertesSettings _settings = null;
         private Dictionary<string, IOrderContext> _currentOrders;
+        private IdnMapping _idnMapping = new IdnMapping();
 
         public CertesACMEProvider(string settingsPath)
         {
@@ -166,7 +168,7 @@ namespace Certify.Providers.Certes
             List<String> domainOrders = new List<string>();
 
             // order all of the distinct domains in the config (primary + SAN).
-            domainOrders.Add(config.PrimaryDomain);
+            domainOrders.Add(_idnMapping.GetAscii(config.PrimaryDomain));
 
             if (config.SubjectAlternativeNames != null)
             {
@@ -174,7 +176,7 @@ namespace Certify.Providers.Certes
                 {
                     if (!domainOrders.Contains(s))
                     {
-                        domainOrders.Add(s);
+                        domainOrders.Add(_idnMapping.GetAscii(s));
                     }
                 }
             }
@@ -222,7 +224,7 @@ namespace Certify.Providers.Certes
                             Key = httpChallenge.Token,
                             Value = httpChallenge.KeyAuthz,
                             ChallengeData = httpChallenge,
-                            ResourceUri = $"http://{domain}/.well-known/acme-challenge/{httpChallenge.Token}",
+                            ResourceUri = $"http://{authzDomain.Replace("*.", "")}/.well-known/acme-challenge/{httpChallenge.Token}",
                             ResourcePath = $".well-known\\acme-challenge\\{httpChallenge.Token}",
                             IsValidated = (httpChallengeStatus.Status == ChallengeStatus.Valid)
                         });
@@ -292,7 +294,7 @@ namespace Certify.Providers.Certes
             catch (Exception exp)
             {
                 // failed to register the domain identifier with LE (invalid, rate limit or CAA fail?)
-                LogAction("NewOrder [" + domain + "]", exp.Message);
+                LogAction("NewOrder [" + config.PrimaryDomain + "]", exp.Message);
 
                 return new List<PendingAuthorization> {
                     new PendingAuthorization
@@ -426,21 +428,20 @@ namespace Certify.Providers.Certes
 
             var csr = new CsrInfo
             {
-                CommonName = config.PrimaryDomain
+                CommonName = _idnMapping.GetAscii(config.PrimaryDomain)
             };
 
             //alternative to certes IOrderContextExtension.Finalize
             var builder = new CertificationRequestBuilder(csrKey);
 
-            foreach (var authzCtx in await orderContext.Authorizations())
+            foreach (var identifier in order.Identifiers)
             {
-                var authz = await authzCtx.Resource();
-                if (!builder.SubjectAlternativeNames.Contains(authz.Identifier.Value))
+                if (!builder.SubjectAlternativeNames.Contains(identifier.Value))
                 {
-                    if (config.PrimaryDomain != $"*.{authz.Identifier.Value}")
+                    if (config.PrimaryDomain != $"*.{identifier.Value}")
                     {
                         //only add domain to SAN if it is not derived from a wildcard domain eg test.com from *.test.com
-                        builder.SubjectAlternativeNames.Add(authz.Identifier.Value);
+                        builder.SubjectAlternativeNames.Add(identifier.Value);
                     }
                 }
             }
@@ -449,38 +450,43 @@ namespace Certify.Providers.Certes
             if (config.PrimaryDomain.StartsWith("*."))
             {
                 //add wildcard domain to san
-                builder.SubjectAlternativeNames.Add(config.PrimaryDomain);
+                builder.SubjectAlternativeNames.Add(_idnMapping.GetAscii(config.PrimaryDomain));
             }
-            builder.AddName("CN", config.PrimaryDomain);
-            /* foreach (var f in csr.AllFieldsDictionary)
-             {
-                 builder.AddName(f.Key, f.Value);
-             }*/
+            builder.AddName("CN", _idnMapping.GetAscii(config.PrimaryDomain));
 
-            if (string.IsNullOrWhiteSpace(csr.CommonName))
+            var csrBytes = builder.Generate();
+
+            // send our Certificate Signing Request
+            var certResult = await orderContext.Finalize(csrBytes);
+
+            //TODO: should be iterate here until valid or invalid?
+
+            if (certResult.Status == OrderStatus.Valid)
             {
-                builder.AddName("CN", builder.SubjectAlternativeNames[0]);
+                // fetch our certificate info
+                var certificateChain = await orderContext.Download();
+
+                var cert = new CertificateInfo(certificateChain, csrKey);
+
+                var certFriendlyName = config.PrimaryDomain + "[Certify]";
+                var certFolderPath = _settingsFolder + "\\assets\\pfx";
+
+                if (!System.IO.Directory.Exists(certFolderPath))
+                {
+                    System.IO.Directory.CreateDirectory(certFolderPath);
+                }
+
+                string certFile = Guid.NewGuid().ToString() + ".pfx";
+                string pfxPath = certFolderPath + "\\" + certFile;
+                System.IO.File.WriteAllBytes(pfxPath, cert.ToPfx(certFriendlyName, ""));
+
+                return new ProcessStepResult { IsSuccess = true, Result = pfxPath };
             }
-
-            var certResult = await orderContext.Finalize(builder.Generate());
-
-            var pem = await orderContext.Download();
-
-            var cert = new CertificateInfo(pem, csrKey);
-
-            var certFriendlyName = config.PrimaryDomain + "[Certify]";
-            var certFolderPath = _settingsFolder + "\\assets\\pfx";
-
-            if (!System.IO.Directory.Exists(certFolderPath))
+            else
             {
-                System.IO.Directory.CreateDirectory(certFolderPath);
+                // TODO: is cert pending or failed?
+                return new ProcessStepResult { IsSuccess = false, ErrorMessage = "Certificate signing request not completed" };
             }
-
-            string certFile = Guid.NewGuid().ToString() + ".pfx";
-            string pfxPath = certFolderPath + "\\" + certFile;
-            System.IO.File.WriteAllBytes(pfxPath, cert.ToPfx(certFriendlyName, ""));
-
-            return new ProcessStepResult { IsSuccess = true, Result = pfxPath };
         }
 
         public Task<StatusMessage> RevokeCertificate(ManagedSite managedSite)
