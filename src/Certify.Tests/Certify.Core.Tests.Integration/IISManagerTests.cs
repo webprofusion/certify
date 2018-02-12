@@ -179,6 +179,11 @@ namespace Certify.Core.Tests
             Assert.IsTrue(sites.Any());
         }
 
+        private bool IsCertHashEqual(byte[] a, byte[] b)
+        {
+            return StructuralComparisons.StructuralEqualityComparer.Equals(a, b);
+        }
+
         [TestMethod, TestCategory("MegaTest")]
         public async Task TestBindingMatch()
         {
@@ -205,7 +210,10 @@ namespace Certify.Core.Tests
             // get fresh instance of site since updates
             site = iisManager.GetSiteById(site.Id.ToString());
 
+            var bindingsBeforeApply = site.Bindings.ToList();
+
             Assert.AreEqual(site.Name, testBindingSiteName);
+
             var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
             var managedSite = new ManagedSite
             {
@@ -221,14 +229,21 @@ namespace Certify.Core.Tests
                     PerformChallengeFileCopy = true,
                     PerformExtensionlessConfigChecks = true,
                     WebsiteRootPath = testSitePath,
-                    DeploymentSiteOption = DeploymentOption.SingleSite
+                    DeploymentSiteOption = DeploymentOption.AllSites,
+                    DeploymentBindingMatchHostname = true,
+                    DeploymentBindingBlankHostname = true,
+                    DeploymentBindingReplacePrevious = true,
+                    SubjectAlternativeNames = new string[] { testSiteDomain, "label1." + testSiteDomain }
                 },
                 ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS,
                 CertificatePath = dummyCertPath
             };
 
-            await iisManager.InstallCertForRequest(managedSite, dummyCertPath, false, false);
-
+            var actions = await iisManager.InstallCertForRequest(managedSite, dummyCertPath, false, false);
+            foreach (var a in actions)
+            {
+                System.Console.WriteLine(a.Description);
+            }
             // get cert info to compare hash
             var certInfo = CertificateManager.LoadCertificate(managedSite.CertificatePath);
 
@@ -236,9 +251,34 @@ namespace Certify.Core.Tests
             site = iisManager.GetSiteById(site.Id.ToString());
             var finalBindings = site.Bindings.ToList();
 
+            Assert.IsTrue(bindingsBeforeApply.Count < finalBindings.Count, "Should have new bindings");
+
             try
             {
-                foreach (var b in finalBindings)
+                // check we have the new bindings we expected
+
+                // blank hostname binding
+                var testBinding = finalBindings.FirstOrDefault(b => b.Host == "" && b.Protocol == "https");
+                Assert.IsTrue(IsCertHashEqual(testBinding.CertificateHash, certInfo.GetCertHash()), "Blank hostname binding should be added and have certificate set");
+
+                // TODO: testDomains includes matches and not matches to test
+                foreach (var d in testDomains)
+                {
+                    // check san domain now has an https binding
+                    testBinding = finalBindings.FirstOrDefault(b => b.Host == d && b.Protocol == "https");
+                    if (!d.StartsWith("nested."))
+                    {
+                        Assert.IsNotNull(testBinding);
+                        Assert.IsTrue(IsCertHashEqual(testBinding.CertificateHash, certInfo.GetCertHash()), "hostname binding should be added and have certificate set");
+                    }
+                    else
+                    {
+                        Assert.IsNull(testBinding, "nested binding should be null");
+                    }
+                }
+
+                // check existing bindings have been updated as expected
+                /*foreach (var b in finalBindings)
                 {
                     if (b.Protocol == "https")
                     {
@@ -269,12 +309,13 @@ namespace Certify.Core.Tests
                             Assert.IsFalse(isCertMatch, "Binding should not have been updated with cert hash but was.");
                         }
                     }
-                }
+                }*/
             }
             finally
             {
                 // clean up IIS either way
                 iisManager.DeleteSite(testBindingSiteName);
+                if (certInfo != null) CertificateManager.RemoveCertificate(certInfo);
             }
         }
     }

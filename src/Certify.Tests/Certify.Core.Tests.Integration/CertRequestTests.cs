@@ -176,7 +176,7 @@ namespace Certify.Core.Tests
         {
             // attempt to request a cert for many domains
 
-            int numDomains = 101;
+            int numDomains = 100;
 
             List<string> domainList = new List<string>();
             for (var i = 0; i < numDomains; i++)
@@ -219,9 +219,66 @@ namespace Certify.Core.Tests
             {
                 var result = await certifyManager.PerformCertificateRequest(dummyManagedSite);
                 // check details of cert, subject alternative name should include domain and expiry
-                // must be great than 89 days in the future
+                // must be greater than 89 days in the future
 
                 Assert.IsTrue(result.IsSuccess, $"Certificate Request Not Completed: {result.Message}");
+            }
+            finally
+            {
+                iisManager.DeleteSite("TestBazillionDomains");
+            }
+        }
+
+        [TestMethod, TestCategory("MegaTest")]
+        public async Task TestChallengeRequestHttp01BazillionAndOneDomains()
+        {
+            // attempt to request a cert for too many domains
+
+            int numDomains = 101;
+
+            List<string> domainList = new List<string>();
+            for (var i = 0; i < numDomains; i++)
+            {
+                var testStr = Guid.NewGuid().ToString().Substring(0, 6);
+                domainList.Add($"bazillion-2-{i}." + PrimaryTestDomain);
+            }
+
+            if (iisManager.SiteExists("TestBazillionDomains"))
+            {
+                iisManager.DeleteSite("TestBazillionDomains");
+            }
+
+            var site = iisManager.CreateSite("TestBazillionDomains", domainList[0], testSitePath, "DefaultAppPool", port: testSiteHttpPort);
+
+            // add bindings
+            iisManager.AddSiteBindings(site.Id.ToString(), domainList, testSiteHttpPort);
+
+            var dummyManagedSite = new ManagedSite
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = testSiteName,
+                GroupId = site.Id.ToString(),
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = domainList[0],
+                    SubjectAlternativeNames = domainList.ToArray(),
+                    ChallengeType = "http-01",
+                    PerformAutoConfig = true,
+                    PerformAutomatedCertBinding = true,
+                    PerformChallengeFileCopy = true,
+                    PerformExtensionlessConfigChecks = false,
+                    WebsiteRootPath = testSitePath
+                },
+                ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS,
+            };
+
+            //ensure cert request was successful
+            try
+            {
+                var result = await certifyManager.PerformCertificateRequest(dummyManagedSite);
+                // request failed as expected
+
+                Assert.IsFalse(result.IsSuccess, $"Certificate Request Should Not Complete: {result.Message}");
             }
             finally
             {
