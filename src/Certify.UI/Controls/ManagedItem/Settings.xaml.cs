@@ -1,13 +1,10 @@
 using Certify.Locales;
 using Certify.Models;
-using Microsoft.Win32;
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using WinForms = System.Windows.Forms;
 
 namespace Certify.UI.Controls.ManagedItem
 {
@@ -34,11 +31,11 @@ namespace Certify.UI.Controls.ManagedItem
 
         private async Task<bool> ValidateAndSave(ManagedSite item)
         {
-            if (item.Id == null && MainViewModel.SelectedWebSite == null)
+            /*if (item.Id == null && MainViewModel.SelectedWebSite == null)
             {
                 MessageBox.Show(SR.ManagedItemSettings_SelectWebsiteOrCert, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
-            }
+            }*/
 
             if (item.Id == null && item.RequestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
             {
@@ -67,6 +64,12 @@ namespace Certify.UI.Controls.ManagedItem
                 // if we still can't decide on the primary domain ask user to define it
                 MessageBox.Show(SR.ManagedItemSettings_NeedPrimaryDomain, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
+            }
+
+            // if title set to the default, use the primary domain
+            if (item.Name == "New Managed Site")
+            {
+                item.Name = MainViewModel.PrimarySubjectDomain.Domain;
             }
 
             if (item.RequestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI &&
@@ -201,58 +204,6 @@ namespace Certify.UI.Controls.ManagedItem
             if (MainViewModel.SelectedItem?.Id == null)
             {
                 MainViewModel.SelectedItem = MainViewModel.ManagedSites.FirstOrDefault();
-            }
-        }
-
-        private void DirectoryBrowse_Click(object sender, EventArgs e)
-        {
-            var config = MainViewModel.SelectedItem.RequestConfig;
-            var dialog = new WinForms.FolderBrowserDialog()
-            {
-                SelectedPath = config.WebsiteRootPath
-            };
-            if (dialog.ShowDialog() == WinForms.DialogResult.OK)
-            {
-                config.WebsiteRootPath = dialog.SelectedPath;
-            }
-        }
-
-        private void FileBrowse_Click(object sender, EventArgs e)
-        {
-            var button = (Button)sender;
-            var config = MainViewModel.SelectedItem.RequestConfig;
-            var dialog = new OpenFileDialog()
-            {
-                Filter = "Powershell Scripts (*.ps1)| *.ps1;"
-            };
-            Action saveAction = null;
-            string filename = "";
-            if (button.Name == "Button_PreRequest")
-            {
-                filename = config.PreRequestPowerShellScript;
-                saveAction = () => config.PreRequestPowerShellScript = dialog.FileName;
-            }
-            else if (button.Name == "Button_PostRequest")
-            {
-                filename = config.PostRequestPowerShellScript;
-                saveAction = () => config.PostRequestPowerShellScript = dialog.FileName;
-            }
-            try
-            {
-                var fileInfo = new FileInfo(filename);
-                if (fileInfo.Directory.Exists)
-                {
-                    dialog.InitialDirectory = fileInfo.Directory.FullName;
-                    dialog.FileName = fileInfo.Name;
-                }
-            }
-            catch (ArgumentException)
-            {
-                // invalid file passed in, open dialog with default options
-            }
-            if (dialog.ShowDialog() == true)
-            {
-                saveAction();
             }
         }
 

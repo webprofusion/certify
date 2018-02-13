@@ -44,7 +44,19 @@ namespace Certify.UI.Controls.ManagedItem
                 {
                     //get list of sites from IIS. FIXME: this is async and we should gather this at startup (or on refresh) instead
                     WebSiteList = new ObservableCollection<SiteBindingItem>(await MainViewModel.CertifyClient.GetServerSiteList(StandardServerTypes.IIS));
-                    WebsiteDropdown.ItemsSource = WebSiteList;
+                    if (WebSiteList.Count > 0)
+                    {
+                        WebsiteDropdown.ItemsSource = WebSiteList;
+                        WebsiteDropdown.IsEnabled = true;
+                    }
+                    else
+                    {
+                        WebsiteDropdown.IsEnabled = false;
+                        WebsiteDropdown.IsEditable = true;
+                        WebsiteDropdown.IsReadOnly = true;
+
+                        WebsiteDropdown.Text = "(No IIS Sites Found)";
+                    }
                 }
             }
         }
@@ -68,48 +80,10 @@ namespace Certify.UI.Controls.ManagedItem
 
         private void AddDomains_Click(object sender, RoutedEventArgs e)
         {
-            var item = MainViewModel.SelectedItem;
-
-            // parse text input to add as manual domain options
-            string domains = ManualDomains.Text;
-            if (!string.IsNullOrEmpty(domains))
+            if (MainViewModel.UpdateDomainOptions(ManualDomains.Text))
             {
-                var domainList = domains.Split(",; ".ToCharArray());
-                string invalidDomains = "";
-                foreach (var d in domainList)
-                {
-                    if (!string.IsNullOrEmpty(d.Trim()))
-                    {
-                        var domain = d.ToLower().Trim();
-                        if (!item.DomainOptions.Any(o => o.Domain == domain))
-                        {
-                            var option = new DomainOption
-                            {
-                                Domain = domain,
-                                IsManualEntry = true,
-                                IsSelected = true
-                            };
-                            if (Uri.CheckHostName(domain) == UriHostNameType.Dns || (domain.StartsWith("*.") && Uri.CheckHostName(domain.Replace("*.", "")) == UriHostNameType.Dns))
-                            {
-                                item.DomainOptions.Add(option);
-                            }
-                            else
-                            {
-                                invalidDomains += domain + "\n";
-                            }
-                        }
-                    }
-                }
-
-                if (!String.IsNullOrEmpty(invalidDomains))
-                {
-                    MessageBox.Show("Invalid domains: " + invalidDomains);
-                }
-                else
-                {
-                    //all domain added, clear manual entry
-                    ManualDomains.Text = "";
-                }
+                // domains added, clear entry
+                ManualDomains.Text = "";
             }
         }
 
