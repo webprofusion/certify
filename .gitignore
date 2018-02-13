@@ -238,3 +238,4 @@ _Pvt_Extensions
 # Axo Cover
 .axoCover
 src/lib/
+*.pyc

@@ -1,4 +1,5 @@
 ﻿using Certify.Models;
+using Certify.Models.Config;
 using Microsoft.AspNet.SignalR.Client;
 using Newtonsoft.Json;
 using System;
@@ -200,10 +201,10 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<bool>(await response.Content.ReadAsStringAsync());
         }
 
-        public async Task<APIResult> RevokeManageSiteCertificate(string managedSiteId)
+        public async Task<StatusMessage> RevokeManageSiteCertificate(string managedSiteId)
         {
             var response = await FetchAsync($"managedsites/revoke/{managedSiteId}");
-            return JsonConvert.DeserializeObject<APIResult>(response);
+            return JsonConvert.DeserializeObject<StatusMessage>(response);
         }
 
         public async Task<List<CertificateRequestResult>> BeginAutoRenewal()
@@ -230,15 +231,15 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<RequestProgressState>(json);
         }
 
-        public async Task<APIResult> TestChallengeConfiguration(ManagedSite site)
+        public async Task<StatusMessage> TestChallengeConfiguration(ManagedSite site)
         {
             var response = await PostAsync($"managedsites/testconfig", site);
-            return JsonConvert.DeserializeObject<APIResult>(await response.Content.ReadAsStringAsync());
+            return JsonConvert.DeserializeObject<StatusMessage>(await response.Content.ReadAsStringAsync());
         }
 
-        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedSiteId)
+        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedSiteId, bool isPreviewOnly)
         {
-            var response = await FetchAsync($"managedsites/reapply/{managedSiteId}");
+            var response = await FetchAsync($"managedsites/reapply/{managedSiteId}/{isPreviewOnly}");
             return JsonConvert.DeserializeObject<CertificateRequestResult>(response);
         }
 
@@ -255,6 +256,24 @@ namespace Certify.Client
         public async Task<bool> SetPrimaryContact(ContactRegistration contact)
         {
             var result = await PostAsync("contacts/primary", contact);
+            return JsonConvert.DeserializeObject<bool>(await result.Content.ReadAsStringAsync());
+        }
+
+        public async Task<List<StoredCredential>> GetCredentials()
+        {
+            var result = await FetchAsync("credentials");
+            return JsonConvert.DeserializeObject<List<StoredCredential>>(result);
+        }
+
+        public async Task<bool> UpdateCredentials(StoredCredential credential)
+        {
+            var result = await PostAsync("credentials", credential);
+            return JsonConvert.DeserializeObject<bool>(await result.Content.ReadAsStringAsync());
+        }
+
+        public async Task<bool> DeleteCredential(string credentialKey)
+        {
+            var result = await DeleteAsync($"credentials/{credentialKey}");
             return JsonConvert.DeserializeObject<bool>(await result.Content.ReadAsStringAsync());
         }
 

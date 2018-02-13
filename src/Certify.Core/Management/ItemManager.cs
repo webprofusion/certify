@@ -20,7 +20,7 @@ namespace Certify.Management
         public const string ITEMMANAGERCONFIG = "manageditems";
 
         private Dictionary<string, ManagedSite> ManagedSitesCache { get; set; }
-        public string StorageSubfolder = ""; //if specifed will be appended to AppData path as subfolder to load/save to
+        public string StorageSubfolder = ""; //if specified will be appended to AppData path as subfolder to load/save to
         public bool IsSingleInstanceMode { get; set; } = true; //if true, access to this resource is centralised so we can make assumptions about when reload of settings is required etc
 
         public ItemManager()
@@ -49,11 +49,15 @@ namespace Certify.Management
                 using (var db = new SQLiteConnection($"Data Source={path}"))
                 {
                     await db.OpenAsync();
-                    using (var cmd = new SQLiteCommand("CREATE TABLE manageditem (id TEXT NOT NULL UNIQUE PRIMARY KEY, json TEXT NOT NULL)", db))
+                    using (var cmd = new SQLiteCommand("CREATE TABLE manageditem (id TEXT NOT NULL UNIQUE PRIMARY KEY, parentid TEXT NULL, json TEXT NOT NULL)", db))
                     {
                         await cmd.ExecuteNonQueryAsync();
                     }
                 }
+            }
+            else
+            {
+                await UpgradeSchema(path);
             }
 
             // save all new/modified items into settings database
@@ -73,9 +77,10 @@ namespace Certify.Management
                     }
                     foreach (var changed in ManagedSitesCache.Values.Where(s => s.IsChanged))
                     {
-                        using (var cmd = new SQLiteCommand("INSERT OR REPLACE INTO manageditem (id,json) VALUES (@id,@json)", db))
+                        using (var cmd = new SQLiteCommand("INSERT OR REPLACE INTO manageditem (id,parentid,json) VALUES (@id,@parentid, @json)", db))
                         {
                             cmd.Parameters.Add(new SQLiteParameter("@id", changed.Id));
+                            cmd.Parameters.Add(new SQLiteParameter("@parentid", changed.ParentId));
                             cmd.Parameters.Add(new SQLiteParameter("@json", JsonConvert.SerializeObject(changed)));
                             await cmd.ExecuteNonQueryAsync();
                         }
@@ -87,6 +92,26 @@ namespace Certify.Management
 
             // reset IsChanged as all items have been persisted
             Debug.WriteLine($"StoreSettings[SQLite] took {watch.ElapsedMilliseconds}ms for {ManagedSitesCache.Count} records");
+        }
+
+        private async Task UpgradeSchema(string path)
+        {
+            // attempt column upgrades
+            using (var db = new SQLiteConnection($"Data Source={path}"))
+            {
+                await db.OpenAsync();
+                try
+                {
+                    using (var cmd = new SQLiteCommand("ALTER TABLE manageditem ADD COLUMN parentid TEXT", db))
+                    {
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+                catch
+                {
+                    // column may already exist
+                }
+            }
         }
 
         public async Task DeleteAllManagedSites()
@@ -190,6 +215,11 @@ namespace Certify.Management
                     // no setting to upgrade, create the empty database
                     await StoreSettings();
                 }
+                else
+                {
+                    // apply schema upgrades
+                    await UpgradeSchema(db);
+                }
             }
         }
 
@@ -244,10 +274,16 @@ namespace Certify.Management
             if (!ManagedSitesCache.Any() || IsSingleInstanceMode == false || reloadAll) await LoadAllManagedItems();
 
             // filter and convert dictionary to list TODO: use db instead of in memory filter?
-            var items = ManagedSitesCache.Values.AsEnumerable();
+            var items = ManagedSitesCache.Values.AsQueryable();
             if (filter != null)
             {
                 if (!String.IsNullOrEmpty(filter.Keyword)) items = items.Where(i => i.Name.ToLowerInvariant().Contains(filter.Keyword.ToLowerInvariant()));
+
+                if (!String.IsNullOrEmpty(filter.ChallengeType)) items = items.Where(i => i.RequestConfig.ChallengeType == filter.ChallengeType);
+
+                if (!String.IsNullOrEmpty(filter.ChallengeProvider)) items = items.Where(i => i.RequestConfig.ChallengeProvider == filter.ChallengeProvider);
+
+                if (!String.IsNullOrEmpty(filter.StoredCredentialKey)) items = items.Where(i => i.RequestConfig.ChallengeCredentialKey == filter.StoredCredentialKey);
 
                 //TODO: IncludeOnlyNextAutoRenew
                 if (filter.MaxResults > 0) items = items.Take(filter.MaxResults);
@@ -266,9 +302,10 @@ namespace Certify.Management
                     db.Open();
                     using (var tran = db.BeginTransaction())
                     {
-                        using (var cmd = new SQLiteCommand("INSERT OR REPLACE INTO manageditem (id,json) VALUES (@id,@json)", db))
+                        using (var cmd = new SQLiteCommand("INSERT OR REPLACE INTO manageditem (id, parentid, json) VALUES (@id,@parentid,@json)", db))
                         {
                             cmd.Parameters.Add(new SQLiteParameter("@id", managedSite.Id));
+                            cmd.Parameters.Add(new SQLiteParameter("@parentid", managedSite.ParentId));
                             cmd.Parameters.Add(new SQLiteParameter("@json", JsonConvert.SerializeObject(managedSite)));
                             await cmd.ExecuteNonQueryAsync();
                         }

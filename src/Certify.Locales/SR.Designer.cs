@@ -223,6 +223,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add/Update Stored Credential.
+        /// </summary>
+        public static string Credentials_EditCredential {
+            get {
+                return ResourceManager.GetString("Credentials_EditCredential", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to To add this server to your dashboard, provide your https://certifytheweb.com/profile sign in details or register a new account:.
         /// </summary>
         public static string Dashboard_AddIntro {
@@ -1571,6 +1580,15 @@ namespace Certify.Locales {
         public static string Update_Available {
             get {
                 return ResourceManager.GetString("Update_Available", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sorry, the update could not be downloaded. Please try again later..
+        /// </summary>
+        public static string Update_DownloadFailed {
+            get {
+                return ResourceManager.GetString("Update_DownloadFailed", resourceCulture);
             }
         }
         

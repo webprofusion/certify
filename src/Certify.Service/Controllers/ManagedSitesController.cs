@@ -53,7 +53,7 @@ namespace Certify.Service
         }
 
         [HttpPost, Route("testconfig")]
-        public async Task<APIResult> TestChallengeResponse(ManagedSite site)
+        public async Task<StatusMessage> TestChallengeResponse(ManagedSite site)
         {
             DebugLog();
 
@@ -101,7 +101,7 @@ namespace Certify.Service
         }
 
         [HttpGet, Route("revoke/{managedSiteId}")]
-        public async Task<APIResult> RevokeCertificate(string managedSiteId)
+        public async Task<StatusMessage> RevokeCertificate(string managedSiteId)
         {
             DebugLog();
 
@@ -110,18 +110,18 @@ namespace Certify.Service
             return result;
         }
 
-        [HttpGet, Route("reapply/{managedSiteId}")]
-        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedSiteId)
+        [HttpGet, Route("reapply/{managedSiteId}/{isPreviewOnly}")]
+        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedSiteId, bool isPreviewOnly)
         {
             DebugLog();
 
             var managedSite = await _certifyManager.GetManagedSite(managedSiteId);
 
-            RequestProgressState progressState = new RequestProgressState(RequestState.Running, "Starting..", managedSite);
-            //begin monitoring progress
-            _certifyManager.BeginTrackingProgress(progressState);
+            /* RequestProgressState progressState = new RequestProgressState(RequestState.Running, "Starting..", managedSite);
+             //begin monitoring progress
+             _certifyManager.BeginTrackingProgress(progressState);*/
 
-            var result = await _certifyManager.ReapplyCertificateBindings(managedSite);
+            var result = await _certifyManager.ReapplyCertificateBindings(managedSite, null, isPreviewOnly);
             return result;
         }
     }
