@@ -19,7 +19,7 @@
         </TextBox>
         <TextBlock Margin="10,150,33.6,0" TextWrapping="Wrap" Text="{x:Static res:SR.NewContact_AgreeConfirm}" VerticalAlignment="Top" Foreground="{DynamicResource AccentColorBrush}" />
         <CheckBox Content="{x:Static res:SR.Yes_I_Agree}" HorizontalAlignment="Left" Margin="10,218,0,0" VerticalAlignment="Top" IsChecked="{Binding AgreedToTermsAndConditions}" />
-        <Button x:Name="Save" Content="{x:Static res:SR.Register_Contact}" Margin="302,251,17.6,0" VerticalAlignment="Top" Click="Save_Click" />
-        <Button x:Name="Cancel" Content="{x:Static res:SR.Cancel}" HorizontalAlignment="Left" Margin="10,251,0,0" VerticalAlignment="Top" Width="135" Click="Cancel_Click" />
+        <Button x:Name="Save" Content="{x:Static res:SR.Register_Contact}" Margin="12,251,307.6,0" VerticalAlignment="Top" Click="Save_Click" />
+        <Button x:Name="Cancel" Content="{x:Static res:SR.Cancel}" HorizontalAlignment="Left" Margin="349,251,0,0" VerticalAlignment="Top" Width="135" Click="Cancel_Click" />
     </Grid>
 </Controls:MetroWindow>

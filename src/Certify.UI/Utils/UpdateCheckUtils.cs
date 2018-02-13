@@ -1,4 +1,5 @@
 ﻿using Certify.Locales;
+using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -10,7 +11,20 @@ namespace Certify.UI.Utils
         public async Task<Models.UpdateCheck> UpdateWithDownload()
         {
             Mouse.OverrideCursor = Cursors.Wait;
-            var updateCheck = await new Management.Util().DownloadUpdate();
+            Models.UpdateCheck updateCheck;
+
+            try
+            {
+                updateCheck = await new Management.Util().DownloadUpdate();
+            }
+            catch (Exception exp)
+            {
+                //could not complete or verify download
+                MessageBox.Show(SR.Update_DownloadFailed);
+                System.Diagnostics.Debug.WriteLine(exp.ToString());
+                return null;
+            }
+
             if (!string.IsNullOrEmpty(updateCheck.UpdateFilePath))
             {
                 if (MessageBox.Show(SR.Update_ReadyToApply, ConfigResources.AppName, MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)

@@ -1,6 +1,5 @@
 ﻿using Microsoft.Win32;
 using System;
-using System.Linq;
 
 namespace Certify.Management
 {
@@ -45,7 +44,7 @@ namespace Certify.Management
             //DisabledByDefault=1
 
             clientKey.SetValue("DisabledByDefault", 1, RegistryValueKind.DWord);
-            clientKey.Close();
+            // clientKey.Close();
             //set \Server\Enabled=0
             RegistryKey serverKey = SSLProtocolKey.OpenSubKey("Server", true);
             if (serverKey == null)
@@ -54,7 +53,7 @@ namespace Certify.Management
             }
 
             serverKey.SetValue("Enabled", 0, RegistryValueKind.DWord);
-            serverKey.Close();
+            // serverKey.Close();
         }
 
         private void DisableSSLCipherViaRegistry(string cipher)
@@ -69,7 +68,7 @@ namespace Certify.Management
             }
 
             cipherKey.SetValue("Enabled", 0, RegistryValueKind.DWord);
-            cipherKey.Close();
+            // cipherKey.Close();
         }
 
         #endregion Registry

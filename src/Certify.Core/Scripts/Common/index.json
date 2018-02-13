@@ -1,0 +1,16 @@
+﻿[
+  {
+    "Title": "Microsoft Exchange (2013 or higher): Enable Certificate",
+    "Description": "Enable Certificate for common services including: POP,IMAP,SMTP,IIS",
+    "Language": "PowerShell",
+    "Usage": "PostRequest",
+    "File": "MSExchangeEnableServices.ps1"
+  },
+  {
+    "Title": "Microsoft RDP Gateway: Enable Certificate",
+    "Description": "Enable Certificate for RDP Gateway",
+    "Language": "PowerShell",
+    "Usage": "PostRequest",
+    "File": "RDPGatewayServices.ps1"
+  }
+]

@@ -136,15 +136,7 @@ namespace Certify.Locales {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        public static System.Drawing.Icon icon {
-            get {
-                object obj = ResourceManager.GetObject("icon", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
+
         
         /// <summary>
         ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;

@@ -1,5 +1,6 @@
 ﻿using Certify.Models.Plugins;
 using System;
+using System.ComponentModel.Composition;
 using System.Composition.Hosting;
 using System.Diagnostics;
 using System.IO;
@@ -9,8 +10,17 @@ namespace Certify.Management
 {
     public class PluginManager
     {
+        [Import]
         public ILicensingManager LicensingManager { get; set; }
+
+        [Import]
         public IDashboardClient DashboardClient { get; set; }
+
+        [Import]
+        public IACMEClientProvider AcmeClientProvider { get; set; }
+
+        [Import]
+        public IVaultProvider VaultProvider { get; set; }
 
         private string GetPluginFolderPath()
         {
@@ -59,6 +69,10 @@ namespace Certify.Management
 
             LicensingManager = LoadPlugin("Licensing.dll", typeof(ILicensingManager)) as ILicensingManager;
             DashboardClient = LoadPlugin("DashboardClient.dll", typeof(IDashboardClient)) as IDashboardClient;
+
+            //AcmeClientProvider = LoadPlugin("Certify.Providers.ACMESharp.dll", typeof(IACMEClientProvider)) as IACMEClientProvider;
+            //VaultProvider = LoadPlugin("Certify.Providers.ACMESharp.dll", typeof(IVaultProvider)) as IVaultProvider;
+
             s.Stop();
 
             Debug.WriteLine($"Plugin load took {s.ElapsedMilliseconds}ms");

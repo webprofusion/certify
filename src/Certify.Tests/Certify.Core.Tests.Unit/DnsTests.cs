@@ -1,10 +1,5 @@
 ﻿using Certify.Management;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Certify.Core.Tests.Unit
 {
@@ -14,7 +9,7 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Ensure that DNS verification (CAA/DNSSEC) is correct")]
         public void TestDNSTests()
         {
-            var net = new NetworkUtils();
+            var net = new NetworkUtils(enableProxyValidationAPI: true);
 
             // check invalid domain
             Assert.IsFalse(net.CheckDNS("fdlsakdfoweinoijsjdfpsdkfspdf.com").Ok, "Non-existant DNS does not throw an error");

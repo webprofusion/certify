@@ -1,4 +1,5 @@
-﻿using Certify.Models;
+﻿using Certify.Management;
+using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Threading.Tasks;
@@ -11,7 +12,7 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Ensure managed sites list loads")]
         public async Task TestLoadManagedSites()
         {
-            var managedSiteSettings = new Management.ItemManager();
+            var managedSiteSettings = new ItemManager();
             managedSiteSettings.StorageSubfolder = "Tests";
 
             var managedSites = await managedSiteSettings.GetManagedSites();
@@ -21,7 +22,7 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Ensure mamaged site can be created, retrieved and deleted")]
         public async Task TestCreateDeleteManagedSite()
         {
-            var itemManager = new Management.ItemManager();
+            var itemManager = new ItemManager();
             itemManager.StorageSubfolder = "Tests";
 
             var testSite = new ManagedSite
@@ -61,7 +62,7 @@ namespace Certify.Core.Tests.Unit
         [Ignore, TestMethod, Description("Ensure a large number of managed sites can be create, saved and loaded")]
         public async Task TestCheckLargeManagedSiteSettingSave()
         {
-            var managedSiteSettings = new Management.ItemManager();
+            var managedSiteSettings = new ItemManager();
             managedSiteSettings.StorageSubfolder = "Tests";
 
             await managedSiteSettings.LoadAllManagedItems();

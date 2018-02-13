@@ -1,5 +1,5 @@
-﻿using Certify.Models;
-using System.Collections.Generic;
+﻿using Certify.Management;
+using Certify.Models;
 using System.Threading.Tasks;
 using System.Web.Http;
 
@@ -8,7 +8,7 @@ namespace Certify.Service
     [RoutePrefix("api/system")]
     public class SystemController : Controllers.ControllerBase
     {
-        private Management.ICertifyManager _certifyManager = null;
+        private ICertifyManager _certifyManager = null;
 
         public SystemController(Management.ICertifyManager manager)
         {

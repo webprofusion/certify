@@ -7,15 +7,16 @@
         xmlns:local="clr-namespace:Certify.UI.Windows"
         xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
         mc:Ignorable="d"
-        Title="{x:Static res:SR.Registration}" Height="201.6" Width="363.6"
+        Title="{x:Static res:SR.Registration}" Height="255.15" Width="421.946"
         GlowBrush="{DynamicResource AccentColorBrush}" ResizeMode="NoResize"
         BorderThickness="1" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner">
     <Grid Margin="0,0,0,-19">
-        <Button x:Name="ValidateKey" Content="{x:Static res:SR.ValidateKey}" HorizontalAlignment="Left" Margin="228,137,0,0" VerticalAlignment="Top" Width="112" Click="ValidateKey_Click" />
-        <Label Content="{x:Static res:SR.RegistrationEmailAddress}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" />
-        <TextBox x:Name="EmailAddress" HorizontalAlignment="Left" Height="23" Margin="34,35,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="306" />
-        <Label Content="{x:Static res:SR.LicenseKey}" HorizontalAlignment="Left" Margin="10,66,0,0" VerticalAlignment="Top" Height="26" Width="108" />
-        <TextBox x:Name="LicenseKey" HorizontalAlignment="Left" Height="23" Margin="34,97,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="306" />
-        <Button x:Name="Cancel" Content="{x:Static res:SR.Cancel}" HorizontalAlignment="Left" Margin="34,137,0,0" VerticalAlignment="Top" Width="75" Click="Cancel_Click" />
+        <TextBlock TextWrapping="WrapWithOverflow" Margin="10,10,-10,-11"><Run>You can purchase a license key by registering at:</Run><LineBreak></LineBreak> <Hyperlink NavigateUri="https://certifytheweb.com/register?src=app.enterkey" RequestNavigate="Hyperlink_RequestNavigate">https://certifytheweb.com/register</Hyperlink></TextBlock>
+        <Button x:Name="ValidateKey" Content="{x:Static res:SR.ValidateKey}" HorizontalAlignment="Left" Margin="229,181,0,0" VerticalAlignment="Top" Width="112" Click="ValidateKey_Click" />
+        <Label Content="{x:Static res:SR.RegistrationEmailAddress}" HorizontalAlignment="Left" Margin="11,54,0,0" VerticalAlignment="Top" />
+        <TextBox x:Name="EmailAddress" HorizontalAlignment="Left" Height="23" Margin="34,79,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="306" />
+        <Label Content="{x:Static res:SR.LicenseKey}" HorizontalAlignment="Left" Margin="11,110,0,0" VerticalAlignment="Top" Height="26" Width="108" />
+        <TextBox x:Name="LicenseKey" HorizontalAlignment="Left" Height="23" Margin="34,141,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="306" />
+        <Button x:Name="Cancel" Content="{x:Static res:SR.Cancel}" HorizontalAlignment="Left" Margin="35,181,0,0" VerticalAlignment="Top" Width="75" Click="Cancel_Click" />
     </Grid>
 </Controls:MetroWindow>
