@@ -556,11 +556,14 @@ namespace Certify.UI.ViewModel
             //determine if this site has an existing entry in Managed Sites, if so use that, otherwise start a new one
             if (SelectedItem.Id == null)
             {
-                var siteInfo = SelectedWebSite;
-                //if siteInfo null we need to go back and select a site
+                item.Id = Guid.NewGuid().ToString();
 
-                item.Id = Guid.NewGuid().ToString() + ":" + siteInfo.SiteId;
-                item.GroupId = siteInfo.SiteId;
+                // optionally append webserver site ID (if used)
+                if (SelectedWebSite != null)
+                {
+                    item.Id += ":" + SelectedWebSite.SiteId;
+                    item.GroupId = SelectedWebSite.SiteId;
+                }
             }
 
             item.ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS;
@@ -601,6 +604,58 @@ namespace Certify.UI.ViewModel
             //TODO: load settings from previously saved managed site?
             RaisePropertyChanged(nameof(PrimarySubjectDomain));
             RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
+        }
+
+        public bool UpdateDomainOptions(string domains)
+        {
+            var item = SelectedItem;
+
+            // parse text input to add as manual domain options
+
+            if (!string.IsNullOrEmpty(domains))
+            {
+                var domainList = domains.Split(",; ".ToCharArray());
+                string invalidDomains = "";
+                foreach (var d in domainList)
+                {
+                    if (!string.IsNullOrEmpty(d.Trim()))
+                    {
+                        var domain = d.ToLower().Trim();
+                        if (!item.DomainOptions.Any(o => o.Domain == domain))
+                        {
+                            var option = new DomainOption
+                            {
+                                Domain = domain,
+                                IsManualEntry = true,
+                                IsSelected = true
+                            };
+
+                            if (Uri.CheckHostName(domain) == UriHostNameType.Dns || (domain.StartsWith("*.") && Uri.CheckHostName(domain.Replace("*.", "")) == UriHostNameType.Dns))
+                            {
+                                // preselect first item as primary domain
+                                if (item.DomainOptions.Count == 0) option.IsPrimaryDomain = true;
+
+                                item.DomainOptions.Add(option);
+                            }
+                            else
+                            {
+                                invalidDomains += domain + "\n";
+                            }
+                        }
+                    }
+                }
+
+                RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
+
+                if (!String.IsNullOrEmpty(invalidDomains))
+                {
+                    MessageBox.Show("Invalid domains: " + invalidDomains);
+                    return false;
+                }
+            }
+
+            // all ok or nothing to do
+            return true;
         }
 
         protected async virtual Task<IEnumerable<DomainOption>> GetDomainOptionsFromSite(string siteId)
