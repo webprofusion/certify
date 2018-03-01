@@ -17,7 +17,7 @@
              d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}">
     <ScrollViewer>
         <StackPanel Background="{DynamicResource {x:Static SystemColors.ControlBrush}}" Margin="8,0,8,8">
-            <TextBlock Style="{StaticResource Subheading}">About Scripting</TextBlock>
+            <TextBlock Style="{StaticResource Subheading}">Scripting</TextBlock>
 
             <TextBlock  Text="You can optionally specify scripts or webhooks to call. Scripts can happen before or after the certificate request and are especially useful if you need to update other services after your certificate has been renewed." TextWrapping="Wrap" />
             <StackPanel>

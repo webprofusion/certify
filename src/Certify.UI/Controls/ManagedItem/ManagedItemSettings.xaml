@@ -38,15 +38,13 @@
                     <ColumnDefinition Width="*"></ColumnDefinition>
                     <ColumnDefinition Width="32"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Style="{StaticResource Subheading}" Text="{Binding SelectedItem.Name}" Margin="4,0,0,4" />
+                <TextBlock Grid.Column="0" Text="{Binding SelectedItem.Name}" Margin="6,0,0,4" FontSize="20" VerticalAlignment="Top" Foreground="#FF494949" />
                 <Button Grid.Column="1" x:Name="Dismiss" Click="Dismiss_Click" ToolTip="Dismiss" Background="White" Margin="4,4,0,4" VerticalAlignment="Top" BorderBrush="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
                     <StackPanel Orientation="Horizontal">
                         <fa:ImageAwesome Grid.Column="1" Height="16" Width="16" Icon="WindowClose" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}" />
                     </StackPanel>
                 </Button>
             </Grid>
-
-            <Label Content="{Binding ValidationError}" Margin="8,0,0,0" />
         </StackPanel>
 
         <!-- save/request buttons-->
@@ -82,15 +80,15 @@
         </StackPanel>
 
         <DockPanel Grid.Row="2">
-            <!-- Renewal warning messages-->
-            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" MaxHeight="120" Visibility="{Binding SelectedItem.Health, Converter={StaticResource ResourceKey=HealthVisibleConverter}}" Background="#FF3F3F3F" Margin="0,8,0,8">
-                <fa:ImageAwesome Margin="4" Icon="ExclamationTriangle" Height="16" Foreground="#FFFDFDFD" />
-                <ScrollViewer>
+            <ScrollViewer DockPanel.Dock="Top" MaxHeight="60" Visibility="{Binding SelectedItem.Health, Converter={StaticResource ResourceKey=HealthVisibleConverter}}">
+                <!-- Renewal warning messages-->
+                <DockPanel    Background="#FF3F3F3F" Margin="0,8,0,8">
+                    <fa:ImageAwesome Margin="4" Icon="ExclamationTriangle" Height="16" Foreground="#FFFDFDFD" />
+
                     <TextBlock TextWrapping="Wrap" Text="{Binding SelectedItem.RenewalFailureMessage}" Margin="4,4,16,4" Foreground="White">
                     </TextBlock>
-                </ScrollViewer>
-            </StackPanel>
-
+                </DockPanel>
+            </ScrollViewer>
             <!-- Managed Item display name-->
             <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,8,0,0">
                 <Label Width="100" Content="{x:Static Resources:SR.ManagedItemSettings_DisplayName}" />

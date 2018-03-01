@@ -647,4 +647,10 @@
   <data name="Update_DownloadFailed" xml:space="preserve">
     <value>Sorry, the update could not be downloaded. Please try again later.</value>
   </data>
+  <data name="Managed_Certificates" xml:space="preserve">
+    <value>Managed Certificates</value>
+  </data>
+  <data name="ManagedItemSettings_DefaultTitle" xml:space="preserve">
+    <value>New Managed Certificate</value>
+  </data>
 </root>

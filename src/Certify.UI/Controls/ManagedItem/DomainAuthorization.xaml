@@ -29,9 +29,9 @@
 
             <!--Authorization Types-->
             <StackPanel>
-                <TextBlock Style="{StaticResource Subheading}">About Domain Authorization</TextBlock>
+                <TextBlock Style="{StaticResource Subheading}">Domain Authorization</TextBlock>
                 <TextBlock TextWrapping="Wrap">
-                <Run>In order for a certificate to be issued you must prove you control the domains you are requesting in your certificate. If any included domain fails authorization the certificate request cannot be completed.</Run>
+                <Run>For a certificate to be issued you must prove you control the domains you are requesting in your certificate. If any included domain fails authorization the certificate request cannot be completed.</Run>
                 </TextBlock>
             </StackPanel>
 

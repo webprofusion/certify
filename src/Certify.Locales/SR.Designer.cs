@@ -520,6 +520,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Managed Certificates.
+        /// </summary>
+        public static string Managed_Certificates {
+            get {
+                return ResourceManager.GetString("Managed_Certificates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Managed Sites.
         /// </summary>
         public static string Managed_Sites {
@@ -679,6 +688,15 @@ namespace Certify.Locales {
         public static string ManagedItemSettings_ConfirmRevokeCertificate {
             get {
                 return ResourceManager.GetString("ManagedItemSettings_ConfirmRevokeCertificate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New Managed Certificate.
+        /// </summary>
+        public static string ManagedItemSettings_DefaultTitle {
+            get {
+                return ResourceManager.GetString("ManagedItemSettings_DefaultTitle", resourceCulture);
             }
         }
         

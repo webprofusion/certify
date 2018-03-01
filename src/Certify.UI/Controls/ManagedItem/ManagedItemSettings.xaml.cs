@@ -67,7 +67,7 @@ namespace Certify.UI.Controls.ManagedItem
             }
 
             // if title set to the default, use the primary domain
-            if (item.Name == "New Managed Site")
+            if (item.Name == SR.ManagedItemSettings_DefaultTitle)
             {
                 item.Name = MainViewModel.PrimarySubjectDomain.Domain;
             }

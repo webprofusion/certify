@@ -163,7 +163,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\ManagedItem\Settings.xaml">
+    <Page Include="Controls\ManagedItem\ManagedItemSettings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -198,8 +198,8 @@
     <Compile Include="Controls\AboutControl.xaml.cs">
       <DependentUpon>AboutControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ManagedItem\Settings.xaml.cs">
-      <DependentUpon>Settings.xaml</DependentUpon>
+    <Compile Include="Controls\ManagedItem\ManagedItemSettings.xaml.cs">
+      <DependentUpon>ManagedItemSettings.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\ManagedSites.xaml.cs">
       <DependentUpon>ManagedSites.xaml</DependentUpon>

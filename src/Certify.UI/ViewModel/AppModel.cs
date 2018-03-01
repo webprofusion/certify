@@ -563,10 +563,13 @@ namespace Certify.UI.ViewModel
                 {
                     item.Id += ":" + SelectedWebSite.SiteId;
                     item.GroupId = SelectedWebSite.SiteId;
+                    item.ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS;
+                }
+                else
+                {
+                    item.ItemType = ManagedItemType.SSL_LetsEncrypt_Manual;
                 }
             }
-
-            item.ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS;
         }
 
         public async Task PopulateManagedSiteSettings(string siteId)

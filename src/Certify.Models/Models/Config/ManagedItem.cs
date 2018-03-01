@@ -142,7 +142,7 @@ namespace Certify.Models
     {
         public ManagedSite()
         {
-            this.Name = "New Managed Site";
+            this.Name = SR.ManagedItemSettings_DefaultTitle;
             this.IncludeInAutoRenew = true;
 
             this.DomainOptions = new ObservableCollection<DomainOption>();

@@ -11,10 +11,10 @@
             <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                 <GradientStop Color="White" Offset="1" />
                 <GradientStop Color="White" />
-                <GradientStop Color="#FFD4CFCF" Offset="0.511" />
+                <GradientStop Color="#FFF0F0F0" Offset="0.511" />
             </LinearGradientBrush>
         </DockPanel.Background>
-        <controls:FlipView x:Name="QuickStartFlipView" MouseOverGlowEnabled="False" Margin="16,0" IsBannerEnabled="False">
+        <controls:FlipView x:Name="QuickStartFlipView" MouseOverGlowEnabled="False" Margin="16" IsBannerEnabled="False">
 
             <controls:FlipViewItem>
                 <DockPanel>
