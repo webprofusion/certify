@@ -33,16 +33,10 @@
                     <TextBlock DockPanel.Dock="Top" Padding="0,0,0,0"  TextWrapping="WrapWithOverflow" VerticalAlignment="Top"  Margin="8,0" FontWeight="Normal" FontFamily="Segoe UI" HorizontalAlignment="Left"><Run Text="Select domains from existing hostname bindings on an website or add the domains manually. These must all be domains where you can validate control either via DNS or by creating a temporary file on the website (see the Authorization tab)." /></TextBlock>
                     <TextBlock DockPanel.Dock="Top" Padding="0,0,0,0"  TextWrapping="WrapWithOverflow" VerticalAlignment="Top"  Margin="8,8,8,0" FontWeight="Normal" FontFamily="Segoe UI" HorizontalAlignment="Left"><Run Text="You can then select " /><Run FontWeight="Bold" Text="Request Certificate " /><Run Text="above or refer to the Authorization and Deployment tabs for more options." /></TextBlock>
                 </DockPanel>
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,4,0,0"
-                            Visibility="{Binding HasSelectedItemWebsiteSelection, Converter={StaticResource ResourceKey=InvBoolVisConverter}}">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,4,0,0">
                     <Label Width="160" Content="{x:Static Resources:SR.ManagedItemSettings_SelectIISSite}" />
-                    <ComboBox x:Name="WebsiteDropdown"  ItemsSource="{Binding WebSiteList, UpdateSourceTrigger=Default}" SelectedItem="{Binding SelectedWebSite}"  DisplayMemberPath="SiteName" Width="225" SelectionChanged="Website_SelectionChanged" />
+                    <ComboBox x:Name="WebsiteDropdown" ItemsSource="{Binding WebSiteList, UpdateSourceTrigger=Default}" SelectedItem="{Binding SelectedWebSite}"  DisplayMemberPath="SiteName" Width="225" SelectionChanged="Website_SelectionChanged" />
                     <fa:ImageAwesome x:Name="SiteQueryInProgress" Margin="4,0,0,0" Visibility="Hidden" Icon="Refresh" Height="16" Spin="True" SpinDuration="1" />
-                </StackPanel>
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,4,0,0"
-                            Visibility="{Binding HasSelectedItemWebsiteSelection, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
-                    <Label Width="160" Content="Website:" />
-                    <Label Width="160" Content="{Binding SelectedItem.GroupId}" />
                 </StackPanel>
 
                 <StackPanel DockPanel.Dock="Top" x:Name="ManualDomainEntry" Orientation="Vertical"  Margin="0,8,0,0">

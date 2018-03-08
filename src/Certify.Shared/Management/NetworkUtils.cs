@@ -127,7 +127,7 @@ namespace Certify.Management
             {
                 var request = WebRequest.Create(!useProxy ? url :
                     ConfigResources.APIBaseURI + "configcheck/testurl?url=" + url);
-
+                request.Timeout = 5000;
                 ServicePointManager.ServerCertificateValidationCallback = (obj, cert, chain, errors) =>
                 {
                     // ignore all cert errors when validating URL response
@@ -173,7 +173,7 @@ namespace Certify.Management
                 else
                 {
                     // failed to check URL locally
-                    System.Diagnostics.Debug.WriteLine("Failed to check url for access (" + url + "): " + exp.ToString());
+                    System.Diagnostics.Debug.WriteLine("Failed to check url for access (" + url + "): " + exp.Message);
                     return false;
                 }
             }

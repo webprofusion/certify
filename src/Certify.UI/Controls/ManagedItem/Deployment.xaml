@@ -35,9 +35,9 @@
                 <StackPanel Orientation="Horizontal">
                     <Label Width="130" Content="Matching any of:"></Label>
                     <StackPanel>
-                        <CheckBox IsChecked="{Binding SelectedItem.RequestConfig.DeploymentBindingMatchHostname}" DockPanel.Dock="Top" Content="Hostname matches certificate domains" Margin="0,4,0,0">
+                        <CheckBox IsChecked="{Binding SelectedItem.RequestConfig.DeploymentBindingMatchHostname}" DockPanel.Dock="Top" Content="Existing binding hostname matches certificate domains" Margin="0,4,0,0">
                         </CheckBox>
-                        <CheckBox  IsChecked="{Binding SelectedItem.RequestConfig.DeploymentBindingBlankHostname}" DockPanel.Dock="Top" Content="Hostname not specified (IP only or All Unassigned)" Margin="0,4,0,0">
+                        <CheckBox  IsChecked="{Binding SelectedItem.RequestConfig.DeploymentBindingBlankHostname}" DockPanel.Dock="Top" Content="Binding hostname not specified (IP only or All Unassigned)" Margin="0,4,0,0">
                         </CheckBox>
                         <CheckBox IsChecked="{Binding SelectedItem.RequestConfig.DeploymentBindingReplacePrevious}" DockPanel.Dock="Top"  Content="Existing binding uses old version of same certificate" Margin="0,4,0,0">
                         </CheckBox>

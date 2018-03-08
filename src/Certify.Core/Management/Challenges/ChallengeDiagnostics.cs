@@ -1,5 +1,4 @@
-﻿using Certify.Locales;
-using Certify.Management;
+﻿using Certify.Management;
 using Certify.Models;
 using Certify.Models.Providers;
 using Certify.Models.Shared;
@@ -340,48 +339,55 @@ namespace Certify.Core.Management.Challenges
                 if (!destFile.EndsWith("configcheck") && File.Exists(destFile)) File.Delete(destFile);
             };
 
-            // create a web.config for extensionless files, then test it (make a request for the
-            // extensionless configcheck file over http)
-            string webConfigContent = ConfigResources.IISWebConfig;
-
-            if (!File.Exists(destPath + "\\web.config"))
+            return () =>
             {
-                // no existing config, attempt auto config and perform test
-                this.LogAction($"Config does not exist, writing default config to: {destPath}\\web.config");
-                System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
-                return () => _netUtil.CheckURL($"http://{domain}/{httpChallenge.ResourcePath}");
-            }
-            else
-            {
-                // web config already exists, don't overwrite it, just test it
-                return () =>
+                // first check if it already works with no changes
+                if (_netUtil.CheckURL(httpChallenge.ResourceUri))
                 {
-                    if (_netUtil.CheckURL(httpChallenge.ResourceUri))
-                    {
-                        return true;
-                    }
+                    return true;
+                }
 
-                    if (requestConfig.PerformAutoConfig)
+                // initial check didn't work, if auto config enabled attempt to find a working config
+                if (requestConfig.PerformAutoConfig)
+                {
+                    this.LogAction($"Pre-config check failed: Auto-config will overwrite existing config: {destPath}\\web.config");
+
+                    var configOptions = Directory.EnumerateFiles(Environment.CurrentDirectory + "\\Scripts\\Web.config\\", "*.config");
+
+                    foreach (var configFile in configOptions)
                     {
-                        this.LogAction($"Pre-config check failed: Auto-config will overwrite existing config: {destPath}\\web.config");
-                        // didn't work, try our default config
+                        // create a web.config for extensionless files, then test it (make a request
+                        // for the extensionless configcheck file over http)
+
+                        string webConfigContent = File.ReadAllText(configFile);
+
+                        // no existing config, attempt auto config and perform test
+                        this.LogAction($"Testing config alternative: " + configFile);
+
                         try
                         {
                             System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
                         }
-                        catch (System.IO.IOException)
+                        catch (Exception exp)
                         {
-                            this.LogAction($"Failed to update alternative web config: {destPath}\\web.config");
+                            this.LogAction($"Failed to write config: " + exp.Message);
                         }
 
-                        if (_netUtil.CheckURL(httpChallenge.ResourceUri))
+                        if (_netUtil.CheckURL($"http://{domain}/{httpChallenge.ResourcePath}"))
                         {
                             return true;
                         }
                     }
+
+                    //couldn't auto configure
                     return false;
-                };
-            }
+                }
+                else
+                {
+                    // auto config not enabled, just have to fail
+                    return false;
+                }
+            };
         }
 
         /// <summary>

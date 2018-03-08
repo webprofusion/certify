@@ -25,8 +25,8 @@ namespace Certify.UI
 
             // now set the Green accent and dark theme
             MahApps.Metro.ThemeManager.ChangeAppStyle(Application.Current,
-                                        MahApps.Metro.ThemeManager.GetAccent("Red"),
-                                        MahApps.Metro.ThemeManager.GetAppTheme("BaseLight")); // or appStyle.Item1
+                                        MahApps.Metro.ThemeManager.GetAccent("Olive"),
+                                        MahApps.Metro.ThemeManager.GetAppTheme("BaseLight"));
 #endif
             // Test translations
             //System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("zh-HANS");

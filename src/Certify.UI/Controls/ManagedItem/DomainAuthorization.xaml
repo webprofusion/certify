@@ -61,7 +61,7 @@
                     <Button Name="Button_WebRoot" Content="{x:Static Resources:SR.ManagedItemSettings_BrowseFolder}" Margin="4,0,0,0" Click="DirectoryBrowse_Click" />
                 </StackPanel>
 
-                <StackPanel Orientation="Vertical" Margin="4,8,0,0">
+                <StackPanel Orientation="Vertical" Margin="160,8,0,0">
                     <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_PerformChallengeResponseConfigCheck}" IsChecked="{Binding SelectedItem.RequestConfig.PerformExtensionlessConfigChecks}" />
                     <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_PerformWebAppAutoConfig}" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutoConfig}" />
                 </StackPanel>
@@ -104,8 +104,8 @@
                         </Style.Triggers>
                     </Style>
                 </StackPanel.Style>
-                <StackPanel Orientation="Vertical" Margin="4,8,0,0">
-                    <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_PerformChallengeResponseConfigCheck}" IsChecked="{Binding SelectedItem.RequestConfig.PerformTlsSniBindingConfigChecks}" />
+                <StackPanel Orientation="Vertical" Margin="0,8,0,0">
+                    <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_PerformChallengeResponseConfigCheck}" IsChecked="{Binding SelectedItem.RequestConfig.PerformTlsSniBindingConfigChecks}" Margin="160,0,0,0" />
                 </StackPanel>
             </StackPanel>
             <Expander Header="More Info.." Background="{DynamicResource {x:Static SystemColors.MenuBrushKey}}" BorderBrush="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" Margin="8,16" Controls:ControlsHelper.ContentCharacterCasing="Normal">

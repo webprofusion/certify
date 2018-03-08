@@ -1,6 +1,5 @@
 using Certify.Models;
 using System;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,21 +12,18 @@ namespace Certify.UI.Controls.ManagedItem
     /// </summary>
     public partial class CertificateDomains : UserControl
     {
-        public ObservableCollection<SiteBindingItem> WebSiteList { get; set; }
-
         protected Certify.UI.ViewModel.AppModel MainViewModel => UI.ViewModel.AppModel.Current;
+        private ManagedSite SelectedItem => MainViewModel.SelectedItem;
 
         public CertificateDomains()
         {
             InitializeComponent();
             this.MainViewModel.PropertyChanged += MainViewModel_PropertyChanged;
-
-            WebSiteList = new ObservableCollection<SiteBindingItem>();
         }
 
         private void SetFilter()
         {
-            CollectionViewSource.GetDefaultView(MainViewModel.SelectedItem.DomainOptions).Filter = (item) =>
+            CollectionViewSource.GetDefaultView(SelectedItem.DomainOptions).Filter = (item) =>
             {
                 string filter = DomainFilter.Text.Trim();
                 return filter == "" || filter.Split(';').Where(f => f.Trim() != "").Any(f =>
@@ -39,14 +35,15 @@ namespace Certify.UI.Controls.ManagedItem
         {
             if (e.PropertyName == "SelectedItem")
             {
+                //get list of sites from local server if we don't already have it
+                if (MainViewModel.WebSiteList.Count == 0) await MainViewModel.RefreshWebsiteList();
+
                 // ie only need the list of sites for new managed sites, existing ones are already set
-                if (MainViewModel.SelectedItem != null && MainViewModel.SelectedItem.Id == null)
+                if (SelectedItem != null && SelectedItem.Id == null)
                 {
-                    //get list of sites from IIS. FIXME: this is async and we should gather this at startup (or on refresh) instead
-                    WebSiteList = new ObservableCollection<SiteBindingItem>(await MainViewModel.CertifyClient.GetServerSiteList(StandardServerTypes.IIS));
-                    if (WebSiteList.Count > 0)
+                    if (MainViewModel.WebSiteList.Count > 0)
                     {
-                        WebsiteDropdown.ItemsSource = WebSiteList;
+                        WebsiteDropdown.ItemsSource = MainViewModel.WebSiteList;
                         WebsiteDropdown.IsEnabled = true;
                     }
                     else
@@ -56,6 +53,22 @@ namespace Certify.UI.Controls.ManagedItem
                         WebsiteDropdown.IsReadOnly = true;
 
                         WebsiteDropdown.Text = "(No IIS Sites Found)";
+                    }
+                }
+                else
+                {
+                    // if website previously selected, preselect in dropdown
+                    if (SelectedItem != null && !String.IsNullOrEmpty(SelectedItem.GroupId))
+                    {
+                        var selectedWebsite = MainViewModel.WebSiteList.FirstOrDefault(w => w.SiteId == SelectedItem.GroupId);
+                        if (selectedWebsite != null)
+                        {
+                            MainViewModel.SelectedWebSite = selectedWebsite;
+                        }
+                        else
+                        {
+                            MainViewModel.SelectedWebSite = null;
+                        }
                     }
                 }
             }

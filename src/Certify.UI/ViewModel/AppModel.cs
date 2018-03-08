@@ -57,6 +57,11 @@ namespace Certify.UI.ViewModel
             System.Windows.MessageBox.Show(exp.Message);
         }
 
+        internal async Task RefreshWebsiteList()
+        {
+            this.WebSiteList = new ObservableCollection<SiteBindingItem>(await this.CertifyClient.GetServerSiteList(StandardServerTypes.IIS));
+        }
+
         public Preferences Preferences { get; set; } = new Preferences();
 
         internal async Task SetPreferences(Preferences prefs)
@@ -100,6 +105,11 @@ namespace Certify.UI.ViewModel
         public ObservableCollection<ManagedSite> ImportedManagedSites { get; set; }
 
         public ObservableCollection<StoredCredential> StoredCredentials { get; set; }
+
+        /// <summary>
+        /// List of websites from the selected web server (if any) 
+        /// </summary>
+        public ObservableCollection<SiteBindingItem> WebSiteList { get; set; } = new ObservableCollection<SiteBindingItem>();
 
         /// <summary>
         /// If true, import from vault/iis scan will merge multi domain sites into one managed site 
