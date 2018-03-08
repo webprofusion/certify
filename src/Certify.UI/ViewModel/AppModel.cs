@@ -586,13 +586,19 @@ namespace Certify.UI.ViewModel
         {
             ValidationError = null;
             var managedSite = SelectedItem;
-            managedSite.Name = SelectedWebSite.SiteName;
-            managedSite.GroupId = SelectedWebSite.SiteId;
+            if (managedSite.Id == null || String.IsNullOrEmpty(managedSite.Name))
+            {
+                if (SelectedWebSite != null)
+                {
+                    managedSite.Name = SelectedWebSite.SiteName;
+                    managedSite.GroupId = SelectedWebSite.SiteId;
+                    //set defaults first
+                    managedSite.RequestConfig.WebsiteRootPath = Environment.ExpandEnvironmentVariables(SelectedWebSite.PhysicalPath);
+                }
+            }
 
             //TODO: if this site would be a duplicate need to increment the site name
 
-            //set defaults first
-            managedSite.RequestConfig.WebsiteRootPath = Environment.ExpandEnvironmentVariables(SelectedWebSite.PhysicalPath);
             managedSite.RequestConfig.PerformExtensionlessConfigChecks = true;
             managedSite.RequestConfig.PerformTlsSniBindingConfigChecks = true;
             managedSite.RequestConfig.PerformChallengeFileCopy = true;
