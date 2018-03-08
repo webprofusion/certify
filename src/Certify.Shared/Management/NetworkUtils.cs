@@ -116,7 +116,7 @@ namespace Certify.Management
             }
         }
 
-        public bool CheckURL(string url, bool? useProxyAPI = null)
+        public async Task<bool> CheckURL(string url, bool? useProxyAPI = null)
         {
             // if validation proxy enabled, access to the domain being validated is checked via our
             // remote API rather than directly on the servers
@@ -134,7 +134,7 @@ namespace Certify.Management
                     return true;
                 };
 
-                var response = (HttpWebResponse)request.GetResponse();
+                var response = (HttpWebResponse)await request.GetResponseAsync();
 
                 //if checking via proxy, examine result
                 if (useProxy)
@@ -154,7 +154,7 @@ namespace Certify.Management
                         }
                     }
                     //request failed using proxy api, request again using local http
-                    return CheckURL(url, false);
+                    return await CheckURL(url, false);
                 }
                 else
                 {
@@ -168,7 +168,7 @@ namespace Certify.Management
                 if (useProxy)
                 {
                     // failed to call proxy API (maybe offline?), let's try a local check
-                    return CheckURL(url, false);
+                    return await CheckURL(url, false);
                 }
                 else
                 {

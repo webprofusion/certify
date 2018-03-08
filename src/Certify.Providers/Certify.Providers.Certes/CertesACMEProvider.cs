@@ -479,8 +479,6 @@ namespace Certify.Providers.Certes
                 // fetch our certificate info
                 var certificateChain = await orderContext.Download();
 
-                var cert = new CertificateInfo(certificateChain, csrKey);
-
                 var certFriendlyName = config.PrimaryDomain + "[Certify]";
                 var certFolderPath = _settingsFolder + "\\assets\\pfx";
 
@@ -491,7 +489,11 @@ namespace Certify.Providers.Certes
 
                 string certFile = Guid.NewGuid().ToString() + ".pfx";
                 string pfxPath = certFolderPath + "\\" + certFile;
-                System.IO.File.WriteAllBytes(pfxPath, cert.ToPfx(certFriendlyName, ""));
+
+                var pfx = certificateChain.ToPfx(csrKey);
+                var pfxBytes = pfx.Build(certFriendlyName, "");
+
+                System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
 
                 return new ProcessStepResult { IsSuccess = true, Result = pfxPath };
             }

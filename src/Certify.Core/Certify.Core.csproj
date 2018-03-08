@@ -23,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -66,11 +67,11 @@
       <Project>{baaa9b8c-e44b-43f6-ac9c-b5666e69ee27}</Project>
       <Name>Certify.Models</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Certify.Providers.ACMESharp\Certify.Providers.ACMESharp.csproj">
+    <ProjectReference Include="..\Certify.Providers\Certify.Providers.ACMESharp\Certify.Providers.ACMESharp.csproj">
       <Project>{1a1cda25-f810-4cb7-a913-9b3cdf1a0cf3}</Project>
       <Name>Certify.Providers.ACMESharp</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Certify.Providers.Certes\Certify.Providers.Certes.csproj">
+    <ProjectReference Include="..\Certify.Providers\Certify.Providers.Certes\Certify.Providers.Certes.csproj">
       <Project>{d7d2d121-b796-49ed-9cf9-158c624857a1}</Project>
       <Name>Certify.Providers.Certes</Name>
     </ProjectReference>
@@ -90,10 +91,22 @@
     <None Include="Scripts\Common\index.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Scripts\Web.config\Web.alt1.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Scripts\Web.config\Web.alt2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Scripts\Web.config\Web.alt3..config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Scripts\Web.config\Web.alt4.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.ApplicationInsights">
-      <Version>2.4.0</Version>
+      <Version>2.5.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Bcl">
       <Version>1.1.10</Version>
@@ -114,7 +127,7 @@
       <Version>2.0.1</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
-      <Version>10.0.3</Version>
+      <Version>11.0.1</Version>
     </PackageReference>
     <PackageReference Include="System.AppContext">
       <Version>4.3.0</Version>
@@ -129,7 +142,7 @@
       <Version>4.3.0</Version>
     </PackageReference>
     <PackageReference Include="System.Data.SQLite.Core">
-      <Version>1.0.107</Version>
+      <Version>1.0.108</Version>
     </PackageReference>
     <PackageReference Include="System.Diagnostics.Debug">
       <Version>4.3.0</Version>

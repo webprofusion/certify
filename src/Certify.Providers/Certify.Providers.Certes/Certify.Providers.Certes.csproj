@@ -33,7 +33,7 @@
   <ItemGroup>
     <Reference Include="Certes, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\third-party\certes\src\Certes\bin\Debug\netstandard2.0\Certes.dll</HintPath>
+      <HintPath>..\..\..\..\third-party\certes\src\Certes\bin\Debug\netstandard2.0\Certes.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -55,10 +55,10 @@
       <Version>2.0.1</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
-      <Version>10.0.3</Version>
+      <Version>11.0.1</Version>
     </PackageReference>
     <PackageReference Include="Portable.BouncyCastle">
-      <Version>1.8.1.3</Version>
+      <Version>1.8.1.4</Version>
     </PackageReference>
     <PackageReference Include="System.Net.Http">
       <Version>4.3.3</Version>
@@ -80,15 +80,15 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj">
+    <ProjectReference Include="..\..\Certify.Locales\Certify.Locales.csproj">
       <Project>{1efdebe9-468b-4aa0-afd4-1c6d0a321be5}</Project>
       <Name>Certify.Locales</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Certify.Models\Certify.Models.csproj">
+    <ProjectReference Include="..\..\Certify.Models\Certify.Models.csproj">
       <Project>{baaa9b8c-e44b-43f6-ac9c-b5666e69ee27}</Project>
       <Name>Certify.Models</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Certify.Shared\Certify.Shared.csproj">
+    <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.csproj">
       <Project>{ed48b479-b619-4c16-afa3-83dd3cd89338}</Project>
       <Name>Certify.Shared</Name>
     </ProjectReference>

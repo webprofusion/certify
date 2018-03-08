@@ -37,56 +37,54 @@ namespace Certify.Core.Management.Challenges
         /// </remarks>
         public async Task<StatusMessage> TestChallengeResponse(ICertifiedServer iisManager, ManagedSite managedSite, bool isPreviewMode, bool enableDnsChecks)
         {
-            return await Task.Run(() =>
+            _actionLogs.Clear(); // reset action logs
+
+            var requestConfig = managedSite.RequestConfig;
+            var result = new StatusMessage { IsOK = true };
+            var domains = new List<string> { requestConfig.PrimaryDomain };
+
+            if (requestConfig.SubjectAlternativeNames != null)
             {
-                _actionLogs.Clear(); // reset action logs
+                domains.AddRange(requestConfig.SubjectAlternativeNames);
+            }
 
-                var requestConfig = managedSite.RequestConfig;
-                var result = new StatusMessage { IsOK = true };
-                var domains = new List<string> { requestConfig.PrimaryDomain };
+            var generatedAuthorizations = new List<PendingAuthorization>();
 
-                if (requestConfig.SubjectAlternativeNames != null)
+            try
+            {
+                // if DNS checks enabled, attempt them here
+                if (isPreviewMode && enableDnsChecks)
                 {
-                    domains.AddRange(requestConfig.SubjectAlternativeNames);
+                    // check all domain configs
+                    Parallel.ForEach(domains.Distinct(), new ParallelOptions
+                    {
+                        // check 8 domains at a time
+                        MaxDegreeOfParallelism = 8
+                    },
+                    domain =>
+                    {
+                        var (ok, message) = _netUtil.CheckDNS(domain);
+                        if (!ok)
+                        {
+                            result.IsOK = false;
+                            result.FailedItemSummary.Add(message);
+                        }
+                    });
+                    if (!result.IsOK)
+                    {
+                        return result;
+                    }
                 }
 
-                var generatedAuthorizations = new List<PendingAuthorization>();
-
-                try
+                if (requestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
                 {
-                    // if DNS checks enabled, attempt them here
-                    if (isPreviewMode && enableDnsChecks)
+                    foreach (var domain in domains.Distinct())
                     {
-                        // check all domain configs
-                        Parallel.ForEach(domains.Distinct(), new ParallelOptions
-                        {
-                            // check 8 domains at a time
-                            MaxDegreeOfParallelism = 8
-                        },
-                        domain =>
-                        {
-                            var (ok, message) = _netUtil.CheckDNS(domain);
-                            if (!ok)
-                            {
-                                result.IsOK = false;
-                                result.FailedItemSummary.Add(message);
-                            }
-                        });
-                        if (!result.IsOK)
-                        {
-                            return result;
-                        }
-                    }
+                        string challengeFileUrl = $"http://{domain}/.well-known/acme-challenge/configcheck";
 
-                    if (requestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
-                    {
-                        foreach (var domain in domains.Distinct())
+                        var simulatedAuthorization = new PendingAuthorization
                         {
-                            string challengeFileUrl = $"http://{domain}/.well-known/acme-challenge/configcheck";
-
-                            var simulatedAuthorization = new PendingAuthorization
-                            {
-                                Challenges = new List<AuthorizationChallengeItem>{
+                            Challenges = new List<AuthorizationChallengeItem>{
                                     new AuthorizationChallengeItem
                                 {
                                         ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
@@ -95,87 +93,86 @@ namespace Certify.Core.Management.Challenges
                                         Value = "Extensionless File Config Test - OK"
                                     }
                                 }
-                            };
+                        };
 
-                            generatedAuthorizations.Add(simulatedAuthorization);
+                        generatedAuthorizations.Add(simulatedAuthorization);
 
-                            var resultOK = PrepareChallengeResponse_Http01(
-                               iisManager, domain, managedSite, simulatedAuthorization
-                            )();
+                        var resultOK = await PrepareChallengeResponse_Http01(
+                           iisManager, domain, managedSite, simulatedAuthorization
+                        )();
 
-                            if (!resultOK)
-                            {
-                                result.IsOK = false;
-                                result.FailedItemSummary.Add($"Config checks failed to verify http://{domain} is both publicly accessible and can serve extensionless files e.g. {challengeFileUrl}");
-
-                                // don't check any more after first failure
-                                break;
-                            }
-                        }
-                    }
-                    else if (requestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
-                    {
-                        if (iisManager.GetServerVersion().Major < 8)
+                        if (!resultOK)
                         {
                             result.IsOK = false;
-                            result.FailedItemSummary.Add($"The {SupportedChallengeTypes.CHALLENGE_TYPE_SNI} challenge is only available for IIS versions 8+.");
-                            return result;
-                        }
+                            result.FailedItemSummary.Add($"Config checks failed to verify http://{domain} is both publicly accessible and can serve extensionless files e.g. {challengeFileUrl}");
 
-                        result.IsOK = domains.Distinct().All(domain =>
+                            // don't check any more after first failure
+                            break;
+                        }
+                    }
+                }
+                else if (requestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
+                {
+                    if (iisManager.GetServerVersion().Major < 8)
+                    {
+                        result.IsOK = false;
+                        result.FailedItemSummary.Add($"The {SupportedChallengeTypes.CHALLENGE_TYPE_SNI} challenge is only available for IIS versions 8+.");
+                        return result;
+                    }
+
+                    result.IsOK = domains.Distinct().All(domain =>
+                    {
+                        var simulatedAuthorization = new PendingAuthorization
                         {
-                            var simulatedAuthorization = new PendingAuthorization
-                            {
-                                Challenges = new List<AuthorizationChallengeItem> {
+                            Challenges = new List<AuthorizationChallengeItem> {
                                      new AuthorizationChallengeItem
                                      {
                                           ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_SNI,
                                           HashIterationCount= 1,
                                           Value = GenerateSimulatedKeyAuth()
                                      }
-                                 }
-                            };
-                            generatedAuthorizations.Add(simulatedAuthorization);
-                            return PrepareChallengeResponse_TlsSni01(
-                                iisManager, domain, managedSite, simulatedAuthorization
-                            )();
-                        });
-                    }
-                    else if (requestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
+                             }
+                        };
+                        generatedAuthorizations.Add(simulatedAuthorization);
+                        return PrepareChallengeResponse_TlsSni01(
+                            iisManager, domain, managedSite, simulatedAuthorization
+                        )();
+                    });
+                }
+                else if (requestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
+                {
+                    result.IsOK = domains.Distinct().All(domain =>
                     {
-                        result.IsOK = domains.Distinct().All(domain =>
+                        var simulatedAuthorization = new PendingAuthorization
                         {
-                            var simulatedAuthorization = new PendingAuthorization
-                            {
-                                Challenges = new List<AuthorizationChallengeItem> {
+                            Challenges = new List<AuthorizationChallengeItem> {
                                      new AuthorizationChallengeItem
                                      {
                                           ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                                             Key= "_acme-challenge.test."+domain,
                                             Value = GenerateSimulatedKeyAuth()
                                      }
-                                 }
-                            };
+                             }
+                        };
 
-                            generatedAuthorizations.Add(simulatedAuthorization);
+                        generatedAuthorizations.Add(simulatedAuthorization);
 
-                            return PrepareChallengeResponse_Dns01(
-                                domain, managedSite, simulatedAuthorization
-                            )();
-                        });
-                    }
-                    else
-                    {
-                        throw new NotSupportedException($"ChallengeType not supported: {requestConfig.ChallengeType}");
-                    }
+                        return PrepareChallengeResponse_Dns01(
+                            domain, managedSite, simulatedAuthorization
+                        )();
+                    });
                 }
-                finally
+                else
                 {
-                    //FIXME: needs to be filtered by managed site: result.Message = String.Join("\r\n", GetActionLogSummary());
-                    generatedAuthorizations.ForEach(ga => ga.Cleanup());
+                    throw new NotSupportedException($"ChallengeType not supported: {requestConfig.ChallengeType}");
                 }
-                return result;
-            });
+            }
+            finally
+            {
+                //FIXME: needs to be filtered by managed site: result.Message = String.Join("\r\n", GetActionLogSummary());
+                generatedAuthorizations.ForEach(ga => ga.Cleanup());
+            }
+            return result;
         }
 
         /// <summary>
@@ -218,7 +215,7 @@ namespace Certify.Core.Management.Challenges
                         var check = PrepareChallengeResponse_Http01(iisManager, domain, managedSite, pendingAuth);
                         if (requestConfig.PerformExtensionlessConfigChecks)
                         {
-                            pendingAuth.AttemptedChallenge.ConfigCheckedOK = check();
+                            pendingAuth.AttemptedChallenge.ConfigCheckedOK = await check();
                         }
                     }
 
@@ -254,7 +251,7 @@ namespace Certify.Core.Management.Challenges
         /// <returns>
         /// A Boolean returning Func. Invoke the Func to test the challenge response locally.
         /// </returns>
-        private Func<bool> PrepareChallengeResponse_Http01(ICertifiedServer iisManager, string domain, ManagedSite managedSite, PendingAuthorization pendingAuth)
+        private Func<Task<bool>> PrepareChallengeResponse_Http01(ICertifiedServer iisManager, string domain, ManagedSite managedSite, PendingAuthorization pendingAuth)
         {
             var requestConfig = managedSite.RequestConfig;
             var httpChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP);
@@ -262,7 +259,7 @@ namespace Certify.Core.Management.Challenges
             if (httpChallenge == null)
             {
                 this.LogAction($"No http challenge to complete for {managedSite.Name}. Request cannot continue.");
-                return () => false;
+                return () => Task.FromResult(false);
             }
 
             this.LogAction("Preparing challenge response for Let's Encrypt server to check at: " + httpChallenge.ResourceUri);
@@ -295,7 +292,7 @@ namespace Certify.Core.Management.Challenges
                 // our website no longer appears to exist on disk, continuing would potentially
                 // create unwanted folders, so it's time for us to give up
                 this.LogAction($"The website root path for {managedSite.Name} could not be determined. Request cannot continue.");
-                return () => false;
+                return () => Task.FromResult(false);
             }
 
             // copy temp file to path challenge expects in web folder
@@ -312,7 +309,7 @@ namespace Certify.Core.Management.Challenges
                 {
                     // failed to create directory, probably permissions or may be invalid config
                     this.LogAction($"Pre-config check failed: Could not create directory: {destPath}");
-                    return () => { return false; };
+                    return () => Task.FromResult(false);
                 }
             }
 
@@ -328,7 +325,7 @@ namespace Certify.Core.Management.Challenges
                 {
                     // failed to create configcheck file, probably permissions or may be invalid config
                     this.LogAction($"Pre-config check failed: Could not create file: {destFile}");
-                    return () => { return false; };
+                    return () => Task.FromResult(false);
                 }
             }
 
@@ -339,10 +336,10 @@ namespace Certify.Core.Management.Challenges
                 if (!destFile.EndsWith("configcheck") && File.Exists(destFile)) File.Delete(destFile);
             };
 
-            return () =>
+            return async () =>
             {
                 // first check if it already works with no changes
-                if (_netUtil.CheckURL(httpChallenge.ResourceUri))
+                if (await _netUtil.CheckURL(httpChallenge.ResourceUri))
                 {
                     return true;
                 }
@@ -373,7 +370,7 @@ namespace Certify.Core.Management.Challenges
                             this.LogAction($"Failed to write config: " + exp.Message);
                         }
 
-                        if (_netUtil.CheckURL($"http://{domain}/{httpChallenge.ResourcePath}"))
+                        if (await _netUtil.CheckURL($"http://{domain}/{httpChallenge.ResourcePath}"))
                         {
                             return true;
                         }
@@ -390,12 +387,6 @@ namespace Certify.Core.Management.Challenges
             };
         }
 
-        /// <summary>
-        /// Prepares IIS to respond to a tls-sni-01 challenge 
-        /// </summary>
-        /// <returns>
-        /// A Boolean-returning Func. Invoke the Func to test the challenge response locally.
-        /// </returns>
         private Func<bool> PrepareChallengeResponse_TlsSni01(ICertifiedServer iisManager, string domain, ManagedSite managedSite, PendingAuthorization pendingAuth)
         {
             var requestConfig = managedSite.RequestConfig;

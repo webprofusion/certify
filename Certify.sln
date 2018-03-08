@@ -26,7 +26,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Shared", "src\Certi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Service.Tests.Integration", "src\Certify.Tests\Certify.Service.Tests.Integration\Certify.Service.Tests.Integration.csproj", "{28E8D96D-D07C-4F5F-B0BD-008B1074EDF7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Providers.ACMESharp", "src\Certify.Providers.ACMESharp\Certify.Providers.ACMESharp.csproj", "{1A1CDA25-F810-4CB7-A913-9B3CDF1A0CF3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Providers\Certify.Providers.ACMESharp", "src\Certify.Providers\Certify.Providers.ACMESharp\Certify.Providers.ACMESharp.csproj", "{1A1CDA25-F810-4CB7-A913-9B3CDF1A0CF3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Core", "src\Certify.Core\Certify.Core.csproj", "{58881E46-4A76-47B9-9725-FA7C5F0090D0}"
 EndProject
@@ -34,7 +34,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ACME", "ACME", "{D2D146B6-E
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Service", "Service", "{A627D955-AD92-4A4C-BC85-78B45073CB74}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Providers.Certes", "src\Certify.Providers.Certes\Certify.Providers.Certes.csproj", "{D7D2D121-B796-49ED-9CF9-158C624857A1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Providers\Certify.Providers.Certes", "src\Certify.Providers\Certify.Providers.Certes\Certify.Providers.Certes.csproj", "{D7D2D121-B796-49ED-9CF9-158C624857A1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Locales", "src\Certify.Locales\Certify.Locales.csproj", "{1EFDEBE9-468B-4AA0-AFD4-1C6D0A321BE5}"
 EndProject

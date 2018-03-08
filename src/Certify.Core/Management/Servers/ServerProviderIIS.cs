@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace Certify.Management.Servers
 {
     /// <summary>
-    /// Model to work with IIS site details.
+    /// Model to work with IIS site details. 
     /// </summary>
     public class ServerProviderIIS : ICertifiedServer
     {
@@ -169,7 +169,7 @@ namespace Certify.Management.Servers
         }
 
         /// <summary>
-        /// Return list of sites (non-specific bindings)
+        /// Return list of sites (non-specific bindings) 
         /// </summary>
         /// <param name="includeOnlyStartedSites"></param>
         /// <returns></returns>
@@ -342,7 +342,7 @@ namespace Certify.Management.Servers
         }
 
         /// <summary>
-        /// Create a new IIS site with the given default host name, path, app pool
+        /// Create a new IIS site with the given default host name, path, app pool 
         /// </summary>
         /// <param name="siteName"></param>
         /// <param name="hostname"></param>
@@ -381,7 +381,7 @@ namespace Certify.Management.Servers
         }
 
         /// <summary>
-        /// Check if site with given site name exists
+        /// Check if site with given site name exists 
         /// </summary>
         /// <param name="siteName"></param>
         /// <returns></returns>
@@ -436,7 +436,7 @@ namespace Certify.Management.Servers
         }
 
         /// <summary>
-        /// Finds the IIS <see cref="Site" /> corresponding to a <see cref="ManagedSite" />.
+        /// Finds the IIS <see cref="Site" /> corresponding to a <see cref="ManagedSite" />. 
         /// </summary>
         /// <param name="managedSite"> Configured site. </param>
         /// <returns> The matching IIS Site if found, otherwise null. </returns>
@@ -669,7 +669,7 @@ namespace Certify.Management.Servers
         }
 
         /// <summary>
-        /// removes the managedSite's https binding for the dns host name specified
+        /// removes the managedSite's https binding for the dns host name specified 
         /// </summary>
         /// <param name="managedSite"></param>
         /// <param name="host"></param>
@@ -751,56 +751,55 @@ namespace Certify.Management.Servers
                     {
                         string internationalHost = host == "" ? "" : ToUnicodeString(host);
                         var existingBindings = from b in siteToUpdate.Bindings where b.Host == internationalHost && b.Protocol == "https" select b;
-foreach (var existingBinding in existingBindings)
-{
-
-                        if (existingBinding != null)
+                        foreach (var existingBinding in existingBindings)
                         {
-                            if (!isPreviewOnly)
+                            if (existingBinding != null)
                             {
-                                // Update existing https Binding
-                                existingBinding.CertificateHash = certificateHash;
-                                existingBinding.CertificateStoreName = certStoreName;
-                            }
-                            action.Description = $"Update existing binding: [{siteToUpdate.Name}] {existingBinding.BindingInformation}";
-                        }
-                        else
-                        {
-                            //add new https binding at default port "<ip>:port:hostDnsName";
-                            string bindingSpec = $"{(!String.IsNullOrEmpty(ipAddress) ? ipAddress : "*")}:{sslPort}:{internationalHost}";
-
-                            action.Description = $"Add new https binding: [{siteToUpdate.Name}] {bindingSpec}";
-
-                            if (!isPreviewOnly)
-                            {
-                                var binding = siteToUpdate.Bindings.CreateElement();
-
-                                // Set binding values
-                                binding.Protocol = "https";
-                                binding.BindingInformation = bindingSpec;
-                                binding.CertificateStoreName = certStoreName;
-                                binding.CertificateHash = certificateHash;
-
-                                if (!String.IsNullOrEmpty(internationalHost) && useSNI)
+                                if (!isPreviewOnly)
                                 {
-                                    try
-                                    {
-                                        binding["sslFlags"] = 1; // enable SNI
-                                    }
-                                    catch (Exception)
-                                    {
-                                        //failed to set requested SNI flag
-
-                                        action.Description += $" Failed to set SNI attribute";
-                                        return action;
-                                    }
+                                    // Update existing https Binding
+                                    existingBinding.CertificateHash = certificateHash;
+                                    existingBinding.CertificateStoreName = certStoreName;
                                 }
+                                action.Description = $"Update existing binding: [{siteToUpdate.Name}] {existingBinding.BindingInformation}";
+                            }
+                            else
+                            {
+                                //add new https binding at default port "<ip>:port:hostDnsName";
+                                string bindingSpec = $"{(!String.IsNullOrEmpty(ipAddress) ? ipAddress : "*")}:{sslPort}:{internationalHost}";
 
-                                // Add the binding to the site
-                                siteToUpdate.Bindings.Add(binding);
+                                action.Description = $"Add new https binding: [{siteToUpdate.Name}] {bindingSpec}";
+
+                                if (!isPreviewOnly)
+                                {
+                                    var binding = siteToUpdate.Bindings.CreateElement();
+
+                                    // Set binding values
+                                    binding.Protocol = "https";
+                                    binding.BindingInformation = bindingSpec;
+                                    binding.CertificateStoreName = certStoreName;
+                                    binding.CertificateHash = certificateHash;
+
+                                    if (!String.IsNullOrEmpty(internationalHost) && useSNI)
+                                    {
+                                        try
+                                        {
+                                            binding["sslFlags"] = 1; // enable SNI
+                                        }
+                                        catch (Exception)
+                                        {
+                                            //failed to set requested SNI flag
+
+                                            action.Description += $" Failed to set SNI attribute";
+                                            return action;
+                                        }
+                                    }
+
+                                    // Add the binding to the site
+                                    siteToUpdate.Bindings.Add(binding);
+                                }
                             }
                         }
-					}
                     }
                     else
                     {
