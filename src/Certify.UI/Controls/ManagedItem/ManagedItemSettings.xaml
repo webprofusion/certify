@@ -71,6 +71,13 @@
                 </StackPanel>
             </Button>
 
+            <Button Name="Button_TestChallenge" Margin="4,0,0,0" Click="TestChallenge_Click" MinWidth="60">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome x:Name="TestInProgress" Icon="Refresh" Height="16" Spin="True" SpinDuration="1"  VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.Test}" /></TextBlock>
+                </StackPanel>
+            </Button>
+
             <Button IsEnabled="{Binding IsSelectedItemValid}" Click="Button_RequestCertificate" Margin="16,0,0,0">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome Icon="Play" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />

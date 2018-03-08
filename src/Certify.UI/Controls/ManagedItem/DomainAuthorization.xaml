@@ -40,8 +40,6 @@
             <StackPanel Orientation="Horizontal">
                 <Label Width="160" Content="{x:Static Resources:SR.ManagedItemSettings_ChallengeTypes}" />
                 <ComboBox ItemsSource="{Binding ChallengeTypes}" SelectedItem="{Binding SelectedItem.RequestConfig.ChallengeType}" Width="225" />
-                <Button Name="Button_TestChallenge" Content="{x:Static Resources:SR.Test}" Margin="4,0,0,0" Click="TestChallenge_Click" />
-                <fa:ImageAwesome x:Name="TestInProgress" Margin="4,0,0,0" Visibility="Hidden" Icon="Refresh" Height="16" Spin="True" SpinDuration="1" />
             </StackPanel>
 
             <StackPanel>
