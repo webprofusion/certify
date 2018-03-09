@@ -154,6 +154,7 @@ namespace Certify.UI.ViewModel
                 }
             }
         }
+        public bool IsTestInProgress { get; set; }
 
         public ManagedSite SelectedItem
         {

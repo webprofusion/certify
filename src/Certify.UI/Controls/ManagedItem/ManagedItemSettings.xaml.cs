@@ -209,6 +209,8 @@ namespace Certify.UI.Controls.ManagedItem
 
         private async void TestChallenge_Click(object sender, EventArgs e)
         {
+            MainViewModel.IsTestInProgress = true;
+
             if (!MainViewModel.IsIISAvailable)
             {
                 MessageBox.Show(SR.ManagedItemSettings_CannotChallengeWithoutIIS, SR.ChallengeError, MessageBoxButton.OK, MessageBoxImage.Error);
@@ -216,7 +218,6 @@ namespace Certify.UI.Controls.ManagedItem
             else if (MainViewModel.SelectedItem.RequestConfig.ChallengeType != null)
             {
                 Button_TestChallenge.IsEnabled = false;
-                TestInProgress.Visibility = Visibility.Visible;
 
                 try
                 {
@@ -225,6 +226,9 @@ namespace Certify.UI.Controls.ManagedItem
                 catch (Exception exp)
                 {
                     // usual failure is that primary domain is not set
+                    Button_TestChallenge.IsEnabled = true;
+                    MainViewModel.IsTestInProgress = false;
+
                     MessageBox.Show(exp.Message);
                     return;
                 }
@@ -239,8 +243,9 @@ namespace Certify.UI.Controls.ManagedItem
                     MessageBox.Show(string.Format(SR.ManagedItemSettings_ConfigurationCheckFailed, String.Join("\r\n", result.FailedItemSummary)), SR.ManagedItemSettings_ChallengeTestFailed, MessageBoxButton.OK, MessageBoxImage.Error);
                 }
 
+                //TODO: just use viewmodel to determine if test button should be enabled
                 Button_TestChallenge.IsEnabled = true;
-                TestInProgress.Visibility = Visibility.Hidden;
+                MainViewModel.IsTestInProgress = false;
             }
         }
 

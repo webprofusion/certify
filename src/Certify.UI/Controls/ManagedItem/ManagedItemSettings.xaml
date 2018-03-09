@@ -48,43 +48,47 @@
         </StackPanel>
 
         <!-- save/request buttons-->
-        <StackPanel Orientation="Horizontal" Height="32" Grid.Row="1">
+        <DockPanel  Height="32" Grid.Row="1" LastChildFill="False">
 
-            <Button  IsEnabled="{Binding SelectedItem.IsChanged}" Click="Button_Save" Margin="8,0,0,0">
+            <Button DockPanel.Dock="Left" IsEnabled="{Binding SelectedItem.IsChanged}" Click="Button_Save" Margin="8,0,0,0">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome Icon="Save" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.Save}" /></TextBlock>
                 </StackPanel>
             </Button>
 
-            <Button  IsEnabled="{Binding SelectedItem.IsChanged}" Click="Button_DiscardChanges" Margin="8,0,0,0">
+            <Button DockPanel.Dock="Left"  IsEnabled="{Binding SelectedItem.IsChanged}" Click="Button_DiscardChanges" Margin="8,0,0,0">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome Icon="Undo" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.DiscardChanges}" /></TextBlock>
                 </StackPanel>
             </Button>
 
-            <Button Click="Button_Delete" Margin="8,0,0,0">
+            <Button DockPanel.Dock="Left" Click="Button_Delete" Margin="8,0,0,0">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome Icon="Trash" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.Delete}" /></TextBlock>
                 </StackPanel>
             </Button>
 
-            <Button Name="Button_TestChallenge" Margin="4,0,0,0" Click="TestChallenge_Click" MinWidth="60">
-                <StackPanel Orientation="Horizontal">
-                    <fa:ImageAwesome x:Name="TestInProgress" Icon="Refresh" Height="16" Spin="True" SpinDuration="1"  VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
-                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.Test}" /></TextBlock>
-                </StackPanel>
-            </Button>
-
-            <Button IsEnabled="{Binding IsSelectedItemValid}" Click="Button_RequestCertificate" Margin="16,0,0,0">
+            <Button DockPanel.Dock="Right" IsEnabled="{Binding IsSelectedItemValid}" Click="Button_RequestCertificate" Margin="16,0,0,0">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome Icon="Play" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.ManagedItemSettings_RequestCertificate}" /></TextBlock>
                 </StackPanel>
             </Button>
-        </StackPanel>
+            
+            
+            <Button DockPanel.Dock="Right" Name="Button_TestChallenge" Margin="4,0,0,0" Click="TestChallenge_Click" MinWidth="70">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome x:Name="TestInProgress" Visibility="{Binding IsTestInProgress, Converter={StaticResource ResourceKey=BoolToVisConverter}}" Icon="Refresh" Height="16" Spin="True" SpinDuration="1"  VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <fa:ImageAwesome x:Name="TestSettings" Visibility="{Binding IsTestInProgress, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" Icon="CheckCircle" Height="16" Spin="False" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.Test}" /></TextBlock>
+                </StackPanel>
+            </Button>
+
+          
+        </DockPanel>
 
         <DockPanel Grid.Row="2">
             <ScrollViewer DockPanel.Dock="Top" MaxHeight="60" Visibility="{Binding SelectedItem.Health, Converter={StaticResource ResourceKey=HealthVisibleConverter}}">

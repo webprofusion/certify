@@ -43,7 +43,7 @@
 
                     <StackPanel Orientation="Horizontal">
                         <Label Width="160" Content="Add domains to certificate:" />
-                        <TextBox x:Name="ManualDomains" Controls:TextBoxHelper.Watermark="e.g. *.example.com, www.example.com, example.com" />
+                        <TextBox x:Name="ManualDomains" MinWidth="200" Controls:TextBoxHelper.Watermark="e.g. *.example.com, www.example.com, example.com" />
                         <Button x:Name="AddDomains"  Content="Add Domains" Margin="4,0,0,0" Click="AddDomains_Click" />
                     </StackPanel>
                 </StackPanel>
