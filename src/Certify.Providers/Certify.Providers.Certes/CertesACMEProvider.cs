@@ -60,6 +60,11 @@ namespace Certify.Providers.Certes
 
         private void LoadSettings()
         {
+            if (!System.IO.Directory.Exists(_settingsFolder))
+            {
+                System.IO.Directory.CreateDirectory(_settingsFolder);
+            }
+
             if (System.IO.File.Exists(_settingsFolder + "\\c-settings.json"))
             {
                 string json = System.IO.File.ReadAllText(_settingsFolder + "\\c-settings.json");
