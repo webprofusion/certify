@@ -18,7 +18,7 @@ Quick Start
 ----------
 1. Download from [https://certifytheweb.com/](https://certifytheweb.com/) and install it.
 2. Click 'New Certificate', choose your IIS site (which must have 1 or more hostname bindings set). Save your settings and click 'Request Certificate'
-3. All done! Click 'Configure Auto Renew' to setup the scheduled task for renewals.
+3. All done!
 
 Development & Bug Reporting
 -------------
@@ -58,6 +58,6 @@ git submodule update --init --recursive --remote
 > - The UI needs the background service to be running. You cna configure Visual Studio to launch both the Certify.UI project and the Certify.Service project  via Solution > Properties > Multiple Startup Projects
 
 > **Note:**  For testing you will require a publicly accessible IP mapped to the domain/subdomain you want to test with. The Let's Encrypt service will need to be able to access your test site remotely via HTTP in order to complete authorisation challenges.
-> The app consists of a UI and background service. The background service must be running for the UI to operatre. The develop/debug you can configure Visual Studio to launch both the UI and Service - Right Click the Solution > Properties> Startup Project, Set Certify.UI and Certify.Service to 'Start', then debug as normal. 
+> The app consists of a UI and background service. The background service must be running for the UI to operate. To develop/debug you can configure Visual Studio to launch both the UI and Service - Right Click the Solution > Properties> Startup Project, Set Certify.UI and Certify.Service to 'Start', then debug as normal. 
 apps {at} webprofusion.com
 
