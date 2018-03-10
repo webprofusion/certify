@@ -17,7 +17,7 @@ namespace Certify.UI.Controls.ManagedItem
     /// </summary>
     public partial class ScriptHooks : UserControl
     {
-        protected Certify.UI.ViewModel.AppModel MainViewModel => UI.ViewModel.AppModel.Current;
+        protected Certify.UI.ViewModel.ManagedItemModel ItemViewModel => UI.ViewModel.ManagedItemModel.Current;
 
         public ScriptHooks()
         {
@@ -48,7 +48,7 @@ namespace Certify.UI.Controls.ManagedItem
 
         private void DirectoryBrowse_Click(object sender, EventArgs e)
         {
-            var config = MainViewModel.SelectedItem.RequestConfig;
+            var config = ItemViewModel.SelectedItem.RequestConfig;
             var dialog = new WinForms.FolderBrowserDialog()
             {
                 SelectedPath = config.WebsiteRootPath
@@ -62,7 +62,7 @@ namespace Certify.UI.Controls.ManagedItem
         private void FileBrowse_Click(object sender, EventArgs e)
         {
             var button = (Button)sender;
-            var config = MainViewModel.SelectedItem.RequestConfig;
+            var config = ItemViewModel.SelectedItem.RequestConfig;
             var dialog = new OpenFileDialog()
             {
                 Filter = "Powershell Scripts (*.ps1)| *.ps1;"
@@ -102,15 +102,15 @@ namespace Certify.UI.Controls.ManagedItem
         {
             var button = (Button)sender;
             string scriptFile = null;
-            var result = new CertificateRequestResult { ManagedItem = MainViewModel.SelectedItem, IsSuccess = true, Message = "Script Testing Message" };
+            var result = new CertificateRequestResult { ManagedItem = ItemViewModel.SelectedItem, IsSuccess = true, Message = "Script Testing Message" };
             if (button.Name == "Button_TestPreRequest")
             {
-                scriptFile = MainViewModel.SelectedItem.RequestConfig.PreRequestPowerShellScript;
+                scriptFile = ItemViewModel.SelectedItem.RequestConfig.PreRequestPowerShellScript;
                 result.IsSuccess = false; // pre-request messages will always have IsSuccess = false
             }
             else if (button.Name == "Button_TestPostRequest")
             {
-                scriptFile = MainViewModel.SelectedItem.RequestConfig.PostRequestPowerShellScript;
+                scriptFile = ItemViewModel.SelectedItem.RequestConfig.PostRequestPowerShellScript;
             }
             if (string.IsNullOrEmpty(scriptFile)) return; // don't try to run empty script
             try
@@ -130,7 +130,7 @@ namespace Certify.UI.Controls.ManagedItem
             {
                 Button_TestWebhook.IsEnabled = false;
 
-                var config = MainViewModel.SelectedItem.RequestConfig;
+                var config = ItemViewModel.SelectedItem.RequestConfig;
                 if (!Uri.TryCreate(config.WebhookUrl, UriKind.Absolute, out var result))
                 {
                     MessageBox.Show($"The webhook url must be a valid url.", SR.ManagedItemSettings_WebhookTestFailed, MessageBoxButton.OK, MessageBoxImage.Error);
@@ -160,7 +160,7 @@ namespace Certify.UI.Controls.ManagedItem
         {
             // get selected preset script
             var button = e.Source as System.Windows.Controls.Button;
-            var config = MainViewModel.SelectedItem.RequestConfig;
+            var config = ItemViewModel.SelectedItem.RequestConfig;
 
             if (button.CommandParameter != null)
             {

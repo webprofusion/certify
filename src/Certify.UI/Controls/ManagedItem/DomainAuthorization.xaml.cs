@@ -12,7 +12,7 @@ namespace Certify.UI.Controls.ManagedItem
     /// </summary>
     public partial class DomainAuthorization : UserControl
     {
-        protected Certify.UI.ViewModel.AppModel MainViewModel => UI.ViewModel.AppModel.Current;
+        protected Certify.UI.ViewModel.ManagedItemModel ItemViewModel => UI.ViewModel.ManagedItemModel.Current;
 
         public DomainAuthorization()
         {
@@ -27,7 +27,7 @@ namespace Certify.UI.Controls.ManagedItem
 
         private void DirectoryBrowse_Click(object sender, EventArgs e)
         {
-            var config = MainViewModel.SelectedItem.RequestConfig;
+            var config = ItemViewModel.SelectedItem.RequestConfig;
             var dialog = new WinForms.FolderBrowserDialog()
             {
                 SelectedPath = config.WebsiteRootPath

@@ -12,13 +12,13 @@ namespace Certify.UI.Controls.ManagedItem
     /// </summary>
     public partial class CertificateDomains : UserControl
     {
-        protected Certify.UI.ViewModel.AppModel MainViewModel => UI.ViewModel.AppModel.Current;
-        private ManagedSite SelectedItem => MainViewModel.SelectedItem;
+        protected Certify.UI.ViewModel.ManagedItemModel ItemViewModel => UI.ViewModel.ManagedItemModel.Current;
+        private ManagedSite SelectedItem => ItemViewModel.SelectedItem;
 
         public CertificateDomains()
         {
             InitializeComponent();
-            this.MainViewModel.PropertyChanged += MainViewModel_PropertyChanged;
+            this.ItemViewModel.PropertyChanged += MainViewModel_PropertyChanged;
         }
 
         private void SetFilter()
@@ -36,14 +36,14 @@ namespace Certify.UI.Controls.ManagedItem
             if (e.PropertyName == "SelectedItem")
             {
                 //get list of sites from local server if we don't already have it
-                if (MainViewModel.WebSiteList.Count == 0) await MainViewModel.RefreshWebsiteList();
+                if (ItemViewModel.WebSiteList.Count == 0) await ItemViewModel.RefreshWebsiteList();
 
                 // ie only need the list of sites for new managed sites, existing ones are already set
                 if (SelectedItem != null && SelectedItem.Id == null)
                 {
-                    if (MainViewModel.WebSiteList.Count > 0)
+                    if (ItemViewModel.WebSiteList.Count > 0)
                     {
-                        WebsiteDropdown.ItemsSource = MainViewModel.WebSiteList;
+                        WebsiteDropdown.ItemsSource = ItemViewModel.WebSiteList;
                         WebsiteDropdown.IsEnabled = true;
                     }
                     else
@@ -60,14 +60,14 @@ namespace Certify.UI.Controls.ManagedItem
                     // if website previously selected, preselect in dropdown
                     if (SelectedItem != null && !String.IsNullOrEmpty(SelectedItem.GroupId))
                     {
-                        var selectedWebsite = MainViewModel.WebSiteList.FirstOrDefault(w => w.SiteId == SelectedItem.GroupId);
+                        var selectedWebsite = ItemViewModel.WebSiteList.FirstOrDefault(w => w.SiteId == SelectedItem.GroupId);
                         if (selectedWebsite != null)
                         {
-                            MainViewModel.SelectedWebSite = selectedWebsite;
+                            ItemViewModel.SelectedWebSite = selectedWebsite;
                         }
                         else
                         {
-                            MainViewModel.SelectedWebSite = null;
+                            ItemViewModel.SelectedWebSite = null;
                         }
                     }
                 }
@@ -76,24 +76,24 @@ namespace Certify.UI.Controls.ManagedItem
 
         private async void Website_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (MainViewModel.SelectedWebSite != null)
+            if (ItemViewModel.SelectedWebSite != null)
             {
-                string siteId = MainViewModel.SelectedWebSite.SiteId;
+                string siteId = ItemViewModel.SelectedWebSite.SiteId;
 
                 SiteQueryInProgress.Visibility = Visibility.Visible;
-                await MainViewModel.PopulateManagedSiteSettings(siteId);
+                await ItemViewModel.PopulateManagedSiteSettings(siteId);
                 SiteQueryInProgress.Visibility = Visibility.Hidden;
             }
         }
 
         private async void RefreshSanList_Click(object sender, RoutedEventArgs e)
         {
-            await MainViewModel.SANRefresh();
+            await ItemViewModel.SANRefresh();
         }
 
         private void AddDomains_Click(object sender, RoutedEventArgs e)
         {
-            if (MainViewModel.UpdateDomainOptions(ManualDomains.Text))
+            if (ItemViewModel.UpdateDomainOptions(ManualDomains.Text))
             {
                 // domains added, clear entry
                 ManualDomains.Text = "";

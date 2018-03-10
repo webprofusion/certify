@@ -13,7 +13,7 @@ namespace Certify.UI.Controls.ManagedItem
     /// </summary>
     public partial class MiscOptions : UserControl
     {
-        protected Certify.UI.ViewModel.AppModel MainViewModel => UI.ViewModel.AppModel.Current;
+        protected Certify.UI.ViewModel.ManagedItemModel ItemViewModel => UI.ViewModel.ManagedItemModel.Current;
 
         public MiscOptions()
         {
@@ -22,10 +22,10 @@ namespace Certify.UI.Controls.ManagedItem
 
         private void OpenLogFile_Click(object sender, RoutedEventArgs e)
         {
-            if (this.MainViewModel?.SelectedItem?.Id == null) return;
+            if (this.ItemViewModel?.SelectedItem?.Id == null) return;
 
             // get file path for log
-            var logPath = Models.ManagedSiteLog.GetLogPath(this.MainViewModel.SelectedItem.Id);
+            var logPath = Models.ManagedSiteLog.GetLogPath(this.ItemViewModel.SelectedItem.Id);
 
             //check file exists, if not inform user
             if (System.IO.File.Exists(logPath))
@@ -42,7 +42,7 @@ namespace Certify.UI.Controls.ManagedItem
         private void OpenCertificateFile_Click(object sender, RoutedEventArgs e)
         {
             // get file path for log
-            var certPath = this.MainViewModel.SelectedItem.CertificatePath;
+            var certPath = this.ItemViewModel.SelectedItem.CertificatePath;
 
             //check file exists, if not inform user
             if (!String.IsNullOrEmpty(certPath) && System.IO.File.Exists(certPath))
@@ -69,7 +69,7 @@ namespace Certify.UI.Controls.ManagedItem
         private async void RevokeCertificateBtn_Click(object sender, RoutedEventArgs e)
         {
             // check cert exists, if not inform user
-            var certPath = this.MainViewModel.SelectedItem.CertificatePath;
+            var certPath = this.ItemViewModel.SelectedItem.CertificatePath;
             if (String.IsNullOrEmpty(certPath) || !File.Exists(certPath))
             {
                 MessageBox.Show(SR.ManagedItemSettings_CertificateNotReady, SR.Error, MessageBoxButton.OK, MessageBoxImage.Error);
@@ -81,7 +81,7 @@ namespace Certify.UI.Controls.ManagedItem
                 try
                 {
                     RevokeCertificateBtn.IsEnabled = false;
-                    var result = await MainViewModel.RevokeSelectedItem();
+                    var result = await ItemViewModel.RevokeSelectedItem();
                     if (result.IsOK)
                     {
                         MessageBox.Show(SR.ManagedItemSettings_Certificate_Revoked, SR.Alert, MessageBoxButton.OK, MessageBoxImage.Information);
@@ -100,11 +100,11 @@ namespace Certify.UI.Controls.ManagedItem
 
         private async void ReapplyCertBindings_Click(object sender, RoutedEventArgs e)
         {
-            if (!String.IsNullOrEmpty(MainViewModel.SelectedItem.CertificatePath))
+            if (!String.IsNullOrEmpty(ItemViewModel.SelectedItem.CertificatePath))
             {
                 if (MessageBox.Show("Re-apply certificate to website bindings?", "Confirm Re-Apply?", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
                 {
-                    await MainViewModel.ReapplyCertificateBindings(MainViewModel.SelectedItem.Id, false);
+                    await ItemViewModel.ReapplyCertificateBindings(ItemViewModel.SelectedItem.Id, false);
                 }
             }
         }

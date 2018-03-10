@@ -15,8 +15,15 @@
         <TabControl x:Name="MainTabControl" Controls:TabControlHelper.Underlined="TabPanel"  Margin="8,8,8,8" HorizontalContentAlignment="Left" VerticalContentAlignment="Stretch"   Height="auto">
             <TabItem  Header="Settings" IsSelected="True" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
                 <StackPanel Orientation="Vertical" Margin="0,8,0,16">
+                    <Button Height="32" Width="160" Margin="8,0,0,5" Click="Button_ScheduledTaskConfig" HorizontalAlignment="Left">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:ImageAwesome Icon="Calendar" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                            <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Configure_Auto_Renew}" /></TextBlock>
+                        </StackPanel>
+                    </Button>
+
                     <StackPanel Orientation="Horizontal" Margin="8,0,10,0" Height="32">
-                        <Button Click="Button_NewContact" Margin="0
+                        <Button Click="Button_NewContact" Width="160" Margin="0
                     ,0,0,0">
                             <StackPanel Orientation="Horizontal">
                                 <fa:ImageAwesome Icon="Flag" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />

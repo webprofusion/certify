@@ -15,7 +15,7 @@
              xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
              x:Class="Certify.UI.Controls.ManagedItem.Settings"
              mc:Ignorable="d" Width="697.442" Height="425.672"
-             d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}">
+             d:DataContext="{d:DesignInstance Type=certifyui:DesignItemViewModel, IsDesignTimeCreatable=True}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="32"></RowDefinition>
@@ -27,7 +27,7 @@
             <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
             <utils:OptionalBooleanToVisibilityConverter True="Collapsed" False="Visible" x:Key="InvBoolVisConverter" />
             <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
-            <utils:ManagedItemHealthVisibilityConverter x:Key="HealthVisibleConverter" />
+            <utils:ManagedItemHealthColourConverter x:Key="HealthColourConverter" />
             <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
         </Grid.Resources>
 
@@ -77,34 +77,25 @@
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.ManagedItemSettings_RequestCertificate}" /></TextBlock>
                 </StackPanel>
             </Button>
-            
-            
+
             <Button DockPanel.Dock="Right" Name="Button_TestChallenge" Margin="4,0,0,0" Click="TestChallenge_Click" MinWidth="70">
                 <StackPanel Orientation="Horizontal">
-                    <fa:ImageAwesome x:Name="TestInProgress" Visibility="{Binding IsTestInProgress, Converter={StaticResource ResourceKey=BoolToVisConverter}}" Icon="Refresh" Height="16" Spin="True" SpinDuration="1"  VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
-                    <fa:ImageAwesome x:Name="TestSettings" Visibility="{Binding IsTestInProgress, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" Icon="CheckCircle" Height="16" Spin="False" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <fa:ImageAwesome Visibility="{Binding IsTestInProgress, Converter={StaticResource ResourceKey=BoolToVisConverter}}" Icon="Refresh" Height="16" Spin="True" SpinDuration="1"  VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
+                    <fa:ImageAwesome Visibility="{Binding IsTestInProgress, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" Icon="CheckCircle" Height="16" Spin="False" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.Test}" /></TextBlock>
                 </StackPanel>
             </Button>
-
-          
         </DockPanel>
 
         <DockPanel Grid.Row="2">
-            <ScrollViewer DockPanel.Dock="Top" MaxHeight="60" Visibility="{Binding SelectedItem.Health, Converter={StaticResource ResourceKey=HealthVisibleConverter}}">
-                <!-- Renewal warning messages-->
-                <DockPanel    Background="#FF3F3F3F" Margin="0,8,0,8">
-                    <fa:ImageAwesome Margin="4" Icon="ExclamationTriangle" Height="16" Foreground="#FFFDFDFD" />
 
-                    <TextBlock TextWrapping="Wrap" Text="{Binding SelectedItem.RenewalFailureMessage}" Margin="4,4,16,4" Foreground="White">
-                    </TextBlock>
-                </DockPanel>
-            </ScrollViewer>
             <!-- Managed Item display name-->
-            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,8,0,0">
-                <Label Width="100" Content="{x:Static Resources:SR.ManagedItemSettings_DisplayName}" />
-                <TextBox Text="{Binding SelectedItem.Name, UpdateSourceTrigger=PropertyChanged}" Width="302" />
-            </StackPanel>
+            <DockPanel DockPanel.Dock="Top"  Margin="4,8,0,0" LastChildFill="False">
+                <Label DockPanel.Dock="Left" Content="{x:Static Resources:SR.ManagedItemSettings_DisplayName}" />
+                <TextBox DockPanel.Dock="Left" Text="{Binding IsAdvancedView, UpdateSourceTrigger=PropertyChanged}" Height="26" MinWidth="300" />
+
+                <CheckBox DockPanel.Dock="Right" x:Name="CheckAdvancedView" IsChecked="{Binding IsAdvancedView}"  Content="Show Advanced Options" Unchecked="CheckAdvancedView_Checked" Checked="CheckAdvancedView_Checked" />
+            </DockPanel>
 
             <!--settings tabs-->
 
@@ -112,28 +103,32 @@
             <DockPanel Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}" RenderTransformOrigin="0.5,0.5">
 
                 <Controls:MetroTabControl x:Name="SettingsTab" Margin="8" Controls:TabControlHelper.Underlined="TabPanel"
-                                 VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                                 VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Controls:TabControlHelper.IsUnderlined="True" Controls:ScrollViewerHelper.IsHorizontalScrollWheelEnabled="True">
 
-                    <TabItem Header="Certificate Domains" IsSelected="True" Controls:ControlsHelper.HeaderFontSize="12" Margin="0" MinWidth="130">
-                        <manageditem:CertificateDomains Visibility="Visible" Margin="0,8,0,0" />
+                    <TabItem x:Name="TabStatusInfo" Foreground="{Binding Path=Health, Converter={StaticResource HealthColourConverter}}"  Header="Renewal Issues" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100"  Controls:TabControlHelper.UnderlineBrush="White">
+                        <manageditem:StatusInfo Margin="0,8,0,0" />
+                    </TabItem>
+
+                    <TabItem x:Name="TabDomains" Header="Certificate Domains" IsSelected="True" Controls:ControlsHelper.HeaderFontSize="12" Margin="0" MinWidth="130">
+                        <manageditem:CertificateDomains Margin="0,8,0,0" />
                     </TabItem>
 
                     <TabItem Header="Authorization" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
-                        <manageditem:DomainAuthorization Visibility="Visible" Margin="0,8,0,0" />
+                        <manageditem:DomainAuthorization Margin="0,8,0,0" />
                     </TabItem>
 
-                    <TabItem Header="Deployment" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
-                        <manageditem:Deployment Visibility="Visible" Margin="0,8,0,0" />
+                    <TabItem x:Name="TabDeployment"  Header="Deployment" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
+                        <manageditem:Deployment  Margin="0,8,0,0" />
                     </TabItem>
 
-                    <TabItem Header="Scripting"  Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
-                        <manageditem:ScriptHooks Visibility="Visible" Margin="0,8,0,0" />
+                    <TabItem x:Name="TabScripting" Header="Scripting"  Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
+                        <manageditem:ScriptHooks  Margin="0,8,0,0" />
                     </TabItem>
-                    <TabItem Header="Other Options" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
-                        <manageditem:MiscOptions Visibility="Visible" Margin="0,8,0,0" />
+                    <TabItem x:Name="TabOptions" Header="Other Options"  Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
+                        <manageditem:MiscOptions Margin="0,8,0,0" />
                     </TabItem>
                     <TabItem Header="Preview" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
-                        <manageditem:Preview Visibility="Visible" Margin="0,8,0,0" />
+                        <manageditem:Preview Margin="0,8,0,0" />
                     </TabItem>
                 </Controls:MetroTabControl>
             </DockPanel>

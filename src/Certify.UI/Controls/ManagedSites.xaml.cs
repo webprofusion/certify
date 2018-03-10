@@ -13,19 +13,21 @@ namespace Certify.UI.Controls
     /// </summary>
     public partial class ManagedSites
     {
-        protected ViewModel.AppModel MainViewModel => ViewModel.AppModel.Current;
+        protected ViewModel.AppModel _appViewModel => ViewModel.AppModel.Current;
+        protected ViewModel.ManagedItemModel _itemViewModel => ViewModel.ManagedItemModel.Current;
+
         private string _sortOrder { get; set; } = "NameAsc";
 
         public ManagedSites()
         {
             InitializeComponent();
-            DataContext = MainViewModel;
+            DataContext = _appViewModel;
 
             SetFilter(); // start listening
-            MainViewModel.PropertyChanged += (obj, args) =>
+            _appViewModel.PropertyChanged += (obj, args) =>
             {
                 if (args.PropertyName == "ManagedSites" || args.PropertyName == "SelectedItem" &&
-                    MainViewModel.ManagedSites != null)
+                    _appViewModel.ManagedSites != null)
                 {
                     SetFilter(); // reset listeners when ManagedSites are reset
                 }
@@ -34,7 +36,7 @@ namespace Certify.UI.Controls
 
         private void SetFilter()
         {
-            CollectionViewSource.GetDefaultView(MainViewModel.ManagedSites).Filter = (item) =>
+            CollectionViewSource.GetDefaultView(_appViewModel.ManagedSites).Filter = (item) =>
             {
                 string filter = txtFilter.Text.Trim();
                 return filter == "" || filter.Split(';').Where(f => f.Trim() != "").Any(f =>
@@ -44,18 +46,18 @@ namespace Certify.UI.Controls
             };
 
             //sort by name ascending
-            CollectionViewSource.GetDefaultView(MainViewModel.ManagedSites).SortDescriptions.Clear();
+            CollectionViewSource.GetDefaultView(_appViewModel.ManagedSites).SortDescriptions.Clear();
 
             if (_sortOrder == "NameAsc")
             {
-                CollectionViewSource.GetDefaultView(MainViewModel.ManagedSites).SortDescriptions.Add(
+                CollectionViewSource.GetDefaultView(_appViewModel.ManagedSites).SortDescriptions.Add(
                    new System.ComponentModel.SortDescription("Name", System.ComponentModel.ListSortDirection.Ascending)
                );
             }
 
             if (_sortOrder == "ExpiryDateAsc")
             {
-                CollectionViewSource.GetDefaultView(MainViewModel.ManagedSites).SortDescriptions.Add(
+                CollectionViewSource.GetDefaultView(_appViewModel.ManagedSites).SortDescriptions.Add(
                    new System.ComponentModel.SortDescription("DateExpiry", System.ComponentModel.ListSortDirection.Ascending)
                );
             }
@@ -68,10 +70,10 @@ namespace Certify.UI.Controls
             if (item != null && item.DataContext != null && item.DataContext is ManagedSite)
             {
                 var site = (ManagedSite)item.DataContext;
-                site = site == MainViewModel.SelectedItem && ctrl ? null : site;
-                if (MainViewModel.SelectedItem != site)
+                site = site == _appViewModel.SelectedItem && ctrl ? null : site;
+                if (_appViewModel.SelectedItem != site)
                 {
-                    if (await MainViewModel.ConfirmDiscardUnsavedChanges())
+                    if (await _itemViewModel.ConfirmDiscardUnsavedChanges())
                     {
                         SelectAndFocus(site);
                     }
@@ -84,13 +86,13 @@ namespace Certify.UI.Controls
         {
             var defaultView = CollectionViewSource.GetDefaultView(lvManagedSites.ItemsSource);
             defaultView.Refresh();
-            if (lvManagedSites.SelectedIndex == -1 && MainViewModel.SelectedItem != null)
+            if (lvManagedSites.SelectedIndex == -1 && _appViewModel.SelectedItem != null)
             {
                 // if the data model's selected item has come into view after filter box text
                 // changed, select the item in the list
-                if (defaultView.Filter(MainViewModel.SelectedItem))
+                if (defaultView.Filter(_appViewModel.SelectedItem))
                 {
-                    lvManagedSites.SelectedItem = MainViewModel.SelectedItem;
+                    lvManagedSites.SelectedItem = _appViewModel.SelectedItem;
                 }
             }
         }
@@ -103,12 +105,12 @@ namespace Certify.UI.Controls
                 if (lvManagedSites.Items.Count > 0)
                 {
                     // get selected index of filtered list or 0
-                    int index = lvManagedSites.Items.IndexOf(MainViewModel.SelectedItem);
+                    int index = lvManagedSites.Items.IndexOf(_appViewModel.SelectedItem);
                     var item = lvManagedSites.Items[index == -1 ? 0 : index];
 
                     // if navigating away, confirm discard
-                    if (item != MainViewModel.SelectedItem &&
-                        !await MainViewModel.ConfirmDiscardUnsavedChanges())
+                    if (item != _appViewModel.SelectedItem &&
+                        !await _itemViewModel.ConfirmDiscardUnsavedChanges())
                     {
                         return;
                     }
@@ -132,11 +134,11 @@ namespace Certify.UI.Controls
 
         private void SelectAndFocus(object obj)
         {
-            MainViewModel.SelectedItem = obj as ManagedSite;
-            if (lvManagedSites.Items.Count > 0 && lvManagedSites.Items.Contains(MainViewModel.SelectedItem))
+            _appViewModel.SelectedItem = obj as ManagedSite;
+            if (lvManagedSites.Items.Count > 0 && lvManagedSites.Items.Contains(_appViewModel.SelectedItem))
             {
                 lvManagedSites.UpdateLayout(); // ensure containers exist
-                if (lvManagedSites.ItemContainerGenerator.ContainerFromItem(MainViewModel.SelectedItem) is ListViewItem item)
+                if (lvManagedSites.ItemContainerGenerator.ContainerFromItem(_appViewModel.SelectedItem) is ListViewItem item)
                 {
                     item.Focus();
                     item.IsSelected = true;
@@ -153,14 +155,14 @@ namespace Certify.UI.Controls
             }
             if (e.Key == Key.Delete && lvManagedSites.SelectedItem != null)
             {
-                await MainViewModel.DeleteManagedSite(MainViewModel.SelectedItem);
+                await _appViewModel.DeleteManagedSite(_appViewModel.SelectedItem);
                 if (lvManagedSites.Items.Count > 0)
                 {
                     SelectAndFocus(lvManagedSites.SelectedItem);
                 }
                 return;
             }
-            object next = MainViewModel.SelectedItem;
+            object next = _appViewModel.SelectedItem;
             var item = ((ListViewItem)sender);
             int index = lvManagedSites.Items.IndexOf(item.DataContext);
             if (e.Key == Key.Enter)
@@ -170,7 +172,7 @@ namespace Certify.UI.Controls
             var ctrl = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
             if (e.Key == Key.Space)
             {
-                next = MainViewModel.SelectedItem != null && ctrl ? null : item.DataContext;
+                next = _appViewModel.SelectedItem != null && ctrl ? null : item.DataContext;
             }
             if (e.Key == Key.Up)
             {
@@ -198,9 +200,9 @@ namespace Certify.UI.Controls
                 int pagesize = (int)(lvManagedSites.ActualHeight / item.ActualHeight);
                 next = lvManagedSites.Items[index + pagesize < lvManagedSites.Items.Count ? index + pagesize : lvManagedSites.Items.Count - 1];
             }
-            if (next != MainViewModel.SelectedItem)
+            if (next != _appViewModel.SelectedItem)
             {
-                if (await MainViewModel.ConfirmDiscardUnsavedChanges())
+                if (await _itemViewModel.ConfirmDiscardUnsavedChanges())
                 {
                     SelectAndFocus(next);
                 }
@@ -212,12 +214,12 @@ namespace Certify.UI.Controls
 
         private void lvManagedSites_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (MainViewModel.SelectedItem != null &&
-                !MainViewModel.ManagedSites.Contains(MainViewModel.SelectedItem))
+            if (_appViewModel.SelectedItem != null &&
+                !_appViewModel.ManagedSites.Contains(_appViewModel.SelectedItem))
             {
                 if (lvManagedSites.Items.Count == 0)
                 {
-                    MainViewModel.SelectedItem = null;
+                    _appViewModel.SelectedItem = null;
                     txtFilter.Focus();
                 }
                 else

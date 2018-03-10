@@ -23,7 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -80,12 +80,6 @@
     <PackageReference Include="ACMESharp.PKI.Providers.BouncyCastle">
       <Version>0.9.1</Version>
     </PackageReference>
-    <PackageReference Include="ACMESharp.PKI.Providers.OpenSslLib32">
-      <Version>0.9.1.326</Version>
-    </PackageReference>
-    <PackageReference Include="ACMESharp.PKI.Providers.OpenSslLib64">
-      <Version>0.9.1.326</Version>
-    </PackageReference>
     <PackageReference Include="ACMESharp.Vault">
       <Version>0.9.1.326</Version>
     </PackageReference>
@@ -98,17 +92,8 @@
     <PackageReference Include="AWSSDK.Route53">
       <Version>3.3.15.1</Version>
     </PackageReference>
-    <PackageReference Include="AWSSDK.S3">
-      <Version>3.3.17.1</Version>
-    </PackageReference>
     <PackageReference Include="BouncyCastle">
       <Version>1.8.1</Version>
-    </PackageReference>
-    <PackageReference Include="ManagedOpenSsl32">
-      <Version>0.6.1.3</Version>
-    </PackageReference>
-    <PackageReference Include="ManagedOpenSsl64">
-      <Version>0.6.1.3</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.NETCore.Platforms">
       <Version>2.0.1</Version>

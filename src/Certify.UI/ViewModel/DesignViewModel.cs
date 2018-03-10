@@ -3,10 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace Certify.UI
@@ -23,7 +20,6 @@ namespace Certify.UI
 
             // generate mock data starting point
             GenerateMockData();
-            SaveSettings();
 
             // auto-load data if in WPF designer
             bool inDesignMode = !(Application.Current is App);
@@ -74,6 +70,10 @@ namespace Certify.UI
                 }
                 ManagedSites.Add(site);
             }
+
+            MockDataStore = JsonConvert.SerializeObject(ManagedSites);
+            foreach (var site in ManagedSites) site.IsChanged = false;
+            ManagedSites = new ObservableCollection<ManagedSite>(ManagedSites);
         }
 
         private string MockDataStore;
@@ -86,38 +86,8 @@ namespace Certify.UI
             ImportedManagedSites = new ObservableCollection<ManagedSite>();
         }
 
-        public override void SaveSettings()
-        {
-            MockDataStore = JsonConvert.SerializeObject(ManagedSites);
-            foreach (var site in ManagedSites) site.IsChanged = false;
-            ManagedSites = new ObservableCollection<ManagedSite>(ManagedSites);
-        }
-
-        /* public override List<SiteBindingItem> WebSiteList =>
-             Enumerable.Range(1, 20).Select(i => new SiteBindingItem()
-             {
-                 SiteId = i.ToString(),
-                 SiteName = $"Website {i}",
-                 PhysicalPath = $@"c:\inetpub\wwwroot\website{i}",
-                 IsEnabled = true
-             })
-             .ToList();*/
-
         public override bool IsIISAvailable => true;
         public override Version IISVersion => new Version(10, 0);
         public override bool HasRegisteredContacts => true;
-
-        protected async override Task<IEnumerable<DomainOption>> GetDomainOptionsFromSite(string siteId)
-        {
-            return await Task.Run(() =>
-            {
-                return Enumerable.Range(1, 50).Select(i => new DomainOption()
-                {
-                    Domain = $"www{i}.domain.example.org",
-                    IsPrimaryDomain = i == 1,
-                    IsSelected = true
-                });
-            });
-        }
     }
 }

@@ -67,6 +67,14 @@ namespace Certify.UI.Controls
             d.ShowDialog();
         }
 
+        private void Button_ScheduledTaskConfig(object sender, RoutedEventArgs e)
+        {
+            //show UI to update auto renewal task
+            var d = new Windows.ScheduledTaskConfig { Owner = App.Current.MainWindow };
+
+            d.ShowDialog();
+        }
+
         private void SettingsUpdated(object sender, RoutedEventArgs e)
         {
             if (settingsInitialised)

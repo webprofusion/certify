@@ -87,6 +87,9 @@
     <Compile Include="Controls\GettingStarted.xaml.cs">
       <DependentUpon>GettingStarted.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ManagedItem\StatusInfo.xaml.cs">
+      <DependentUpon>StatusInfo.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\ManagedItem\MiscOptions.xaml.cs">
       <DependentUpon>MiscOptions.xaml</DependentUpon>
     </Compile>
@@ -113,15 +116,14 @@
     <Compile Include="Utils\ManagedItemHealthVisibilityConverter.cs" />
     <Compile Include="Utils\ManagedItemHealthColourConverter.cs" />
     <Compile Include="Utils\UpdateCheckUtils.cs" />
+    <Compile Include="ViewModel\DesignItemViewModel.cs" />
+    <Compile Include="ViewModel\ManagedItemModel.cs" />
     <Compile Include="ViewModel\DesignViewModel.cs" />
     <Compile Include="Windows\EditCredential.xaml.cs">
       <DependentUpon>EditCredential.xaml</DependentUpon>
     </Compile>
     <Compile Include="Windows\Feedback.xaml.cs">
       <DependentUpon>Feedback.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Windows\ImportManagedSites.xaml.cs">
-      <DependentUpon>ImportManagedSites.xaml</DependentUpon>
     </Compile>
     <Compile Include="Windows\AddToDashboard.xaml.cs">
       <DependentUpon>AddToDashboard.xaml</DependentUpon>
@@ -139,6 +141,10 @@
     <Page Include="Controls\GettingStarted.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ManagedItem\StatusInfo.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Controls\ManagedItem\MiscOptions.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -230,10 +236,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Windows\ImportManagedSites.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Windows\AddToDashboard.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -314,10 +316,7 @@
   <ItemGroup>
     <None Include="FodyWeavers.xml" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Resources\" />
-    <Folder Include="SampleData\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
       <Visible>False</Visible>
@@ -336,7 +335,7 @@
       <Version>0.0.3.203</Version>
     </PackageReference>
     <PackageReference Include="Fody">
-      <Version>2.4.4</Version>
+      <Version>2.4.5</Version>
     </PackageReference>
     <PackageReference Include="FontAwesome.WPF">
       <Version>4.7.0.9</Version>

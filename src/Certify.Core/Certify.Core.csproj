@@ -23,7 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -66,10 +66,6 @@
     <ProjectReference Include="..\Certify.Models\Certify.Models.csproj">
       <Project>{baaa9b8c-e44b-43f6-ac9c-b5666e69ee27}</Project>
       <Name>Certify.Models</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Certify.Providers\Certify.Providers.ACMESharp\Certify.Providers.ACMESharp.csproj">
-      <Project>{1a1cda25-f810-4cb7-a913-9b3cdf1a0cf3}</Project>
-      <Name>Certify.Providers.ACMESharp</Name>
     </ProjectReference>
     <ProjectReference Include="..\Certify.Providers\Certify.Providers.Certes\Certify.Providers.Certes.csproj">
       <Project>{d7d2d121-b796-49ed-9cf9-158c624857a1}</Project>

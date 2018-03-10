@@ -108,7 +108,7 @@ namespace Certify.Management
 
         private TelemetryClient _tc = null;
 
-        private string _acmeAPIProvider = "certes"; //"ACMESharp";
+        private string _acmeAPIProvider = "certes";
 
         public CertifyManager()
         {
@@ -125,7 +125,7 @@ namespace Certify.Management
             // ACME Sharp is both a vault (config storage) provider and ACME client provider
             // TODO: fully convert to plugin
 
-            if (_acmeAPIProvider == "ACMESharp")
+            /*if (_acmeAPIProvider == "ACMESharp")
             {
                 var acmeSharp = new Certify.Providers.ACMESharpProvider();
                 acmeSharp.InitProvider(CoreAppSettings.Current.VaultPath);
@@ -134,12 +134,14 @@ namespace Certify.Management
                 _vaultProvider = acmeSharp;
             }
             else
-            {
-                var certes = new Certify.Providers.Certes.CertesACMEProvider(Management.Util.GetAppDataFolder() + "\\certes");
+            {*/
 
-                _acmeClientProvider = certes;
-                _vaultProvider = certes;
-            }
+            // }
+
+            var certes = new Certify.Providers.Certes.CertesACMEProvider(Management.Util.GetAppDataFolder() + "\\certes");
+
+            _acmeClientProvider = certes;
+            _vaultProvider = certes;
 
             // init remaining utilities and optionally enable telematics
             _challengeDiagnostics = new ChallengeDiagnostics(CoreAppSettings.Current.EnableValidationProxyAPI);

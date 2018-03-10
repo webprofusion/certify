@@ -13,12 +13,16 @@ namespace Certify.UI.Controls.ManagedItem
     /// </summary>
     public partial class Settings : UserControl
     {
-        protected Certify.UI.ViewModel.AppModel MainViewModel => UI.ViewModel.AppModel.Current;
+        protected Certify.UI.ViewModel.AppModel AppViewModel => UI.ViewModel.AppModel.Current;
+
+        protected Certify.UI.ViewModel.ManagedItemModel ItemViewModel => UI.ViewModel.ManagedItemModel.Current;
 
         public Settings()
         {
             InitializeComponent();
-            this.MainViewModel.PropertyChanged += MainViewModel_PropertyChanged;
+            this.AppViewModel.PropertyChanged += MainViewModel_PropertyChanged;
+
+            ToggleAdvancedView();
         }
 
         private void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -26,6 +30,20 @@ namespace Certify.UI.Controls.ManagedItem
             if (e.PropertyName == "SelectedItem")
             {
                 this.SettingsTab.SelectedIndex = 0;
+
+                if (ItemViewModel.SelectedItem?.Health == ManagedItemHealth.Error
+                    ||
+                    ItemViewModel.SelectedItem?.Health == ManagedItemHealth.Warning
+                    )
+                {
+                    this.TabStatusInfo.Visibility = Visibility.Visible;
+                    this.SettingsTab.SelectedItem = this.TabStatusInfo;
+                }
+                else
+                {
+                    this.TabStatusInfo.Visibility = Visibility.Collapsed;
+                    this.SettingsTab.SelectedItem = this.TabDomains;
+                }
             }
         }
 
@@ -50,16 +68,16 @@ namespace Certify.UI.Controls.ManagedItem
             }
 
             // check primary domain is also checked
-            if (MainViewModel.PrimarySubjectDomain != null && MainViewModel.SelectedItem.DomainOptions.Any())
+            if (ItemViewModel.PrimarySubjectDomain != null && ItemViewModel.SelectedItem.DomainOptions.Any())
             {
-                var primaryDomain = MainViewModel.SelectedItem.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain);
+                var primaryDomain = ItemViewModel.SelectedItem.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain);
                 if (primaryDomain != null && !primaryDomain.IsSelected)
                 {
                     primaryDomain.IsSelected = true;
                 }
             }
 
-            if (MainViewModel.PrimarySubjectDomain == null)
+            if (ItemViewModel.PrimarySubjectDomain == null)
             {
                 // if we still can't decide on the primary domain ask user to define it
                 MessageBox.Show(SR.ManagedItemSettings_NeedPrimaryDomain, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
@@ -69,11 +87,11 @@ namespace Certify.UI.Controls.ManagedItem
             // if title set to the default, use the primary domain
             if (item.Name == SR.ManagedItemSettings_DefaultTitle)
             {
-                item.Name = MainViewModel.PrimarySubjectDomain.Domain;
+                item.Name = ItemViewModel.PrimarySubjectDomain.Domain;
             }
 
             if (item.RequestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI &&
-                MainViewModel.IISVersion.Major < 8)
+                AppViewModel.IISVersion.Major < 8)
             {
                 MessageBox.Show(string.Format(SR.ManagedItemSettings_ChallengeNotAvailable, SupportedChallengeTypes.CHALLENGE_TYPE_SNI), SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
@@ -144,14 +162,14 @@ namespace Certify.UI.Controls.ManagedItem
             //save changes
 
             //creating new managed item
-            return await MainViewModel.SaveManagedItemChanges();
+            return await ItemViewModel.SaveManagedItemChanges();
         }
 
         private async void Button_Save(object sender, RoutedEventArgs e)
         {
-            if (MainViewModel.SelectedItem.IsChanged)
+            if (ItemViewModel.SelectedItem.IsChanged)
             {
-                var item = MainViewModel.SelectedItem;
+                var item = ItemViewModel.SelectedItem;
                 await ValidateAndSave(item);
             }
             else
@@ -163,14 +181,14 @@ namespace Certify.UI.Controls.ManagedItem
         private async void Button_DiscardChanges(object sender, RoutedEventArgs e)
         {
             //if new item, discard and select first item in managed sites
-            if (MainViewModel.SelectedItem.Id == null)
+            if (ItemViewModel.SelectedItem.Id == null)
             {
                 ReturnToDefaultManagedItemView();
             }
             else
             {
                 //reload settings for managed sites, discard changes
-                await MainViewModel.DiscardChanges();
+                await ItemViewModel.DiscardChanges();
 
                 ReturnToDefaultManagedItemView();
             }
@@ -178,62 +196,62 @@ namespace Certify.UI.Controls.ManagedItem
 
         private void ReturnToDefaultManagedItemView()
         {
-            MainViewModel.SelectedItem = null;
+            ItemViewModel.SelectedItem = null;
         }
 
         private async void Button_RequestCertificate(object sender, RoutedEventArgs e)
         {
-            if (MainViewModel.SelectedItem != null)
+            if (ItemViewModel.SelectedItem != null)
             {
-                if (MainViewModel.SelectedItem.IsChanged)
+                if (ItemViewModel.SelectedItem.IsChanged)
                 {
-                    var savedOK = await ValidateAndSave(MainViewModel.SelectedItem);
+                    var savedOK = await ValidateAndSave(ItemViewModel.SelectedItem);
                     if (!savedOK) return;
                 }
 
                 //begin request
-                MainViewModel.MainUITabIndex = (int)MainWindow.PrimaryUITabs.CurrentProgress;
+                AppViewModel.MainUITabIndex = (int)MainWindow.PrimaryUITabs.CurrentProgress;
 
-                await MainViewModel.BeginCertificateRequest(MainViewModel.SelectedItem.Id);
+                await AppViewModel.BeginCertificateRequest(ItemViewModel.SelectedItem.Id);
             }
         }
 
         private async void Button_Delete(object sender, RoutedEventArgs e)
         {
-            await MainViewModel.DeleteManagedSite(MainViewModel.SelectedItem);
-            if (MainViewModel.SelectedItem?.Id == null)
+            await AppViewModel.DeleteManagedSite(ItemViewModel.SelectedItem);
+            if (ItemViewModel.SelectedItem?.Id == null)
             {
-                MainViewModel.SelectedItem = MainViewModel.ManagedSites.FirstOrDefault();
+                AppViewModel.SelectedItem = AppViewModel.ManagedSites.FirstOrDefault();
             }
         }
 
         private async void TestChallenge_Click(object sender, EventArgs e)
         {
-            MainViewModel.IsTestInProgress = true;
+            ItemViewModel.IsTestInProgress = true;
 
-            if (!MainViewModel.IsIISAvailable)
+            if (!AppViewModel.IsIISAvailable)
             {
                 MessageBox.Show(SR.ManagedItemSettings_CannotChallengeWithoutIIS, SR.ChallengeError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            else if (MainViewModel.SelectedItem.RequestConfig.ChallengeType != null)
+            else if (ItemViewModel.SelectedItem.RequestConfig.ChallengeType != null)
             {
                 Button_TestChallenge.IsEnabled = false;
 
                 try
                 {
-                    MainViewModel.UpdateManagedSiteSettings();
+                    ItemViewModel.UpdateManagedSiteSettings();
                 }
                 catch (Exception exp)
                 {
                     // usual failure is that primary domain is not set
                     Button_TestChallenge.IsEnabled = true;
-                    MainViewModel.IsTestInProgress = false;
+                    ItemViewModel.IsTestInProgress = false;
 
                     MessageBox.Show(exp.Message);
                     return;
                 }
 
-                var result = await MainViewModel.TestChallengeResponse(MainViewModel.SelectedItem);
+                var result = await ItemViewModel.TestChallengeResponse(ItemViewModel.SelectedItem);
                 if (result.IsOK)
                 {
                     MessageBox.Show(SR.ManagedItemSettings_ConfigurationCheckOk, SR.Challenge, MessageBoxButton.OK, MessageBoxImage.Information);
@@ -245,13 +263,34 @@ namespace Certify.UI.Controls.ManagedItem
 
                 //TODO: just use viewmodel to determine if test button should be enabled
                 Button_TestChallenge.IsEnabled = true;
-                MainViewModel.IsTestInProgress = false;
+                ItemViewModel.IsTestInProgress = false;
             }
         }
 
         private void Dismiss_Click(object sender, RoutedEventArgs e)
         {
-            MainViewModel.SelectedItem = null;
+            AppViewModel.SelectedItem = null;
+        }
+
+        private void CheckAdvancedView_Checked(object sender, RoutedEventArgs e)
+        {
+            ToggleAdvancedView();
+        }
+
+        private void ToggleAdvancedView()
+        {
+            if (CheckAdvancedView.IsChecked == false)
+            {
+                this.TabDeployment.Visibility = Visibility.Collapsed;
+                this.TabScripting.Visibility = Visibility.Collapsed;
+                this.TabOptions.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                this.TabDeployment.Visibility = Visibility.Visible;
+                this.TabScripting.Visibility = Visibility.Visible;
+                this.TabOptions.Visibility = Visibility.Visible;
+            }
         }
     }
 }

@@ -25,11 +25,20 @@ namespace Certify.UI.ViewModel
 
         public AppModel()
         {
-            /*if (!(this is DesignViewModel))
-            {
-               // certifyManager = new CertifyManager();
-            }*/
             CertifyClient = new CertifyServiceClient();
+
+            Init();
+        }
+
+        public AppModel(ICertifyClient certifyClient)
+        {
+            CertifyClient = certifyClient;
+
+            Init();
+        }
+
+        private void Init()
+        {
             ProgressResults = new ObservableCollection<RequestProgressState>();
 
             this.ImportedManagedSites = new ObservableCollection<ManagedSite>();
@@ -57,11 +66,6 @@ namespace Certify.UI.ViewModel
             System.Windows.MessageBox.Show(exp.Message);
         }
 
-        internal async Task RefreshWebsiteList()
-        {
-            this.WebSiteList = new ObservableCollection<SiteBindingItem>(await this.CertifyClient.GetServerSiteList(StandardServerTypes.IIS));
-        }
-
         public Preferences Preferences { get; set; } = new Preferences();
 
         internal async Task SetPreferences(Preferences prefs)
@@ -77,8 +81,6 @@ namespace Certify.UI.ViewModel
             await CertifyClient.SetPreferences(prefs);
             this.Preferences = prefs;
         }
-
-        #region properties
 
         /// <summary>
         /// List of all the sites we currently manage 
@@ -104,13 +106,6 @@ namespace Certify.UI.ViewModel
         /// </summary>
         public ObservableCollection<ManagedSite> ImportedManagedSites { get; set; }
 
-        public ObservableCollection<StoredCredential> StoredCredentials { get; set; }
-
-        /// <summary>
-        /// List of websites from the selected web server (if any) 
-        /// </summary>
-        public ObservableCollection<SiteBindingItem> WebSiteList { get; set; } = new ObservableCollection<SiteBindingItem>();
-
         /// <summary>
         /// If true, import from vault/iis scan will merge multi domain sites into one managed site 
         /// </summary>
@@ -124,37 +119,6 @@ namespace Certify.UI.ViewModel
                 return Task.Run(() => CertifyClient.GetPrimaryContact()).Result != null;
             }
         }
-
-        public bool HasSelectedItemWebsiteSelection
-        {
-            get
-            {
-                if (SelectedItem != null && SelectedItem.GroupId != null)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-        }
-
-        public bool HasSelectedItemDomainOptions
-        {
-            get
-            {
-                if (SelectedItem != null && SelectedItem.DomainOptions != null && SelectedItem.DomainOptions.Any())
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-        }
-        public bool IsTestInProgress { get; set; }
 
         public ManagedSite SelectedItem
         {
@@ -173,20 +137,6 @@ namespace Certify.UI.ViewModel
 
         public bool IsRegisteredVersion { get; set; }
 
-        internal async Task<bool> SaveManagedItemChanges()
-        {
-            UpdateManagedSiteSettings();
-
-            var updatedOK = await AddOrUpdateManagedSite(SelectedItem);
-
-            if (updatedOK) SelectedItem.IsChanged = false;
-
-            RaisePropertyChanged(nameof(IsSelectedItemValid));
-            RaisePropertyChanged(nameof(SelectedItem));
-
-            return updatedOK;
-        }
-
         internal async Task<bool> AddContactRegistration(ContactRegistration reg)
         {
             var addedOk = await CertifyClient.SetPrimaryContact(reg);
@@ -196,67 +146,10 @@ namespace Certify.UI.ViewModel
             return addedOk;
         }
 
-        // Certify-supported challenge types
-        public IEnumerable<string> ChallengeTypes { get; set; } = new string[] {
-            SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
-            SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-            SupportedChallengeTypes.CHALLENGE_TYPE_SNI
-        };
-
-        public IEnumerable<string> WebhookTriggerTypes => Webhook.TriggerTypes;
-
-        public List<IPAddressOption> HostIPAddresses
-        {
-            get
-            {
-                try
-                {
-                    var ipAddressOptions = Certify.Utils.Networking.GetIPAddresses();
-
-                    ipAddressOptions.Insert(0, new IPAddressOption { Description = "* (All Unassigned)", IPAddress = "*", IsIPv6 = false }); //add wildcard option
-
-                    return ipAddressOptions;
-                }
-                catch (Exception)
-                {
-                    //return empty list
-                    return new List<IPAddressOption>();
-                }
-            }
-        }
-
-        public SiteBindingItem SelectedWebSite
-        {
-            get; set;
-        }
-
-        public DomainOption PrimarySubjectDomain
-        {
-            get { return SelectedItem?.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain); }
-            set
-            {
-                foreach (var d in SelectedItem.DomainOptions)
-                {
-                    if (d.Domain == value.Domain)
-                    {
-                        d.IsPrimaryDomain = true;
-                        d.IsSelected = true;
-                    }
-                    else
-                    {
-                        d.IsPrimaryDomain = false;
-                    }
-                }
-                SelectedItem.IsChanged = true;
-            }
-        }
-
         public bool IsSelectedItemValid
         {
             get => SelectedItem?.Id != null && !SelectedItem.IsChanged;
         }
-
-        public string ValidationError { get; set; }
 
         public int MainUITabIndex { get; set; }
 
@@ -287,10 +180,6 @@ namespace Certify.UI.ViewModel
         /// If an update is available this will contain more info about the new update 
         /// </summary>
         public UpdateCheck UpdateCheckResult { get; set; }
-
-        #endregion properties
-
-        #region methods
 
         public static AppModel GetModel()
         {
@@ -324,14 +213,6 @@ namespace Certify.UI.ViewModel
                 IISVersion = await CertifyClient.GetServerVersion(StandardServerTypes.IIS);
             }
             return IsIISAvailable;
-        }
-
-        public void PreviewImport(bool sanMergeMode)
-        {
-            /* AppViewModel.IsImportSANMergeMode = sanMergeMode;
-             //we have no managed sites, offer to import them from vault if we have one
-             var importedSites = certifyManager.ImportManagedSitesFromVault(sanMergeMode);
-             ImportedManagedSites = new ObservableCollection<ManagedSite>(importedSites);*/
         }
 
         public async Task InitServiceConnections()
@@ -411,65 +292,6 @@ namespace Certify.UI.ViewModel
             MessageBox.Show($"Received: {arg1} {arg2}");
         }
 
-        public virtual void SaveSettings()
-        {
-            /*
-            // CertifyClient..SaveManagedSites(ManagedSites.ToList());
-            foreach (var d in ManagedSites.Where(s => s.Deleted))
-            {
-                if (d.Id != null) CertifyClient.DeleteManagedSite(d.Id);
-            }
-            // TODO: Identify updated sites and save them?
-            foreach (var u in ManagedSites.Where(s => s.Updated))
-             {
-                 CertifyClient.UpdateManagedSiteu);
-             }
-
-            // remove deleted managed sites from view model
-            foreach (var site in ManagedSites.Where(s => s.Deleted).ToList())
-            {
-                ManagedSites.Remove(site);
-            }
-
-            // refresh observable
-            ManagedSites = new ObservableCollection<ManagedSite>(ManagedSites);
-            */
-        }
-
-        public async Task<bool> ConfirmDiscardUnsavedChanges()
-        {
-            if (SelectedItem?.IsChanged ?? false)
-            {
-                //user needs to save or discard changes before changing selection
-                if (MessageBox.Show(SR.ManagedSites_UnsavedWarning, SR.Alert, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
-                {
-                    await DiscardChanges();
-                }
-                else
-                {
-                    // user cancelled out of dialog
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        public async Task DiscardChanges()
-        {
-            if (SelectedItem?.IsChanged ?? false)
-            {
-                if (SelectedItem.Id == null)
-                {
-                    SelectedItem = null;
-                }
-                else
-                {
-                    // add/update site in our local cache
-                    await UpdatedCachedManagedSite(SelectedItem, reload: true);
-                }
-            }
-        }
-
         public async Task<bool> AddOrUpdateManagedSite(ManagedSite item)
         {
             var updatedManagedSite = await CertifyClient.UpdateManagedSite(item);
@@ -498,189 +320,6 @@ namespace Certify.UI.ViewModel
                 }
             }
             return false;
-        }
-
-        public void SANSelectAll(object o)
-        {
-            SelectedItem?.DomainOptions.ToList().ForEach(opt => opt.IsSelected = true);
-        }
-
-        public void SANSelectNone(object o)
-        {
-            SelectedItem?.DomainOptions.ToList().ForEach(opt => opt.IsSelected = false);
-        }
-
-        public async Task<bool> SANRefresh()
-        {
-            //requery list of domains from IIS and refresh Domain Options in Selected Item, leave existing items checked
-            if (SelectedItem != null)
-            {
-                var opts = await GetDomainOptionsFromSite(SelectedItem.GroupId);
-                if (opts != null && opts.Any())
-                {
-                    //reselect options
-                    foreach (var currentOpt in SelectedItem?.DomainOptions)
-                    {
-                        opts.Where(opt => opt.Domain == currentOpt.Domain).ToList().ForEach(opt =>
-                        {
-                            if (currentOpt.IsPrimaryDomain)
-                            {
-                                opt.IsPrimaryDomain = currentOpt.IsPrimaryDomain;
-                                opt.IsSelected = true;
-                            }
-                            else
-                            {
-                                opt.IsSelected = currentOpt.IsSelected;
-                            }
-                        });
-                    }
-
-                    SelectedItem.DomainOptions = new ObservableCollection<DomainOption>(opts);
-                }
-            }
-            return true;
-        }
-
-        /// <summary>
-        /// For the given set of options get a new CertRequestConfig to store 
-        /// </summary>
-        /// <returns></returns>
-        public void UpdateManagedSiteSettings()
-        {
-            var item = SelectedItem;
-            var config = item.RequestConfig;
-            var primaryDomain = item.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain == true);
-
-            //if no primary domain need to go back and select one
-            if (primaryDomain == null) throw new ArgumentException("Primary subject domain must be set.");
-
-            config.PrimaryDomain = primaryDomain.Domain.Trim();
-
-            //apply remaining selected domains as subject alternative names
-            config.SubjectAlternativeNames =
-                item.DomainOptions.Where(dm => dm.IsSelected == true)
-                .Select(i => i.Domain)
-                .ToArray();
-
-            // TODO: config.EnableFailureNotifications = chkEnableNotifications.Checked;
-
-            //determine if this site has an existing entry in Managed Sites, if so use that, otherwise start a new one
-            if (SelectedItem.Id == null)
-            {
-                item.Id = Guid.NewGuid().ToString();
-
-                // optionally append webserver site ID (if used)
-                if (SelectedWebSite != null)
-                {
-                    item.Id += ":" + SelectedWebSite.SiteId;
-                    item.GroupId = SelectedWebSite.SiteId;
-                    item.ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS;
-                }
-                else
-                {
-                    item.ItemType = ManagedItemType.SSL_LetsEncrypt_Manual;
-                }
-            }
-        }
-
-        public async Task PopulateManagedSiteSettings(string siteId)
-        {
-            ValidationError = null;
-            var managedSite = SelectedItem;
-            if (managedSite.Id == null || String.IsNullOrEmpty(managedSite.Name))
-            {
-                if (SelectedWebSite != null)
-                {
-                    managedSite.Name = SelectedWebSite.SiteName;
-                    managedSite.GroupId = SelectedWebSite.SiteId;
-                    //set defaults first
-                    managedSite.RequestConfig.WebsiteRootPath = Environment.ExpandEnvironmentVariables(SelectedWebSite.PhysicalPath);
-                }
-            }
-
-            //TODO: if this site would be a duplicate need to increment the site name
-
-            managedSite.RequestConfig.PerformExtensionlessConfigChecks = true;
-            managedSite.RequestConfig.PerformTlsSniBindingConfigChecks = true;
-            managedSite.RequestConfig.PerformChallengeFileCopy = true;
-            managedSite.RequestConfig.PerformAutomatedCertBinding = true;
-            managedSite.RequestConfig.PerformAutoConfig = true;
-            managedSite.RequestConfig.EnableFailureNotifications = true;
-            managedSite.RequestConfig.ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP;
-            managedSite.IncludeInAutoRenew = true;
-            managedSite.DomainOptions.Clear();
-
-            var domainOptions = await GetDomainOptionsFromSite(siteId);
-            foreach (var option in domainOptions)
-            {
-                managedSite.DomainOptions.Add(option);
-            }
-
-            if (!managedSite.DomainOptions.Any())
-            {
-                ValidationError = "The selected site has no domain bindings setup. Configure the domains first using Edit Bindings in IIS.";
-            }
-
-            //TODO: load settings from previously saved managed site?
-            RaisePropertyChanged(nameof(PrimarySubjectDomain));
-            RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
-        }
-
-        public bool UpdateDomainOptions(string domains)
-        {
-            var item = SelectedItem;
-
-            // parse text input to add as manual domain options
-
-            if (!string.IsNullOrEmpty(domains))
-            {
-                var domainList = domains.Split(",; ".ToCharArray());
-                string invalidDomains = "";
-                foreach (var d in domainList)
-                {
-                    if (!string.IsNullOrEmpty(d.Trim()))
-                    {
-                        var domain = d.ToLower().Trim();
-                        if (!item.DomainOptions.Any(o => o.Domain == domain))
-                        {
-                            var option = new DomainOption
-                            {
-                                Domain = domain,
-                                IsManualEntry = true,
-                                IsSelected = true
-                            };
-
-                            if (Uri.CheckHostName(domain) == UriHostNameType.Dns || (domain.StartsWith("*.") && Uri.CheckHostName(domain.Replace("*.", "")) == UriHostNameType.Dns))
-                            {
-                                // preselect first item as primary domain
-                                if (item.DomainOptions.Count == 0) option.IsPrimaryDomain = true;
-
-                                item.DomainOptions.Add(option);
-                            }
-                            else
-                            {
-                                invalidDomains += domain + "\n";
-                            }
-                        }
-                    }
-                }
-
-                RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
-
-                if (!String.IsNullOrEmpty(invalidDomains))
-                {
-                    MessageBox.Show("Invalid domains: " + invalidDomains);
-                    return false;
-                }
-            }
-
-            // all ok or nothing to do
-            return true;
-        }
-
-        protected async virtual Task<IEnumerable<DomainOption>> GetDomainOptionsFromSite(string siteId)
-        {
-            return await CertifyClient.GetServerSiteDomains(StandardServerTypes.IIS, siteId);
         }
 
         public async Task BeginCertificateRequest(string managedItemId)
@@ -731,12 +370,7 @@ namespace Certify.UI.ViewModel
             // current requests?
         }
 
-        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly)
-        {
-            return await CertifyClient.ReapplyCertificateBindings(managedItemId, isPreviewOnly);
-        }
-
-        private async Task UpdatedCachedManagedSite(ManagedSite managedSite, bool reload = false)
+        public async Task UpdatedCachedManagedSite(ManagedSite managedSite, bool reload = false)
         {
             var existing = ManagedSites.FirstOrDefault(i => i.Id == managedSite.Id);
             var newItem = managedSite;
@@ -761,17 +395,6 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public async Task<StatusMessage> TestChallengeResponse(ManagedSite managedSite)
-        {
-            return await CertifyClient.TestChallengeConfiguration(managedSite);
-        }
-
-        public async Task<StatusMessage> RevokeSelectedItem()
-        {
-            var managedSite = SelectedItem;
-            return await CertifyClient.RevokeManageSiteCertificate(managedSite.Id);
-        }
-
         private void UpdateRequestTrackingProgress(RequestProgressState state)
         {
             App.Current.Dispatcher.Invoke((Action)delegate
@@ -793,6 +416,10 @@ namespace Certify.UI.ViewModel
                 RaisePropertyChanged(nameof(ProgressResults));
             });
         }
+
+        /* Stored Credentials */
+
+        public ObservableCollection<StoredCredential> StoredCredentials { get; set; }
 
         public async Task<bool> UpdateCredential(StoredCredential credential)
         {
@@ -816,14 +443,6 @@ namespace Certify.UI.ViewModel
             StoredCredentials = new System.Collections.ObjectModel.ObservableCollection<Models.Config.StoredCredential>(list);
         }
 
-        #endregion methods
-
-        #region commands
-
-        public ICommand SANSelectAllCommand => new RelayCommand<object>(SANSelectAll);
-        public ICommand SANSelectNoneCommand => new RelayCommand<object>(SANSelectNone);
         public ICommand RenewAllCommand => new RelayCommand<bool>(RenewAll);
-
-        #endregion commands
     }
 }

@@ -13,7 +13,7 @@ namespace Certify.UI.Controls.ManagedItem
     /// </summary>
     public partial class Preview : UserControl
     {
-        protected Certify.UI.ViewModel.AppModel MainViewModel => UI.ViewModel.AppModel.Current;
+        protected Certify.UI.ViewModel.ManagedItemModel ItemViewModel => UI.ViewModel.ManagedItemModel.Current;
 
         private ObservableCollection<ActionStep> Steps { get; set; }
 
@@ -27,12 +27,12 @@ namespace Certify.UI.Controls.ManagedItem
         private async Task UpdatePreview()
         {
             // generate preview
-            if (MainViewModel.SelectedItem != null)
+            if (ItemViewModel.SelectedItem != null)
             {
                 List<ActionStep> steps = new List<ActionStep>();
                 try
                 {
-                    var item = MainViewModel.SelectedItem;
+                    var item = ItemViewModel.SelectedItem;
 
                     int stepIndex = 1;
 
@@ -92,7 +92,7 @@ namespace Certify.UI.Controls.ManagedItem
                     var deploymentStep = new ActionStep { Title = $"{stepIndex}. Deployment", Description = deploymentDescription };
 
                     // add deployment sub-steps (if any)
-                    var bindingRequest = await MainViewModel.ReapplyCertificateBindings(item.Id, true);
+                    var bindingRequest = await ItemViewModel.ReapplyCertificateBindings(item.Id, true);
                     if (bindingRequest.Actions != null) deploymentStep.Substeps = bindingRequest.Actions;
 
                     steps.Add(deploymentStep);
