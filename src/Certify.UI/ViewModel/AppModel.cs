@@ -416,7 +416,7 @@ namespace Certify.UI.ViewModel
 
         public ObservableCollection<StoredCredential> StoredCredentials { get; set; }
 
-        public async Task<bool> UpdateCredential(StoredCredential credential)
+        public async Task<StoredCredential> UpdateCredential(StoredCredential credential)
         {
             var result = await CertifyClient.UpdateCredentials(credential);
             await RefreshStoredCredentialsList();

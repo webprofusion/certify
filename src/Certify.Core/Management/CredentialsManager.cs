@@ -71,11 +71,11 @@ namespace Certify.Management
             if (managedSites.Any())
             {
                 // credential is in use
-                return false;
+                return true;
             }
             else
             {
-                return true;
+                return false;
             }
         }
 
@@ -192,9 +192,9 @@ namespace Certify.Management
             return Unprotect(protectedString, PROTECTIONENTROPY, DataProtectionScope.CurrentUser);
         }
 
-        public async Task<bool> UpdateCredential(StoredCredential credentialInfo)
+        public async Task<StoredCredential> UpdateCredential(StoredCredential credentialInfo)
         {
-            if (credentialInfo.Secret == null) return false;
+            if (credentialInfo.Secret == null) return null;
 
             credentialInfo.DateCreated = DateTime.Now;
 
@@ -233,7 +233,7 @@ namespace Certify.Management
                 }
                 db.Close();
             }
-            return true;
+            return credentialInfo;
         }
     }
 }

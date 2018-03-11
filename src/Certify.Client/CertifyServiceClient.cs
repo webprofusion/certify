@@ -265,10 +265,10 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<List<StoredCredential>>(result);
         }
 
-        public async Task<bool> UpdateCredentials(StoredCredential credential)
+        public async Task<StoredCredential> UpdateCredentials(StoredCredential credential)
         {
             var result = await PostAsync("credentials", credential);
-            return JsonConvert.DeserializeObject<bool>(await result.Content.ReadAsStringAsync());
+            return JsonConvert.DeserializeObject<StoredCredential>(await result.Content.ReadAsStringAsync());
         }
 
         public async Task<bool> DeleteCredential(string credentialKey)

@@ -293,12 +293,17 @@ namespace Certify.UI.ViewModel
         {
             ValidationError = null;
             var managedSite = SelectedItem;
-            if (managedSite.Id == null || String.IsNullOrEmpty(managedSite.Name))
+
+            if (SelectedWebSite != null)
             {
-                if (SelectedWebSite != null)
+                // update website association
+                managedSite.GroupId = SelectedWebSite.SiteId;
+
+                // if not already set, use website name as default name
+                if (managedSite.Id == null || String.IsNullOrEmpty(managedSite.Name))
                 {
                     managedSite.Name = SelectedWebSite.SiteName;
-                    managedSite.GroupId = SelectedWebSite.SiteId;
+
                     //set defaults first
                     managedSite.RequestConfig.WebsiteRootPath = Environment.ExpandEnvironmentVariables(SelectedWebSite.PhysicalPath);
                 }

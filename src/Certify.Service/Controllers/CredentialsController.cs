@@ -18,7 +18,7 @@ namespace Certify.Service
         }
 
         [HttpPost, Route("")]
-        public async Task<bool> UpdateCredentials(StoredCredential credential)
+        public async Task<StoredCredential> UpdateCredentials(StoredCredential credential)
         {
             DebugLog();
 

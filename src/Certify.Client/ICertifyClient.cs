@@ -90,7 +90,7 @@ namespace Certify.Client
 
         Task<List<StoredCredential>> GetCredentials();
 
-        Task<bool> UpdateCredentials(StoredCredential credential);
+        Task<StoredCredential> UpdateCredentials(StoredCredential credential);
 
         Task<bool> DeleteCredential(string credentialKey);
 

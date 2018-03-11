@@ -56,7 +56,7 @@ namespace Certify.UI.Windows
                 };
             }
 
-            var result = await MainViewModel.UpdateCredential(credential);
+            Item = await MainViewModel.UpdateCredential(credential);
             this.Close();
         }
 
