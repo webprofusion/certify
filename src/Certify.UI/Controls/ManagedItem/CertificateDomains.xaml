@@ -29,9 +29,10 @@
         </Grid.Resources>
         <ScrollViewer>
             <DockPanel Margin="8,0,8,8" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Certificate Domains</TextBlock>
                 <DockPanel DockPanel.Dock="Top"  Width="Auto">
                     <TextBlock DockPanel.Dock="Top" Padding="0,0,0,0"  TextWrapping="WrapWithOverflow" VerticalAlignment="Top"  Margin="8,0" FontWeight="Normal" FontFamily="Segoe UI" HorizontalAlignment="Left"><Run Text="Select domains from existing hostname bindings on an website or add the domains manually. These must all be domains where you can validate control either via DNS or by creating a temporary file on the website (see the Authorization tab)." /></TextBlock>
-                    <TextBlock DockPanel.Dock="Top" Padding="0,0,0,0"  TextWrapping="WrapWithOverflow" VerticalAlignment="Top"  Margin="8,8,8,0" FontWeight="Normal" FontFamily="Segoe UI" HorizontalAlignment="Left"><Run Text="You can then select " /><Run FontWeight="Bold" Text="Request Certificate " /><Run Text="above or refer to the Authorization and Deployment tabs for more options." /></TextBlock>
+                    <TextBlock DockPanel.Dock="Top" Padding="0,0,0,0"  TextWrapping="WrapWithOverflow" VerticalAlignment="Top"  Margin="8,8,8,0" FontWeight="Normal" FontFamily="Segoe UI" HorizontalAlignment="Left"><Run Text="You can then select " /><Run FontWeight="Bold" Text="Request Certificate " /><Run Text="above or modify options as required." /></TextBlock>
                 </DockPanel>
                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,4,0,0">
                     <Label Width="160" Content="{x:Static Resources:SR.ManagedItemSettings_SelectIISSite}" />

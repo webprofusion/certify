@@ -5,7 +5,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:Certify.UI.Controls.ManagedItem"
              xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-              xmlns:utils="clr-namespace:Certify.UI.Utils"
+             xmlns:utils="clr-namespace:Certify.UI.Utils"
+             xmlns:certifyui="clr-namespace:Certify.UI"
+             d:DataContext="{d:DesignInstance Type=certifyui:DesignItemViewModel, IsDesignTimeCreatable=True}"
              mc:Ignorable="d">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />

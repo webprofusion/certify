@@ -71,11 +71,11 @@ namespace Certify.UI.ViewModel
 
         public ManagedSite SelectedItem
         {
-            get { return _appViewModel.SelectedItem; }
-            set
+            get
             {
-                _appViewModel.SelectedItem = value;
+                return _appViewModel.SelectedItem;
             }
+            set { _appViewModel.SelectedItem = value; }
         }
 
         internal async Task<bool> SaveManagedItemChanges()
@@ -149,7 +149,10 @@ namespace Certify.UI.ViewModel
 
         public string ValidationError { get; set; }
 
-        public bool IsAdvancedView { get; set; } = true;
+        public bool IsAdvancedView { get; set; } = false;
+
+        public bool IsSelectedItemValid => _appViewModel.IsSelectedItemValid;
+        public Preferences Preferences => _appViewModel.Preferences;
 
         public static ManagedItemModel GetModel()
         {

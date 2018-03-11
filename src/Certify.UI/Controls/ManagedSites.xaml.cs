@@ -22,6 +22,7 @@ namespace Certify.UI.Controls
         {
             InitializeComponent();
             DataContext = _appViewModel;
+            MainItemView.DataContext = _itemViewModel;
 
             SetFilter(); // start listening
             _appViewModel.PropertyChanged += (obj, args) =>
@@ -30,6 +31,7 @@ namespace Certify.UI.Controls
                     _appViewModel.ManagedSites != null)
                 {
                     SetFilter(); // reset listeners when ManagedSites are reset
+                    _itemViewModel.RaisePropertyChanged("SelectedItem");
                 }
             };
         }

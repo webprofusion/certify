@@ -13,12 +13,14 @@ namespace Certify.UI.Controls.ManagedItem
     public partial class CertificateDomains : UserControl
     {
         protected Certify.UI.ViewModel.ManagedItemModel ItemViewModel => UI.ViewModel.ManagedItemModel.Current;
+        protected Certify.UI.ViewModel.AppModel AppViewModel => UI.ViewModel.AppModel.Current;
+
         private ManagedSite SelectedItem => ItemViewModel.SelectedItem;
 
         public CertificateDomains()
         {
             InitializeComponent();
-            this.ItemViewModel.PropertyChanged += MainViewModel_PropertyChanged;
+            this.AppViewModel.PropertyChanged += MainViewModel_PropertyChanged;
         }
 
         private void SetFilter()

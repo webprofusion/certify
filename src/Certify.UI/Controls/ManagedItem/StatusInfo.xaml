@@ -7,7 +7,9 @@
              xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
               xmlns:utils="clr-namespace:Certify.UI.Utils"
              xmlns:fa="http://schemas.fontawesome.io/icons/"
-             mc:Ignorable="d" Height="447.642" Width="1023.283">
+             xmlns:certifyui="clr-namespace:Certify.UI"
+             d:DataContext="{d:DesignInstance Type=certifyui:DesignItemViewModel, IsDesignTimeCreatable=True}"
+             mc:Ignorable="d" d:DesignHeight="280" d:DesignWidth="631.2">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
         <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
@@ -17,16 +19,22 @@
         <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
     </UserControl.Resources>
     <ScrollViewer>
-        <StackPanel>
+        <StackPanel Margin="8,0,8,8">
             <StackPanel Orientation="Horizontal">
                 <fa:ImageAwesome Margin="4" Icon="ExclamationTriangle" Height="16" />
 
                 <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Renewal Status Error</TextBlock>
             </StackPanel>
             <!-- Renewal warning messages-->
-            <StackPanel Background="#FF3F3F3F" MinHeight="80">
+            <StackPanel MinHeight="80">
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Renewal Failures:" FontWeight="Bold" />
+                    <Label Content="{Binding SelectedItem.RenewalFailureCount}" FontWeight="Bold"></Label>
+                </StackPanel>
+                <TextBlock TextWrapping="Wrap" Text="Renewal failures can be caused by temporary API timeouts, rate limits, configuration problems or settings which are no longer valid. Please review the renewal status error and test your configuration." Margin="4,0,16,0" />
+                <TextBlock TextWrapping="Wrap" Text="If you do not require this certificate anymore you can delete it from the app or uncheck 'Enable Auto Renewal' in General Options to prevent further renewal error messages." FontWeight="Bold" Margin="4,4,0,0" />
 
-                <TextBlock TextWrapping="Wrap" Text="{Binding SelectedItem.RenewalFailureMessage}" Margin="4,4,16,4" Foreground="White"></TextBlock>
+                <TextBlock TextWrapping="Wrap" Text="{Binding SelectedItem.RenewalFailureMessage}" Foreground="#FF650000" Margin="4,16,0,0" FontStyle="Italic" />
             </StackPanel>
         </StackPanel>
     </ScrollViewer>

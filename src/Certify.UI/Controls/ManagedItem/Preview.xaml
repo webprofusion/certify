@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" IsVisibleChanged="UserControl_IsVisibleChanged">
     <ScrollViewer>
-        <DockPanel>
+        <DockPanel Margin="8,0,8,8">
             <TextBlock  DockPanel.Dock="Top" Style="{StaticResource Subheading}">Preview</TextBlock>
 
             <Label DockPanel.Dock="Top" Content="The following is a preview of the actions which will be performed based on these settings:" />
