@@ -28,9 +28,14 @@
             <!-- Renewal warning messages-->
             <StackPanel MinHeight="80">
                 <StackPanel Orientation="Horizontal">
-                    <Label Content="Renewal Failures:" FontWeight="Bold" />
+                    <Label Content="Renewal Failures:" Width="160" FontWeight="Bold" />
                     <Label Content="{Binding SelectedItem.RenewalFailureCount}" FontWeight="Bold"></Label>
                 </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Last Renewal Attempt:" Width="160" FontWeight="Bold" />
+                    <Label Content="{Binding SelectedItem.DateLastRenewalAttempt}" FontWeight="Bold"></Label>
+                </StackPanel>
+
                 <TextBlock TextWrapping="Wrap" Text="Renewal failures can be caused by temporary API timeouts, rate limits, configuration problems or settings which are no longer valid. Please review the renewal status error and test your configuration." Margin="4,0,16,0" />
                 <TextBlock TextWrapping="Wrap" Text="If you do not require this certificate anymore you can delete it from the app or uncheck 'Enable Auto Renewal' in General Options to prevent further renewal error messages." FontWeight="Bold" Margin="4,4,0,0" />
 
