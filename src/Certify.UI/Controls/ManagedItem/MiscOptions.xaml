@@ -18,7 +18,7 @@
         <utils:ManagedItemHealthVisibilityConverter x:Key="HealthVisibleConverter" />
         <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
     </UserControl.Resources>
-    <ScrollViewer>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
         <DockPanel LastChildFill="True" Margin="8,0,8,8">
             <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">General Options</TextBlock>
             <StackPanel DockPanel.Dock="Top" x:Name="GeneralOptions" Margin="2,0,0,0">

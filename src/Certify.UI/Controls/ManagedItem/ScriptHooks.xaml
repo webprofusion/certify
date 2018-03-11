@@ -15,7 +15,7 @@
              x:Class="Certify.UI.Controls.ManagedItem.ScriptHooks"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=certifyui:DesignItemViewModel, IsDesignTimeCreatable=True}">
-    <ScrollViewer>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Background="{DynamicResource {x:Static SystemColors.ControlBrush}}" Margin="8,0,8,8">
             <TextBlock Style="{StaticResource Subheading}">Scripting</TextBlock>
 

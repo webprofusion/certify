@@ -149,7 +149,7 @@ namespace Certify.Core.Management.Challenges
                                      new AuthorizationChallengeItem
                                      {
                                           ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                                            Key= "_acme-challenge.test."+domain,
+                                            Key= "_acme-challenge-test."+domain,
                                             Value = GenerateSimulatedKeyAuth()
                                      }
                              }
@@ -455,14 +455,13 @@ namespace Certify.Core.Management.Challenges
             var dnsHelper = new DNSChallengeHelper();
             var helperResult = dnsHelper.CompleteDNSChallenge(managedSite, domain, dnsChallenge.Key, dnsChallenge.Value).Result;
 
-            var cleanupQueue = new List<Action>();
-            var checkQueue = new List<Func<bool>>();
+            var cleanupQueue = new List<Action> { };
+            var checkQueue = new List<Func<bool>> { };
 
             // add check to the queue checkQueue.Add(() => _netUtil.CheckDNS(domain, ));
+            checkQueue.Add(() => { return helperResult.IsSuccess; });
 
-            // add cleanup actions to queue
-
-            // cleanupQueue.Add(() => remvoe txt record);
+            // TODO: add cleanup actions to queue cleanupQueue.Add(() => remove temp txt record);
 
             // configure cleanup actions for use after challenge completes
             pendingAuth.Cleanup = () => cleanupQueue.ForEach(a => a());

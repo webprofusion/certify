@@ -18,7 +18,7 @@
         <utils:EnumConverter x:Key="EnumConverter" />
         <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
     </UserControl.Resources>
-    <ScrollViewer>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="8,0,8,8">
             <StackPanel Orientation="Horizontal">
                 <fa:ImageAwesome Margin="4" Icon="ExclamationTriangle" Height="16" />

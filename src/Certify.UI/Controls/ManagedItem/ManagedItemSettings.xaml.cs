@@ -44,6 +44,8 @@ namespace Certify.UI.Controls.ManagedItem
                     this.TabStatusInfo.Visibility = Visibility.Collapsed;
                     this.SettingsTab.SelectedItem = this.TabDomains;
                 }
+
+                AppViewModel.IsChanged = false;
             }
         }
 

@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:Certify.UI.Controls.ManagedItem"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" IsVisibleChanged="UserControl_IsVisibleChanged">
-    <ScrollViewer>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
         <DockPanel Margin="8,0,8,8">
             <TextBlock  DockPanel.Dock="Top" Style="{StaticResource Subheading}">Preview</TextBlock>
 

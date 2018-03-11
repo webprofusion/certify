@@ -55,6 +55,10 @@ namespace Certify.Core.Management.Challenges
                 //get our driver type
                 providerSpecificConfig = config.First(c => c.StartsWith("Driver")).Replace("Driver=", "");
             }
+            else
+            {
+                return new ChallengeHelperResult { IsSuccess = false, Message = "DNS Challenge API Provider not set. Select an API to proceed." };
+            }
 
             if (!String.IsNullOrEmpty(managedsite.RequestConfig.ChallengeCredentialKey))
             {
@@ -62,6 +66,10 @@ namespace Certify.Core.Management.Challenges
                 string credentialsJson = await credentialsManager.GetUnlockedCredential(managedsite.RequestConfig.ChallengeCredentialKey);
                 string[] credentialArray = JsonConvert.DeserializeObject<string[]>(credentialsJson);
                 credentials = String.Join(",", credentialArray);
+            }
+            else
+            {
+                return new ChallengeHelperResult { IsSuccess = false, Message = "DNS Challenge API Credentials not set. Add or select API credentials to proceed." };
             }
 
             // Run python helper, specifying driver to use

@@ -27,7 +27,7 @@
             <utils:ManagedItemHealthVisibilityConverter x:Key="HealthVisibleConverter" />
             <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
         </Grid.Resources>
-        <ScrollViewer>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
             <DockPanel Margin="8,0,8,8" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
                 <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Certificate Domains</TextBlock>
                 <DockPanel DockPanel.Dock="Top"  Width="Auto">

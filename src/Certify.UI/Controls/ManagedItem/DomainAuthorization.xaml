@@ -15,7 +15,7 @@
              x:Class="Certify.UI.Controls.ManagedItem.DomainAuthorization"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=certifyui:DesignItemViewModel, IsDesignTimeCreatable=True}">
-    <ScrollViewer>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="8,0,8,8">
 
             <StackPanel.Resources>

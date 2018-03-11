@@ -16,7 +16,7 @@
         <utils:EnumConverter x:Key="EnumConverter" />
         <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
     </UserControl.Resources>
-    <ScrollViewer>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
         <DockPanel LastChildFill="True" Margin="8,0,8,8">
 
             <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Certificate Deployment</TextBlock>
