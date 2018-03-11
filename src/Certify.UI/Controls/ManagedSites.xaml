@@ -47,7 +47,7 @@
                       ScrollViewer.CanContentScroll="True"
                       VirtualizingPanel.IsVirtualizing="True"
                       ScrollViewer.VerticalScrollBarVisibility="Auto"
-                      ScrollViewer.HorizontalScrollBarVisibility="Auto" Background="#FFF1F4EF">
+                      ScrollViewer.HorizontalScrollBarVisibility="Auto" Background="#FCFCFC">
                 <ListView.ContextMenu>
                     <ContextMenu x:Name="ListContextMenu" PlacementRectangle="{Binding RelativeSource={RelativeSource Self}}">
                         <MenuItem Header="Sort By Name" Tag="NameAsc" Click="SetListSortOrder_Click">

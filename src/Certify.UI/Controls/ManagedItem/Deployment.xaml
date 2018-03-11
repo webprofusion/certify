@@ -8,7 +8,7 @@
              xmlns:utils="clr-namespace:Certify.UI.Utils"
              xmlns:certifyui="clr-namespace:Certify.UI"
              d:DataContext="{d:DesignInstance Type=certifyui:DesignItemViewModel, IsDesignTimeCreatable=True}"
-             mc:Ignorable="d">
+             mc:Ignorable="d" d:DesignWidth="572.8">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
         <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
@@ -21,7 +21,7 @@
 
             <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Certificate Deployment</TextBlock>
 
-            <TextBlock DockPanel.Dock="Top" Text="Choose how to apply the certificate:" Margin="0,0,0,8" />
+            <TextBlock DockPanel.Dock="Top" Text="Choose how to apply the certificate:" Style="{StaticResource Instructions}" />
             <StackPanel DockPanel.Dock="Top">
                 <StackPanel Orientation="Horizontal">
                     <Label Width="130" Content="Deploy to:"></Label>
@@ -46,8 +46,8 @@
                 </StackPanel>
             </StackPanel>
 
-            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">IIS Binding Settings</TextBlock>
-            <TextBlock DockPanel.Dock="Top" Text="If one or more new https bindings need to be created, the following settings will be used:"></TextBlock>
+            <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">IIS Binding Settings</TextBlock>
+            <TextBlock DockPanel.Dock="Top" Text="If one or more new https bindings need to be created, the following settings will be used:" Style="{StaticResource Instructions}"></TextBlock>
             <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Margin="8,4,0,0">
                 <RadioButton Margin="0,0,0,4" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" GroupName="BindingType" Content="{x:Static Resources:SR.ManagedItemSettings_AutoUpdateBinding}" />
                 <RadioButton Margin="0,0,0,4" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Mode=OneWay, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType" Content="{x:Static Resources:SR.ManagedItemSettings_UseSpecificBinding}" />
@@ -66,7 +66,7 @@
                     <Label Width="130" Content="{x:Static Resources:SR.ManagedItemSettings_UseSNI}" />
                     <CheckBox IsChecked="{Binding SelectedItem.RequestConfig.BindingUseSNI}"></CheckBox>
                 </StackPanel>
-                <Label Content="{x:Static Resources:SR.ManagedItemSettings_BindingNote}" />
+                <TextBlock Style="{StaticResource Instructions}" Text="{x:Static Resources:SR.ManagedItemSettings_BindingNote}" />
             </StackPanel>
         </DockPanel>
     </ScrollViewer>

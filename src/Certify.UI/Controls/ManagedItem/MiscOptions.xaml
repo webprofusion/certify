@@ -7,8 +7,7 @@
              xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
              xmlns:utils="clr-namespace:Certify.UI.Utils"
              xmlns:certifyui="clr-namespace:Certify.UI"
-             d:DataContext="{d:DesignInstance Type=certifyui:DesignItemViewModel, IsDesignTimeCreatable=True}"
-             mc:Ignorable="d">
+             d:DataContext="{d:DesignInstance Type=certifyui:DesignItemViewModel, IsDesignTimeCreatable=True}"  mc:Ignorable="d" Width="732">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
         <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
@@ -19,14 +18,14 @@
         <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <DockPanel LastChildFill="True" Margin="8,0,8,8">
+        <DockPanel LastChildFill="False" Margin="8,0,8,8">
             <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">General Options</TextBlock>
             <StackPanel DockPanel.Dock="Top" x:Name="GeneralOptions" Margin="2,0,0,0">
 
                 <!-- General Options-->
-                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
-                    <Label Content="{x:Static Resources:SR.Comments}" Width="120" />
-                    <TextBox Height="38" AcceptsReturn="True" VerticalScrollBarVisibility="Auto">
+                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12" LastChildFill="False">
+                    <Label DockPanel.Dock="Left" Content="{x:Static Resources:SR.Comments}" Width="120" />
+                    <TextBox DockPanel.Dock="Left" Height="38" AcceptsReturn="True" MinWidth="300" Width="Auto" MaxWidth="400" VerticalScrollBarVisibility="Auto">
                         <TextBox.Text>
                             <Binding  Path="SelectedItem.Comments" UpdateSourceTrigger="PropertyChanged" />
                         </TextBox.Text>
@@ -50,54 +49,54 @@
 
             <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Actions</TextBlock>
 
-            <Grid Margin="0,0,16,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="240" />
-                </Grid.ColumnDefinitions>
-                <Label Grid.Column="0" Grid.Row="0" Content="View the latest log file entries:"></Label>
-                <Button Grid.Column="1" Grid.Row="0" x:Name="OpenLogFile" Content="{x:Static Resources:SR.ManagedItemSettings_OpenLogFile}" Click="OpenLogFile_Click" Width="220" Margin="0,4,0,0" HorizontalAlignment="Left" />
+            <DockPanel LastChildFill="False">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                    <Button  x:Name="OpenLogFile" Content="{x:Static Resources:SR.ManagedItemSettings_OpenLogFile}" Click="OpenLogFile_Click" Width="220" Margin="0,4,0,0" HorizontalAlignment="Left" />
+                    <TextBlock  Text="View the latest log file entries" Style="{StaticResource Instructions}" Margin="8,0,0,0"></TextBlock>
+                </StackPanel>
 
-                <Label Grid.Column="0" Grid.Row="1" x:Name="CertPath" Content="{Binding SelectedItem.CertificatePath, TargetNullValue={x:Static Resources:SR.ManagedItemSettings_CertificatePathEmpty}}" />
-                <Button Grid.Column="1" Grid.Row="1" x:Name="OpenCertificateFile" Content="{x:Static Resources:SR.ManagedItemSettings_ViewCertificate}" Click="OpenCertificateFile_Click" Width="220" Margin="0,4,0,0" HorizontalAlignment="Left" />
-                <Label Grid.Column="0" Grid.Row="2" Content="You can optionally re-deploy the latest certificate without requesting a new one: " />
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                    <Button x:Name="OpenCertificateFile" Content="{x:Static Resources:SR.ManagedItemSettings_ViewCertificate}" Click="OpenCertificateFile_Click" Width="220" Margin="0,4,0,0" HorizontalAlignment="Left" />
+                    <TextBlock  x:Name="CertPath" Text="{Binding SelectedItem.CertificatePath, TargetNullValue={x:Static Resources:SR.ManagedItemSettings_CertificatePathEmpty}}" Style="{StaticResource Instructions}" Margin="8,0,0,0" />
+                </StackPanel>
 
-                <Button Grid.Column="1" Grid.Row="2" x:Name="ReapplyCertBindings" Content="{x:Static Resources:SR.ManagedItemSettings_ReapplyCertificate}" Click="ReapplyCertBindings_Click" Width="220" Margin="0,4,0,0" HorizontalAlignment="Left" />
-                <Label Content="{x:Static Resources:SR.ManagedItemSettings_ExportTip}" Grid.ColumnSpan="2" Margin="0,4.8,199.8,-8.6" Grid.Row="4" />
-                <Border Grid.Column="1" Grid.Row="4">
-                    <Border.Style>
-                        <Style>
-                            <Setter Property="Border.Visibility" Value="Collapsed" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedItem.CertificateRevoked}" Value="False">
-                                    <Setter Property="Border.Visibility" Value="Visible" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-                    <Button x:Name="RevokeCertificateBtn" Content="{x:Static Resources:SR.ManagedItemSettings_RevokeCertificate}" Click="RevokeCertificateBtn_Click" Background="#FFFFC7C7" Width="220"  Margin="0,4,0,0" HorizontalAlignment="Left" />
-                </Border>
-                <Border Grid.Column="1" Grid.Row="4">
-                    <Border.Style>
-                        <Style>
-                            <Setter Property="Border.Visibility" Value="Collapsed" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedItem.CertificateRevoked}" Value="True">
-                                    <Setter Property="Border.Visibility" Value="Visible" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-                    <Label Content="{x:Static Resources:SR.ManagedItemSettings_CertificateRevokeWarning}" Background="#FFFFC7C7" />
-                </Border>
-            </Grid>
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                    <Button Grid.Column="1" Grid.Row="2" x:Name="ReapplyCertBindings" Content="{x:Static Resources:SR.ManagedItemSettings_ReapplyCertificate}" Click="ReapplyCertBindings_Click" Width="220" Margin="0,4,0,0" HorizontalAlignment="Left" />
+                    <TextBlock Grid.Column="0" Grid.Row="2" Text="You can optionally re-deploy the latest certificate without requesting a new one " Style="{StaticResource Instructions}" Margin="8,0,0,0" />
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                    <Border Grid.Column="1" Grid.Row="4">
+                        <Border.Style>
+                            <Style>
+                                <Setter Property="Border.Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedItem.CertificateRevoked}" Value="False">
+                                        <Setter Property="Border.Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Button x:Name="RevokeCertificateBtn" Content="{x:Static Resources:SR.ManagedItemSettings_RevokeCertificate}" Click="RevokeCertificateBtn_Click" Background="#FFFFC7C7" Width="220"  Margin="0,4,0,0" HorizontalAlignment="Left" />
+                    </Border>
+                    <Border Grid.Column="1" Grid.Row="4">
+                        <Border.Style>
+                            <Style>
+                                <Setter Property="Border.Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedItem.CertificateRevoked}" Value="True">
+                                        <Setter Property="Border.Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Label Content="{x:Static Resources:SR.ManagedItemSettings_CertificateRevokeWarning}" Background="#FFFFC7C7" />
+                    </Border>
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Top">
+                    <TextBlock Text="{x:Static Resources:SR.ManagedItemSettings_ExportTip}" Style="{StaticResource Instructions}" Grid.Row="4" Margin="0,8,32,0" HorizontalAlignment="Right" />
+                </StackPanel>
+            </DockPanel>
         </DockPanel>
     </ScrollViewer>
 </UserControl>

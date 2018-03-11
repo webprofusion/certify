@@ -14,6 +14,7 @@
              xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
              x:Class="Certify.UI.Controls.ManagedItem.DomainAuthorization"
              mc:Ignorable="d"
+    d:DesignWidth="500"
              d:DataContext="{d:DesignInstance Type=certifyui:DesignItemViewModel, IsDesignTimeCreatable=True}">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="8,0,8,8">
@@ -29,12 +30,9 @@
             <!--Authorization Types-->
             <StackPanel>
                 <TextBlock Style="{StaticResource Subheading}">Domain Authorization</TextBlock>
-                <TextBlock TextWrapping="Wrap">
-                <Run>For a certificate to be issued you must prove you control the domains you are requesting in your certificate. If any included domain fails authorization the certificate request cannot be completed.</Run>
+                <TextBlock Style="{StaticResource Instructions}" Text="For a certificate to be issued you must prove you control the domains you are requesting in your certificate. If any included domain fails authorization the certificate request cannot be completed.">
                 </TextBlock>
             </StackPanel>
-
-            <TextBlock Style="{StaticResource Subheading}">Select Authorization Challenge Type</TextBlock>
 
             <StackPanel Orientation="Horizontal">
                 <Label Width="160" Content="{x:Static Resources:SR.ManagedItemSettings_ChallengeTypes}" />
@@ -54,7 +52,7 @@
                 </StackPanel.Style>
                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                     <Label Width="160" Content="{x:Static Resources:SR.ManagedItemSettings_WebsiteRoot}" />
-                    <TextBox Text="{Binding SelectedItem.RequestConfig.WebsiteRootPath}" Width="350" />
+                    <TextBox Text="{Binding SelectedItem.RequestConfig.WebsiteRootPath}" Width="225" />
                     <Button Name="Button_WebRoot" Content="{x:Static Resources:SR.ManagedItemSettings_BrowseFolder}" Margin="4,0,0,0" Click="DirectoryBrowse_Click" />
                 </StackPanel>
 
@@ -105,19 +103,16 @@
                     <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_PerformChallengeResponseConfigCheck}" IsChecked="{Binding SelectedItem.RequestConfig.PerformTlsSniBindingConfigChecks}" Margin="160,0,0,0" />
                 </StackPanel>
             </StackPanel>
-            <Expander Header="More Info.." Background="{DynamicResource {x:Static SystemColors.MenuBrushKey}}" BorderBrush="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" Margin="8,16" Controls:ControlsHelper.ContentCharacterCasing="Normal">
-                <TextBlock TextWrapping="Wrap">
+            <DockPanel Margin="0,16,0,0">
+                <TextBlock Style="{StaticResource Instructions}">
 
                 <Run>You can choose between validation over HTTP (port 80), or via DNS:</Run>
-                <LineBreak></LineBreak>
-                            <LineBreak></LineBreak>
-                <Run> - For HTTP validation the app will automatically create the validation file required. Your website must answer http requests on port 80 (redirections permitted) and serve extensionless content from the .well-known/acme-challenge/ path.</Run>
-                <LineBreak></LineBreak>
-                            <LineBreak></LineBreak>
-
+                <LineBreak /><LineBreak />
+                <Run> - For HTTP validation the app will automatically create the validation file required. Your website must answer http requests on port 80 (redirections permitted) and be able to serve randomly named extensionless text files from the .well-known/acme-challenge/ path.</Run>
+                <LineBreak /><LineBreak />
                 <Run> - For DNS validation the app will automatically create a TXT record in the DNS zone of your domain(s) as an answer to the authorization challenge. The DNS provider for your domain(s) must provide an API and be supported by this app.</Run>
                 </TextBlock>
-            </Expander>
+            </DockPanel>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

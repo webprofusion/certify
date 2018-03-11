@@ -86,7 +86,7 @@ namespace Certify.UI.ViewModel
 
             if (updatedOK) SelectedItem.IsChanged = false;
 
-            RaisePropertyChanged(nameof(_appViewModel.IsSelectedItemValid));
+            RaisePropertyChanged(nameof(IsSelectedItemValid));
             RaisePropertyChanged(nameof(SelectedItem));
 
             return updatedOK;
@@ -151,7 +151,11 @@ namespace Certify.UI.ViewModel
 
         public bool IsAdvancedView { get; set; } = false;
 
-        public bool IsSelectedItemValid => _appViewModel.IsSelectedItemValid;
+        public bool IsSelectedItemValid
+        {
+            get => SelectedItem?.Id != null && !SelectedItem.IsChanged;
+        }
+
         public Preferences Preferences => _appViewModel.Preferences;
 
         public static ManagedItemModel GetModel()

@@ -14,14 +14,14 @@
              xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
              x:Class="Certify.UI.Controls.ManagedItem.ScriptHooks"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance Type=certifyui:DesignItemViewModel, IsDesignTimeCreatable=True}">
+             d:DataContext="{d:DesignInstance Type=certifyui:DesignItemViewModel, IsDesignTimeCreatable=True}" d:DesignHeight="637.6" d:DesignWidth="600">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Background="{DynamicResource {x:Static SystemColors.ControlBrush}}" Margin="8,0,8,8">
             <TextBlock Style="{StaticResource Subheading}">Scripting</TextBlock>
 
-            <TextBlock  Text="You can optionally specify scripts or webhooks to call. Scripts can happen before or after the certificate request and are especially useful if you need to update other services after your certificate has been renewed." TextWrapping="Wrap" />
+            <TextBlock Style="{StaticResource Instructions}" Text="You can optionally specify scripts or webhooks to call. Scripts can happen before or after the certificate request and are especially useful if you need to update other services after your certificate has been renewed." />
             <StackPanel>
-                <TextBlock Text="There are also a number of preset scripts for common tasks such as enabling a certificate in MS Exchange:" Margin="0,8,0,0"></TextBlock>
+                <TextBlock Style="{StaticResource Instructions}" Text="There are also a number of preset scripts for common tasks such as enabling a certificate in MS Exchange:" ></TextBlock>
                 <Expander Header="Example Scripts" Margin="0,8,0,0" ExpandDirection="Right">
                     <ItemsControl  x:Name="PresetScripts" Margin="16,0,0,0">
                         <ItemsControl.ItemTemplate>
@@ -46,19 +46,19 @@
 
                 <StackPanel Orientation="Horizontal">
                     <Label Width="155" Content="{x:Static Resources:SR.ManagedItemSettings_PerRequsetScript}" />
-                    <TextBox Text="{Binding SelectedItem.RequestConfig.PreRequestPowerShellScript}" Width="350" />
+                    <TextBox Text="{Binding SelectedItem.RequestConfig.PreRequestPowerShellScript}" Width="250" />
                     <Button Name="Button_PreRequest" Content="{x:Static Resources:SR.Browser}" Margin="4,0,0,0" Click="FileBrowse_Click" />
                     <Button Name="Button_TestPreRequest" Content="{x:Static Resources:SR.Test}" Margin="4,0,0,0" Click="TestScript_Click" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                     <Label Width="155" Content="{x:Static Resources:SR.ManagedItemSettings_PostRequestScript}" />
-                    <TextBox Text="{Binding SelectedItem.RequestConfig.PostRequestPowerShellScript}" Width="350" />
+                    <TextBox Text="{Binding SelectedItem.RequestConfig.PostRequestPowerShellScript}" Width="250" />
                     <Button Name="Button_PostRequest" Content="{x:Static Resources:SR.Browser}" Margin="4,0,0,0" Click="FileBrowse_Click" />
                     <Button Name="Button_TestPostRequest" Content="{x:Static Resources:SR.Test}" Margin="4,0,0,0" Click="TestScript_Click" />
                 </StackPanel>
             </StackPanel>
 
-            <StackPanel Orientation="Vertical" Margin="0,16,0,0">
+            <StackPanel Orientation="Vertical" Margin="0,16,0,0" Width="500" HorizontalAlignment="Left">
                 <TextBlock Style="{StaticResource Subheading}">Webhooks</TextBlock>
 
                 <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
@@ -78,7 +78,7 @@
                         <Button Name="Button_TestWebhook" Content="{x:Static Resources:SR.Test}" Margin="4,0,0,0" Click="TestWebhook_Click" />
                     </Border>
                 </StackPanel>
-                <StackPanel Background="#efefef" Margin="46,8,12,12" Width="520" HorizontalAlignment="Left">
+                <StackPanel Background="#efefef" Margin="46,8,12,12" Width="400" HorizontalAlignment="Left">
                     <StackPanel.Style>
                         <Style>
                             <Setter Property="StackPanel.Visibility" Value="Visible" />

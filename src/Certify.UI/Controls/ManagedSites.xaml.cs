@@ -32,6 +32,7 @@ namespace Certify.UI.Controls
                 {
                     SetFilter(); // reset listeners when ManagedSites are reset
                     _itemViewModel.RaisePropertyChanged("SelectedItem");
+                    _itemViewModel.RaisePropertyChanged("IsSelectedItemValid");
                 }
             };
         }

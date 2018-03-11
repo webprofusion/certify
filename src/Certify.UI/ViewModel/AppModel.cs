@@ -146,11 +146,6 @@ namespace Certify.UI.ViewModel
             return addedOk;
         }
 
-        public bool IsSelectedItemValid
-        {
-            get => SelectedItem?.Id != null && !SelectedItem.IsChanged;
-        }
-
         public int MainUITabIndex { get; set; }
 
         [DependsOn(nameof(ProgressResults))]

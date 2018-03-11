@@ -538,6 +538,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add domains to certificate:.
+        /// </summary>
+        public static string ManagedItemSettings_AddDomainsToCertificate {
+            get {
+                return ResourceManager.GetString("ManagedItemSettings_AddDomainsToCertificate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Auto create/update IIS bindings (uses SNI).
         /// </summary>
         public static string ManagedItemSettings_AutoUpdateBinding {

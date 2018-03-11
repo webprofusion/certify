@@ -67,7 +67,7 @@
                 </StackPanel>
             </Button>
 
-            <Button DockPanel.Dock="Right" IsEnabled="{Binding IsSelectedItemValid}" Click="Button_RequestCertificate" Margin="16,0,0,0">
+            <Button DockPanel.Dock="Right" IsEnabled="{Binding IsSelectedItemValid}" Click="Button_RequestCertificate" Margin="8,0,0,0">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome Icon="Play" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.ManagedItemSettings_RequestCertificate}" /></TextBlock>
@@ -83,50 +83,43 @@
             </Button>
         </DockPanel>
 
-        <DockPanel Grid.Row="2">
-
+        <DockPanel Grid.Row="2" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}" Margin="8,0,8,0" Background="#FCFCFC">
             <!-- Managed Item display name-->
             <DockPanel DockPanel.Dock="Top"  Margin="8,8,8,8" LastChildFill="False">
-                <TextBox DockPanel.Dock="Left" Controls:TextBoxHelper.Watermark="Display Name" Text="{Binding SelectedItem.Name, UpdateSourceTrigger=PropertyChanged}" MinWidth="400" />
+                <TextBox DockPanel.Dock="Left" ToolTip="Enter a display name for this managed certificate. This is for your own use and is not included in the certificate." Controls:TextBoxHelper.Watermark="Display Name" Text="{Binding SelectedItem.Name, UpdateSourceTrigger=PropertyChanged}" MinWidth="400" />
 
-                <CheckBox DockPanel.Dock="Right" x:Name="CheckAdvancedView" IsChecked="{Binding IsAdvancedView}"  Content="Show Advanced Options" Unchecked="CheckAdvancedView_Checked" Checked="CheckAdvancedView_Checked" />
+                <CheckBox DockPanel.Dock="Right" x:Name="CheckAdvancedView" IsChecked="{Binding IsAdvancedView}"  Content="Show Advanced Options" Unchecked="CheckAdvancedView_Checked" Checked="CheckAdvancedView_Checked" BorderBrush="{DynamicResource {x:Static SystemColors.InactiveCaptionTextBrushKey}}" />
             </DockPanel>
 
-            <!--settings tabs-->
-
-            <!--general settings and domain options-->
-            <DockPanel Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}" Margin="8,0,8,0" Background="#FFF1F4EF">
-
-                <Controls:MetroTabControl x:Name="SettingsTab" Margin="8" Controls:TabControlHelper.Underlined="TabPanel"
+            <Controls:MetroTabControl DockPanel.Dock="Top" x:Name="SettingsTab" Margin="8" Controls:TabControlHelper.Underlined="TabPanel"
                                  VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Controls:ScrollViewerHelper.IsHorizontalScrollWheelEnabled="True" TabStripPlacement="Right" Controls:TabControlHelper.IsUnderlined="True">
 
-                    <TabItem x:Name="TabStatusInfo"  Header="Status" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100"  Controls:TabControlHelper.UnderlineBrush="White">
-                        <manageditem:StatusInfo Margin="0,8,0,0" />
-                    </TabItem>
+                <TabItem x:Name="TabStatusInfo"  Header="Status" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100"  Controls:TabControlHelper.UnderlineBrush="White">
+                    <manageditem:StatusInfo Margin="0,8,0,0" />
+                </TabItem>
 
-                    <TabItem x:Name="TabDomains" Header="Certificate Domains" IsSelected="True" Controls:ControlsHelper.HeaderFontSize="12" Margin="0" MinWidth="130">
-                        <manageditem:CertificateDomains Margin="0,8,0,0" />
-                    </TabItem>
+                <TabItem x:Name="TabDomains" Header="Certificate Domains" IsSelected="True" Controls:ControlsHelper.HeaderFontSize="12" Margin="0" MinWidth="130">
+                    <manageditem:CertificateDomains Margin="0,8,0,0" />
+                </TabItem>
 
-                    <TabItem Header="Authorization" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
-                        <manageditem:DomainAuthorization Margin="0,8,0,0" />
-                    </TabItem>
+                <TabItem Header="Authorization" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
+                    <manageditem:DomainAuthorization Margin="0,8,0,0" />
+                </TabItem>
 
-                    <TabItem x:Name="TabDeployment"  Header="Deployment" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
-                        <manageditem:Deployment  Margin="0,8,0,0" />
-                    </TabItem>
+                <TabItem x:Name="TabDeployment"  Header="Deployment" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
+                    <manageditem:Deployment  Margin="0,8,0,0" />
+                </TabItem>
 
-                    <TabItem x:Name="TabScripting" Header="Scripting"  Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
-                        <manageditem:ScriptHooks  Margin="0,8,0,0" />
-                    </TabItem>
-                    <TabItem x:Name="TabOptions" Header="Other Options"  Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
-                        <manageditem:MiscOptions Margin="0,8,0,0" />
-                    </TabItem>
-                    <TabItem Header="Preview" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
-                        <manageditem:Preview Margin="0,8,0,0" />
-                    </TabItem>
-                </Controls:MetroTabControl>
-            </DockPanel>
+                <TabItem x:Name="TabScripting" Header="Scripting"  Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
+                    <manageditem:ScriptHooks  Margin="0,8,0,0" />
+                </TabItem>
+                <TabItem x:Name="TabOptions" Header="Other Options"  Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
+                    <manageditem:MiscOptions Margin="0,8,0,0" />
+                </TabItem>
+                <TabItem Header="Preview" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
+                    <manageditem:Preview Margin="0,8,0,0" />
+                </TabItem>
+            </Controls:MetroTabControl>
         </DockPanel>
     </Grid>
 </UserControl>

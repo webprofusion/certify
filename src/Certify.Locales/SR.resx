@@ -653,4 +653,7 @@
   <data name="ManagedItemSettings_DefaultTitle" xml:space="preserve">
     <value>New Managed Certificate</value>
   </data>
+  <data name="ManagedItemSettings_AddDomainsToCertificate" xml:space="preserve">
+    <value>Add domains to certificate:</value>
+  </data>
 </root>
