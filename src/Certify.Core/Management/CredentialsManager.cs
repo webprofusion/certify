@@ -195,7 +195,16 @@ namespace Certify.Management
         public async Task<string[]> GetUnlockedCredentialsArray(string storageKey)
         {
             string val = await this.GetUnlockedCredential(storageKey);
-            return val.Split(',');
+
+            if (val.StartsWith("["))
+            {
+                var results = JsonConvert.DeserializeObject<List<string>>(val);
+                return results.ToArray();
+            }
+            else
+            {
+                return val.Split(',');
+            }
         }
 
         public async Task<StoredCredential> UpdateCredential(StoredCredential credentialInfo)
