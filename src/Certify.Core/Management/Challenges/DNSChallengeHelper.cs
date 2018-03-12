@@ -1,6 +1,5 @@
 ﻿using Certify.Management;
 using Certify.Models;
-using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -63,8 +62,7 @@ namespace Certify.Core.Management.Challenges
             if (!String.IsNullOrEmpty(managedsite.RequestConfig.ChallengeCredentialKey))
             {
                 // decode credentials string array
-                string credentialsJson = await credentialsManager.GetUnlockedCredential(managedsite.RequestConfig.ChallengeCredentialKey);
-                string[] credentialArray = JsonConvert.DeserializeObject<string[]>(credentialsJson);
+                string[] credentialArray = await credentialsManager.GetUnlockedCredentialsArray(managedsite.RequestConfig.ChallengeCredentialKey);
                 credentials = String.Join(",", credentialArray);
             }
             else

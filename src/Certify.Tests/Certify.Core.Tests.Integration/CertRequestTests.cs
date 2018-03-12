@@ -4,6 +4,7 @@ using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -22,6 +23,7 @@ namespace Certify.Core.Tests
         private string testSiteDomain = "";
         private string testSitePath = "c:\\inetpub\\wwwroot";
         private int testSiteHttpPort = 81;
+        private string _awsCredStorageKey = "";
 
         public CertRequestTests()
         {
@@ -31,6 +33,8 @@ namespace Certify.Core.Tests
             // see integrationtestbase for environment variable replacement
             testSiteDomain = "integration1." + PrimaryTestDomain;
             testSitePath = PrimaryIISRoot;
+
+            _awsCredStorageKey = ConfigurationManager.AppSettings["TestCredentialsKey_Route53"];
 
             //perform setup for IIS
             SetupIIS();
@@ -307,7 +311,7 @@ namespace Certify.Core.Tests
                     PerformExtensionlessConfigChecks = true,
                     WebsiteRootPath = testSitePath,
                     ChallengeProvider = "DNS01.API.Route53",
-                    ChallengeCredentialKey = "789731c9-5748-456a-b4cc-6464df3f393d" //TODO: make configurable
+                    ChallengeCredentialKey = _awsCredStorageKey
                 },
                 ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS
             };
@@ -383,7 +387,7 @@ namespace Certify.Core.Tests
                         PerformExtensionlessConfigChecks = true,
                         WebsiteRootPath = testSitePath,
                         ChallengeProvider = "DNS01.API.Route53",
-                        ChallengeCredentialKey = "789731c9-5748-456a-b4cc-6464df3f393d" //TODO: make configurable
+                        ChallengeCredentialKey = _awsCredStorageKey
                     },
                     ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS
                 };

@@ -25,13 +25,14 @@ namespace Certify.Core.Tests.Unit
             var credentialsManager = new CredentialsManager();
             var result = await credentialsManager.UpdateCredential(test);
 
-            Assert.IsTrue(result, "Credential stored OK");
+            Assert.IsNotNull(result, "Credential stored OK");
 
             List<StoredCredential> list = await credentialsManager.GetStoredCredentials();
 
-            Assert.IsTrue(list.Any(l => l.StorageKey == test.StorageKey), "Credential retreived");
+            Assert.IsTrue(list.Any(l => l.StorageKey == test.StorageKey), "Credential retrieved");
 
             var secret = await credentialsManager.GetUnlockedCredential(test.StorageKey);
+            Assert.IsNotNull(secret);
             Assert.IsTrue(secret == testSecret, "Credential decrypted");
         }
     }

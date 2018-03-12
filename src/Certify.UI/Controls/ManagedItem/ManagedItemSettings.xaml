@@ -35,7 +35,7 @@
 
         <DockPanel Grid.Row="0" LastChildFill="False">
 
-            <TextBlock DockPanel.Dock="Left" Text="{Binding SelectedItem.Name}" Margin="6,0,0,4" FontSize="20" VerticalAlignment="Top" Foreground="#FF494949" />
+            <TextBlock DockPanel.Dock="Left" Text="{Binding SelectedItem.Name}" Margin="16,0,0,4" FontSize="20" VerticalAlignment="Top" Foreground="#FF494949" />
             <Button DockPanel.Dock="Right" x:Name="Dismiss" Click="Dismiss_Click" ToolTip="Dismiss" Background="White" Margin="0,4,8,4" VerticalAlignment="Top" BorderBrush="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome Grid.Column="1" Height="16" Width="16" Icon="WindowClose" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}" />
@@ -44,7 +44,7 @@
         </DockPanel>
 
         <!-- save/request buttons-->
-        <DockPanel  Height="32" Grid.Row="1" LastChildFill="False" Margin="0,8,8,0">
+        <DockPanel  Height="32" Grid.Row="1" LastChildFill="False" Margin="8,8,8,0">
 
             <Button DockPanel.Dock="Left" IsEnabled="{Binding SelectedItem.IsChanged}" Click="Button_Save" Margin="8,0,0,0">
                 <StackPanel Orientation="Horizontal">
@@ -67,7 +67,7 @@
                 </StackPanel>
             </Button>
 
-            <Button DockPanel.Dock="Right" IsEnabled="{Binding IsSelectedItemValid}" Click="Button_RequestCertificate" Margin="8,0,0,0">
+            <Button DockPanel.Dock="Right" Click="Button_RequestCertificate" Margin="8,0,0,0">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome Icon="Play" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.ManagedItemSettings_RequestCertificate}" /></TextBlock>

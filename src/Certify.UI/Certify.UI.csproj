@@ -338,7 +338,7 @@
       <Version>0.0.3.203</Version>
     </PackageReference>
     <PackageReference Include="Fody">
-      <Version>2.4.5</Version>
+      <Version>2.4.6</Version>
     </PackageReference>
     <PackageReference Include="FontAwesome.WPF">
       <Version>4.7.0.9</Version>

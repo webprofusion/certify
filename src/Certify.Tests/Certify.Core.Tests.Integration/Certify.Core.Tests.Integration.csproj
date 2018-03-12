@@ -43,6 +43,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Numerics" />
@@ -61,6 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <Compile Include="DnsAPITest.AWSRoute53.cs" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
@@ -73,6 +75,14 @@
     <ProjectReference Include="..\..\Certify.Models\Certify.Models.csproj">
       <Project>{baaa9b8c-e44b-43f6-ac9c-b5666e69ee27}</Project>
       <Name>Certify.Models</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Certify.Providers\DNS\AWSRoute53\Certify.Providers.DNS.AWSRoute53.csproj">
+      <Project>{5a15cad6-eb62-4f0e-8229-83336d7c1d4b}</Project>
+      <Name>Certify.Providers.DNS.AWSRoute53</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Certify.Providers\DNS\Certify.Providers.DNS.Azure\Certify.Providers.DNS.Azure.csproj">
+      <Project>{533cfb5b-d443-4ab6-a289-90c689a71b81}</Project>
+      <Name>Certify.Providers.DNS.Azure</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.csproj">
       <Project>{ed48b479-b619-4c16-afa3-83dd3cd89338}</Project>

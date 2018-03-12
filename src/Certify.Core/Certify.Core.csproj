@@ -67,9 +67,13 @@
       <Project>{baaa9b8c-e44b-43f6-ac9c-b5666e69ee27}</Project>
       <Name>Certify.Models</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Certify.Providers\Certify.Providers.Certes\Certify.Providers.Certes.csproj">
+    <ProjectReference Include="..\Certify.Providers\ACME\Certes\Certify.Providers.Certes.csproj">
       <Project>{d7d2d121-b796-49ed-9cf9-158c624857a1}</Project>
       <Name>Certify.Providers.Certes</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Certify.Providers\DNS\AWSRoute53\Certify.Providers.DNS.AWSRoute53.csproj">
+      <Project>{5a15cad6-eb62-4f0e-8229-83336d7c1d4b}</Project>
+      <Name>Certify.Providers.DNS.AWSRoute53</Name>
     </ProjectReference>
     <ProjectReference Include="..\Certify.Shared\Certify.Shared.csproj">
       <Project>{ed48b479-b619-4c16-afa3-83dd3cd89338}</Project>

@@ -192,6 +192,12 @@ namespace Certify.Management
             return Unprotect(protectedString, PROTECTIONENTROPY, DataProtectionScope.CurrentUser);
         }
 
+        public async Task<string[]> GetUnlockedCredentialsArray(string storageKey)
+        {
+            string val = await this.GetUnlockedCredential(storageKey);
+            return val.Split(',');
+        }
+
         public async Task<StoredCredential> UpdateCredential(StoredCredential credentialInfo)
         {
             if (credentialInfo.Secret == null) return null;
