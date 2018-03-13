@@ -2,7 +2,7 @@
 
 namespace Certify.Models.Config
 {
-    public class ChallengeProvider
+    public class ProviderDefinition
     {
         public string Id { get; set; }
         public string ChallengeType { get; set; }
@@ -10,16 +10,21 @@ namespace Certify.Models.Config
         public string Description { get; set; }
         public string HelpUrl { get; set; }
         public string RequiredCredentials { get; set; }
-
+        public List<ProviderParameter> ProviderParameters { get; set; }
         public string Config { get; set; }
+
+        public ProviderDefinition()
+        {
+            ProviderParameters = new List<ProviderParameter>();
+        }
     }
 
     public class ChallengeProviders
     {
-        public static List<ChallengeProvider> Providers = new List<ChallengeProvider>
+        public static List<ProviderDefinition> Providers = new List<ProviderDefinition>
         {
             // IIS
-            new ChallengeProvider
+            new ProviderDefinition
             {
                 Id = "HTTP01.IIS.Local",
                 ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
@@ -27,16 +32,20 @@ namespace Certify.Models.Config
                 Description = "Validates via standard http website bindings on port 80"
             },
             // DNS
-            new ChallengeProvider
+            new ProviderDefinition
             {
                 Id = "DNS01.API.Route53",
                 ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Title = "Amazon Route 53 DNS API",
                 Description = "Validates via Route 53 APIs using AMI service credentials",
-                RequiredCredentials="Access Key, Secret Access Key",
-                Config="Provider=PythonHelper;Driver=ROUTE53"
+                ProviderParameters= new List<ProviderParameter>{
+                    new ProviderParameter{ Name="Access Key", IsRequired=true, IsPassword=false },
+                    new ProviderParameter{ Name="Secret Access Key", IsRequired=true, IsPassword=true },
+                    new ProviderParameter{ Name="Hosted Zone ID", IsRequired=true, IsPassword=false }
+                },
+                Config="Provider=Certify.Providers.DNS.AWSRoute53"
             },
-            new ChallengeProvider
+            new ProviderDefinition
             {
                 Id = "DNS01.API.Azure",
                 ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,

@@ -14,7 +14,7 @@ namespace Certify.Providers.DNS.AWSRoute53
 
         public DnsProviderAWSRoute53(string accessKey, string secretKey)
         {
-            route53Client = new AmazonRoute53Client(accessKey, secretKey);
+            route53Client = new AmazonRoute53Client(accessKey, secretKey, Amazon.RegionEndpoint.USEast1);
         }
 
         private async Task<HostedZone> ResolveMatchingZone(DnsRecordRequest request)
@@ -72,8 +72,11 @@ namespace Certify.Providers.DNS.AWSRoute53
             while (ChangeStatus.PENDING == route53Client.GetChange(changeRequest).ChangeInfo.Status)
             {
                 System.Diagnostics.Debug.WriteLine("DNS change is pending.");
-                await Task.Delay(2500);
+                await Task.Delay(1500);
             }
+
+            System.Diagnostics.Debug.WriteLine("DNS change completed.");
+
             return true;
         }
 
@@ -92,11 +95,18 @@ namespace Certify.Providers.DNS.AWSRoute53
                     Type = RRType.TXT,
                     ResourceRecords = new List<ResourceRecord>
                         {
-                          new ResourceRecord { Value = request.RecordValue }
+                          new ResourceRecord { Value =  "\""+request.RecordValue+"\""}
                         }
                 };
 
-                var result = await ApplyDnsChange(zone, recordSet, ChangeAction.UPSERT);
+                try
+                {
+                    var result = await ApplyDnsChange(zone, recordSet, ChangeAction.UPSERT);
+                }
+                catch (Exception exp)
+                {
+                    new DnsRequestResult { IsSuccess = false, Message = exp.InnerException.Message };
+                }
 
                 return new DnsRequestResult { IsSuccess = true, Message = "Success" };
             }
@@ -119,7 +129,7 @@ namespace Certify.Providers.DNS.AWSRoute53
                     Type = RRType.TXT,
                     ResourceRecords = new List<ResourceRecord>
                         {
-                          new ResourceRecord { Value = request.RecordValue }
+                          new ResourceRecord { Value = "\""+request.RecordValue+"\""}
                         }
                 };
 
