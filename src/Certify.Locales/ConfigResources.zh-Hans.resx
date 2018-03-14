@@ -117,89 +117,30 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="ManagedItemType_LocalIIS" xml:space="preserve">
-    <value>本地IIS，Let's Encrypt的证书</value>
+  <data name="AppName" xml:space="preserve">
+    <value>Certify SSL/TLS 证书管理器</value>
   </data>
-  <data name="ManagedItemType_Manual" xml:space="preserve">
-    <value>手动绑定，Let's Encrypt的证书</value>
+  <data name="GettingStartedExistingVault" xml:space="preserve">
+    <value>开始：在左侧浏览证书库以查看当前证书信息。</value>
   </data>
-  <data name="Finish" xml:space="preserve">
-    <value>完成</value>
+  <data name="BetaWarning" xml:space="preserve">
+    <value>警告：这是一个预发布版本，仅供测试或反馈，可能会遇到问题，不要在重要的生产站点上使用此版本。</value>
   </data>
-  <data name="CertifyManager_DomainValidationFailed" xml:space="preserve">
-    <value>域名验证失败：{0} 
-{1}</value>
+  <data name="UpdateCheckLatestVersion" xml:space="preserve">
+    <value>您正在使用最新版本。</value>
   </data>
-  <data name="CertifyManager_DomainValidationCompleted" xml:space="preserve">
-    <value>域名认证完成：{0}</value>
+  <data name="LongAppName" xml:space="preserve">
+    <value>Certify SSL/TLS 证书管理器</value>
   </data>
-  <data name="CertifyManager_DomainValidationSkipVerifed" xml:space="preserve">
-    <value>域名当前已经认证通过，跳过认证：{0}</value>
-  </data>
-  <data name="CertifyManager_RequestCertificate" xml:space="preserve">
-    <value>正在申请证书</value>
-  </data>
-  <data name="CertifyManager_CompleteRequest" xml:space="preserve">
-    <value>申请证书完成</value>
-  </data>
-  <data name="CertifyManager_CompleteRequestAndUpdateBinding" xml:space="preserve">
-    <value>证书申请完成，IIS绑定已自动更新</value>
-  </data>
-  <data name="CertifyManager_CertificateInstalledAndBindingUpdated" xml:space="preserve">
-    <value>证书申请完成，{0} 的IIS绑定已更新</value>
-  </data>
-  <data name="CertifyManager_CertificateInstallFailed" xml:space="preserve">
-    <value>安装证书的时候发生错误，证书可能无效：{0}</value>
-  </data>
-  <data name="CertifyManager_CertificateCreatedForBinding" xml:space="preserve">
-    <value>证书已可供手动绑定：{0}</value>
-  </data>
-  <data name="CertifyManager_LetsEncryptServiceTimeout" xml:space="preserve">
-    <value>Let's Encrypt 服务未在指定的时间内颁发有效的证书。{0}</value>
-  </data>
-  <data name="CertifyManager_ValidationForChallengeNotSuccess" xml:space="preserve">
-    <value>必须的验证未能成功完成。{0}</value>
-  </data>
-  <data name="CertifyManager_RequestFailed" xml:space="preserve">
-    <value>{0}: 请求失败 - {1} {2}</value>
-  </data>
-  <data name="CertificateRequestWasAbortedByPSScript" xml:space="preserve">
-    <value>证书申请被PS脚本中止</value>
-  </data>
-  <data name="CertifyManager_FailedPrerequisiteCheck" xml:space="preserve">
-    <value>预置检查失败（{0}）</value>
-  </data>
-  <data name="CertifyManager_AutomateConfigurationCheckFailed_HTTP" xml:space="preserve">
-    <value>自动配置检查失败，无法完成认证。检查您站点的HTTP绑定，请在继续前确认可以浏览 http://{0}/.well-known/acme-challenge/configcheck</value>
-  </data>
-  <data name="CertifyManager_AutomateConfigurationCheckFailed_SNI" xml:space="preserve">
-    <value>自动配置检查失败，无法完成认证。请在继续签检查您站点的HTTPS SNI绑定（如  '0123456789ABCDEF0123456789ABCDEF.0123456789ABCDEF0123456789ABCDEF.acme.invalid'）</value>
-  </data>
-  <data name="CertifyManager_ReqestValidationFromLetsEncrypt" xml:space="preserve">
-    <value>正在向Let's Encrype请求验证：{0}</value>
-  </data>
-  <data name="CertifyManager_AutoBinding" xml:space="preserve">
-    <value>进行自动证书绑定</value>
-  </data>
-  <data name="CertifyManager_SkipRenewalOk" xml:space="preserve">
-    <value>当前证书有效，跳过续期。</value>
-  </data>
-  <data name="CertifyManager_SiteStopped" xml:space="preserve">
-    <value>站点已停止（或不存在），因域名验证无法继续所以跳过续期。</value>
-  </data>
-  <data name="CertifyManager_PerformingConfigTests" xml:space="preserve">
-    <value>进行配置检查</value>
-  </data>
-  <data name="CertifyManager_RegisteringAndValidatingX0" xml:space="preserve">
-    <value>注册并验证 {0}</value>
-  </data>
-  <data name="CertifyManager_PerformingChallengeResponseViaIISX0" xml:space="preserve">
-    <value>通过IIS进行认证: {0}</value>
-  </data>
-  <data name="CertifyManager_RegisterDomainIdentity" xml:space="preserve">
-    <value>注册域名标识符</value>
-  </data>
-  <data name="CertifyManager_RenewalOnHold" xml:space="preserve">
-    <value>上次证书续期失败：{0}，将会在48小时内重试。</value>
+  <data name="Credits" xml:space="preserve">
+    <value>此软件提供为“AS-IS”并不提供任何形式的保证，无论明示或暗示，包括但不限于任何默认条件下，不间断的使用、适销性，针对特定用途的适用性或非侵权。
+
+使用LetsEncrypt.org的加密服务来获得免费的SSL/TSL证书收到LetsEncrypt.org的服务条款约束。此软件不隶属于或受赞助于LetsEncrypt.org。
+
+此软件使用下列开源软件（或明显的移植于）：
+
+- ACMESharp by Eugene Bekker (https://github.com/ebekker/ACMESharp) Licensed under the MPL V 2.0
+- Some icons from Font Awesome by Dave Gandy - http://fontawesome.io 
+- OpenSSL (https://github.com/openssl-net/openssl-net)</value>
   </data>
 </root>

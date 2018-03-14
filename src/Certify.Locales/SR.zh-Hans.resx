@@ -585,4 +585,73 @@
   <data name="ExpiryDateConverter_CertificateExpiresIn" xml:space="preserve">
     <value>{0} 天后过期</value>
   </data>
+  <data name="General_Loading" xml:space="preserve">
+    <value>加载中...</value>
+  </data>
+  <data name="Update_MandatoryUpdateQuit" xml:space="preserve">
+    <value>当前的APP版本已经不再提供支持，请更新后继续使用。</value>
+  </data>
+  <data name="ManagedItemSettings_BindingNote" xml:space="preserve">
+    <value>这些设置仅会应用到新建的HTTPS绑定，已有的绑定将只会应用新证书。</value>
+  </data>
+  <data name="ManagedItemSettings_ReapplyCertificate" xml:space="preserve">
+    <value>重新应用证书</value>
+  </data>
+  <data name="Dashboard_Register" xml:space="preserve">
+    <value>添加</value>
+  </data>
+  <data name="Dashboard_Password" xml:space="preserve">
+    <value>密码</value>
+  </data>
+  <data name="GettingStarted_AddToDashboard" xml:space="preserve">
+    <value>添加到报表看板</value>
+  </data>
+  <data name="GettingStarted_Dashboard" xml:space="preserve">
+    <value>看板</value>
+  </data>
+  <data name="GettingStarted_DashboardIntro" xml:space="preserve">
+    <value>你可以使用报表看板来很方便地查看一台或多台服务器的更新状态，并设置通知选项。</value>
+  </data>
+  <data name="GettingStarted_ViewDashboard" xml:space="preserve">
+    <value>查看看板</value>
+  </data>
+  <data name="Dashboard_NewAccount" xml:space="preserve">
+    <value>创建新账户</value>
+  </data>
+  <data name="Dashboard_AddIntro" xml:space="preserve">
+    <value>要添加这台服务器到您的看板，请提供您在 https://certifytheweb.com/profile 上的登录信息或注册新账户。</value>
+  </data>
+  <data name="ScheduledTaskConfig_UseBackgroundService" xml:space="preserve">
+    <value>使用后台服务（以本地系统帐户运行）</value>
+  </data>
+  <data name="ScheduledTaskConfig_UseScheduledTask" xml:space="preserve">
+    <value>使用计划任务（以特定帐户运行）</value>
+  </data>
+  <data name="ManagedItemsSettings_RefreshDomains" xml:space="preserve">
+    <value>刷新</value>
+  </data>
+  <data name="Update_DownloadNow" xml:space="preserve">
+    <value>您希望自动下载更新吗？在准备就绪的时候将会通知您。</value>
+  </data>
+  <data name="Update_ReadyToApply" xml:space="preserve">
+    <value>更新已就绪，现在就安装吗？</value>
+  </data>
+  <data name="ManagedItemSettings_InvalidSNI" xml:space="preserve">
+    <value>您正在试图在一个已绑定IP的地址上创建一个SNI绑定。我们推荐在使用SNI绑定的时候使用未指定地址。确定继续保存吗？</value>
+  </data>
+  <data name="Credentials_EditCredential" xml:space="preserve">
+    <value>添加/更新证书存储</value>
+  </data>
+  <data name="Update_DownloadFailed" xml:space="preserve">
+    <value>抱歉，更新无法下载，请稍候重试。</value>
+  </data>
+  <data name="Managed_Certificates" xml:space="preserve">
+    <value>受管理证书</value>
+  </data>
+  <data name="ManagedItemSettings_DefaultTitle" xml:space="preserve">
+    <value>新建受管理证书</value>
+  </data>
+  <data name="ManagedItemSettings_AddDomainsToCertificate" xml:space="preserve">
+    <value>添加域名:</value>
+  </data>
 </root>

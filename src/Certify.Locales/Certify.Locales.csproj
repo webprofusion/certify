@@ -25,6 +25,9 @@
     <EmbeddedResource Update="ConfigResources.es-ES.resx">
       <DependentUpon>ConfigResources.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Update="ConfigResources.zh-Hans.resx">
+      <DependentUpon>ConfigResources.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Update="ConfigResources.nb-NO.resx">
       <DependentUpon>ConfigResources.resx</DependentUpon>
     </EmbeddedResource>
