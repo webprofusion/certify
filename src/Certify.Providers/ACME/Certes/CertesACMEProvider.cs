@@ -28,10 +28,10 @@ namespace Certify.Providers.Certes
     public class CertesACMEProvider : ActionLogCollector, IACMEClientProvider, IVaultProvider
     {
         private AcmeContext _acme;
-#if DEBUG
+#if !DEBUG
         private Uri _serviceUri = WellKnownServers.LetsEncryptStagingV2;
 #else
-        private Uri _serviceUri = WellKnownServers.LetsEncrypt;
+        private Uri _serviceUri = WellKnownServers.LetsEncryptV2;
 #endif
         private string _settingsFolder = @"c:\programdata\certify\certes\";
         private CertesSettings _settings = null;

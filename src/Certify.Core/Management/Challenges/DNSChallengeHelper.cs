@@ -2,7 +2,9 @@
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
+using Certify.Providers.DNS.Azure;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -16,7 +18,8 @@ namespace Certify.Core.Management.Challenges
             // creating the required TXT record
 
             var credentialsManager = new CredentialsManager();
-            string[] credentialArray;
+            Dictionary<string, string> credentials = new Dictionary<string, string>();
+
             string zoneId = null;
 
             Models.Config.ProviderDefinition providerDefinition;
@@ -25,7 +28,7 @@ namespace Certify.Core.Management.Challenges
             if (!String.IsNullOrEmpty(managedsite.RequestConfig.ChallengeCredentialKey))
             {
                 // decode credentials string array
-                credentialArray = await credentialsManager.GetUnlockedCredentialsArray(managedsite.RequestConfig.ChallengeCredentialKey);
+                credentials = await credentialsManager.GetUnlockedCredentialsDictionary(managedsite.RequestConfig.ChallengeCredentialKey);
             }
             else
             {
@@ -43,7 +46,7 @@ namespace Certify.Core.Management.Challenges
 
             if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.PYTHON_HELPER)
             {
-                dnsAPIProvider = new LibcloudDNSProvider(credentialArray);
+                dnsAPIProvider = new LibcloudDNSProvider(credentials);
             }
             else
             {
@@ -51,8 +54,18 @@ namespace Certify.Core.Management.Challenges
                 {
                     if (providerDefinition.Id == "DNS01.API.Route53")
                     {
-                        zoneId = credentialArray[2];
-                        dnsAPIProvider = new Providers.DNS.AWSRoute53.DnsProviderAWSRoute53(credentialArray[0], credentialArray[1]);
+                        zoneId = credentials["zoneid"];
+
+                        dnsAPIProvider = new Providers.DNS.AWSRoute53.DnsProviderAWSRoute53(credentials["accesskey"], credentials["secretaccesskey"]);
+                    }
+
+                    if (providerDefinition.Id == "DNS01.API.Azure")
+                    {
+                        zoneId = credentials["zoneid"];
+
+                        var azureDns = new DnsProviderAzure(credentials);
+                        await azureDns.InitProvider();
+                        dnsAPIProvider = azureDns;
                     }
                 }
             }

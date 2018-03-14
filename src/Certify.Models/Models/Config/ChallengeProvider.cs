@@ -50,14 +50,34 @@ namespace Certify.Models.Config
                 Title = "Amazon Route 53 DNS API",
                 Description = "Validates via Route 53 APIs using AMI service credentials",
                 ProviderParameters= new List<ProviderParameter>{
-                    new ProviderParameter{ Name="Access Key", IsRequired=true, IsPassword=false },
-                    new ProviderParameter{ Name="Secret Access Key", IsRequired=true, IsPassword=true },
-                    new ProviderParameter{ Name="Hosted Zone ID", IsRequired=true, IsPassword=false }
+                    new ProviderParameter{ Key="accesskey",Name="Access Key", IsRequired=true, IsPassword=false },
+                    new ProviderParameter{ Key="secretaccesskey",Name="Secret Access Key", IsRequired=true, IsPassword=true },
+                    new ProviderParameter{ Key="zoneid",Name="Hosted Zone ID", IsRequired=true, IsPassword=false }
                 },
                 Config="Provider=Certify.Providers.DNS.AWSRoute53",
                 HandlerType = ChallengeHandlerType.INTERNAL
             },
             new ProviderDefinition
+            {
+                Id = "DNS01.API.Azure",
+                ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Title = "Azure DNS API",
+                Description = "Validates via Azure DNS APIs using credentials",
+                HelpUrl="https://docs.microsoft.com/en-us/azure/dns/dns-sdk",
+                ProviderParameters = new List<ProviderParameter>{
+                    new ProviderParameter{Key="tenantid", Name="Tenant Id", IsRequired=false },
+                    new ProviderParameter{Key="clientid", Name="ClientId", IsRequired=false },
+                    new ProviderParameter{Key="secret",Name="Secret", IsRequired=true , IsPassword=true},
+                    new ProviderParameter{Key="subscriptionid",Name="DNS Subscription Id", IsRequired=true , IsPassword=false},
+                    new ProviderParameter{Key="resourcegroupname",Name="Resource Group Name", IsRequired=true , IsPassword=false},
+                    new ProviderParameter{Key="zoneid",Name="Zone Name", IsRequired=true , IsPassword=false},
+                },
+                Config="Provider=Certify.Providers.DNS.Azure",
+                HandlerType = ChallengeHandlerType.INTERNAL
+            }
+
+            /*
+             *  new ProviderDefinition
             {
                 Id = "DNS01.API.Azure",
                 ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
@@ -71,10 +91,9 @@ namespace Certify.Models.Config
                     new ProviderParameter{Name="DNS Subscription Id", IsRequired=true , IsPassword=true},
                     new ProviderParameter{Name="Resource Group Name", IsRequired=true , IsPassword=false},
                 },
-                RequiredCredentials="Subscription ID, Access Key",
                 Config="Provider=PythonHelper;Driver=AZURE",
                 HandlerType = ChallengeHandlerType.PYTHON_HELPER
-            }
+            }*/
         };
     }
 }

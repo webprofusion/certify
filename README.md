@@ -2,7 +2,7 @@
 
 Home page for downloads and info : [https://certifytheweb.com/](https://certifytheweb.com/)
 
-The SSL/TLS Certificate Management GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/), allowing you to generate and install free SSL certificates for IIS (with a 90 day expiry and automated renewal).
+The SSL/TLS Certificate Management GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/), allowing you to generate and install free SSL certificates for IIS (with automated renewal).
 
 Features:
 - Easy certificate requests & automated SSL bindings

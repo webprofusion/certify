@@ -1,6 +1,7 @@
 ﻿using Certify.Management;
 using Certify.Models.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -11,7 +12,7 @@ namespace Certify.Core.Tests
     public class DnsAPITest : IntegrationTestBase
     {
         private string _awsCredStorageKey = "";
-        private string[] _credArray;
+        private Dictionary<string, string> _credentials = new Dictionary<string, string>();
 
         public DnsAPITest()
         {
@@ -23,13 +24,13 @@ namespace Certify.Core.Tests
         {
             var credentialsManager = new CredentialsManager();
 
-            _credArray = await credentialsManager.GetUnlockedCredentialsArray(_awsCredStorageKey);
+            _credentials = await credentialsManager.GetUnlockedCredentialsDictionary(_awsCredStorageKey);
         }
 
         [TestMethod, TestCategory("DNS")]
         public async Task TestCreateRecord()
         {
-            Certify.Providers.DNS.AWSRoute53.DnsProviderAWSRoute53 route53 = new Providers.DNS.AWSRoute53.DnsProviderAWSRoute53(_credArray[0], _credArray[1]);
+            var route53 = new Providers.DNS.AWSRoute53.DnsProviderAWSRoute53(_credentials["accesskey"], _credentials["secretaccesskey"]);
 
             DnsCreateRecordRequest createRequest = new DnsCreateRecordRequest
             {
@@ -53,7 +54,7 @@ namespace Certify.Core.Tests
         [TestMethod, TestCategory("DNS")]
         public async Task TestDeleteRecord()
         {
-            Certify.Providers.DNS.AWSRoute53.DnsProviderAWSRoute53 route53 = new Providers.DNS.AWSRoute53.DnsProviderAWSRoute53(_credArray[0], _credArray[1]);
+            var route53 = new Providers.DNS.AWSRoute53.DnsProviderAWSRoute53(_credentials["accesskey"], _credentials["secretaccesskey"]);
 
             DnsDeleteRecordRequest deleteRequest = new DnsDeleteRecordRequest
             {

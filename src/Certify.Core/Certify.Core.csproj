@@ -76,6 +76,10 @@
       <Project>{5a15cad6-eb62-4f0e-8229-83336d7c1d4b}</Project>
       <Name>Certify.Providers.DNS.AWSRoute53</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Certify.Providers\DNS\Certify.Providers.DNS.Azure\Certify.Providers.DNS.Azure.csproj">
+      <Project>{533CFB5B-D443-4AB6-A289-90C689A71B81}</Project>
+      <Name>Certify.Providers.DNS.Azure</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Certify.Shared\Certify.Shared.csproj">
       <Project>{ed48b479-b619-4c16-afa3-83dd3cd89338}</Project>
       <Name>Certify.Shared</Name>

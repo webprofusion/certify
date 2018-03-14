@@ -1,6 +1,7 @@
 ﻿using Certify.Models.Config;
 using Certify.Models.Providers;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -10,10 +11,11 @@ namespace Certify.Core.Management.Challenges
     public class LibcloudDNSProvider : IDnsProvider
     {
         private string _pythonPath = "";
-        private string[] credentials;
+        private Dictionary<string, string> _credentials;
 
-        public LibcloudDNSProvider(string[] credentials)
+        public LibcloudDNSProvider(Dictionary<string, string> credentials)
         {
+            _credentials = credentials;
             _pythonPath = Certify.Management.Util.GetAppDataFolder("python-embedded") + "\\python.exe";
         }
 
@@ -26,14 +28,14 @@ namespace Certify.Core.Management.Challenges
             // name> -v <record value>
 
             string providerSpecificConfig = "ROUTE53";
-            string credentialsString = String.Join(",", credentials);
+            string credentialsString = String.Join(",", _credentials);
 
             // var config = providerDetails.Config.Split(';');
             //get our driver type
             //   providerSpecificConfig = config.First(c => c.StartsWith("Driver")).Replace("Driver=", "");
 
             // Run python helper, specifying driver to use
-            var helperResult = RunPythonScript($"dns_helper_util.py -p {providerSpecificConfig} -c {credentials} -d {request.TargetDomainName} -n {request.RecordName} -v {request.RecordValue}");
+            var helperResult = RunPythonScript($"dns_helper_util.py -p {providerSpecificConfig} -c {_credentials} -d {request.TargetDomainName} -n {request.RecordName} -v {request.RecordValue}");
 
             if (helperResult.IsSuccess)
             {
@@ -74,7 +76,7 @@ namespace Certify.Core.Management.Challenges
             try
             {
                 var start = new ProcessStartInfo();
-                //FIXME: remove hard coded test paths
+
                 start.FileName = _pythonPath;
 
                 start.WorkingDirectory = Environment.CurrentDirectory + "\\Scripts\\Python\\";
