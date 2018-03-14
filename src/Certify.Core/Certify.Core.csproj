@@ -51,6 +51,7 @@
     <Compile Include="Management\CertifyManager.cs" />
     <Compile Include="Management\Challenges\ChallengeDiagnostics.cs" />
     <Compile Include="Management\Challenges\DNSChallengeHelper.cs" />
+    <Compile Include="Management\Challenges\LibcloudDNSProvider.cs" />
     <Compile Include="Management\CredentialsManager.cs" />
     <Compile Include="Management\Servers\ServerProviderIIS.cs" />
     <Compile Include="Management\ItemManager.cs" />

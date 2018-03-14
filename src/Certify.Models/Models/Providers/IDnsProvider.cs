@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using Certify.Models.Config;
+using System.Threading.Tasks;
 
 namespace Certify.Models.Providers
 {
@@ -21,16 +22,10 @@ namespace Certify.Models.Providers
         public string RecordValue { get; set; }
     }
 
-    public class DnsRequestResult
-    {
-        public bool IsSuccess { get; set; }
-        public string Message { get; set; }
-    }
-
     public interface IDnsProvider
     {
-        Task<DnsRequestResult> CreateRecord(DnsCreateRecordRequest request);
+        Task<ActionResult> CreateRecord(DnsCreateRecordRequest request);
 
-        Task<DnsRequestResult> DeleteRecord(DnsDeleteRecordRequest request);
+        Task<ActionResult> DeleteRecord(DnsDeleteRecordRequest request);
     }
 }

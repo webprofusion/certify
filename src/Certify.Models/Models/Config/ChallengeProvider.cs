@@ -2,10 +2,20 @@
 
 namespace Certify.Models.Config
 {
+    public enum ChallengeHandlerType
+    {
+        MANUAL = 1,
+        CUSTOM_SCRIPT = 2,
+        PYTHON_HELPER = 3,
+        PLUGIN = 4,
+        INTERNAL = 5
+    }
+
     public class ProviderDefinition
     {
         public string Id { get; set; }
         public string ChallengeType { get; set; }
+        public ChallengeHandlerType HandlerType { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
         public string HelpUrl { get; set; }
@@ -29,7 +39,8 @@ namespace Certify.Models.Config
                 Id = "HTTP01.IIS.Local",
                 ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
                 Title = "Local IIS Server",
-                Description = "Validates via standard http website bindings on port 80"
+                Description = "Validates via standard http website bindings on port 80",
+                HandlerType = ChallengeHandlerType.INTERNAL
             },
             // DNS
             new ProviderDefinition
@@ -43,7 +54,8 @@ namespace Certify.Models.Config
                     new ProviderParameter{ Name="Secret Access Key", IsRequired=true, IsPassword=true },
                     new ProviderParameter{ Name="Hosted Zone ID", IsRequired=true, IsPassword=false }
                 },
-                Config="Provider=Certify.Providers.DNS.AWSRoute53"
+                Config="Provider=Certify.Providers.DNS.AWSRoute53",
+                HandlerType = ChallengeHandlerType.INTERNAL
             },
             new ProviderDefinition
             {
@@ -51,8 +63,17 @@ namespace Certify.Models.Config
                 ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Title = "Azure DNS API",
                 Description = "Validates via Azure DNS APIs using credentials",
+                HelpUrl="https://docs.microsoft.com/en-us/azure/dns/dns-sdk",
+                ProviderParameters = new List<ProviderParameter>{
+                    new ProviderParameter{Name="TenantId", IsRequired=true },
+                    new ProviderParameter{Name="ClientId", IsRequired=true },
+                    new ProviderParameter{Name="Secret", IsRequired=true , IsPassword=true},
+                    new ProviderParameter{Name="DNS Subscription Id", IsRequired=true , IsPassword=true},
+                    new ProviderParameter{Name="Resource Group Name", IsRequired=true , IsPassword=false},
+                },
                 RequiredCredentials="Subscription ID, Access Key",
-                Config="Provider=PythonHelper;Driver=AZURE"
+                Config="Provider=PythonHelper;Driver=AZURE",
+                HandlerType = ChallengeHandlerType.PYTHON_HELPER
             }
         };
     }

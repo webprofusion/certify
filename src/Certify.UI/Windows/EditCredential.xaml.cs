@@ -23,7 +23,7 @@ namespace Certify.UI.Windows
         {
             InitializeComponent();
 
-            this.ProviderTypes.ItemsSource = ChallengeProviders.Providers.Where(p => p.RequiredCredentials != null);
+            this.ProviderTypes.ItemsSource = ChallengeProviders.Providers.Where(p => p.ProviderParameters.Any());
         }
 
         private async void Save_Click(object sender, System.Windows.RoutedEventArgs e)

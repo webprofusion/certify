@@ -1,149 +1,101 @@
 ﻿using Certify.Management;
 using Certify.Models;
+using Certify.Models.Config;
+using Certify.Models.Providers;
 using System;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Certify.Core.Management.Challenges
 {
-    public enum DNSChallengeHandlerType
-    {
-        MANUAL = 1,
-        CUSTOM_SCRIPT = 2,
-        PYTHON_HELPER = 3
-    }
-
-    public class ChallengeHelperResult
-    {
-        public bool IsSuccess { get; set; }
-        public string Message { get; set; }
-    }
-
     public class DNSChallengeHelper
     {
-        private string _pythonPath = "";
-
-        public DNSChallengeHelper()
-        {
-            _pythonPath = Certify.Management.Util.GetAppDataFolder("python-embedded") + "\\python.exe";
-        }
-
-        public async Task<ChallengeHelperResult> CompleteDNSChallenge(ManagedSite managedsite, string domain, string txtRecordName, string txtRecordValue)
+        public async Task<ActionResult> CompleteDNSChallenge(ManagedSite managedsite, string domain, string txtRecordName, string txtRecordValue)
         {
             // for a given managed site configuration, attempt to complete the required challenge by
             // creating the required TXT record
 
-            // if provider is python based
-
-            // get stored credentials, for passing as arguments to script
-
-            // run script dns_helper_init.py -p <providername> -c <user,pwd> -d <domain> -n <record
-            // name> -v <record value>
-            string providerType = "PythonHelper";
-            string providerSpecificConfig = "ROUTE53";
-            string credentials = "user,pwd";
-
             var credentialsManager = new CredentialsManager();
+            string[] credentialArray;
+            string zoneId = null;
 
-            if (!String.IsNullOrEmpty(managedsite.RequestConfig.ChallengeProvider))
-            {
-                var providerDetails = Models.Config.ChallengeProviders.Providers.FirstOrDefault(p => p.Id == managedsite.RequestConfig.ChallengeProvider);
-                var config = providerDetails.Config.Split(';');
-                //get our driver type
-                providerSpecificConfig = config.First(c => c.StartsWith("Driver")).Replace("Driver=", "");
-            }
-            else
-            {
-                return new ChallengeHelperResult { IsSuccess = false, Message = "DNS Challenge API Provider not set. Select an API to proceed." };
-            }
+            Models.Config.ProviderDefinition providerDefinition;
+            IDnsProvider dnsAPIProvider = null;
 
             if (!String.IsNullOrEmpty(managedsite.RequestConfig.ChallengeCredentialKey))
             {
                 // decode credentials string array
-                string[] credentialArray = await credentialsManager.GetUnlockedCredentialsArray(managedsite.RequestConfig.ChallengeCredentialKey);
-                credentials = String.Join(",", credentialArray);
+                credentialArray = await credentialsManager.GetUnlockedCredentialsArray(managedsite.RequestConfig.ChallengeCredentialKey);
             }
             else
             {
-                return new ChallengeHelperResult { IsSuccess = false, Message = "DNS Challenge API Credentials not set. Add or select API credentials to proceed." };
+                return new ActionResult { IsSuccess = false, Message = "DNS Challenge API Credentials not set. Add or select API credentials to proceed." };
             }
 
-            // Run python helper, specifying driver to use
-            var helperResult = RunPythonScript($"dns_helper_util.py -p {providerSpecificConfig} -c {credentials} -d {domain} -n {txtRecordName} -v {txtRecordValue}");
-
-            if (helperResult.IsSuccess)
+            if (!String.IsNullOrEmpty(managedsite.RequestConfig.ChallengeProvider))
             {
-                // test - wait for DNS changes
-                await Task.Delay(15000);
+                providerDefinition = Models.Config.ChallengeProviders.Providers.FirstOrDefault(p => p.Id == managedsite.RequestConfig.ChallengeProvider);
+            }
+            else
+            {
+                return new ActionResult { IsSuccess = false, Message = "DNS Challenge API Provider not set. Select an API to proceed." };
+            }
 
-                // do our own txt record query before proceeding with challenge completion
-                /*
-                int attempts = 3;
-                bool recordCheckedOK = false;
-                var networkUtil = new NetworkUtils(false);
-
-                while (attempts > 0 && !recordCheckedOK)
+            if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.PYTHON_HELPER)
+            {
+                dnsAPIProvider = new LibcloudDNSProvider(credentialArray);
+            }
+            else
+            {
+                if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.INTERNAL)
                 {
-                    recordCheckedOK = networkUtil.CheckDNSRecordTXT(domain, txtRecordName, txtRecordValue);
-                    attempts--;
-                    if (!recordCheckedOK)
+                    if (providerDefinition.Id == "DNS01.API.Route53")
                     {
-                        await Task.Delay(1000); // hold on a sec
+                        zoneId = credentialArray[2];
+                        dnsAPIProvider = new Providers.DNS.AWSRoute53.DnsProviderAWSRoute53(credentialArray[0], credentialArray[1]);
                     }
                 }
-                */
-                return helperResult;
             }
-            else
+
+            if (dnsAPIProvider != null)
             {
-                return helperResult;
-            }
-        }
-
-        private ChallengeHelperResult RunPythonScript(string args)
-        {
-            try
-            {
-                var start = new ProcessStartInfo();
-                //FIXME: remove hard coded test paths
-                start.FileName = _pythonPath;
-
-                start.WorkingDirectory = Environment.CurrentDirectory + "\\Scripts\\Python\\";
-                start.Arguments = string.Format("{0}", args);
-                start.UseShellExecute = false;
-                start.RedirectStandardOutput = true;
-
-                bool failEncountered = false;
-                string msg = "";
-                using (Process process = Process.Start(start))
+                var result = await dnsAPIProvider.CreateRecord(new DnsCreateRecordRequest
                 {
-                    using (StreamReader reader = process.StandardOutput)
+                    RecordType = "TXT",
+                    TargetDomainName = domain,
+                    RecordName = txtRecordName,
+                    RecordValue = txtRecordValue,
+                    ZoneId = zoneId
+                });
+
+                if (result.IsSuccess)
+                {
+                    // do our own txt record query before proceeding with challenge completion
+                    /*
+                    int attempts = 3;
+                    bool recordCheckedOK = false;
+                    var networkUtil = new NetworkUtils(false);
+
+                    while (attempts > 0 && !recordCheckedOK)
                     {
-                        string result = reader.ReadToEnd();
-                        if (result.ToLower().Contains("failed") || result.ToLower().Contains("error"))
+                        recordCheckedOK = networkUtil.CheckDNSRecordTXT(domain, txtRecordName, txtRecordValue);
+                        attempts--;
+                        if (!recordCheckedOK)
                         {
-                            failEncountered = true;
-                            msg = result;
+                            await Task.Delay(1000); // hold on a sec
                         }
-                        Debug.Write(result);
                     }
+                    */
+                    return result;
                 }
-
-                return new ChallengeHelperResult
+                else
                 {
-                    IsSuccess = !failEncountered,
-                    Message = msg
-                };
+                    return result;
+                }
             }
-            catch (Exception exp)
+            else
             {
-                return new ChallengeHelperResult
-                {
-                    IsSuccess = false,
-                    Message = exp.Message
-                };
+                return new ActionResult { IsSuccess = false, Message = "Error: Could not determine DNS API Provider." };
             }
         }
     }

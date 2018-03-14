@@ -1,5 +1,6 @@
 ﻿using Amazon.Route53;
 using Amazon.Route53.Model;
+using Certify.Models.Config;
 using Certify.Models.Providers;
 using System;
 using System.Collections.Generic;
@@ -80,7 +81,7 @@ namespace Certify.Providers.DNS.AWSRoute53
             return true;
         }
 
-        public async Task<DnsRequestResult> CreateRecord(DnsCreateRecordRequest request)
+        public async Task<ActionResult> CreateRecord(DnsCreateRecordRequest request)
         {
             // https://docs.aws.amazon.com/sdk-for-net/v2/developer-guide/route53-apis-intro.html
             // find zone
@@ -105,18 +106,18 @@ namespace Certify.Providers.DNS.AWSRoute53
                 }
                 catch (Exception exp)
                 {
-                    new DnsRequestResult { IsSuccess = false, Message = exp.InnerException.Message };
+                    new ActionResult { IsSuccess = false, Message = exp.InnerException.Message };
                 }
 
-                return new DnsRequestResult { IsSuccess = true, Message = "Success" };
+                return new ActionResult { IsSuccess = true, Message = "Success" };
             }
             else
             {
-                return new DnsRequestResult { IsSuccess = false, Message = "DNS Zone match could not be determined." };
+                return new ActionResult { IsSuccess = false, Message = "DNS Zone match could not be determined." };
             }
         }
 
-        public async Task<DnsRequestResult> DeleteRecord(DnsDeleteRecordRequest request)
+        public async Task<ActionResult> DeleteRecord(DnsDeleteRecordRequest request)
         {
             var zone = await ResolveMatchingZone(request);
 
@@ -135,11 +136,11 @@ namespace Certify.Providers.DNS.AWSRoute53
 
                 var result = ApplyDnsChange(zone, recordSet, ChangeAction.DELETE);
 
-                return new DnsRequestResult { IsSuccess = true, Message = "Success" };
+                return new ActionResult { IsSuccess = true, Message = "Success" };
             }
             else
             {
-                return new DnsRequestResult { IsSuccess = false, Message = "DNS Zone match could not be determined." };
+                return new ActionResult { IsSuccess = false, Message = "DNS Zone match could not be determined." };
             }
         }
     }
