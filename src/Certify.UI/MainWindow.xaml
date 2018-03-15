@@ -28,13 +28,13 @@
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,8,8,0" VerticalAlignment="Top">
 
-            <Button Height="32" Margin="8,0,0,5" Click="Button_NewCertificate">
+            <Button AutomationProperties.Name="{x:Static res:SR.New_Certificate}" Height="32" Margin="8,0,0,5" Click="Button_NewCertificate">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome Icon="Globe" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.New_Certificate}" /></TextBlock>
                 </StackPanel>
             </Button>
-            <Button Height="32" Margin="8,0,0,5" Click="Button_RenewAll">
+            <Button AutomationProperties.Name="{x:Static res:SR.Renew_All}" Height="32" Margin="8,0,0,5" Click="Button_RenewAll">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome Icon="Refresh" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Renew_All}" /></TextBlock>
@@ -42,7 +42,7 @@
             </Button>
 
             <StackPanel Orientation="Horizontal" Visibility="{Binding IsUpdateAvailable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
-                <Button x:Name="ButtonUpdateAvailable" Height="32" Margin="8,0,0,5" Background="GreenYellow" Click="ButtonUpdateAvailable_Click">
+                <Button x:Name="ButtonUpdateAvailable" AutomationProperties.Name="{x:Static res:SR.Update_Available}" Height="32" Margin="8,0,0,5" Background="GreenYellow" Click="ButtonUpdateAvailable_Click">
                     <StackPanel Orientation="Horizontal">
                         <fa:ImageAwesome Name="UpdateIcon" Icon="Superpowers" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
                         <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Update_Available}" /></TextBlock>

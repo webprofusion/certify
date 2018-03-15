@@ -143,15 +143,13 @@ namespace Certify.UI.Controls
             //modify the selected credential
             if (_selectedStoredCredential != null)
             {
-                var d = new Windows.EditCredential
-                {
-                    Item = _selectedStoredCredential,
-                    Owner = Window.GetWindow(this)
-                };
+                var d = new Windows.EditCredential(_selectedStoredCredential);
+                d.Owner = Window.GetWindow(this);
+
                 d.ShowDialog();
             }
 
-            //TODO: test credential option
+            //TODO: option to test a credential
         }
 
         private async void DeleteStoredCredential_Click(object sender, RoutedEventArgs e)

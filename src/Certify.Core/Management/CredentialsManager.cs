@@ -207,6 +207,8 @@ namespace Certify.Management
 
             string protectedContent = Protect(credentialInfo.Secret, PROTECTIONENTROPY, DataProtectionScope.CurrentUser);
 
+            credentialInfo.Secret = "protected";
+
             var path = GetDbPath();
 
             //create database if it doesn't exist

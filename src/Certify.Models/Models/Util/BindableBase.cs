@@ -27,7 +27,7 @@ namespace Certify.Models
             {
                 // auto-update the IsChanged property for standard properties
 #if DEBUG
-                System.Diagnostics.Debug.WriteLine($"Model change: {prop} from {before} to {after}");
+                // System.Diagnostics.Debug.WriteLine($"Model change: {prop} from {before} to {after}");
 #endif
                 IsChanged = true;
             }

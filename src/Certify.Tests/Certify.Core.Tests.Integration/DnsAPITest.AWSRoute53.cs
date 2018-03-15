@@ -38,7 +38,7 @@ namespace Certify.Core.Tests
                 RecordType = "TXT",
                 RecordValue = "A random test",
                 TargetDomainName = PrimaryTestDomain,
-                ZoneId = "Z2UTXJ6TJN4Q0M"
+                ZoneId = _credentials["zoneid"]
             };
 
             Stopwatch stopwatch = Stopwatch.StartNew();
@@ -62,7 +62,7 @@ namespace Certify.Core.Tests
                 RecordType = "TXT",
                 RecordValue = "A random test",
                 TargetDomainName = PrimaryTestDomain,
-                ZoneId = "Z2UTXJ6TJN4Q0M"
+                ZoneId = _credentials["zoneid"]
             };
 
             var stopwatch = Stopwatch.StartNew();
