@@ -13,11 +13,11 @@
         Title="{x:Static res:SR.New_Contact}" Height="319.69" Width="514.703" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner">
     <Grid>
 
-        <TextBlock HorizontalAlignment="Left" Margin="12,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="472" Foreground="{DynamicResource AccentColorBrush}" ><Run Text="{x:Static res:SR.New_Contact_Tip1}" /><LineBreak /><Run /><LineBreak /><Run Text="{x:Static res:SR.New_Contact_Tip2}" /></TextBlock>
+        <TextBlock HorizontalAlignment="Left" Margin="12,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="472" Style="{StaticResource Instructions}" ><Run Text="{x:Static res:SR.New_Contact_Tip1}" /><LineBreak /><Run /><LineBreak /><Run Text="{x:Static res:SR.New_Contact_Tip2}" /></TextBlock>
         <Label Content="{x:Static res:SR.Email_Address}" Padding="0,5,5,5" HorizontalAlignment="Left" Margin="12,119,0,0" VerticalAlignment="Top" />
         <TextBox HorizontalAlignment="Left" Height="23" Margin="96,119,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="367" Text="{Binding EmailAddress}">
         </TextBox>
-        <TextBlock Margin="10,150,33.6,0" TextWrapping="Wrap" Text="{x:Static res:SR.NewContact_AgreeConfirm}" VerticalAlignment="Top" Foreground="{DynamicResource AccentColorBrush}" />
+        <TextBlock Margin="10,150,33.6,0" TextWrapping="Wrap" Text="{x:Static res:SR.NewContact_AgreeConfirm}" VerticalAlignment="Top" Style="{StaticResource Instructions}" />
         <CheckBox Content="{x:Static res:SR.Yes_I_Agree}" HorizontalAlignment="Left" Margin="10,218,0,0" VerticalAlignment="Top" IsChecked="{Binding AgreedToTermsAndConditions}" />
         <Button x:Name="Save" Content="{x:Static res:SR.Register_Contact}" Margin="12,251,307.6,0" VerticalAlignment="Top" Click="Save_Click" />
         <Button x:Name="Cancel" Content="{x:Static res:SR.Cancel}" HorizontalAlignment="Left" Margin="349,251,0,0" VerticalAlignment="Top" Width="135" Click="Cancel_Click" />
