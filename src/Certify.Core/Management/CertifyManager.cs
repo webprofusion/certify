@@ -108,8 +108,6 @@ namespace Certify.Management
 
         private TelemetryClient _tc = null;
 
-        private string _acmeAPIProvider = "certes";
-
         public CertifyManager()
         {
             Certify.Management.Util.SetSupportedTLSVersions();
