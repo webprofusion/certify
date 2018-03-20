@@ -1,8 +1,15 @@
 ﻿using Certify.Models.Config;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Certify.Models.Providers
 {
+    public class DnsZone
+    {
+        public string ZoneId { get; set; }
+        public string Description { get; set; }
+    }
+
     public class DnsRecordRequest
     {
         public string ZoneId { get; set; }
@@ -27,5 +34,7 @@ namespace Certify.Models.Providers
         Task<ActionResult> CreateRecord(DnsCreateRecordRequest request);
 
         Task<ActionResult> DeleteRecord(DnsDeleteRecordRequest request);
+
+        Task<List<DnsZone>> GetZones();
     }
 }

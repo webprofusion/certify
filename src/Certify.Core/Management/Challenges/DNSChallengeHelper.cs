@@ -3,6 +3,7 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Providers.DNS.Azure;
+using Certify.Providers.DNS.Cloudflare;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -67,6 +68,14 @@ namespace Certify.Core.Management.Challenges
                         await azureDns.InitProvider();
                         dnsAPIProvider = azureDns;
                     }
+
+                    if (providerDefinition.Id == "DNS01.API.Cloudflare")
+                    {
+                        zoneId = credentials["zoneid"];
+
+                        var azureDns = new DnsProviderCloudflare(credentials);
+                        dnsAPIProvider = azureDns;
+                    }
                 }
             }
 
@@ -99,6 +108,9 @@ namespace Certify.Core.Management.Challenges
                         }
                     }
                     */
+
+                    await Task.Delay(5000); // hold on a sec
+
                     return result;
                 }
                 else

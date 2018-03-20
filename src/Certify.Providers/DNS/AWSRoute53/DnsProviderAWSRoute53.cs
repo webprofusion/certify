@@ -143,5 +143,22 @@ namespace Certify.Providers.DNS.AWSRoute53
                 return new ActionResult { IsSuccess = false, Message = "DNS Zone match could not be determined." };
             }
         }
+
+        public async Task<List<DnsZone>> GetZones()
+        {
+            var zones = await route53Client.ListHostedZonesAsync();
+
+            List<DnsZone> results = new List<DnsZone>();
+            foreach (var z in zones.HostedZones)
+            {
+                results.Add(new DnsZone
+                {
+                    ZoneId = z.Id,
+                    Description = z.Name
+                });
+            }
+
+            return results;
+        }
     }
 }

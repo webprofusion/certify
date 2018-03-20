@@ -72,13 +72,17 @@
       <Project>{d7d2d121-b796-49ed-9cf9-158c624857a1}</Project>
       <Name>Certify.Providers.Certes</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Certify.Providers\DNS\AWSRoute53\Certify.Providers.DNS.AWSRoute53.csproj">
+    <ProjectReference Include="..\Certify.Providers\DNS\AWSRoute53\AWSRoute53.csproj">
       <Project>{5a15cad6-eb62-4f0e-8229-83336d7c1d4b}</Project>
-      <Name>Certify.Providers.DNS.AWSRoute53</Name>
+      <Name>AWSRoute53</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Certify.Providers\DNS\Certify.Providers.DNS.Azure\Certify.Providers.DNS.Azure.csproj">
-      <Project>{533CFB5B-D443-4AB6-A289-90C689A71B81}</Project>
-      <Name>Certify.Providers.DNS.Azure</Name>
+    <ProjectReference Include="..\Certify.Providers\DNS\Azure\Azure.csproj">
+      <Project>{533cfb5b-d443-4ab6-a289-90c689a71b81}</Project>
+      <Name>Azure</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Certify.Providers\DNS\Cloudflare\Cloudflare.csproj">
+      <Project>{24849dd8-f1db-42fb-a4e2-45a7a4cf694b}</Project>
+      <Name>Cloudflare</Name>
     </ProjectReference>
     <ProjectReference Include="..\Certify.Shared\Certify.Shared.csproj">
       <Project>{ed48b479-b619-4c16-afa3-83dd3cd89338}</Project>

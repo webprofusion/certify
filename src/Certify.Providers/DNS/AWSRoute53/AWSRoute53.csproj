@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{533CFB5B-D443-4AB6-A289-90C689A71B81}</ProjectGuid>
+    <ProjectGuid>{5A15CAD6-EB62-4F0E-8229-83336D7C1D4B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Certify.Providers.DNS.Azure</RootNamespace>
-    <AssemblyName>Certify.Providers.DNS.Azure</AssemblyName>
+    <RootNamespace>Certify.Providers.DNS.AWSRoute53</RootNamespace>
+    <AssemblyName>Certify.Providers.DNS.AWSRoute53</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -40,7 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DnsProviderAzure.cs" />
+    <Compile Include="DnsProviderAWSRoute53.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -50,11 +50,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Azure.Management.Dns">
-      <Version>2.1.0-preview</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Rest.ClientRuntime.Azure.Authentication">
-      <Version>2.3.2</Version>
+    <PackageReference Include="AWSSDK.Route53">
+      <Version>3.3.15.2</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

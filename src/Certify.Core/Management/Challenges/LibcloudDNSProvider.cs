@@ -71,6 +71,11 @@ namespace Certify.Core.Management.Challenges
             throw new NotImplementedException();
         }
 
+        public Task<List<DnsZone>> GetZones()
+        {
+            throw new NotImplementedException();
+        }
+
         private ActionResult RunPythonScript(string args)
         {
             try

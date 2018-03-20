@@ -66,11 +66,26 @@ namespace Certify.Models.Config
                 HelpUrl="https://docs.microsoft.com/en-us/azure/dns/dns-sdk",
                 ProviderParameters = new List<ProviderParameter>{
                     new ProviderParameter{Key="tenantid", Name="Tenant Id", IsRequired=false },
-                    new ProviderParameter{Key="clientid", Name="ClientId", IsRequired=false },
-                    new ProviderParameter{Key="secret",Name="Secret", IsRequired=true , IsPassword=true},
+                    new ProviderParameter{Key="clientid", Name="Application Id", IsRequired=false },
+                    new ProviderParameter{Key="secret",Name="Svc Principal Secret", IsRequired=true , IsPassword=true},
                     new ProviderParameter{Key="subscriptionid",Name="DNS Subscription Id", IsRequired=true , IsPassword=false},
                     new ProviderParameter{Key="resourcegroupname",Name="Resource Group Name", IsRequired=true , IsPassword=false},
                     new ProviderParameter{Key="zoneid",Name="Zone Name", IsRequired=true , IsPassword=false},
+                },
+                Config="Provider=Certify.Providers.DNS.Azure",
+                HandlerType = ChallengeHandlerType.INTERNAL
+            },
+              new ProviderDefinition
+            {
+                Id = "DNS01.API.Cloudflare",
+                ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Title = "Cloudflare DNS API",
+                Description = "Validates via Cloudflare DNS APIs using credentials",
+                HelpUrl="https://api.cloudflare.com/#dns-records-for-a-zone-dns-record-details",
+                ProviderParameters = new List<ProviderParameter>{
+                    new ProviderParameter{Key="emailaddress", Name="Email Address", IsRequired=true },
+                    new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true },
+                    new ProviderParameter{Key="zoneid",Name="Zone Name", IsRequired=true},
                 },
                 Config="Provider=Certify.Providers.DNS.Azure",
                 HandlerType = ChallengeHandlerType.INTERNAL

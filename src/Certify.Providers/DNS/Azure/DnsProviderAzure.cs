@@ -14,10 +14,6 @@ namespace Certify.Providers.DNS.Azure
         private DnsManagementClient _dnsClient;
         private Dictionary<string, string> _credentials;
 
-        /*public static ProviderDefinition GetDefinition()
-        {
-        }*/
-
         public DnsProviderAzure(Dictionary<string, string> credentials)
         {
             _credentials = credentials;
@@ -56,7 +52,7 @@ namespace Certify.Providers.DNS.Azure
                 var result = await _dnsClient.RecordSets.CreateOrUpdateAsync(
                        _credentials["resourcegroupname"],
                        _credentials["zoneid"],
-                       request.TargetDomainName,
+                       request.RecordName,
                        RecordType.TXT,
                        recordSetParams
                );
@@ -76,7 +72,34 @@ namespace Certify.Providers.DNS.Azure
 
         public async Task<ActionResult> DeleteRecord(DnsDeleteRecordRequest request)
         {
-            throw new NotImplementedException();
+            try
+            {
+                await _dnsClient.RecordSets.DeleteAsync(
+                       _credentials["resourcegroupname"],
+                       _credentials["zoneid"],
+                       request.RecordName,
+                       RecordType.TXT
+               );
+
+                return new ActionResult { IsSuccess = true, Message = "DNS TXT Record Deleted" };
+            }
+            catch (Exception exp)
+            {
+                new ActionResult { IsSuccess = false, Message = exp.InnerException.Message };
+            }
+
+            return new ActionResult { IsSuccess = false, Message = "DNS TXT Record Delete failed" };
+        }
+
+        public async Task<List<DnsZone>> GetZones()
+        {
+            List<DnsZone> results = new List<DnsZone>();
+            var list = await _dnsClient.Zones.ListAsync();
+            foreach (var z in list)
+            {
+                results.Add(new DnsZone { ZoneId = z.Name, Description = z.Name });
+            }
+            return results;
         }
     }
 }
