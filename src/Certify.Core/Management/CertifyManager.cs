@@ -15,77 +15,6 @@ using System.Threading.Tasks;
 
 namespace Certify.Management
 {
-    public interface ICertifyManager
-    {
-        Task<bool> IsServerTypeAvailable(StandardServerTypes serverType);
-
-        Task<Version> GetServerTypeVersion(StandardServerTypes serverType);
-
-        Task<bool> LoadSettingsAsync(bool skipIfLoaded);
-
-        Task<ManagedSite> GetManagedSite(string id);
-
-        Task<List<ManagedSite>> GetManagedSites(ManagedSiteFilter filter = null);
-
-        Task<ManagedSite> UpdateManagedSite(ManagedSite site);
-
-        Task DeleteManagedSite(string id);
-
-        List<RegistrationItem> GetContactRegistrations();
-
-        string GetPrimaryContactEmail();
-
-        List<IdentifierItem> GetDomainIdentifiers();
-
-        List<CertificateItem> GetCertificates();
-
-        void PerformVaultCleanup();
-
-        bool HasRegisteredContacts();
-
-        Task<StatusMessage> TestChallenge(ManagedSite managedSite, bool isPreviewMode);
-
-        Task<StatusMessage> RevokeCertificate(ManagedSite managedSite);
-
-        Task<CertificateRequestResult> PerformDummyCertificateRequest(ManagedSite managedSite, IProgress<RequestProgressState> progress = null);
-
-        Task<bool> AddRegisteredContact(ContactRegistration reg);
-
-        void RemoveExtraContacts(string email);
-
-        void RemoveAllContacts();
-
-        List<SiteBindingItem> GetPrimaryWebSites(bool ignoreStoppedSites);
-
-        string GetAcmeSummary();
-
-        string GetVaultSummary();
-
-        void BeginTrackingProgress(RequestProgressState state);
-
-        Task<CertificateRequestResult> ReapplyCertificateBindings(ManagedSite managedSite, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false);
-
-        Task<CertificateRequestResult> PerformCertificateRequest(ManagedSite managedSite, IProgress<RequestProgressState> progress = null);
-
-        List<DomainOption> GetDomainOptionsFromSite(string siteId);
-
-        List<ManagedSite> ImportManagedSitesFromVault(bool mergeSitesAsSan = false);
-
-        Task<List<CertificateRequestResult>> PerformRenewalAllManagedSites(bool autoRenewalOnly = true, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null);
-
-        Task<List<ManagedSite>> PreviewManagedSites(StandardServerTypes serverType);
-
-        RequestProgressState GetRequestProgressState(string managedSiteId);
-
-        Task<bool> PerformPeriodicTasks();
-
-        Task<bool> PerformDailyTasks();
-
-        event Action<RequestProgressState> OnRequestProgressStateUpdated;
-
-        event Action<ManagedSite> OnManagedSiteUpdated;
-    }
-
     public class CertifyManager : ICertifyManager
     {
         private ItemManager _siteManager = null;
@@ -120,22 +49,7 @@ namespace Certify.Management
             PluginManager = new PluginManager();
             PluginManager.LoadPlugins();
 
-            // ACME Sharp is both a vault (config storage) provider and ACME client provider
-            // TODO: fully convert to plugin
-
-            /*if (_acmeAPIProvider == "ACMESharp")
-            {
-                var acmeSharp = new Certify.Providers.ACMESharpProvider();
-                acmeSharp.InitProvider(CoreAppSettings.Current.VaultPath);
-
-                _acmeClientProvider = acmeSharp;
-                _vaultProvider = acmeSharp;
-            }
-            else
-            {*/
-
-            // }
-
+            // TODO: convert providers to plugins
             var certes = new Certify.Providers.Certes.CertesACMEProvider(Management.Util.GetAppDataFolder() + "\\certes");
 
             _acmeClientProvider = certes;
@@ -190,24 +104,9 @@ namespace Certify.Management
             return _vaultProvider.GetContactRegistrations();
         }
 
-        public List<IdentifierItem> GetDomainIdentifiers()
-        {
-            return _vaultProvider.GetDomainIdentifiers();
-        }
-
         public List<CertificateItem> GetCertificates()
         {
             return _vaultProvider.GetCertificates();
-        }
-
-        public void PerformVaultCleanup()
-        {
-            _vaultProvider.PerformVaultCleanup();
-        }
-
-        public bool HasRegisteredContacts()
-        {
-            return _vaultProvider.HasRegisteredContacts();
         }
 
         /// <summary>
@@ -289,23 +188,6 @@ namespace Certify.Management
             }
         }
 
-        /// <summary>
-        /// Remove other contacts which don't match the email address given 
-        /// </summary>
-        /// <param name="email"></param>
-        /// <returns></returns>
-        public void RemoveExtraContacts(string email)
-        {
-            var regList = _vaultProvider.GetContactRegistrations();
-            foreach (var reg in regList)
-            {
-                if (!reg.Contacts.Contains("mailto:" + email))
-                {
-                    _vaultProvider.DeleteContactRegistration(reg.Id);
-                }
-            }
-        }
-
         public void RemoveAllContacts()
         {
             var regList = _vaultProvider.GetContactRegistrations();
@@ -318,16 +200,6 @@ namespace Certify.Management
         public List<SiteBindingItem> GetPrimaryWebSites(bool ignoreStoppedSites)
         {
             return _serverProvider.GetPrimarySites(ignoreStoppedSites);
-        }
-
-        public string GetAcmeSummary()
-        {
-            return _acmeClientProvider.GetAcmeBaseURI();
-        }
-
-        public string GetVaultSummary()
-        {
-            return _vaultProvider.GetVaultSummary();
         }
 
         private void ReportProgress(IProgress<RequestProgressState> progress, RequestProgressState state, bool logThisEvent = true)
@@ -900,89 +772,6 @@ namespace Certify.Management
             return domainOptions.OrderByDescending(d => d.IsPrimaryDomain).ThenBy(d => d.Domain).ToList();
         }
 
-        public List<ManagedSite> ImportManagedSitesFromVault(bool mergeSitesAsSan = false)
-        {
-            var sites = new List<ManagedSite>();
-
-            if (_serverProvider == null || !_serverProvider.IsAvailable())
-            {
-                // IIS not enabled, can't match sites to vault items
-                return sites;
-            }
-
-            //get dns identifiers from vault
-            var identifiers = _vaultProvider.GetDomainIdentifiers();
-
-            // match existing IIS sites to vault items
-            var iisSites = _serverProvider.GetSiteBindingList(ignoreStoppedSites: CoreAppSettings.Current.IgnoreStoppedSites);
-
-            foreach (var identifier in identifiers)
-            {
-                //identify IIS site related to this identifier (if any)
-                var iisSite = iisSites.FirstOrDefault(d => d.Host == identifier.Dns);
-                var site = new ManagedSite
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    GroupId = iisSite?.SiteId,
-                    Name = identifier.Dns + (iisSite != null ? " : " + iisSite.SiteName : ""),
-                    IncludeInAutoRenew = true,
-                    Comments = "Imported from vault",
-                    ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS,
-                    TargetHost = "localhost",
-                    RequestConfig = new CertRequestConfig
-                    {
-                        BindingIPAddress = iisSite?.IP,
-                        BindingPort = iisSite?.Port.ToString(),
-                        ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
-                        EnableFailureNotifications = true,
-                        PerformAutoConfig = true,
-                        PerformAutomatedCertBinding = true,
-                        PerformChallengeFileCopy = true,
-                        PerformExtensionlessConfigChecks = true,
-                        PrimaryDomain = identifier.Dns,
-                        SubjectAlternativeNames = new string[] { identifier.Dns }
-                    }
-                };
-                site.DomainOptions.Add(new DomainOption { Domain = identifier.Dns, IsPrimaryDomain = true, IsSelected = true });
-                sites.Add(site);
-            }
-
-            if (mergeSitesAsSan)
-            {
-                foreach (var s in sites)
-                {
-                    //merge sites with same group (iis site etc) and different primary domain
-                    if (sites.Any(m => m.GroupId != null && m.GroupId == s.GroupId && m.RequestConfig.PrimaryDomain != s.RequestConfig.PrimaryDomain))
-                    {
-                        //existing site to merge into
-                        //add san for dns
-                        var mergedSite = sites.FirstOrDefault(m =>
-                        m.GroupId != null && m.GroupId == s.GroupId
-                        && m.RequestConfig.PrimaryDomain != s.RequestConfig.PrimaryDomain
-                        && m.RequestConfig.PrimaryDomain != null
-                        );
-                        if (mergedSite != null)
-                        {
-                            mergedSite.DomainOptions.Add(new DomainOption { Domain = s.RequestConfig.PrimaryDomain, IsPrimaryDomain = false, IsSelected = true });
-
-                            //use shortest version of domain name as site name
-                            if (mergedSite.RequestConfig.PrimaryDomain.Contains(s.RequestConfig.PrimaryDomain))
-                            {
-                                mergedSite.Name = mergedSite.Name.Replace(mergedSite.RequestConfig.PrimaryDomain, s.RequestConfig.PrimaryDomain);
-                            }
-
-                            //flag spare site config to be discar
-                            s.RequestConfig.PrimaryDomain = null;
-                        }
-                    }
-                }
-
-                //discard sites which have been merged into other sites
-                sites.RemoveAll(s => s.RequestConfig.PrimaryDomain == null);
-            }
-            return sites;
-        }
-
         public static bool IsRenewalRequired(ManagedSite s, int renewalIntervalDays, bool checkFailureStatus = false)
         {
             // if we know the last renewal date, check whether we should renew again, otherwise
@@ -1035,11 +824,17 @@ namespace Certify.Management
 
             //await _siteManager.LoadAllManagedItems();
 
-            IEnumerable<ManagedSite> sites = await _siteManager.GetManagedSites(new ManagedSiteFilter { IncludeOnlyNextAutoRenew = true }, reloadAll: true);
+            IEnumerable<ManagedSite> sites = await _siteManager.GetManagedSites(
+                new ManagedSiteFilter
+                {
+                    IncludeOnlyNextAutoRenew = true
+                }, reloadAll: true);
 
             if (autoRenewalOnly)
             {
-                sites = sites.Where(s => s.IncludeInAutoRenew == true);
+                // auto renew enabled sites in order of oldest date renewed first
+                sites = sites.Where(s => s.IncludeInAutoRenew == true)
+                             .OrderBy(s => s.DateRenewed ?? DateTime.MinValue);
             }
 
             // check site list and examine current certificates. If certificate is less than n days
