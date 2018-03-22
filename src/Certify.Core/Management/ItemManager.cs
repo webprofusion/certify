@@ -281,9 +281,9 @@ namespace Certify.Management
 
                 if (!String.IsNullOrEmpty(filter.ChallengeType)) items = items.Where(i => i.RequestConfig.ChallengeType == filter.ChallengeType);
 
-                if (!String.IsNullOrEmpty(filter.ChallengeProvider)) items = items.Where(i => i.RequestConfig.ChallengeProvider == filter.ChallengeProvider);
+                if (!String.IsNullOrEmpty(filter.ChallengeProvider)) items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeProvider == filter.ChallengeProvider));
 
-                if (!String.IsNullOrEmpty(filter.StoredCredentialKey)) items = items.Where(i => i.RequestConfig.ChallengeCredentialKey == filter.StoredCredentialKey);
+                if (!String.IsNullOrEmpty(filter.StoredCredentialKey)) items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeCredentialKey == filter.StoredCredentialKey));
 
                 //TODO: IncludeOnlyNextAutoRenew
                 if (filter.MaxResults > 0) items = items.Take(filter.MaxResults);

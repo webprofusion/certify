@@ -39,7 +39,12 @@ namespace Certify.UI.Controls.ManagedItem
 
                 if (cred.Item != null)
                 {
-                    ItemViewModel.SelectedItem.RequestConfig.ChallengeCredentialKey = cred.Item.StorageKey;
+                    ItemViewModel.SelectedItem.RequestConfig.Challenges = new System.Collections.Generic.List<CertRequestChallengeConfig> {
+                        new CertRequestChallengeConfig {
+                                ChallengeCredentialKey= cred.Item.StorageKey,
+                                ChallengeProvider=ChallengeProviderList.SelectedValue.ToString()
+                            }
+                    };
                 }
             };
         }

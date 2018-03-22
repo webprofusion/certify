@@ -13,6 +13,61 @@ namespace Certify.Core.Management.Challenges
 {
     public class DNSChallengeHelper
     {
+        /// <summary>
+        /// For the given domain, get the matching challenge config (DNS provider variant etc) 
+        /// </summary>
+        /// <param name="managedSite"></param>
+        /// <param name="domain"></param>
+        /// <returns></returns>
+        private CertRequestChallengeConfig GetChallengeConfig(ManagedSite managedSite, string domain)
+        {
+            if (managedSite.RequestConfig.Challenges == null || managedSite.RequestConfig.Challenges.Count == 0)
+            {
+                // there are no challenge configs defined return a default based on the parent
+                return new CertRequestChallengeConfig
+                {
+                    ChallengeType = managedSite.RequestConfig.ChallengeType
+                };
+            }
+            else
+            {
+                //identify matching challenge config based on domain etc
+                if (managedSite.RequestConfig.Challenges.Count == 1)
+                {
+                    return managedSite.RequestConfig.Challenges[0];
+                }
+                else
+                {
+                    // start by matching first config with no specific domain
+                    CertRequestChallengeConfig matchedConfig = managedSite.RequestConfig.Challenges.FirstOrDefault(c => String.IsNullOrEmpty(c.DomainMatch));
+
+                    //if any more specific configs match, use that
+                    foreach (var config in managedSite.RequestConfig.Challenges.Where(c => !String.IsNullOrEmpty(c.DomainMatch)).OrderByDescending(l => l.DomainMatch.Length))
+                    {
+                        if (config.DomainMatch.EndsWith(domain))
+                        {
+                            // use longest matching domain (so subdomain.test.com takes priority over test.com)
+                            return config;
+                        }
+                    }
+
+                    // no other matches, just use first
+                    if (matchedConfig != null)
+                    {
+                        return matchedConfig;
+                    }
+                    else
+                    {
+                        // no match, return default
+                        return new CertRequestChallengeConfig
+                        {
+                            ChallengeType = managedSite.RequestConfig.ChallengeType
+                        };
+                    }
+                }
+            }
+        }
+
         public async Task<ActionResult> CompleteDNSChallenge(ManagedSite managedsite, string domain, string txtRecordName, string txtRecordValue)
         {
             // for a given managed site configuration, attempt to complete the required challenge by
@@ -26,19 +81,21 @@ namespace Certify.Core.Management.Challenges
             Models.Config.ProviderDefinition providerDefinition;
             IDnsProvider dnsAPIProvider = null;
 
-            if (!String.IsNullOrEmpty(managedsite.RequestConfig.ChallengeCredentialKey))
+            var challengeConfig = GetChallengeConfig(managedsite, domain);
+
+            if (!String.IsNullOrEmpty(challengeConfig.ChallengeCredentialKey))
             {
                 // decode credentials string array
-                credentials = await credentialsManager.GetUnlockedCredentialsDictionary(managedsite.RequestConfig.ChallengeCredentialKey);
+                credentials = await credentialsManager.GetUnlockedCredentialsDictionary(challengeConfig.ChallengeCredentialKey);
             }
             else
             {
                 return new ActionResult { IsSuccess = false, Message = "DNS Challenge API Credentials not set. Add or select API credentials to proceed." };
             }
 
-            if (!String.IsNullOrEmpty(managedsite.RequestConfig.ChallengeProvider))
+            if (!String.IsNullOrEmpty(challengeConfig.ChallengeProvider))
             {
-                providerDefinition = Models.Config.ChallengeProviders.Providers.FirstOrDefault(p => p.Id == managedsite.RequestConfig.ChallengeProvider);
+                providerDefinition = Models.Config.ChallengeProviders.Providers.FirstOrDefault(p => p.Id == challengeConfig.ChallengeProvider);
             }
             else
             {

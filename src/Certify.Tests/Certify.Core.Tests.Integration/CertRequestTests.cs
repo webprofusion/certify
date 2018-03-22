@@ -310,8 +310,13 @@ namespace Certify.Core.Tests
                     PerformChallengeFileCopy = true,
                     PerformExtensionlessConfigChecks = true,
                     WebsiteRootPath = testSitePath,
-                    ChallengeProvider = "DNS01.API.Route53",
-                    ChallengeCredentialKey = _awsCredStorageKey
+                    Challenges = new List<CertRequestChallengeConfig> {
+                        new CertRequestChallengeConfig{
+                            ChallengeType="dns-01",
+                            ChallengeProvider= "DNS01.API.Route53",
+                            ChallengeCredentialKey=_awsCredStorageKey
+                        }
+                    }
                 },
                 ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS
             };
@@ -386,8 +391,14 @@ namespace Certify.Core.Tests
                         PerformChallengeFileCopy = true,
                         PerformExtensionlessConfigChecks = true,
                         WebsiteRootPath = testSitePath,
-                        ChallengeProvider = "DNS01.API.Route53",
-                        ChallengeCredentialKey = _awsCredStorageKey
+                        Challenges = new List<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = _awsCredStorageKey
+                            }
+                        }
                     },
                     ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS
                 };

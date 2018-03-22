@@ -1,5 +1,40 @@
-﻿namespace Certify.Models
+﻿using System.Collections.Generic;
+
+namespace Certify.Models
 {
+    public class CertificateAuthorities
+    {
+        public const string LETS_ENCRYPT = "letsencrypt";
+    }
+
+    public class CertRequestChallengeConfig : BindableBase
+    {
+        /// <summary>
+        /// In the case of Lets Encrypt, the challenge type this request will use (eg. http-01) 
+        /// </summary>
+        public string ChallengeType { get; set; }
+
+        /// <summary>
+        /// Optional primary domain (e.g. test.com for www.test.com) for auto matching credential to domain
+        /// </summary>
+        public string DomainMatch { get; set; }
+
+        /// <summary>
+        /// Id/key for the provider type we require (such as DNS01.API.ROUTE53) 
+        /// </summary>
+        public string ChallengeProvider { get; set; }
+
+        /// <summary>
+        /// Id/key for the stored credential we need to use with the Challenge Provider 
+        /// </summary>
+        public string ChallengeCredentialKey { get; set; }
+
+        /// <summary>
+        /// Optional, DNS Zone ID if using a DNS challenge provider 
+        /// </summary>
+        public string ZoneId { get; set; }
+    }
+
     public class CertRequestConfig : BindableBase
     {
         /// <summary>
@@ -73,7 +108,7 @@
         public bool EnableFailureNotifications { get; set; }
 
         /// <summary>
-        /// In the case of Lets Encrypt, the challenge type this request will use (eg. http-01) 
+        /// In the case of Let's Encrypt, the primary challenge type this request will use (eg. http-01) 
         /// </summary>
         public string ChallengeType { get; set; }
 
@@ -113,16 +148,6 @@
         public string PostRequestPowerShellScript { get; set; }
 
         /// <summary>
-        /// Id/key for the provider type we require (such as DNS01.API.ROUTE53) 
-        /// </summary>
-        public string ChallengeProvider { get; set; }
-
-        /// <summary>
-        /// Id/key for the stored credential we need to use with the Challenge Provider 
-        /// </summary>
-        public string ChallengeCredentialKey { get; set; }
-
-        /// <summary>
         /// Key algorithm type for CSR signing. Default is RS256 
         /// </summary>
         public string CSRKeyAlg { get; set; }
@@ -151,5 +176,11 @@
         /// If true, apply cert where binding has certificatehash set to the old certificate 
         /// </summary>
         public bool DeploymentBindingReplacePrevious { get; set; } = false;
+
+        /// <summary>
+        /// Optional list of challenge configs, used when challenge requires credentials, optionally
+        /// varying per domain
+        /// </summary>
+        public List<CertRequestChallengeConfig> Challenges { get; set; }
     }
 }
