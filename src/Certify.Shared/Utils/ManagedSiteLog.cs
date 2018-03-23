@@ -37,41 +37,60 @@ namespace Certify.Models
         }
     }
 
-    public class ManagedSiteLog
+    public static class ManagedSiteLog
     {
-        public ManagedSiteLog()
-        {
-            this.Logs = new List<ManagedSiteLogItem>();
-        }
-
-        /// <summary>
-        /// Log of recent actions/results for this item 
-        /// </summary>
-        public List<ManagedSiteLogItem> Logs { get; set; }
+        private static Dictionary<string, Serilog.Core.Logger> _managedItemLoggers { get; set; }
 
         public static string GetLogPath(string managedItemId)
         {
             return Util.GetAppDataFolder() + "\\logs\\log_" + managedItemId.Replace(':', '_') + ".txt";
         }
 
-        public static void AppendLog(string managedItemId, ManagedSiteLogItem logItem)
+        public static ILogger GetLogger(string managedItemId)
         {
-            //FIXME:
-            var logPath = GetLogPath(managedItemId);
+            if (_managedItemLoggers == null) _managedItemLoggers = new Dictionary<string, Serilog.Core.Logger>();
 
-            var log = new LoggerConfiguration()
+            Serilog.Core.Logger log = null;
+
+            if (_managedItemLoggers.ContainsKey(managedItemId))
+            {
+                log = _managedItemLoggers[managedItemId];
+            }
+            else
+            {
+                var logPath = GetLogPath(managedItemId);
+
+                log = new LoggerConfiguration()
                 .WriteTo.File(logPath, shared: true)
                 .CreateLogger();
 
+                _managedItemLoggers.Add(managedItemId, log);
+            }
+            return log;
+        }
+
+        public static void AppendLog(string managedItemId, ManagedSiteLogItem logItem)
+        {
+            var log = GetLogger(managedItemId);
+
             var logLevel = Serilog.Events.LogEventLevel.Information;
+
             if (logItem.LogItemType == LogItemType.CertficateRequestFailed) logLevel = Serilog.Events.LogEventLevel.Error;
             if (logItem.LogItemType == LogItemType.GeneralError) logLevel = Serilog.Events.LogEventLevel.Error;
             if (logItem.LogItemType == LogItemType.GeneralWarning) logLevel = Serilog.Events.LogEventLevel.Warning;
 
             log.Write(logLevel, logItem.Message);
-            //TODO: log to per site log
-            //if (this.Logs == null) this.Logs = new List<ManagedSiteLogItem>();
-            //this.Logs.Add(logItem);
+        }
+
+        public static void DisposeLoggers()
+        {
+            if (_managedItemLoggers.Count>0)
+            {
+                foreach(var l in _managedItemLoggers.Values)
+                {
+                    l.Dispose();
+                }
+            }
         }
     }
 }

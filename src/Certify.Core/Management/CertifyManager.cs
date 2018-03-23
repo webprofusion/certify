@@ -5,6 +5,7 @@ using Certify.Models;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Microsoft.ApplicationInsights;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -15,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace Certify.Management
 {
-    public class CertifyManager : ICertifyManager
+    public class CertifyManager : ICertifyManager, IDisposable
     {
         private ItemManager _siteManager = null;
         private IACMEClientProvider _acmeClientProvider = null;
@@ -63,7 +64,7 @@ namespace Certify.Management
                 _tc = new Certify.Management.Util().InitTelemetry();
             }
         }
-
+ 
         public void BeginTrackingProgress(RequestProgressState state)
         {
             var existing = _progressResults.FirstOrDefault(p => p.ManagedItem.Id == state.ManagedItem.Id);
@@ -118,9 +119,9 @@ namespace Certify.Management
         /// If true, perform full set of checks (DNS etc), if false performs minimal/basic checks
         /// </param>
         /// <returns></returns>
-        public async Task<StatusMessage> TestChallenge(ManagedSite managedSite, bool isPreviewMode)
+        public async Task<StatusMessage> TestChallenge(ManagedSite managedSite, ILogger log, bool isPreviewMode)
         {
-            return await _challengeDiagnostics.TestChallengeResponse(_serverProvider, managedSite, isPreviewMode, CoreAppSettings.Current.EnableDNSValidationChecks);
+            return await _challengeDiagnostics.TestChallengeResponse(log, _serverProvider, managedSite, isPreviewMode, CoreAppSettings.Current.EnableDNSValidationChecks);
         }
 
         public async Task<StatusMessage> RevokeCertificate(ManagedSite managedSite)
@@ -223,6 +224,7 @@ namespace Certify.Management
                 LogItemType = LogItemType.GeneralInfo,
                 Message = msg
             });
+        
         }
 
         public async Task<CertificateRequestResult> ReapplyCertificateBindings(ManagedSite managedSite, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false)
@@ -1114,6 +1116,11 @@ namespace Certify.Management
             {
                 return null;
             }
+        }
+
+        public void Dispose()
+        {
+            ManagedSiteLog.DisposeLoggers();
         }
     }
 }

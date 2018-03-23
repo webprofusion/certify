@@ -2,6 +2,7 @@
 using Certify.Models;
 using Certify.Models.Providers;
 using Certify.Models.Shared;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -35,7 +36,7 @@ namespace Certify.Core.Management.Challenges
         /// submitting a request to the ACME server, to avoid creating failed requests and hitting
         /// usage limits.
         /// </remarks>
-        public async Task<StatusMessage> TestChallengeResponse(ICertifiedServer iisManager, ManagedSite managedSite, bool isPreviewMode, bool enableDnsChecks)
+        public async Task<StatusMessage> TestChallengeResponse(ILogger log,ICertifiedServer iisManager, ManagedSite managedSite, bool isPreviewMode, bool enableDnsChecks)
         {
             _actionLogs.Clear(); // reset action logs
 
