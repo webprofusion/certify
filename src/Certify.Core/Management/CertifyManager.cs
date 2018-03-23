@@ -24,8 +24,9 @@ namespace Certify.Management
         private ICertifiedServer _serverProvider = null;
         private ChallengeDiagnostics _challengeDiagnostics = null;
         private IdnMapping _idnMapping = new IdnMapping();
+        private PluginManager _pluginManager { get; set; }
+        private TelemetryClient _tc = null;
 
-        public bool IsSingleInstanceMode { get; set; } = true; //if true we make assumptions about how often to load settings etc
         private ObservableCollection<RequestProgressState> _progressResults { get; set; }
 
         public event Action<RequestProgressState> OnRequestProgressStateUpdated;
@@ -33,10 +34,6 @@ namespace Certify.Management
         public event Action<ManagedSite> OnManagedSiteUpdated;
 
         private bool _isRenewAllInProgress { get; set; }
-
-        private PluginManager PluginManager { get; set; }
-
-        private TelemetryClient _tc = null;
 
         public CertifyManager()
         {
@@ -47,8 +44,8 @@ namespace Certify.Management
 
             _progressResults = new ObservableCollection<RequestProgressState>();
 
-            PluginManager = new PluginManager();
-            PluginManager.LoadPlugins();
+            _pluginManager = new PluginManager();
+            _pluginManager.LoadPlugins();
 
             // TODO: convert providers to plugins
             var certes = new Certify.Providers.Certes.CertesACMEProvider(Management.Util.GetAppDataFolder() + "\\certes");
@@ -64,7 +61,7 @@ namespace Certify.Management
                 _tc = new Certify.Management.Util().InitTelemetry();
             }
         }
- 
+
         public void BeginTrackingProgress(RequestProgressState state)
         {
             var existing = _progressResults.FirstOrDefault(p => p.ManagedItem.Id == state.ManagedItem.Id);
@@ -119,7 +116,7 @@ namespace Certify.Management
         /// If true, perform full set of checks (DNS etc), if false performs minimal/basic checks
         /// </param>
         /// <returns></returns>
-        public async Task<StatusMessage> TestChallenge(ManagedSite managedSite, ILogger log, bool isPreviewMode)
+        public async Task<StatusMessage> TestChallenge(ILogger log, ManagedSite managedSite, bool isPreviewMode)
         {
             return await _challengeDiagnostics.TestChallengeResponse(log, _serverProvider, managedSite, isPreviewMode, CoreAppSettings.Current.EnableDNSValidationChecks);
         }
@@ -212,10 +209,16 @@ namespace Certify.Management
 
             if (state.ManagedItem != null && logThisEvent)
             {
-                LogMessage(state.ManagedItem.Id, state.Message, LogItemType.GeneralWarning);
+                LogMessage(state.ManagedItem.Id, state.Message, LogItemType.GeneralInfo);
             }
         }
 
+        /// <summary>
+        /// Log messages specific to the managed site. TODO: pass in active ILogger or replace 
+        /// </summary>
+        /// <param name="managedSiteId"></param>
+        /// <param name="msg"></param>
+        /// <param name="logType"></param>
         private void LogMessage(string managedSiteId, string msg, LogItemType logType = LogItemType.GeneralInfo)
         {
             ManagedSiteLog.AppendLog(managedSiteId, new ManagedSiteLogItem
@@ -224,7 +227,6 @@ namespace Certify.Management
                 LogItemType = LogItemType.GeneralInfo,
                 Message = msg
             });
-        
         }
 
         public async Task<CertificateRequestResult> ReapplyCertificateBindings(ManagedSite managedSite, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false)
@@ -270,6 +272,7 @@ namespace Certify.Management
         {
             // Perform pre-request checks and scripting hooks, invoke main request process, then
             // perform an post request scripting hooks
+            var log = ManagedSiteLog.GetLogger(managedSite.Id);
 
             // this is a pre-request validation check (http-01), we repeat this later but this one
             // prevents registering a new identifier with LE before we start (and potential rate
@@ -281,7 +284,7 @@ namespace Certify.Management
                     new RequestProgressState(RequestState.Running, Certify.Locales.CoreSR.CertifyManager_PerformingConfigTests, managedSite)
                 );
 
-                var testResult = await TestChallenge(managedSite, isPreviewMode: false);
+                var testResult = await TestChallenge(log, managedSite, isPreviewMode: false);
                 if (!testResult.IsOK)
                 {
                     string msg = String.Join("; ", testResult.FailedItemSummary);
@@ -320,7 +323,7 @@ namespace Certify.Management
                 }
                 else
                 {
-                    await PerformCertificateRequestProcessing(managedSite, progress, result, config);
+                    await PerformCertificateRequestProcessing(log, managedSite, progress, result, config);
                 }
             }
             catch (Exception exp)
@@ -329,13 +332,14 @@ namespace Certify.Management
 
                 result.IsSuccess = false;
                 result.Message = string.Format(Certify.Locales.CoreSR.CertifyManager_RequestFailed, managedSite.Name, exp.Message, exp);
+
                 LogMessage(managedSite.Id, result.Message, LogItemType.CertficateRequestFailed);
+
                 ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedSite));
 
                 await UpdateManagedSiteStatus(managedSite, RequestState.Error, result.Message);
 
-                //LogMessage(managedSite.Id, String.Join("\r\n", _vaultProvider.GetActionSummary())); FIXME: needs to be filtered in managed site
-                System.Diagnostics.Debug.WriteLine(exp.ToString());
+                log.Error(exp, "Certificate request process failed: {exp}");
             }
             finally
             {
@@ -379,7 +383,7 @@ namespace Certify.Management
             return result;
         }
 
-        private async Task PerformCertificateRequestProcessing(ManagedSite managedSite, IProgress<RequestProgressState> progress, CertificateRequestResult result, CertRequestConfig config)
+        private async Task PerformCertificateRequestProcessing(ILogger log, ManagedSite managedSite, IProgress<RequestProgressState> progress, CertificateRequestResult result, CertRequestConfig config)
         {
             // proceed with the request
             LogMessage(managedSite.Id, $"Beginning Certificate Request Process: {managedSite.Name} using ACME Provider:{_acmeClientProvider.GetProviderName()}");
@@ -410,9 +414,6 @@ namespace Certify.Management
             var distinctDomains = allDomains.Distinct();
 
             // perform validation process for each domain
-
-            //begin authorization process (register identifier, request authorization if not already given)
-            // var domainIdentifierId = _acmeClientProvider.ComputeDomainIdentifierId(domain);
 
             // begin authorization by registering the domain identifier. This may return an already
             // validated authorization or we may still have to complete the authorization challenge.
@@ -450,7 +451,7 @@ namespace Certify.Management
                             // ask LE to check our answer to their authorization challenge (http-01
                             // or tls-sni-01), LE will then attempt to fetch our answer, if all
                             // accessible and correct (authorized) LE will then allow us to request a certificate
-                            authorization = await _challengeDiagnostics.PerformAutomatedChallengeResponse(_serverProvider, managedSite, authorization);
+                            authorization = await _challengeDiagnostics.PerformAutomatedChallengeResponse(log, _serverProvider, managedSite, authorization);
 
                             if (
                                 (config.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP && config.PerformExtensionlessConfigChecks && !authorization.AttemptedChallenge?.ConfigCheckedOK == true) ||
@@ -521,6 +522,7 @@ namespace Certify.Management
                                 {
                                     // clean up challenge answers (.well-known/acme-challenge/* files
                                     // for http-01 or iis bindings for tls-sni-01)
+
                                     authorization.Cleanup();
                                 }
                             }
@@ -1083,7 +1085,7 @@ namespace Certify.Management
         /// <returns></returns>
         private async Task ReportManagedSiteStatus(ManagedSite managedSite)
         {
-            if (this.PluginManager != null && this.PluginManager.DashboardClient != null)
+            if (this._pluginManager != null && this._pluginManager.DashboardClient != null)
             {
                 var report = new Models.Shared.RenewalStatusReport
                 {
@@ -1095,7 +1097,7 @@ namespace Certify.Management
                 };
                 try
                 {
-                    await this.PluginManager.DashboardClient.ReportRenewalStatusAsync(report);
+                    await this._pluginManager.DashboardClient.ReportRenewalStatusAsync(report);
                 }
                 catch (Exception)
                 {

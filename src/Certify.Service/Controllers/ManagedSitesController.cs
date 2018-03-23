@@ -57,7 +57,8 @@ namespace Certify.Service
         {
             DebugLog();
 
-            return await _certifyManager.TestChallenge(site, isPreviewMode: true);
+            var log = ManagedSiteLog.GetLogger(site.Id);
+            return await _certifyManager.TestChallenge(log, site, isPreviewMode: true);
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.ObjectModel;
 
 namespace Certify.Models
 {
@@ -37,6 +37,11 @@ namespace Certify.Models
 
     public class CertRequestConfig : BindableBase
     {
+        public CertRequestConfig()
+        {
+            Challenges = new ObservableCollection<CertRequestChallengeConfig>();
+        }
+
         /// <summary>
         /// Primary subject domain for our SSL Cert request 
         /// </summary>
@@ -72,29 +77,29 @@ namespace Certify.Models
         /// If true, this request requires a challenge file copy as part of the web applications
         /// content, usually to /.well-known/acme-challenge/
         /// </summary>
-        public bool PerformChallengeFileCopy { get; set; }
+        public bool PerformChallengeFileCopy { get; set; } = true;
 
         /// <summary>
         /// If true, perform an automated check that the web host is configured to respond to
         /// extensionless file requests
         /// </summary>
-        public bool PerformExtensionlessConfigChecks { get; set; }
+        public bool PerformExtensionlessConfigChecks { get; set; } = true;
 
         /// <summary>
         /// If true, perform an automated check that the web host is configured to respond to tls sni requests
         /// </summary>
-        public bool PerformTlsSniBindingConfigChecks { get; set; }
+        public bool PerformTlsSniBindingConfigChecks { get; set; } = true;
 
         /// <summary>
         /// If true, attempt to automatically configure the web host/web aplication as required 
         /// </summary>
-        public bool PerformAutoConfig { get; set; }
+        public bool PerformAutoConfig { get; set; } = true;
 
         /// <summary>
         /// If true, automatically add/remove SSL certificate to store and create or update SSL
         /// certificate bindings in web host
         /// </summary>
-        public bool PerformAutomatedCertBinding { get; set; }
+        public bool PerformAutomatedCertBinding { get; set; } = true;
 
         /// <summary>
         /// If true, existings https bindings for the cert we are renewing will be removed and replaced 
@@ -105,12 +110,12 @@ namespace Certify.Models
         /// If true, indicates that Certify should attempt to send failure notifications if an
         /// automated renewal request fails
         /// </summary>
-        public bool EnableFailureNotifications { get; set; }
+        public bool EnableFailureNotifications { get; set; } = true;
 
         /// <summary>
         /// In the case of Let's Encrypt, the primary challenge type this request will use (eg. http-01) 
         /// </summary>
-        public string ChallengeType { get; set; }
+        public string ChallengeType { get; set; } = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP;
 
         /// <summary>
         /// The trigger for the webhook (None, Success, Error) 
@@ -150,7 +155,7 @@ namespace Certify.Models
         /// <summary>
         /// Key algorithm type for CSR signing. Default is RS256 
         /// </summary>
-        public string CSRKeyAlg { get; set; }
+        public string CSRKeyAlg { get; set; } = SupportedCSRKeyAlgs.RS256;
 
         /// <summary>
         /// Deployment site options (single/all etc) 
@@ -181,6 +186,6 @@ namespace Certify.Models
         /// Optional list of challenge configs, used when challenge requires credentials, optionally
         /// varying per domain
         /// </summary>
-        public List<CertRequestChallengeConfig> Challenges { get; set; }
+        public ObservableCollection<CertRequestChallengeConfig> Challenges { get; set; }
     }
 }

@@ -27,10 +27,18 @@ namespace Certify.UI.ViewModel
 
         internal async Task RefreshWebsiteList()
         {
-            this.WebSiteList = new ObservableCollection<SiteBindingItem>(await _appViewModel.CertifyClient.GetServerSiteList(StandardServerTypes.IIS));
+            var list = await _appViewModel.CertifyClient.GetServerSiteList(StandardServerTypes.IIS);
+            list.Insert(0, new SiteBindingItem { SiteName = "(No IIS Website Selected)", SiteId = "" });
+            this.WebSiteList = new ObservableCollection<SiteBindingItem>(list);
         }
 
-        public ObservableCollection<StoredCredential> StoredCredentials { get; set; }
+        public ObservableCollection<StoredCredential> StoredCredentials
+        {
+            get
+            {
+                return _appViewModel.StoredCredentials;
+            }
+        }
 
         /// <summary>
         /// List of websites from the selected web server (if any) 
@@ -92,11 +100,47 @@ namespace Certify.UI.ViewModel
             return updatedOK;
         }
 
-        // Certify-supported challenge types
+        public CertRequestChallengeConfig RefreshPrimaryChallengeConfig()
+        {
+            if (SelectedItem != null)
+            {
+                if (SelectedItem.RequestConfig.Challenges == null) SelectedItem.RequestConfig.Challenges = new ObservableCollection<CertRequestChallengeConfig> { };
+
+                if (SelectedItem.RequestConfig.Challenges.Any())
+                {
+                    return SelectedItem.RequestConfig.Challenges[0];
+                }
+                else
+                {
+                    // no challenge config defined, create a default, migrate settings
+                    SelectedItem.RequestConfig.Challenges.Add(new CertRequestChallengeConfig
+                    {
+                        ChallengeType = SelectedItem.RequestConfig.ChallengeType
+                    });
+                    SelectedItem.RequestConfig.ChallengeType = null;
+
+                    return SelectedItem.RequestConfig.Challenges[0];
+                }
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public CertRequestChallengeConfig PrimaryChallengeConfig
+        {
+            get
+            {
+                return RefreshPrimaryChallengeConfig();
+            }
+        }
+
+        // Let's Encrypt - supported challenge types
         public IEnumerable<string> ChallengeTypes { get; set; } = new string[] {
             SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
             SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-            SupportedChallengeTypes.CHALLENGE_TYPE_SNI
+            //SupportedChallengeTypes.CHALLENGE_TYPE_SNI
         };
 
         public IEnumerable<string> WebhookTriggerTypes => Webhook.TriggerTypes;
@@ -257,6 +301,11 @@ namespace Certify.UI.ViewModel
             var config = item.RequestConfig;
             var primaryDomain = item.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain == true);
 
+            if (primaryDomain == null)
+            {
+                if (item.DomainOptions.Any()) item.DomainOptions[0].IsPrimaryDomain = true;
+            }
+
             //if no primary domain need to go back and select one
             if (primaryDomain == null) throw new ArgumentException("Primary subject domain must be set.");
 
@@ -296,45 +345,57 @@ namespace Certify.UI.ViewModel
 
             if (SelectedWebSite != null)
             {
-                // update website association
-                managedSite.GroupId = SelectedWebSite.SiteId;
-
-                // if not already set, use website name as default name
-                if (managedSite.Id == null || String.IsNullOrEmpty(managedSite.Name))
+                if (managedSite.GroupId != SelectedWebSite.SiteId)
                 {
-                    managedSite.Name = SelectedWebSite.SiteName;
+                    // update website association
+                    managedSite.GroupId = SelectedWebSite.SiteId;
 
-                    //set defaults first
-                    managedSite.RequestConfig.WebsiteRootPath = Environment.ExpandEnvironmentVariables(SelectedWebSite.PhysicalPath);
+                    // if not already set, use website name as default name
+                    if (managedSite.Id == null || String.IsNullOrEmpty(managedSite.Name))
+                    {
+                        if (!String.IsNullOrEmpty(SelectedWebSite.SiteName))
+                        {
+                            managedSite.Name = SelectedWebSite.SiteName;
+                        }
+
+                        //set defaults first
+                        if (!String.IsNullOrEmpty(SelectedWebSite.PhysicalPath))
+                        {
+                            managedSite.RequestConfig.WebsiteRootPath = Environment.ExpandEnvironmentVariables(SelectedWebSite.PhysicalPath);
+                        }
+                    }
+
+                    // remove domain options not manually added
+                    foreach (var d in managedSite.DomainOptions.ToList())
+                    {
+                        if (!d.IsManualEntry)
+                        {
+                            managedSite.DomainOptions.Remove(d);
+                        }
+                    }
+
+                    var domainOptions = await GetDomainOptionsFromSite(siteId);
+                    foreach (var option in domainOptions)
+                    {
+                        managedSite.DomainOptions.Add(option);
+                    }
+
+                    if (!managedSite.DomainOptions.Any())
+                    {
+                        ValidationError = "The selected site has no domain bindings setup. Configure the domains first using Edit Bindings in IIS.";
+                    }
+
+                    //TODO: load settings from previously saved managed site?
+                    RaisePropertyChanged(nameof(PrimarySubjectDomain));
+                    RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
+                }
+                else
+                {
+                    // same website selection
+                    RaisePropertyChanged(nameof(PrimarySubjectDomain));
+                    RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
                 }
             }
-
-            //TODO: if this site would be a duplicate need to increment the site name
-
-            managedSite.RequestConfig.PerformExtensionlessConfigChecks = true;
-            managedSite.RequestConfig.PerformTlsSniBindingConfigChecks = true;
-            managedSite.RequestConfig.PerformChallengeFileCopy = true;
-            managedSite.RequestConfig.PerformAutomatedCertBinding = true;
-            managedSite.RequestConfig.PerformAutoConfig = true;
-            managedSite.RequestConfig.EnableFailureNotifications = true;
-            managedSite.RequestConfig.ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP;
-            managedSite.IncludeInAutoRenew = true;
-            managedSite.DomainOptions.Clear();
-
-            var domainOptions = await GetDomainOptionsFromSite(siteId);
-            foreach (var option in domainOptions)
-            {
-                managedSite.DomainOptions.Add(option);
-            }
-
-            if (!managedSite.DomainOptions.Any())
-            {
-                ValidationError = "The selected site has no domain bindings setup. Configure the domains first using Edit Bindings in IIS.";
-            }
-
-            //TODO: load settings from previously saved managed site?
-            RaisePropertyChanged(nameof(PrimarySubjectDomain));
-            RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
         }
 
         public bool UpdateDomainOptions(string domains)
@@ -391,6 +452,11 @@ namespace Certify.UI.ViewModel
 
         protected async virtual Task<IEnumerable<DomainOption>> GetDomainOptionsFromSite(string siteId)
         {
+            if (String.IsNullOrEmpty(siteId))
+            {
+                return new List<DomainOption>();
+            }
+
             return await _appViewModel.CertifyClient.GetServerSiteDomains(StandardServerTypes.IIS, siteId);
         }
 

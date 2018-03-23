@@ -1,4 +1,5 @@
 ﻿using Certify.Models;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -27,7 +28,7 @@ namespace Certify.Management
 
         List<CertificateItem> GetCertificates();
 
-        Task<StatusMessage> TestChallenge(ManagedSite managedSite, bool isPreviewMode);
+        Task<StatusMessage> TestChallenge(ILogger log, ManagedSite managedSite, bool isPreviewMode);
 
         Task<StatusMessage> RevokeCertificate(ManagedSite managedSite);
 

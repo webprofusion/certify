@@ -175,7 +175,10 @@ namespace Certify.Client
             using (JsonTextReader reader = new JsonTextReader(sr))
             {
                 var managedSiteList = serializer.Deserialize<List<ManagedSite>>(reader);
-                foreach (var s in managedSiteList) s.IsChanged = false;
+                foreach (var s in managedSiteList)
+                {
+                    s.IsChanged = false;
+                }
                 return managedSiteList;
             }
         }

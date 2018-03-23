@@ -142,12 +142,13 @@ namespace Certify.Models
     {
         public ManagedSite()
         {
-            this.Name = SR.ManagedItemSettings_DefaultTitle;
-            this.IncludeInAutoRenew = true;
+            Name = SR.ManagedItemSettings_DefaultTitle;
+            IncludeInAutoRenew = true;
 
-            this.DomainOptions = new ObservableCollection<DomainOption>();
-            this.RequestConfig = new CertRequestConfig();
-            this.RequestConfig.EnableFailureNotifications = true;
+            DomainOptions = new ObservableCollection<DomainOption>();
+            RequestConfig = new CertRequestConfig();
+
+            IncludeInAutoRenew = true;
         }
 
         /// <summary>

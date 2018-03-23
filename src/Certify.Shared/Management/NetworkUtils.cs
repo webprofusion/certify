@@ -1,6 +1,7 @@
 ﻿using ARSoft.Tools.Net;
 using ARSoft.Tools.Net.Dns;
 using Certify.Locales;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -116,7 +117,7 @@ namespace Certify.Management
             }
         }
 
-        public async Task<bool> CheckURL(string url, bool? useProxyAPI = null)
+        public async Task<bool> CheckURL(ILogger log, string url, bool? useProxyAPI = null)
         {
             // if validation proxy enabled, access to the domain being validated is checked via our
             // remote API rather than directly on the servers
@@ -127,53 +128,77 @@ namespace Certify.Management
             {
                 var request = WebRequest.Create(!useProxy ? url :
                     ConfigResources.APIBaseURI + "configcheck/testurl?url=" + url);
+
                 request.Timeout = 5000;
+
                 ServicePointManager.ServerCertificateValidationCallback = (obj, cert, chain, errors) =>
                 {
                     // ignore all cert errors when validating URL response
                     return true;
                 };
 
+                log.Information("Checking URL is accessible: {url} proxyAPI: {proxyAPI}, timeoutMs: ", url, useProxy, request.Timeout);
+
                 var response = (HttpWebResponse)await request.GetResponseAsync();
 
                 //if checking via proxy, examine result
                 if (useProxy)
                 {
-                    if ((int)response.StatusCode >= 200)
+                    if ((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
                     {
                         var encoding = ASCIIEncoding.UTF8;
                         using (var reader = new System.IO.StreamReader(response.GetResponseStream(), encoding))
                         {
                             string jsonText = reader.ReadToEnd();
-                            Log("Proxy URL Check Result: " + jsonText);
+
                             var result = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.API.URLCheckResult>(jsonText);
+
                             if (result.IsAccessible == true)
                             {
+                                log.Information("URL is accessible. Check passed.");
+
                                 return true;
+                            }
+                            else
+                            {
+                                log.Information("(proxy api) URL is not accessible. Result: {result}", result);
                             }
                         }
                     }
+
                     //request failed using proxy api, request again using local http
-                    return await CheckURL(url, false);
+                    return await CheckURL(log, url, false);
                 }
                 else
                 {
-                    Log($"Local URL Check Result: HTTP {response.StatusCode}");
-                    //not checking via proxy, base result on status code
-                    return (int)response.StatusCode >= 200 && (int)response.StatusCode < 300;
+                    if ((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
+                    {
+                        log.Information($"(local check) URL is accessible. Check passed. HTTP {response.StatusCode}");
+
+                        return true;
+                    }
+                    else
+                    {
+                        log.Warning($"(local check) URL is not accessible. Check failed. HTTP {response.StatusCode}");
+
+                        return false;
+                    }
                 }
             }
             catch (Exception exp)
             {
                 if (useProxy)
                 {
+                    log.Warning(exp, "Problem checking URL is accessible : {url} ", url);
+
                     // failed to call proxy API (maybe offline?), let's try a local check
-                    return await CheckURL(url, false);
+                    return await CheckURL(log, url, false);
                 }
                 else
                 {
                     // failed to check URL locally
-                    System.Diagnostics.Debug.WriteLine("Failed to check url for access (" + url + "): " + exp.Message);
+                    log.Error(exp, "Failed to confirm URL is accessible : {url} ", url);
+
                     return false;
                 }
             }
@@ -184,7 +209,7 @@ namespace Certify.Management
             }
         }
 
-        public bool CheckDNSRecordTXT(string domain, string record, string record_value)
+        public bool CheckDNSRecordTXT(ILogger log, string domain, string record, string record_value)
         {
             bool recordExists = false;
             bool recordValueMatches = false;
@@ -223,18 +248,18 @@ namespace Certify.Management
             }
             catch (Exception exp)
             {
-                Log($"'{domain}' DNS error resolving TXT: " + exp.ToString());
+                log.Error(exp, $"'{domain}' DNS Check error resolving TXT: ");
             }
             return false;
         }
 
-        public (bool Ok, string Message) CheckDNS(string domain, bool? useProxyAPI = null)
+        public (bool Ok, string Message) CheckDNS(ILogger log, string domain, bool? useProxyAPI = null)
         {
             // helper function to log the error then return the ValueTuple
             Func<string, (bool, string)> errorResponse = (msg) =>
             {
                 msg = $"CheckDNS: {msg}\nDNS checks can be disabled in Settings if required.";
-                Log(msg);
+                log.Warning(msg);
                 return (false, msg);
             };
 
@@ -273,7 +298,7 @@ namespace Certify.Management
             }
             catch (Exception exp)
             {
-                Log($"'{domain}' DNS error resolving CAA: " + exp.ToString());
+                log.Error(exp, $"'{domain}' DNS error resolving CAA ");
             }
 
             if (caa_query == null || caa_query.ReturnCode != ReturnCode.NoError)
@@ -316,7 +341,7 @@ namespace Certify.Management
                 catch (Exception exp)
                 {
                     // domain failed to resolve from this machine
-                    Log($"'{domain}' DNS error resolving DnsSecRecursiveDnsResolver: " + exp.ToString());
+                    log.Error(exp, $"'{domain}' DNS error resolving DnsSecRecursiveDnsResolver ");
                     return false;
                 }
             }).Result)

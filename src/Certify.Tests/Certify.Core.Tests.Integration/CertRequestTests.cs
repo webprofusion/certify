@@ -4,6 +4,7 @@ using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Configuration;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -310,7 +311,7 @@ namespace Certify.Core.Tests
                     PerformChallengeFileCopy = true,
                     PerformExtensionlessConfigChecks = true,
                     WebsiteRootPath = testSitePath,
-                    Challenges = new List<CertRequestChallengeConfig> {
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig> {
                         new CertRequestChallengeConfig{
                             ChallengeType="dns-01",
                             ChallengeProvider= "DNS01.API.Route53",
@@ -391,7 +392,7 @@ namespace Certify.Core.Tests
                         PerformChallengeFileCopy = true,
                         PerformExtensionlessConfigChecks = true,
                         WebsiteRootPath = testSitePath,
-                        Challenges = new List<CertRequestChallengeConfig>
+                        Challenges = new ObservableCollection<CertRequestChallengeConfig>
                         {
                             new CertRequestChallengeConfig{
                                 ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,

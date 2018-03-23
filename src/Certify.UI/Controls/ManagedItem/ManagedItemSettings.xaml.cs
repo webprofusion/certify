@@ -79,6 +79,13 @@ namespace Certify.UI.Controls.ManagedItem
                 }
             }
 
+            // no primary domain selected, try to auto select first checked domain
+            if (ItemViewModel.PrimarySubjectDomain == null && ItemViewModel.SelectedItem.DomainOptions.Any(d => d.IsSelected))
+            {
+                var autoPrimaryDomain = ItemViewModel.SelectedItem.DomainOptions.First(d => d.IsSelected);
+                autoPrimaryDomain.IsPrimaryDomain = true;
+            }
+
             if (ItemViewModel.PrimarySubjectDomain == null)
             {
                 // if we still can't decide on the primary domain ask user to define it

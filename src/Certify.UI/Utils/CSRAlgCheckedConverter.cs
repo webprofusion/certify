@@ -8,24 +8,20 @@ namespace Certify.UI.Utils
         public object Convert(object value, Type targetType, object parameter,
         System.Globalization.CultureInfo culture)
         {
-            if (value != null)
+            if (value != null && value.ToString() == parameter.ToString())
             {
-                var enumVals = parameter.ToString().Split('.');
-                return value.Equals(enumVals[enumVals.Length-1]);
+                return true;
             }
             else
             {
-                return Models.SupportedCSRKeyAlgs.RS256; //default
+                return false;
             }
         }
 
         public object ConvertBack(object value, Type targetType, object parameter,
             System.Globalization.CultureInfo culture)
         {
-            // fixme: this is a rubbish way to convert the enum from string
-            var enumVals = parameter.ToString().Split('.');
-            Models.SupportedCSRKeyAlgs enumVal = (Models.SupportedCSRKeyAlgs)Enum.Parse(typeof(Models.SupportedCSRKeyAlgs), enumVals[enumVals.Length - 1]);
-            return value.Equals(true) ? enumVal.ToString() : Binding.DoNothing;
+            return parameter;
         }
     }
 }

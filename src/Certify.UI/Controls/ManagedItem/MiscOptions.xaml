@@ -40,9 +40,9 @@
                 <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
                     <Label Content="CSR Signing Algorithm"></Label>
                     <StackPanel Margin="120,0,0,0">
-                        <RadioButton GroupName="CSRAlg" x:Name="CSROption_RS256" IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=Certify.Models.SupportedCSRKeyAlgs.RS256}" Content="RSASSA-PKCS1-v1_5 using SHA-256 (Default)" Margin="8,4,0,4" />
-                        <RadioButton GroupName="CSRAlg" x:Name="CSROption_ECDSA256"  IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=Certify.Models.SupportedCSRKeyAlgs.ECDSA256}"  Content="ECDSA using P-256 and SHA-256" Margin="8,0,0,4" />
-                        <RadioButton GroupName="CSRAlg" x:Name="CSROption_ECDSA384" IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=Certify.Models.SupportedCSRKeyAlgs.ECDSA384}" Content="ECDSA using P-384 and SHA-384" Margin="8,0,0,4" />
+                        <RadioButton GroupName="CSRAlg" x:Name="CSROption_RS256" IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=RS256}" Content="RSASSA-PKCS1-v1_5 using SHA-256 (Default)" Margin="8,4,0,4" />
+                        <RadioButton GroupName="CSRAlg" x:Name="CSROption_ECDSA256"  IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=ECDSA256}"  Content="ECDSA using P-256 and SHA-256" Margin="8,0,0,4" />
+                        <RadioButton GroupName="CSRAlg" x:Name="CSROption_ECDSA384" IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=ECDSA384}" Content="ECDSA using P-384 and SHA-384" Margin="8,0,0,4" />
                     </StackPanel>
                 </StackPanel>
             </StackPanel>

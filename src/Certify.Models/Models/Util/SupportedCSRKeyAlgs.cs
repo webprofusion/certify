@@ -1,9 +1,14 @@
 ﻿namespace Certify.Models
 {
-    public enum SupportedCSRKeyAlgs
+    /// <summary>
+    /// Supported CSR signing key algorithms 
+    /// </summary>
+    public static class SupportedCSRKeyAlgs
     {
-        RS256,
-        ECDSA256,
-        ECDSA384
+        public static string RS256 = "RS256";
+
+        public static string ECDSA256 = "ECDA256";
+
+        public static string ECDSA384 = "ECDSA384";
     }
 }

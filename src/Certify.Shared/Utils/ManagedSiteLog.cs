@@ -60,9 +60,19 @@ namespace Certify.Models
             {
                 var logPath = GetLogPath(managedItemId);
 
+                try
+                {
+                    if (System.IO.File.Exists(logPath) && new System.IO.FileInfo(logPath).Length > (1024 * 1024))
+                    {
+                        System.IO.File.Delete(logPath);
+                    }
+                }
+                catch { }
+
                 log = new LoggerConfiguration()
-                .WriteTo.File(logPath, shared: true)
-                .CreateLogger();
+                    .WriteTo.Debug()
+                    .WriteTo.File(logPath, shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
+                    .CreateLogger();
 
                 _managedItemLoggers.Add(managedItemId, log);
             }
@@ -84,9 +94,9 @@ namespace Certify.Models
 
         public static void DisposeLoggers()
         {
-            if (_managedItemLoggers.Count>0)
+            if (_managedItemLoggers.Count > 0)
             {
-                foreach(var l in _managedItemLoggers.Values)
+                foreach (var l in _managedItemLoggers.Values)
                 {
                     l.Dispose();
                 }
