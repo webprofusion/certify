@@ -23,5 +23,11 @@ namespace Certify.UI.Controls
         {
             System.Diagnostics.Process.Start("https://certifytheweb.com/dashboard");
         }
+
+        private void QuickStart_Click(object sender, RoutedEventArgs e)
+        {
+            var d = new Windows.GettingStartedGuide { Owner = Window.GetWindow(this) };
+            d.Show();
+        }
     }
 }

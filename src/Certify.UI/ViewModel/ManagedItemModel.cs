@@ -167,6 +167,26 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        public List<string> SelectedItemLogEntries
+        {
+            get
+            {
+                if (SelectedItem != null)
+                {
+                    try
+                    {
+                        var logPath = ManagedCertificateLog.GetLogPath(SelectedItem.Id);
+                        var logEntries = System.IO.File.ReadAllLines(logPath);
+                        return logEntries.Reverse().Take(50).ToList();
+                    }
+                    catch
+                    {
+                    }
+                }
+                return new List<string> { "Could not retrieve log entries" };
+            }
+        }
+
         public string ValidationError { get; set; }
 
         public bool IsAdvancedView { get; set; } = false;

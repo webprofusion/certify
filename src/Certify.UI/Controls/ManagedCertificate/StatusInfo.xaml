@@ -43,6 +43,7 @@
                     <TextBlock TextWrapping="Wrap" Text="{Binding SelectedItem.RenewalFailureMessage}" Margin="8,8,8,8" FontStyle="Italic" Foreground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}" />
                 </Border>
             </StackPanel>
+            <DataGrid x:Name="LogViewer" ItemsSource="{Binding SelectedItemLogEntries}" AutoGenerateColumns="True" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>
