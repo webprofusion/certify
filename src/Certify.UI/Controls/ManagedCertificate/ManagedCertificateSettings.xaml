@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
              xmlns:local="clr-namespace:Certify.UI.Controls"
-             xmlns:manageditem="clr-namespace:Certify.UI.Controls.ManagedItem"
+             xmlns:managedcertificate="clr-namespace:Certify.UI.Controls.ManagedCertificate"
              xmlns:certifyui="clr-namespace:Certify.UI"
              xmlns:fa="http://schemas.fontawesome.io/icons/"
              xmlns:Custom="http://metro.mahapps.com/winfx/xaml/controls"
@@ -13,7 +13,7 @@
              xmlns:utils="clr-namespace:Certify.UI.Utils"
              xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Models"
              xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-             x:Class="Certify.UI.Controls.ManagedItem.Settings"
+             x:Class="Certify.UI.Controls.ManagedCertificate.ManagedCertificateSettings"
              mc:Ignorable="d" d:DesignWidth="697.442" d:DesignHeight="600"
              d:DataContext="{d:DesignInstance Type=certifyui:DesignItemViewModel, IsDesignTimeCreatable=True}">
     <Grid>
@@ -27,7 +27,7 @@
             <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
             <utils:OptionalBooleanToVisibilityConverter True="Collapsed" False="Visible" x:Key="InvBoolVisConverter" />
             <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
-            <utils:ManagedItemHealthColourConverter x:Key="HealthColourConverter" />
+            <utils:ManagedCertificateHealthColourConverter x:Key="HealthColourConverter" />
             <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
         </Grid.Resources>
 
@@ -70,7 +70,7 @@
             <Button DockPanel.Dock="Right" Click="Button_RequestCertificate" Margin="8,0,0,0">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome Icon="Play" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
-                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.ManagedItemSettings_RequestCertificate}" /></TextBlock>
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.ManagedCertificateSettings_RequestCertificate}" /></TextBlock>
                 </StackPanel>
             </Button>
 
@@ -95,29 +95,29 @@
                                  VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Controls:ScrollViewerHelper.IsHorizontalScrollWheelEnabled="True" TabStripPlacement="Right" Controls:TabControlHelper.IsUnderlined="True">
 
                 <TabItem x:Name="TabStatusInfo"  Header="Status" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100"  Controls:TabControlHelper.UnderlineBrush="White">
-                    <manageditem:StatusInfo Margin="0,8,0,0" />
+                    <managedcertificate:StatusInfo Margin="0,8,0,0" />
                 </TabItem>
 
                 <TabItem x:Name="TabDomains" Header="Certificate Domains" IsSelected="True" Controls:ControlsHelper.HeaderFontSize="12" Margin="0" MinWidth="130">
-                    <manageditem:CertificateDomains Margin="0,8,0,0" />
+                    <managedcertificate:CertificateDomains Margin="0,8,0,0" />
                 </TabItem>
 
                 <TabItem Header="Authorization" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
-                    <manageditem:DomainAuthorization Margin="0,8,0,0" />
+                    <managedcertificate:DomainAuthorization Margin="0,8,0,0" />
                 </TabItem>
 
                 <TabItem x:Name="TabDeployment"  Header="Deployment" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
-                    <manageditem:Deployment  Margin="0,8,0,0" />
+                    <managedcertificate:Deployment  Margin="0,8,0,0" />
                 </TabItem>
 
                 <TabItem x:Name="TabScripting" Header="Scripting"  Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
-                    <manageditem:ScriptHooks  Margin="0,8,0,0" />
+                    <managedcertificate:ScriptHooks  Margin="0,8,0,0" />
                 </TabItem>
                 <TabItem x:Name="TabOptions" Header="Other Options"  Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
-                    <manageditem:MiscOptions Margin="0,8,0,0" />
+                    <managedcertificate:MiscOptions Margin="0,8,0,0" />
                 </TabItem>
                 <TabItem Header="Preview" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
-                    <manageditem:Preview Margin="0,8,0,0" />
+                    <managedcertificate:Preview Margin="0,8,0,0" />
                 </TabItem>
             </Controls:MetroTabControl>
         </DockPanel>

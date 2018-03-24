@@ -72,7 +72,7 @@ namespace Certify.Core.Tests
             var site = iisManager.GetSiteByDomain(testSiteDomain);
             Assert.AreEqual(site.Name, testSiteName);
 
-            var dummyManagedSite = new ManagedSite
+            var dummyManagedCertificate = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
                 Name = testSiteName,
@@ -87,29 +87,29 @@ namespace Certify.Core.Tests
                     PerformExtensionlessConfigChecks = true,
                     WebsiteRootPath = testSitePath
                 },
-                ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS
+                ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
             };
 
-            var result = await certifyManager.PerformCertificateRequest(dummyManagedSite);
+            var result = await certifyManager.PerformCertificateRequest(dummyManagedCertificate);
 
             //ensure cert request was successful
             Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");
 
             //check details of cert, subject alternative name should include domain and expiry must be great than 89 days in the future
-            var managedSites = await certifyManager.GetManagedSites();
-            var managedSite = managedSites.FirstOrDefault(m => m.Id == dummyManagedSite.Id);
+            var managedCertificates = await certifyManager.GetManagedCertificates();
+            var managedCertificate = managedCertificates.FirstOrDefault(m => m.Id == dummyManagedCertificate.Id);
 
             //emsure we have a new managed site
-            Assert.IsNotNull(managedSite);
+            Assert.IsNotNull(managedCertificate);
 
             //have cert file details
-            Assert.IsNotNull(managedSite.CertificatePath);
+            Assert.IsNotNull(managedCertificate.CertificatePath);
 
-            var fileExists = System.IO.File.Exists(managedSite.CertificatePath);
+            var fileExists = System.IO.File.Exists(managedCertificate.CertificatePath);
             Assert.IsTrue(fileExists);
 
             //check cert is correct
-            var certInfo = CertificateManager.LoadCertificate(managedSite.CertificatePath);
+            var certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
             Assert.IsNotNull(certInfo);
 
             bool isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
@@ -119,7 +119,7 @@ namespace Certify.Core.Tests
             Assert.IsTrue(expiresInFuture);
 
             // remove managed site
-            await certifyManager.DeleteManagedSite(managedSite.Id);
+            await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
         }
 
         [TestMethod, TestCategory("MegaTest")]
@@ -136,7 +136,7 @@ namespace Certify.Core.Tests
 
             Assert.AreEqual(site.Name, testIDNDomain);
 
-            var dummyManagedSite = new ManagedSite
+            var dummyManagedCertificate = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
                 Name = testIDNDomain,
@@ -151,22 +151,22 @@ namespace Certify.Core.Tests
                     PerformExtensionlessConfigChecks = true,
                     WebsiteRootPath = testSitePath
                 },
-                ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS
+                ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
             };
 
-            var result = await certifyManager.PerformCertificateRequest(dummyManagedSite);
+            var result = await certifyManager.PerformCertificateRequest(dummyManagedCertificate);
 
             //ensure cert request was successful
             Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");
 
             //have cert file details
-            Assert.IsNotNull(dummyManagedSite.CertificatePath);
+            Assert.IsNotNull(dummyManagedCertificate.CertificatePath);
 
-            var fileExists = System.IO.File.Exists(dummyManagedSite.CertificatePath);
+            var fileExists = System.IO.File.Exists(dummyManagedCertificate.CertificatePath);
             Assert.IsTrue(fileExists);
 
             //check cert is correct
-            var certInfo = CertificateManager.LoadCertificate(dummyManagedSite.CertificatePath);
+            var certInfo = CertificateManager.LoadCertificate(dummyManagedCertificate.CertificatePath);
             Assert.IsNotNull(certInfo);
 
             bool isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
@@ -200,7 +200,7 @@ namespace Certify.Core.Tests
             // add bindings
             iisManager.AddSiteBindings(site.Id.ToString(), domainList, testSiteHttpPort);
 
-            var dummyManagedSite = new ManagedSite
+            var dummyManagedCertificate = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
                 Name = testSiteName,
@@ -216,13 +216,13 @@ namespace Certify.Core.Tests
                     PerformExtensionlessConfigChecks = false,
                     WebsiteRootPath = testSitePath
                 },
-                ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS,
+                ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS,
             };
 
             //ensure cert request was successful
             try
             {
-                var result = await certifyManager.PerformCertificateRequest(dummyManagedSite);
+                var result = await certifyManager.PerformCertificateRequest(dummyManagedCertificate);
                 // check details of cert, subject alternative name should include domain and expiry
                 // must be greater than 89 days in the future
 
@@ -258,7 +258,7 @@ namespace Certify.Core.Tests
             // add bindings
             iisManager.AddSiteBindings(site.Id.ToString(), domainList, testSiteHttpPort);
 
-            var dummyManagedSite = new ManagedSite
+            var dummyManagedCertificate = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
                 Name = testSiteName,
@@ -274,13 +274,13 @@ namespace Certify.Core.Tests
                     PerformExtensionlessConfigChecks = false,
                     WebsiteRootPath = testSitePath
                 },
-                ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS,
+                ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS,
             };
 
             //ensure cert request was successful
             try
             {
-                var result = await certifyManager.PerformCertificateRequest(dummyManagedSite);
+                var result = await certifyManager.PerformCertificateRequest(dummyManagedCertificate);
                 // request failed as expected
 
                 Assert.IsFalse(result.IsSuccess, $"Certificate Request Should Not Complete: {result.Message}");
@@ -297,7 +297,7 @@ namespace Certify.Core.Tests
             var site = iisManager.GetSiteByDomain(testSiteDomain);
             Assert.AreEqual(site.Name, testSiteName);
 
-            var dummyManagedSite = new ManagedSite
+            var dummyManagedCertificate = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
                 Name = testSiteName,
@@ -319,29 +319,29 @@ namespace Certify.Core.Tests
                         }
                     }
                 },
-                ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS
+                ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
             };
 
-            var result = await certifyManager.PerformCertificateRequest(dummyManagedSite);
+            var result = await certifyManager.PerformCertificateRequest(dummyManagedCertificate);
 
             //ensure cert request was successful
             Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");
 
             //check details of cert, subject alternative name should include domain and expiry must be great than 89 days in the future
-            var managedSites = await certifyManager.GetManagedSites();
-            var managedSite = managedSites.FirstOrDefault(m => m.Id == dummyManagedSite.Id);
+            var managedCertificates = await certifyManager.GetManagedCertificates();
+            var managedCertificate = managedCertificates.FirstOrDefault(m => m.Id == dummyManagedCertificate.Id);
 
             //emsure we have a new managed site
-            Assert.IsNotNull(managedSite);
+            Assert.IsNotNull(managedCertificate);
 
             //have cert file details
-            Assert.IsNotNull(managedSite.CertificatePath);
+            Assert.IsNotNull(managedCertificate.CertificatePath);
 
-            var fileExists = System.IO.File.Exists(managedSite.CertificatePath);
+            var fileExists = System.IO.File.Exists(managedCertificate.CertificatePath);
             Assert.IsTrue(fileExists);
 
             //check cert is correct
-            var certInfo = CertificateManager.LoadCertificate(managedSite.CertificatePath);
+            var certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
             Assert.IsNotNull(certInfo);
 
             bool isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
@@ -351,7 +351,7 @@ namespace Certify.Core.Tests
             Assert.IsTrue(expiresInFuture);
 
             // remove managed site
-            await certifyManager.DeleteManagedSite(managedSite.Id);
+            await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
 
             // cleanup certificate
             CertificateManager.RemoveCertificate(certInfo);
@@ -373,12 +373,12 @@ namespace Certify.Core.Tests
             iisManager.CreateSite(testWildcardSiteName, "test" + testStr + "." + PrimaryTestDomain, PrimaryIISRoot, "DefaultAppPool", port: testSiteHttpPort);
             var site = iisManager.GetSiteByDomain("test" + testStr + "." + PrimaryTestDomain);
 
-            ManagedSite managedSite = null;
+            ManagedCertificate managedCertificate = null;
             X509Certificate2 certInfo = null;
 
             try
             {
-                var dummyManagedSite = new ManagedSite
+                var dummyManagedCertificate = new ManagedCertificate
                 {
                     Id = Guid.NewGuid().ToString(),
                     Name = testWildcardSiteName,
@@ -401,29 +401,29 @@ namespace Certify.Core.Tests
                             }
                         }
                     },
-                    ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS
+                    ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
                 };
 
-                var result = await certifyManager.PerformCertificateRequest(dummyManagedSite);
+                var result = await certifyManager.PerformCertificateRequest(dummyManagedCertificate);
 
                 //ensure cert request was successful
                 Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");
 
                 //check details of cert, subject alternative name should include domain and expiry must be great than 89 days in the future
-                var managedSites = await certifyManager.GetManagedSites();
-                managedSite = managedSites.FirstOrDefault(m => m.Id == dummyManagedSite.Id);
+                var managedCertificates = await certifyManager.GetManagedCertificates();
+                managedCertificate = managedCertificates.FirstOrDefault(m => m.Id == dummyManagedCertificate.Id);
 
                 //emsure we have a new managed site
-                Assert.IsNotNull(managedSite);
+                Assert.IsNotNull(managedCertificate);
 
                 //have cert file details
-                Assert.IsNotNull(managedSite.CertificatePath);
+                Assert.IsNotNull(managedCertificate.CertificatePath);
 
-                var fileExists = System.IO.File.Exists(managedSite.CertificatePath);
+                var fileExists = System.IO.File.Exists(managedCertificate.CertificatePath);
                 Assert.IsTrue(fileExists);
 
                 //check cert is correct
-                certInfo = CertificateManager.LoadCertificate(managedSite.CertificatePath);
+                certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
                 Assert.IsNotNull(certInfo);
 
                 bool isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
@@ -435,7 +435,7 @@ namespace Certify.Core.Tests
             finally
             {
                 // remove managed site
-                if (managedSite != null) await certifyManager.DeleteManagedSite(managedSite.Id);
+                if (managedCertificate != null) await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
 
                 // remove IIS site
                 iisManager.DeleteSite(testWildcardSiteName);

@@ -6,18 +6,18 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Certify.UI.Controls.ManagedItem
+namespace Certify.UI.Controls.ManagedCertificate
 {
     /// <summary>
-    /// Interaction logic for ManagedItemSettings.xaml 
+    /// Interaction logic for ManagedCertificateSettings.xaml 
     /// </summary>
-    public partial class Settings : UserControl
+    public partial class ManagedCertificateSettings : UserControl
     {
         protected Certify.UI.ViewModel.AppModel AppViewModel => UI.ViewModel.AppModel.Current;
 
-        protected Certify.UI.ViewModel.ManagedItemModel ItemViewModel => UI.ViewModel.ManagedItemModel.Current;
+        protected Certify.UI.ViewModel.ManagedCertificateModel ItemViewModel => UI.ViewModel.ManagedCertificateModel.Current;
 
-        public Settings()
+        public ManagedCertificateSettings()
         {
             InitializeComponent();
             this.AppViewModel.PropertyChanged += MainViewModel_PropertyChanged;
@@ -31,9 +31,9 @@ namespace Certify.UI.Controls.ManagedItem
             {
                 this.SettingsTab.SelectedIndex = 0;
 
-                if (ItemViewModel.SelectedItem?.Health == ManagedItemHealth.Error
+                if (ItemViewModel.SelectedItem?.Health == ManagedCertificateHealth.Error
                     ||
-                    ItemViewModel.SelectedItem?.Health == ManagedItemHealth.Warning
+                    ItemViewModel.SelectedItem?.Health == ManagedCertificateHealth.Warning
                     )
                 {
                     this.TabStatusInfo.Visibility = Visibility.Visible;
@@ -49,11 +49,11 @@ namespace Certify.UI.Controls.ManagedItem
             }
         }
 
-        private async Task<bool> ValidateAndSave(ManagedSite item)
+        private async Task<bool> ValidateAndSave(Models.ManagedCertificate item)
         {
             /*if (item.Id == null && MainViewModel.SelectedWebSite == null)
             {
-                MessageBox.Show(SR.ManagedItemSettings_SelectWebsiteOrCert, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(SR.ManagedCertificateSettings_SelectWebsiteOrCert, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }*/
 
@@ -65,7 +65,7 @@ namespace Certify.UI.Controls.ManagedItem
 
             if (String.IsNullOrEmpty(item.Name))
             {
-                MessageBox.Show(SR.ManagedItemSettings_NameRequired, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(SR.ManagedCertificateSettings_NameRequired, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 
@@ -89,12 +89,12 @@ namespace Certify.UI.Controls.ManagedItem
             if (ItemViewModel.PrimarySubjectDomain == null)
             {
                 // if we still can't decide on the primary domain ask user to define it
-                MessageBox.Show(SR.ManagedItemSettings_NeedPrimaryDomain, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(SR.ManagedCertificateSettings_NeedPrimaryDomain, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 
             // if title set to the default, use the primary domain
-            if (item.Name == SR.ManagedItemSettings_DefaultTitle)
+            if (item.Name == SR.ManagedCertificateSettings_DefaultTitle)
             {
                 item.Name = ItemViewModel.PrimarySubjectDomain.Domain;
             }
@@ -102,7 +102,7 @@ namespace Certify.UI.Controls.ManagedItem
             if (item.RequestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI &&
                 AppViewModel.IISVersion.Major < 8)
             {
-                MessageBox.Show(string.Format(SR.ManagedItemSettings_ChallengeNotAvailable, SupportedChallengeTypes.CHALLENGE_TYPE_SNI), SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(string.Format(SR.ManagedCertificateSettings_ChallengeNotAvailable, SupportedChallengeTypes.CHALLENGE_TYPE_SNI), SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 
@@ -123,7 +123,7 @@ namespace Certify.UI.Controls.ManagedItem
                 // if user has chosen to bind SNI with a specific IP, warn and confirm save
                 if (item.RequestConfig.BindingUseSNI == true && !String.IsNullOrEmpty(item.RequestConfig.BindingIPAddress) && item.RequestConfig.BindingIPAddress != "*")
                 {
-                    if (MessageBox.Show(SR.ManagedItemSettings_InvalidSNI, SR.SaveError, MessageBoxButton.YesNoCancel, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                    if (MessageBox.Show(SR.ManagedCertificateSettings_InvalidSNI, SR.SaveError, MessageBoxButton.YesNoCancel, MessageBoxImage.Warning) != MessageBoxResult.Yes)
                     {
                         // opted not to save
                         return false;
@@ -137,12 +137,12 @@ namespace Certify.UI.Controls.ManagedItem
                 if (string.IsNullOrEmpty(item.RequestConfig.WebhookUrl) ||
                     !Uri.TryCreate(item.RequestConfig.WebhookUrl, UriKind.Absolute, out var uri))
                 {
-                    MessageBox.Show(SR.ManagedItemSettings_HookMustBeValidUrl, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(SR.ManagedCertificateSettings_HookMustBeValidUrl, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                     return false;
                 }
                 if (string.IsNullOrEmpty(item.RequestConfig.WebhookMethod))
                 {
-                    MessageBox.Show(SR.ManagedItemSettings_HookMethodMustBeSet, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(SR.ManagedCertificateSettings_HookMethodMustBeSet, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                     return false;
                 }
             }
@@ -171,7 +171,7 @@ namespace Certify.UI.Controls.ManagedItem
             //save changes
 
             //creating new managed item
-            return await ItemViewModel.SaveManagedItemChanges();
+            return await ItemViewModel.SaveManagedCertificateChanges();
         }
 
         private async void Button_Save(object sender, RoutedEventArgs e)
@@ -183,7 +183,7 @@ namespace Certify.UI.Controls.ManagedItem
             }
             else
             {
-                MessageBox.Show(SR.ManagedItemSettings_NoChanges);
+                MessageBox.Show(SR.ManagedCertificateSettings_NoChanges);
             }
         }
 
@@ -192,18 +192,18 @@ namespace Certify.UI.Controls.ManagedItem
             //if new item, discard and select first item in managed sites
             if (ItemViewModel.SelectedItem.Id == null)
             {
-                ReturnToDefaultManagedItemView();
+                ReturnToDefaultManagedCertificateView();
             }
             else
             {
                 //reload settings for managed sites, discard changes
                 await ItemViewModel.DiscardChanges();
 
-                ReturnToDefaultManagedItemView();
+                ReturnToDefaultManagedCertificateView();
             }
         }
 
-        private void ReturnToDefaultManagedItemView()
+        private void ReturnToDefaultManagedCertificateView()
         {
             ItemViewModel.SelectedItem = null;
         }
@@ -227,10 +227,10 @@ namespace Certify.UI.Controls.ManagedItem
 
         private async void Button_Delete(object sender, RoutedEventArgs e)
         {
-            await AppViewModel.DeleteManagedSite(ItemViewModel.SelectedItem);
+            await AppViewModel.DeleteManagedCertificate(ItemViewModel.SelectedItem);
             if (ItemViewModel.SelectedItem?.Id == null)
             {
-                AppViewModel.SelectedItem = AppViewModel.ManagedSites.FirstOrDefault();
+                AppViewModel.SelectedItem = AppViewModel.ManagedCertificates.FirstOrDefault();
             }
         }
 
@@ -240,7 +240,7 @@ namespace Certify.UI.Controls.ManagedItem
 
             if (!AppViewModel.IsIISAvailable)
             {
-                MessageBox.Show(SR.ManagedItemSettings_CannotChallengeWithoutIIS, SR.ChallengeError, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(SR.ManagedCertificateSettings_CannotChallengeWithoutIIS, SR.ChallengeError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             else if (ItemViewModel.SelectedItem.RequestConfig.ChallengeType != null)
             {
@@ -248,7 +248,7 @@ namespace Certify.UI.Controls.ManagedItem
 
                 try
                 {
-                    ItemViewModel.UpdateManagedSiteSettings();
+                    ItemViewModel.UpdateManagedCertificateSettings();
                 }
                 catch (Exception exp)
                 {
@@ -263,11 +263,11 @@ namespace Certify.UI.Controls.ManagedItem
                 var result = await ItemViewModel.TestChallengeResponse(ItemViewModel.SelectedItem);
                 if (result.IsOK)
                 {
-                    MessageBox.Show(SR.ManagedItemSettings_ConfigurationCheckOk, SR.Challenge, MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show(SR.ManagedCertificateSettings_ConfigurationCheckOk, SR.Challenge, MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
-                    MessageBox.Show(string.Format(SR.ManagedItemSettings_ConfigurationCheckFailed, String.Join("\r\n", result.FailedItemSummary)), SR.ManagedItemSettings_ChallengeTestFailed, MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(string.Format(SR.ManagedCertificateSettings_ConfigurationCheckFailed, String.Join("\r\n", result.FailedItemSummary)), SR.ManagedCertificateSettings_ChallengeTestFailed, MessageBoxButton.OK, MessageBoxImage.Error);
                 }
 
                 //TODO: just use viewmodel to determine if test button should be enabled

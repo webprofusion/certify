@@ -5,23 +5,23 @@ using System.Windows.Data;
 
 namespace Certify.UI.Utils
 {
-    public class ManagedItemHealthVisibilityConverter : IValueConverter
+    public class ManagedCertificateHealthVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (value == null) return DependencyProperty.UnsetValue;
 
-            var health = (ManagedItemHealth)value;
+            var health = (ManagedCertificateHealth)value;
 
-            if (health == ManagedItemHealth.Unknown)
+            if (health == ManagedCertificateHealth.Unknown)
             {
                 return Visibility.Collapsed;
             }
-            else if (health == ManagedItemHealth.Error)
+            else if (health == ManagedCertificateHealth.Error)
             {
                 return Visibility.Visible;
             }
-            else if (health == ManagedItemHealth.Warning)
+            else if (health == ManagedCertificateHealth.Warning)
             {
                 return Visibility.Visible;
             }

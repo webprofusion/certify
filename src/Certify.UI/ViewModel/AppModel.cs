@@ -41,8 +41,8 @@ namespace Certify.UI.ViewModel
         {
             ProgressResults = new ObservableCollection<RequestProgressState>();
 
-            this.ImportedManagedSites = new ObservableCollection<ManagedSite>();
-            this.ManagedSites = new ObservableCollection<ManagedSite>();
+            this.ImportedManagedCertificates = new ObservableCollection<ManagedCertificate>();
+            this.ManagedCertificates = new ObservableCollection<ManagedCertificate>();
         }
 
         public const int ProductTypeId = 1;
@@ -85,12 +85,12 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// List of all the sites we currently manage 
         /// </summary>
-        public ObservableCollection<ManagedSite> ManagedSites
+        public ObservableCollection<ManagedCertificate> ManagedCertificates
         {
-            get { return managedSites; }
+            get { return managedCertificates; }
             set
             {
-                managedSites = value;
+                managedCertificates = value;
                 if (SelectedItem != null)
                 {
                     SelectedItem = SelectedItem;
@@ -99,12 +99,12 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        private ObservableCollection<ManagedSite> managedSites;
+        private ObservableCollection<ManagedCertificate> managedCertificates;
 
         /// <summary>
         /// If set, there are one or more vault items available to be imported as managed sites 
         /// </summary>
-        public ObservableCollection<ManagedSite> ImportedManagedSites { get; set; }
+        public ObservableCollection<ManagedCertificate> ImportedManagedCertificates { get; set; }
 
         /// <summary>
         /// If true, import from vault/iis scan will merge multi domain sites into one managed site 
@@ -120,20 +120,20 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public ManagedSite SelectedItem
+        public ManagedCertificate SelectedItem
         {
             get { return selectedItem; }
             set
             {
-                if (value?.Id != null && !ManagedSites.Contains(value))
+                if (value?.Id != null && !ManagedCertificates.Contains(value))
                 {
-                    value = ManagedSites.FirstOrDefault(s => s.Id == value.Id);
+                    value = ManagedCertificates.FirstOrDefault(s => s.Id == value.Id);
                 }
                 selectedItem = value;
             }
         }
 
-        private ManagedSite selectedItem;
+        private ManagedCertificate selectedItem;
 
         public bool IsRegisteredVersion { get; set; }
 
@@ -215,7 +215,7 @@ namespace Certify.UI.ViewModel
             // wire up stream events
             CertifyClient.OnMessageFromService += CertifyClient_SendMessage;
             CertifyClient.OnRequestProgressStateUpdated += UpdateRequestTrackingProgress;
-            CertifyClient.OnManagedSiteUpdated += CertifyClient_OnManagedSiteUpdated;
+            CertifyClient.OnManagedCertificateUpdated += CertifyClient_OnManagedCertificateUpdated;
 
             //check service connection
             IsServiceAvailable = await CheckServiceAvailable();
@@ -238,12 +238,12 @@ namespace Certify.UI.ViewModel
             await CertifyClient.ConnectStatusStreamAsync();
         }
 
-        private async void CertifyClient_OnManagedSiteUpdated(ManagedSite obj)
+        private async void CertifyClient_OnManagedCertificateUpdated(ManagedCertificate obj)
         {
             await App.Current.Dispatcher.InvokeAsync(async () =>
               {
                   // a managed site has been updated, update it in our view
-                  await UpdatedCachedManagedSite(obj);
+                  await UpdatedCachedManagedCertificate(obj);
               });
         }
 
@@ -271,11 +271,11 @@ namespace Certify.UI.ViewModel
         {
             this.Preferences = await CertifyClient.GetPreferences();
 
-            List<ManagedSite> list = await CertifyClient.GetManagedSites(new Models.ManagedSiteFilter());
+            List<ManagedCertificate> list = await CertifyClient.GetManagedCertificates(new Models.ManagedCertificateFilter());
 
             foreach (var i in list) i.IsChanged = false;
 
-            ManagedSites = new System.Collections.ObjectModel.ObservableCollection<Models.ManagedSite>(list);
+            ManagedCertificates = new System.Collections.ObjectModel.ObservableCollection<Models.ManagedCertificate>(list);
 
             PrimaryContactEmail = await CertifyClient.GetPrimaryContact();
 
@@ -287,29 +287,29 @@ namespace Certify.UI.ViewModel
             MessageBox.Show($"Received: {arg1} {arg2}");
         }
 
-        public async Task<bool> AddOrUpdateManagedSite(ManagedSite item)
+        public async Task<bool> AddOrUpdateManagedCertificate(ManagedCertificate item)
         {
-            var updatedManagedSite = await CertifyClient.UpdateManagedSite(item);
-            updatedManagedSite.IsChanged = false;
+            var updatedManagedCertificate = await CertifyClient.UpdateManagedCertificate(item);
+            updatedManagedCertificate.IsChanged = false;
 
             // add/update site in our local cache
-            await UpdatedCachedManagedSite(updatedManagedSite);
+            await UpdatedCachedManagedCertificate(updatedManagedCertificate);
 
             return true;
         }
 
-        public async Task<bool> DeleteManagedSite(ManagedSite selectedItem)
+        public async Task<bool> DeleteManagedCertificate(ManagedCertificate selectedItem)
         {
-            var existing = ManagedSites.FirstOrDefault(s => s.Id == selectedItem.Id);
+            var existing = ManagedCertificates.FirstOrDefault(s => s.Id == selectedItem.Id);
             if (existing != null)
             {
-                if (MessageBox.Show(SR.ManagedItemSettings_ConfirmDelete, SR.ConfirmDelete, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
+                if (MessageBox.Show(SR.ManagedCertificateSettings_ConfirmDelete, SR.ConfirmDelete, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
                 {
                     existing.Deleted = true;
-                    var deletedOK = await CertifyClient.DeleteManagedSite(selectedItem.Id);
+                    var deletedOK = await CertifyClient.DeleteManagedCertificate(selectedItem.Id);
                     if (deletedOK)
                     {
-                        ManagedSites.Remove(existing);
+                        ManagedCertificates.Remove(existing);
                     }
                     return deletedOK;
                 }
@@ -320,14 +320,14 @@ namespace Certify.UI.ViewModel
         public async Task BeginCertificateRequest(string managedItemId)
         {
             //begin request process
-            var managedSite = ManagedSites.FirstOrDefault(s => s.Id == managedItemId);
+            var managedCertificate = ManagedCertificates.FirstOrDefault(s => s.Id == managedItemId);
 
-            if (managedSite != null)
+            if (managedCertificate != null)
             {
                 MainUITabIndex = (int)MainWindow.PrimaryUITabs.CurrentProgress;
 
                 //add request to observable list of progress state
-                RequestProgressState progressState = new RequestProgressState(RequestState.Running, "Starting..", managedSite);
+                RequestProgressState progressState = new RequestProgressState(RequestState.Running, "Starting..", managedCertificate);
 
                 //begin monitoring progress
                 UpdateRequestTrackingProgress(progressState);
@@ -335,7 +335,7 @@ namespace Certify.UI.ViewModel
                 var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
 
                 // start request
-                var result = await CertifyClient.BeginCertificateRequest(managedSite.Id);
+                var result = await CertifyClient.BeginCertificateRequest(managedCertificate.Id);
             }
         }
 
@@ -344,7 +344,7 @@ namespace Certify.UI.ViewModel
             //FIXME: currently user can run renew all again while renewals are still in progress
 
             Dictionary<string, Progress<RequestProgressState>> itemTrackers = new Dictionary<string, Progress<RequestProgressState>>();
-            foreach (var s in ManagedSites)
+            foreach (var s in ManagedCertificates)
             {
                 if ((autoRenewalsOnly && s.IncludeInAutoRenew) || !autoRenewalsOnly)
                 {
@@ -365,13 +365,13 @@ namespace Certify.UI.ViewModel
             // current requests?
         }
 
-        public async Task UpdatedCachedManagedSite(ManagedSite managedSite, bool reload = false)
+        public async Task UpdatedCachedManagedCertificate(ManagedCertificate managedCertificate, bool reload = false)
         {
-            var existing = ManagedSites.FirstOrDefault(i => i.Id == managedSite.Id);
-            var newItem = managedSite;
+            var existing = ManagedCertificates.FirstOrDefault(i => i.Id == managedCertificate.Id);
+            var newItem = managedCertificate;
 
             // optional reload managed site details (for refresh)
-            if (reload) newItem = await CertifyClient.GetManagedSite(managedSite.Id);
+            if (reload) newItem = await CertifyClient.GetManagedCertificate(managedCertificate.Id);
 
             if (newItem != null)
             {
@@ -380,12 +380,12 @@ namespace Certify.UI.ViewModel
                 // update our cached copy of the managed site details
                 if (existing != null)
                 {
-                    var index = ManagedSites.IndexOf(existing);
-                    ManagedSites[index] = newItem;
+                    var index = ManagedCertificates.IndexOf(existing);
+                    ManagedCertificates[index] = newItem;
                 }
                 else
                 {
-                    ManagedSites.Add(newItem);
+                    ManagedCertificates.Add(newItem);
                 }
             }
         }
@@ -394,7 +394,7 @@ namespace Certify.UI.ViewModel
         {
             App.Current.Dispatcher.Invoke((Action)delegate
             {
-                var existing = ProgressResults.FirstOrDefault(p => p.ManagedItem.Id == state.ManagedItem.Id);
+                var existing = ProgressResults.FirstOrDefault(p => p.ManagedCertificate.Id == state.ManagedCertificate.Id);
 
                 if (existing != null)
                 {

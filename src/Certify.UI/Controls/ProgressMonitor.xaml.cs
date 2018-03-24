@@ -27,13 +27,13 @@ namespace Certify.UI.Controls
             this.DataContext = MainViewModel;
         }
 
-        private void ManagedSite_ViewLog(object sender, MouseButtonEventArgs e)
+        private void ManagedCertificate_ViewLog(object sender, MouseButtonEventArgs e)
         {
             // show log for the selected managed site
             try
             {
-                var itemId = ((RequestProgressState)((StackPanel)sender).DataContext).ManagedItem.Id;
-                var logPath = Models.ManagedSiteLog.GetLogPath(itemId);
+                var itemId = ((RequestProgressState)((StackPanel)sender).DataContext).ManagedCertificate.Id;
+                var logPath = Models.ManagedCertificateLog.GetLogPath(itemId);
                 if (System.IO.File.Exists(logPath))
                 {
                     //open file

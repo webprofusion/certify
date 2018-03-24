@@ -6,7 +6,7 @@ using Certify.Models;
 namespace Certify.Service.Tests.Integration
 {
     [TestClass]
-    public class ManagedSiteTests
+    public class ManagedCertificateTests
     {
         private Client.CertifyServiceClient _client = null;
 
@@ -17,25 +17,25 @@ namespace Certify.Service.Tests.Integration
         }
 
         [TestMethod]
-        public async Task TestGetManagedSites()
+        public async Task TestGetManagedCertificates()
         {
-            var filter = new ManagedSiteFilter();
-            var result = await _client.GetManagedSites(filter);
+            var filter = new ManagedCertificateFilter();
+            var result = await _client.GetManagedCertificates(filter);
 
             Assert.IsNotNull(result, $"Fetched {result.Count} managed sites");
         }
 
         [TestMethod]
-        public async Task TestGetManagedSite()
+        public async Task TestGetManagedCertificate()
         {
             //get full list
-            var filter = new ManagedSiteFilter { MaxResults = 10 };
-            var results = await _client.GetManagedSites(filter);
+            var filter = new ManagedCertificateFilter { MaxResults = 10 };
+            var results = await _client.GetManagedCertificates(filter);
 
             Assert.IsTrue(results.Count > 0, "Got one or more managed sites");
 
             //attempt to get single item
-            var site = await _client.GetManagedSite(results[0].Id);
+            var site = await _client.GetManagedCertificate(results[0].Id);
             Assert.IsNotNull(site, $"Fetched single managed site details");
         }
     }

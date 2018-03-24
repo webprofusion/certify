@@ -6,14 +6,14 @@ using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Certify.UI.Controls.ManagedItem
+namespace Certify.UI.Controls.ManagedCertificate
 {
     /// <summary>
     /// Interaction logic for Deployment.xaml 
     /// </summary>
     public partial class MiscOptions : UserControl
     {
-        protected Certify.UI.ViewModel.ManagedItemModel ItemViewModel => UI.ViewModel.ManagedItemModel.Current;
+        protected Certify.UI.ViewModel.ManagedCertificateModel ItemViewModel => UI.ViewModel.ManagedCertificateModel.Current;
 
         public MiscOptions()
         {
@@ -25,7 +25,7 @@ namespace Certify.UI.Controls.ManagedItem
             if (this.ItemViewModel?.SelectedItem?.Id == null) return;
 
             // get file path for log
-            var logPath = Models.ManagedSiteLog.GetLogPath(this.ItemViewModel.SelectedItem.Id);
+            var logPath = Models.ManagedCertificateLog.GetLogPath(this.ItemViewModel.SelectedItem.Id);
 
             //check file exists, if not inform user
             if (System.IO.File.Exists(logPath))
@@ -35,7 +35,7 @@ namespace Certify.UI.Controls.ManagedItem
             }
             else
             {
-                MessageBox.Show(SR.ManagedItemSettings_LogNotCreated);
+                MessageBox.Show(SR.ManagedCertificateSettings_LogNotCreated);
             }
         }
 
@@ -62,7 +62,7 @@ namespace Certify.UI.Controls.ManagedItem
             }
             else
             {
-                MessageBox.Show(SR.ManagedItemSettings_CertificateNotReady);
+                MessageBox.Show(SR.ManagedCertificateSettings_CertificateNotReady);
             }
         }
 
@@ -72,11 +72,11 @@ namespace Certify.UI.Controls.ManagedItem
             var certPath = this.ItemViewModel.SelectedItem.CertificatePath;
             if (String.IsNullOrEmpty(certPath) || !File.Exists(certPath))
             {
-                MessageBox.Show(SR.ManagedItemSettings_CertificateNotReady, SR.Error, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(SR.ManagedCertificateSettings_CertificateNotReady, SR.Error, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            if (MessageBox.Show(SR.ManagedItemSettings_ConfirmRevokeCertificate, SR.Alert, MessageBoxButton.OKCancel, MessageBoxImage.Exclamation) == MessageBoxResult.OK)
+            if (MessageBox.Show(SR.ManagedCertificateSettings_ConfirmRevokeCertificate, SR.Alert, MessageBoxButton.OKCancel, MessageBoxImage.Exclamation) == MessageBoxResult.OK)
             {
                 try
                 {
@@ -84,11 +84,11 @@ namespace Certify.UI.Controls.ManagedItem
                     var result = await ItemViewModel.RevokeSelectedItem();
                     if (result.IsOK)
                     {
-                        MessageBox.Show(SR.ManagedItemSettings_Certificate_Revoked, SR.Alert, MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show(SR.ManagedCertificateSettings_Certificate_Revoked, SR.Alert, MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     else
                     {
-                        MessageBox.Show(string.Format(SR.ManagedItemSettings_RevokeCertificateError, result.Message), SR.Error, MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show(string.Format(SR.ManagedCertificateSettings_RevokeCertificateError, result.Message), SR.Error, MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
                 finally

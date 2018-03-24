@@ -405,7 +405,7 @@ namespace Certify.Providers.Certes
             throw new System.NotImplementedException();
         }
 
-        public PendingAuthorization PerformAutomatedChallengeResponse(ICertifiedServer iisManager, ManagedSite managedSite, PendingAuthorization pendingAuth)
+        public PendingAuthorization PerformAutomatedChallengeResponse(ICertifiedServer iisManager, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
         {
             throw new System.NotImplementedException();
         }
@@ -509,12 +509,12 @@ namespace Certify.Providers.Certes
             }
         }
 
-        public Task<StatusMessage> RevokeCertificate(ManagedSite managedSite)
+        public Task<StatusMessage> RevokeCertificate(ManagedCertificate managedCertificate)
         {
             throw new System.NotImplementedException();
         }
 
-        public Task<StatusMessage> TestChallengeResponse(ICertifiedServer iisManager, ManagedSite managedSite, bool isPreviewMode)
+        public Task<StatusMessage> TestChallengeResponse(ICertifiedServer iisManager, ManagedCertificate managedCertificate, bool isPreviewMode)
         {
             throw new System.NotImplementedException();
         }

@@ -14,13 +14,13 @@ namespace Certify.Management
 
         Task<bool> LoadSettingsAsync(bool skipIfLoaded);
 
-        Task<ManagedSite> GetManagedSite(string id);
+        Task<ManagedCertificate> GetManagedCertificate(string id);
 
-        Task<List<ManagedSite>> GetManagedSites(ManagedSiteFilter filter = null);
+        Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter = null);
 
-        Task<ManagedSite> UpdateManagedSite(ManagedSite site);
+        Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate site);
 
-        Task DeleteManagedSite(string id);
+        Task DeleteManagedCertificate(string id);
 
         List<RegistrationItem> GetContactRegistrations();
 
@@ -28,11 +28,11 @@ namespace Certify.Management
 
         List<CertificateItem> GetCertificates();
 
-        Task<StatusMessage> TestChallenge(ILogger log, ManagedSite managedSite, bool isPreviewMode);
+        Task<StatusMessage> TestChallenge(ILogger log, ManagedCertificate managedCertificate, bool isPreviewMode);
 
-        Task<StatusMessage> RevokeCertificate(ManagedSite managedSite);
+        Task<StatusMessage> RevokeCertificate(ManagedCertificate managedCertificate);
 
-        Task<CertificateRequestResult> PerformDummyCertificateRequest(ManagedSite managedSite, IProgress<RequestProgressState> progress = null);
+        Task<CertificateRequestResult> PerformDummyCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null);
 
         Task<bool> AddRegisteredContact(ContactRegistration reg);
 
@@ -42,17 +42,17 @@ namespace Certify.Management
 
         void BeginTrackingProgress(RequestProgressState state);
 
-        Task<CertificateRequestResult> ReapplyCertificateBindings(ManagedSite managedSite, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false);
+        Task<CertificateRequestResult> ReapplyCertificateBindings(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false);
 
-        Task<CertificateRequestResult> PerformCertificateRequest(ManagedSite managedSite, IProgress<RequestProgressState> progress = null);
+        Task<CertificateRequestResult> PerformCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null);
 
         List<DomainOption> GetDomainOptionsFromSite(string siteId);
 
-        Task<List<CertificateRequestResult>> PerformRenewalAllManagedSites(bool autoRenewalOnly = true, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null);
+        Task<List<CertificateRequestResult>> PerformRenewalAllManagedCertificates(bool autoRenewalOnly = true, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null);
 
-        Task<List<ManagedSite>> PreviewManagedSites(StandardServerTypes serverType);
+        Task<List<ManagedCertificate>> PreviewManagedCertificates(StandardServerTypes serverType);
 
-        RequestProgressState GetRequestProgressState(string managedSiteId);
+        RequestProgressState GetRequestProgressState(string managedItemId);
 
         Task<bool> PerformPeriodicTasks();
 
@@ -60,6 +60,6 @@ namespace Certify.Management
 
         event Action<RequestProgressState> OnRequestProgressStateUpdated;
 
-        event Action<ManagedSite> OnManagedSiteUpdated;
+        event Action<ManagedCertificate> OnManagedCertificateUpdated;
     }
 }

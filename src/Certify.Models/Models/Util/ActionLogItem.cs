@@ -8,7 +8,7 @@ namespace Certify.Models
 {
     public class ActionLogItem
     {
-        public string ManagedSiteId { get; set; }
+        public string ManagedCertificateId { get; set; }
         public DateTime DateTime { get; set; }
         public string Command { get; set; }
 

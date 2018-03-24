@@ -67,8 +67,8 @@ namespace Certify.Management
 
         public async Task<bool> IsCredentialInUse(string storageKey)
         {
-            var managedSites = await new ItemManager().GetManagedSites(new Models.ManagedSiteFilter { StoredCredentialKey = storageKey });
-            if (managedSites.Any())
+            var managedCertificates = await new ItemManager().GetManagedCertificates(new Models.ManagedCertificateFilter { StoredCredentialKey = storageKey });
+            if (managedCertificates.Any())
             {
                 // credential is in use
                 return true;

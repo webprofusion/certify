@@ -10,7 +10,7 @@ namespace Certify.Models.Shared
         public string OS { get; set; }
         public string AppVersion { get; set; }
         public int Websites { get; set; }
-        public int ManagedSites { get; set; }
+        public int ManagedCertificates { get; set; }
         public DateTime? DateRegistered { get; set; }
         public DateTime? DateLastConfigSync { get; set; }
     }

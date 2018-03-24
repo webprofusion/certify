@@ -61,7 +61,7 @@
     <Compile Include="Controllers\PreferencesController.cs" />
     <Compile Include="Controllers\ServerController.cs" />
     <Compile Include="Controllers\SystemController.cs" />
-    <Compile Include="Controllers\ManagedSitesController.cs" />
+    <Compile Include="Controllers\ManagedCertificateController.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

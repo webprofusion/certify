@@ -1,9 +1,9 @@
-﻿<UserControl x:Class="Certify.UI.Controls.ManagedItem.Deployment"
+﻿<UserControl x:Class="Certify.UI.Controls.ManagedCertificate.Deployment"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:Certify.UI.Controls.ManagedItem"
+             xmlns:local="clr-namespace:Certify.UI.Controls.ManagedCertificate"
              xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
              xmlns:utils="clr-namespace:Certify.UI.Utils"
              xmlns:certifyui="clr-namespace:Certify.UI"
@@ -49,24 +49,24 @@
             <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">IIS Binding Settings</TextBlock>
             <TextBlock DockPanel.Dock="Top" Text="If one or more new https bindings need to be created, the following settings will be used:" Style="{StaticResource Instructions}"></TextBlock>
             <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Margin="8,4,0,0">
-                <RadioButton Margin="0,0,0,4" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" GroupName="BindingType" Content="{x:Static Resources:SR.ManagedItemSettings_AutoUpdateBinding}" />
-                <RadioButton Margin="0,0,0,4" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Mode=OneWay, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType" Content="{x:Static Resources:SR.ManagedItemSettings_UseSpecificBinding}" />
+                <RadioButton Margin="0,0,0,4" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" GroupName="BindingType" Content="{x:Static Resources:SR.ManagedCertificateSettings_AutoUpdateBinding}" />
+                <RadioButton Margin="0,0,0,4" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Mode=OneWay, Converter={StaticResource ResourceKey=InvBoolConverter}}" GroupName="BindingType" Content="{x:Static Resources:SR.ManagedCertificateSettings_UseSpecificBinding}" />
             </StackPanel>
 
             <StackPanel  DockPanel.Dock="Top" Orientation="Vertical" IsEnabled="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}" Margin="32,8,0,0">
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                    <Label Width="130" Content="{x:Static Resources:SR.ManagedItemSettings_BindIP}" />
+                    <Label Width="130" Content="{x:Static Resources:SR.ManagedCertificateSettings_BindIP}" />
                     <ComboBox ItemsSource="{Binding HostIPAddresses}" DisplayMemberPath="Description" SelectedValue="{Binding SelectedItem.RequestConfig.BindingIPAddress}" SelectedValuePath="IPAddress" Width="225" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                    <Label Width="130" Content="{x:Static Resources:SR.ManagedItemSettings_BindPort}" />
+                    <Label Width="130" Content="{x:Static Resources:SR.ManagedCertificateSettings_BindPort}" />
                     <TextBox Text="{Binding SelectedItem.RequestConfig.BindingPort}" Width="225" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
-                    <Label Width="130" Content="{x:Static Resources:SR.ManagedItemSettings_UseSNI}" />
+                    <Label Width="130" Content="{x:Static Resources:SR.ManagedCertificateSettings_UseSNI}" />
                     <CheckBox IsChecked="{Binding SelectedItem.RequestConfig.BindingUseSNI}"></CheckBox>
                 </StackPanel>
-                <TextBlock Style="{StaticResource Instructions}" Text="{x:Static Resources:SR.ManagedItemSettings_BindingNote}" />
+                <TextBlock Style="{StaticResource Instructions}" Text="{x:Static Resources:SR.ManagedCertificateSettings_BindingNote}" />
             </StackPanel>
         </DockPanel>
     </ScrollViewer>

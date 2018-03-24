@@ -15,7 +15,7 @@ namespace Certify.Models
         CertficateRequestAttentionRequired = 110
     }
 
-    public class ManagedSiteLogItem
+    public class ManagedCertificateLogItem
     {
         public DateTime EventDate { get; set; }
         public string Message { get; set; }
@@ -37,7 +37,7 @@ namespace Certify.Models
         }
     }
 
-    public static class ManagedSiteLog
+    public static class ManagedCertificateLog
     {
         private static Dictionary<string, Serilog.Core.Logger> _managedItemLoggers { get; set; }
 
@@ -79,7 +79,7 @@ namespace Certify.Models
             return log;
         }
 
-        public static void AppendLog(string managedItemId, ManagedSiteLogItem logItem)
+        public static void AppendLog(string managedItemId, ManagedCertificateLogItem logItem)
         {
             var log = GetLogger(managedItemId);
 

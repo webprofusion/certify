@@ -385,7 +385,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Merge multiple domains/certificates per site into one Managed Site.
+        ///   Looks up a localized string similar to Merge multiple domains/certificates per site into one  Managed Certificate.
         /// </summary>
         public static string ImportDlg_Merge {
             get {
@@ -394,7 +394,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You are upgrading from an older version of Certify. This will create new Managed Sites which you can then edit to adjust the renewal settings etc..
+        ///   Looks up a localized string similar to You are upgrading from an older version of Certify. This will create new  Managed Certificates which you can then edit to adjust the renewal settings etc..
         /// </summary>
         public static string ImportDlg_OpComment {
             get {
@@ -403,7 +403,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Import Managed Sites.
+        ///   Looks up a localized string similar to Import  Managed Certificates.
         /// </summary>
         public static string ImportDlg_OpTitle {
             get {
@@ -529,7 +529,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Managed Sites.
+        ///   Looks up a localized string similar to  Managed Certificates.
         /// </summary>
         public static string Managed_Sites {
             get {
@@ -540,126 +540,126 @@ namespace Certify.Locales {
         /// <summary>
         ///   Looks up a localized string similar to Add domains to certificate:.
         /// </summary>
-        public static string ManagedItemSettings_AddDomainsToCertificate {
+        public static string ManagedCertificateSettings_AddDomainsToCertificate {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_AddDomainsToCertificate", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_AddDomainsToCertificate", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Auto create/update IIS bindings (uses SNI).
         /// </summary>
-        public static string ManagedItemSettings_AutoUpdateBinding {
+        public static string ManagedCertificateSettings_AutoUpdateBinding {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_AutoUpdateBinding", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_AutoUpdateBinding", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Note: these setting only apply to new https bindings, existing bindings are only updated with the new certificate..
         /// </summary>
-        public static string ManagedItemSettings_BindingNote {
+        public static string ManagedCertificateSettings_BindingNote {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_BindingNote", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_BindingNote", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Bind to Specific IP:.
         /// </summary>
-        public static string ManagedItemSettings_BindIP {
+        public static string ManagedCertificateSettings_BindIP {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_BindIP", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_BindIP", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Bind to Specific Port:.
         /// </summary>
-        public static string ManagedItemSettings_BindPort {
+        public static string ManagedCertificateSettings_BindPort {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_BindPort", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_BindPort", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to ....
         /// </summary>
-        public static string ManagedItemSettings_BrowseFolder {
+        public static string ManagedCertificateSettings_BrowseFolder {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_BrowseFolder", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_BrowseFolder", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Cannot check challenges if IIS is not available..
         /// </summary>
-        public static string ManagedItemSettings_CannotChallengeWithoutIIS {
+        public static string ManagedCertificateSettings_CannotChallengeWithoutIIS {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_CannotChallengeWithoutIIS", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_CannotChallengeWithoutIIS", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Certificate Revoked..
         /// </summary>
-        public static string ManagedItemSettings_Certificate_Revoked {
+        public static string ManagedCertificateSettings_Certificate_Revoked {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_Certificate_Revoked", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_Certificate_Revoked", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to The certificate file for this item has not been created yet..
         /// </summary>
-        public static string ManagedItemSettings_CertificateNotReady {
+        public static string ManagedCertificateSettings_CertificateNotReady {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_CertificateNotReady", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_CertificateNotReady", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Certificate Path: [to be set].
         /// </summary>
-        public static string ManagedItemSettings_CertificatePathEmpty {
+        public static string ManagedCertificateSettings_CertificatePathEmpty {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_CertificatePathEmpty", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_CertificatePathEmpty", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to WARNING: This certificate has been revoked..
         /// </summary>
-        public static string ManagedItemSettings_CertificateRevokeWarning {
+        public static string ManagedCertificateSettings_CertificateRevokeWarning {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_CertificateRevokeWarning", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_CertificateRevokeWarning", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to The {0} challenge is only available for IIS versions 8+..
         /// </summary>
-        public static string ManagedItemSettings_ChallengeNotAvailable {
+        public static string ManagedCertificateSettings_ChallengeNotAvailable {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_ChallengeNotAvailable", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_ChallengeNotAvailable", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Challenge Test Failed.
         /// </summary>
-        public static string ManagedItemSettings_ChallengeTestFailed {
+        public static string ManagedCertificateSettings_ChallengeTestFailed {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_ChallengeTestFailed", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_ChallengeTestFailed", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Challenge Type:.
         /// </summary>
-        public static string ManagedItemSettings_ChallengeTypes {
+        public static string ManagedCertificateSettings_ChallengeTypes {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_ChallengeTypes", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_ChallengeTypes", resourceCulture);
             }
         }
         
@@ -667,306 +667,306 @@ namespace Certify.Locales {
         ///   Looks up a localized string similar to Configuration Check Failed:
         ///{0}.
         /// </summary>
-        public static string ManagedItemSettings_ConfigurationCheckFailed {
+        public static string ManagedCertificateSettings_ConfigurationCheckFailed {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_ConfigurationCheckFailed", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_ConfigurationCheckFailed", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Configuration Checked OK.
         /// </summary>
-        public static string ManagedItemSettings_ConfigurationCheckOk {
+        public static string ManagedCertificateSettings_ConfigurationCheckOk {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_ConfigurationCheckOk", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_ConfigurationCheckOk", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to delete this item? Deleting the item will not affect IIS settings etc..
         /// </summary>
-        public static string ManagedItemSettings_ConfirmDelete {
+        public static string ManagedCertificateSettings_ConfirmDelete {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_ConfirmDelete", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_ConfirmDelete", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to revoke this certificate?.
         /// </summary>
-        public static string ManagedItemSettings_ConfirmRevokeCertificate {
+        public static string ManagedCertificateSettings_ConfirmRevokeCertificate {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_ConfirmRevokeCertificate", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_ConfirmRevokeCertificate", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to New Managed Certificate.
         /// </summary>
-        public static string ManagedItemSettings_DefaultTitle {
+        public static string ManagedCertificateSettings_DefaultTitle {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_DefaultTitle", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_DefaultTitle", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Display Name:.
         /// </summary>
-        public static string ManagedItemSettings_DisplayName {
+        public static string ManagedCertificateSettings_DisplayName {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_DisplayName", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_DisplayName", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Domain.
         /// </summary>
-        public static string ManagedItemSettings_Domain {
+        public static string ManagedCertificateSettings_Domain {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_Domain", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_Domain", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to The following selected domains will be included as a single certificate request. The Lets Encrypt service must be able to access all of these domains via port 80 (for HTTP challenges) or port 443 (for TLS-SNI challenges) for the certification process to work..
         /// </summary>
-        public static string ManagedItemSettings_DomainIncluded {
+        public static string ManagedCertificateSettings_DomainIncluded {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_DomainIncluded", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_DomainIncluded", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Enable Auto Renewal.
         /// </summary>
-        public static string ManagedItemSettings_EnableAutoRenewal {
+        public static string ManagedCertificateSettings_EnableAutoRenewal {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_EnableAutoRenewal", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_EnableAutoRenewal", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Note: To export this certificate use the Manage Computer Certificates option in Windows. .
         /// </summary>
-        public static string ManagedItemSettings_ExportTip {
+        public static string ManagedCertificateSettings_ExportTip {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_ExportTip", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_ExportTip", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Body:.
         /// </summary>
-        public static string ManagedItemSettings_HookBody {
+        public static string ManagedCertificateSettings_HookBody {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_HookBody", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_HookBody", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to ContentType:.
         /// </summary>
-        public static string ManagedItemSettings_HookContentType {
+        public static string ManagedCertificateSettings_HookContentType {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_HookContentType", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_HookContentType", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Method:.
         /// </summary>
-        public static string ManagedItemSettings_HookMethod {
+        public static string ManagedCertificateSettings_HookMethod {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_HookMethod", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_HookMethod", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to The Method for the webhook must be set..
         /// </summary>
-        public static string ManagedItemSettings_HookMethodMustBeSet {
+        public static string ManagedCertificateSettings_HookMethodMustBeSet {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_HookMethodMustBeSet", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_HookMethodMustBeSet", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to The Url for the webhook must be set to a valid Url..
         /// </summary>
-        public static string ManagedItemSettings_HookMustBeValidUrl {
+        public static string ManagedCertificateSettings_HookMustBeValidUrl {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_HookMustBeValidUrl", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_HookMustBeValidUrl", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Webhook Trigger:.
         /// </summary>
-        public static string ManagedItemSettings_HookTrigger {
+        public static string ManagedCertificateSettings_HookTrigger {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_HookTrigger", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_HookTrigger", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Url:.
         /// </summary>
-        public static string ManagedItemSettings_HookUrl {
+        public static string ManagedCertificateSettings_HookUrl {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_HookUrl", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_HookUrl", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Include.
         /// </summary>
-        public static string ManagedItemSettings_Include {
+        public static string ManagedCertificateSettings_Include {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_Include", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_Include", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to You are attempting to create an SNI binding that also has a specific bound IP address. It is recommended that SNI bindings use All Unassigned instead. Do you wish to continue saving?.
         /// </summary>
-        public static string ManagedItemSettings_InvalidSNI {
+        public static string ManagedCertificateSettings_InvalidSNI {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_InvalidSNI", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_InvalidSNI", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to The log file for this item has not been created yet..
         /// </summary>
-        public static string ManagedItemSettings_LogNotCreated {
+        public static string ManagedCertificateSettings_LogNotCreated {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_LogNotCreated", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_LogNotCreated", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to A name is required for this item..
         /// </summary>
-        public static string ManagedItemSettings_NameRequired {
+        public static string ManagedCertificateSettings_NameRequired {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_NameRequired", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_NameRequired", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to A Primary Domain must be included.
         /// </summary>
-        public static string ManagedItemSettings_NeedPrimaryDomain {
+        public static string ManagedCertificateSettings_NeedPrimaryDomain {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_NeedPrimaryDomain", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_NeedPrimaryDomain", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to No changes were made, skipping save.
         /// </summary>
-        public static string ManagedItemSettings_NoChanges {
+        public static string ManagedCertificateSettings_NoChanges {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_NoChanges", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_NoChanges", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to There are no http or https hostname bindings associated with the selected site in IIS. At least one fully qualified hostname (e.g &apos;github.com&apos;) is required to create a certificate..
         /// </summary>
-        public static string ManagedItemSettings_NoHostNameBindingWarning {
+        public static string ManagedCertificateSettings_NoHostNameBindingWarning {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_NoHostNameBindingWarning", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_NoHostNameBindingWarning", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Notify Primary Contact On Renewal Failure.
         /// </summary>
-        public static string ManagedItemSettings_NotifyPrimaryContactOnRenewalFailure {
+        public static string ManagedCertificateSettings_NotifyPrimaryContactOnRenewalFailure {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_NotifyPrimaryContactOnRenewalFailure", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_NotifyPrimaryContactOnRenewalFailure", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Open Log File.
         /// </summary>
-        public static string ManagedItemSettings_OpenLogFile {
+        public static string ManagedCertificateSettings_OpenLogFile {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_OpenLogFile", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_OpenLogFile", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Perform challenge response config checks.
         /// </summary>
-        public static string ManagedItemSettings_PerformChallengeResponseConfigCheck {
+        public static string ManagedCertificateSettings_PerformChallengeResponseConfigCheck {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_PerformChallengeResponseConfigCheck", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_PerformChallengeResponseConfigCheck", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Perform web application auto config.
         /// </summary>
-        public static string ManagedItemSettings_PerformWebAppAutoConfig {
+        public static string ManagedCertificateSettings_PerformWebAppAutoConfig {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_PerformWebAppAutoConfig", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_PerformWebAppAutoConfig", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Pre-request PS Script:.
         /// </summary>
-        public static string ManagedItemSettings_PerRequsetScript {
+        public static string ManagedCertificateSettings_PerRequsetScript {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_PerRequsetScript", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_PerRequsetScript", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Post-request PS Script:.
         /// </summary>
-        public static string ManagedItemSettings_PostRequestScript {
+        public static string ManagedCertificateSettings_PostRequestScript {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_PostRequestScript", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_PostRequestScript", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Primary.
         /// </summary>
-        public static string ManagedItemSettings_Primary {
+        public static string ManagedCertificateSettings_Primary {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_Primary", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_Primary", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Re-apply Certificate to Bindings.
         /// </summary>
-        public static string ManagedItemSettings_ReapplyCertificate {
+        public static string ManagedCertificateSettings_ReapplyCertificate {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_ReapplyCertificate", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_ReapplyCertificate", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Request Certificate.
         /// </summary>
-        public static string ManagedItemSettings_RequestCertificate {
+        public static string ManagedCertificateSettings_RequestCertificate {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_RequestCertificate", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_RequestCertificate", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Revoke Certificate.
         /// </summary>
-        public static string ManagedItemSettings_RevokeCertificate {
+        public static string ManagedCertificateSettings_RevokeCertificate {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_RevokeCertificate", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_RevokeCertificate", resourceCulture);
             }
         }
         
@@ -974,171 +974,171 @@ namespace Certify.Locales {
         ///   Looks up a localized string similar to Error Revoking Certificate:
         ///{0}.
         /// </summary>
-        public static string ManagedItemSettings_RevokeCertificateError {
+        public static string ManagedCertificateSettings_RevokeCertificateError {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_RevokeCertificateError", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_RevokeCertificateError", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Domains and Subdomains to include:.
         /// </summary>
-        public static string ManagedItemSettings_SelectDomain {
+        public static string ManagedCertificateSettings_SelectDomain {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_SelectDomain", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_SelectDomain", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Select IIS Site:.
         /// </summary>
-        public static string ManagedItemSettings_SelectIISSite {
+        public static string ManagedCertificateSettings_SelectIISSite {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_SelectIISSite", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_SelectIISSite", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Select None.
         /// </summary>
-        public static string ManagedItemSettings_SelectNone {
+        public static string ManagedCertificateSettings_SelectNone {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_SelectNone", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_SelectNone", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Select the website to create a certificate for..
         /// </summary>
-        public static string ManagedItemSettings_SelectWebsiteOrCert {
+        public static string ManagedCertificateSettings_SelectWebsiteOrCert {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_SelectWebsiteOrCert", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_SelectWebsiteOrCert", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Options.
         /// </summary>
-        public static string ManagedItemSettings_Tab_Options {
+        public static string ManagedCertificateSettings_Tab_Options {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_Tab_Options", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_Tab_Options", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Use SNI (IIS 8+):.
         /// </summary>
-        public static string ManagedItemSettings_UseSNI {
+        public static string ManagedCertificateSettings_UseSNI {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_UseSNI", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_UseSNI", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Use specific IP/Port bindings.
         /// </summary>
-        public static string ManagedItemSettings_UseSpecificBinding {
+        public static string ManagedCertificateSettings_UseSpecificBinding {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_UseSpecificBinding", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_UseSpecificBinding", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to View Certificate.
         /// </summary>
-        public static string ManagedItemSettings_ViewCertificate {
+        public static string ManagedCertificateSettings_ViewCertificate {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_ViewCertificate", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_ViewCertificate", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Webhook request error: {0}.
         /// </summary>
-        public static string ManagedItemSettings_WebhookRequestError {
+        public static string ManagedCertificateSettings_WebhookRequestError {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_WebhookRequestError", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_WebhookRequestError", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Webhook request {0}: HTTP {1}.
         /// </summary>
-        public static string ManagedItemSettings_WebhookRequestResult {
+        public static string ManagedCertificateSettings_WebhookRequestResult {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_WebhookRequestResult", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_WebhookRequestResult", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Webhook Test.
         /// </summary>
-        public static string ManagedItemSettings_WebhookTest {
+        public static string ManagedCertificateSettings_WebhookTest {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_WebhookTest", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_WebhookTest", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Webhook Test Failed.
         /// </summary>
-        public static string ManagedItemSettings_WebhookTestFailed {
+        public static string ManagedCertificateSettings_WebhookTestFailed {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_WebhookTestFailed", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_WebhookTestFailed", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Website Root Directory.
         /// </summary>
-        public static string ManagedItemSettings_WebsiteRoot {
+        public static string ManagedCertificateSettings_WebsiteRoot {
             get {
-                return ResourceManager.GetString("ManagedItemSettings_WebsiteRoot", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateSettings_WebsiteRoot", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Refresh.
         /// </summary>
-        public static string ManagedItemsSettings_RefreshDomains {
+        public static string ManagedCertificatesSettings_RefreshDomains {
             get {
-                return ResourceManager.GetString("ManagedItemsSettings_RefreshDomains", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificatesSettings_RefreshDomains", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Filter....
         /// </summary>
-        public static string ManagedSites_Filter {
+        public static string ManagedCertificates_Filter {
             get {
-                return ResourceManager.GetString("ManagedSites_Filter", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificates_Filter", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Free SSL Certificates provided via the Let&apos;s Encrypt service (https://letsencrypt.org)..
         /// </summary>
-        public static string ManagedSites_NoItemSelectedDesc {
+        public static string ManagedCertificates_NoItemSelectedDesc {
             get {
-                return ResourceManager.GetString("ManagedSites_NoItemSelectedDesc", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificates_NoItemSelectedDesc", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select a Managed Site or select New Certificate to begin..
+        ///   Looks up a localized string similar to Select a  Managed Certificate or select New Certificate to begin..
         /// </summary>
-        public static string ManagedSites_NoItemSelectedTip {
+        public static string ManagedCertificates_NoItemSelectedTip {
             get {
-                return ResourceManager.GetString("ManagedSites_NoItemSelectedTip", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificates_NoItemSelectedTip", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to There are unsaved changes to the selected site. Discard changes?.
         /// </summary>
-        public static string ManagedSites_UnsavedWarning {
+        public static string ManagedCertificates_UnsavedWarning {
             get {
-                return ResourceManager.GetString("ManagedSites_UnsavedWarning", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificates_UnsavedWarning", resourceCulture);
             }
         }
         

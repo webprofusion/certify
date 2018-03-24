@@ -5,13 +5,13 @@ using System.Windows.Data;
 
 namespace Certify.UI.Utils
 {
-    public class ManagedItemHealthColourConverter : IValueConverter
+    public class ManagedCertificateHealthColourConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (value == null) return DependencyProperty.UnsetValue;
 
-            return GetColour((ManagedItemHealth)value);
+            return GetColour((ManagedCertificateHealth)value);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
@@ -19,17 +19,17 @@ namespace Certify.UI.Utils
             return null;
         }
 
-        public static System.Windows.Media.Brush GetColour(ManagedItemHealth health)
+        public static System.Windows.Media.Brush GetColour(ManagedCertificateHealth health)
         {
-            if (health == ManagedItemHealth.Unknown)
+            if (health == ManagedCertificateHealth.Unknown)
             {
                 return System.Windows.Media.Brushes.SlateGray;
             }
-            else if (health == ManagedItemHealth.Error)
+            else if (health == ManagedCertificateHealth.Error)
             {
                 return System.Windows.Media.Brushes.Red;
             }
-            else if (health == ManagedItemHealth.Warning)
+            else if (health == ManagedCertificateHealth.Warning)
             {
                 return System.Windows.Media.Brushes.OrangeRed;
             }

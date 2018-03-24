@@ -87,25 +87,25 @@
     <Compile Include="Controls\GettingStarted.xaml.cs">
       <DependentUpon>GettingStarted.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ManagedItem\StatusInfo.xaml.cs">
+    <Compile Include="Controls\ManagedCertificate\StatusInfo.xaml.cs">
       <DependentUpon>StatusInfo.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ManagedItem\MiscOptions.xaml.cs">
+    <Compile Include="Controls\ManagedCertificate\MiscOptions.xaml.cs">
       <DependentUpon>MiscOptions.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ManagedItem\Deployment.xaml.cs">
+    <Compile Include="Controls\ManagedCertificate\Deployment.xaml.cs">
       <DependentUpon>Deployment.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ManagedItem\Preview.xaml.cs">
+    <Compile Include="Controls\ManagedCertificate\Preview.xaml.cs">
       <DependentUpon>Preview.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ManagedItem\ScriptHooks.xaml.cs">
+    <Compile Include="Controls\ManagedCertificate\ScriptHooks.xaml.cs">
       <DependentUpon>ScriptHooks.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ManagedItem\DomainAuthorization.xaml.cs">
+    <Compile Include="Controls\ManagedCertificate\DomainAuthorization.xaml.cs">
       <DependentUpon>DomainAuthorization.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ManagedItem\CertificateDomains.xaml.cs">
+    <Compile Include="Controls\ManagedCertificate\CertificateDomains.xaml.cs">
       <DependentUpon>CertificateDomains.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\QuickStart.xaml.cs">
@@ -113,8 +113,8 @@
     </Compile>
     <Compile Include="Utils\CSRAlgCheckedConverter.cs" />
     <Compile Include="Utils\ExpiryDateConverter.cs" />
-    <Compile Include="Utils\ManagedItemHealthVisibilityConverter.cs" />
-    <Compile Include="Utils\ManagedItemHealthColourConverter.cs" />
+    <Compile Include="Utils\ManagedCertificateHealthVisibilityConverter.cs" />
+    <Compile Include="Utils\ManagedCertificateHealthColourConverter.cs" />
     <Compile Include="Utils\UpdateCheckUtils.cs" />
     <Compile Include="ViewModel\DesignItemViewModel.cs" />
     <Compile Include="ViewModel\ManagedItemModel.cs" />
@@ -142,39 +142,39 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Controls\ManagedItem\StatusInfo.xaml">
+    <Page Include="Controls\ManagedCertificate\StatusInfo.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\ManagedItem\MiscOptions.xaml">
+    <Page Include="Controls\ManagedCertificate\MiscOptions.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\ManagedItem\Deployment.xaml">
+    <Page Include="Controls\ManagedCertificate\Deployment.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Controls\ManagedItem\Preview.xaml">
+    <Page Include="Controls\ManagedCertificate\Preview.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Controls\ManagedItem\ScriptHooks.xaml">
+    <Page Include="Controls\ManagedCertificate\ScriptHooks.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\ManagedItem\DomainAuthorization.xaml">
+    <Page Include="Controls\ManagedCertificate\DomainAuthorization.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\ManagedItem\CertificateDomains.xaml">
+    <Page Include="Controls\ManagedCertificate\CertificateDomains.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\ManagedItem\ManagedItemSettings.xaml">
+    <Page Include="Controls\ManagedCertificate\ManagedCertificateSettings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Controls\ManagedSites.xaml">
+    <Page Include="Controls\ManagedCertificates.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -205,11 +205,11 @@
     <Compile Include="Controls\AboutControl.xaml.cs">
       <DependentUpon>AboutControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ManagedItem\ManagedItemSettings.xaml.cs">
-      <DependentUpon>ManagedItemSettings.xaml</DependentUpon>
+    <Compile Include="Controls\ManagedCertificate\ManagedCertificateSettings.xaml.cs">
+      <DependentUpon>ManagedCertificateSettings.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ManagedSites.xaml.cs">
-      <DependentUpon>ManagedSites.xaml</DependentUpon>
+    <Compile Include="Controls\ManagedCertificates.xaml.cs">
+      <DependentUpon>ManagedCertificates.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\ProgressMonitor.xaml.cs">
       <DependentUpon>ProgressMonitor.xaml</DependentUpon>

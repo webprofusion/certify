@@ -12,7 +12,7 @@
              xmlns:utils="clr-namespace:Certify.UI.Utils"
              xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Models"
              xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-             x:Class="Certify.UI.Controls.ManagedItem.CertificateDomains"
+             x:Class="Certify.UI.Controls.ManagedCertificate.CertificateDomains"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=certifyui:DesignItemViewModel, IsDesignTimeCreatable=True}">
     <Grid>
@@ -24,7 +24,7 @@
             <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
             <utils:OptionalBooleanToVisibilityConverter True="Collapsed" False="Visible" x:Key="InvBoolVisConverter" />
             <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
-            <utils:ManagedItemHealthVisibilityConverter x:Key="HealthVisibleConverter" />
+            <utils:ManagedCertificateHealthVisibilityConverter x:Key="HealthVisibleConverter" />
             <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
         </Grid.Resources>
         <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -35,7 +35,7 @@
                     <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}"><Run Text="You can then select " /><Run FontWeight="Bold" Text="Request Certificate " /><Run Text="above or modify options as required." /></TextBlock>
                 </DockPanel>
                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,4,0,0">
-                    <Label Width="160" Content="{x:Static Resources:SR.ManagedItemSettings_SelectIISSite}" />
+                    <Label Width="160" Content="{x:Static Resources:SR.ManagedCertificateSettings_SelectIISSite}" />
                     <ComboBox x:Name="WebsiteDropdown" ItemsSource="{Binding WebSiteList, UpdateSourceTrigger=Default}" SelectedItem="{Binding SelectedWebSite}"  DisplayMemberPath="SiteName" Width="240" SelectionChanged="Website_SelectionChanged" />
                     <fa:ImageAwesome x:Name="SiteQueryInProgress" Margin="4,0,0,0" Visibility="Hidden" Icon="Refresh" Height="16" Spin="True" SpinDuration="1" />
                 </StackPanel>
@@ -43,21 +43,21 @@
                 <StackPanel DockPanel.Dock="Top" x:Name="ManualDomainEntry" Orientation="Vertical"  Margin="0,8,0,0">
 
                     <StackPanel Orientation="Horizontal">
-                        <Label Width="160" Content="{x:Static Resources:SR.ManagedItemSettings_AddDomainsToCertificate}" />
+                        <Label Width="160" Content="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsToCertificate}" />
                         <TextBox x:Name="ManualDomains" Width="240" Controls:TextBoxHelper.Watermark="e.g. test.com, www.test.com or *.test.com" />
                         <Button x:Name="AddDomains"  Content="Add Domains" Margin="4,0,0,0" Click="AddDomains_Click" />
                     </StackPanel>
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Top" x:Name="NoBindings" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" Orientation="Vertical"  Margin="0,4,0,0">
-                    <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="8,0" FontWeight="Bold" FontFamily="Segoe UI Semibold" Foreground="#FFEA1010"><Run Text="{x:Static Resources:SR.ManagedItemSettings_NoHostNameBindingWarning}" /></TextBlock>
+                    <TextBlock TextWrapping="WrapWithOverflow" VerticalAlignment="Top" HorizontalAlignment="Left"  Margin="8,0" FontWeight="Bold" FontFamily="Segoe UI Semibold" Foreground="#FFEA1010"><Run Text="{x:Static Resources:SR.ManagedCertificateSettings_NoHostNameBindingWarning}" /></TextBlock>
                 </StackPanel>
                 <DockPanel DockPanel.Dock="Bottom" x:Name="DomainOptions" Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=BoolToVisConverter}}" Margin="0,8,0,0">
-                    <Label DockPanel.Dock="Top" Content="{x:Static Resources:SR.ManagedItemSettings_SelectDomain}" FontWeight="Bold" />
+                    <Label DockPanel.Dock="Top" Content="{x:Static Resources:SR.ManagedCertificateSettings_SelectDomain}" FontWeight="Bold" />
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,4,0,4">
 
                         <Button Content="{x:Static Resources:SR.SelectAll}" Command="{Binding SANSelectAllCommand}" Margin="0,0,0,0" />
-                        <Button Content="{x:Static Resources:SR.ManagedItemSettings_SelectNone}" Command="{Binding SANSelectNoneCommand}" Margin="8,0,0,0" />
-                        <Button Content="{x:Static Resources:SR.ManagedItemsSettings_RefreshDomains}" Name="RefreshSanList" Click="RefreshSanList_Click" Margin="8,0,0,0" />
+                        <Button Content="{x:Static Resources:SR.ManagedCertificateSettings_SelectNone}" Command="{Binding SANSelectNoneCommand}" Margin="8,0,0,0" />
+                        <Button Content="{x:Static Resources:SR.ManagedCertificatesSettings_RefreshDomains}" Name="RefreshSanList" Click="RefreshSanList_Click" Margin="8,0,0,0" />
                         <Label Content="Filter:" />
                         <TextBox x:Name="DomainFilter" TextChanged="DomainFilter_TextChanged" Width="120" />
                     </StackPanel>
@@ -68,15 +68,15 @@
                                   ScrollViewer.HorizontalScrollBarVisibility="Auto"
                                   ItemsSource="{Binding SelectedItem.DomainOptions}" MouseLeftButtonUp="DataGrid_MouseLeftButtonUp">
                         <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="{x:Static Resources:SR.ManagedItemSettings_Primary}">
+                            <DataGridTemplateColumn Header="{x:Static Resources:SR.ManagedCertificateSettings_Primary}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <RadioButton GroupName="PrimaryDomainGroup" IsChecked="{Binding IsPrimaryDomain, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridCheckBoxColumn Header="{x:Static Resources:SR.ManagedItemSettings_Include}" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
-                            <DataGridTextColumn Header="{x:Static Resources:SR.ManagedItemSettings_Domain}" Binding="{Binding Domain, UpdateSourceTrigger=PropertyChanged}" Width="*" MinWidth="200"  IsReadOnly="True" />
+                            <DataGridCheckBoxColumn Header="{x:Static Resources:SR.ManagedCertificateSettings_Include}" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
+                            <DataGridTextColumn Header="{x:Static Resources:SR.ManagedCertificateSettings_Domain}" Binding="{Binding Domain, UpdateSourceTrigger=PropertyChanged}" Width="*" MinWidth="200"  IsReadOnly="True" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </DockPanel>

@@ -1,4 +1,3 @@
-using Certify.Models;
 using System;
 using System.Linq;
 using System.Windows;
@@ -9,16 +8,16 @@ using System.Windows.Input;
 namespace Certify.UI.Controls
 {
     /// <summary>
-    /// Interaction logic for ManagedSites.xaml 
+    /// Interaction logic for ManagedCertificates.xaml 
     /// </summary>
-    public partial class ManagedSites
+    public partial class ManagedCertificates
     {
         protected ViewModel.AppModel _appViewModel => ViewModel.AppModel.Current;
-        protected ViewModel.ManagedItemModel _itemViewModel => ViewModel.ManagedItemModel.Current;
+        protected ViewModel.ManagedCertificateModel _itemViewModel => ViewModel.ManagedCertificateModel.Current;
 
         private string _sortOrder { get; set; } = "NameAsc";
 
-        public ManagedSites()
+        public ManagedCertificates()
         {
             InitializeComponent();
             DataContext = _appViewModel;
@@ -27,10 +26,10 @@ namespace Certify.UI.Controls
             SetFilter(); // start listening
             _appViewModel.PropertyChanged += (obj, args) =>
             {
-                if (args.PropertyName == "ManagedSites" || args.PropertyName == "SelectedItem" &&
-                    _appViewModel.ManagedSites != null)
+                if (args.PropertyName == "ManagedCertificates" || args.PropertyName == "SelectedItem" &&
+                    _appViewModel.ManagedCertificates != null)
                 {
-                    SetFilter(); // reset listeners when ManagedSites are reset
+                    SetFilter(); // reset listeners when ManagedCertificates are reset
                     _itemViewModel.RaisePropertyChanged("SelectedItem");
                     _itemViewModel.RaisePropertyChanged("IsSelectedItemValid");
                 }
@@ -39,28 +38,28 @@ namespace Certify.UI.Controls
 
         private void SetFilter()
         {
-            CollectionViewSource.GetDefaultView(_appViewModel.ManagedSites).Filter = (item) =>
+            CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).Filter = (item) =>
             {
                 string filter = txtFilter.Text.Trim();
                 return filter == "" || filter.Split(';').Where(f => f.Trim() != "").Any(f =>
-                    ((Models.ManagedSite)item).Name.IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1 ||
-                    (((Models.ManagedSite)item).DomainOptions?.Any(d => d.Domain.IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1) ?? false) ||
-                    (((Models.ManagedSite)item).Comments ?? "").IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1);
+                    ((Models.ManagedCertificate)item).Name.IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1 ||
+                    (((Models.ManagedCertificate)item).DomainOptions?.Any(d => d.Domain.IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1) ?? false) ||
+                    (((Models.ManagedCertificate)item).Comments ?? "").IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1);
             };
 
             //sort by name ascending
-            CollectionViewSource.GetDefaultView(_appViewModel.ManagedSites).SortDescriptions.Clear();
+            CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Clear();
 
             if (_sortOrder == "NameAsc")
             {
-                CollectionViewSource.GetDefaultView(_appViewModel.ManagedSites).SortDescriptions.Add(
+                CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Add(
                    new System.ComponentModel.SortDescription("Name", System.ComponentModel.ListSortDirection.Ascending)
                );
             }
 
             if (_sortOrder == "ExpiryDateAsc")
             {
-                CollectionViewSource.GetDefaultView(_appViewModel.ManagedSites).SortDescriptions.Add(
+                CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Add(
                    new System.ComponentModel.SortDescription("DateExpiry", System.ComponentModel.ListSortDirection.Ascending)
                );
             }
@@ -70,9 +69,9 @@ namespace Certify.UI.Controls
         {
             var item = (ListViewItem)sender;
             var ctrl = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
-            if (item != null && item.DataContext != null && item.DataContext is ManagedSite)
+            if (item != null && item.DataContext != null && item.DataContext is Models.ManagedCertificate)
             {
-                var site = (ManagedSite)item.DataContext;
+                var site = (Models.ManagedCertificate)item.DataContext;
                 site = site == _appViewModel.SelectedItem && ctrl ? null : site;
                 if (_appViewModel.SelectedItem != site)
                 {
@@ -87,15 +86,15 @@ namespace Certify.UI.Controls
 
         private void TxtFilter_TextChanged(object sender, TextChangedEventArgs e)
         {
-            var defaultView = CollectionViewSource.GetDefaultView(lvManagedSites.ItemsSource);
+            var defaultView = CollectionViewSource.GetDefaultView(lvManagedCertificates.ItemsSource);
             defaultView.Refresh();
-            if (lvManagedSites.SelectedIndex == -1 && _appViewModel.SelectedItem != null)
+            if (lvManagedCertificates.SelectedIndex == -1 && _appViewModel.SelectedItem != null)
             {
                 // if the data model's selected item has come into view after filter box text
                 // changed, select the item in the list
                 if (defaultView.Filter(_appViewModel.SelectedItem))
                 {
-                    lvManagedSites.SelectedItem = _appViewModel.SelectedItem;
+                    lvManagedCertificates.SelectedItem = _appViewModel.SelectedItem;
                 }
             }
         }
@@ -105,11 +104,11 @@ namespace Certify.UI.Controls
             if (e.Key == Key.Escape) ResetFilter();
             if (e.Key == Key.Enter || e.Key == Key.Down)
             {
-                if (lvManagedSites.Items.Count > 0)
+                if (lvManagedCertificates.Items.Count > 0)
                 {
                     // get selected index of filtered list or 0
-                    int index = lvManagedSites.Items.IndexOf(_appViewModel.SelectedItem);
-                    var item = lvManagedSites.Items[index == -1 ? 0 : index];
+                    int index = lvManagedCertificates.Items.IndexOf(_appViewModel.SelectedItem);
+                    var item = lvManagedCertificates.Items[index == -1 ? 0 : index];
 
                     // if navigating away, confirm discard
                     if (item != _appViewModel.SelectedItem &&
@@ -129,19 +128,19 @@ namespace Certify.UI.Controls
         {
             txtFilter.Text = "";
             txtFilter.Focus();
-            if (lvManagedSites.SelectedItem != null)
+            if (lvManagedCertificates.SelectedItem != null)
             {
-                lvManagedSites.ScrollIntoView(lvManagedSites.SelectedItem);
+                lvManagedCertificates.ScrollIntoView(lvManagedCertificates.SelectedItem);
             }
         }
 
         private void SelectAndFocus(object obj)
         {
-            _appViewModel.SelectedItem = obj as ManagedSite;
-            if (lvManagedSites.Items.Count > 0 && lvManagedSites.Items.Contains(_appViewModel.SelectedItem))
+            _appViewModel.SelectedItem = obj as Models.ManagedCertificate;
+            if (lvManagedCertificates.Items.Count > 0 && lvManagedCertificates.Items.Contains(_appViewModel.SelectedItem))
             {
-                lvManagedSites.UpdateLayout(); // ensure containers exist
-                if (lvManagedSites.ItemContainerGenerator.ContainerFromItem(_appViewModel.SelectedItem) is ListViewItem item)
+                lvManagedCertificates.UpdateLayout(); // ensure containers exist
+                if (lvManagedCertificates.ItemContainerGenerator.ContainerFromItem(_appViewModel.SelectedItem) is ListViewItem item)
                 {
                     item.Focus();
                     item.IsSelected = true;
@@ -156,18 +155,18 @@ namespace Certify.UI.Controls
                 ResetFilter();
                 return;
             }
-            if (e.Key == Key.Delete && lvManagedSites.SelectedItem != null)
+            if (e.Key == Key.Delete && lvManagedCertificates.SelectedItem != null)
             {
-                await _appViewModel.DeleteManagedSite(_appViewModel.SelectedItem);
-                if (lvManagedSites.Items.Count > 0)
+                await _appViewModel.DeleteManagedCertificate(_appViewModel.SelectedItem);
+                if (lvManagedCertificates.Items.Count > 0)
                 {
-                    SelectAndFocus(lvManagedSites.SelectedItem);
+                    SelectAndFocus(lvManagedCertificates.SelectedItem);
                 }
                 return;
             }
             object next = _appViewModel.SelectedItem;
             var item = ((ListViewItem)sender);
-            int index = lvManagedSites.Items.IndexOf(item.DataContext);
+            int index = lvManagedCertificates.Items.IndexOf(item.DataContext);
             if (e.Key == Key.Enter)
             {
                 next = item.DataContext;
@@ -179,29 +178,29 @@ namespace Certify.UI.Controls
             }
             if (e.Key == Key.Up)
             {
-                next = lvManagedSites.Items[index - 1 > -1 ? index - 1 : 0];
+                next = lvManagedCertificates.Items[index - 1 > -1 ? index - 1 : 0];
             }
             if (e.Key == Key.Down)
             {
-                next = lvManagedSites.Items[index + 1 < lvManagedSites.Items.Count ? index + 1 : lvManagedSites.Items.Count - 1];
+                next = lvManagedCertificates.Items[index + 1 < lvManagedCertificates.Items.Count ? index + 1 : lvManagedCertificates.Items.Count - 1];
             }
             if (e.Key == Key.Home)
             {
-                next = lvManagedSites.Items[0];
+                next = lvManagedCertificates.Items[0];
             }
             if (e.Key == Key.End)
             {
-                next = lvManagedSites.Items[lvManagedSites.Items.Count - 1];
+                next = lvManagedCertificates.Items[lvManagedCertificates.Items.Count - 1];
             }
             if (e.Key == Key.PageUp)
             {
-                int pagesize = (int)(lvManagedSites.ActualHeight / item.ActualHeight);
-                next = lvManagedSites.Items[index - pagesize > -1 ? index - pagesize : 0];
+                int pagesize = (int)(lvManagedCertificates.ActualHeight / item.ActualHeight);
+                next = lvManagedCertificates.Items[index - pagesize > -1 ? index - pagesize : 0];
             }
             if (e.Key == Key.PageDown)
             {
-                int pagesize = (int)(lvManagedSites.ActualHeight / item.ActualHeight);
-                next = lvManagedSites.Items[index + pagesize < lvManagedSites.Items.Count ? index + pagesize : lvManagedSites.Items.Count - 1];
+                int pagesize = (int)(lvManagedCertificates.ActualHeight / item.ActualHeight);
+                next = lvManagedCertificates.Items[index + pagesize < lvManagedCertificates.Items.Count ? index + pagesize : lvManagedCertificates.Items.Count - 1];
             }
             if (next != _appViewModel.SelectedItem)
             {
@@ -215,12 +214,12 @@ namespace Certify.UI.Controls
 
         private int lastSelectedIndex = -1;
 
-        private void lvManagedSites_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void lvManagedCertificates_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (_appViewModel.SelectedItem != null &&
-                !_appViewModel.ManagedSites.Contains(_appViewModel.SelectedItem))
+                !_appViewModel.ManagedCertificates.Contains(_appViewModel.SelectedItem))
             {
-                if (lvManagedSites.Items.Count == 0)
+                if (lvManagedCertificates.Items.Count == 0)
                 {
                     _appViewModel.SelectedItem = null;
                     txtFilter.Focus();
@@ -229,14 +228,14 @@ namespace Certify.UI.Controls
                 {
                     // selected item was deleted
                     int newIndex = lastSelectedIndex;
-                    while (newIndex >= lvManagedSites.Items.Count && newIndex >= -1)
+                    while (newIndex >= lvManagedCertificates.Items.Count && newIndex >= -1)
                     {
                         newIndex--;
                     }
-                    SelectAndFocus(newIndex == -1 ? null : lvManagedSites.Items[newIndex]);
+                    SelectAndFocus(newIndex == -1 ? null : lvManagedCertificates.Items[newIndex]);
                 }
             }
-            lastSelectedIndex = lvManagedSites.SelectedIndex;
+            lastSelectedIndex = lvManagedCertificates.SelectedIndex;
         }
 
         private void UserControl_OnLoaded(object sender, RoutedEventArgs e)

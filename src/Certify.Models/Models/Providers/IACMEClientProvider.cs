@@ -22,7 +22,7 @@ namespace Certify.Models.Plugins
 
         Task<ProcessStepResult> PerformCertificateRequestProcess(string primaryDnsIdentifier, string[] alternativeDnsIdentifiers, CertRequestConfig config);
 
-        Task<StatusMessage> RevokeCertificate(ManagedSite managedSite);
+        Task<StatusMessage> RevokeCertificate(ManagedCertificate managedCertificate);
 
         ActionLogItem GetLastActionLogItem();
     }

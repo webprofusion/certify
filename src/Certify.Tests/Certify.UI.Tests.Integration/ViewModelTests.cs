@@ -22,12 +22,12 @@ namespace Certify.UI.Tests.Integration
                 Task.FromResult(new Models.Preferences { })
                 );
 
-            mockClient.Setup(c => c.GetManagedSites(It.IsAny<Models.ManagedSiteFilter>()))
+            mockClient.Setup(c => c.GetManagedCertificates(It.IsAny<Models.ManagedCertificateFilter>()))
                 .Returns(
-                Task.FromResult(new List<ManagedSite> {
-                    new ManagedSite{
+                Task.FromResult(new List<ManagedCertificate> {
+                    new ManagedCertificate{
                          Id= Guid.NewGuid().ToString(),
-                         Name="Test Managed Site"
+                         Name="Test  Managed Certificate"
                     }
                 })
                 );
@@ -46,7 +46,7 @@ namespace Certify.UI.Tests.Integration
 
             await appModel.LoadSettingsAsync();
 
-            Assert.IsTrue(appModel.ManagedSites.Count > 0, "Should have managed sites");
+            Assert.IsTrue(appModel.ManagedCertificates.Count > 0, "Should have managed sites");
 
             Assert.IsTrue(appModel.HasRegisteredContacts, "Should have a registered contact");
 

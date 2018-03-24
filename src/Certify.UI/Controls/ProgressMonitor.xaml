@@ -27,10 +27,10 @@
         <ListView ItemsSource="{Binding ProgressResults}"  SelectionMode="Single" BorderBrush="{DynamicResource IdealForegroundDisabledBrush}" MinWidth="200" MinHeight="100" HorizontalContentAlignment="Stretch">
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel Orientation="Vertical" Margin="0,8,0,0" MouseUp="ManagedSite_ViewLog">
+                    <StackPanel Orientation="Vertical" Margin="0,8,0,0" MouseUp="ManagedCertificate_ViewLog">
                         <StackPanel Orientation="Horizontal">
                             <fa:FontAwesome Icon="Globe" Margin="0,0,8,0" />
-                            <TextBlock Text="{Binding ManagedItem.Name}" Width="200" FontWeight="Bold" Margin="0,0,8,0" Foreground="{DynamicResource AccentColorBrush3}" />
+                            <TextBlock Text="{Binding ManagedCertificate.Name}" Width="200" FontWeight="Bold" Margin="0,0,8,0" Foreground="{DynamicResource AccentColorBrush3}" />
                             <ProgressBar IsIndeterminate="True" Width="200" Visibility="{Binding IsRunning, Converter={StaticResource BooleanToVisibilityConverter}}" />
                             <TextBlock Text="{Binding CurrentState}" Width="200" Foreground="{Binding CurrentState, Converter={StaticResource StateToColorConverter}}" Margin="16,0,0,0" />
                         </StackPanel>

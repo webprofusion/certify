@@ -15,7 +15,7 @@ namespace Certify.UI
     {
         public enum PrimaryUITabs
         {
-            ManagedItems = 0,
+            ManagedCertificates = 0,
 
             CurrentProgress = 1
         }
@@ -23,15 +23,15 @@ namespace Certify.UI
         private TelemetryClient tc = null;
 
         protected Certify.UI.ViewModel.AppModel _appViewModel => UI.ViewModel.AppModel.Current;
-        protected Certify.UI.ViewModel.ManagedItemModel _itemViewModel => UI.ViewModel.ManagedItemModel.Current;
+        protected Certify.UI.ViewModel.ManagedCertificateModel _itemViewModel => UI.ViewModel.ManagedCertificateModel.Current;
 
-        public int NumManagedSites
+        public int NumManagedCertificates
         {
             get
             {
-                if (_appViewModel != null && _appViewModel.ManagedSites != null)
+                if (_appViewModel != null && _appViewModel.ManagedCertificates != null)
                 {
-                    return _appViewModel.ManagedSites.Count;
+                    return _appViewModel.ManagedCertificates.Count;
                 }
                 else
                 {
@@ -61,7 +61,7 @@ namespace Certify.UI
                 }
             }
 
-            if (!_appViewModel.IsRegisteredVersion && _appViewModel.ManagedSites != null && _appViewModel.ManagedSites.Count >= 5)
+            if (!_appViewModel.IsRegisteredVersion && _appViewModel.ManagedCertificates != null && _appViewModel.ManagedCertificates.Count >= 5)
             {
                 MessageBox.Show(SR.MainWindow_TrialLimitationReached);
                 return;
@@ -76,10 +76,10 @@ namespace Certify.UI
 
             //present new managed item (certificate request) UI
             //select tab Managed Items
-            _appViewModel.MainUITabIndex = (int)PrimaryUITabs.ManagedItems;
+            _appViewModel.MainUITabIndex = (int)PrimaryUITabs.ManagedCertificates;
 
             _appViewModel.SelectedItem = null; // deselect site list item
-            _appViewModel.SelectedItem = new Certify.Models.ManagedSite();
+            _appViewModel.SelectedItem = new Certify.Models.ManagedCertificate();
         }
 
         private async void Button_RenewAll(object sender, RoutedEventArgs e)

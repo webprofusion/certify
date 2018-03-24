@@ -6,14 +6,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 
-namespace Certify.UI.Controls.ManagedItem
+namespace Certify.UI.Controls.ManagedCertificate
 {
     /// <summary>
     /// Interaction logic for Preview.xaml 
     /// </summary>
     public partial class Preview : UserControl
     {
-        protected Certify.UI.ViewModel.ManagedItemModel ItemViewModel => UI.ViewModel.ManagedItemModel.Current;
+        protected Certify.UI.ViewModel.ManagedCertificateModel ItemViewModel => UI.ViewModel.ManagedCertificateModel.Current;
 
         private ObservableCollection<ActionStep> Steps { get; set; }
 

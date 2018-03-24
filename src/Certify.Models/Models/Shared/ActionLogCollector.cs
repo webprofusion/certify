@@ -14,7 +14,7 @@ namespace Certify.Models.Shared
             _actionLogs.Capacity = 1000;
         }
 
-        protected void LogAction(string command, string result = null, string managedSiteId = null)
+        protected void LogAction(string command, string result = null, string managedItemId = null)
         {
             if (this._actionLogs != null)
             {
@@ -22,7 +22,7 @@ namespace Certify.Models.Shared
                 {
                     Command = command,
                     Result = result,
-                    ManagedSiteId = managedSiteId,
+                    ManagedCertificateId = managedItemId,
                     DateTime = DateTime.Now
                 });
             }

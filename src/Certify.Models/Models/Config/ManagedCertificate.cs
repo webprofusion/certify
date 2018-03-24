@@ -5,12 +5,12 @@ using System.Collections.ObjectModel;
 
 namespace Certify.Models
 {
-    public enum ManagedItemType
+    public enum ManagedCertificateType
     {
-        [SRDescription("ManagedItemType_LocalIIS")]
+        [SRDescription("ManagedCertificateType_LocalIIS")]
         SSL_LetsEncrypt_LocalIIS = 1,
 
-        [SRDescription("ManagedItemType_Manual")]
+        [SRDescription("ManagedCertificateType_Manual")]
         SSL_LetsEncrypt_Manual = 2
     }
 
@@ -22,7 +22,7 @@ namespace Certify.Models
         Ignore
     }
 
-    public enum ManagedItemHealth
+    public enum ManagedCertificateHealth
     {
         Unknown,
         OK,
@@ -30,8 +30,40 @@ namespace Certify.Models
         Error
     }
 
-    public class ManagedItem : BindableBase
+    public class ManagedCertificate : BindableBase
     {
+        public ManagedCertificate()
+        {
+            Name = SR.ManagedCertificateSettings_DefaultTitle;
+            IncludeInAutoRenew = true;
+
+            DomainOptions = new ObservableCollection<DomainOption>();
+            RequestConfig = new CertRequestConfig();
+
+            IncludeInAutoRenew = true;
+        }
+
+        /// <summary>
+        /// If true, the auto renewal process will include this item in attempted renewal operations
+        /// if applicable
+        /// </summary>
+        public bool IncludeInAutoRenew { get; set; }
+
+        /// <summary>
+        /// Host or server where this item is based, usually localhost if managing the local server 
+        /// </summary>
+        public string TargetHost { get; set; }
+
+        /// <summary>
+        /// List of configured domains this managed site will include (primary subject or SAN) 
+        /// </summary>
+        public ObservableCollection<DomainOption> DomainOptions { get; set; }
+
+        /// <summary>
+        /// Configuration options for this request 
+        /// </summary>
+        public CertRequestConfig RequestConfig { get; set; }
+
         /// <summary>
         /// Unique ID for this managed item 
         /// </summary>
@@ -67,7 +99,7 @@ namespace Certify.Models
         /// <summary>
         /// Specific type of item we are managing, affects the renewal/rewuest operations required 
         /// </summary>
-        public ManagedItemType ItemType { get; set; }
+        public ManagedCertificateType ItemType { get; set; }
 
         public DateTime? DateStart { get; set; }
         public DateTime? DateExpiry { get; set; }
@@ -108,7 +140,7 @@ namespace Certify.Models
         public bool Deleted { get; set; } // do not serialize to settings
 
         [JsonIgnore]
-        public ManagedItemHealth Health
+        public ManagedCertificateHealth Health
         {
             get
             {
@@ -116,65 +148,30 @@ namespace Certify.Models
                 {
                     if (RenewalFailureCount > 5)
                     {
-                        return ManagedItemHealth.Error;
+                        return ManagedCertificateHealth.Error;
                     }
                     else
                     {
-                        return ManagedItemHealth.Warning;
+                        return ManagedCertificateHealth.Warning;
                     }
                 }
                 else
                 {
                     if (LastRenewalStatus != null)
                     {
-                        return ManagedItemHealth.OK;
+                        return ManagedCertificateHealth.OK;
                     }
                     else
                     {
-                        return ManagedItemHealth.Unknown;
+                        return ManagedCertificateHealth.Unknown;
                     }
                 }
             }
         }
     }
 
-    public class ManagedSite : ManagedItem
-    {
-        public ManagedSite()
-        {
-            Name = SR.ManagedItemSettings_DefaultTitle;
-            IncludeInAutoRenew = true;
-
-            DomainOptions = new ObservableCollection<DomainOption>();
-            RequestConfig = new CertRequestConfig();
-
-            IncludeInAutoRenew = true;
-        }
-
-        /// <summary>
-        /// If true, the auto renewal process will include this item in attempted renewal operations
-        /// if applicable
-        /// </summary>
-        public bool IncludeInAutoRenew { get; set; }
-
-        /// <summary>
-        /// Host or server where this item is based, usually localhost if managing the local server 
-        /// </summary>
-        public string TargetHost { get; set; }
-
-        /// <summary>
-        /// List of configured domains this managed site will include (primary subject or SAN) 
-        /// </summary>
-        public ObservableCollection<DomainOption> DomainOptions { get; set; }
-
-        /// <summary>
-        /// Configuration options for this request 
-        /// </summary>
-        public CertRequestConfig RequestConfig { get; set; }
-    }
-
     //TODO: may deprecate, was mainly for preview of setup wizard
-    public class ManagedSiteBinding
+    public class ManagedCertificateBinding
     {
         public string Hostname { get; set; }
         public int? Port { get; set; }

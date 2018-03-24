@@ -301,18 +301,18 @@ namespace Certify.Locales {
         /// <summary>
         ///   Looks up a localized string similar to Local IIS, SSL Certificate via Let&apos;s Encrypt.
         /// </summary>
-        public static string ManagedItemType_LocalIIS {
+        public static string ManagedCertificateType_LocalIIS {
             get {
-                return ResourceManager.GetString("ManagedItemType_LocalIIS", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateType_LocalIIS", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Manual SSL Certificate via Let&apos;s Encrypt.
         /// </summary>
-        public static string ManagedItemType_Manual {
+        public static string ManagedCertificateType_Manual {
             get {
-                return ResourceManager.GetString("ManagedItemType_Manual", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateType_Manual", resourceCulture);
             }
         }
     }

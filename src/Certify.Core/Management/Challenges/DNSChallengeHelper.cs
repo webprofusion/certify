@@ -17,33 +17,33 @@ namespace Certify.Core.Management.Challenges
         /// <summary>
         /// For the given domain, get the matching challenge config (DNS provider variant etc) 
         /// </summary>
-        /// <param name="managedSite"></param>
+        /// <param name="managedCertificate"></param>
         /// <param name="domain"></param>
         /// <returns></returns>
-        private CertRequestChallengeConfig GetChallengeConfig(ManagedSite managedSite, string domain)
+        private CertRequestChallengeConfig GetChallengeConfig(ManagedCertificate managedCertificate, string domain)
         {
-            if (managedSite.RequestConfig.Challenges == null || managedSite.RequestConfig.Challenges.Count == 0)
+            if (managedCertificate.RequestConfig.Challenges == null || managedCertificate.RequestConfig.Challenges.Count == 0)
             {
                 // there are no challenge configs defined return a default based on the parent
                 return new CertRequestChallengeConfig
                 {
-                    ChallengeType = managedSite.RequestConfig.ChallengeType
+                    ChallengeType = managedCertificate.RequestConfig.ChallengeType
                 };
             }
             else
             {
                 //identify matching challenge config based on domain etc
-                if (managedSite.RequestConfig.Challenges.Count == 1)
+                if (managedCertificate.RequestConfig.Challenges.Count == 1)
                 {
-                    return managedSite.RequestConfig.Challenges[0];
+                    return managedCertificate.RequestConfig.Challenges[0];
                 }
                 else
                 {
                     // start by matching first config with no specific domain
-                    CertRequestChallengeConfig matchedConfig = managedSite.RequestConfig.Challenges.FirstOrDefault(c => String.IsNullOrEmpty(c.DomainMatch));
+                    CertRequestChallengeConfig matchedConfig = managedCertificate.RequestConfig.Challenges.FirstOrDefault(c => String.IsNullOrEmpty(c.DomainMatch));
 
                     //if any more specific configs match, use that
-                    foreach (var config in managedSite.RequestConfig.Challenges.Where(c => !String.IsNullOrEmpty(c.DomainMatch)).OrderByDescending(l => l.DomainMatch.Length))
+                    foreach (var config in managedCertificate.RequestConfig.Challenges.Where(c => !String.IsNullOrEmpty(c.DomainMatch)).OrderByDescending(l => l.DomainMatch.Length))
                     {
                         if (config.DomainMatch.EndsWith(domain))
                         {
@@ -62,14 +62,14 @@ namespace Certify.Core.Management.Challenges
                         // no match, return default
                         return new CertRequestChallengeConfig
                         {
-                            ChallengeType = managedSite.RequestConfig.ChallengeType
+                            ChallengeType = managedCertificate.RequestConfig.ChallengeType
                         };
                     }
                 }
             }
         }
 
-        public async Task<ActionResult> CompleteDNSChallenge(ILogger log, ManagedSite managedsite, string domain, string txtRecordName, string txtRecordValue)
+        public async Task<ActionResult> CompleteDNSChallenge(ILogger log, ManagedCertificate managedcertificate, string domain, string txtRecordName, string txtRecordValue)
         {
             // for a given managed site configuration, attempt to complete the required challenge by
             // creating the required TXT record
@@ -82,7 +82,7 @@ namespace Certify.Core.Management.Challenges
             Models.Config.ProviderDefinition providerDefinition;
             IDnsProvider dnsAPIProvider = null;
 
-            var challengeConfig = GetChallengeConfig(managedsite, domain);
+            var challengeConfig = GetChallengeConfig(managedcertificate, domain);
 
             if (!String.IsNullOrEmpty(challengeConfig.ChallengeCredentialKey))
             {

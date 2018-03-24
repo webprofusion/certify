@@ -1,6 +1,6 @@
 ﻿namespace Certify.Models
 {
-    public class ManagedSiteFilter
+    public class ManagedCertificateFilter
     {
         // optional keyword to filter name or domains
         public string Keyword { get; set; }

@@ -50,7 +50,7 @@ namespace Certify.CLI
                 if (args.Contains("list", StringComparer.InvariantCultureIgnoreCase))
                 {
                     //list managed sites and status
-                    p.ListManagedSites();
+                    p.ListManagedCertificates();
                 }
 
                 if (args.Contains("certdiag", StringComparer.InvariantCultureIgnoreCase))
@@ -199,7 +199,7 @@ namespace Certify.CLI
             Console.ForegroundColor = ConsoleColor.White;
             System.Console.WriteLine("Usage: certify <command> \n");
             System.Console.WriteLine("certify renew : renew certificates for all auto renewed managed sites");
-            System.Console.WriteLine("certify list : list managed sites and current running/not running status in IIS");
+            System.Console.WriteLine("certify list : list managed certificates and current running/not running status in IIS");
 
             System.Console.WriteLine("\n");
         }
@@ -253,11 +253,11 @@ namespace Certify.CLI
             }
         }
 
-        internal void ListManagedSites()
+        internal void ListManagedCertificates()
         {
-            var managedSites = _certifyClient.GetManagedSites(new ManagedSiteFilter()).Result;
+            var managedCertificates = _certifyClient.GetManagedCertificates(new ManagedCertificateFilter()).Result;
 
-            foreach (var site in managedSites)
+            foreach (var site in managedCertificates)
             {
                 Console.ForegroundColor = ConsoleColor.White;
 
@@ -267,11 +267,11 @@ namespace Certify.CLI
 
         internal void RunCertDiagnostics()
         {
-            var managedSites = _certifyClient.GetManagedSites(new ManagedSiteFilter()).Result;
+            var managedCertificates = _certifyClient.GetManagedCertificates(new ManagedCertificateFilter()).Result;
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("Running cert diagnostics..");
 
-            foreach (var site in managedSites)
+            foreach (var site in managedCertificates)
             {
                 if (!String.IsNullOrEmpty(site.CertificatePath))
                 {
@@ -335,7 +335,7 @@ namespace Certify.CLI
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("Importing CSV: " + filename);
 
-            var currentManagedSites = await _certifyClient.GetManagedSites(new ManagedSiteFilter() { });
+            var currentManagedCertificates = await _certifyClient.GetManagedCertificates(new ManagedCertificateFilter() { });
             var rows = System.IO.File.ReadAllLines(filename);
             foreach (var row in rows)
             {
@@ -345,19 +345,19 @@ namespace Certify.CLI
                 string siteName = values[1].Trim();
                 string[] domains = values[2].Trim().Split(';');
 
-                var newManagedSite = new ManagedSite();
-                newManagedSite.Id = Guid.NewGuid().ToString();
-                newManagedSite.GroupId = siteId;
-                newManagedSite.Name = siteName;
-                newManagedSite.IncludeInAutoRenew = true;
-                newManagedSite.ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS;
-                newManagedSite.RequestConfig.ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP;
-                newManagedSite.RequestConfig.PerformAutoConfig = true;
-                newManagedSite.RequestConfig.PerformChallengeFileCopy = true;
-                newManagedSite.RequestConfig.PerformExtensionlessConfigChecks = true;
-                newManagedSite.RequestConfig.PerformTlsSniBindingConfigChecks = true;
-                newManagedSite.RequestConfig.PerformAutomatedCertBinding = true;
-                newManagedSite.RequestConfig.EnableFailureNotifications = true;
+                var newManagedCertificate = new ManagedCertificate();
+                newManagedCertificate.Id = Guid.NewGuid().ToString();
+                newManagedCertificate.GroupId = siteId;
+                newManagedCertificate.Name = siteName;
+                newManagedCertificate.IncludeInAutoRenew = true;
+                newManagedCertificate.ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS;
+                newManagedCertificate.RequestConfig.ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP;
+                newManagedCertificate.RequestConfig.PerformAutoConfig = true;
+                newManagedCertificate.RequestConfig.PerformChallengeFileCopy = true;
+                newManagedCertificate.RequestConfig.PerformExtensionlessConfigChecks = true;
+                newManagedCertificate.RequestConfig.PerformTlsSniBindingConfigChecks = true;
+                newManagedCertificate.RequestConfig.PerformAutomatedCertBinding = true;
+                newManagedCertificate.RequestConfig.EnableFailureNotifications = true;
 
                 bool isPrimaryDomain = true;
                 List<string> sans = new List<string>();
@@ -365,11 +365,11 @@ namespace Certify.CLI
                 {
                     if (!String.IsNullOrWhiteSpace(d))
                     {
-                        newManagedSite.DomainOptions.Add(new DomainOption { Domain = d.Trim(), IsPrimaryDomain = isPrimaryDomain, IsSelected = true, Title = d });
+                        newManagedCertificate.DomainOptions.Add(new DomainOption { Domain = d.Trim(), IsPrimaryDomain = isPrimaryDomain, IsSelected = true, Title = d });
 
                         if (isPrimaryDomain)
                         {
-                            newManagedSite.RequestConfig.PrimaryDomain = d.Trim();
+                            newManagedCertificate.RequestConfig.PrimaryDomain = d.Trim();
                         }
 
                         sans.Add(d.Trim());
@@ -377,13 +377,13 @@ namespace Certify.CLI
                         isPrimaryDomain = false;
                     }
                 }
-                newManagedSite.RequestConfig.SubjectAlternativeNames = sans.ToArray();
+                newManagedCertificate.RequestConfig.SubjectAlternativeNames = sans.ToArray();
 
                 // TODO:check for dupes
 
                 // add managed site
-                Console.WriteLine("Creating Managed Site: " + newManagedSite.Name);
-                await _certifyClient.UpdateManagedSite(newManagedSite);
+                Console.WriteLine("Creating  Managed Certificate: " + newManagedCertificate.Name);
+                await _certifyClient.UpdateManagedCertificate(newManagedCertificate);
             }
         }
 

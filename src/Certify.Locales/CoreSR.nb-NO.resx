@@ -129,10 +129,10 @@
   <data name="CertifyManager_CompleteRequestAndUpdateBinding" xml:space="preserve">
     <value>Sertifikatforespørsel og automatisert bindingsoppdatering (IIS) fullført</value>
   </data>
-  <data name="ManagedItemType_LocalIIS" xml:space="preserve">
+  <data name="ManagedCertificateType_LocalIIS" xml:space="preserve">
     <value>Lokalt IIS, SSL-sertifikat via Let's Encrypt</value>
   </data>
-  <data name="ManagedItemType_Manual" xml:space="preserve">
+  <data name="ManagedCertificateType_Manual" xml:space="preserve">
     <value>Manuelt sertifikat fra Let's Encrypt</value>
   </data>
   <data name="CertifyManager_CertificateInstallFailed" xml:space="preserve">

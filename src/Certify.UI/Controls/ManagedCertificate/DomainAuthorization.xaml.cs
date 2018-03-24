@@ -6,14 +6,14 @@ using System.Windows;
 using System.Windows.Controls;
 using WinForms = System.Windows.Forms;
 
-namespace Certify.UI.Controls.ManagedItem
+namespace Certify.UI.Controls.ManagedCertificate
 {
     /// <summary>
     /// Interaction logic for DomainAuthorization.xaml 
     /// </summary>
     public partial class DomainAuthorization : UserControl
     {
-        protected Certify.UI.ViewModel.ManagedItemModel ItemViewModel => UI.ViewModel.ManagedItemModel.Current;
+        protected Certify.UI.ViewModel.ManagedCertificateModel ItemViewModel => UI.ViewModel.ManagedCertificateModel.Current;
         protected Certify.UI.ViewModel.AppModel AppViewModel => UI.ViewModel.AppModel.Current;
 
         public DomainAuthorization()

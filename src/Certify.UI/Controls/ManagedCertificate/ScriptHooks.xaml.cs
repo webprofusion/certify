@@ -10,14 +10,14 @@ using System.Windows;
 using System.Windows.Controls;
 using WinForms = System.Windows.Forms;
 
-namespace Certify.UI.Controls.ManagedItem
+namespace Certify.UI.Controls.ManagedCertificate
 {
     /// <summary>
-    /// Interaction logic for ManagedItemSettingsScriptHooks.xaml 
+    /// Interaction logic for ManagedCertificateSettingsScriptHooks.xaml 
     /// </summary>
     public partial class ScriptHooks : UserControl
     {
-        protected Certify.UI.ViewModel.ManagedItemModel ItemViewModel => UI.ViewModel.ManagedItemModel.Current;
+        protected Certify.UI.ViewModel.ManagedCertificateModel ItemViewModel => UI.ViewModel.ManagedCertificateModel.Current;
 
         public ScriptHooks()
         {
@@ -133,22 +133,22 @@ namespace Certify.UI.Controls.ManagedItem
                 var config = ItemViewModel.SelectedItem.RequestConfig;
                 if (!Uri.TryCreate(config.WebhookUrl, UriKind.Absolute, out var result))
                 {
-                    MessageBox.Show($"The webhook url must be a valid url.", SR.ManagedItemSettings_WebhookTestFailed, MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"The webhook url must be a valid url.", SR.ManagedCertificateSettings_WebhookTestFailed, MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
                 if (string.IsNullOrEmpty(config.WebhookMethod))
                 {
-                    MessageBox.Show($"The webhook method must be selected.", SR.ManagedItemSettings_WebhookTestFailed, MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"The webhook method must be selected.", SR.ManagedCertificateSettings_WebhookTestFailed, MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
                 bool forSuccess = config.WebhookTrigger == Webhook.ON_SUCCESS;
                 var webhookResult = await Webhook.SendRequest(config, forSuccess);
                 string completed = webhookResult.Success ? SR.succeed : SR.failed;
-                MessageBox.Show(string.Format(SR.ManagedItemSettings_WebhookRequestResult, completed, webhookResult.StatusCode), SR.ManagedItemSettings_WebhookTest, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(string.Format(SR.ManagedCertificateSettings_WebhookRequestResult, completed, webhookResult.StatusCode), SR.ManagedCertificateSettings_WebhookTest, MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(string.Format(SR.ManagedItemSettings_WebhookRequestError, ex.Message), SR.ManagedItemSettings_WebhookTestFailed, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(string.Format(SR.ManagedCertificateSettings_WebhookRequestError, ex.Message), SR.ManagedCertificateSettings_WebhookTestFailed, MessageBoxButton.OK, MessageBoxImage.Information);
             }
             finally
             {

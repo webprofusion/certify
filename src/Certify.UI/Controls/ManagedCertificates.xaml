@@ -5,11 +5,11 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
              xmlns:local="clr-namespace:Certify.UI.Controls"
-             xmlns:manageditem="clr-namespace:Certify.UI.Controls.ManagedItem"
+             xmlns:managedcertificate="clr-namespace:Certify.UI.Controls.ManagedCertificate"
              xmlns:certifyui="clr-namespace:Certify.UI;assembly=Certify.UI"
              xmlns:System="clr-namespace:System;assembly=mscorlib"
              xmlns:fa="http://schemas.fontawesome.io/icons/"
-             xmlns:utils="clr-namespace:Certify.UI.Utils" x:Class="Certify.UI.Controls.ManagedSites"
+             xmlns:utils="clr-namespace:Certify.UI.Utils" x:Class="Certify.UI.Controls.ManagedCertificates"
              xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
 
     mc:Ignorable="d" Width="970" Height="487"
@@ -23,7 +23,7 @@
             <utils:EnumConverter x:Key="EnumConverter" />
             <utils:ExpiryDateConverter x:Key="ExpiryDateConverter" />
             <utils:ExpiryDateColourConverter x:Key="ExpiryDateColourConverter" />
-            <utils:ManagedItemHealthColourConverter x:Key="HealthColourConverter" />
+            <utils:ManagedCertificateHealthColourConverter x:Key="HealthColourConverter" />
         </Grid.Resources>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="220" MaxWidth="400" MinWidth="200"></ColumnDefinition>
@@ -37,12 +37,12 @@
                 <RowDefinition Height="*"></RowDefinition>
             </Grid.RowDefinitions>
 
-            <TextBox Grid.Row="0" Name="txtFilter" TextChanged="TxtFilter_TextChanged" PreviewKeyDown="TxtFilter_PreviewKeyDown" Controls:TextBoxHelper.Watermark="{x:Static res:SR.ManagedSites_Filter}" Controls:TextBoxHelper.ClearTextButton="True"></TextBox>
+            <TextBox Grid.Row="0" Name="txtFilter" TextChanged="TxtFilter_TextChanged" PreviewKeyDown="TxtFilter_PreviewKeyDown" Controls:TextBoxHelper.Watermark="{x:Static res:SR.ManagedCertificates_Filter}" Controls:TextBoxHelper.ClearTextButton="True"></TextBox>
 
-            <ListView Grid.Row="1" Name="lvManagedSites"
-                      ItemsSource="{Binding ManagedSites}"
+            <ListView Grid.Row="1" Name="lvManagedCertificates"
+                      ItemsSource="{Binding ManagedCertificates}"
                       SelectedItem="{Binding SelectedItem, Mode=OneWay}"
-                      SelectionChanged="lvManagedSites_SelectionChanged"
+                      SelectionChanged="lvManagedCertificates_SelectionChanged"
                       SelectionMode="Single"
                       ScrollViewer.CanContentScroll="True"
                       VirtualizingPanel.IsVirtualizing="True"
@@ -86,7 +86,7 @@
         <GridSplitter Grid.Column="1" Width="10" HorizontalAlignment="Stretch" Background="White" />
         <Grid Grid.Column="2" x:Name="MainItemView">
 
-            <manageditem:Settings x:Name="ManagedItemView" Visibility="{Binding SelectedItem, Converter={StaticResource NullCollapsedConverter}}" BorderBrush="{DynamicResource WindowTitleColorBrush}" Margin="0,10,0,0" Width="Auto" Height="Auto" />
+            <managedcertificate:ManagedCertificateSettings x:Name="ManagedCertificateView" Visibility="{Binding SelectedItem, Converter={StaticResource NullCollapsedConverter}}" BorderBrush="{DynamicResource WindowTitleColorBrush}" Margin="0,10,0,0" Width="Auto" Height="Auto" />
             <StackPanel Visibility="{Binding SelectedItem, Converter={StaticResource NullVisibleConverter}}" Margin="16,0,0,0" Height="Auto">
                 <local:GettingStarted></local:GettingStarted>
             </StackPanel>

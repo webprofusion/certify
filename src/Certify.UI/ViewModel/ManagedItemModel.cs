@@ -11,17 +11,17 @@ using System.Windows.Input;
 
 namespace Certify.UI.ViewModel
 {
-    public class ManagedItemModel : BindableBase
+    public class ManagedCertificateModel : BindableBase
     {
         /// <summary>
         /// Provide single static instance of model for all consumers 
         /// </summary>
         //public static AppModel AppViewModel = new DesignViewModel(); // for UI testing
-        public static ManagedItemModel Current = ManagedItemModel.GetModel();
+        public static ManagedCertificateModel Current = ManagedCertificateModel.GetModel();
 
         private Certify.UI.ViewModel.AppModel _appViewModel => ViewModel.AppModel.Current;
 
-        public ManagedItemModel()
+        public ManagedCertificateModel()
         {
         }
 
@@ -77,7 +77,7 @@ namespace Certify.UI.ViewModel
 
         public bool IsTestInProgress { get; set; }
 
-        public ManagedSite SelectedItem
+        public ManagedCertificate SelectedItem
         {
             get
             {
@@ -86,11 +86,11 @@ namespace Certify.UI.ViewModel
             set { _appViewModel.SelectedItem = value; }
         }
 
-        internal async Task<bool> SaveManagedItemChanges()
+        internal async Task<bool> SaveManagedCertificateChanges()
         {
-            UpdateManagedSiteSettings();
+            UpdateManagedCertificateSettings();
 
-            var updatedOK = await _appViewModel.AddOrUpdateManagedSite(SelectedItem);
+            var updatedOK = await _appViewModel.AddOrUpdateManagedCertificate(SelectedItem);
 
             if (updatedOK) SelectedItem.IsChanged = false;
 
@@ -202,12 +202,12 @@ namespace Certify.UI.ViewModel
 
         public Preferences Preferences => _appViewModel.Preferences;
 
-        public static ManagedItemModel GetModel()
+        public static ManagedCertificateModel GetModel()
         {
             var stack = new System.Diagnostics.StackTrace();
             if (stack.GetFrames().Last().GetMethod().Name == "Main")
             {
-                return new ManagedItemModel();
+                return new ManagedCertificateModel();
             }
             else
             {
@@ -221,7 +221,7 @@ namespace Certify.UI.ViewModel
             if (SelectedItem?.IsChanged ?? false)
             {
                 //user needs to save or discard changes before changing selection
-                if (MessageBox.Show(SR.ManagedSites_UnsavedWarning, SR.Alert, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
+                if (MessageBox.Show(SR.ManagedCertificates_UnsavedWarning, SR.Alert, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
                 {
                     await DiscardChanges();
                 }
@@ -245,7 +245,7 @@ namespace Certify.UI.ViewModel
                 else
                 {
                     // add/update site in our local cache
-                    await _appViewModel.UpdatedCachedManagedSite(SelectedItem, reload: true);
+                    await _appViewModel.UpdatedCachedManagedCertificate(SelectedItem, reload: true);
                 }
             }
         }
@@ -295,7 +295,7 @@ namespace Certify.UI.ViewModel
         /// For the given set of options get a new CertRequestConfig to store 
         /// </summary>
         /// <returns></returns>
-        public void UpdateManagedSiteSettings()
+        public void UpdateManagedCertificateSettings()
         {
             var item = SelectedItem;
             var config = item.RequestConfig;
@@ -319,7 +319,7 @@ namespace Certify.UI.ViewModel
 
             // TODO: config.EnableFailureNotifications = chkEnableNotifications.Checked;
 
-            //determine if this site has an existing entry in Managed Sites, if so use that, otherwise start a new one
+            //determine if this site has an existing entry in  Managed Certificates, if so use that, otherwise start a new one
             if (SelectedItem.Id == null)
             {
                 item.Id = Guid.NewGuid().ToString();
@@ -329,58 +329,58 @@ namespace Certify.UI.ViewModel
                 {
                     item.Id += ":" + SelectedWebSite.SiteId;
                     item.GroupId = SelectedWebSite.SiteId;
-                    item.ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS;
+                    item.ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS;
                 }
                 else
                 {
-                    item.ItemType = ManagedItemType.SSL_LetsEncrypt_Manual;
+                    item.ItemType = ManagedCertificateType.SSL_LetsEncrypt_Manual;
                 }
             }
         }
 
-        public async Task PopulateManagedSiteSettings(string siteId)
+        public async Task PopulateManagedCertificateSettings(string siteId)
         {
             ValidationError = null;
-            var managedSite = SelectedItem;
+            var managedCertificate = SelectedItem;
 
             if (SelectedWebSite != null)
             {
-                if (managedSite.GroupId != SelectedWebSite.SiteId)
+                if (managedCertificate.GroupId != SelectedWebSite.SiteId)
                 {
                     // update website association
-                    managedSite.GroupId = SelectedWebSite.SiteId;
+                    managedCertificate.GroupId = SelectedWebSite.SiteId;
 
                     // if not already set, use website name as default name
-                    if (managedSite.Id == null || String.IsNullOrEmpty(managedSite.Name))
+                    if (managedCertificate.Id == null || String.IsNullOrEmpty(managedCertificate.Name))
                     {
                         if (!String.IsNullOrEmpty(SelectedWebSite.SiteName))
                         {
-                            managedSite.Name = SelectedWebSite.SiteName;
+                            managedCertificate.Name = SelectedWebSite.SiteName;
                         }
 
                         //set defaults first
                         if (!String.IsNullOrEmpty(SelectedWebSite.PhysicalPath))
                         {
-                            managedSite.RequestConfig.WebsiteRootPath = Environment.ExpandEnvironmentVariables(SelectedWebSite.PhysicalPath);
+                            managedCertificate.RequestConfig.WebsiteRootPath = Environment.ExpandEnvironmentVariables(SelectedWebSite.PhysicalPath);
                         }
                     }
 
                     // remove domain options not manually added
-                    foreach (var d in managedSite.DomainOptions.ToList())
+                    foreach (var d in managedCertificate.DomainOptions.ToList())
                     {
                         if (!d.IsManualEntry)
                         {
-                            managedSite.DomainOptions.Remove(d);
+                            managedCertificate.DomainOptions.Remove(d);
                         }
                     }
 
                     var domainOptions = await GetDomainOptionsFromSite(siteId);
                     foreach (var option in domainOptions)
                     {
-                        managedSite.DomainOptions.Add(option);
+                        managedCertificate.DomainOptions.Add(option);
                     }
 
-                    if (!managedSite.DomainOptions.Any())
+                    if (!managedCertificate.DomainOptions.Any())
                     {
                         ValidationError = "The selected site has no domain bindings setup. Configure the domains first using Edit Bindings in IIS.";
                     }
@@ -465,15 +465,15 @@ namespace Certify.UI.ViewModel
             return await _appViewModel.CertifyClient.ReapplyCertificateBindings(managedItemId, isPreviewOnly);
         }
 
-        public async Task<StatusMessage> TestChallengeResponse(ManagedSite managedSite)
+        public async Task<StatusMessage> TestChallengeResponse(ManagedCertificate managedCertificate)
         {
-            return await _appViewModel.CertifyClient.TestChallengeConfiguration(managedSite);
+            return await _appViewModel.CertifyClient.TestChallengeConfiguration(managedCertificate);
         }
 
         public async Task<StatusMessage> RevokeSelectedItem()
         {
-            var managedSite = SelectedItem;
-            return await _appViewModel.CertifyClient.RevokeManageSiteCertificate(managedSite.Id);
+            var managedCertificate = SelectedItem;
+            return await _appViewModel.CertifyClient.RevokeManageSiteCertificate(managedCertificate.Id);
         }
 
         public ICommand SANSelectAllCommand => new RelayCommand<object>(SANSelectAll);

@@ -33,17 +33,17 @@ namespace Certify.Client
         GetServerSiteList("IIS")
         GetServerSiteDomains("IIS",siteId);
 
-        Managed Sites: /managedsites/
+         Managed Certificates: /managedcertificates/
 
-        GetManagedSites(filter)
-        GetManagedSite(id)
-        AddOrUpdateManagedSite
-        DeleteManagedItem
+        GetManagedCertificates(filter)
+        GetManagedCertificate(id)
+        AddOrUpdateManagedCertificate
+        DeleteManagedCertificate
 
         PreviewAutoRenewal - return list of managed sites which would be currently included in an auto renew run
-        BeginAutoRenewal - Begin auto renewal process and returns list of managedsites included in this run
-        BeginCertificateRequest(managedsite id) - Begins a single manage site certificate request
-        CheckCertificateRequest(managedsite id) - poll until completed/failed or timeout
+        BeginAutoRenewal - Begin auto renewal process and returns list of managedcertificates included in this run
+        BeginCertificateRequest(managedcertificate id) - Begins a single manage site certificate request
+        CheckCertificateRequest(managedcertificate id) - poll until completed/failed or timeout
         */
 
         #region Status
@@ -52,7 +52,7 @@ namespace Certify.Client
 
         event Action<RequestProgressState> OnRequestProgressStateUpdated;
 
-        event Action<ManagedSite> OnManagedSiteUpdated;
+        event Action<ManagedCertificate> OnManagedCertificateUpdated;
 
         Task ConnectStatusStreamAsync();
 
@@ -96,29 +96,29 @@ namespace Certify.Client
 
         #endregion Credentials
 
-        #region Managed Sites
+        #region Managed Certificates
 
-        Task<List<ManagedSite>> GetManagedSites(ManagedSiteFilter filter);
+        Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter);
 
-        Task<ManagedSite> GetManagedSite(string managedSiteId);
+        Task<ManagedCertificate> GetManagedCertificate(string managedItemId);
 
-        Task<ManagedSite> UpdateManagedSite(ManagedSite site);
+        Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate site);
 
-        Task<bool> DeleteManagedSite(string managedSiteId);
+        Task<bool> DeleteManagedCertificate(string managedItemId);
 
-        Task<StatusMessage> RevokeManageSiteCertificate(string managedSiteId);
+        Task<StatusMessage> RevokeManageSiteCertificate(string managedItemId);
 
         Task<List<CertificateRequestResult>> BeginAutoRenewal();
 
-        Task<CertificateRequestResult> ReapplyCertificateBindings(string managedSiteId, bool isPreviewOnly);
+        Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly);
 
-        Task<CertificateRequestResult> BeginCertificateRequest(string managedSiteId);
+        Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId);
 
-        Task<RequestProgressState> CheckCertificateRequest(string managedSiteId);
+        Task<RequestProgressState> CheckCertificateRequest(string managedItemId);
 
-        Task<StatusMessage> TestChallengeConfiguration(ManagedSite site);
+        Task<StatusMessage> TestChallengeConfiguration(ManagedCertificate site);
 
-        #endregion Managed Sites
+        #endregion Managed Certificates
 
         #region Contacts
 

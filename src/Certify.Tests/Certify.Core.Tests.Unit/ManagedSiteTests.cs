@@ -7,25 +7,25 @@ using System.Threading.Tasks;
 namespace Certify.Core.Tests.Unit
 {
     [TestClass]
-    public class ManagedSiteTests
+    public class ManagedCertificateTests
     {
         [TestMethod, Description("Ensure managed sites list loads")]
-        public async Task TestLoadManagedSites()
+        public async Task TestLoadManagedCertificates()
         {
-            var managedSiteSettings = new ItemManager();
-            managedSiteSettings.StorageSubfolder = "Tests";
+            var managedCertificateSettings = new ItemManager();
+            managedCertificateSettings.StorageSubfolder = "Tests";
 
-            var managedSites = await managedSiteSettings.GetManagedSites();
-            Assert.IsTrue(managedSites.Count > 0);
+            var managedCertificates = await managedCertificateSettings.GetManagedCertificates();
+            Assert.IsTrue(managedCertificates.Count > 0);
         }
 
         [TestMethod, Description("Ensure mamaged site can be created, retrieved and deleted")]
-        public async Task TestCreateDeleteManagedSite()
+        public async Task TestCreateDeleteManagedCertificate()
         {
             var itemManager = new ItemManager();
             itemManager.StorageSubfolder = "Tests";
 
-            var testSite = new ManagedSite
+            var testSite = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
                 Name = "TestSite..",
@@ -41,41 +41,41 @@ namespace Certify.Core.Tests.Unit
                     PerformExtensionlessConfigChecks = true,
                     WebsiteRootPath = "c:\\inetpub\\wwwroot"
                 },
-                ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS
+                ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
             };
 
-            var managedSite = await itemManager.UpdatedManagedSite(testSite);
+            var managedCertificate = await itemManager.UpdatedManagedCertificate(testSite);
 
-            Assert.IsNotNull(managedSite, "Create/store managed site");
+            Assert.IsNotNull(managedCertificate, "Create/store managed site");
 
             //check site now exists
-            managedSite = await itemManager.GetManagedSite(testSite.Id);
-            Assert.IsNotNull(managedSite, "Retrieve managed site");
+            managedCertificate = await itemManager.GetManagedCertificate(testSite.Id);
+            Assert.IsNotNull(managedCertificate, "Retrieve managed site");
 
-            await itemManager.DeleteManagedSite(managedSite);
-            managedSite = await itemManager.GetManagedSite(testSite.Id);
+            await itemManager.DeleteManagedCertificate(managedCertificate);
+            managedCertificate = await itemManager.GetManagedCertificate(testSite.Id);
 
             // now check site has been delete
-            Assert.IsNull(managedSite, "Managed site deleted");
+            Assert.IsNull(managedCertificate, "Managed site deleted");
         }
 
         [Ignore, TestMethod, Description("Ensure a large number of managed sites can be create, saved and loaded")]
-        public async Task TestCheckLargeManagedSiteSettingSave()
+        public async Task TestCheckLargeManagedCertificateSettingSave()
         {
-            var managedSiteSettings = new ItemManager();
-            managedSiteSettings.StorageSubfolder = "Tests";
+            var managedCertificateSettings = new ItemManager();
+            managedCertificateSettings.StorageSubfolder = "Tests";
 
-            await managedSiteSettings.LoadAllManagedItems();
-            await managedSiteSettings.DeleteAllManagedSites();
-            await managedSiteSettings.StoreSettings();
+            await managedCertificateSettings.LoadAllManagedCertificates();
+            await managedCertificateSettings.DeleteAllManagedCertificates();
+            await managedCertificateSettings.StoreSettings();
 
-            var numTestManagedSites = 100000;
+            var numTestManagedCertificates = 100000;
             var numSANsPerSite = 2;
 
-            for (var i = 0; i < numTestManagedSites; i++)
+            for (var i = 0; i < numTestManagedCertificates; i++)
             {
                 var testname = Guid.NewGuid().ToString();
-                var site = new ManagedSite
+                var site = new ManagedCertificate
                 {
                     Id = Guid.NewGuid().ToString(),
                     Name = testname,
@@ -91,7 +91,7 @@ namespace Certify.Core.Tests.Unit
                         PerformExtensionlessConfigChecks = true,
                         WebsiteRootPath = "c:\\inetpub\\wwwroot"
                     },
-                    ItemType = ManagedItemType.SSL_LetsEncrypt_LocalIIS
+                    ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
                 };
 
                 site.DomainOptions.Add(new DomainOption { Domain = testname + ".com", IsPrimaryDomain = true, IsSelected = true });
@@ -102,18 +102,18 @@ namespace Certify.Core.Tests.Unit
                 }
 
                 //add new site
-                await managedSiteSettings.UpdatedManagedSite(site);
+                await managedCertificateSettings.UpdatedManagedCertificate(site);
             }
 
             // reload settings
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            var managedSites = await managedSiteSettings.GetManagedSites(null, reloadAll: true);
+            var managedCertificates = await managedCertificateSettings.GetManagedCertificates(null, reloadAll: true);
             stopwatch.Stop();
 
-            Assert.IsTrue(stopwatch.ElapsedMilliseconds < 20 * numTestManagedSites, "Should load quickly : (ms) " + stopwatch.ElapsedMilliseconds);
+            Assert.IsTrue(stopwatch.ElapsedMilliseconds < 20 * numTestManagedCertificates, "Should load quickly : (ms) " + stopwatch.ElapsedMilliseconds);
 
             // assert result
-            Assert.IsTrue(managedSites.Count == numTestManagedSites, "Should have loaded required number of sites " + managedSites.Count);
+            Assert.IsTrue(managedCertificates.Count == numTestManagedCertificates, "Should have loaded required number of sites " + managedCertificates.Count);
         }
     }
 }

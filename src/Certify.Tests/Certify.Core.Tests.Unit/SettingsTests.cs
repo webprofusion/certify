@@ -13,7 +13,7 @@ namespace Certify.Core.Tests.Unit
         {
             // setup
             var renewalPeriodDays = 14;
-            var managedSite = new ManagedSite
+            var managedCertificate = new ManagedCertificate
             {
                 IncludeInAutoRenew = true,
                 DateRenewed = DateTime.Now.AddDays(-15),
@@ -24,12 +24,12 @@ namespace Certify.Core.Tests.Unit
             };
 
             // perform check
-            var isRenewalRequired = CertifyManager.IsRenewalRequired(managedSite, renewalPeriodDays, true);
+            var isRenewalRequired = CertifyManager.IsRenewalRequired(managedCertificate, renewalPeriodDays, true);
 
             // assert result
             Assert.IsTrue(isRenewalRequired, "Renewal should be required");
 
-            managedSite = new ManagedSite
+            managedCertificate = new ManagedCertificate
             {
                 IncludeInAutoRenew = true,
                 DateRenewed = DateTime.Now.AddDays(-15),
@@ -40,7 +40,7 @@ namespace Certify.Core.Tests.Unit
             };
 
             // perform check
-            isRenewalRequired = CertifyManager.IsRenewalRequired(managedSite, renewalPeriodDays, true);
+            isRenewalRequired = CertifyManager.IsRenewalRequired(managedCertificate, renewalPeriodDays, true);
 
             // assert result
             Assert.IsTrue(isRenewalRequired, "Site with no previous status - Renewal should be required");
@@ -51,10 +51,10 @@ namespace Certify.Core.Tests.Unit
         {
             // setup
             var renewalPeriodDays = 14;
-            var managedSite = new ManagedSite { IncludeInAutoRenew = true, DateRenewed = DateTime.Now.AddDays(-15), DateExpiry = DateTime.Now.AddDays(60) };
+            var managedCertificate = new ManagedCertificate { IncludeInAutoRenew = true, DateRenewed = DateTime.Now.AddDays(-15), DateExpiry = DateTime.Now.AddDays(60) };
 
             // perform check
-            var isRenewalRequired = CertifyManager.IsRenewalRequired(managedSite, renewalPeriodDays);
+            var isRenewalRequired = CertifyManager.IsRenewalRequired(managedCertificate, renewalPeriodDays);
 
             // assert result
             Assert.IsTrue(isRenewalRequired, "Renewal should be required");
@@ -66,10 +66,10 @@ namespace Certify.Core.Tests.Unit
             // setup : set renewal period to 30 days, last renewal 15 days ago. Renewal should not be
             // required yet.
             var renewalPeriodDays = 30;
-            var managedSite = new ManagedSite { IncludeInAutoRenew = true, DateRenewed = DateTime.Now.AddDays(-15), DateExpiry = DateTime.Now.AddDays(60) };
+            var managedCertificate = new ManagedCertificate { IncludeInAutoRenew = true, DateRenewed = DateTime.Now.AddDays(-15), DateExpiry = DateTime.Now.AddDays(60) };
 
             // perform check
-            var isRenewalRequired = CertifyManager.IsRenewalRequired(managedSite, renewalPeriodDays);
+            var isRenewalRequired = CertifyManager.IsRenewalRequired(managedCertificate, renewalPeriodDays);
 
             // assert result
             Assert.IsFalse(isRenewalRequired, "Renewal should not be required");
@@ -81,10 +81,10 @@ namespace Certify.Core.Tests.Unit
             // setup : set renewal period to 14 days, last renewal unknown.
 
             var renewalPeriodDays = 14;
-            var managedSite = new ManagedSite { IncludeInAutoRenew = true, DateExpiry = DateTime.Now.AddDays(60) };
+            var managedCertificate = new ManagedCertificate { IncludeInAutoRenew = true, DateExpiry = DateTime.Now.AddDays(60) };
 
             // perform check
-            var isRenewalRequired = CertifyManager.IsRenewalRequired(managedSite, renewalPeriodDays);
+            var isRenewalRequired = CertifyManager.IsRenewalRequired(managedCertificate, renewalPeriodDays);
 
             // assert result
             Assert.IsTrue(isRenewalRequired, "Renewal should be required");

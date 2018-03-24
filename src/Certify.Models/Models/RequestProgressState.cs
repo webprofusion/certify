@@ -13,13 +13,13 @@ namespace Certify.Models
 
     public class RequestProgressState : BindableBase
     {
-        public ManagedItem ManagedItem { get; set; }
+        public ManagedCertificate ManagedCertificate { get; set; }
 
-        public RequestProgressState(RequestState currentState, string msg, ManagedItem item)
+        public RequestProgressState(RequestState currentState, string msg, ManagedCertificate item)
         {
             CurrentState = currentState;
             Message = msg;
-            ManagedItem = item;
+            ManagedCertificate = item;
         }
 
         public bool IsRunning
@@ -40,7 +40,7 @@ namespace Certify.Models
         {
             get
             {
-                if (ManagedItem != null) return ManagedItem.Id;
+                if (ManagedCertificate != null) return ManagedCertificate.Id;
                 return null;
             }
         }
@@ -52,7 +52,7 @@ namespace Certify.Models
             this.Result = state.Result;
 
 #if DEBUG
-            System.Diagnostics.Debug.WriteLine(ManagedItem.Name + ": " + CurrentState.ToString() + (Message != null ? ", " + Message : ""));
+            System.Diagnostics.Debug.WriteLine(ManagedCertificate.Name + ": " + CurrentState.ToString() + (Message != null ? ", " + Message : ""));
 #endif
         }
     }

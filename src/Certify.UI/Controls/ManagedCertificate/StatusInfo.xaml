@@ -1,9 +1,9 @@
-﻿<UserControl x:Class="Certify.UI.Controls.ManagedItem.StatusInfo"
+﻿<UserControl x:Class="Certify.UI.Controls.ManagedCertificate.StatusInfo"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:Certify.UI.Controls.ManagedItem"
+             xmlns:local="clr-namespace:Certify.UI.Controls.ManagedCertificate"
              xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
               xmlns:utils="clr-namespace:Certify.UI.Utils"
              xmlns:fa="http://schemas.fontawesome.io/icons/"
@@ -13,7 +13,7 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
         <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
-        <utils:ManagedItemHealthVisibilityConverter x:Key="HealthVisibleConverter" />
+        <utils:ManagedCertificateHealthVisibilityConverter x:Key="HealthVisibleConverter" />
         <utils:OptionalBooleanToVisibilityConverter True="Collapsed" False="Visible" x:Key="InvBoolVisConverter" />
         <utils:EnumConverter x:Key="EnumConverter" />
         <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />

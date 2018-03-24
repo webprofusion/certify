@@ -12,7 +12,7 @@
              xmlns:utils="clr-namespace:Certify.UI.Utils"
              xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Models"
              xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-             x:Class="Certify.UI.Controls.ManagedItem.DomainAuthorization"
+             x:Class="Certify.UI.Controls.ManagedCertificate.DomainAuthorization"
              mc:Ignorable="d"
     d:DesignWidth="500"
              d:DataContext="{d:DesignInstance Type=certifyui:DesignItemViewModel, IsDesignTimeCreatable=True}">
@@ -23,7 +23,7 @@
                 <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
                 <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
                 <utils:OptionalBooleanToVisibilityConverter True="Collapsed" False="Visible" x:Key="InvBoolVisConverter" />
-                <utils:ManagedItemHealthVisibilityConverter x:Key="HealthVisibleConverter" />
+                <utils:ManagedCertificateHealthVisibilityConverter x:Key="HealthVisibleConverter" />
                 <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
             </StackPanel.Resources>
 
@@ -35,7 +35,7 @@
             </StackPanel>
 
             <StackPanel Orientation="Horizontal">
-                <Label Width="160" Content="{x:Static Resources:SR.ManagedItemSettings_ChallengeTypes}" />
+                <Label Width="160" Content="{x:Static Resources:SR.ManagedCertificateSettings_ChallengeTypes}" />
                 <ComboBox x:Name="ChallengeTypeList" ItemsSource="{Binding ChallengeTypes}" SelectedItem="{Binding PrimaryChallengeConfig.ChallengeType}" Width="225" SelectionChanged="ComboBox_SelectionChanged" />
             </StackPanel>
 
@@ -51,14 +51,14 @@
                     </Style>
                 </StackPanel.Style>
                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                    <Label Width="160" Content="{x:Static Resources:SR.ManagedItemSettings_WebsiteRoot}" />
+                    <Label Width="160" Content="{x:Static Resources:SR.ManagedCertificateSettings_WebsiteRoot}" />
                     <TextBox Text="{Binding SelectedItem.RequestConfig.WebsiteRootPath}" Width="225" />
-                    <Button Name="Button_WebRoot" Content="{x:Static Resources:SR.ManagedItemSettings_BrowseFolder}" Margin="4,0,0,0" Click="DirectoryBrowse_Click" />
+                    <Button Name="Button_WebRoot" Content="{x:Static Resources:SR.ManagedCertificateSettings_BrowseFolder}" Margin="4,0,0,0" Click="DirectoryBrowse_Click" />
                 </StackPanel>
 
                 <StackPanel Orientation="Vertical" Margin="160,8,0,0">
-                    <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_PerformChallengeResponseConfigCheck}" IsChecked="{Binding SelectedItem.RequestConfig.PerformExtensionlessConfigChecks}" />
-                    <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_PerformWebAppAutoConfig}" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutoConfig}" />
+                    <CheckBox Content="{x:Static Resources:SR.ManagedCertificateSettings_PerformChallengeResponseConfigCheck}" IsChecked="{Binding SelectedItem.RequestConfig.PerformExtensionlessConfigChecks}" />
+                    <CheckBox Content="{x:Static Resources:SR.ManagedCertificateSettings_PerformWebAppAutoConfig}" IsChecked="{Binding SelectedItem.RequestConfig.PerformAutoConfig}" />
                 </StackPanel>
             </StackPanel>
 
@@ -104,7 +104,7 @@
                     </Style>
                 </StackPanel.Style>
                 <StackPanel Orientation="Vertical" Margin="0,8,0,0">
-                    <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_PerformChallengeResponseConfigCheck}" IsChecked="{Binding SelectedItem.RequestConfig.PerformTlsSniBindingConfigChecks}" Margin="160,0,0,0" />
+                    <CheckBox Content="{x:Static Resources:SR.ManagedCertificateSettings_PerformChallengeResponseConfigCheck}" IsChecked="{Binding SelectedItem.RequestConfig.PerformTlsSniBindingConfigChecks}" Margin="160,0,0,0" />
                 </StackPanel>
             </StackPanel>
             <DockPanel Margin="0,16,0,0">

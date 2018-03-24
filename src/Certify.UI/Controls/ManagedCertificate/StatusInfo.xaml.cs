@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace Certify.UI.Controls.ManagedItem
+namespace Certify.UI.Controls.ManagedCertificate
 {
     /// <summary>
     /// Interaction logic for Deployment.xaml 

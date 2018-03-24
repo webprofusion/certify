@@ -5,17 +5,17 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 
-namespace Certify.UI.Controls.ManagedItem
+namespace Certify.UI.Controls.ManagedCertificate
 {
     /// <summary>
     /// Interaction logic for CertificateDomains.xaml 
     /// </summary>
     public partial class CertificateDomains : UserControl
     {
-        protected Certify.UI.ViewModel.ManagedItemModel ItemViewModel => UI.ViewModel.ManagedItemModel.Current;
+        protected Certify.UI.ViewModel.ManagedCertificateModel ItemViewModel => UI.ViewModel.ManagedCertificateModel.Current;
         protected Certify.UI.ViewModel.AppModel AppViewModel => UI.ViewModel.AppModel.Current;
 
-        private ManagedSite SelectedItem => ItemViewModel.SelectedItem;
+        private Models.ManagedCertificate SelectedItem => ItemViewModel.SelectedItem;
 
         public CertificateDomains()
         {
@@ -80,7 +80,7 @@ namespace Certify.UI.Controls.ManagedItem
 
                 SiteQueryInProgress.Visibility = Visibility.Visible;
 
-                await ItemViewModel.PopulateManagedSiteSettings(siteId);
+                await ItemViewModel.PopulateManagedCertificateSettings(siteId);
 
                 SiteQueryInProgress.Visibility = Visibility.Hidden;
             }

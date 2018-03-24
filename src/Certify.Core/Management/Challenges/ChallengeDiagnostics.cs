@@ -29,18 +29,18 @@ namespace Certify.Core.Management.Challenges
         /// verify it.
         /// </summary>
         /// <param name="iisManager"></param>
-        /// <param name="managedSite"></param>
+        /// <param name="managedCertificate"></param>
         /// <returns> APIResult </returns>
         /// <remarks>
         /// The purpose of this method is to test the options (permissions, configuration) before
         /// submitting a request to the ACME server, to avoid creating failed requests and hitting
         /// usage limits.
         /// </remarks>
-        public async Task<StatusMessage> TestChallengeResponse(ILogger log, ICertifiedServer iisManager, ManagedSite managedSite, bool isPreviewMode, bool enableDnsChecks)
+        public async Task<StatusMessage> TestChallengeResponse(ILogger log, ICertifiedServer iisManager, ManagedCertificate managedCertificate, bool isPreviewMode, bool enableDnsChecks)
         {
             _actionLogs.Clear(); // reset action logs
 
-            var requestConfig = managedSite.RequestConfig;
+            var requestConfig = managedCertificate.RequestConfig;
             var result = new StatusMessage { IsOK = true };
             var domains = new List<string> { requestConfig.PrimaryDomain };
 
@@ -56,7 +56,7 @@ namespace Certify.Core.Management.Challenges
                 // if DNS checks enabled, attempt them here
                 if (isPreviewMode && enableDnsChecks)
                 {
-                    log.Information("Performing preview DNS tests. {managedItem}", managedSite);
+                    log.Information("Performing preview DNS tests. {managedItem}", managedCertificate);
 
                     // check all domain configs
                     Parallel.ForEach(domains.Distinct(), new ParallelOptions
@@ -101,7 +101,7 @@ namespace Certify.Core.Management.Challenges
                         generatedAuthorizations.Add(simulatedAuthorization);
 
                         var resultOK = await PrepareChallengeResponse_Http01(
-                           log, iisManager, domain, managedSite, simulatedAuthorization
+                           log, iisManager, domain, managedCertificate, simulatedAuthorization
                         )();
 
                         if (!resultOK)
@@ -138,7 +138,7 @@ namespace Certify.Core.Management.Challenges
                         };
                         generatedAuthorizations.Add(simulatedAuthorization);
                         return PrepareChallengeResponse_TlsSni01(
-                            log, iisManager, domain, managedSite, simulatedAuthorization
+                            log, iisManager, domain, managedCertificate, simulatedAuthorization
                         )();
                     });
                 }
@@ -163,7 +163,7 @@ namespace Certify.Core.Management.Challenges
                         return PrepareChallengeResponse_Dns01(
                             log,
                             domain,
-                            managedSite,
+                            managedCertificate,
                             simulatedAuthorization
                         )();
                     });
@@ -203,14 +203,14 @@ namespace Certify.Core.Management.Challenges
             return $"{simulated_token}.{thumbprint}";
         }
 
-        public async Task<PendingAuthorization> PerformAutomatedChallengeResponse(ILogger log, ICertifiedServer iisManager, ManagedSite managedSite, PendingAuthorization pendingAuth)
+        public async Task<PendingAuthorization> PerformAutomatedChallengeResponse(ILogger log, ICertifiedServer iisManager, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
         {
-            var requestConfig = managedSite.RequestConfig;
+            var requestConfig = managedCertificate.RequestConfig;
             var domain = pendingAuth.Identifier.Dns;
             if (pendingAuth.Challenges != null)
             {
                 // from list of possible challenges, select the one we prefer to attempt
-                var requiredChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == managedSite.RequestConfig.ChallengeType);
+                var requiredChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == managedCertificate.RequestConfig.ChallengeType);
 
                 if (requiredChallenge != null)
                 {
@@ -218,7 +218,7 @@ namespace Certify.Core.Management.Challenges
                     if (requiredChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
                     {
                         // perform http-01 challenge response
-                        var check = PrepareChallengeResponse_Http01(log, iisManager, domain, managedSite, pendingAuth);
+                        var check = PrepareChallengeResponse_Http01(log, iisManager, domain, managedCertificate, pendingAuth);
                         if (requestConfig.PerformExtensionlessConfigChecks)
                         {
                             pendingAuth.AttemptedChallenge.ConfigCheckedOK = await check();
@@ -228,7 +228,7 @@ namespace Certify.Core.Management.Challenges
                     if (requiredChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
                     {
                         // perform tls-sni-01 challenge response
-                        var check = PrepareChallengeResponse_TlsSni01(log, iisManager, domain, managedSite, pendingAuth);
+                        var check = PrepareChallengeResponse_TlsSni01(log, iisManager, domain, managedCertificate, pendingAuth);
                         if (requestConfig.PerformTlsSniBindingConfigChecks)
                         {
                             // set config check OK if all checks return true
@@ -239,7 +239,7 @@ namespace Certify.Core.Management.Challenges
                     if (requiredChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                     {
                         // perform dns-01 challenge response FIXME:
-                        var check = PrepareChallengeResponse_Dns01(log, domain, managedSite, pendingAuth);
+                        var check = PrepareChallengeResponse_Dns01(log, domain, managedCertificate, pendingAuth);
                         /*if (requestConfig.PerformTlsSniBindingConfigChecks)
                         {
                             // set config check OK if all checks return true
@@ -257,14 +257,14 @@ namespace Certify.Core.Management.Challenges
         /// <returns>
         /// A Boolean returning Func. Invoke the Func to test the challenge response locally.
         /// </returns>
-        private Func<Task<bool>> PrepareChallengeResponse_Http01(ILogger log, ICertifiedServer iisManager, string domain, ManagedSite managedSite, PendingAuthorization pendingAuth)
+        private Func<Task<bool>> PrepareChallengeResponse_Http01(ILogger log, ICertifiedServer iisManager, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
         {
-            var requestConfig = managedSite.RequestConfig;
+            var requestConfig = managedCertificate.RequestConfig;
             var httpChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP);
 
             if (httpChallenge == null)
             {
-                log.Warning($"No http challenge to complete for {managedSite.Name}. Request cannot continue.");
+                log.Warning($"No http challenge to complete for {managedCertificate.Name}. Request cannot continue.");
                 return () => Task.FromResult(false);
             }
 
@@ -277,7 +277,7 @@ namespace Certify.Core.Management.Challenges
             // if website root path not specified, determine it now
             if (String.IsNullOrEmpty(websiteRootPath))
             {
-                websiteRootPath = iisManager.GetSitePhysicalPath(managedSite);
+                websiteRootPath = iisManager.GetSitePhysicalPath(managedCertificate);
             }
 
             if (!String.IsNullOrEmpty(websiteRootPath) && websiteRootPath.Contains("%"))
@@ -287,7 +287,7 @@ namespace Certify.Core.Management.Challenges
                 if (websiteRootPath.Contains("%websiteroot%"))
                 {
                     // sets env variable for this process only
-                    Environment.SetEnvironmentVariable("websiteroot", iisManager.GetSitePhysicalPath(managedSite));
+                    Environment.SetEnvironmentVariable("websiteroot", iisManager.GetSitePhysicalPath(managedCertificate));
                 }
                 // expand any environment variables present in site path
                 websiteRootPath = Environment.ExpandEnvironmentVariables(websiteRootPath);
@@ -299,7 +299,7 @@ namespace Certify.Core.Management.Challenges
             {
                 // our website no longer appears to exist on disk, continuing would potentially
                 // create unwanted folders, so it's time for us to give up
-                log.Error($"The website root path for {managedSite.Name} could not be determined. Request cannot continue.");
+                log.Error($"The website root path for {managedCertificate.Name} could not be determined. Request cannot continue.");
                 return () => Task.FromResult(false);
             }
 
@@ -399,14 +399,14 @@ namespace Certify.Core.Management.Challenges
             };
         }
 
-        private Func<bool> PrepareChallengeResponse_TlsSni01(ILogger log, ICertifiedServer iisManager, string domain, ManagedSite managedSite, PendingAuthorization pendingAuth)
+        private Func<bool> PrepareChallengeResponse_TlsSni01(ILogger log, ICertifiedServer iisManager, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
         {
-            var requestConfig = managedSite.RequestConfig;
+            var requestConfig = managedCertificate.RequestConfig;
             var tlsSniChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI);
 
             if (tlsSniChallenge == null)
             {
-                log.Warning($"No tls-sni-01 challenge to complete for {managedSite.Name}. Request cannot continue.");
+                log.Warning($"No tls-sni-01 challenge to complete for {managedCertificate.Name}. Request cannot continue.");
                 return () => false;
             }
 
@@ -434,13 +434,13 @@ namespace Certify.Core.Management.Challenges
                 CertificateManager.StoreCertificate(x509);
                 var certStoreName = CertificateManager.GetDefaultStore().Name;
 
-                iisManager.InstallCertificateforBinding(certStoreName, x509.GetCertHash(), managedSite, sni);
+                iisManager.InstallCertificateforBinding(certStoreName, x509.GetCertHash(), managedCertificate, sni);
 
                 // add check to the queue
                 checkQueue.Add(() => _netUtil.CheckSNI(domain, sni));
 
                 // add cleanup actions to queue
-                cleanupQueue.Add(() => iisManager.RemoveHttpsBinding(managedSite, sni));
+                cleanupQueue.Add(() => iisManager.RemoveHttpsBinding(managedCertificate, sni));
                 cleanupQueue.Add(() => CertificateManager.RemoveCertificate(x509));
             }
 
@@ -451,21 +451,21 @@ namespace Certify.Core.Management.Challenges
             return () => checkQueue.All(check => check());
         }
 
-        private Func<bool> PrepareChallengeResponse_Dns01(ILogger log, string domain, ManagedSite managedSite, PendingAuthorization pendingAuth)
+        private Func<bool> PrepareChallengeResponse_Dns01(ILogger log, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
         {
             // TODO: make this async
-            var requestConfig = managedSite.RequestConfig;
+            var requestConfig = managedCertificate.RequestConfig;
             var dnsChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
 
             if (dnsChallenge == null)
             {
-                log.Warning($"No dns-01 challenge to complete for {managedSite.Name}. Request cannot continue.");
+                log.Warning($"No dns-01 challenge to complete for {managedCertificate.Name}. Request cannot continue.");
                 return () => false;
             }
 
             // create DNS records (manually or via automation)
             var dnsHelper = new DNSChallengeHelper();
-            var helperResult = dnsHelper.CompleteDNSChallenge(log, managedSite, domain, dnsChallenge.Key, dnsChallenge.Value).Result;
+            var helperResult = dnsHelper.CompleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value).Result;
 
             var cleanupQueue = new List<Action> { };
             var checkQueue = new List<Func<bool>> { };

@@ -11,15 +11,15 @@ namespace Certify.Models.Providers
     {
         List<SiteBindingItem> GetSiteBindingList(bool ignoreStoppedSites, string siteId = null);
 
-        Task<List<ActionStep>> InstallCertForRequest(ManagedSite managedSite, string pfxPath, bool cleanupCertStore, bool isPreviewOnly);
+        Task<List<ActionStep>> InstallCertForRequest(ManagedCertificate managedCertificate, string pfxPath, bool cleanupCertStore, bool isPreviewOnly);
 
-        ActionStep InstallCertificateforBinding(string certStoreName, byte[] certificateHash, ManagedSite managedSite, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null, bool alwaysRecreateBindings = false, bool isPreviewOnly = false);
+        ActionStep InstallCertificateforBinding(string certStoreName, byte[] certificateHash, ManagedCertificate managedCertificate, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null, bool alwaysRecreateBindings = false, bool isPreviewOnly = false);
 
         List<SiteBindingItem> GetPrimarySites(bool ignoreStoppedSites);
 
-        string GetSitePhysicalPath(ManagedSite managedSite);
+        string GetSitePhysicalPath(ManagedCertificate managedCertificate);
 
-        void RemoveHttpsBinding(ManagedSite managedSite, string sni);
+        void RemoveHttpsBinding(ManagedCertificate managedCertificate, string sni);
 
         Version GetServerVersion();
 

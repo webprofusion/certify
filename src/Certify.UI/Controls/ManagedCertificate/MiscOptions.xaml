@@ -1,9 +1,9 @@
-﻿<UserControl x:Class="Certify.UI.Controls.ManagedItem.MiscOptions"
+﻿<UserControl x:Class="Certify.UI.Controls.ManagedCertificate.MiscOptions"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:Certify.UI.Controls.ManagedItem"
+             xmlns:local="clr-namespace:Certify.UI.Controls.ManagedCertificate"
              xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
              xmlns:utils="clr-namespace:Certify.UI.Utils"
              xmlns:certifyui="clr-namespace:Certify.UI"
@@ -14,7 +14,7 @@
         <utils:OptionalBooleanToVisibilityConverter True="Collapsed" False="Visible" x:Key="InvBoolVisConverter" />
         <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
         <utils:CSRAlgCheckedConverter x:Key="CSRCheckedConverter" />
-        <utils:ManagedItemHealthVisibilityConverter x:Key="HealthVisibleConverter" />
+        <utils:ManagedCertificateHealthVisibilityConverter x:Key="HealthVisibleConverter" />
         <utils:NullVisibilityConverter x:Key="NullVisibleConverter" Null="Visible" NotNull="Collapsed" />
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -32,8 +32,8 @@
                     </TextBox>
                 </DockPanel>
                 <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Margin="120,0,0,0">
-                    <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_EnableAutoRenewal}" IsChecked="{Binding SelectedItem.IncludeInAutoRenew}" Margin="0,4,0,4" />
-                    <CheckBox Content="{x:Static Resources:SR.ManagedItemSettings_NotifyPrimaryContactOnRenewalFailure}" IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" Margin="0,4,0,4" />
+                    <CheckBox Content="{x:Static Resources:SR.ManagedCertificateSettings_EnableAutoRenewal}" IsChecked="{Binding SelectedItem.IncludeInAutoRenew}" Margin="0,4,0,4" />
+                    <CheckBox Content="{x:Static Resources:SR.ManagedCertificateSettings_NotifyPrimaryContactOnRenewalFailure}" IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" Margin="0,4,0,4" />
                 </StackPanel>
 
                 <!-- CSR Options-->
@@ -51,17 +51,17 @@
 
             <DockPanel LastChildFill="False">
                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                    <Button  x:Name="OpenLogFile" Content="{x:Static Resources:SR.ManagedItemSettings_OpenLogFile}" Click="OpenLogFile_Click" Width="220" Margin="0,4,0,0" HorizontalAlignment="Left" />
+                    <Button  x:Name="OpenLogFile" Content="{x:Static Resources:SR.ManagedCertificateSettings_OpenLogFile}" Click="OpenLogFile_Click" Width="220" Margin="0,4,0,0" HorizontalAlignment="Left" />
                     <TextBlock  Text="View the latest log file entries" Style="{StaticResource Instructions}" Margin="8,0,0,0"></TextBlock>
                 </StackPanel>
 
                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                    <Button x:Name="OpenCertificateFile" Content="{x:Static Resources:SR.ManagedItemSettings_ViewCertificate}" Click="OpenCertificateFile_Click" Width="220" Margin="0,4,0,0" HorizontalAlignment="Left" />
-                    <TextBlock  x:Name="CertPath" Text="{Binding SelectedItem.CertificatePath, TargetNullValue={x:Static Resources:SR.ManagedItemSettings_CertificatePathEmpty}}" Style="{StaticResource Instructions}" Margin="8,0,0,0" />
+                    <Button x:Name="OpenCertificateFile" Content="{x:Static Resources:SR.ManagedCertificateSettings_ViewCertificate}" Click="OpenCertificateFile_Click" Width="220" Margin="0,4,0,0" HorizontalAlignment="Left" />
+                    <TextBlock  x:Name="CertPath" Text="{Binding SelectedItem.CertificatePath, TargetNullValue={x:Static Resources:SR.ManagedCertificateSettings_CertificatePathEmpty}}" Style="{StaticResource Instructions}" Margin="8,0,0,0" />
                 </StackPanel>
 
                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                    <Button Grid.Column="1" Grid.Row="2" x:Name="ReapplyCertBindings" Content="{x:Static Resources:SR.ManagedItemSettings_ReapplyCertificate}" Click="ReapplyCertBindings_Click" Width="220" Margin="0,4,0,0" HorizontalAlignment="Left" />
+                    <Button Grid.Column="1" Grid.Row="2" x:Name="ReapplyCertBindings" Content="{x:Static Resources:SR.ManagedCertificateSettings_ReapplyCertificate}" Click="ReapplyCertBindings_Click" Width="220" Margin="0,4,0,0" HorizontalAlignment="Left" />
                     <TextBlock Grid.Column="0" Grid.Row="2" Text="You can optionally re-deploy the latest certificate without requesting a new one " Style="{StaticResource Instructions}" Margin="8,0,0,0" />
                 </StackPanel>
 
@@ -77,7 +77,7 @@
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
-                        <Button x:Name="RevokeCertificateBtn" Content="{x:Static Resources:SR.ManagedItemSettings_RevokeCertificate}" Click="RevokeCertificateBtn_Click" Background="#FFFFC7C7" Width="220"  Margin="0,4,0,0" HorizontalAlignment="Left" />
+                        <Button x:Name="RevokeCertificateBtn" Content="{x:Static Resources:SR.ManagedCertificateSettings_RevokeCertificate}" Click="RevokeCertificateBtn_Click" Background="#FFFFC7C7" Width="220"  Margin="0,4,0,0" HorizontalAlignment="Left" />
                     </Border>
                     <Border Grid.Column="1" Grid.Row="4">
                         <Border.Style>
@@ -90,11 +90,11 @@
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
-                        <Label Content="{x:Static Resources:SR.ManagedItemSettings_CertificateRevokeWarning}" Background="#FFFFC7C7" />
+                        <Label Content="{x:Static Resources:SR.ManagedCertificateSettings_CertificateRevokeWarning}" Background="#FFFFC7C7" />
                     </Border>
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Top">
-                    <TextBlock Text="{x:Static Resources:SR.ManagedItemSettings_ExportTip}" Style="{StaticResource Instructions}" Grid.Row="4" Margin="0,8,32,0" HorizontalAlignment="Right" />
+                    <TextBlock Text="{x:Static Resources:SR.ManagedCertificateSettings_ExportTip}" Style="{StaticResource Instructions}" Grid.Row="4" Margin="0,8,32,0" HorizontalAlignment="Right" />
                 </StackPanel>
             </DockPanel>
         </DockPanel>
