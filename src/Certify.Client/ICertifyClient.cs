@@ -118,6 +118,8 @@ namespace Certify.Client
 
         Task<StatusMessage> TestChallengeConfiguration(ManagedCertificate site);
 
+        Task<List<ActionStep>> PreviewActions(ManagedCertificate site);
+
         #endregion Managed Certificates
 
         #region Contacts

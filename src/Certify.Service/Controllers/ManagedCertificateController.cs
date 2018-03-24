@@ -61,6 +61,14 @@ namespace Certify.Service
             return await _certifyManager.TestChallenge(log, site, isPreviewMode: true);
         }
 
+        [HttpPost, Route("preview")]
+        public async Task<List<ActionStep>> PreviewActions(ManagedCertificate site)
+        {
+            DebugLog();
+
+            return await _certifyManager.GeneratePreview(site);
+        }
+
         /// <summary>
         /// Begin auto renew process and return list of included sites 
         /// </summary>

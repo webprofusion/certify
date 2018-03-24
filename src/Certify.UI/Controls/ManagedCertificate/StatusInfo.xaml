@@ -36,10 +36,12 @@
                     <Label Content="{Binding SelectedItem.DateLastRenewalAttempt}" FontWeight="Bold"></Label>
                 </StackPanel>
 
-                <TextBlock TextWrapping="Wrap" Text="Renewal failures can be caused by temporary API timeouts, rate limits, configuration problems or settings which are no longer valid. Please review the renewal status error and test your configuration." Margin="4,0,16,0" />
-                <TextBlock TextWrapping="Wrap" Text="If you do not require this certificate anymore you can delete it from the app or uncheck 'Enable Auto Renewal' in General Options to prevent further renewal error messages." FontWeight="Bold" Margin="4,4,0,0" />
+                <TextBlock Style="{StaticResource Instructions}" Text="Renewal failures can be caused by temporary API timeouts, rate limits, configuration problems or settings which are no longer valid. Please review the renewal status error and test your configuration." Margin="4,0,16,0" />
+                <TextBlock Style="{StaticResource Instructions}" Text="If you do not require this certificate anymore you can delete it from the app or uncheck 'Enable Auto Renewal' in General Options to prevent further renewal error messages." FontWeight="Bold" Margin="4,4,0,0" />
 
-                <TextBlock TextWrapping="Wrap" Text="{Binding SelectedItem.RenewalFailureMessage}" Foreground="#FF650000" Margin="4,16,0,0" FontStyle="Italic" />
+                <Border Margin="8,16,8,8" Background="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}">
+                    <TextBlock TextWrapping="Wrap" Text="{Binding SelectedItem.RenewalFailureMessage}" Margin="8,8,8,8" FontStyle="Italic" Foreground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}" />
+                </Border>
             </StackPanel>
         </StackPanel>
     </ScrollViewer>

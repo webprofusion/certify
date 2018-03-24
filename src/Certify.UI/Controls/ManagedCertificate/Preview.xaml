@@ -10,31 +10,34 @@
         <DockPanel Margin="8,0,8,8">
             <TextBlock  DockPanel.Dock="Top" Style="{StaticResource Subheading}">Preview</TextBlock>
 
-            <Label DockPanel.Dock="Top" Content="The following is a preview of the actions which will be performed based on these settings:" />
-            <ItemsControl DockPanel.Dock="Top" x:Name="PreviewSteps" Margin="16,0,0,0">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Grid Margin="0,0,0,5">
-                            <StackPanel>
-                                <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
-                                <TextBlock Margin="16,0,0,0" Style="{StaticResource Instructions}" Text="{Binding Description}" />
-                                <ItemsControl x:Name="PreviewSubSteps" Margin="16,0,0,0" ItemsSource="{Binding Substeps}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid Margin="16,0,0,5">
-                                                <StackPanel>
-                                                    <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
-                                                    <TextBlock Margin="16,0,0,0" Style="{StaticResource Instructions}" Text="{Binding Description}" />
-                                                </StackPanel>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Grid>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                <DockPanel Margin="8">
+                    <TextBlock Style="{StaticResource Instructions}" DockPanel.Dock="Top" Text="The following is a preview of the actions which will be performed based on these settings:" />
+                    <ItemsControl DockPanel.Dock="Top" x:Name="PreviewSteps" Margin="16,0,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,5">
+                                    <StackPanel>
+                                        <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
+                                        <TextBlock Margin="16,0,0,0" Style="{StaticResource Instructions}" Text="{Binding Description}" />
+                                        <ItemsControl x:Name="PreviewSubSteps" Margin="16,0,0,0" ItemsSource="{Binding Substeps}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Margin="16,0,0,5">
+                                                        <StackPanel>
+                                                            <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
+                                                            <TextBlock Margin="16,0,0,0" Style="{StaticResource Instructions}" Text="{Binding Description}" />
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </DockPanel>
+       
         </DockPanel>
     </ScrollViewer>
 </UserControl>

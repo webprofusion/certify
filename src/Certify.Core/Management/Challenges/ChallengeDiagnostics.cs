@@ -467,6 +467,15 @@ namespace Certify.Core.Management.Challenges
             var dnsHelper = new DNSChallengeHelper();
             var helperResult = dnsHelper.CompleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value).Result;
 
+            if (helperResult.IsSuccess)
+            {
+                log.Error("DNS update failed: Failed {err}", helperResult.Message);
+            }
+            else
+            {
+                log.Error("DNS updated OK : {err}", helperResult.Message);
+            }
+
             var cleanupQueue = new List<Action> { };
             var checkQueue = new List<Func<bool>> { };
 

@@ -50,7 +50,7 @@ namespace Certify.Models
         /// <summary>
         /// Optional subject alternative names for our SSL Cert request 
         /// </summary>
-        public string[] SubjectAlternativeNames { get; set; }
+        public string[] SubjectAlternativeNames { get; set; } = new string[] { };
 
         /// <summary>
         /// Root path for our website content, used when responding to file based challenges 

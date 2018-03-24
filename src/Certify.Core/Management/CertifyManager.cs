@@ -1120,6 +1120,80 @@ namespace Certify.Management
             }
         }
 
+        public async Task<List<ActionStep>> GeneratePreview(ManagedCertificate item)
+        {
+            List<ActionStep> steps = new List<ActionStep>();
+
+            int stepIndex = 1;
+
+            // certificate summary
+            string certDescription = "A new certificate will be requested from the Let's Encrypt certificate authority for the following domains:\n";
+            certDescription += $"\n{ item.RequestConfig.PrimaryDomain } (Primary Domain) ";
+            if (item.RequestConfig.SubjectAlternativeNames.Any(s => s != item.RequestConfig.PrimaryDomain))
+            {
+                certDescription += $"\nIncluding the following Subject Alternative Names:\n\n";
+
+                foreach (var d in item.RequestConfig.SubjectAlternativeNames)
+                {
+                    certDescription += $"\t{ d} \n";
+                }
+            }
+
+            steps.Add(new ActionStep { Title = "Summary", Description = certDescription });
+
+            // validation steps
+            string validationDescription = $"Attempt authorization using the {item.RequestConfig.ChallengeType} challenge type.";
+
+            // if using http-01, describe steps
+
+            // if using dns-01, describe steps
+
+            steps.Add(new ActionStep { Title = $"{stepIndex}. Domain Validation", Description = validationDescription });
+            stepIndex++;
+
+            // pre request scripting steps
+            if (!String.IsNullOrEmpty(item.RequestConfig.PreRequestPowerShellScript))
+            {
+                steps.Add(new ActionStep { Title = $"{stepIndex}. Pre-Request Powershell", Description = $"Execute PowerShell Script" });
+                stepIndex++;
+            }
+
+            // cert request step
+            string certRequest = $"Certificate Signing Request {item.RequestConfig.CSRKeyAlg}.";
+            steps.Add(new ActionStep { Title = $"{stepIndex}. Certificate Request", Description = certRequest });
+            stepIndex++;
+
+            // post request scripting steps
+            if (!String.IsNullOrEmpty(item.RequestConfig.PostRequestPowerShellScript))
+            {
+                steps.Add(new ActionStep { Title = $"{stepIndex}. Post-Request Powershell", Description = $"Execute PowerShell Script" });
+                stepIndex++;
+            }
+
+            // webhook scripting steps
+            if (!String.IsNullOrEmpty(item.RequestConfig.WebhookUrl))
+            {
+                steps.Add(new ActionStep { Title = $"{stepIndex}. Post-Request WebHook", Description = $"Execute WebHook {item.RequestConfig.WebhookUrl}" });
+
+                stepIndex++;
+            }
+
+            // deployment & binding steps
+            string deploymentDescription = $"IIS Binding creation/update with certificate.";
+            var deploymentStep = new ActionStep { Title = $"{stepIndex}. Deployment", Description = deploymentDescription };
+
+            // add deployment sub-steps (if any)
+            var bindingRequest = await ReapplyCertificateBindings(item, null, isPreviewOnly: true);
+            if (bindingRequest.Actions != null) deploymentStep.Substeps = bindingRequest.Actions;
+
+            steps.Add(deploymentStep);
+            stepIndex++;
+
+            stepIndex = steps.Count;
+
+            return steps;
+        }
+
         public void Dispose()
         {
             ManagedCertificateLog.DisposeLoggers();

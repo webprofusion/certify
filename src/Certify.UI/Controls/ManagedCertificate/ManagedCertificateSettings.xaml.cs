@@ -45,6 +45,8 @@ namespace Certify.UI.Controls.ManagedCertificate
                     this.SettingsTab.SelectedItem = this.TabDomains;
                 }
 
+                ItemViewModel.RaisePropertyChanged(nameof(ItemViewModel.ChallengeConfigViewModels));
+
                 AppViewModel.IsChanged = false;
             }
         }
@@ -154,21 +156,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                 item.RequestConfig.WebhookContentType = null;
                 item.RequestConfig.WebhookContentBody = null;
             }
-
-            // if DNS etc provider in use, store the selected provider
-            ///TODO
-            /*if (ChallengeProviderList.SelectedItem != null)
-            {
-                item.RequestConfig.ChallengeProvider = ((Models.Config.ChallengeProvider)ChallengeProviderList.SelectedItem).Id;
-            }
-
-            //if stored credential required, store selection
-            if (StoredCredentialList.SelectedItem != null)
-            {
-                item.RequestConfig.ChallengeCredentialKey = ((Models.Config.StoredCredential)StoredCredentialList.SelectedItem).StorageKey;
-            }*/
-
-            //save changes
 
             //creating new managed item
             return await ItemViewModel.SaveManagedCertificateChanges();

@@ -51,7 +51,7 @@ namespace Certify.Providers.DNS.Azure
             {
                 var result = await _dnsClient.RecordSets.CreateOrUpdateAsync(
                        _credentials["resourcegroupname"],
-                       _credentials["zoneid"],
+                       request.ZoneId,
                        request.RecordName,
                        RecordType.TXT,
                        recordSetParams
@@ -76,7 +76,7 @@ namespace Certify.Providers.DNS.Azure
             {
                 await _dnsClient.RecordSets.DeleteAsync(
                        _credentials["resourcegroupname"],
-                       _credentials["zoneid"],
+                       request.ZoneId,
                        request.RecordName,
                        RecordType.TXT
                );

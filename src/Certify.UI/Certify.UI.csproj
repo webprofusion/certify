@@ -87,6 +87,9 @@
     <Compile Include="Controls\GettingStarted.xaml.cs">
       <DependentUpon>GettingStarted.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ManagedCertificate\ChallengeConfigItem.xaml.cs">
+      <DependentUpon>ChallengeConfigItem.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\ManagedCertificate\StatusInfo.xaml.cs">
       <DependentUpon>StatusInfo.xaml</DependentUpon>
     </Compile>
@@ -108,6 +111,9 @@
     <Compile Include="Controls\ManagedCertificate\CertificateDomains.xaml.cs">
       <DependentUpon>CertificateDomains.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ManagedCertificate\TabHeader.xaml.cs">
+      <DependentUpon>TabHeader.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\QuickStart.xaml.cs">
       <DependentUpon>QuickStart.xaml</DependentUpon>
     </Compile>
@@ -117,6 +123,7 @@
     <Compile Include="Utils\ManagedCertificateHealthColourConverter.cs" />
     <Compile Include="Utils\UpdateCheckUtils.cs" />
     <Compile Include="ViewModel\DesignItemViewModel.cs" />
+    <Compile Include="ViewModel\ChallengeConfigItemViewModel.cs" />
     <Compile Include="ViewModel\ManagedItemModel.cs" />
     <Compile Include="ViewModel\DesignViewModel.cs" />
     <Compile Include="Windows\EditCredential.xaml.cs">
@@ -140,6 +147,9 @@
     </Page>
     <Page Include="Controls\GettingStarted.xaml">
       <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ManagedCertificate\ChallengeConfigItem.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\ManagedCertificate\StatusInfo.xaml">
@@ -176,6 +186,9 @@
     </Page>
     <Page Include="Controls\ManagedCertificates.xaml">
       <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ManagedCertificate\TabHeader.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\ProgressMonitor.xaml">

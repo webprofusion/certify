@@ -12,7 +12,7 @@ namespace Certify.Providers.DNS.Cloudflare
     /// <summary>
     /// Adapted from
     /// https://github.com/ebekker/ACMESharp/tree/master/ACMESharp/ACMESharp.Providers.CloudFlare By
-    /// janpieterz and ebekker
+    /// janpieterz and ebekker, used with permission under MIT license
     /// </summary>
     internal class ZoneResult
     {
@@ -135,7 +135,12 @@ namespace Certify.Providers.DNS.Cloudflare
             var request = CreateRequest(HttpMethod.Post, string.Format(_createRecordUri, zoneId));
 
             request.Content = new StringContent(
-                JsonConvert.SerializeObject(new { type = "TXT", name = name, content = value })
+                JsonConvert.SerializeObject(new
+                {
+                    type = "TXT",
+                    name = name,
+                    content = value
+                })
                 );
 
             request.Content.Headers.ContentType.MediaType = "application/json";
@@ -164,7 +169,12 @@ namespace Certify.Providers.DNS.Cloudflare
         {
             var request = CreateRequest(HttpMethod.Put, string.Format(_updateRecordUri, zoneId, record.Id));
             request.Content = new StringContent(
-                JsonConvert.SerializeObject(new { type = "TXT", name = record.Name, content = value })
+                JsonConvert.SerializeObject(new
+                {
+                    type = "TXT",
+                    name = record.Name,
+                    content = value
+                })
                 );
 
             request.Content.Headers.ContentType.MediaType = "application/json";

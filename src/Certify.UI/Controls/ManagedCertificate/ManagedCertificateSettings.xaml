@@ -94,29 +94,65 @@
             <Controls:MetroTabControl DockPanel.Dock="Top" x:Name="SettingsTab" Margin="8" Controls:TabControlHelper.Underlined="TabPanel"
                                  VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Controls:ScrollViewerHelper.IsHorizontalScrollWheelEnabled="True" TabStripPlacement="Right" Controls:TabControlHelper.IsUnderlined="True">
 
-                <TabItem x:Name="TabStatusInfo"  Header="Status" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100"  Controls:TabControlHelper.UnderlineBrush="White">
+                <TabItem x:Name="TabStatusInfo" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100"  Controls:TabControlHelper.UnderlineBrush="White">
+                    <TabItem.HeaderTemplate>
+                        <DataTemplate>
+                            <managedcertificate:TabHeader IconName="Support" HeaderText="Status"></managedcertificate:TabHeader>
+                        </DataTemplate>
+                    </TabItem.HeaderTemplate>
                     <managedcertificate:StatusInfo Margin="0,8,0,0" />
                 </TabItem>
 
-                <TabItem x:Name="TabDomains" Header="Certificate Domains" IsSelected="True" Controls:ControlsHelper.HeaderFontSize="12" Margin="0" MinWidth="130">
+                <TabItem x:Name="TabDomains" IsSelected="True" Controls:ControlsHelper.HeaderFontSize="12" Margin="0" MinWidth="130">
+                    <TabItem.HeaderTemplate>
+                        <DataTemplate>
+                            <managedcertificate:TabHeader IconName="Globe" HeaderText="Certificate Domains"></managedcertificate:TabHeader>
+                        </DataTemplate>
+                    </TabItem.HeaderTemplate>
                     <managedcertificate:CertificateDomains Margin="0,8,0,0" />
                 </TabItem>
 
-                <TabItem Header="Authorization" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
+                <TabItem Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
+                    <TabItem.HeaderTemplate>
+                        <DataTemplate>
+                            <managedcertificate:TabHeader IconName="Lock" HeaderText="Authorization"></managedcertificate:TabHeader>
+                        </DataTemplate>
+                    </TabItem.HeaderTemplate>
+
                     <managedcertificate:DomainAuthorization Margin="0,8,0,0" />
                 </TabItem>
 
-                <TabItem x:Name="TabDeployment"  Header="Deployment" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
+                <TabItem x:Name="TabDeployment" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
+                    <TabItem.HeaderTemplate>
+                        <DataTemplate>
+                            <managedcertificate:TabHeader IconName="Cog" HeaderText="Deployment"></managedcertificate:TabHeader>
+                        </DataTemplate>
+                    </TabItem.HeaderTemplate>
                     <managedcertificate:Deployment  Margin="0,8,0,0" />
                 </TabItem>
 
-                <TabItem x:Name="TabScripting" Header="Scripting"  Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
+                <TabItem x:Name="TabScripting"  Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
+                    <TabItem.HeaderTemplate>
+                        <DataTemplate>
+                            <managedcertificate:TabHeader IconName="Code" HeaderText="Scripting"></managedcertificate:TabHeader>
+                        </DataTemplate>
+                    </TabItem.HeaderTemplate>
                     <managedcertificate:ScriptHooks  Margin="0,8,0,0" />
                 </TabItem>
-                <TabItem x:Name="TabOptions" Header="Other Options"  Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
+                <TabItem x:Name="TabOptions" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
+                    <TabItem.HeaderTemplate>
+                        <DataTemplate>
+                            <managedcertificate:TabHeader IconName="Cog" HeaderText="Other Options"></managedcertificate:TabHeader>
+                        </DataTemplate>
+                    </TabItem.HeaderTemplate>
                     <managedcertificate:MiscOptions Margin="0,8,0,0" />
                 </TabItem>
-                <TabItem Header="Preview" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
+                <TabItem  x:Name="TabPreview" Controls:ControlsHelper.HeaderFontSize="12" MinWidth="100">
+                    <TabItem.HeaderTemplate>
+                        <DataTemplate>
+                            <managedcertificate:TabHeader IconName="Comment" HeaderText="Preview"></managedcertificate:TabHeader>
+                        </DataTemplate>
+                    </TabItem.HeaderTemplate>
                     <managedcertificate:Preview Margin="0,8,0,0" />
                 </TabItem>
             </Controls:MetroTabControl>

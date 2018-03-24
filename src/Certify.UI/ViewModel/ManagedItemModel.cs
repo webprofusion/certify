@@ -1,6 +1,5 @@
 ﻿using Certify.Locales;
 using Certify.Models;
-using Certify.Models.Config;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -30,14 +29,6 @@ namespace Certify.UI.ViewModel
             var list = await _appViewModel.CertifyClient.GetServerSiteList(StandardServerTypes.IIS);
             list.Insert(0, new SiteBindingItem { SiteName = "(No IIS Website Selected)", SiteId = "" });
             this.WebSiteList = new ObservableCollection<SiteBindingItem>(list);
-        }
-
-        public ObservableCollection<StoredCredential> StoredCredentials
-        {
-            get
-            {
-                return _appViewModel.StoredCredentials;
-            }
         }
 
         /// <summary>
@@ -86,6 +77,34 @@ namespace Certify.UI.ViewModel
             set { _appViewModel.SelectedItem = value; }
         }
 
+        public ObservableCollection<ChallengeConfigItemViewModel> ChallengeConfigViewModels
+        {
+            get
+            {
+                if (SelectedItem != null)
+                {
+                    if (SelectedItem.RequestConfig.Challenges == null || !SelectedItem.RequestConfig.Challenges.Any())
+                    {
+                        // populate challenge config info
+                        SelectedItem.RequestConfig.Challenges.Add(new CertRequestChallengeConfig
+                        {
+                            ChallengeType = SelectedItem.RequestConfig.ChallengeType
+                        });
+                    }
+
+                    return new ObservableCollection<ChallengeConfigItemViewModel>(
+
+                      SelectedItem.RequestConfig.Challenges.Select(c => new ChallengeConfigItemViewModel(c))
+
+                      );
+                }
+                else
+                {
+                    return new ObservableCollection<ChallengeConfigItemViewModel> { };
+                }
+            }
+        }
+
         internal async Task<bool> SaveManagedCertificateChanges()
         {
             UpdateManagedCertificateSettings();
@@ -99,49 +118,6 @@ namespace Certify.UI.ViewModel
 
             return updatedOK;
         }
-
-        public CertRequestChallengeConfig RefreshPrimaryChallengeConfig()
-        {
-            if (SelectedItem != null)
-            {
-                if (SelectedItem.RequestConfig.Challenges == null) SelectedItem.RequestConfig.Challenges = new ObservableCollection<CertRequestChallengeConfig> { };
-
-                if (SelectedItem.RequestConfig.Challenges.Any())
-                {
-                    return SelectedItem.RequestConfig.Challenges[0];
-                }
-                else
-                {
-                    // no challenge config defined, create a default, migrate settings
-                    SelectedItem.RequestConfig.Challenges.Add(new CertRequestChallengeConfig
-                    {
-                        ChallengeType = SelectedItem.RequestConfig.ChallengeType
-                    });
-                    SelectedItem.RequestConfig.ChallengeType = null;
-
-                    return SelectedItem.RequestConfig.Challenges[0];
-                }
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public CertRequestChallengeConfig PrimaryChallengeConfig
-        {
-            get
-            {
-                return RefreshPrimaryChallengeConfig();
-            }
-        }
-
-        // Let's Encrypt - supported challenge types
-        public IEnumerable<string> ChallengeTypes { get; set; } = new string[] {
-            SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
-            SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-            //SupportedChallengeTypes.CHALLENGE_TYPE_SNI
-        };
 
         public IEnumerable<string> WebhookTriggerTypes => Webhook.TriggerTypes;
 

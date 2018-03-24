@@ -14,7 +14,7 @@
 
     mc:Ignorable="d" Width="970" Height="487"
              Loaded="UserControl_OnLoaded"
-             d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}">
+             d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel, IsDesignTimeCreatable=True}" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
 
     <Grid>
         <Grid.Resources>

@@ -45,6 +45,52 @@
             </Style>
             <Style TargetType="{x:Type Controls:WindowButtonCommands}"
                    BasedOn="{StaticResource MahApps.Metro.Styles.WindowButtonCommands.Win10}" />
+
+            <!-- Style for the Individual Tab Item -->
+            <Style x:Key="TabHeaderWithImage" TargetType="{x:Type TabItem}">
+                <Setter Property="Foreground" Value="White" />
+                <Setter Property="Height" Value="25" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type Controls:MetroTabItem}">
+                            <Grid>
+                                <Border
+                            Name="Border"
+                            Background="LightBlue"
+                            BorderThickness="0"
+                            CornerRadius="6,6,0,0">
+                                    <ContentPresenter x:Name="ContentSite"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            ContentSource="Header"
+                            Margin="12,2,12,2" />
+                                </Border>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="Border" Property="Background" Value="#550000" />
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="False">
+                                    <Setter TargetName="Border" Property="Background">
+                                        <Setter.Value>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Offset="0" Color="#ffffff" />
+                                                <GradientStop Offset="1" Color="#000000" />
+                                            </LinearGradientBrush>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter TargetName="Border" Property="BorderBrush" Value="#164A7C" />
+                                    <Setter TargetName="Border" Property="BorderThickness" Value="1,1,1,0" />
+                                    <Setter Property="Foreground" Value="Black" />
+                                </Trigger>
+                                <Trigger Property="Background" Value="Transparent">
+                                    <Setter TargetName="Border" Property="Background" Value="Transparent" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

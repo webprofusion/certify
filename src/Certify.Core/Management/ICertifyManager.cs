@@ -61,5 +61,7 @@ namespace Certify.Management
         event Action<RequestProgressState> OnRequestProgressStateUpdated;
 
         event Action<ManagedCertificate> OnManagedCertificateUpdated;
+
+        Task<List<ActionStep>> GeneratePreview(ManagedCertificate item);
     }
 }

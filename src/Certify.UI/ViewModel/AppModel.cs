@@ -390,6 +390,11 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        public async Task<List<ActionStep>> GetPreviewActions(ManagedCertificate item)
+        {
+            return await CertifyClient.PreviewActions(item);
+        }
+
         private void UpdateRequestTrackingProgress(RequestProgressState state)
         {
             App.Current.Dispatcher.Invoke((Action)delegate

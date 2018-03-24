@@ -240,6 +240,12 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<StatusMessage>(await response.Content.ReadAsStringAsync());
         }
 
+        public async Task<List<ActionStep>> PreviewActions(ManagedCertificate site)
+        {
+            var response = await PostAsync($"managedcertificates/preview", site);
+            return JsonConvert.DeserializeObject<List<ActionStep>>(await response.Content.ReadAsStringAsync());
+        }
+
         public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly)
         {
             var response = await FetchAsync($"managedcertificates/reapply/{managedItemId}/{isPreviewOnly}");
