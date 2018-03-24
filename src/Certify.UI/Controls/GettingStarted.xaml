@@ -37,7 +37,7 @@
 
                         <TextBlock TextWrapping="Wrap" Margin="16,0,0,0"><Run Text="{x:Static res:SR.ManagedCertificates_NoItemSelectedTip}" /><Run Text="&#x9;" /></TextBlock>
 
-                        <Button x:Name="QuickStart" Width="180"  HorizontalAlignment="Left" Margin="16,0,0,0" Click="QuickStart_Click">
+                        <Button x:Name="QuickStart" Width="180"  HorizontalAlignment="Left" Margin="16,8,0,0" Click="QuickStart_Click">
                             <StackPanel Orientation="Horizontal">
                                 <fa:ImageAwesome Height="16" Icon="PlayCircle" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="#FF6BB039" Margin="0" />
                                 <TextBlock HorizontalAlignment="Left" Margin="8,0,0,0"><Run Text="Quick Start Guide" /></TextBlock>

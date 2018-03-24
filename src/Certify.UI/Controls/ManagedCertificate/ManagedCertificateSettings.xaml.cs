@@ -31,10 +31,8 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 this.SettingsTab.SelectedIndex = 0;
 
-                if (ItemViewModel.SelectedItem?.Health == ManagedCertificateHealth.Error
-                    ||
-                    ItemViewModel.SelectedItem?.Health == ManagedCertificateHealth.Warning
-                    )
+                // show status tab for existing managed certs
+                if (ItemViewModel.SelectedItem?.Id != null)
                 {
                     this.TabStatusInfo.Visibility = Visibility.Visible;
                     this.SettingsTab.SelectedItem = this.TabStatusInfo;
@@ -46,7 +44,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 }
 
                 ItemViewModel.RaisePropertyChanged(nameof(ItemViewModel.ChallengeConfigViewModels));
-
+                ItemViewModel.RaisePropertyChanged(nameof(ItemViewModel.SelectedItemLogEntries));
                 AppViewModel.IsChanged = false;
             }
         }
@@ -247,19 +245,24 @@ namespace Certify.UI.Controls.ManagedCertificate
                     return;
                 }
 
-                var result = await ItemViewModel.TestChallengeResponse(ItemViewModel.SelectedItem);
-                if (result.IsOK)
+                ItemViewModel.ConfigCheckResult = await ItemViewModel.TestChallengeResponse(ItemViewModel.SelectedItem);
+
+                if (ItemViewModel.ConfigCheckResult.IsOK)
                 {
                     MessageBox.Show(SR.ManagedCertificateSettings_ConfigurationCheckOk, SR.Challenge, MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
-                    MessageBox.Show(string.Format(SR.ManagedCertificateSettings_ConfigurationCheckFailed, String.Join("\r\n", result.FailedItemSummary)), SR.ManagedCertificateSettings_ChallengeTestFailed, MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(string.Format(SR.ManagedCertificateSettings_ConfigurationCheckFailed, String.Join("\r\n", ItemViewModel.ConfigCheckResult.FailedItemSummary)), SR.ManagedCertificateSettings_ChallengeTestFailed, MessageBoxButton.OK, MessageBoxImage.Error);
                 }
 
                 //TODO: just use viewmodel to determine if test button should be enabled
                 Button_TestChallenge.IsEnabled = true;
                 ItemViewModel.IsTestInProgress = false;
+
+                // show status tab
+
+                this.SettingsTab.SelectedItem = this.TabStatusInfo;
             }
         }
 

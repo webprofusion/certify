@@ -20,30 +20,46 @@
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="8,0,8,8">
+        <StackPanel Orientation="Horizontal">
+            <fa:ImageAwesome Margin="4" Icon="ExclamationTriangle" Height="16" />
+
+            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Renewal Status Error</TextBlock>
+        </StackPanel>
+        <!-- Renewal warning messages-->
+        <StackPanel MinHeight="80">
             <StackPanel Orientation="Horizontal">
-                <fa:ImageAwesome Margin="4" Icon="ExclamationTriangle" Height="16" />
-
-                <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Renewal Status Error</TextBlock>
+                <Label Content="Renewal Failures:" Width="160" FontWeight="Bold" />
+                <Label Content="{Binding SelectedItem.RenewalFailureCount}" FontWeight="Bold"></Label>
             </StackPanel>
-            <!-- Renewal warning messages-->
-            <StackPanel MinHeight="80">
-                <StackPanel Orientation="Horizontal">
-                    <Label Content="Renewal Failures:" Width="160" FontWeight="Bold" />
-                    <Label Content="{Binding SelectedItem.RenewalFailureCount}" FontWeight="Bold"></Label>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Label Content="Last Renewal Attempt:" Width="160" FontWeight="Bold" />
-                    <Label Content="{Binding SelectedItem.DateLastRenewalAttempt}" FontWeight="Bold"></Label>
-                </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Last Renewal Attempt:" Width="160" FontWeight="Bold" />
+                <Label Content="{Binding SelectedItem.DateLastRenewalAttempt}" FontWeight="Bold"></Label>
+            </StackPanel>
 
-                <TextBlock Style="{StaticResource Instructions}" Text="Renewal failures can be caused by temporary API timeouts, rate limits, configuration problems or settings which are no longer valid. Please review the renewal status error and test your configuration." Margin="4,0,16,0" />
-                <TextBlock Style="{StaticResource Instructions}" Text="If you do not require this certificate anymore you can delete it from the app or uncheck 'Enable Auto Renewal' in General Options to prevent further renewal error messages." FontWeight="Bold" Margin="4,4,0,0" />
+            <TextBlock Style="{StaticResource Instructions}" Text="Renewal failures can be caused by temporary API timeouts, rate limits, configuration problems or settings which are no longer valid. Please review the renewal status error and test your configuration." Margin="4,0,16,0" />
+            <TextBlock Style="{StaticResource Instructions}" Text="If you do not require this certificate anymore you can delete it from the app or uncheck 'Enable Auto Renewal' in General Options to prevent further renewal error messages." FontWeight="Bold" Margin="4,4,0,0" />
 
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                <Button  x:Name="OpenLogFile" Margin="0,4,0,0" HorizontalAlignment="Left" Click="OpenLogFile_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <fa:ImageAwesome Height="16" Icon="Database" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="#FF6BB039" Margin="0" />
+                        <TextBlock HorizontalAlignment="Center" Margin="8,0,0,0" Text="{x:Static Resources:SR.ManagedCertificateSettings_OpenLogFile}" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </StackPanel>
+
+            <StackPanel>
                 <Border Margin="8,16,8,8" Background="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}">
                     <TextBlock TextWrapping="Wrap" Text="{Binding SelectedItem.RenewalFailureMessage}" Margin="8,8,8,8" FontStyle="Italic" Foreground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}" />
                 </Border>
+                <DataGrid x:Name="LogViewer" ItemsSource="{Binding SelectedItemLogEntries}" LoadingRow="LogViewer_LoadingRow">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Recent Log Items" Binding="{Binding Path=.}" />
+                    </DataGrid.Columns>
+                </DataGrid>
             </StackPanel>
-            <DataGrid x:Name="LogViewer" ItemsSource="{Binding SelectedItemLogEntries}" AutoGenerateColumns="True" />
-        </StackPanel>
+
+    </StackPanel>
     </ScrollViewer>
 </UserControl>

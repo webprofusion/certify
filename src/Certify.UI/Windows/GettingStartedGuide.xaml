@@ -8,7 +8,7 @@
         xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
         xmlns:Controls1="clr-namespace:Certify.UI.Controls" x:Class="Certify.UI.Windows.GettingStartedGuide"
         mc:Ignorable="d"
-        Title="Getting Started" Height="340.589" Width="657.786"
+        Title="Getting Started" Height="473.429" Width="739.386"
         GlowBrush="{DynamicResource AccentColorBrush}"
         BorderThickness="1" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner" MinWidth="300" MinHeight="300">
     <DockPanel>

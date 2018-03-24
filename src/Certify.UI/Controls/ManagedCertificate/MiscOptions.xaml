@@ -50,10 +50,6 @@
             <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Actions</TextBlock>
 
             <DockPanel LastChildFill="False">
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                    <Button  x:Name="OpenLogFile" Content="{x:Static Resources:SR.ManagedCertificateSettings_OpenLogFile}" Click="OpenLogFile_Click" Width="220" Margin="0,4,0,0" HorizontalAlignment="Left" />
-                    <TextBlock  Text="View the latest log file entries" Style="{StaticResource Instructions}" Margin="8,0,0,0"></TextBlock>
-                </StackPanel>
 
                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
                     <Button x:Name="OpenCertificateFile" Content="{x:Static Resources:SR.ManagedCertificateSettings_ViewCertificate}" Click="OpenCertificateFile_Click" Width="220" Margin="0,4,0,0" HorizontalAlignment="Left" />

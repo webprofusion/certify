@@ -1,4 +1,6 @@
 ﻿using Certify.Models;
+using Serilog;
+using Serilog.Sinks.ListOfString;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -57,8 +59,17 @@ namespace Certify.Service
         {
             DebugLog();
 
-            var log = ManagedCertificateLog.GetLogger(site.Id);
-            return await _certifyManager.TestChallenge(log, site, isPreviewMode: true);
+            // perform challenge response test, log to string list and return in result
+            List<string> logList = new List<string>();
+            using (var log = new LoggerConfiguration()
+                     .WriteTo.Debug()
+                     .WriteTo.StringList(logList)
+                     .CreateLogger())
+            {
+                var result = await _certifyManager.TestChallenge(log, site, isPreviewMode: true);
+                result.Result = logList;
+                return result;
+            }
         }
 
         [HttpPost, Route("preview")]

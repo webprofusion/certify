@@ -20,25 +20,6 @@ namespace Certify.UI.Controls.ManagedCertificate
             InitializeComponent();
         }
 
-        private void OpenLogFile_Click(object sender, RoutedEventArgs e)
-        {
-            if (this.ItemViewModel?.SelectedItem?.Id == null) return;
-
-            // get file path for log
-            var logPath = Models.ManagedCertificateLog.GetLogPath(this.ItemViewModel.SelectedItem.Id);
-
-            //check file exists, if not inform user
-            if (System.IO.File.Exists(logPath))
-            {
-                //open file
-                System.Diagnostics.Process.Start(logPath);
-            }
-            else
-            {
-                MessageBox.Show(SR.ManagedCertificateSettings_LogNotCreated);
-            }
-        }
-
         private void OpenCertificateFile_Click(object sender, RoutedEventArgs e)
         {
             // get file path for log
