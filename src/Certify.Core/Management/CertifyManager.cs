@@ -278,22 +278,22 @@ namespace Certify.Management
             // prevents registering a new identifier with LE before we start (and potential rate
             // limiting). The place in the request pipeline could be made configurable as this is a
             // matter of preference
-            if (managedCertificate.RequestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP && managedCertificate.RequestConfig.PerformExtensionlessConfigChecks)
-            {
-                ReportProgress(progress,
-                    new RequestProgressState(RequestState.Running, Certify.Locales.CoreSR.CertifyManager_PerformingConfigTests, managedCertificate)
-                );
+            /* if (managedCertificate.RequestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP && managedCertificate.RequestConfig.PerformExtensionlessConfigChecks)
+             {
+                 ReportProgress(progress,
+                     new RequestProgressState(RequestState.Running, Certify.Locales.CoreSR.CertifyManager_PerformingConfigTests, managedCertificate)
+                 );
 
-                var testResult = await TestChallenge(log, managedCertificate, isPreviewMode: false);
-                if (!testResult.IsOK)
-                {
-                    string msg = String.Join("; ", testResult.FailedItemSummary);
-                    ReportProgress(progress, new RequestProgressState(RequestState.Error, msg, managedCertificate) { Result = testResult });
+                 var testResult = await TestChallenge(log, managedCertificate, isPreviewMode: false);
+                 if (!testResult.IsOK)
+                 {
+                     string msg = String.Join("; ", testResult.FailedItemSummary);
+                     ReportProgress(progress, new RequestProgressState(RequestState.Error, msg, managedCertificate) { Result = testResult });
 
-                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, msg);
-                    return new CertificateRequestResult { ManagedItem = managedCertificate, IsSuccess = false, Message = msg, Result = testResult.Result };
-                }
-            }
+                     await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, msg);
+                     return new CertificateRequestResult { ManagedItem = managedCertificate, IsSuccess = false, Message = msg, Result = testResult.Result };
+                 }
+             }*/
 
             // start with a failure result, set to success when succeeding
             var result = new CertificateRequestResult { ManagedItem = managedCertificate, IsSuccess = false, Message = "" };

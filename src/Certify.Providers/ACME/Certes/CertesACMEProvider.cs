@@ -477,7 +477,7 @@ namespace Certify.Providers.Certes
                 LogAction("Order.Finalize", $"Failed to finalize order. Status: {certOrder.Status} ");
             }
 
-            //TODO: should be iterate here until valid or invalid?
+            //TODO: should we iterate here until valid or invalid?
 
             if (certOrder.Status == OrderStatus.Valid)
             {
@@ -529,17 +529,7 @@ namespace Certify.Providers.Certes
             return list;
         }
 
-        public List<IdentifierItem> GetDomainIdentifiers()
-        {
-            throw new NotImplementedException();
-        }
-
         public List<CertificateItem> GetCertificates()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool HasRegisteredContacts()
         {
             throw new NotImplementedException();
         }
@@ -549,19 +539,9 @@ namespace Certify.Providers.Certes
             // do nothing for this provider
         }
 
-        public string GetVaultSummary()
-        {
-            throw new NotImplementedException();
-        }
-
         public void EnableSensitiveFileEncryption()
         {
-            throw new NotImplementedException();
-        }
-
-        public void PerformVaultCleanup()
-        {
-            throw new NotImplementedException();
+            //FIXME: not implemented
         }
     }
 }

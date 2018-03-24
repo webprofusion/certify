@@ -207,6 +207,8 @@ namespace Certify.UI.Controls.ManagedCertificate
                 AppViewModel.MainUITabIndex = (int)MainWindow.PrimaryUITabs.CurrentProgress;
 
                 await AppViewModel.BeginCertificateRequest(ItemViewModel.SelectedItem.Id);
+
+                ItemViewModel.RaisePropertyChanged(nameof(ItemViewModel.SelectedItemLogEntries));
             }
         }
 

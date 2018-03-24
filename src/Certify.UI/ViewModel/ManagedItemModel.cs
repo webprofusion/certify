@@ -183,7 +183,7 @@ namespace Certify.UI.ViewModel
                     {
                     }
                 }
-                return new List<string> { "Could not retrieve log entries yo" };
+                return new List<string> { "Could not retrieve log entries." };
             }
         }
 
