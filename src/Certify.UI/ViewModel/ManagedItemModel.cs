@@ -187,6 +187,36 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        [PropertyChanged.DependsOn(nameof(SelectedItem))]
+        public int? DaysRemaining
+        {
+            get
+            {
+                if (SelectedItem != null && SelectedItem.DateExpiry.HasValue)
+                {
+                    return (int)Math.Abs((DateTime.Now - SelectedItem.DateExpiry).Value.TotalDays);
+                }
+
+                return null;
+            }
+        }
+
+        [PropertyChanged.DependsOn(nameof(SelectedItem))]
+        public DateTime? DateNextRenewalDue
+        {
+            get
+            {
+                // for the simplest version based on preference for renewal interval this is
+                // DateRenewed + Interval more complicated would be based on last renewal attempt and
+                // number of attempts so far etc
+                if (SelectedItem != null && SelectedItem.DateRenewed.HasValue)
+                {
+                    return SelectedItem.DateRenewed.Value.AddDays(Preferences.RenewalIntervalDays);
+                }
+                return null;
+            }
+        }
+
         public StatusMessage ConfigCheckResult
         {
             get; set;
@@ -310,15 +340,22 @@ namespace Certify.UI.ViewModel
             //if no primary domain need to go back and select one
             if (primaryDomain == null) throw new ArgumentException("Primary subject domain must be set.");
 
-            config.PrimaryDomain = primaryDomain.Domain.Trim();
+            if (config.PrimaryDomain != primaryDomain.Domain)
+            {
+                config.PrimaryDomain = primaryDomain.Domain.Trim();
+            }
 
             //apply remaining selected domains as subject alternative names
-            config.SubjectAlternativeNames =
+            var sanList =
                 item.DomainOptions.Where(dm => dm.IsSelected == true)
                 .Select(i => i.Domain)
                 .ToArray();
 
-            // TODO: config.EnableFailureNotifications = chkEnableNotifications.Checked;
+            if (config.SubjectAlternativeNames == null ||
+                !sanList.SequenceEqual(config.SubjectAlternativeNames))
+            {
+                config.SubjectAlternativeNames = sanList;
+            }
 
             //determine if this site has an existing entry in  Managed Certificates, if so use that, otherwise start a new one
             if (SelectedItem.Id == null)

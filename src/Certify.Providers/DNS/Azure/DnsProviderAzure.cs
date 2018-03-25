@@ -64,7 +64,7 @@ namespace Certify.Providers.DNS.Azure
             }
             catch (Exception exp)
             {
-                new ActionResult { IsSuccess = false, Message = exp.InnerException.Message };
+                return new ActionResult { IsSuccess = false, Message = exp.InnerException.Message };
             }
 
             return new ActionResult { IsSuccess = false, Message = "DNS TXT Record create failed" };
@@ -85,10 +85,8 @@ namespace Certify.Providers.DNS.Azure
             }
             catch (Exception exp)
             {
-                new ActionResult { IsSuccess = false, Message = exp.InnerException.Message };
+                return new ActionResult { IsSuccess = false, Message = "DNS TXT Record Delete failed: " + exp.InnerException.Message };
             }
-
-            return new ActionResult { IsSuccess = false, Message = "DNS TXT Record Delete failed" };
         }
 
         public async Task<List<DnsZone>> GetZones()

@@ -79,9 +79,11 @@ namespace Certify.Core.Management.Challenges
                     }
                 }
 
-                if (requestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
+                foreach (var domain in domains.Distinct())
                 {
-                    foreach (var domain in domains.Distinct())
+                    var challengeConfig = managedCertificate.GetChallengeConfig(domain);
+
+                    if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
                     {
                         string challengeFileUrl = $"http://{domain}/.well-known/acme-challenge/configcheck";
 
@@ -113,18 +115,15 @@ namespace Certify.Core.Management.Challenges
                             break;
                         }
                     }
-                }
-                else if (requestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
-                {
-                    if (iisManager.GetServerVersion().Major < 8)
+                    else if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
                     {
-                        result.IsOK = false;
-                        result.FailedItemSummary.Add($"The {SupportedChallengeTypes.CHALLENGE_TYPE_SNI} challenge is only available for IIS versions 8+.");
-                        return result;
-                    }
+                        if (iisManager.GetServerVersion().Major < 8)
+                        {
+                            result.IsOK = false;
+                            result.FailedItemSummary.Add($"The {SupportedChallengeTypes.CHALLENGE_TYPE_SNI} challenge is only available for IIS versions 8+.");
+                            return result;
+                        }
 
-                    result.IsOK = domains.Distinct().All(domain =>
-                    {
                         var simulatedAuthorization = new PendingAuthorization
                         {
                             Challenges = new List<AuthorizationChallengeItem> {
@@ -134,17 +133,15 @@ namespace Certify.Core.Management.Challenges
                                           HashIterationCount= 1,
                                           Value = GenerateSimulatedKeyAuth()
                                      }
-                             }
+                                 }
                         };
                         generatedAuthorizations.Add(simulatedAuthorization);
-                        return PrepareChallengeResponse_TlsSni01(
-                            log, iisManager, domain, managedCertificate, simulatedAuthorization
-                        )();
-                    });
-                }
-                else if (requestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
-                {
-                    result.IsOK = domains.Distinct().All(domain =>
+                        result.IsOK =
+                             PrepareChallengeResponse_TlsSni01(
+                                log, iisManager, domain, managedCertificate, simulatedAuthorization
+                            )();
+                    }
+                    else if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                     {
                         var simulatedAuthorization = new PendingAuthorization
                         {
@@ -155,22 +152,21 @@ namespace Certify.Core.Management.Challenges
                                             Key= "_acme-challenge-test."+domain,
                                             Value = GenerateSimulatedKeyAuth()
                                      }
-                             }
+                                 }
                         };
-
                         generatedAuthorizations.Add(simulatedAuthorization);
-
-                        return PrepareChallengeResponse_Dns01(
-                            log,
-                            domain,
-                            managedCertificate,
-                            simulatedAuthorization
-                        )();
-                    });
-                }
-                else
-                {
-                    throw new NotSupportedException($"ChallengeType not supported: {requestConfig.ChallengeType}");
+                        result.IsOK =
+                             PrepareChallengeResponse_Dns01(
+                                log,
+                                domain,
+                                managedCertificate,
+                                simulatedAuthorization
+                            )();
+                    }
+                    else
+                    {
+                        throw new NotSupportedException($"ChallengeType not supported: {challengeConfig.ChallengeType}");
+                    }
                 }
             }
             finally
@@ -178,6 +174,7 @@ namespace Certify.Core.Management.Challenges
                 //FIXME: needs to be filtered by managed site: result.Message = String.Join("\r\n", GetActionLogSummary());
                 generatedAuthorizations.ForEach(ga => ga.Cleanup());
             }
+
             return result;
         }
 

@@ -538,6 +538,42 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Filter....
+        /// </summary>
+        public static string ManagedCertificates_Filter {
+            get {
+                return ResourceManager.GetString("ManagedCertificates_Filter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Free SSL Certificates provided via the Let&apos;s Encrypt service (https://letsencrypt.org)..
+        /// </summary>
+        public static string ManagedCertificates_NoItemSelectedDesc {
+            get {
+                return ResourceManager.GetString("ManagedCertificates_NoItemSelectedDesc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select a Managed Certificate or select New Certificate to begin..
+        /// </summary>
+        public static string ManagedCertificates_NoItemSelectedTip {
+            get {
+                return ResourceManager.GetString("ManagedCertificates_NoItemSelectedTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are unsaved changes to the selected site. Discard changes?.
+        /// </summary>
+        public static string ManagedCertificates_UnsavedWarning {
+            get {
+                return ResourceManager.GetString("ManagedCertificates_UnsavedWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add domains to certificate:.
         /// </summary>
         public static string ManagedCertificateSettings_AddDomainsToCertificate {
@@ -1103,42 +1139,6 @@ namespace Certify.Locales {
         public static string ManagedCertificatesSettings_RefreshDomains {
             get {
                 return ResourceManager.GetString("ManagedCertificatesSettings_RefreshDomains", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Filter....
-        /// </summary>
-        public static string ManagedCertificates_Filter {
-            get {
-                return ResourceManager.GetString("ManagedCertificates_Filter", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Free SSL Certificates provided via the Let&apos;s Encrypt service (https://letsencrypt.org)..
-        /// </summary>
-        public static string ManagedCertificates_NoItemSelectedDesc {
-            get {
-                return ResourceManager.GetString("ManagedCertificates_NoItemSelectedDesc", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Select a  Managed Certificate or select New Certificate to begin..
-        /// </summary>
-        public static string ManagedCertificates_NoItemSelectedTip {
-            get {
-                return ResourceManager.GetString("ManagedCertificates_NoItemSelectedTip", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to There are unsaved changes to the selected site. Discard changes?.
-        /// </summary>
-        public static string ManagedCertificates_UnsavedWarning {
-            get {
-                return ResourceManager.GetString("ManagedCertificates_UnsavedWarning", resourceCulture);
             }
         }
         

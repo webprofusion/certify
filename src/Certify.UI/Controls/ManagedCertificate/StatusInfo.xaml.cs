@@ -11,10 +11,36 @@ namespace Certify.UI.Controls.ManagedCertificate
     public partial class StatusInfo : UserControl
     {
         protected Certify.UI.ViewModel.ManagedCertificateModel ItemViewModel => UI.ViewModel.ManagedCertificateModel.Current;
+        protected Certify.UI.ViewModel.AppModel AppViewModel => UI.ViewModel.AppModel.Current;
 
         public StatusInfo()
         {
             InitializeComponent();
+
+            this.AppViewModel.PropertyChanged += AppViewModel_PropertyChanged; ;
+        }
+
+        private void AppViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "SelectedItem")
+            {
+                if (ItemViewModel.SelectedItem != null)
+                {
+                    if (ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.OK)
+                    {
+                        this.RenewalSuccess.Visibility = Visibility.Visible;
+                        this.RenewalFailed.Visibility = Visibility.Collapsed;
+                    }
+
+                    if (ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.Error ||
+                        ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.Warning
+                        )
+                    {
+                        this.RenewalSuccess.Visibility = Visibility.Collapsed;
+                        this.RenewalFailed.Visibility = Visibility.Visible;
+                    }
+                }
+            }
         }
 
         private void OpenLogFile_Click(object sender, System.Windows.RoutedEventArgs e)

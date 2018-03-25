@@ -90,6 +90,9 @@
     <Compile Include="Controls\ManagedCertificate\ChallengeConfigItem.xaml.cs">
       <DependentUpon>ChallengeConfigItem.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ManagedCertificate\TestProgress.xaml.cs">
+      <DependentUpon>TestProgress.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\ManagedCertificate\StatusInfo.xaml.cs">
       <DependentUpon>StatusInfo.xaml</DependentUpon>
     </Compile>
@@ -154,6 +157,10 @@
     </Page>
     <Page Include="Controls\ManagedCertificate\ChallengeConfigItem.xaml">
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ManagedCertificate\TestProgress.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Controls\ManagedCertificate\StatusInfo.xaml">
       <Generator>MSBuild:Compile</Generator>

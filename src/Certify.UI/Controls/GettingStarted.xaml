@@ -1,67 +1,144 @@
 ﻿<UserControl
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:Certify.UI.Controls"
-             xmlns:fa="http://schemas.fontawesome.io/icons/"
-                  xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-             xmlns:utils="clr-namespace:Certify.UI.Utils"
-             xmlns:Custom="http://metro.mahapps.com/winfx/xaml/controls" x:Class="Certify.UI.Controls.GettingStarted"
-             mc:Ignorable="d">
+    x:Class="Certify.UI.Controls.GettingStarted"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Custom="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fa="http://schemas.fontawesome.io/icons/"
+    xmlns:local="clr-namespace:Certify.UI.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+    xmlns:utils="clr-namespace:Certify.UI.Utils"
+    mc:Ignorable="d">
     <ScrollViewer>
-        <DockPanel Margin="6,8" LastChildFill="True"  Height="Auto" MinHeight="600">
+        <DockPanel
+            Height="Auto"
+            MinHeight="600"
+            Margin="6,8"
+            LastChildFill="True">
             <DockPanel.Resources>
-                <utils:OptionalBooleanToVisibilityConverter True="Collapsed" False="Visible" x:Key="InvBoolVisConverter" />
+                <utils:OptionalBooleanToVisibilityConverter
+                    x:Key="InvBoolVisConverter"
+                    False="Visible"
+                    True="Collapsed" />
             </DockPanel.Resources>
 
-            <Border  DockPanel.Dock="Top" Padding="0,0,0,16" Margin="8,0,8,8" CornerRadius="4" BorderThickness="0">
+            <Border
+                Margin="8,0,8,8"
+                Padding="0,0,0,16"
+                BorderThickness="0"
+                CornerRadius="4"
+                DockPanel.Dock="Top">
                 <Border.BorderBrush>
-                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                        <GradientStop Color="#FFE7E7E7" Offset="1" />
-                        <GradientStop Color="#FFE8E8E8" Offset="0.003" />
+                    <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                        <GradientStop Offset="1" Color="#FFE7E7E7" />
+                        <GradientStop Offset="0.003" Color="#FFE8E8E8" />
                     </LinearGradientBrush>
                 </Border.BorderBrush>
 
                 <StackPanel>
 
-                    <Border Margin="0,0,0,16" Padding="0,0,0,8" BorderThickness="0">
+                    <Border
+                        Margin="0,0,0,16"
+                        Padding="0,0,0,8"
+                        BorderThickness="0">
                         <StackPanel>
-                            <TextBlock TextWrapping="Wrap" FontSize="36" Margin="16,0,0,8"  FontFamily="Segoe UI Light" Foreground="#FF313131"><Run FontWeight="Bold" FontFamily="Segoe UI Semibold" Text="Certify" /><Run Text=" the web" /></TextBlock>
-                            <TextBlock TextWrapping="Wrap" Foreground="#FF545454" Margin="16,0,0,0"><Run Text="{x:Static res:SR.ManagedCertificates_NoItemSelectedDesc}" /></TextBlock>
+                            <TextBlock
+                                Margin="16,0,0,8"
+                                FontFamily="Segoe UI Light"
+                                FontSize="36"
+                                Foreground="#FF313131"
+                                TextWrapping="Wrap"><Run
+                                    FontFamily="Segoe UI Semibold"
+                                    FontWeight="Bold"
+                                    Text="Certify" /><Run Text=" the web" /></TextBlock>
+                            <TextBlock
+                                Margin="16,0,0,0"
+                                Foreground="#FF545454"
+                                TextWrapping="Wrap"><Run Text="{x:Static res:SR.ManagedCertificates_NoItemSelectedDesc}" /></TextBlock>
                         </StackPanel>
                     </Border>
 
-                    <StackPanel  Orientation="Vertical" MinHeight="20">
-                        <TextBlock TextWrapping="Wrap" Margin="16,8,0,16" FontSize="20" FontFamily="Segoe UI Light" HorizontalAlignment="Left" VerticalAlignment="Top"><Run Text="Getting Started" /></TextBlock>
+                    <StackPanel MinHeight="20" Orientation="Vertical">
+                        <TextBlock
+                            Margin="16,8,0,16"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            FontFamily="Segoe UI Light"
+                            FontSize="20"
+                            TextWrapping="Wrap"><Run Text="Getting Started" /></TextBlock>
 
-                        <TextBlock TextWrapping="Wrap" Margin="16,0,0,0"><Run Text="{x:Static res:SR.ManagedCertificates_NoItemSelectedTip}" /><Run Text="&#x9;" /></TextBlock>
+                        <TextBlock Margin="16,0,0,0" TextWrapping="Wrap"><Run Text="{x:Static res:SR.ManagedCertificates_NoItemSelectedTip}" /><Run Text="&#x9;" /></TextBlock>
 
-                        <Button x:Name="QuickStart" Width="180"  HorizontalAlignment="Left" Margin="16,8,0,0" Click="QuickStart_Click">
+                        <Button
+                            x:Name="QuickStart"
+                            Width="180"
+                            Margin="16,8,0,0"
+                            HorizontalAlignment="Left"
+                            Click="QuickStart_Click">
                             <StackPanel Orientation="Horizontal">
-                                <fa:ImageAwesome Height="16" Icon="PlayCircle" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="#FF6BB039" Margin="0" />
-                                <TextBlock HorizontalAlignment="Left" Margin="8,0,0,0"><Run Text="Quick Start Guide" /></TextBlock>
+                                <fa:ImageAwesome
+                                    Height="16"
+                                    Margin="0"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Foreground="#FF6BB039"
+                                    Icon="PlayCircle" />
+                                <TextBlock Margin="8,0,0,0" HorizontalAlignment="Left"><Run Text="Quick Start Guide" /></TextBlock>
                             </StackPanel>
                         </Button>
                     </StackPanel>
 
                     <StackPanel x:Name="Dashboard">
 
-                        <TextBlock TextWrapping="Wrap" Margin="16,8,0,16" FontSize="20" FontFamily="Segoe UI Light" HorizontalAlignment="Left" VerticalAlignment="Top"><Run Text="{x:Static res:SR.GettingStarted_Dashboard}" /></TextBlock>
+                        <TextBlock
+                            Margin="16,8,0,16"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            FontFamily="Segoe UI Light"
+                            FontSize="20"
+                            TextWrapping="Wrap"><Run Text="{x:Static res:SR.GettingStarted_Dashboard}" /></TextBlock>
 
-                        <TextBlock TextWrapping="Wrap" Margin="16,0,16,16" FontSize="14" FontFamily="Segoe UI Light" ><Run Text="{x:Static res:SR.GettingStarted_DashboardIntro}" /></TextBlock>
+                        <TextBlock
+                            Margin="16,0,16,16"
+                            FontFamily="Segoe UI Light"
+                            FontSize="14"
+                            TextWrapping="Wrap"><Run Text="{x:Static res:SR.GettingStarted_DashboardIntro}" /></TextBlock>
                         <StackPanel Orientation="Horizontal">
 
-                            <Button Visibility="{Binding Preferences.IsInstanceRegistered, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" x:Name="AddToDashboard" Width="180"  HorizontalAlignment="Left" Margin="16,0,0,0" Click="AddToDashboard_Click">
+                            <Button
+                                x:Name="AddToDashboard"
+                                Width="180"
+                                Margin="16,0,0,0"
+                                HorizontalAlignment="Left"
+                                Click="AddToDashboard_Click"
+                                Visibility="{Binding Preferences.IsInstanceRegistered, Converter={StaticResource ResourceKey=InvBoolVisConverter}}">
                                 <StackPanel Orientation="Horizontal">
-                                    <fa:ImageAwesome Height="16" Icon="PlusCircle" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="#FF6BB039" Margin="0" />
-                                    <TextBlock HorizontalAlignment="Center" Margin="8,0,0,0"><Run Text="{x:Static res:SR.GettingStarted_AddToDashboard}" /></TextBlock>
+                                    <fa:ImageAwesome
+                                        Height="16"
+                                        Margin="0"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Foreground="#FF6BB039"
+                                        Icon="PlusCircle" />
+                                    <TextBlock Margin="8,0,0,0" HorizontalAlignment="Center"><Run Text="{x:Static res:SR.GettingStarted_AddToDashboard}" /></TextBlock>
                                 </StackPanel>
                             </Button>
-                            <Button x:Name="ViewDashboard" Width="180"  HorizontalAlignment="Left" Margin="16,0,0,0" Click="ViewDashboard_Click">
+                            <Button
+                                x:Name="ViewDashboard"
+                                Width="180"
+                                Margin="16,0,0,0"
+                                HorizontalAlignment="Left"
+                                Click="ViewDashboard_Click">
                                 <StackPanel Orientation="Horizontal">
-                                    <fa:ImageAwesome Height="16" Icon="Leaf" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="#FF6BB039" Margin="0" />
-                                    <TextBlock HorizontalAlignment="Center" Margin="8,0,0,0"><Run Text="{x:Static res:SR.GettingStarted_ViewDashboard}" /></TextBlock>
+                                    <fa:ImageAwesome
+                                        Height="16"
+                                        Margin="0"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Foreground="#FF6BB039"
+                                        Icon="Leaf" />
+                                    <TextBlock Margin="8,0,0,0" HorizontalAlignment="Center"><Run Text="{x:Static res:SR.GettingStarted_ViewDashboard}" /></TextBlock>
                                 </StackPanel>
                             </Button>
                         </StackPanel>

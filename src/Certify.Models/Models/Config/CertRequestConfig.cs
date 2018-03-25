@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 
 namespace Certify.Models
 {
@@ -115,6 +116,7 @@ namespace Certify.Models
         /// <summary>
         /// In the case of Let's Encrypt, the primary challenge type this request will use (eg. http-01) 
         /// </summary>
+        [Obsolete("ChallengeType is now determined in Challenges collection")]
         public string ChallengeType { get; set; } = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP;
 
         /// <summary>

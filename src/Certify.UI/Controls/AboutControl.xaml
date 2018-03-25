@@ -1,29 +1,134 @@
-<UserControl x:Class="Certify.UI.Controls.AboutControl"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:Certify.UI.Controls"
-             xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-             xmlns:fa="http://schemas.fontawesome.io/icons/"
-             mc:Ignorable="d" MinWidth="650" Loaded="UserControl_Loaded" d:DesignWidth="817.6" Height="387.867">
+<UserControl
+    x:Class="Certify.UI.Controls.AboutControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fa="http://schemas.fontawesome.io/icons/"
+    xmlns:local="clr-namespace:Certify.UI.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+    Height="387.867"
+    MinWidth="650"
+    d:DesignWidth="817.6"
+    Loaded="UserControl_Loaded"
+    mc:Ignorable="d">
     <Grid Margin="0,0,12,10">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition></ColumnDefinition>
-            <ColumnDefinition Width="190"></ColumnDefinition>
+            <ColumnDefinition />
+            <ColumnDefinition Width="190" />
         </Grid.ColumnDefinitions>
 
-        <TextBlock x:Name="lblAppVersion" HorizontalAlignment="Left" Margin="10,35,0,0" TextWrapping="Wrap" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5" Height="16" Width="335"><Run Text="V2.0.201703" /><Run Text="27" /></TextBlock>
-        <TextBlock x:Name="lblRegistrationType" HorizontalAlignment="Left" Margin="10,56,0,0" TextWrapping="Wrap" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5" Height="35" Width="335" Text="{x:Static res:SR.AboutControl_RegistrationTypeLabel}" FontWeight="Bold" />
-        <TextBlock x:Name="lblRegistrationDetails" Margin="10,123,9.6,0" TextWrapping="Wrap" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5" Height="64" Style="{StaticResource Instructions}"><Run Text="{x:Static res:SR.AboutControl_TrialDetailLabel}" /></TextBlock>
-        <TextBox IsEnabled="True" ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Visible" TextWrapping="NoWrap" x:Name="creditLibs" Margin="10,195,20,10.2" Text="This app makes use of the following Open Source projects. &#xA;&#xA;Please refer to each project website for full license details:&#xA;&#xA;Let's Encrypt:&#xD;&#xA;&#x9;https://letsencrypt.org&#xA;Certify SSL Manager:&#xD;&#xA;&#x9;MIT License, Copyright (c) 2015-2018 Webprofusion Pty Ltd &#xD;&#xA;&#x9;https://github.com/webprofusion/certify&#xA;ACMESharp:&#xD;&#xA;&#x9;MPL 2.0&#xD;&#xA;&#x9;https://pkisharp.github.io/ACMESharp-docs/&#xA;Certes: &#xD;&#xA;&#x9;MIT License&#xD;&#xA;&#x9;Copyright (c) 2018 Certes Project &#xD;&#xA;&#x9;https://github.com/fszlin/certes &#xA;Newtonsoft Json.Net: &#xD;&#xA;&#x9;MIT License&#xD;&#xA;&#x9;Copyright (c) 2007 James Newton-King &#xD;&#xA;&#x9;https://www.newtonsoft.com/json &#xA;Fontawesome.WPF: &#xD;&#xA;&#x9;MIT License&#xD;&#xA;&#x9;Copyright (c) 2014-2016 charri&#xD;&#xA;&#x9;https://github.com/charri/Font-Awesome-WPF&#xA;MahApps.Metro: &#xD;&#xA;&#x9;MIT License&#xD;&#xA;&#x9;Copyright (c) 2016 MahApps &#xD;&#xA;&#x9;http://mahapps.com/&#xA;ARSoft.Tools.Net: &#xD;&#xA;&#x9;Apache License 2.0&#xD;&#xA;&#x9;Copyright (c) 2010-2017 Alexander Reinert&#xD;&#xA;&#x9;https://github.com/alexreinert/ARSoft.Tools.Net&#xA;Apache Libcloud: &#xD;&#xA;&#x9;Apache License 2.0&#xD;&#xA;&#x9;Copyright (c) 2010-2015 &#xD;&#xA;&#x9;The Apache Software Foundation &#xD;&#xA;&#x9;https://github.com/apache/libcloud &#xA;Fody: &#xD;&#xA;&#x9;MIT License&#xD;&#xA;&#x9;Copyright (c) Simon Cropp and contributors&#xD;&#xA;&#x9;https://github.com/Fody/Fody &#xA;LightInject: &#xD;&#xA;&#x9;MIT License&#xD;&#xA;&#x9;Copyright (c) 2017 Bernhard Richter&#xD;&#xA;&#x9;https://github.com/seesharper/LightInject&#xA;TaskScheduler: &#xD;&#xA;&#x9;MIT License&#xD;&#xA;&#x9;Copyright (c) 2003-2010 David Hall&#xD;&#xA;&#x9;https://github.com/dahall/TaskScheduler&#xA;BouncyCastle: &#xD;&#xA;&#x9;MIT License&#xD;&#xA;&#x9;Copyright (c) 2000 - 2017 The Legion of the Bouncy Castle Inc.&#xD;&#xA;&#x9;http://www.bouncycastle.org&#xA;SignalR: &#x9;&#xD;&#xA;&#x9;Apache License 2.0&#xD;&#xA;&#x9;Copyright (c) .NET Foundation.&#xD;&#xA;&#x9;http://signalr.net/ &#xD;&#xA;Topshelf: &#xD;&#xA;&#x9;Apache License 2.0&#xD;&#xA;&#x9;Copyright 2007-2016 Travis Smith, Chris Patterson, Dru Sellers, Henrik Feldt et al.&#xD;&#xA;&#x9;http://topshelf-project.com/ " />
-        <Button Content="{x:Static res:SR.AboutControl_CheckForUpdateButton}" Margin="0,10,29.6,0" VerticalAlignment="Top" Click="UpdateCheck_Click" Height="27" Grid.Column="1" HorizontalAlignment="Right" Width="151" />
-        <Button x:Name="Register" Content="{x:Static res:SR.AboutControl_Register}" HorizontalAlignment="Right" Margin="0,105,29.6,0" VerticalAlignment="Top" Width="151" Height="27" Grid.Column="1" Click="Button_Click" />
-        <TextBlock x:Name="lblAbout" Margin="10,78,20,0" TextWrapping="Wrap" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5" Height="35"><Run Text="Copyright Webprofusion Pty Ltd 2015 - 2018" /><LineBreak /><Run Text="https://certifytheweb.com" /></TextBlock>
-        <TextBlock x:Name="lblAppTitle" HorizontalAlignment="Left" Margin="10,0,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="24" RenderTransformOrigin="0.5,0.5" Height="35" Width="335"><Run FontFamily="Segoe UI Semibold" Text="Certify the web" /></TextBlock>
-        <Button x:Name="ValidateKey" Content="{x:Static res:SR.AboutControl_EnterKey}" Margin="0,137,29.6,0" VerticalAlignment="Top" Height="27" Grid.Column="1" Click="Button_ApplyRegistrationKey" HorizontalAlignment="Right" Width="151" />
-        <Button x:Name="Help" Content="{x:Static res:SR.AboutControl_Support}" Margin="0,42,29.6,0" VerticalAlignment="Top" Height="27" Grid.Column="1" Click="Help_Click" HorizontalAlignment="Right" Width="151" />
-        <Button x:Name="Feedback" Content="{x:Static res:SR.AboutControl_SendFeedback}" Margin="9.8,195,29.6,0" VerticalAlignment="Top" Height="27" Click="Feedback_Click" Grid.Column="1" />
-        <fa:ImageAwesome Icon="Chain" ToolTip="Service Status" x:Name="ServiceConnected" VerticalAlignment="Bottom" HorizontalAlignment="Right" Foreground="{DynamicResource AccentColorBrush3}" Width="16" Height="23" Grid.Column="1" RenderTransformOrigin="0.453,2.187" Margin="0,0,29.6,10.2" />
+        <TextBlock
+            x:Name="lblAppVersion"
+            Width="335"
+            Height="16"
+            Margin="10,35,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            RenderTransformOrigin="0.5,0.5"
+            TextWrapping="Wrap"><Run Text="V2.0.201703" /><Run Text="27" /></TextBlock>
+        <TextBlock
+            x:Name="lblRegistrationType"
+            Width="335"
+            Height="35"
+            Margin="10,56,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            FontWeight="Bold"
+            RenderTransformOrigin="0.5,0.5"
+            Text="{x:Static res:SR.AboutControl_RegistrationTypeLabel}"
+            TextWrapping="Wrap" />
+        <TextBlock
+            x:Name="lblRegistrationDetails"
+            Height="64"
+            Margin="10,123,9.6,0"
+            VerticalAlignment="Top"
+            RenderTransformOrigin="0.5,0.5"
+            Style="{StaticResource Instructions}"
+            TextWrapping="Wrap"><Run Text="{x:Static res:SR.AboutControl_TrialDetailLabel}" /></TextBlock>
+        <TextBox
+            x:Name="creditLibs"
+            Margin="10,195,20,10.2"
+            HorizontalScrollBarVisibility="Visible"
+            IsEnabled="True"
+            ScrollViewer.CanContentScroll="True"
+            Text="This app makes use of the following Open Source projects. &#xA;&#xA;Please refer to each project website for full license details:&#xA;&#xA;Let's Encrypt:&#xD;&#xA;&#x9;https://letsencrypt.org&#xA;Certify SSL Manager:&#xD;&#xA;&#x9;MIT License, Copyright (c) 2015-2018 Webprofusion Pty Ltd &#xD;&#xA;&#x9;https://github.com/webprofusion/certify&#xA;ACMESharp:&#xD;&#xA;&#x9;MPL 2.0&#xD;&#xA;&#x9;https://pkisharp.github.io/ACMESharp-docs/&#xA;Certes: &#xD;&#xA;&#x9;MIT License&#xD;&#xA;&#x9;Copyright (c) 2018 Certes Project &#xD;&#xA;&#x9;https://github.com/fszlin/certes &#xA;Newtonsoft Json.Net: &#xD;&#xA;&#x9;MIT License&#xD;&#xA;&#x9;Copyright (c) 2007 James Newton-King &#xD;&#xA;&#x9;https://www.newtonsoft.com/json &#xA;Fontawesome.WPF: &#xD;&#xA;&#x9;MIT License&#xD;&#xA;&#x9;Copyright (c) 2014-2016 charri&#xD;&#xA;&#x9;https://github.com/charri/Font-Awesome-WPF&#xA;MahApps.Metro: &#xD;&#xA;&#x9;MIT License&#xD;&#xA;&#x9;Copyright (c) 2016 MahApps &#xD;&#xA;&#x9;http://mahapps.com/&#xA;ARSoft.Tools.Net: &#xD;&#xA;&#x9;Apache License 2.0&#xD;&#xA;&#x9;Copyright (c) 2010-2017 Alexander Reinert&#xD;&#xA;&#x9;https://github.com/alexreinert/ARSoft.Tools.Net&#xA;Apache Libcloud: &#xD;&#xA;&#x9;Apache License 2.0&#xD;&#xA;&#x9;Copyright (c) 2010-2015 &#xD;&#xA;&#x9;The Apache Software Foundation &#xD;&#xA;&#x9;https://github.com/apache/libcloud &#xA;Fody: &#xD;&#xA;&#x9;MIT License&#xD;&#xA;&#x9;Copyright (c) Simon Cropp and contributors&#xD;&#xA;&#x9;https://github.com/Fody/Fody &#xA;LightInject: &#xD;&#xA;&#x9;MIT License&#xD;&#xA;&#x9;Copyright (c) 2017 Bernhard Richter&#xD;&#xA;&#x9;https://github.com/seesharper/LightInject&#xA;TaskScheduler: &#xD;&#xA;&#x9;MIT License&#xD;&#xA;&#x9;Copyright (c) 2003-2010 David Hall&#xD;&#xA;&#x9;https://github.com/dahall/TaskScheduler&#xA;BouncyCastle: &#xD;&#xA;&#x9;MIT License&#xD;&#xA;&#x9;Copyright (c) 2000 - 2017 The Legion of the Bouncy Castle Inc.&#xD;&#xA;&#x9;http://www.bouncycastle.org&#xA;SignalR: &#x9;&#xD;&#xA;&#x9;Apache License 2.0&#xD;&#xA;&#x9;Copyright (c) .NET Foundation.&#xD;&#xA;&#x9;http://signalr.net/ &#xD;&#xA;Topshelf: &#xD;&#xA;&#x9;Apache License 2.0&#xD;&#xA;&#x9;Copyright 2007-2016 Travis Smith, Chris Patterson, Dru Sellers, Henrik Feldt et al.&#xD;&#xA;&#x9;http://topshelf-project.com/ "
+            TextWrapping="NoWrap" />
+        <Button
+            Grid.Column="1"
+            Width="151"
+            Height="27"
+            Margin="0,10,29.6,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Click="UpdateCheck_Click"
+            Content="{x:Static res:SR.AboutControl_CheckForUpdateButton}" />
+        <Button
+            x:Name="Register"
+            Grid.Column="1"
+            Width="151"
+            Height="27"
+            Margin="0,105,29.6,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Click="Button_Click"
+            Content="{x:Static res:SR.AboutControl_Register}" />
+        <TextBlock
+            x:Name="lblAbout"
+            Height="35"
+            Margin="10,78,20,0"
+            VerticalAlignment="Top"
+            RenderTransformOrigin="0.5,0.5"
+            TextWrapping="Wrap"><Run Text="Copyright Webprofusion Pty Ltd 2015 - 2018" /><LineBreak /><Run Text="https://certifytheweb.com" /></TextBlock>
+        <TextBlock
+            x:Name="lblAppTitle"
+            Width="335"
+            Height="35"
+            Margin="10,0,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            FontSize="24"
+            RenderTransformOrigin="0.5,0.5"
+            TextWrapping="Wrap"><Run FontFamily="Segoe UI Semibold" Text="Certify the web" /></TextBlock>
+        <Button
+            x:Name="ValidateKey"
+            Grid.Column="1"
+            Width="151"
+            Height="27"
+            Margin="0,137,29.6,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Click="Button_ApplyRegistrationKey"
+            Content="{x:Static res:SR.AboutControl_EnterKey}" />
+        <Button
+            x:Name="Help"
+            Grid.Column="1"
+            Width="151"
+            Height="27"
+            Margin="0,42,29.6,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Click="Help_Click"
+            Content="{x:Static res:SR.AboutControl_Support}" />
+        <Button
+            x:Name="Feedback"
+            Grid.Column="1"
+            Height="27"
+            Margin="9.8,195,29.6,0"
+            VerticalAlignment="Top"
+            Click="Feedback_Click"
+            Content="{x:Static res:SR.AboutControl_SendFeedback}" />
+        <fa:ImageAwesome
+            x:Name="ServiceConnected"
+            Grid.Column="1"
+            Width="16"
+            Height="23"
+            Margin="0,0,29.6,10.2"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Foreground="{DynamicResource AccentColorBrush3}"
+            Icon="Chain"
+            RenderTransformOrigin="0.453,2.187"
+            ToolTip="Service Status" />
     </Grid>
 </UserControl>

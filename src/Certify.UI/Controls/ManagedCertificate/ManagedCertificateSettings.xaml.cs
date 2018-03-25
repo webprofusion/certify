@@ -1,5 +1,6 @@
 using Certify.Locales;
 using Certify.Models;
+using MahApps.Metro.Controls;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -221,15 +222,28 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
+        private void ShowTestResults()
+        {
+            Window parentWindow = Window.GetWindow(this);
+            object obj = parentWindow.FindName("MainFlyout");
+            Flyout flyout = (Flyout)obj;
+            flyout.Header = "Test Progress";
+            flyout.Content = new TestProgress();
+            flyout.IsOpen = !flyout.IsOpen;
+        }
+
         private async void TestChallenge_Click(object sender, EventArgs e)
         {
+            ShowTestResults();
+
             ItemViewModel.IsTestInProgress = true;
 
+            var challengeConfig = ItemViewModel.SelectedItem.GetChallengeConfig(null);
             if (!AppViewModel.IsIISAvailable)
             {
                 MessageBox.Show(SR.ManagedCertificateSettings_CannotChallengeWithoutIIS, SR.ChallengeError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            else if (ItemViewModel.SelectedItem.RequestConfig.ChallengeType != null)
+            else if (challengeConfig.ChallengeType != null)
             {
                 Button_TestChallenge.IsEnabled = false;
 

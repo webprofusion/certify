@@ -295,7 +295,7 @@
     <value>Free SSL Certificates provided via the Let's Encrypt service (https://letsencrypt.org).</value>
   </data>
   <data name="ManagedCertificates_NoItemSelectedTip" xml:space="preserve">
-    <value>Select a  Managed Certificate or select New Certificate to begin.</value>
+    <value>Select a Managed Certificate or select New Certificate to begin.</value>
   </data>
   <data name="ManagedCertificates_UnsavedWarning" xml:space="preserve">
     <value>There are unsaved changes to the selected site. Discard changes?</value>

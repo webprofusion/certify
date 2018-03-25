@@ -1,12 +1,14 @@
-﻿<UserControl x:Class="Certify.UI.Controls.ManagedCertificate.TabHeader"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:Certify.UI.Controls.ManagedCertificate"
-              xmlns:fa="http://schemas.fontawesome.io/icons/"
-             mc:Ignorable="d"
-             d:DesignHeight="64" d:DesignWidth="200">
+﻿<UserControl
+    x:Class="Certify.UI.Controls.ManagedCertificate.TabHeader"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fa="http://schemas.fontawesome.io/icons/"
+    xmlns:local="clr-namespace:Certify.UI.Controls.ManagedCertificate"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="64"
+    d:DesignWidth="200"
+    mc:Ignorable="d">
     <DockPanel LastChildFill="True">
         <DockPanel.Style>
             <Style>
@@ -18,16 +20,28 @@
                 </Style.Triggers>
             </Style>
         </DockPanel.Style>
-        <StackPanel Orientation="Vertical" Margin="4">
-            <fa:ImageAwesome x:Name="TabIcon" Width="16" Icon="{Binding IconName}" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource AccentColorBrush3}" />
-            <Label x:Name="TabLabel" Padding="4" Content="{Binding HeaderText}" VerticalAlignment="Center" FontSize="12" HorizontalAlignment="Center">
+        <StackPanel Margin="4" Orientation="Vertical">
+            <fa:ImageAwesome
+                x:Name="TabIcon"
+                Width="16"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Foreground="{DynamicResource AccentColorBrush3}"
+                Icon="{Binding IconName}" />
+            <Label
+                x:Name="TabLabel"
+                Padding="4"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Content="{Binding HeaderText}"
+                FontSize="12">
                 <Label.Style>
                     <Style>
                         <Setter Property="Label.Foreground" Value="{DynamicResource AccentColorBrush3}" />
                         <Setter Property="Label.FontWeight" Value="Normal" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type TabItem}}, Path=(IsSelected)}" Value="true">
-                                <Setter Property="Label.Foreground" Value="{DynamicResource AccentColorBrush2}" />
+                                <Setter Property="Label.Foreground" Value="{DynamicResource AccentColorBrush}" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>

@@ -2,6 +2,7 @@ using Certify.Locales;
 using Newtonsoft.Json;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace Certify.Models
 {
@@ -164,6 +165,61 @@ namespace Certify.Models
                     else
                     {
                         return ManagedCertificateHealth.Unknown;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// For the given domain, get the matching challenge config (DNS provider variant etc) 
+        /// </summary>
+        /// <param name="managedCertificate"></param>
+        /// <param name="domain"></param>
+        /// <returns></returns>
+        public CertRequestChallengeConfig GetChallengeConfig(string domain)
+        {
+            if (RequestConfig.Challenges == null || RequestConfig.Challenges.Count == 0)
+            {
+                // there are no challenge configs defined return a default based on the parent
+                return new CertRequestChallengeConfig
+                {
+                    ChallengeType = RequestConfig.ChallengeType
+                };
+            }
+            else
+            {
+                //identify matching challenge config based on domain etc
+                if (RequestConfig.Challenges.Count == 1)
+                {
+                    return RequestConfig.Challenges[0];
+                }
+                else
+                {
+                    // start by matching first config with no specific domain
+                    CertRequestChallengeConfig matchedConfig = RequestConfig.Challenges.FirstOrDefault(c => String.IsNullOrEmpty(c.DomainMatch));
+
+                    //if any more specific configs match, use that
+                    foreach (var config in RequestConfig.Challenges.Where(c => !String.IsNullOrEmpty(c.DomainMatch)).OrderByDescending(l => l.DomainMatch.Length))
+                    {
+                        if (config.DomainMatch.EndsWith(domain))
+                        {
+                            // use longest matching domain (so subdomain.test.com takes priority over test.com)
+                            return config;
+                        }
+                    }
+
+                    // no other matches, just use first
+                    if (matchedConfig != null)
+                    {
+                        return matchedConfig;
+                    }
+                    else
+                    {
+                        // no match, return default
+                        return new CertRequestChallengeConfig
+                        {
+                            ChallengeType = RequestConfig.ChallengeType
+                        };
                     }
                 }
             }

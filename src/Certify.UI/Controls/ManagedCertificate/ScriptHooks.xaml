@@ -1,38 +1,52 @@
 <UserControl
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
-             xmlns:local="clr-namespace:Certify.UI.Controls"
-             xmlns:certifyui="clr-namespace:Certify.UI"
-             xmlns:fa="http://schemas.fontawesome.io/icons/"
-             xmlns:Custom="http://metro.mahapps.com/winfx/xaml/controls"
-             xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
-             xmlns:utils="clr-namespace:Certify.UI.Utils"
-             xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Models"
-             xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-             x:Class="Certify.UI.Controls.ManagedCertificate.ScriptHooks"
-             mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance Type=certifyui:DesignItemViewModel, IsDesignTimeCreatable=True}" d:DesignHeight="637.6" d:DesignWidth="600">
+    x:Class="Certify.UI.Controls.ManagedCertificate.ScriptHooks"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:Custom="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+    xmlns:certifyui="clr-namespace:Certify.UI"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
+    xmlns:fa="http://schemas.fontawesome.io/icons/"
+    xmlns:local="clr-namespace:Certify.UI.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Models"
+    xmlns:utils="clr-namespace:Certify.UI.Utils"
+    d:DataContext="{d:DesignInstance Type=certifyui:DesignItemViewModel,
+                                     IsDesignTimeCreatable=True}"
+    d:DesignHeight="637.6"
+    d:DesignWidth="600"
+    mc:Ignorable="d">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Background="{DynamicResource {x:Static SystemColors.ControlBrush}}" Margin="8,0,8,8">
+        <StackPanel Margin="8,0,8,8" Background="{DynamicResource {x:Static SystemColors.ControlBrush}}">
             <TextBlock Style="{StaticResource Subheading}">Scripting</TextBlock>
 
             <TextBlock Style="{StaticResource Instructions}" Text="You can optionally specify scripts or webhooks to call. Scripts can happen before or after the certificate request and are especially useful if you need to update other services after your certificate has been renewed." />
             <StackPanel>
-                <TextBlock Style="{StaticResource Instructions}" Text="There are also a number of preset scripts for common tasks such as enabling a certificate in MS Exchange:" ></TextBlock>
-                <Expander Header="Example Scripts" Margin="0,8,0,0" ExpandDirection="Right">
-                    <ItemsControl  x:Name="PresetScripts" Margin="16,0,0,0">
+                <TextBlock Style="{StaticResource Instructions}" Text="There are also a number of preset scripts for common tasks such as enabling a certificate in MS Exchange:" />
+                <Expander
+                    Margin="0,8,0,0"
+                    ExpandDirection="Right"
+                    Header="Example Scripts">
+                    <ItemsControl x:Name="PresetScripts" Margin="16,0,0,0">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Margin="0,0,0,8">
 
                                     <DockPanel>
-                                        <Button DockPanel.Dock="Left" Width="80" Content="Select" Click="Button_Click" CommandParameter="{Binding}"></Button>
-                                        <StackPanel DockPanel.Dock="Left" Margin="16,0,0,0">
+                                        <Button
+                                            Width="80"
+                                            Click="Button_Click"
+                                            CommandParameter="{Binding}"
+                                            Content="Select"
+                                            DockPanel.Dock="Left" />
+                                        <StackPanel Margin="16,0,0,0" DockPanel.Dock="Left">
                                             <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
-                                            <TextBlock DockPanel.Dock="Left" Text="{Binding Description}" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                                            <TextBlock
+                                                DockPanel.Dock="Left"
+                                                Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                                                Text="{Binding Description}" />
                                         </StackPanel>
                                     </DockPanel>
                                 </StackPanel>
@@ -41,29 +55,52 @@
                     </ItemsControl>
                 </Expander>
             </StackPanel>
-            <StackPanel Orientation="Vertical" Margin="0,16,0,0">
+            <StackPanel Margin="0,16,0,0" Orientation="Vertical">
                 <TextBlock Style="{StaticResource Subheading}">PowerShell Scripts</TextBlock>
 
                 <StackPanel Orientation="Horizontal">
                     <Label Width="155" Content="{x:Static Resources:SR.ManagedCertificateSettings_PerRequsetScript}" />
-                    <TextBox Text="{Binding SelectedItem.RequestConfig.PreRequestPowerShellScript}" Width="250" />
-                    <Button Name="Button_PreRequest" Content="{x:Static Resources:SR.Browser}" Margin="4,0,0,0" Click="FileBrowse_Click" />
-                    <Button Name="Button_TestPreRequest" Content="{x:Static Resources:SR.Test}" Margin="4,0,0,0" Click="TestScript_Click" />
+                    <TextBox Width="250" Text="{Binding SelectedItem.RequestConfig.PreRequestPowerShellScript}" />
+                    <Button
+                        Name="Button_PreRequest"
+                        Margin="4,0,0,0"
+                        Click="FileBrowse_Click"
+                        Content="{x:Static Resources:SR.Browser}" />
+                    <Button
+                        Name="Button_TestPreRequest"
+                        Margin="4,0,0,0"
+                        Click="TestScript_Click"
+                        Content="{x:Static Resources:SR.Test}" />
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
                     <Label Width="155" Content="{x:Static Resources:SR.ManagedCertificateSettings_PostRequestScript}" />
-                    <TextBox Text="{Binding SelectedItem.RequestConfig.PostRequestPowerShellScript}" Width="250" />
-                    <Button Name="Button_PostRequest" Content="{x:Static Resources:SR.Browser}" Margin="4,0,0,0" Click="FileBrowse_Click" />
-                    <Button Name="Button_TestPostRequest" Content="{x:Static Resources:SR.Test}" Margin="4,0,0,0" Click="TestScript_Click" />
+                    <TextBox Width="250" Text="{Binding SelectedItem.RequestConfig.PostRequestPowerShellScript}" />
+                    <Button
+                        Name="Button_PostRequest"
+                        Margin="4,0,0,0"
+                        Click="FileBrowse_Click"
+                        Content="{x:Static Resources:SR.Browser}" />
+                    <Button
+                        Name="Button_TestPostRequest"
+                        Margin="4,0,0,0"
+                        Click="TestScript_Click"
+                        Content="{x:Static Resources:SR.Test}" />
                 </StackPanel>
             </StackPanel>
 
-            <StackPanel Orientation="Vertical" Margin="0,16,0,0" Width="500" HorizontalAlignment="Left">
+            <StackPanel
+                Width="500"
+                Margin="0,16,0,0"
+                HorizontalAlignment="Left"
+                Orientation="Vertical">
                 <TextBlock Style="{StaticResource Subheading}">Webhooks</TextBlock>
 
-                <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
                     <Label Width="155" Content="{x:Static Resources:SR.ManagedCertificateSettings_HookTrigger}" />
-                    <ComboBox ItemsSource="{Binding WebhookTriggerTypes}" SelectedItem="{Binding SelectedItem.RequestConfig.WebhookTrigger}" Width="150" />
+                    <ComboBox
+                        Width="150"
+                        ItemsSource="{Binding WebhookTriggerTypes}"
+                        SelectedItem="{Binding SelectedItem.RequestConfig.WebhookTrigger}" />
                     <Border>
                         <Border.Style>
                             <Style>
@@ -75,10 +112,18 @@
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
-                        <Button Name="Button_TestWebhook" Content="{x:Static Resources:SR.Test}" Margin="4,0,0,0" Click="TestWebhook_Click" />
+                        <Button
+                            Name="Button_TestWebhook"
+                            Margin="4,0,0,0"
+                            Click="TestWebhook_Click"
+                            Content="{x:Static Resources:SR.Test}" />
                     </Border>
                 </StackPanel>
-                <StackPanel Background="#efefef" Margin="46,8,12,12" Width="400" HorizontalAlignment="Left">
+                <StackPanel
+                    Width="400"
+                    Margin="46,8,12,12"
+                    HorizontalAlignment="Left"
+                    Background="#efefef">
                     <StackPanel.Style>
                         <Style>
                             <Setter Property="StackPanel.Visibility" Value="Visible" />
@@ -100,13 +145,37 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" Content="{x:Static Resources:SR.ManagedCertificateSettings_HookUrl}" />
-                        <TextBox Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Controls:TextBoxHelper.Watermark="https://example.org/api/controller?domain=$PrimaryDomain" Text="{Binding SelectedItem.RequestConfig.WebhookUrl}" Margin="0,0,0,4" />
+                        <Label
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            HorizontalAlignment="Left"
+                            Content="{x:Static Resources:SR.ManagedCertificateSettings_HookUrl}" />
+                        <TextBox
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Margin="0,0,0,4"
+                            HorizontalAlignment="Stretch"
+                            Controls:TextBoxHelper.Watermark="https://example.org/api/controller?domain=$PrimaryDomain"
+                            Text="{Binding SelectedItem.RequestConfig.WebhookUrl}" />
 
-                        <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" Content="{x:Static Resources:SR.ManagedCertificateSettings_HookMethod}" />
-                        <ComboBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" ItemsSource="{x:Static model:Webhook.Methods}" SelectedItem="{Binding SelectedItem.RequestConfig.WebhookMethod}" Width="100" Margin="0,0,0,4" />
+                        <Label
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            HorizontalAlignment="Left"
+                            Content="{x:Static Resources:SR.ManagedCertificateSettings_HookMethod}" />
+                        <ComboBox
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Width="100"
+                            Margin="0,0,0,4"
+                            HorizontalAlignment="Left"
+                            ItemsSource="{x:Static model:Webhook.Methods}"
+                            SelectedItem="{Binding SelectedItem.RequestConfig.WebhookMethod}" />
 
-                        <Grid Grid.Row="2" Grid.ColumnSpan="2" Margin="0">
+                        <Grid
+                            Grid.Row="2"
+                            Grid.ColumnSpan="2"
+                            Margin="0">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="*" />
                                 <RowDefinition Height="*" />
@@ -126,11 +195,35 @@
                                 </Style>
                             </Grid.Style>
 
-                            <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" Content="{x:Static Resources:SR.ManagedCertificateSettings_HookContentType}" />
-                            <TextBox Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" Controls:TextBoxHelper.Watermark="application/json" Width="200" Text="{Binding SelectedItem.RequestConfig.WebhookContentType}" Margin="0,0,0,4" />
+                            <Label
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                HorizontalAlignment="Left"
+                                Content="{x:Static Resources:SR.ManagedCertificateSettings_HookContentType}" />
+                            <TextBox
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Width="200"
+                                Margin="0,0,0,4"
+                                HorizontalAlignment="Left"
+                                Controls:TextBoxHelper.Watermark="application/json"
+                                Text="{Binding SelectedItem.RequestConfig.WebhookContentType}" />
 
-                            <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" Content="{x:Static Resources:SR.ManagedCertificateSettings_HookBody}" />
-                            <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Height="150" Text="{Binding SelectedItem.RequestConfig.WebhookContentBody}" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,4" Controls:TextBoxHelper.Watermark="{x:Static model:Webhook.DEFAULT_BODY}" />
+                            <Label
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                HorizontalAlignment="Left"
+                                Content="{x:Static Resources:SR.ManagedCertificateSettings_HookBody}" />
+                            <TextBox
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Height="150"
+                                Margin="0,0,0,4"
+                                HorizontalAlignment="Stretch"
+                                Controls:TextBoxHelper.Watermark="{x:Static model:Webhook.DEFAULT_BODY}"
+                                AcceptsReturn="True"
+                                Text="{Binding SelectedItem.RequestConfig.WebhookContentBody}"
+                                TextWrapping="Wrap" />
                         </Grid>
                     </Grid>
                 </StackPanel>
