@@ -44,8 +44,12 @@ namespace Certify.UI.Controls.ManagedCertificate
                     this.SettingsTab.SelectedItem = this.TabDomains;
                 }
 
+                // TODO: fix property changed dependencies
                 ItemViewModel.RaisePropertyChanged(nameof(ItemViewModel.ChallengeConfigViewModels));
                 ItemViewModel.RaisePropertyChanged(nameof(ItemViewModel.SelectedItemLogEntries));
+
+                ItemViewModel.RaisePropertyChanged(nameof(ItemViewModel.DaysRemaining));
+                ItemViewModel.RaisePropertyChanged(nameof(ItemViewModel.DateNextRenewalDue));
                 AppViewModel.IsChanged = false;
             }
         }

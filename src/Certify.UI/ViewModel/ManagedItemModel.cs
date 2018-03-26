@@ -1,5 +1,6 @@
 ﻿using Certify.Locales;
 using Certify.Models;
+using PropertyChanged;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -167,6 +168,7 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        [DependsOn(nameof(SelectedItem))]
         public List<string> SelectedItemLogEntries
         {
             get
@@ -187,7 +189,7 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        [PropertyChanged.DependsOn(nameof(SelectedItem))]
+        [PropertyChanged.DependsOn(nameof(SelectedItem), "")]
         public int? DaysRemaining
         {
             get

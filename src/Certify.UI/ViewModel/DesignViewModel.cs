@@ -41,6 +41,10 @@ namespace Certify.UI
                     Name = $"test{i}.example.org",
                     ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS,
                     DateExpiry = DateTime.Now.AddDays(60 - 5 * i),
+                    DateRenewed = DateTime.Now.AddDays(-15),
+                    DateLastRenewalAttempt = DateTime.Now,
+                    DateStart = DateTime.Now.AddMonths(-3),
+
                     RequestConfig = new CertRequestConfig()
                     {
                         ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_SNI,

@@ -121,6 +121,7 @@
       <DependentUpon>QuickStart.xaml</DependentUpon>
     </Compile>
     <Compile Include="Utils\CSRAlgCheckedConverter.cs" />
+    <Compile Include="Utils\NullableDateFormatter.cs" />
     <Compile Include="Utils\ExpiryDateConverter.cs" />
     <Compile Include="Utils\ManagedCertificateHealthVisibilityConverter.cs" />
     <Compile Include="Utils\ManagedCertificateHealthColourConverter.cs" />
