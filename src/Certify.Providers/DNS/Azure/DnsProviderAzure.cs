@@ -19,7 +19,7 @@ namespace Certify.Providers.DNS.Azure
             _credentials = credentials;
         }
 
-        public async Task InitProvider()
+        public async Task<bool> InitProvider()
         {
             // https://docs.microsoft.com/en-us/dotnet/api/overview/azure/dns?view=azure-dotnet
 
@@ -32,6 +32,7 @@ namespace Certify.Providers.DNS.Azure
             _dnsClient = new DnsManagementClient(serviceCreds);
 
             _dnsClient.SubscriptionId = _credentials["subscriptionid"];
+            return true;
         }
 
         public async Task<ActionResult> CreateRecord(DnsCreateRecordRequest request)

@@ -61,7 +61,7 @@ namespace Certify.Core.Management.Challenges
                 {
                     if (providerDefinition.Id == "DNS01.API.Route53")
                     {
-                        dnsAPIProvider = new Providers.DNS.AWSRoute53.DnsProviderAWSRoute53(credentials["accesskey"], credentials["secretaccesskey"]);
+                        dnsAPIProvider = new Providers.DNS.AWSRoute53.DnsProviderAWSRoute53(credentials);
                     }
 
                     if (providerDefinition.Id == "DNS01.API.Azure")

@@ -5,13 +5,13 @@ using System.Threading.Tasks;
 namespace Certify.Core.Tests
 {
     [TestClass]
-    public class DnsAPITestAWSRoute53 : DnsAPITestBase
+    public class DnsAPITestCloudflare : DnsAPITestBase
     {
-        public DnsAPITestAWSRoute53()
+        public DnsAPITestCloudflare()
         {
-            _credStorageKey = ConfigSettings["TestCredentialsKey_Route53"];
-            _zoneId = ConfigSettings["AWS_ZoneId"];
-            PrimaryTestDomain = ConfigSettings["AWS_TestDomain"];
+            _credStorageKey = ConfigSettings["TestCredentialsKey_Cloudflare"];
+            _zoneId = ConfigSettings["Cloudflare_ZoneId"];
+            PrimaryTestDomain = ConfigSettings["Cloudflare_TestDomain"];
         }
 
         [TestInitialize]
@@ -20,7 +20,7 @@ namespace Certify.Core.Tests
             var credentialsManager = new CredentialsManager();
             _credentials = await credentialsManager.GetUnlockedCredentialsDictionary(_credStorageKey);
 
-            _provider = new Providers.DNS.AWSRoute53.DnsProviderAWSRoute53(_credentials);
+            _provider = new Providers.DNS.Cloudflare.DnsProviderCloudflare(_credentials);
             await _provider.InitProvider();
         }
     }

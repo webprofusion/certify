@@ -31,6 +31,8 @@ namespace Certify.Models.Providers
 
     public interface IDnsProvider
     {
+        Task<bool> InitProvider();
+
         Task<ActionResult> CreateRecord(DnsCreateRecordRequest request);
 
         Task<ActionResult> DeleteRecord(DnsDeleteRecordRequest request);

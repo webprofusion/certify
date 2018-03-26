@@ -278,5 +278,10 @@ namespace Certify.Providers.DNS.Cloudflare
 
             return zones;
         }
+
+        public async Task<bool> InitProvider()
+        {
+            return true;
+        }
     }
 }

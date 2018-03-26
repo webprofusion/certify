@@ -13,9 +13,9 @@ namespace Certify.Providers.DNS.AWSRoute53
     {
         private AmazonRoute53Client route53Client;
 
-        public DnsProviderAWSRoute53(string accessKey, string secretKey)
+        public DnsProviderAWSRoute53(Dictionary<string, string> credentials)
         {
-            route53Client = new AmazonRoute53Client(accessKey, secretKey, Amazon.RegionEndpoint.USEast1);
+            route53Client = new AmazonRoute53Client(credentials["accesskey"], credentials["secretaccesskey"], Amazon.RegionEndpoint.USEast1);
         }
 
         private async Task<HostedZone> ResolveMatchingZone(DnsRecordRequest request)
@@ -159,6 +159,11 @@ namespace Certify.Providers.DNS.AWSRoute53
             }
 
             return results;
+        }
+
+        public async Task<bool> InitProvider()
+        {
+            return true;
         }
     }
 }

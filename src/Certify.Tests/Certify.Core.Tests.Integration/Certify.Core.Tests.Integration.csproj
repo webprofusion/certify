@@ -56,6 +56,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CertRequestTests.cs" />
+    <Compile Include="DnsAPITestBase.cs" />
+    <Compile Include="DnsAPITest.Cloudflare.cs" />
+    <Compile Include="DnsAPITest.Azure.cs" />
     <Compile Include="IISManagerTests.cs" />
     <Compile Include="IntegrationTestBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -83,6 +86,10 @@
     <ProjectReference Include="..\..\Certify.Providers\DNS\Azure\Azure.csproj">
       <Project>{533cfb5b-d443-4ab6-a289-90c689a71b81}</Project>
       <Name>Azure</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Certify.Providers\DNS\Cloudflare\Cloudflare.csproj">
+      <Project>{24849dd8-f1db-42fb-a4e2-45a7a4cf694b}</Project>
+      <Name>Cloudflare</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.csproj">
       <Project>{ed48b479-b619-4c16-afa3-83dd3cd89338}</Project>

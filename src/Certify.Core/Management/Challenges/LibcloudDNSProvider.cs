@@ -76,6 +76,11 @@ namespace Certify.Core.Management.Challenges
             throw new NotImplementedException();
         }
 
+        public async Task<bool> InitProvider()
+        {
+            return true;
+        }
+
         private ActionResult RunPythonScript(string args)
         {
             try
