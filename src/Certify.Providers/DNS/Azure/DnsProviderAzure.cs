@@ -60,7 +60,11 @@ namespace Certify.Providers.DNS.Azure
 
                 if (result != null)
                 {
-                    return new ActionResult { IsSuccess = true, Message = "DNS TXT Record Created" };
+                    return new ActionResult
+                    {
+                        IsSuccess = true,
+                        Message = $"DNS TXT Record Created: {request.RecordName} with value: {request.RecordValue} "
+                    };
                 }
             }
             catch (Exception exp)

@@ -1,5 +1,5 @@
 ﻿using Certify.Models;
-using Serilog;
+using Certify.Models.Providers;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -28,7 +28,7 @@ namespace Certify.Management
 
         List<CertificateItem> GetCertificates();
 
-        Task<StatusMessage> TestChallenge(ILogger log, ManagedCertificate managedCertificate, bool isPreviewMode);
+        Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate, bool isPreviewMode);
 
         Task<StatusMessage> RevokeCertificate(ManagedCertificate managedCertificate);
 

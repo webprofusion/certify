@@ -80,7 +80,13 @@ namespace Certify.Core.Tests
                 RequestConfig = new CertRequestConfig
                 {
                     PrimaryDomain = testSiteDomain,
-                    ChallengeType = "http-01",
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>(
+                        new List<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType="http-01"
+                            }
+                        }),
                     PerformAutoConfig = true,
                     PerformAutomatedCertBinding = true,
                     PerformChallengeFileCopy = true,
@@ -144,7 +150,13 @@ namespace Certify.Core.Tests
                 RequestConfig = new CertRequestConfig
                 {
                     PrimaryDomain = testIDNDomain,
-                    ChallengeType = "http-01",
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>(
+                        new List<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType="http-01"
+                            }
+                        }),
                     PerformAutoConfig = true,
                     PerformAutomatedCertBinding = true,
                     PerformChallengeFileCopy = true,
@@ -209,7 +221,13 @@ namespace Certify.Core.Tests
                 {
                     PrimaryDomain = domainList[0],
                     SubjectAlternativeNames = domainList.ToArray(),
-                    ChallengeType = "http-01",
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>(
+                        new List<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType="http-01"
+                            }
+                        }),
                     PerformAutoConfig = true,
                     PerformAutomatedCertBinding = true,
                     PerformChallengeFileCopy = true,
@@ -267,7 +285,13 @@ namespace Certify.Core.Tests
                 {
                     PrimaryDomain = domainList[0],
                     SubjectAlternativeNames = domainList.ToArray(),
-                    ChallengeType = "http-01",
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>(
+                        new List<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType="http-01"
+                            }
+                        }),
                     PerformAutoConfig = true,
                     PerformAutomatedCertBinding = true,
                     PerformChallengeFileCopy = true,
@@ -305,7 +329,6 @@ namespace Certify.Core.Tests
                 RequestConfig = new CertRequestConfig
                 {
                     PrimaryDomain = testSiteDomain,
-                    ChallengeType = "dns-01",
                     PerformAutoConfig = true,
                     PerformAutomatedCertBinding = true,
                     PerformChallengeFileCopy = true,
@@ -386,7 +409,6 @@ namespace Certify.Core.Tests
                     RequestConfig = new CertRequestConfig
                     {
                         PrimaryDomain = wildcardDomain,
-                        ChallengeType = "dns-01",
                         PerformAutoConfig = true,
                         PerformAutomatedCertBinding = true,
                         PerformChallengeFileCopy = true,

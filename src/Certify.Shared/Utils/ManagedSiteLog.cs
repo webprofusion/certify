@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using Certify.Models.Providers;
+using Serilog;
 using System;
 using System.Collections.Generic;
 
@@ -13,6 +14,41 @@ namespace Certify.Models
         CertificateRequestSuccessful = 100,
         CertficateRequestFailed = 101,
         CertficateRequestAttentionRequired = 110
+    }
+
+    public class Loggy : Providers.ILog
+    {
+        private ILogger _log;
+
+        public Loggy(ILogger log)
+        {
+            _log = log;
+        }
+
+        public void Error(string template, params object[] propertyValues)
+        {
+            Log.Error(template, propertyValues);
+        }
+
+        public void Error(Exception exp, string template, params object[] propertyValues)
+        {
+            Log.Error(exp, template, propertyValues);
+        }
+
+        public void Information(string template, params object[] propertyValues)
+        {
+            Log.Information(template, propertyValues);
+        }
+
+        public void Verbose(string template, params object[] propertyValues)
+        {
+            Log.Verbose(template, propertyValues);
+        }
+
+        public void Warning(string template, params object[] propertyValues)
+        {
+            Log.Warning(template, propertyValues);
+        }
     }
 
     public class ManagedCertificateLogItem
@@ -46,7 +82,7 @@ namespace Certify.Models
             return Util.GetAppDataFolder() + "\\logs\\log_" + managedItemId.Replace(':', '_') + ".txt";
         }
 
-        public static ILogger GetLogger(string managedItemId)
+        public static ILog GetLogger(string managedItemId)
         {
             if (_managedItemLoggers == null) _managedItemLoggers = new Dictionary<string, Serilog.Core.Logger>();
 
@@ -76,7 +112,7 @@ namespace Certify.Models
 
                 _managedItemLoggers.Add(managedItemId, log);
             }
-            return log;
+            return new Loggy(log);
         }
 
         public static void AppendLog(string managedItemId, ManagedCertificateLogItem logItem)
@@ -89,7 +125,8 @@ namespace Certify.Models
             if (logItem.LogItemType == LogItemType.GeneralError) logLevel = Serilog.Events.LogEventLevel.Error;
             if (logItem.LogItemType == LogItemType.GeneralWarning) logLevel = Serilog.Events.LogEventLevel.Warning;
 
-            log.Write(logLevel, logItem.Message);
+            // FIXME: log level
+            log.Information(logItem.Message);
         }
 
         public static void DisposeLoggers()

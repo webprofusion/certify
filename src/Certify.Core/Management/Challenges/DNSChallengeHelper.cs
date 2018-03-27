@@ -4,7 +4,6 @@ using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Providers.DNS.Azure;
 using Certify.Providers.DNS.Cloudflare;
-using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +13,7 @@ namespace Certify.Core.Management.Challenges
 {
     public class DNSChallengeHelper
     {
-        public async Task<ActionResult> CompleteDNSChallenge(ILogger log, ManagedCertificate managedcertificate, string domain, string txtRecordName, string txtRecordValue)
+        public async Task<ActionResult> CompleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, string domain, string txtRecordName, string txtRecordValue)
         {
             // for a given managed site configuration, attempt to complete the required challenge by
             // creating the required TXT record

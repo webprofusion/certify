@@ -351,7 +351,12 @@ namespace Certify.CLI
                 newManagedCertificate.Name = siteName;
                 newManagedCertificate.IncludeInAutoRenew = true;
                 newManagedCertificate.ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS;
-                newManagedCertificate.RequestConfig.ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP;
+                newManagedCertificate.RequestConfig.Challenges = new System.Collections.ObjectModel.ObservableCollection<CertRequestChallengeConfig>(
+                    new List<CertRequestChallengeConfig> {
+                        new CertRequestChallengeConfig {
+                            ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP
+                    }
+                    });
                 newManagedCertificate.RequestConfig.PerformAutoConfig = true;
                 newManagedCertificate.RequestConfig.PerformChallengeFileCopy = true;
                 newManagedCertificate.RequestConfig.PerformExtensionlessConfigChecks = true;

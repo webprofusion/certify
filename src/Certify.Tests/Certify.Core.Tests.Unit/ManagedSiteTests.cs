@@ -2,6 +2,8 @@
 using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
 namespace Certify.Core.Tests.Unit
@@ -34,7 +36,13 @@ namespace Certify.Core.Tests.Unit
                 RequestConfig = new CertRequestConfig
                 {
                     PrimaryDomain = "testsite.com",
-                    ChallengeType = "http-01",
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>(
+                        new List<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType="http-01"
+                            }
+                        }),
                     PerformAutoConfig = true,
                     PerformAutomatedCertBinding = true,
                     PerformChallengeFileCopy = true,
@@ -84,7 +92,13 @@ namespace Certify.Core.Tests.Unit
                     RequestConfig = new CertRequestConfig
                     {
                         PrimaryDomain = testname + ".com",
-                        ChallengeType = "http-01",
+                        Challenges = new ObservableCollection<CertRequestChallengeConfig>(
+                        new List<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType="http-01"
+                            }
+                        }),
                         PerformAutoConfig = true,
                         PerformAutomatedCertBinding = true,
                         PerformChallengeFileCopy = true,

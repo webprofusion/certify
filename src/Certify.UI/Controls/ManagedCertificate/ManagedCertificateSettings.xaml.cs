@@ -62,9 +62,9 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return false;
             }*/
 
-            if (item.Id == null && item.RequestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
+            if (item.Id == null && item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
             {
-                MessageBox.Show("Sorry, the tls-sni-01 challenge type is not longer supported by Let's Encrypt for new certificates.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Sorry, the tls-sni-01 challenge type is no longer supported by Let's Encrypt for new certificates.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 
@@ -104,7 +104,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 item.Name = ItemViewModel.PrimarySubjectDomain.Domain;
             }
 
-            if (item.RequestConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI &&
+            if (item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI) &&
                 AppViewModel.IISVersion.Major < 8)
             {
                 MessageBox.Show(string.Format(SR.ManagedCertificateSettings_ChallengeNotAvailable, SupportedChallengeTypes.CHALLENGE_TYPE_SNI), SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
@@ -226,7 +226,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        private void ShowTestResults()
+        private void ShowTestResultsUI()
         {
             Window parentWindow = Window.GetWindow(this);
             object obj = parentWindow.FindName("MainFlyout");
@@ -238,11 +238,10 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private async void TestChallenge_Click(object sender, EventArgs e)
         {
-            ShowTestResults();
-
             ItemViewModel.IsTestInProgress = true;
 
             var challengeConfig = ItemViewModel.SelectedItem.GetChallengeConfig(null);
+
             if (!AppViewModel.IsIISAvailable)
             {
                 MessageBox.Show(SR.ManagedCertificateSettings_CannotChallengeWithoutIIS, SR.ChallengeError, MessageBoxButton.OK, MessageBoxImage.Error);
@@ -264,16 +263,26 @@ namespace Certify.UI.Controls.ManagedCertificate
                     MessageBox.Show(exp.Message);
                     return;
                 }
+                ItemViewModel.ConfigCheckResults = new System.Collections.ObjectModel.ObservableCollection<StatusMessage> {
+                    new StatusMessage{IsOK=true, Message="Testing in progress.."}
+                };
 
-                ItemViewModel.ConfigCheckResult = await ItemViewModel.TestChallengeResponse(ItemViewModel.SelectedItem);
+                ShowTestResultsUI();
 
-                if (ItemViewModel.ConfigCheckResult.IsOK)
+                var results = await ItemViewModel.TestChallengeResponse(ItemViewModel.SelectedItem);
+                ItemViewModel.ConfigCheckResults =
+                    new System.Collections.ObjectModel.ObservableCollection<StatusMessage>(results);
+                ItemViewModel.RaisePropertyChanged(nameof(ItemViewModel.ConfigCheckResults));
+
+                if (ItemViewModel.ConfigCheckResults.All(a => a.IsOK))
                 {
                     MessageBox.Show(SR.ManagedCertificateSettings_ConfigurationCheckOk, SR.Challenge, MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
-                    MessageBox.Show(string.Format(SR.ManagedCertificateSettings_ConfigurationCheckFailed, String.Join("\r\n", ItemViewModel.ConfigCheckResult.FailedItemSummary)), SR.ManagedCertificateSettings_ChallengeTestFailed, MessageBoxButton.OK, MessageBoxImage.Error);
+                    // MessageBox.Show(string.Format(SR.ManagedCertificateSettings_ConfigurationCheckFailed,
+                    // String.Join("\r\n", ItemViewModel.ConfigCheckResults.FailedItemSummary)),
+                    // SR.ManagedCertificateSettings_ChallengeTestFailed, MessageBoxButton.OK, MessageBoxImage.Error);
                 }
 
                 //TODO: just use viewmodel to determine if test button should be enabled

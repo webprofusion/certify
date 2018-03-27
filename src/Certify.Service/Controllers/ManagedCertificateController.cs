@@ -55,7 +55,7 @@ namespace Certify.Service
         }
 
         [HttpPost, Route("testconfig")]
-        public async Task<StatusMessage> TestChallengeResponse(ManagedCertificate site)
+        public async Task<List<StatusMessage>> TestChallengeResponse(ManagedCertificate site)
         {
             DebugLog();
 
@@ -66,9 +66,8 @@ namespace Certify.Service
                      .WriteTo.StringList(logList)
                      .CreateLogger())
             {
-                var result = await _certifyManager.TestChallenge(log, site, isPreviewMode: true);
-                result.Result = logList;
-                return result;
+                Loggy theLog = new Loggy(log);
+                return await _certifyManager.TestChallenge(theLog, site, isPreviewMode: true);
             }
         }
 

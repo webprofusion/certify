@@ -78,7 +78,7 @@ namespace Certify.Core.Management.Challenges
 
         public async Task<bool> InitProvider()
         {
-            return true;
+            return await Task.FromResult(true);
         }
 
         private ActionResult RunPythonScript(string args)

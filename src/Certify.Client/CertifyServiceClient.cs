@@ -234,10 +234,10 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<RequestProgressState>(json);
         }
 
-        public async Task<StatusMessage> TestChallengeConfiguration(ManagedCertificate site)
+        public async Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate site)
         {
             var response = await PostAsync($"managedcertificates/testconfig", site);
-            return JsonConvert.DeserializeObject<StatusMessage>(await response.Content.ReadAsStringAsync());
+            return JsonConvert.DeserializeObject<List<StatusMessage>>(await response.Content.ReadAsStringAsync());
         }
 
         public async Task<List<ActionStep>> PreviewActions(ManagedCertificate site)

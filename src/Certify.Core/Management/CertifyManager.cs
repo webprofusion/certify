@@ -5,7 +5,6 @@ using Certify.Models;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Microsoft.ApplicationInsights;
-using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -116,7 +115,7 @@ namespace Certify.Management
         /// If true, perform full set of checks (DNS etc), if false performs minimal/basic checks
         /// </param>
         /// <returns></returns>
-        public async Task<StatusMessage> TestChallenge(ILogger log, ManagedCertificate managedCertificate, bool isPreviewMode)
+        public async Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate, bool isPreviewMode)
         {
             return await _challengeDiagnostics.TestChallengeResponse(log, _serverProvider, managedCertificate, isPreviewMode, CoreAppSettings.Current.EnableDNSValidationChecks);
         }
@@ -383,7 +382,7 @@ namespace Certify.Management
             return result;
         }
 
-        private async Task PerformCertificateRequestProcessing(ILogger log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, CertificateRequestResult result, CertRequestConfig config)
+        private async Task PerformCertificateRequestProcessing(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, CertificateRequestResult result, CertRequestConfig config)
         {
             // proceed with the request
             LogMessage(managedCertificate.Id, $"Beginning Certificate Request Process: {managedCertificate.Name} using ACME Provider:{_acmeClientProvider.GetProviderName()}");
@@ -406,7 +405,15 @@ namespace Certify.Management
             // begin by assuming all identifiers are valid
             bool allIdentifiersValidated = true;
 
-            if (config.ChallengeType == null) config.ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP;
+            if (config.ChallengeType == null && (config.Challenges == null || !config.Challenges.Any()))
+            {
+                config.Challenges = new ObservableCollection<CertRequestChallengeConfig>(
+                    new List<CertRequestChallengeConfig> {
+                       new CertRequestChallengeConfig{
+                           ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP
+                            }
+                        });
+            }
 
             List<PendingAuthorization> identifierAuthorizations = new List<PendingAuthorization>();
             string failureSummaryMessage = null;
@@ -418,12 +425,13 @@ namespace Certify.Management
             // begin authorization by registering the domain identifier. This may return an already
             // validated authorization or we may still have to complete the authorization challenge.
             // When rate limits are encountered, this step may fail.
-            var authorizations = await _acmeClientProvider.BeginRegistrationAndValidation(config, null, challengeType: config.ChallengeType, domain: null);
+            var authorizations = await _acmeClientProvider.BeginRegistrationAndValidation(log, config, null, domain: null);
 
             foreach (var domain in distinctDomains)
             {
                 var asciiDomain = _idnMapping.GetAscii(domain);
                 var auth = authorizations.FirstOrDefault(a => a.Identifier?.Dns == asciiDomain);
+                var challengeConfig = managedCertificate.GetChallengeConfig(domain);
 
                 var authorization = auth;
                 if (authorization != null && authorization.Identifier != null)
@@ -431,8 +439,8 @@ namespace Certify.Management
                     LogMessage(managedCertificate.Id, $"Attempting Domain Validation: {domain}", LogItemType.CertificateRequestStarted);
 
                     ReportProgress(progress,
-                        new RequestProgressState(RequestState.Running, string.Format(Certify.Locales.CoreSR.CertifyManager_RegisteringAndValidatingX0, domain), managedCertificate)
-                        );
+                                        new RequestProgressState(RequestState.Running, string.Format(Certify.Locales.CoreSR.CertifyManager_RegisteringAndValidatingX0, domain), managedCertificate)
+                                        );
 
                     // check if authorization is pending, it may already be valid if an existing
                     // authorization was reused
@@ -454,8 +462,8 @@ namespace Certify.Management
                             authorization = await _challengeDiagnostics.PerformAutomatedChallengeResponse(log, _serverProvider, managedCertificate, authorization);
 
                             if (
-                                (config.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP && config.PerformExtensionlessConfigChecks && !authorization.AttemptedChallenge?.ConfigCheckedOK == true) ||
-                                (config.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI && config.PerformTlsSniBindingConfigChecks && !authorization.AttemptedChallenge?.ConfigCheckedOK == true)
+                                (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP && config.PerformExtensionlessConfigChecks && !authorization.AttemptedChallenge?.ConfigCheckedOK == true) ||
+                                (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI && config.PerformTlsSniBindingConfigChecks && !authorization.AttemptedChallenge?.ConfigCheckedOK == true)
                                 )
                             {
                                 //if we failed the config checks, report any errors
@@ -463,12 +471,12 @@ namespace Certify.Management
                                 LogMessage(managedCertificate.Id, msg, LogItemType.CertficateRequestFailed);
                                 result.Message = msg;
 
-                                if (config.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
+                                if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
                                 {
                                     result.Message = string.Format(CoreSR.CertifyManager_AutomateConfigurationCheckFailed_HTTP, domain);
                                 }
 
-                                if (config.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
+                                if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
                                 {
                                     result.Message = Certify.Locales.CoreSR.CertifyManager_AutomateConfigurationCheckFailed_SNI;
                                 }
@@ -486,7 +494,7 @@ namespace Certify.Management
                                 try
                                 {
                                     //ask LE to validate our challenge response
-                                    var submissionStatus = await _acmeClientProvider.SubmitChallenge(null, config.ChallengeType, authorization.AttemptedChallenge);
+                                    var submissionStatus = await _acmeClientProvider.SubmitChallenge(log, null, challengeConfig.ChallengeType, authorization.AttemptedChallenge);
 
                                     if (submissionStatus.IsOK)
                                     {
@@ -558,12 +566,7 @@ namespace Certify.Management
                 {
                     // could not begin authorization
 
-                    var lastActionLogItem = _acmeClientProvider.GetLastActionLogItem();
                     var actionLogMsg = "";
-                    if (lastActionLogItem != null)
-                    {
-                        actionLogMsg = lastActionLogItem.ToString();
-                    }
 
                     LogMessage(managedCertificate.Id, $"Could not begin authorization for domain with Let's Encrypt: [{ domain }] {(authorization?.AuthorizationError != null ? authorization?.AuthorizationError : "Could not register domain identifier")} - {actionLogMsg}");
                     failureSummaryMessage = $"[{domain}] : {authorization?.AuthorizationError}";
@@ -590,7 +593,7 @@ namespace Certify.Management
 
                 // Perform CSR request
                 // FIXME: make call async
-                var certRequestResult = await _acmeClientProvider.PerformCertificateRequestProcess(primaryDnsIdentifier, alternativeDnsIdentifiers, config);
+                var certRequestResult = await _acmeClientProvider.PerformCertificateRequestProcess(log, primaryDnsIdentifier, alternativeDnsIdentifiers, config);
 
                 if (certRequestResult.IsSuccess)
                 {
@@ -1142,7 +1145,11 @@ namespace Certify.Management
             steps.Add(new ActionStep { Title = "Summary", Description = certDescription });
 
             // validation steps
-            string validationDescription = $"Attempt authorization using the {item.RequestConfig.ChallengeType} challenge type.";
+            string validationDescription = "";
+            foreach (var challengeConfig in item.RequestConfig.Challenges)
+            {
+                validationDescription += $"Attempt authorization using the {challengeConfig.ChallengeType} challenge type.\r\n";
+            }
 
             // if using http-01, describe steps
 

@@ -1,4 +1,5 @@
 ﻿using Certify.Models.Config;
+using Certify.Models.Providers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -12,18 +13,14 @@ namespace Certify.Models.Plugins
 
         string GetAcmeBaseURI();
 
-        string ComputeDomainIdentifierId(string domain);
+        Task<List<PendingAuthorization>> BeginRegistrationAndValidation(ILog log, CertRequestConfig config, string domainIdentifierId, string domain);
 
-        Task<List<PendingAuthorization>> BeginRegistrationAndValidation(CertRequestConfig config, string domainIdentifierId, string challengeType, string domain);
-
-        Task<StatusMessage> SubmitChallenge(string domainIdentifierId, string challengeType, AuthorizationChallengeItem attemptedChallenge);
+        Task<StatusMessage> SubmitChallenge(ILog log, string domainIdentifierId, string challengeType, AuthorizationChallengeItem attemptedChallenge);
 
         Task<PendingAuthorization> CheckValidationCompleted(string alias, PendingAuthorization pendingAuthorization);
 
-        Task<ProcessStepResult> PerformCertificateRequestProcess(string primaryDnsIdentifier, string[] alternativeDnsIdentifiers, CertRequestConfig config);
+        Task<ProcessStepResult> PerformCertificateRequestProcess(ILog log, string primaryDnsIdentifier, string[] alternativeDnsIdentifiers, CertRequestConfig config);
 
         Task<StatusMessage> RevokeCertificate(ManagedCertificate managedCertificate);
-
-        ActionLogItem GetLastActionLogItem();
     }
 }

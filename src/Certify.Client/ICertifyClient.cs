@@ -116,7 +116,7 @@ namespace Certify.Client
 
         Task<RequestProgressState> CheckCertificateRequest(string managedItemId);
 
-        Task<StatusMessage> TestChallengeConfiguration(ManagedCertificate site);
+        Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate site);
 
         Task<List<ActionStep>> PreviewActions(ManagedCertificate site);
 

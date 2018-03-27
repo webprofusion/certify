@@ -1,8 +1,8 @@
 ﻿using Certify.Management;
 using Certify.Models;
+using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Models.Shared;
-using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -36,9 +36,11 @@ namespace Certify.Core.Management.Challenges
         /// submitting a request to the ACME server, to avoid creating failed requests and hitting
         /// usage limits.
         /// </remarks>
-        public async Task<StatusMessage> TestChallengeResponse(ILogger log, ICertifiedServer iisManager, ManagedCertificate managedCertificate, bool isPreviewMode, bool enableDnsChecks)
+        public async Task<List<StatusMessage>> TestChallengeResponse(ILog log, ICertifiedServer iisManager, ManagedCertificate managedCertificate, bool isPreviewMode, bool enableDnsChecks)
         {
             _actionLogs.Clear(); // reset action logs
+
+            List<StatusMessage> results = new List<StatusMessage>();
 
             var requestConfig = managedCertificate.RequestConfig;
             var result = new StatusMessage { IsOK = true };
@@ -48,6 +50,8 @@ namespace Certify.Core.Management.Challenges
             {
                 domains.AddRange(requestConfig.SubjectAlternativeNames);
             }
+
+            domains = domains.Distinct().ToList();
 
             var generatedAuthorizations = new List<PendingAuthorization>();
 
@@ -59,7 +63,7 @@ namespace Certify.Core.Management.Challenges
                     log.Information("Performing preview DNS tests. {managedItem}", managedCertificate);
 
                     // check all domain configs
-                    Parallel.ForEach(domains.Distinct(), new ParallelOptions
+                    Parallel.ForEach(domains, new ParallelOptions
                     {
                         // check 8 domains at a time
                         MaxDegreeOfParallelism = 8
@@ -72,14 +76,22 @@ namespace Certify.Core.Management.Challenges
                             result.IsOK = false;
                             result.FailedItemSummary.Add(message);
                         }
+                        else
+                        {
+                            result.IsOK = true;
+                            result.Message = message;
+                        }
+                        results.Add(result);
                     });
+
                     if (!result.IsOK)
                     {
-                        return result;
+                        results.Add(result);
+                        return results;
                     }
                 }
 
-                foreach (var domain in domains.Distinct())
+                foreach (var domain in domains)
                 {
                     var challengeConfig = managedCertificate.GetChallengeConfig(domain);
 
@@ -111,6 +123,7 @@ namespace Certify.Core.Management.Challenges
                             result.IsOK = false;
                             result.FailedItemSummary.Add($"Config checks failed to verify http://{domain} is both publicly accessible and can serve extensionless files e.g. {challengeFileUrl}");
 
+                            results.Add(result);
                             // don't check any more after first failure
                             break;
                         }
@@ -121,7 +134,9 @@ namespace Certify.Core.Management.Challenges
                         {
                             result.IsOK = false;
                             result.FailedItemSummary.Add($"The {SupportedChallengeTypes.CHALLENGE_TYPE_SNI} challenge is only available for IIS versions 8+.");
-                            return result;
+                            results.Add(result);
+
+                            return results;
                         }
 
                         var simulatedAuthorization = new PendingAuthorization
@@ -140,6 +155,8 @@ namespace Certify.Core.Management.Challenges
                              PrepareChallengeResponse_TlsSni01(
                                 log, iisManager, domain, managedCertificate, simulatedAuthorization
                             )();
+
+                        results.Add(result);
                     }
                     else if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                     {
@@ -155,13 +172,19 @@ namespace Certify.Core.Management.Challenges
                                  }
                         };
                         generatedAuthorizations.Add(simulatedAuthorization);
-                        result.IsOK =
-                             PrepareChallengeResponse_Dns01(
+
+                        var dnsResult =
+                             await PerformChallengeResponse_Dns01(
                                 log,
                                 domain,
                                 managedCertificate,
                                 simulatedAuthorization
-                            )();
+                            );
+
+                        result.Message = dnsResult.Message;
+                        result.IsOK = dnsResult.IsSuccess;
+
+                        results.Add(result);
                     }
                     else
                     {
@@ -175,7 +198,7 @@ namespace Certify.Core.Management.Challenges
                 generatedAuthorizations.ForEach(ga => ga.Cleanup());
             }
 
-            return result;
+            return results;
         }
 
         /// <summary>
@@ -200,14 +223,16 @@ namespace Certify.Core.Management.Challenges
             return $"{simulated_token}.{thumbprint}";
         }
 
-        public async Task<PendingAuthorization> PerformAutomatedChallengeResponse(ILogger log, ICertifiedServer iisManager, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
+        public async Task<PendingAuthorization> PerformAutomatedChallengeResponse(ILog log, ICertifiedServer iisManager, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
         {
             var requestConfig = managedCertificate.RequestConfig;
             var domain = pendingAuth.Identifier.Dns;
+            var challengeConfig = managedCertificate.GetChallengeConfig(domain);
+
             if (pendingAuth.Challenges != null)
             {
                 // from list of possible challenges, select the one we prefer to attempt
-                var requiredChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == managedCertificate.RequestConfig.ChallengeType);
+                var requiredChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == challengeConfig.ChallengeType);
 
                 if (requiredChallenge != null)
                 {
@@ -236,7 +261,7 @@ namespace Certify.Core.Management.Challenges
                     if (requiredChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                     {
                         // perform dns-01 challenge response FIXME:
-                        var check = PrepareChallengeResponse_Dns01(log, domain, managedCertificate, pendingAuth);
+                        var check = await PerformChallengeResponse_Dns01(log, domain, managedCertificate, pendingAuth);
                         /*if (requestConfig.PerformTlsSniBindingConfigChecks)
                         {
                             // set config check OK if all checks return true
@@ -254,7 +279,7 @@ namespace Certify.Core.Management.Challenges
         /// <returns>
         /// A Boolean returning Func. Invoke the Func to test the challenge response locally.
         /// </returns>
-        private Func<Task<bool>> PrepareChallengeResponse_Http01(ILogger log, ICertifiedServer iisManager, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
+        private Func<Task<bool>> PrepareChallengeResponse_Http01(ILog log, ICertifiedServer iisManager, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
         {
             var requestConfig = managedCertificate.RequestConfig;
             var httpChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP);
@@ -396,7 +421,7 @@ namespace Certify.Core.Management.Challenges
             };
         }
 
-        private Func<bool> PrepareChallengeResponse_TlsSni01(ILogger log, ICertifiedServer iisManager, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
+        private Func<bool> PrepareChallengeResponse_TlsSni01(ILog log, ICertifiedServer iisManager, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
         {
             var requestConfig = managedCertificate.RequestConfig;
             var tlsSniChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI);
@@ -448,44 +473,45 @@ namespace Certify.Core.Management.Challenges
             return () => checkQueue.All(check => check());
         }
 
-        private Func<bool> PrepareChallengeResponse_Dns01(ILogger log, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
+        private async Task<ActionResult> PerformChallengeResponse_Dns01(ILog log, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
         {
-            // TODO: make this async
             var requestConfig = managedCertificate.RequestConfig;
             var dnsChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
 
             if (dnsChallenge == null)
             {
-                log.Warning($"No dns-01 challenge to complete for {managedCertificate.Name}. Request cannot continue.");
-                return () => false;
+                var msg = $"No dns-01 challenge to complete for {managedCertificate.Name}. Request cannot continue.";
+
+                log.Warning(msg);
+
+                return new ActionResult
+                {
+                    IsSuccess = false,
+                    Message = msg
+                };
             }
 
             // create DNS records (manually or via automation)
             var dnsHelper = new DNSChallengeHelper();
-            var helperResult = dnsHelper.CompleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value).Result;
+            var dnsResult = await dnsHelper.CompleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value);
 
-            if (helperResult.IsSuccess)
+            if (!dnsResult.IsSuccess)
             {
-                log.Error("DNS update failed: Failed {err}", helperResult.Message);
+                log.Error("DNS update failed: Failed {err}", dnsResult.Message);
             }
             else
             {
-                log.Error("DNS updated OK : {err}", helperResult.Message);
+                log.Error("DNS updated OK : {msg}", dnsResult.Message);
             }
 
             var cleanupQueue = new List<Action> { };
-            var checkQueue = new List<Func<bool>> { };
-
-            // add check to the queue checkQueue.Add(() => _netUtil.CheckDNS(domain, ));
-            checkQueue.Add(() => { return helperResult.IsSuccess; });
 
             // TODO: add cleanup actions to queue cleanupQueue.Add(() => remove temp txt record);
 
             // configure cleanup actions for use after challenge completes
             pendingAuth.Cleanup = () => cleanupQueue.ForEach(a => a());
 
-            // perform our config checks
-            return () => checkQueue.All(check => check());
+            return dnsResult;
         }
     }
 }

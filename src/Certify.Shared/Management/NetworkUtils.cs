@@ -1,6 +1,7 @@
 ﻿using ARSoft.Tools.Net;
 using ARSoft.Tools.Net.Dns;
 using Certify.Locales;
+using Certify.Models.Providers;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -117,7 +118,7 @@ namespace Certify.Management
             }
         }
 
-        public async Task<bool> CheckURL(ILogger log, string url, bool? useProxyAPI = null)
+        public async Task<bool> CheckURL(ILog log, string url, bool? useProxyAPI = null)
         {
             // if validation proxy enabled, access to the domain being validated is checked via our
             // remote API rather than directly on the servers
@@ -189,7 +190,7 @@ namespace Certify.Management
             {
                 if (useProxy)
                 {
-                    log.Warning(exp, "Problem checking URL is accessible : {url} ", url);
+                    log.Warning($"Problem checking URL is accessible : {url} {exp.Message}", url);
 
                     // failed to call proxy API (maybe offline?), let's try a local check
                     return await CheckURL(log, url, false);
@@ -253,7 +254,7 @@ namespace Certify.Management
             return false;
         }
 
-        public (bool Ok, string Message) CheckDNS(ILogger log, string domain, bool? useProxyAPI = null)
+        public (bool Ok, string Message) CheckDNS(ILog log, string domain, bool? useProxyAPI = null)
         {
             // helper function to log the error then return the ValueTuple
             Func<string, (bool, string)> errorResponse = (msg) =>
@@ -348,7 +349,7 @@ namespace Certify.Management
             {
                 return errorResponse($"'{domain}' DNSSEC verification failed.");
             }
-            return (true, "");
+            return (true, $"DNS Check (CAA, DNSSEC) Passed OK: {domain}");
         }
     }
 }

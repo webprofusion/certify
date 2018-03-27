@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -223,7 +224,13 @@ namespace Certify.Core.Tests
                 RequestConfig = new CertRequestConfig
                 {
                     PrimaryDomain = testSiteDomain,
-                    ChallengeType = "http-01",
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>(
+                        new List<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType="http-01"
+                            }
+                        }),
                     PerformAutoConfig = true,
                     PerformAutomatedCertBinding = true,
                     PerformChallengeFileCopy = true,

@@ -219,7 +219,7 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public StatusMessage ConfigCheckResult
+        public ObservableCollection<StatusMessage> ConfigCheckResults
         {
             get; set;
         }
@@ -505,7 +505,7 @@ namespace Certify.UI.ViewModel
             return await _appViewModel.CertifyClient.ReapplyCertificateBindings(managedItemId, isPreviewOnly);
         }
 
-        public async Task<StatusMessage> TestChallengeResponse(ManagedCertificate managedCertificate)
+        public async Task<List<StatusMessage>> TestChallengeResponse(ManagedCertificate managedCertificate)
         {
             return await _appViewModel.CertifyClient.TestChallengeConfiguration(managedCertificate);
         }

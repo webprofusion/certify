@@ -281,7 +281,7 @@ namespace Certify.Providers.DNS.Cloudflare
 
         public async Task<bool> InitProvider()
         {
-            return true;
+            return await Task.FromResult(true);
         }
     }
 }

@@ -279,7 +279,7 @@ namespace Certify.Management
             {
                 if (!String.IsNullOrEmpty(filter.Keyword)) items = items.Where(i => i.Name.ToLowerInvariant().Contains(filter.Keyword.ToLowerInvariant()));
 
-                if (!String.IsNullOrEmpty(filter.ChallengeType)) items = items.Where(i => i.RequestConfig.ChallengeType == filter.ChallengeType);
+                if (!String.IsNullOrEmpty(filter.ChallengeType)) items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeType == filter.ChallengeType));
 
                 if (!String.IsNullOrEmpty(filter.ChallengeProvider)) items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeProvider == filter.ChallengeProvider));
 

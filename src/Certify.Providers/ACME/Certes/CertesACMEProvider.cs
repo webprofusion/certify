@@ -8,9 +8,9 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
-using Certify.Models.Shared;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Crypto.Digests;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -25,7 +25,7 @@ namespace Certify.Providers.Certes
         public string AccountEmail { get; set; }
     }
 
-    public class CertesACMEProvider : ActionLogCollector, IACMEClientProvider, IVaultProvider
+    public class CertesACMEProvider : IACMEClientProvider, IVaultProvider
     {
         private AcmeContext _acme;
 #if !DEBUG
@@ -163,7 +163,7 @@ namespace Certify.Providers.Certes
             return dnsValue;
         }
 
-        public async Task<List<PendingAuthorization>> BeginRegistrationAndValidation(CertRequestConfig config, string domainIdentifierId, string challengeType, string domain)
+        public async Task<List<PendingAuthorization>> BeginRegistrationAndValidation(ILog log, CertRequestConfig config, string domainIdentifierId, string domain)
         {
             // prepare a list of all pending authorization we need to complete, or those we have
             // already satisfied
@@ -190,6 +190,8 @@ namespace Certify.Providers.Certes
             {
                 var order = await _acme.NewOrder(domainOrders);
 
+                log.Information($"Created ACME Order {order}");
+
                 // track order in memory, keyed in primary domain
                 if (_currentOrders.Keys.Contains(config.PrimaryDomain))
                 {
@@ -199,10 +201,14 @@ namespace Certify.Providers.Certes
                 _currentOrders.Add(config.PrimaryDomain, order);
 
                 // get all required pending (or already valid) authorizations for this order
+
+                log.Verbose($"Fetching Authorizations.");
                 var orderAuthorizations = await order.Authorizations();
 
                 foreach (IAuthorizationContext authz in orderAuthorizations)
                 {
+                    log.Verbose($"Fetching Authz Challenges.");
+
                     var allChallenges = await authz.Challenges();
                     var res = await authz.Resource();
                     string authzDomain = res.Identifier.Value;
@@ -215,6 +221,9 @@ namespace Certify.Providers.Certes
                     if (httpChallenge != null)
                     {
                         var httpChallengeStatus = await httpChallenge.Resource();
+
+                        log.Information($"Got http-01 challenge {httpChallengeStatus}");
+
                         if (httpChallengeStatus.Status == ChallengeStatus.Invalid)
                         {
                             // we need to start a new http challenge
@@ -240,6 +249,8 @@ namespace Certify.Providers.Certes
                     if (dnsChallenge != null)
                     {
                         var dnsChallengeStatus = await dnsChallenge.Resource();
+
+                        log.Information($"Got dns-01 challenge {dnsChallengeStatus}");
 
                         if (dnsChallengeStatus.Status == ChallengeStatus.Invalid)
                         {
@@ -299,17 +310,18 @@ namespace Certify.Providers.Certes
             catch (Exception exp)
             {
                 // failed to register the domain identifier with LE (invalid, rate limit or CAA fail?)
-                LogAction("NewOrder [" + config.PrimaryDomain + "]", exp.Message);
+                log.Error("New Order Failed [" + config.PrimaryDomain + "]", exp.Message);
 
                 return new List<PendingAuthorization> {
                     new PendingAuthorization
-                {
-                    AuthorizationError = exp.Message
-                } };
+                    {
+                        AuthorizationError = exp.Message
+                    }
+                };
             }
         }
 
-        public async Task<StatusMessage> SubmitChallenge(string domainIdentifierId, string challengeType, AuthorizationChallengeItem attemptedChallenge)
+        public async Task<StatusMessage> SubmitChallenge(ILog log, string domainIdentifierId, string challengeType, AuthorizationChallengeItem attemptedChallenge)
         {
             // if not already validate, ask ACME server to validate we have answered the required
             // challenge correctly
@@ -340,7 +352,7 @@ namespace Certify.Providers.Certes
                 }
                 catch (Exception exp)
                 {
-                    LogAction("SubmitChallenge failed. ", exp.Message);
+                    Log.Error("Submit Challenge failed. ", exp.Message);
 
                     var challengeError = await challenge.Resource();
 
@@ -410,7 +422,7 @@ namespace Certify.Providers.Certes
             throw new System.NotImplementedException();
         }
 
-        public async Task<ProcessStepResult> PerformCertificateRequestProcess(string primaryDnsIdentifier, string[] alternativeDnsIdentifiers, CertRequestConfig config)
+        public async Task<ProcessStepResult> PerformCertificateRequestProcess(ILog log, string primaryDnsIdentifier, string[] alternativeDnsIdentifiers, CertRequestConfig config)
         {
             // create our new certificate
             var orderContext = _currentOrders[config.PrimaryDomain];
@@ -474,7 +486,7 @@ namespace Certify.Providers.Certes
                 // can get error on finalize if the order is already valid
                 certOrder = await orderContext.Resource();
 
-                LogAction("Order.Finalize", $"Failed to finalize order. Status: {certOrder.Status} ");
+                Log.Error("Order.Finalize", $"Failed to finalize order. Status: {certOrder.Status} ");
             }
 
             //TODO: should we iterate here until valid or invalid?

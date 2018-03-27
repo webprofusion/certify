@@ -1,4 +1,5 @@
 ﻿using Certify.Management;
+using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Serilog;
 
@@ -12,9 +13,11 @@ namespace Certify.Core.Tests.Unit
         {
             var net = new NetworkUtils(enableProxyValidationAPI: true);
 
-            var log = new LoggerConfiguration()
+            var logImp = new LoggerConfiguration()
                 .WriteTo.Debug()
                 .CreateLogger();
+
+            var log = new Loggy(logImp);
 
             // check invalid domain
             Assert.IsFalse(net.CheckDNS(log, "fdlsakdfoweinoijsjdfpsdkfspdf.com").Ok, "Non-existant DNS does not throw an error");

@@ -47,7 +47,11 @@ namespace Certify.UI
 
                     RequestConfig = new CertRequestConfig()
                     {
-                        ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_SNI,
+                        Challenges = new ObservableCollection<CertRequestChallengeConfig>(
+                           new List<CertRequestChallengeConfig> {
+                               new CertRequestChallengeConfig{ ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_HTTP}
+                           }
+                           ),
                         PerformAutomatedCertBinding = true,
                         PreRequestPowerShellScript = @"c:\inetpub\scripts\pre-req-script.ps1",
                         PostRequestPowerShellScript = @"c:\inetpub\scripts\post-req-script.ps1",
