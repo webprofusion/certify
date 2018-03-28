@@ -39,7 +39,7 @@ namespace Certify.Providers.DNS.Azure
         {
             var recordSetParams = new RecordSet
             {
-                TTL = 1300,
+                TTL = 5,
                 TxtRecords = new List<TxtRecord>
                 {
                     new TxtRecord(new[] {

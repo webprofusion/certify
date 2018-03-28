@@ -139,7 +139,8 @@ namespace Certify.Providers.DNS.Cloudflare
                 {
                     type = "TXT",
                     name = name,
-                    content = value
+                    content = value,
+                    ttl = 120
                 })
                 );
 
@@ -173,7 +174,8 @@ namespace Certify.Providers.DNS.Cloudflare
                 {
                     type = "TXT",
                     name = record.Name,
-                    content = value
+                    content = value,
+                    ttl = 120
                 })
                 );
 

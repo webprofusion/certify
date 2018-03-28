@@ -315,7 +315,8 @@ namespace Certify.Providers.Certes
                 return new List<PendingAuthorization> {
                     new PendingAuthorization
                     {
-                        AuthorizationError = exp.Message
+                        AuthorizationError = exp.Message,
+                        IsFailure=true
                     }
                 };
             }
@@ -373,7 +374,7 @@ namespace Certify.Providers.Certes
             }
         }
 
-        public async Task<PendingAuthorization> CheckValidationCompleted(string alias, PendingAuthorization pendingAuthorization)
+        public async Task<PendingAuthorization> CheckValidationCompleted(ILog log, string challengeType, PendingAuthorization pendingAuthorization)
         {
             IAuthorizationContext authz = (IAuthorizationContext)pendingAuthorization.AuthorizationContext;
 
@@ -394,7 +395,21 @@ namespace Certify.Providers.Certes
                 pendingAuthorization.Identifier.Status = "invalid";
 
                 // TODO:  return ACME error
+                //determine error
+                try
+                {
+                    var challenge = res.Challenges.FirstOrDefault(c => c.Type == challengeType);
+                    if (challenge != null)
+                    {
+                        var r = await _acme.HttpClient.Get<AcmeResponse<Challenge>>(challenge.Url);
 
+                        pendingAuthorization.AuthorizationError = $"{r.Resource.Error.Detail} {r.Resource.Error.Status} {r.Resource.Error.Type}";
+                    }
+                }
+                catch
+                {
+                    log.Warning("Failed to determine error message for failed authorization.");
+                }
                 pendingAuthorization.Identifier.ValidationError = "Failed";
                 pendingAuthorization.Identifier.ValidationErrorType = "Error";
                 pendingAuthorization.IsValidated = false;

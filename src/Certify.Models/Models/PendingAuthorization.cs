@@ -51,6 +51,7 @@ namespace Certify.Models
         public List<string> LogItems { get; set; }
         public string AuthorizationError { get; set; }
         public bool IsValidated { get; set; }
+        public bool IsFailure { get; set; }
 
         /// <summary>
         /// The challenge we have attempted for this authorization request 

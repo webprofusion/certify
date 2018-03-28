@@ -17,7 +17,7 @@ namespace Certify.Models.Plugins
 
         Task<StatusMessage> SubmitChallenge(ILog log, string domainIdentifierId, string challengeType, AuthorizationChallengeItem attemptedChallenge);
 
-        Task<PendingAuthorization> CheckValidationCompleted(string alias, PendingAuthorization pendingAuthorization);
+        Task<PendingAuthorization> CheckValidationCompleted(ILog log, string challengeType, PendingAuthorization pendingAuthorization);
 
         Task<ProcessStepResult> PerformCertificateRequestProcess(ILog log, string primaryDnsIdentifier, string[] alternativeDnsIdentifiers, CertRequestConfig config);
 
