@@ -27,27 +27,27 @@ namespace Certify.Models
 
         public void Error(string template, params object[] propertyValues)
         {
-            Log.Error(template, propertyValues);
+            _log.Error(template, propertyValues);
         }
 
         public void Error(Exception exp, string template, params object[] propertyValues)
         {
-            Log.Error(exp, template, propertyValues);
+            _log.Error(exp, template, propertyValues);
         }
 
         public void Information(string template, params object[] propertyValues)
         {
-            Log.Information(template, propertyValues);
+            _log.Information(template, propertyValues);
         }
 
         public void Verbose(string template, params object[] propertyValues)
         {
-            Log.Verbose(template, propertyValues);
+            _log.Verbose(template, propertyValues);
         }
 
         public void Warning(string template, params object[] propertyValues)
         {
-            Log.Warning(template, propertyValues);
+            _log.Warning(template, propertyValues);
         }
     }
 
@@ -106,6 +106,7 @@ namespace Certify.Models
                 catch { }
 
                 log = new LoggerConfiguration()
+                    .MinimumLevel.Verbose()
                     .WriteTo.Debug()
                     .WriteTo.File(logPath, shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
                     .CreateLogger();
