@@ -14,7 +14,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Models"
     xmlns:utils="clr-namespace:Certify.UI.Utils"
-    d:DataContext="{d:DesignInstance Type=certifyui:DesignItemViewModel,
+    d:DataContext="{d:DesignInstance Type=certifyui:ManagedCertificateDesignViewModel,
                                      IsDesignTimeCreatable=True}"
     d:DesignWidth="500"
     mc:Ignorable="d">

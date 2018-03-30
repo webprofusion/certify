@@ -16,8 +16,6 @@ namespace Certify.Management.Servers
     /// </summary>
     public class ServerProviderIIS : ICertifiedServer
     {
-        #region IIS
-
         private readonly IdnMapping _idnMapping = new IdnMapping();
 
         private bool _isIISAvailable { get; set; }
@@ -274,25 +272,17 @@ namespace Certify.Management.Servers
             return result.OrderBy(r => r.SiteName).ToList();
         }
 
-        public string GetSitePhysicalPath(ManagedCertificate managedCertificate)
-        {
-            return GetSitePhysicalPath(FindManagedCertificate(managedCertificate));
-        }
-
-        private string GetSitePhysicalPath(Site site)
-        {
-            return site?.Applications["/"].VirtualDirectories["/"].PhysicalPath;
-        }
-
         private SiteBindingItem GetSiteBinding(Site site, Binding binding)
         {
+            var siteInfo = Map(site);
+
             return new SiteBindingItem()
             {
-                SiteId = site.Id.ToString(),
-                SiteName = site.Name,
+                SiteId = siteInfo.Id,
+                SiteName = siteInfo.Name,
+                PhysicalPath = siteInfo.Path,
                 Host = binding.Host,
                 IP = binding.EndPoint?.Address?.ToString(),
-                PhysicalPath = GetSitePhysicalPath(site),
                 Port = binding.EndPoint?.Port,
                 IsHTTPS = binding.Protocol.ToLower() == "https",
                 Protocol = binding.Protocol,
@@ -300,7 +290,7 @@ namespace Certify.Management.Servers
             };
         }
 
-        public Site GetSiteByDomain(string domain)
+        public Site GetIISSiteByDomain(string domain)
         {
             if (string.IsNullOrEmpty(domain)) return null;
 
@@ -326,7 +316,7 @@ namespace Certify.Management.Servers
         {
             domain = _idnMapping.GetUnicode(domain);
 
-            var site = GetSiteByDomain(domain);
+            var site = GetIISSiteByDomain(domain);
             if (site != null)
             {
                 foreach (var binding in site.Bindings.OrderByDescending(b => b?.EndPoint?.Port))
@@ -409,7 +399,42 @@ namespace Certify.Management.Servers
             }
         }
 
-        public Site GetSiteById(string id)
+        private SiteInfo Map(Site site)
+        {
+            if (site != null)
+            {
+                var s = new SiteInfo
+                {
+                    Id = site.Id.ToString(),
+                    Name = site.Name,
+
+                    ServerType = StandardServerTypes.IIS
+                };
+
+                try
+                {
+                    s.Path = site.Applications["/"].VirtualDirectories["/"].PhysicalPath;
+                }
+                catch { }
+
+                return s;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public SiteInfo GetSiteById(string id)
+        {
+            using (var iisManager = GetDefaultServerManager())
+            {
+                Site siteDetails = iisManager.Sites.FirstOrDefault(s => s.Id.ToString() == id);
+                return Map(siteDetails);
+            }
+        }
+
+        public Site GetIISSiteById(string id)
         {
             using (var iisManager = GetDefaultServerManager())
             {
@@ -440,7 +465,7 @@ namespace Certify.Management.Servers
         /// </summary>
         /// <param name="managedCertificate"> Configured site. </param>
         /// <returns> The matching IIS Site if found, otherwise null. </returns>
-        private Site FindManagedCertificate(ManagedCertificate managedCertificate)
+        private SiteInfo FindManagedCertificate(ManagedCertificate managedCertificate)
         {
             if (managedCertificate == null)
                 throw new ArgumentNullException(nameof(managedCertificate));
@@ -449,20 +474,18 @@ namespace Certify.Management.Servers
 
             if (site != null)
             {
-                //TODO: check site has bindings for given domains, otherwise set back to null
+                //TODO: ? check site has bindings for given domains, otherwise set back to null
             }
 
             if (site == null)
             {
-                site = GetSiteByDomain(managedCertificate.RequestConfig.PrimaryDomain);
+                site = Map(
+                    GetIISSiteByDomain(managedCertificate.RequestConfig.PrimaryDomain)
+                    );
             }
 
             return site;
         }
-
-        #endregion IIS
-
-        #region Certificates
 
         private string ToUnicodeString(string input)
         {
@@ -573,7 +596,7 @@ namespace Certify.Management.Servers
             // if single site, add that
             if (requestConfig.DeploymentSiteOption == DeploymentOption.SingleSite)
             {
-                var site = FindManagedCertificate(managedCertificate);
+                var site = GetIISSiteById(managedCertificate.ServerSiteId);
                 if (site != null) targetSites.Add(site);
             }
 
@@ -714,7 +737,7 @@ namespace Certify.Management.Servers
         /// <param name="ipAddress"></param>
         public ActionStep InstallCertificateforBinding(string certStoreName, byte[] certificateHash, ManagedCertificate managedCertificate, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null, bool alwaysRecreateBindings = false, bool isPreviewOnly = false)
         {
-            var site = FindManagedCertificate(managedCertificate);
+            var site = GetIISSiteById(managedCertificate.ServerSiteId);
             if (site == null) return new ActionStep { Title = "Install Certificate For Binding", Description = "Managed site not found", HasError = true };
 
             return InstallCertificateforBinding(certStoreName, certificateHash, site, host, sslPort, useSNI, ipAddress, alwaysRecreateBindings, isPreviewOnly);
@@ -863,7 +886,5 @@ namespace Certify.Management.Servers
 
             return isMatch;
         }
-
-        #endregion Certificates
     }
 }

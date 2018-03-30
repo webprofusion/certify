@@ -11,9 +11,9 @@ namespace Certify.UI
     /// <summary>
     /// Mock data view model for use in the XAML designer in Visual Studio 
     /// </summary>
-    public class DesignViewModel : ViewModel.AppModel
+    public class AppDesignViewModel : ViewModel.AppViewModel
     {
-        public DesignViewModel()
+        public AppDesignViewModel()
         {
             // create mock registration
             PrimaryContactEmail = "username@example.org";

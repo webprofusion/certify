@@ -14,7 +14,7 @@ namespace Certify.UI.Controls.ManagedCertificate
     {
         //ChallengeAPIProviderList.ItemsSource = Models.Config.ChallengeProviders.Providers.Where(p => p.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
 
-        protected Certify.UI.ViewModel.AppModel AppViewModel => UI.ViewModel.AppModel.Current;
+        protected Certify.UI.ViewModel.AppViewModel AppViewModel => UI.ViewModel.AppViewModel.Current;
 
         public ChallengeConfigItem()
         {

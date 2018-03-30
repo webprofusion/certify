@@ -90,7 +90,7 @@ namespace Certify.Models
             }
         }
 
-        public void RaisePropertyChanged(string prop)
+        public void RaisePropertyChangedEvent(string prop)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }

@@ -13,7 +13,7 @@ namespace Certify.UI.ViewModel
         /// </summary>
         //public static ChallengeConfigItemViewModel Current = ChallengeConfigItemViewModel.GetModel();
 
-        private Certify.UI.ViewModel.AppModel _appViewModel => ViewModel.AppModel.Current;
+        private Certify.UI.ViewModel.AppViewModel _appViewModel => ViewModel.AppViewModel.Current;
 
         public ChallengeConfigItemViewModel(CertRequestChallengeConfig item)
         {

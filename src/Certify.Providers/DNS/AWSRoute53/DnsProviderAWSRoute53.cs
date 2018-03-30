@@ -34,7 +34,7 @@ namespace Certify.Providers.DNS.AWSRoute53
                     return zone;
                 }
             }
-            catch (Exception exp)
+            catch (Exception)
             {
                 //TODO: return error in result
                 return null;

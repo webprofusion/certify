@@ -106,7 +106,11 @@ namespace Certify.Service
             _certifyManager.BeginTrackingProgress(progressState);
 
             //begin request
-            var result = await _certifyManager.PerformCertificateRequest(managedCertificate, progressIndicator);
+            var result = await _certifyManager.PerformCertificateRequest(
+                ManagedCertificateLog.GetLogger(managedCertificate.Id),
+                managedCertificate,
+                progressIndicator
+                );
             return result;
         }
 
@@ -125,7 +129,10 @@ namespace Certify.Service
             DebugLog();
 
             var managedCertificate = await _certifyManager.GetManagedCertificate(managedItemId);
-            var result = await _certifyManager.RevokeCertificate(managedCertificate);
+            var result = await _certifyManager.RevokeCertificate(
+                  ManagedCertificateLog.GetLogger(managedCertificate.Id),
+                  managedCertificate
+                  );
             return result;
         }
 

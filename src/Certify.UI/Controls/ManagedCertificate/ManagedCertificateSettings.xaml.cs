@@ -14,9 +14,9 @@ namespace Certify.UI.Controls.ManagedCertificate
     /// </summary>
     public partial class ManagedCertificateSettings : UserControl
     {
-        protected Certify.UI.ViewModel.AppModel AppViewModel => UI.ViewModel.AppModel.Current;
+        protected Certify.UI.ViewModel.AppViewModel AppViewModel => UI.ViewModel.AppViewModel.Current;
 
-        protected Certify.UI.ViewModel.ManagedCertificateModel ItemViewModel => UI.ViewModel.ManagedCertificateModel.Current;
+        protected Certify.UI.ViewModel.ManagedCertificateViewModel ItemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
 
         public ManagedCertificateSettings()
         {
@@ -26,7 +26,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             ToggleAdvancedView();
         }
 
-        private void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private async void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (e.PropertyName == "SelectedItem")
             {
@@ -45,11 +45,8 @@ namespace Certify.UI.Controls.ManagedCertificate
                 }
 
                 // TODO: fix property changed dependencies
-                ItemViewModel.RaisePropertyChanged(nameof(ItemViewModel.ChallengeConfigViewModels));
-                ItemViewModel.RaisePropertyChanged(nameof(ItemViewModel.SelectedItemLogEntries));
+                ItemViewModel.RaiseSelectedItemChanges();
 
-                ItemViewModel.RaisePropertyChanged(nameof(ItemViewModel.DaysRemaining));
-                ItemViewModel.RaisePropertyChanged(nameof(ItemViewModel.DateNextRenewalDue));
                 AppViewModel.IsChanged = false;
             }
         }
@@ -213,7 +210,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 await AppViewModel.BeginCertificateRequest(ItemViewModel.SelectedItem.Id);
 
-                ItemViewModel.RaisePropertyChanged(nameof(ItemViewModel.SelectedItemLogEntries));
+                ItemViewModel.RaisePropertyChangedEvent(nameof(ItemViewModel.SelectedItemLogEntries));
             }
         }
 
@@ -272,7 +269,8 @@ namespace Certify.UI.Controls.ManagedCertificate
                 var results = await ItemViewModel.TestChallengeResponse(ItemViewModel.SelectedItem);
                 ItemViewModel.ConfigCheckResults =
                     new System.Collections.ObjectModel.ObservableCollection<StatusMessage>(results);
-                ItemViewModel.RaisePropertyChanged(nameof(ItemViewModel.ConfigCheckResults));
+
+                ItemViewModel.RaisePropertyChangedEvent(nameof(ItemViewModel.ConfigCheckResults));
 
                 if (ItemViewModel.ConfigCheckResults.All(a => a.IsOK))
                 {

@@ -80,7 +80,13 @@ namespace Certify.Models
         /// <summary>
         /// Optional grouping ID, such as where mamaged sites share a common IIS site id 
         /// </summary>
+
         public string GroupId { get; set; }
+
+        /// <summary>
+        /// Id of specific matching site on server (replaces GroupId) 
+        /// </summary>
+        public string ServerSiteId { get => GroupId; set => GroupId = value; }
 
         /// <summary>
         /// If set, this is an identifier for the host to group multiple sets of managed sites across servers

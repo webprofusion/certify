@@ -11,18 +11,43 @@ using System.Windows.Input;
 
 namespace Certify.UI.ViewModel
 {
-    public class ManagedCertificateModel : BindableBase
+    public class ManagedCertificateViewModel : BindableBase
     {
         /// <summary>
         /// Provide single static instance of model for all consumers 
         /// </summary>
         //public static AppModel AppViewModel = new DesignViewModel(); // for UI testing
-        public static ManagedCertificateModel Current = ManagedCertificateModel.GetModel();
+        public static ManagedCertificateViewModel Current = ManagedCertificateViewModel.GetModel();
 
-        private Certify.UI.ViewModel.AppModel _appViewModel => ViewModel.AppModel.Current;
+        private Certify.UI.ViewModel.AppViewModel _appViewModel => ViewModel.AppViewModel.Current;
 
-        public ManagedCertificateModel()
+        public ManagedCertificateViewModel()
         {
+            _appViewModel.PropertyChanged += _appViewModel_PropertyChanged;
+        }
+
+        private void _appViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(_appViewModel.SelectedItem))
+            {
+                RaiseSelectedItemChanges();
+            }
+        }
+
+        public void RaiseSelectedItemChanges()
+        {
+            // workaround - these should be happening automatically but we're currently having to
+            // force them manually
+            RaisePropertyChangedEvent(nameof(ChallengeConfigViewModels));
+            RaisePropertyChangedEvent(nameof(SelectedItemLogEntries));
+
+            RaisePropertyChangedEvent(nameof(DaysRemaining));
+            RaisePropertyChangedEvent(nameof(DateNextRenewalDue));
+
+            RaisePropertyChangedEvent(nameof(IsSelectedItemValid));
+            RaisePropertyChangedEvent(nameof(SelectedItem));
+            RaisePropertyChangedEvent(nameof(HasSelectedItemDomainOptions));
+            RaisePropertyChangedEvent(nameof(HasSelectedItemWebsiteSelection));
         }
 
         internal async Task RefreshWebsiteList()
@@ -52,6 +77,7 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        [DependsOn(nameof(SelectedItem))]
         public bool HasSelectedItemDomainOptions
         {
             get
@@ -114,8 +140,7 @@ namespace Certify.UI.ViewModel
 
             if (updatedOK) SelectedItem.IsChanged = false;
 
-            RaisePropertyChanged(nameof(IsSelectedItemValid));
-            RaisePropertyChanged(nameof(SelectedItem));
+            RaiseSelectedItemChanges();
 
             return updatedOK;
         }
@@ -189,7 +214,6 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        [PropertyChanged.DependsOn(nameof(SelectedItem), "")]
         public int? DaysRemaining
         {
             get
@@ -203,7 +227,6 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        [PropertyChanged.DependsOn(nameof(SelectedItem))]
         public DateTime? DateNextRenewalDue
         {
             get
@@ -235,17 +258,17 @@ namespace Certify.UI.ViewModel
 
         public Preferences Preferences => _appViewModel.Preferences;
 
-        public static ManagedCertificateModel GetModel()
+        public static ManagedCertificateViewModel GetModel()
         {
             var stack = new System.Diagnostics.StackTrace();
             if (stack.GetFrames().Last().GetMethod().Name == "Main")
             {
-                return new ManagedCertificateModel();
+                return new ManagedCertificateViewModel();
             }
             else
             {
                 //TODO: design view model
-                return new DesignItemViewModel();
+                return new ManagedCertificateDesignViewModel();
             }
         }
 
@@ -426,14 +449,12 @@ namespace Certify.UI.ViewModel
                     }
 
                     //TODO: load settings from previously saved managed site?
-                    RaisePropertyChanged(nameof(PrimarySubjectDomain));
-                    RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
+                    //RaisePropertyChanged(nameof(PrimarySubjectDomain));
+                    // RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
                 }
                 else
                 {
-                    // same website selection
-                    RaisePropertyChanged(nameof(PrimarySubjectDomain));
-                    RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
+                    // same website selection RaisePropertyChanged(nameof(PrimarySubjectDomain)); RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
                 }
             }
         }
@@ -477,7 +498,7 @@ namespace Certify.UI.ViewModel
                     }
                 }
 
-                RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
+                //RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
 
                 if (!String.IsNullOrEmpty(invalidDomains))
                 {

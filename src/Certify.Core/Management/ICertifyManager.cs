@@ -26,11 +26,9 @@ namespace Certify.Management
 
         string GetPrimaryContactEmail();
 
-        List<CertificateItem> GetCertificates();
-
         Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate, bool isPreviewMode);
 
-        Task<StatusMessage> RevokeCertificate(ManagedCertificate managedCertificate);
+        Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate);
 
         Task<CertificateRequestResult> PerformDummyCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null);
 
@@ -44,7 +42,7 @@ namespace Certify.Management
 
         Task<CertificateRequestResult> ReapplyCertificateBindings(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false);
 
-        Task<CertificateRequestResult> PerformCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null);
+        Task<CertificateRequestResult> PerformCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null);
 
         List<DomainOption> GetDomainOptionsFromSite(string siteId);
 

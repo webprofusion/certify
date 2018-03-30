@@ -17,7 +17,7 @@ namespace Certify.UI.Controls.ManagedCertificate
     /// </summary>
     public partial class ScriptHooks : UserControl
     {
-        protected Certify.UI.ViewModel.ManagedCertificateModel ItemViewModel => UI.ViewModel.ManagedCertificateModel.Current;
+        protected Certify.UI.ViewModel.ManagedCertificateViewModel ItemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
 
         public ScriptHooks()
         {

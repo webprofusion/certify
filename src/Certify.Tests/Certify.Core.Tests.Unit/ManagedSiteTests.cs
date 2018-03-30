@@ -77,7 +77,7 @@ namespace Certify.Core.Tests.Unit
             await managedCertificateSettings.DeleteAllManagedCertificates();
             await managedCertificateSettings.StoreSettings();
 
-            var numTestManagedCertificates = 100000;
+            var numTestManagedCertificates = 10000;
             var numSANsPerSite = 2;
 
             for (var i = 0; i < numTestManagedCertificates; i++)

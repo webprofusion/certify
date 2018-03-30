@@ -56,6 +56,7 @@
     <Compile Include="Management\ICertifyManager.cs">
       <DependentUpon>CertifyManager.cs</DependentUpon>
     </Compile>
+    <Compile Include="Management\PreviewManager.cs" />
     <Compile Include="Management\Servers\ServerProviderIIS.cs" />
     <Compile Include="Management\ItemManager.cs" />
     <Compile Include="Management\SecurityProtocolsManager.cs" />
@@ -118,7 +119,7 @@
       <Version>2.0.1</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
-      <Version>11.0.1</Version>
+      <Version>11.0.2</Version>
     </PackageReference>
     <PackageReference Include="Serilog">
       <Version>2.6.0</Version>

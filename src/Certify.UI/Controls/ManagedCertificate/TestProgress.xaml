@@ -6,7 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Certify.UI.Controls.ManagedCertificate"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    d:DataContext="{d:DesignInstance Type=certifyui:DesignItemViewModel,
+    d:DataContext="{d:DesignInstance Type=certifyui:ManagedCertificateDesignViewModel,
                                      IsDesignTimeCreatable=True}"
     d:DesignHeight="300"
     d:DesignWidth="300"

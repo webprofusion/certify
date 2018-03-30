@@ -12,8 +12,8 @@ namespace Certify.UI.Controls
     /// </summary>
     public partial class ManagedCertificates
     {
-        protected ViewModel.AppModel _appViewModel => ViewModel.AppModel.Current;
-        protected ViewModel.ManagedCertificateModel _itemViewModel => ViewModel.ManagedCertificateModel.Current;
+        protected ViewModel.AppViewModel _appViewModel => ViewModel.AppViewModel.Current;
+        protected ViewModel.ManagedCertificateViewModel _itemViewModel => ViewModel.ManagedCertificateViewModel.Current;
 
         private string _sortOrder { get; set; } = "NameAsc";
 
@@ -31,8 +31,8 @@ namespace Certify.UI.Controls
                     _appViewModel.ManagedCertificates != null)
                 {
                     SetFilter(); // reset listeners when ManagedCertificates are reset
-                    _itemViewModel.RaisePropertyChanged("SelectedItem");
-                    _itemViewModel.RaisePropertyChanged("IsSelectedItemValid");
+                    _itemViewModel.RaisePropertyChangedEvent("SelectedItem");
+                    _itemViewModel.RaisePropertyChangedEvent("IsSelectedItemValid");
                 }
             };
         }

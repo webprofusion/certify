@@ -13,11 +13,11 @@ namespace Certify.UI.Controls
     /// </summary>
     public partial class ProgressMonitor : UserControl
     {
-        protected Certify.UI.ViewModel.AppModel MainViewModel
+        protected Certify.UI.ViewModel.AppViewModel MainViewModel
         {
             get
             {
-                return UI.ViewModel.AppModel.Current;
+                return UI.ViewModel.AppViewModel.Current;
             }
         }
 

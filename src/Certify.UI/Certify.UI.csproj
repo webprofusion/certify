@@ -126,10 +126,10 @@
     <Compile Include="Utils\ManagedCertificateHealthVisibilityConverter.cs" />
     <Compile Include="Utils\ManagedCertificateHealthColourConverter.cs" />
     <Compile Include="Utils\UpdateCheckUtils.cs" />
-    <Compile Include="ViewModel\DesignItemViewModel.cs" />
+    <Compile Include="ViewModel\Design\ManagedCertificateDesignViewModel.cs" />
     <Compile Include="ViewModel\ChallengeConfigItemViewModel.cs" />
-    <Compile Include="ViewModel\ManagedItemModel.cs" />
-    <Compile Include="ViewModel\DesignViewModel.cs" />
+    <Compile Include="ViewModel\ManagedCertificateViewModel.cs" />
+    <Compile Include="ViewModel\Design\AppDesignViewModel.cs" />
     <Compile Include="Windows\EditCredential.xaml.cs">
       <DependentUpon>EditCredential.xaml</DependentUpon>
     </Compile>
@@ -273,7 +273,7 @@
   <ItemGroup>
     <Compile Include="Utils\EnumConverter.cs" />
     <Compile Include="Utils\BooleanConverters.cs" />
-    <Compile Include="ViewModel\AppModel.cs" />
+    <Compile Include="ViewModel\AppViewModel.cs" />
     <Compile Include="ViewModel\RelayCommand.cs" />
     <Compile Include="Windows\EditContactDialog.xaml.cs">
       <DependentUpon>EditContactDialog.xaml</DependentUpon>
@@ -374,7 +374,7 @@
       <Version>2.0.1</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
-      <Version>11.0.1</Version>
+      <Version>11.0.2</Version>
     </PackageReference>
     <PackageReference Include="PropertyChanged.Fody">
       <Version>2.2.9</Version>

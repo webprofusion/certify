@@ -7,8 +7,8 @@ namespace Certify.UI.Controls.ManagedCertificate
     /// </summary>
     public partial class DomainAuthorization : UserControl
     {
-        protected Certify.UI.ViewModel.ManagedCertificateModel ItemViewModel => UI.ViewModel.ManagedCertificateModel.Current;
-        protected Certify.UI.ViewModel.AppModel AppViewModel => UI.ViewModel.AppModel.Current;
+        protected Certify.UI.ViewModel.ManagedCertificateViewModel ItemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
+        protected Certify.UI.ViewModel.AppViewModel AppViewModel => UI.ViewModel.AppViewModel.Current;
 
         public DomainAuthorization()
         {

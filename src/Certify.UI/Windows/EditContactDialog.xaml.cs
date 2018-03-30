@@ -13,11 +13,11 @@ namespace Certify.UI.Windows
     {
         public ContactRegistration Item { get; set; }
 
-        protected Certify.UI.ViewModel.AppModel MainViewModel
+        protected Certify.UI.ViewModel.AppViewModel MainViewModel
         {
             get
             {
-                return ViewModel.AppModel.Current;
+                return ViewModel.AppViewModel.Current;
             }
         }
 

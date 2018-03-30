@@ -11,7 +11,7 @@
     xmlns:utils="clr-namespace:Certify.UI.Utils"
     Height="432"
     VerticalAlignment="Top"
-    d:DataContext="{d:DesignInstance Type=certifyui:DesignItemViewModel,
+    d:DataContext="{d:DesignInstance Type=certifyui:ManagedCertificateDesignViewModel,
                                      IsDesignTimeCreatable=True}"
     d:DesignWidth="631.2"
     mc:Ignorable="d">

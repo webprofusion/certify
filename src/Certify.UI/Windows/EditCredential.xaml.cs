@@ -19,11 +19,11 @@ namespace Certify.UI.Windows
     /// </summary>
     public partial class EditCredential
     {
-        protected Certify.UI.ViewModel.AppModel MainViewModel
+        protected Certify.UI.ViewModel.AppViewModel MainViewModel
         {
             get
             {
-                return ViewModel.AppModel.Current;
+                return ViewModel.AppViewModel.Current;
             }
         }
 

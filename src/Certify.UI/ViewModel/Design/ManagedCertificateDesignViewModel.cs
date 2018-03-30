@@ -10,11 +10,11 @@ namespace Certify.UI
     /// <summary>
     /// Mock data item view model for use in the XAML designer in Visual Studio 
     /// </summary>
-    public class DesignItemViewModel : ViewModel.ManagedCertificateModel
+    public class ManagedCertificateDesignViewModel : ViewModel.ManagedCertificateViewModel
     {
-        private DesignViewModel _appViewModel => (DesignViewModel)DesignViewModel.Current;
+        private AppDesignViewModel _appViewModel => (AppDesignViewModel)AppDesignViewModel.Current;
 
-        public DesignItemViewModel()
+        public ManagedCertificateDesignViewModel()
         {
             // auto-load data if in WPF designer
             bool inDesignMode = !(Application.Current is App);
@@ -36,6 +36,18 @@ namespace Certify.UI
                         Message ="This is a failure message."
                     }
                 };
+            }
+            else
+            {
+                _appViewModel.PropertyChanged += _appViewModel_PropertyChanged;
+            }
+        }
+
+        private void _appViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(_appViewModel.SelectedItem))
+            {
+                RaisePropertyChangedEvent(nameof(this.SelectedItem));
             }
         }
 

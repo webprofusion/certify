@@ -1,6 +1,7 @@
 ﻿using Certify.Management;
 using Certify.Management.Servers;
 using Certify.Models;
+using Certify.Models.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -25,6 +26,8 @@ namespace Certify.Core.Tests
         private string testSitePath = "c:\\inetpub\\wwwroot";
         private int testSiteHttpPort = 81;
         private string _awsCredStorageKey = "";
+        private ILog _log = new Loggy(null);
+        private string _siteId = "";
 
         public CertRequestTests()
         {
@@ -56,8 +59,9 @@ namespace Certify.Core.Tests
                 iisManager.DeleteSite(testSiteName);
             }
 
-            iisManager.CreateSite(testSiteName, testSiteDomain, PrimaryIISRoot, "DefaultAppPool", port: testSiteHttpPort);
+            var site = iisManager.CreateSite(testSiteName, testSiteDomain, PrimaryIISRoot, "DefaultAppPool", port: testSiteHttpPort);
             Assert.IsTrue(iisManager.SiteExists(testSiteName));
+            _siteId = site.Id.ToString();
         }
 
         public void TeardownIIS()
@@ -69,7 +73,7 @@ namespace Certify.Core.Tests
         [TestMethod, TestCategory("MegaTest")]
         public async Task TestChallengeRequestHttp01()
         {
-            var site = iisManager.GetSiteByDomain(testSiteDomain);
+            var site = iisManager.GetIISSiteById(_siteId);
             Assert.AreEqual(site.Name, testSiteName);
 
             var dummyManagedCertificate = new ManagedCertificate
@@ -96,7 +100,7 @@ namespace Certify.Core.Tests
                 ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
             };
 
-            var result = await certifyManager.PerformCertificateRequest(dummyManagedCertificate);
+            var result = await certifyManager.PerformCertificateRequest(null, dummyManagedCertificate);
 
             //ensure cert request was successful
             Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");
@@ -147,6 +151,9 @@ namespace Certify.Core.Tests
                 Id = Guid.NewGuid().ToString(),
                 Name = testIDNDomain,
                 GroupId = site.Id.ToString(),
+                DomainOptions = new ObservableCollection<DomainOption> {
+                    new DomainOption{ Domain= testIDNDomain, IsManualEntry=true, IsPrimaryDomain=true, IsSelected=true}
+                },
                 RequestConfig = new CertRequestConfig
                 {
                     PrimaryDomain = testIDNDomain,
@@ -166,7 +173,7 @@ namespace Certify.Core.Tests
                 ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
             };
 
-            var result = await certifyManager.PerformCertificateRequest(dummyManagedCertificate);
+            var result = await certifyManager.PerformCertificateRequest(_log, dummyManagedCertificate);
 
             //ensure cert request was successful
             Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");
@@ -240,7 +247,7 @@ namespace Certify.Core.Tests
             //ensure cert request was successful
             try
             {
-                var result = await certifyManager.PerformCertificateRequest(dummyManagedCertificate);
+                var result = await certifyManager.PerformCertificateRequest(_log, dummyManagedCertificate);
                 // check details of cert, subject alternative name should include domain and expiry
                 // must be greater than 89 days in the future
 
@@ -304,7 +311,7 @@ namespace Certify.Core.Tests
             //ensure cert request was successful
             try
             {
-                var result = await certifyManager.PerformCertificateRequest(dummyManagedCertificate);
+                var result = await certifyManager.PerformCertificateRequest(_log, dummyManagedCertificate);
                 // request failed as expected
 
                 Assert.IsFalse(result.IsSuccess, $"Certificate Request Should Not Complete: {result.Message}");
@@ -318,7 +325,7 @@ namespace Certify.Core.Tests
         [TestMethod, TestCategory("MegaTest")]
         public async Task TestChallengeRequestDNS()
         {
-            var site = iisManager.GetSiteByDomain(testSiteDomain);
+            var site = iisManager.GetIISSiteById(_siteId);
             Assert.AreEqual(site.Name, testSiteName);
 
             var dummyManagedCertificate = new ManagedCertificate
@@ -345,7 +352,7 @@ namespace Certify.Core.Tests
                 ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
             };
 
-            var result = await certifyManager.PerformCertificateRequest(dummyManagedCertificate);
+            var result = await certifyManager.PerformCertificateRequest(_log, dummyManagedCertificate);
 
             //ensure cert request was successful
             Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");
@@ -393,8 +400,7 @@ namespace Certify.Core.Tests
                 iisManager.DeleteSite(testWildcardSiteName);
             }
 
-            iisManager.CreateSite(testWildcardSiteName, "test" + testStr + "." + PrimaryTestDomain, PrimaryIISRoot, "DefaultAppPool", port: testSiteHttpPort);
-            var site = iisManager.GetSiteByDomain("test" + testStr + "." + PrimaryTestDomain);
+            var site = iisManager.CreateSite(testWildcardSiteName, "test" + testStr + "." + PrimaryTestDomain, PrimaryIISRoot, "DefaultAppPool", port: testSiteHttpPort);
 
             ManagedCertificate managedCertificate = null;
             X509Certificate2 certInfo = null;
@@ -426,7 +432,7 @@ namespace Certify.Core.Tests
                     ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
                 };
 
-                var result = await certifyManager.PerformCertificateRequest(dummyManagedCertificate);
+                var result = await certifyManager.PerformCertificateRequest(_log, dummyManagedCertificate);
 
                 //ensure cert request was successful
                 Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");

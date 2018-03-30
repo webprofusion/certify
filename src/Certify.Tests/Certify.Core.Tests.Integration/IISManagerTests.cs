@@ -24,6 +24,7 @@ namespace Certify.Core.Tests
         private int testSiteHttpPort = 81;
 
         private string testSitePath = "c:\\inetpub\\wwwroot";
+        private string _siteId = "";
 
         public IISManagerTests()
         {
@@ -50,7 +51,8 @@ namespace Certify.Core.Tests
             {
                 iisManager.DeleteSite(testSiteName);
             }
-            iisManager.CreateSite(testSiteName, testSiteDomain, PrimaryIISRoot, "DefaultAppPool");
+            var site = iisManager.CreateSite(testSiteName, testSiteDomain, PrimaryIISRoot, "DefaultAppPool");
+            _siteId = site.Id.ToString();
             Assert.IsTrue(iisManager.SiteExists(testSiteName));
         }
 
@@ -58,14 +60,6 @@ namespace Certify.Core.Tests
         {
             iisManager.DeleteSite(testSiteName);
             Assert.IsFalse(iisManager.SiteExists(testSiteName));
-        }
-
-        [TestMethod]
-        public void TestSiteExists()
-        {
-            //site exists and matches required domain
-            var site = iisManager.GetSiteByDomain(testSiteDomain);
-            Assert.AreEqual(site.Name, testSiteName);
         }
 
         [TestMethod]
@@ -78,14 +72,12 @@ namespace Certify.Core.Tests
         [TestMethod]
         public void TestIISSiteRunning()
         {
-            var site = iisManager.GetSiteByDomain(testSiteDomain);
-
             //this site should be running
-            bool isRunning = iisManager.IsSiteRunning(site.Id.ToString());
+            bool isRunning = iisManager.IsSiteRunning(_siteId);
             Assert.IsTrue(isRunning);
 
             //this site should not be running
-            isRunning = iisManager.IsSiteRunning("MadeUpSiteName");
+            isRunning = iisManager.IsSiteRunning("MadeUpSiteId");
             Assert.IsFalse(isRunning);
         }
 
@@ -123,10 +115,10 @@ namespace Certify.Core.Tests
 
             var ipAddress =
             Dns.GetHostEntry(Dns.GetHostName()).AddressList[0].ToString();
-            iisManager.CreateSite(testName, testDomainName, PrimaryIISRoot, "DefaultAppPool", "http", ipAddress);
+            var site = iisManager.CreateSite(testName, testDomainName, PrimaryIISRoot, "DefaultAppPool", "http", ipAddress);
 
             Assert.IsTrue(iisManager.SiteExists(testSiteName));
-            var site = iisManager.GetSiteByDomain(testDomainName);
+
             Assert.IsTrue(site.Bindings.Any(b => b.Host == testDomainName && b.BindingInformation.Contains(ipAddress)));
         }
 
@@ -159,8 +151,8 @@ namespace Certify.Core.Tests
             {
                 iisManager.DeleteSite(testName);
             }
-            iisManager.CreateSite(testName, testDomainName, PrimaryIISRoot, null);
-            var site = iisManager.GetSiteByDomain(testDomainName);
+            var site = iisManager.CreateSite(testName, testDomainName, PrimaryIISRoot, null);
+
             var certStoreName = "MY";
             var cert = CertificateManager.GetCertificatesFromStore().First();
             iisManager.InstallCertificateforBinding(certStoreName, cert.GetCertHash(), site, testDomainName);
@@ -209,7 +201,7 @@ namespace Certify.Core.Tests
             iisManager.AddSiteBindings(site.Id.ToString(), testDomains, testSiteHttpPort);
 
             // get fresh instance of site since updates
-            site = iisManager.GetSiteById(site.Id.ToString());
+            site = iisManager.GetIISSiteById(site.Id.ToString());
 
             var bindingsBeforeApply = site.Bindings.ToList();
 
@@ -255,7 +247,7 @@ namespace Certify.Core.Tests
             var certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
 
             // check IIS site bindings
-            site = iisManager.GetSiteById(site.Id.ToString());
+            site = iisManager.GetIISSiteById(site.Id.ToString());
             var finalBindings = site.Bindings.ToList();
 
             Assert.IsTrue(bindingsBeforeApply.Count < finalBindings.Count, "Should have new bindings");

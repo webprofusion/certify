@@ -22,8 +22,8 @@ namespace Certify.UI
 
         private TelemetryClient tc = null;
 
-        protected Certify.UI.ViewModel.AppModel _appViewModel => UI.ViewModel.AppModel.Current;
-        protected Certify.UI.ViewModel.ManagedCertificateModel _itemViewModel => UI.ViewModel.ManagedCertificateModel.Current;
+        protected Certify.UI.ViewModel.AppViewModel _appViewModel => UI.ViewModel.AppViewModel.Current;
+        protected Certify.UI.ViewModel.ManagedCertificateViewModel _itemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
 
         public int NumManagedCertificates
         {
@@ -53,9 +53,9 @@ namespace Certify.UI
 
             if (_appViewModel.IsRegisteredVersion)
             {
-                var licensingManager = ViewModel.AppModel.Current.PluginManager?.LicensingManager;
+                var licensingManager = ViewModel.AppViewModel.Current.PluginManager?.LicensingManager;
 
-                if (licensingManager != null && !await licensingManager.IsInstallActive(ViewModel.AppModel.ProductTypeId, Management.Util.GetAppDataFolder()))
+                if (licensingManager != null && !await licensingManager.IsInstallActive(ViewModel.AppViewModel.ProductTypeId, Management.Util.GetAppDataFolder()))
                 {
                     _appViewModel.IsRegisteredVersion = false;
                 }
@@ -142,7 +142,7 @@ namespace Certify.UI
             var licensingManager = _appViewModel.PluginManager.LicensingManager;
             if (licensingManager != null)
             {
-                if (licensingManager.IsInstallRegistered(ViewModel.AppModel.ProductTypeId, Certify.Management.Util.GetAppDataFolder()))
+                if (licensingManager.IsInstallRegistered(ViewModel.AppViewModel.ProductTypeId, Certify.Management.Util.GetAppDataFolder()))
                 {
                     _appViewModel.IsRegisteredVersion = true;
                 }

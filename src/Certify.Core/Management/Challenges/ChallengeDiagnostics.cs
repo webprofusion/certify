@@ -296,23 +296,28 @@ namespace Certify.Core.Management.Challenges
             // get website root path, expand environment variables if required
             string websiteRootPath = requestConfig.WebsiteRootPath;
 
-            // if website root path not specified, determine it now
-            if (String.IsNullOrEmpty(websiteRootPath))
+            if (!String.IsNullOrEmpty(managedCertificate.ServerSiteId))
             {
-                websiteRootPath = iisManager.GetSitePhysicalPath(managedCertificate);
-            }
+                var siteInfo = iisManager.GetSiteById(managedCertificate.ServerSiteId);
 
-            if (!String.IsNullOrEmpty(websiteRootPath) && websiteRootPath.Contains("%"))
-            {
-                // if websiteRootPath contains %websiteroot% variable, replace that with the current
-                // physical path for the site
-                if (websiteRootPath.Contains("%websiteroot%"))
+                // if website root path not specified, determine it now
+                if (String.IsNullOrEmpty(websiteRootPath))
                 {
-                    // sets env variable for this process only
-                    Environment.SetEnvironmentVariable("websiteroot", iisManager.GetSitePhysicalPath(managedCertificate));
+                    websiteRootPath = siteInfo.Path;
                 }
-                // expand any environment variables present in site path
-                websiteRootPath = Environment.ExpandEnvironmentVariables(websiteRootPath);
+
+                if (!String.IsNullOrEmpty(websiteRootPath) && websiteRootPath.Contains("%"))
+                {
+                    // if websiteRootPath contains %websiteroot% variable, replace that with the
+                    // current physical path for the site
+                    if (websiteRootPath.Contains("%websiteroot%"))
+                    {
+                        // sets env variable for this process only
+                        Environment.SetEnvironmentVariable("websiteroot", siteInfo.Path);
+                    }
+                    // expand any environment variables present in site path
+                    websiteRootPath = Environment.ExpandEnvironmentVariables(websiteRootPath);
+                }
             }
 
             log.Information("Using website path {path}", websiteRootPath);
@@ -501,7 +506,7 @@ namespace Certify.Core.Management.Challenges
             }
             else
             {
-                log.Error("DNS updated OK : {msg}", dnsResult.Message);
+                log.Information("DNS updated OK : {msg}", dnsResult.Message);
             }
 
             var cleanupQueue = new List<Action> { };

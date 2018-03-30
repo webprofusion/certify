@@ -13,7 +13,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Models"
     xmlns:utils="clr-namespace:Certify.UI.Utils"
-    d:DataContext="{d:DesignInstance Type=certifyui:DesignItemViewModel,
+    d:DataContext="{d:DesignInstance Type=certifyui:ManagedCertificateDesignViewModel,
                                      IsDesignTimeCreatable=True}"
     mc:Ignorable="d">
     <Grid>
@@ -87,7 +87,7 @@
                     Margin="0,4,0,0"
                     DockPanel.Dock="Top"
                     Orientation="Vertical"
-                    Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=InvBoolVisConverter}}">
+                    Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=InvBoolVisConverter}, UpdateSourceTrigger=PropertyChanged}">
                     <TextBlock
                         Margin="8,0"
                         HorizontalAlignment="Left"
@@ -101,7 +101,7 @@
                     x:Name="DomainOptions"
                     Margin="0,8,0,0"
                     DockPanel.Dock="Bottom"
-                    Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                    Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=BoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
                     <Label
                         Content="{x:Static Resources:SR.ManagedCertificateSettings_SelectDomain}"
                         DockPanel.Dock="Top"

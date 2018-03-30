@@ -51,7 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Management\NetworkUtils.cs" />
-    <Compile Include="Utils\ManagedSiteLog.cs" />
+    <Compile Include="Utils\ManagedCertificateLog.cs" />
     <Compile Include="Management\CertificateManager.cs" />
     <Compile Include="Management\PluginManager.cs" />
     <Compile Include="Management\PowerShellManager.cs" />
@@ -114,7 +114,7 @@
       <Version>2.0.1</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
-      <Version>11.0.1</Version>
+      <Version>11.0.2</Version>
     </PackageReference>
     <PackageReference Include="Serilog">
       <Version>2.6.0</Version>

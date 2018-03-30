@@ -28,12 +28,14 @@ namespace Certify.Providers.Certes
     public class CertesACMEProvider : IACMEClientProvider, IVaultProvider
     {
         private AcmeContext _acme;
-#if !DEBUG
+#if DEBUG
         private Uri _serviceUri = WellKnownServers.LetsEncryptStagingV2;
 #else
         private Uri _serviceUri = WellKnownServers.LetsEncryptV2;
 #endif
-        private string _settingsFolder = @"c:\programdata\certify\certes\";
+
+        private string _settingsFolder = null;
+
         private CertesSettings _settings = null;
         private Dictionary<string, IOrderContext> _currentOrders;
         private IdnMapping _idnMapping = new IdnMapping();
@@ -41,6 +43,7 @@ namespace Certify.Providers.Certes
         public CertesACMEProvider(string settingsPath)
         {
             _settingsFolder = settingsPath;
+
             LoadSettings();
 
             if (!LoadAccountKey())
@@ -121,21 +124,27 @@ namespace Certify.Providers.Certes
             _acme = new AcmeContext(_serviceUri, accountkey);
         }
 
-        public async Task<bool> AddNewAccountAndAcceptTOS(string email)
+        public async Task<bool> AddNewAccountAndAcceptTOS(ILog log, string email)
         {
             try
             {
                 var account = await _acme.NewAccount(email, true);
+
                 //store account key
                 SaveAccountKey();
+
                 _settings.AccountEmail = email;
+
                 SaveSettings();
+
+                log.Information($"Registering account {email} with certificate authority");
+                return true;
             }
-            catch (Exception)
+            catch (Exception exp)
             {
+                log.Error($"Failed to register account {email} with certificate authority: {exp.Message}");
                 return false;
             }
-            return true;
         }
 
         private static readonly JsonSerializerSettings thumbprintSettings = JsonUtil.CreateSettings();
@@ -163,7 +172,7 @@ namespace Certify.Providers.Certes
             return dnsValue;
         }
 
-        public async Task<List<PendingAuthorization>> BeginRegistrationAndValidation(ILog log, CertRequestConfig config, string domainIdentifierId, string domain)
+        public async Task<List<PendingAuthorization>> BeginRegistrationAndValidation(ILog log, CertRequestConfig config)
         {
             // prepare a list of all pending authorization we need to complete, or those we have
             // already satisfied
@@ -226,10 +235,7 @@ namespace Certify.Providers.Certes
 
                         if (httpChallengeStatus.Status == ChallengeStatus.Invalid)
                         {
-                            // we need to start a new http challenge
-
-                            //retry order
-                            //return await BeginRegistrationAndValidation(config, domainIdentifierId, challengeType, domain);
+                            log.Error($"HTTP challenge has an invalid status");
                         }
 
                         challenges.Add(new AuthorizationChallengeItem
@@ -254,11 +260,7 @@ namespace Certify.Providers.Certes
 
                         if (dnsChallengeStatus.Status == ChallengeStatus.Invalid)
                         {
-                            // we need to start a new http challenge
-                            //await authz.Deactivate();
-
-                            //retry order
-                            //return await BeginRegistrationAndValidation(config, domainIdentifierId, challengeType, domain);
+                            log.Error($"DNS challenge has an invalid status");
                         }
 
                         var dnsValue = ComputeDnsValue(dnsChallenge, _acme.AccountKey);
@@ -322,7 +324,7 @@ namespace Certify.Providers.Certes
             }
         }
 
-        public async Task<StatusMessage> SubmitChallenge(ILog log, string domainIdentifierId, string challengeType, AuthorizationChallengeItem attemptedChallenge)
+        public async Task<StatusMessage> SubmitChallenge(ILog log, string challengeType, AuthorizationChallengeItem attemptedChallenge)
         {
             // if not already validate, ask ACME server to validate we have answered the required
             // challenge correctly
@@ -347,7 +349,7 @@ namespace Certify.Providers.Certes
                         return new StatusMessage
                         {
                             IsOK = false,
-                            Message = challengeError.ToString()
+                            Message = challengeError?.ToString()
                         };
                     }
                 }
@@ -394,7 +396,6 @@ namespace Certify.Providers.Certes
             {
                 pendingAuthorization.Identifier.Status = "invalid";
 
-                // TODO:  return ACME error
                 //determine error
                 try
                 {
@@ -417,24 +418,9 @@ namespace Certify.Providers.Certes
             return pendingAuthorization;
         }
 
-        public string ComputeDomainIdentifierId(string domain)
-        {
-            return "ident" + Guid.NewGuid().ToString().Substring(0, 8).Replace("-", "");
-        }
-
         public string GetAcmeBaseURI()
         {
             return _acme.DirectoryUri.ToString();
-        }
-
-        public List<string> GetActionSummary()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public PendingAuthorization PerformAutomatedChallengeResponse(ICertifiedServer iisManager, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
-        {
-            throw new System.NotImplementedException();
         }
 
         public async Task<ProcessStepResult> PerformCertificateRequestProcess(ILog log, string primaryDnsIdentifier, string[] alternativeDnsIdentifiers, CertRequestConfig config)
@@ -536,14 +522,15 @@ namespace Certify.Providers.Certes
             }
         }
 
-        public Task<StatusMessage> RevokeCertificate(ManagedCertificate managedCertificate)
+        public async Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate)
         {
-            throw new System.NotImplementedException();
-        }
+            // TODO: get cert as bytes (DER),
+            /* byte[] cert = System.IO.File.ReadAllBytes(managedCertificate.CertificatePath);
+             IKey certPrivateKey = null;
 
-        public Task<StatusMessage> TestChallengeResponse(ICertifiedServer iisManager, ManagedCertificate managedCertificate, bool isPreviewMode)
-        {
-            throw new System.NotImplementedException();
+             await _acme.RevokeCertificate(cert, RevocationReason.Unspecified, certPrivateKey)
+             */
+            throw new NotImplementedException();
         }
 
         public List<RegistrationItem> GetContactRegistrations()
@@ -556,11 +543,6 @@ namespace Certify.Providers.Certes
             return list;
         }
 
-        public List<CertificateItem> GetCertificates()
-        {
-            throw new NotImplementedException();
-        }
-
         public void DeleteContactRegistration(string id)
         {
             // do nothing for this provider
@@ -569,6 +551,11 @@ namespace Certify.Providers.Certes
         public void EnableSensitiveFileEncryption()
         {
             //FIXME: not implemented
+        }
+
+        public List<CertificateItem> GetCertificates()
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -12,7 +12,7 @@
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     Width="885.537"
     Height="420.042"
-    d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel,
+    d:DataContext="{d:DesignInstance Type=certifyui:AppDesignViewModel,
                                      IsDesignTimeCreatable=True}"
     Loaded="UserControl_Loaded"
     mc:Ignorable="d">

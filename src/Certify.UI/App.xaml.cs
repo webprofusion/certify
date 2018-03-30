@@ -8,11 +8,11 @@ namespace Certify.UI
     /// </summary>
     public partial class App : Application
     {
-        protected Certify.UI.ViewModel.AppModel MainViewModel
+        protected Certify.UI.ViewModel.AppViewModel MainViewModel
         {
             get
             {
-                return UI.ViewModel.AppModel.Current;
+                return UI.ViewModel.AppViewModel.Current;
             }
         }
 

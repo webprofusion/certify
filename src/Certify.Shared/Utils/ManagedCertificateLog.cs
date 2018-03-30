@@ -120,14 +120,22 @@ namespace Certify.Models
         {
             var log = GetLogger(managedItemId);
 
-            var logLevel = Serilog.Events.LogEventLevel.Information;
-
-            if (logItem.LogItemType == LogItemType.CertficateRequestFailed) logLevel = Serilog.Events.LogEventLevel.Error;
-            if (logItem.LogItemType == LogItemType.GeneralError) logLevel = Serilog.Events.LogEventLevel.Error;
-            if (logItem.LogItemType == LogItemType.GeneralWarning) logLevel = Serilog.Events.LogEventLevel.Warning;
-
-            // FIXME: log level
-            log.Information(logItem.Message);
+            if (logItem.LogItemType == LogItemType.CertficateRequestFailed)
+            {
+                log.Error(logItem.Message);
+            }
+            else if (logItem.LogItemType == LogItemType.GeneralError)
+            {
+                log.Error(logItem.Message);
+            }
+            if (logItem.LogItemType == LogItemType.GeneralWarning)
+            {
+                log.Warning(logItem.Message);
+            }
+            else
+            {
+                log.Information(logItem.Message);
+            }
         }
 
         public static void DisposeLoggers()

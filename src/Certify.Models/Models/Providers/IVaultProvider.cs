@@ -6,8 +6,6 @@ namespace Certify.Models.Plugins
     {
         List<RegistrationItem> GetContactRegistrations();
 
-        List<CertificateItem> GetCertificates();
-
         void DeleteContactRegistration(string id);
 
         void EnableSensitiveFileEncryption();
