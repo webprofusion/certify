@@ -133,6 +133,7 @@
                     <DataGrid
                         x:Name="DomainOptionsList"
                         AutoGenerateColumns="False"
+                        EnableRowVirtualization="True"
                         CanUserAddRows="False"
                         ItemsSource="{Binding SelectedItem.DomainOptions}"
                         MouseLeftButtonUp="DataGrid_MouseLeftButtonUp"

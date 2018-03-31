@@ -198,7 +198,7 @@ namespace Certify.UI.ViewModel
         {
             get
             {
-                if (SelectedItem != null)
+                if (SelectedItem != null && SelectedItem.Id != null)
                 {
                     try
                     {
@@ -448,12 +448,11 @@ namespace Certify.UI.ViewModel
                         ValidationError = "The selected site has no domain bindings setup. Configure the domains first using Edit Bindings in IIS.";
                     }
 
-                    //TODO: load settings from previously saved managed site?
-                    //RaisePropertyChanged(nameof(PrimarySubjectDomain));
-                    // RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
+                    RaiseSelectedItemChanges();
                 }
                 else
                 {
+                    RaiseSelectedItemChanges();
                     // same website selection RaisePropertyChanged(nameof(PrimarySubjectDomain)); RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
                 }
             }
@@ -498,7 +497,7 @@ namespace Certify.UI.ViewModel
                     }
                 }
 
-                //RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
+                RaiseSelectedItemChanges();
 
                 if (!String.IsNullOrEmpty(invalidDomains))
                 {

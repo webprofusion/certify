@@ -69,6 +69,9 @@
     <None Include="Scripts\Common\MSExchangeEnableServices.ps1">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Scripts\Common\RDPListenerService.ps1">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Scripts\Common\RDPGatewayServices.ps1">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

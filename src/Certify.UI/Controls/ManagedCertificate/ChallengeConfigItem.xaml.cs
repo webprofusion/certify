@@ -109,7 +109,8 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 RefreshCredentialOptions();
             }
-            // EditModel.RaisePropertyChanged(nameof(ItemViewModel.PrimaryChallengeConfig));
+
+            //EditModel.RaisePropertyChangedEvent(nameof(EditModel.PrimaryChallengeConfig));
         }
     }
 }

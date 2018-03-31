@@ -81,76 +81,73 @@ namespace Certify.Management
 
             // deployment & binding steps
 
-            if (!String.IsNullOrEmpty(item.ServerSiteId))
+            if (item.ItemType == ManagedCertificateType.SSL_LetsEncrypt_LocalIIS)
             {
-                if (item.ItemType == ManagedCertificateType.SSL_LetsEncrypt_LocalIIS)
+                string deploymentDescription = $"Save certificate only.";
+                var deploymentStep = new ActionStep { Title = $"{stepIndex}. Deployment", Description = deploymentDescription };
+
+                if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.SingleSite)
                 {
-                    string deploymentDescription = $"Save certificate only.";
-                    var deploymentStep = new ActionStep { Title = $"{stepIndex}. Deployment", Description = deploymentDescription };
-
-                    if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.SingleSite)
+                    if (!String.IsNullOrEmpty(item.ServerSiteId))
                     {
-                        if (!String.IsNullOrEmpty(item.ServerSiteId))
+                        try
                         {
-                            try
-                            {
-                                var siteInfo = serverProvider.GetSiteById(item.ServerSiteId);
-                                deploymentDescription = $"Deploy to IIS Site: {siteInfo.Name}  [{siteInfo.Id}] {item.RequestConfig.WebsiteRootPath} ";
-                            }
-                            catch (Exception exp)
-                            {
-                                deploymentDescription = $"Error: cannot identify selected site. {exp.Message} ";
-                            }
-
-                            // add deployment sub-steps (if any)
-                            var bindingRequest = await certifyManager.ReapplyCertificateBindings(item, null, isPreviewOnly: true);
-                            if (bindingRequest.Actions != null) deploymentStep.Substeps = bindingRequest.Actions;
+                            var siteInfo = serverProvider.GetSiteById(item.ServerSiteId);
+                            deploymentDescription = $"Deploy to IIS Site: {siteInfo.Name}  [{siteInfo.Id}] {item.RequestConfig.WebsiteRootPath} ";
                         }
-                        else
+                        catch (Exception exp)
                         {
-                            // no website selected, maybe validating http with a manually specified path
-                            if (!String.IsNullOrEmpty(item.RequestConfig.WebsiteRootPath))
-                            {
-                                deploymentDescription = $"Deploying to manual site: {item.RequestConfig.WebsiteRootPath}";
-                            }
+                            deploymentDescription = $"Error: cannot identify selected site. {exp.Message} ";
+                        }
+
+                        // add deployment sub-steps (if any)
+                        var bindingRequest = await certifyManager.ReapplyCertificateBindings(item, null, isPreviewOnly: true);
+                        if (bindingRequest.Actions != null) deploymentStep.Substeps = bindingRequest.Actions;
+                    }
+                    else
+                    {
+                        // no website selected, maybe validating http with a manually specified path
+                        if (!String.IsNullOrEmpty(item.RequestConfig.WebsiteRootPath))
+                        {
+                            deploymentDescription = $"Deploying to manual site: {item.RequestConfig.WebsiteRootPath}";
                         }
                     }
-
-                    deploymentStep.Description = deploymentDescription;
-
-                    steps.Add(deploymentStep);
-                    stepIndex++;
                 }
-                else
+
+                deploymentStep.Description = deploymentDescription;
+
+                steps.Add(deploymentStep);
+                stepIndex++;
+            }
+            else
+            {
+                string deploymentDescription = $"Save certificate only.";
+                var deploymentStep = new ActionStep { Title = $"{stepIndex}. Deployment", Description = deploymentDescription };
+
+                if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.AllSites)
                 {
-                    string deploymentDescription = $"Save certificate only.";
-                    var deploymentStep = new ActionStep { Title = $"{stepIndex}. Deployment", Description = deploymentDescription };
-
-                    if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.AllSites)
+                    if (item.ItemType == ManagedCertificateType.SSL_LetsEncrypt_LocalIIS)
                     {
-                        if (item.ItemType == ManagedCertificateType.SSL_LetsEncrypt_LocalIIS)
-                        {
-                            deploymentDescription = "Deploying to All IIS Sites on server";
+                        deploymentDescription = "Deploying to All IIS Sites on server";
 
-                            // add deployment sub-steps (if any)
-                            var bindingRequest = await certifyManager.ReapplyCertificateBindings(item, null, isPreviewOnly: true);
-                            if (bindingRequest.Actions != null) deploymentStep.Substeps = bindingRequest.Actions;
-                        }
+                        // add deployment sub-steps (if any)
+                        var bindingRequest = await certifyManager.ReapplyCertificateBindings(item, null, isPreviewOnly: true);
+                        if (bindingRequest.Actions != null) deploymentStep.Substeps = bindingRequest.Actions;
                     }
-                    else if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.DeploymentStoreOnly)
-                    {
-                        deploymentDescription = "Deploying to Certificate Store only (old certificates not removed)";
-                    }
-                    else if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.NoDeployment)
-                    {
-                        deploymentDescription = "Saving certificate to local disk only, no deployment.";
-                    }
-
-                    deploymentStep.Description = deploymentDescription;
-
-                    steps.Add(deploymentStep);
-                    stepIndex++;
                 }
+                else if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.DeploymentStoreOnly)
+                {
+                    deploymentDescription = "Deploying to Certificate Store only (old certificates not removed)";
+                }
+                else if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.NoDeployment)
+                {
+                    deploymentDescription = "Saving certificate to local disk only, no deployment.";
+                }
+
+                deploymentStep.Description = deploymentDescription;
+
+                steps.Add(deploymentStep);
+                stepIndex++;
             }
 
             stepIndex = steps.Count;
