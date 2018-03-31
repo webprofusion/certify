@@ -422,7 +422,7 @@ namespace Certify.Management
             // begin authorization by registering the domain identifier. This may return an already
             // validated authorization or we may still have to complete the authorization challenge.
             // When rate limits are encountered, this step may fail.
-            var authorizations = await _acmeClientProvider.BeginRegistrationAndValidation(log, config);
+            var authorizations = await _acmeClientProvider.BeginCertificateOrder(log, config);
 
             if (authorizations.Any(a => a.IsFailure))
             {
@@ -600,14 +600,10 @@ namespace Certify.Management
 
             if (allIdentifiersValidated)
             {
-                string primaryDnsIdentifier = identifierAuthorizations.First().Identifier.Alias;
-                string[] alternativeDnsIdentifiers = identifierAuthorizations.Select(i => i.Identifier.Alias).ToArray();
-
                 ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RequestCertificate, managedCertificate));
 
                 // Perform CSR request
-                // FIXME: make call async
-                var certRequestResult = await _acmeClientProvider.PerformCertificateRequestProcess(log, primaryDnsIdentifier, alternativeDnsIdentifiers, config);
+                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, config);
 
                 if (certRequestResult.IsSuccess)
                 {

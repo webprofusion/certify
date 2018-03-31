@@ -1,14 +1,12 @@
 ﻿using Certes;
 using Certes.Acme;
 using Certes.Acme.Resource;
-using Certes.Json;
 using Certes.Jws;
 using Certes.Pkcs;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
-using Newtonsoft.Json;
 using Org.BouncyCastle.Crypto.Digests;
 using Serilog;
 using System;
@@ -20,11 +18,17 @@ using System.Threading.Tasks;
 
 namespace Certify.Providers.Certes
 {
+    /// <summary>
+    /// Certes Provider settings for serialization 
+    /// </summary>
     public class CertesSettings
     {
         public string AccountEmail { get; set; }
     }
 
+    /// <summary>
+    /// ACME Provider using certes https://github.com/fszlin/certes 
+    /// </summary>
     public class CertesACMEProvider : IACMEClientProvider, IVaultProvider
     {
         private AcmeContext _acme;
@@ -44,6 +48,24 @@ namespace Certify.Providers.Certes
         {
             _settingsFolder = settingsPath;
 
+            InitProvider();
+        }
+
+        public string GetProviderName()
+        {
+            return "Certes";
+        }
+
+        public string GetAcmeBaseURI()
+        {
+            return _acme.DirectoryUri.ToString();
+        }
+
+        /// <summary>
+        /// Initialise provider settings, allocating account key if required 
+        /// </summary>
+        private void InitProvider()
+        {
             LoadSettings();
 
             if (!LoadAccountKey())
@@ -56,11 +78,9 @@ namespace Certify.Providers.Certes
             _currentOrders = new Dictionary<string, IOrderContext>();
         }
 
-        public string GetProviderName()
-        {
-            return "Certes";
-        }
-
+        /// <summary>
+        /// Load provider settings or create new 
+        /// </summary>
         private void LoadSettings()
         {
             if (!System.IO.Directory.Exists(_settingsFolder))
@@ -79,23 +99,18 @@ namespace Certify.Providers.Certes
             }
         }
 
+        /// <summary>
+        /// Save current provider settings 
+        /// </summary>
         private void SaveSettings()
         {
             System.IO.File.WriteAllText(_settingsFolder + "\\c-settings.json", Newtonsoft.Json.JsonConvert.SerializeObject(_settings));
         }
 
-        public bool IsAccountRegistered()
-        {
-            if (!String.IsNullOrEmpty(_settings.AccountEmail))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
+        /// <summary>
+        /// Load the current account key 
+        /// </summary>
+        /// <returns></returns>
         private bool LoadAccountKey()
         {
             if (System.IO.File.Exists(_settingsFolder + "\\c-acc.key"))
@@ -111,19 +126,49 @@ namespace Certify.Providers.Certes
             }
         }
 
+        /// <summary>
+        /// Save the current account key 
+        /// </summary>
+        /// <returns></returns>
         private bool SaveAccountKey()
         {
             System.IO.File.WriteAllText(_settingsFolder + "\\c-acc.key", _acme.AccountKey.ToPem());
             return true;
         }
 
-        public void SetAccountKey(string pem)
+        /// <summary>
+        /// Determine if we have a currently registered account with the ACME CA (Let's Encrypt) 
+        /// </summary>
+        /// <returns></returns>
+        public bool IsAccountRegistered()
+        {
+            if (!String.IsNullOrEmpty(_settings.AccountEmail))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Set a new account key from PEM encoded text 
+        /// </summary>
+        /// <param name="pem"></param>
+        private void SetAccountKey(string pem)
         {
             var accountkey = KeyFactory.FromPem(pem);
 
             _acme = new AcmeContext(_serviceUri, accountkey);
         }
 
+        /// <summary>
+        /// Register a new account with the ACME CA (Let's Encrypt), accepting terms and conditions 
+        /// </summary>
+        /// <param name="log"></param>
+        /// <param name="email"></param>
+        /// <returns></returns>
         public async Task<bool> AddNewAccountAndAcceptTOS(ILog log, string email)
         {
             try
@@ -146,8 +191,6 @@ namespace Certify.Providers.Certes
                 return false;
             }
         }
-
-        private static readonly JsonSerializerSettings thumbprintSettings = JsonUtil.CreateSettings();
 
         private string ComputeKeyAuthorization(IChallengeContext challenge, IKey key)
         {
@@ -172,7 +215,14 @@ namespace Certify.Providers.Certes
             return dnsValue;
         }
 
-        public async Task<List<PendingAuthorization>> BeginRegistrationAndValidation(ILog log, CertRequestConfig config)
+        /// <summary>
+        /// Begin order for new certificate for one or more domains, fetching the required challenges
+        /// to complete
+        /// </summary>
+        /// <param name="log"></param>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public async Task<List<PendingAuthorization>> BeginCertificateOrder(ILog log, CertRequestConfig config)
         {
             // prepare a list of all pending authorization we need to complete, or those we have
             // already satisfied
@@ -324,10 +374,15 @@ namespace Certify.Providers.Certes
             }
         }
 
+        /// <summary>
+        /// if not already validate, ask ACME CA to check we have answered the nominated challenges correctly 
+        /// </summary>
+        /// <param name="log"></param>
+        /// <param name="challengeType"></param>
+        /// <param name="attemptedChallenge"></param>
+        /// <returns></returns>
         public async Task<StatusMessage> SubmitChallenge(ILog log, string challengeType, AuthorizationChallengeItem attemptedChallenge)
         {
-            // if not already validate, ask ACME server to validate we have answered the required
-            // challenge correctly
             if (!attemptedChallenge.IsValidated)
             {
                 IChallengeContext challenge = (IChallengeContext)attemptedChallenge.ChallengeData;
@@ -376,6 +431,14 @@ namespace Certify.Providers.Certes
             }
         }
 
+        /// <summary>
+        /// After we have asked the CA to check we have responded to the required challenges, check
+        /// the result to see if they are now valid
+        /// </summary>
+        /// <param name="log"></param>
+        /// <param name="challengeType"></param>
+        /// <param name="pendingAuthorization"></param>
+        /// <returns></returns>
         public async Task<PendingAuthorization> CheckValidationCompleted(ILog log, string challengeType, PendingAuthorization pendingAuthorization)
         {
             IAuthorizationContext authz = (IAuthorizationContext)pendingAuthorization.AuthorizationContext;
@@ -418,14 +481,17 @@ namespace Certify.Providers.Certes
             return pendingAuthorization;
         }
 
-        public string GetAcmeBaseURI()
+        /// <summary>
+        /// Once validation has completed for our requested domains we can complete the certificate
+        /// request by submitting a Certificate Signing Request (CSR) to the CA
+        /// </summary>
+        /// <param name="log"></param>
+        /// <param name="primaryDnsIdentifier"></param>
+        /// <param name="alternativeDnsIdentifiers"></param>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config)
         {
-            return _acme.DirectoryUri.ToString();
-        }
-
-        public async Task<ProcessStepResult> PerformCertificateRequestProcess(ILog log, string primaryDnsIdentifier, string[] alternativeDnsIdentifiers, CertRequestConfig config)
-        {
-            // create our new certificate
             var orderContext = _currentOrders[config.PrimaryDomain];
 
             //update order status
@@ -517,8 +583,9 @@ namespace Certify.Providers.Certes
             }
             else
             {
+                log.Error($"Certificate signing request, not valid: {certOrder.Status} {certOrder.Error}");
                 // TODO: is cert pending or failed?
-                return new ProcessStepResult { IsSuccess = false, ErrorMessage = "Certificate signing request not completed" };
+                return new ProcessStepResult { IsSuccess = false, ErrorMessage = "Certificate signing request could not complete." };
             }
         }
 
@@ -551,11 +618,6 @@ namespace Certify.Providers.Certes
         public void EnableSensitiveFileEncryption()
         {
             //FIXME: not implemented
-        }
-
-        public List<CertificateItem> GetCertificates()
-        {
-            throw new NotImplementedException();
         }
     }
 }
