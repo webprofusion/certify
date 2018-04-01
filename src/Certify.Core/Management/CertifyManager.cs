@@ -249,6 +249,8 @@ namespace Certify.Management
         public async Task<CertificateRequestResult> ReapplyCertificateBindings(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false)
         {
             if (_tc != null) _tc.TrackEvent("ReapplyCertBindings");
+            string logPrefix = "";
+            if (isPreviewOnly) logPrefix = "[Preview Mode] ";
 
             var result = new CertificateRequestResult { ManagedItem = managedCertificate, IsSuccess = false, Message = "" };
             var config = managedCertificate.RequestConfig;
@@ -265,18 +267,18 @@ namespace Certify.Management
                 if (!actions.Any(a => a.HasError))
                 {
                     //all done
-                    LogMessage(managedCertificate.Id, CoreSR.CertifyManager_CompleteRequestAndUpdateBinding, LogItemType.CertificateRequestSuccessful);
+                    LogMessage(managedCertificate.Id, logPrefix + CoreSR.CertifyManager_CompleteRequestAndUpdateBinding, LogItemType.CertificateRequestSuccessful);
 
                     if (!isPreviewOnly) await UpdateManagedCertificateStatus(managedCertificate, RequestState.Success);
 
                     result.IsSuccess = true;
-                    result.Message = string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
+                    result.Message = logPrefix + string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
                     ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedCertificate));
                 }
                 else
                 {
                     // certificate install failed
-                    result.Message = string.Format(CoreSR.CertifyManager_CertificateInstallFailed, pfxPath);
+                    result.Message = logPrefix + string.Format(CoreSR.CertifyManager_CertificateInstallFailed, pfxPath);
                     if (!isPreviewOnly) await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
 
                     LogMessage(managedCertificate.Id, result.Message, LogItemType.GeneralError);

@@ -93,7 +93,7 @@ namespace Certify.Management
                         try
                         {
                             var siteInfo = serverProvider.GetSiteById(item.ServerSiteId);
-                            deploymentDescription = $"Deploy to IIS Site: {siteInfo.Name}  [{siteInfo.Id}] {item.RequestConfig.WebsiteRootPath} ";
+                            deploymentDescription = $"Deploy to IIS Site [{siteInfo.Id}]: {siteInfo.Name} {item.RequestConfig.WebsiteRootPath} ";
                         }
                         catch (Exception exp)
                         {
