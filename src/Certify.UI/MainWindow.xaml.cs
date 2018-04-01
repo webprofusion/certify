@@ -48,23 +48,29 @@ namespace Certify.UI
 
         private async void Button_NewCertificate(object sender, RoutedEventArgs e)
         {
+#if ALPHA
+            MessageBox.Show("You are using an alpha version of Certify The Web. You should only use this version for testing and should not consider it suitable for use on production servers.");
+#endif
+
             // save or discard site changes before creating a new site/certificate
             if (!await _itemViewModel.ConfirmDiscardUnsavedChanges()) return;
-
-            if (_appViewModel.IsRegisteredVersion)
-            {
-                var licensingManager = ViewModel.AppViewModel.Current.PluginManager?.LicensingManager;
-
-                if (licensingManager != null && !await licensingManager.IsInstallActive(ViewModel.AppViewModel.ProductTypeId, Management.Util.GetAppDataFolder()))
-                {
-                    _appViewModel.IsRegisteredVersion = false;
-                }
-            }
 
             if (!_appViewModel.IsRegisteredVersion && _appViewModel.ManagedCertificates != null && _appViewModel.ManagedCertificates.Count >= 5)
             {
                 MessageBox.Show(SR.MainWindow_TrialLimitationReached);
                 return;
+            }
+            else
+            {
+                if (_appViewModel.IsRegisteredVersion && _appViewModel.ManagedCertificates?.Count >= 5)
+                {
+                    var licensingManager = ViewModel.AppViewModel.Current.PluginManager?.LicensingManager;
+
+                    if (licensingManager != null && !await licensingManager.IsInstallActive(ViewModel.AppViewModel.ProductTypeId, Management.Util.GetAppDataFolder()))
+                    {
+                        _appViewModel.IsRegisteredVersion = false;
+                    }
+                }
             }
 
             // check user has registered a contact with LE first

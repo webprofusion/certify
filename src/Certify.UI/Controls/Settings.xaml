@@ -152,7 +152,7 @@
                     <TextBlock
                         Grid.Row="0"
                         Margin="8"
-                        TextWrapping="Wrap">
+                        Style="{StaticResource Instructions}">
                         Stored Credentials are saved API Keys or password for providers (DNS etc). Multiple managed sites can re-use the same stored credentials as required. These credentials are stored locally and protected using the Windows Data Protection APIs.
                     </TextBlock>
                     <Button
