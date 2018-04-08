@@ -1063,7 +1063,7 @@ namespace Certify.Management
                     InstanceId = CoreAppSettings.Current.InstanceId,
                     MachineName = Environment.MachineName,
                     PrimaryContactEmail = GetPrimaryContactEmail(),
-                    ManagedCertificate = managedCertificate,
+                    ManagedSite = managedCertificate,
                     AppVersion = new Management.Util().GetAppVersion().ToString()
                 };
                 try
@@ -1073,7 +1073,7 @@ namespace Certify.Management
                 catch (Exception)
                 {
                     // failed to report status
-                    LogMessage(managedCertificate.Id, "Failed send renewal status report.", LogItemType.GeneralWarning);
+                    LogMessage(managedCertificate.Id, "Failed to send renewal status report.", LogItemType.GeneralWarning);
                 }
             }
         }
