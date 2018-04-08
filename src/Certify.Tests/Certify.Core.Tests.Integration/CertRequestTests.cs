@@ -472,5 +472,69 @@ namespace Certify.Core.Tests
                 if (certInfo != null) CertificateManager.RemoveCertificate(certInfo);
             }
         }
+
+        [TestMethod]
+        public async Task TestPreview()
+        {
+            var testStr = Guid.NewGuid().ToString().Substring(0, 6);
+            PrimaryTestDomain = $"test-{testStr}." + PrimaryTestDomain;
+            var wildcardDomain = "*.test." + PrimaryTestDomain;
+            string testWildcardSiteName = "TestWildcard_" + testStr;
+
+            if (iisManager.SiteExists(testWildcardSiteName))
+            {
+                iisManager.DeleteSite(testWildcardSiteName);
+            }
+
+            var site = iisManager.CreateSite(testWildcardSiteName, "test" + testStr + "." + PrimaryTestDomain, PrimaryIISRoot, "DefaultAppPool", port: testSiteHttpPort);
+
+            ManagedCertificate managedCertificate = null;
+            X509Certificate2 certInfo = null;
+
+            try
+            {
+                var dummyManagedCertificate = new ManagedCertificate
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = testWildcardSiteName,
+                    GroupId = site.Id.ToString(),
+                    RequestConfig = new CertRequestConfig
+                    {
+                        PrimaryDomain = wildcardDomain,
+                        PerformAutoConfig = true,
+                        PerformAutomatedCertBinding = true,
+                        PerformChallengeFileCopy = true,
+                        PerformExtensionlessConfigChecks = true,
+                        WebsiteRootPath = testSitePath,
+                        Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = _awsCredStorageKey
+                            }
+                        }
+                    },
+                    ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
+                };
+
+                var preview = certifyManager.GeneratePreview(dummyManagedCertificate);
+                var result = await certifyManager.PerformCertificateRequest(_log, dummyManagedCertificate);
+
+                var deployStep = result.Actions[3];
+                Assert.IsTrue(deployStep.Title.StartsWith("Deploy to IIS Site"));
+            }
+            finally
+            {
+                // remove managed site
+                if (managedCertificate != null) await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
+
+                // remove IIS site
+                iisManager.DeleteSite(testWildcardSiteName);
+
+                // cleanup certificate
+                if (certInfo != null) CertificateManager.RemoveCertificate(certInfo);
+            }
+        }
     }
 }
