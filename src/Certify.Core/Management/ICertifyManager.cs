@@ -40,7 +40,7 @@ namespace Certify.Management
 
         void BeginTrackingProgress(RequestProgressState state);
 
-        Task<CertificateRequestResult> ReapplyCertificateBindings(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false);
+        Task<CertificateRequestResult> ApplyCertificateBindings(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false);
 
         Task<CertificateRequestResult> PerformCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null);
 

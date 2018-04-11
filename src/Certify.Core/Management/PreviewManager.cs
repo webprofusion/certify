@@ -101,7 +101,7 @@ namespace Certify.Management
                         }
 
                         // add deployment sub-steps (if any)
-                        var bindingRequest = await certifyManager.ReapplyCertificateBindings(item, null, isPreviewOnly: true);
+                        var bindingRequest = await certifyManager.ApplyCertificateBindings(item, null, isPreviewOnly: true);
                         if (bindingRequest.Actions != null) deploymentStep.Substeps = bindingRequest.Actions;
                     }
                     else
@@ -131,7 +131,7 @@ namespace Certify.Management
                         deploymentDescription = "Deploying to All IIS Sites on server";
 
                         // add deployment sub-steps (if any)
-                        var bindingRequest = await certifyManager.ReapplyCertificateBindings(item, null, isPreviewOnly: true);
+                        var bindingRequest = await certifyManager.ApplyCertificateBindings(item, null, isPreviewOnly: true);
                         if (bindingRequest.Actions != null) deploymentStep.Substeps = bindingRequest.Actions;
                     }
                 }

@@ -614,6 +614,10 @@ namespace Certify.Management.Servers
             {
                 var existingBindings = site.Bindings.ToList();
 
+                //remove https bindings which already have an https equivalent (specific hostname or blank)
+                existingBindings.RemoveAll(b => b.Protocol == "http" && existingBindings.Any(e => e.Host == b.Host && e.Protocol == "https"));
+                existingBindings = existingBindings.OrderBy(b => b.Protocol).ThenBy(b => b.Host).ToList();
+
                 // for each binding create or update an https binding
                 foreach (var b in existingBindings)
                 {
@@ -773,13 +777,15 @@ namespace Certify.Management.Servers
                     if (siteToUpdate != null)
                     {
                         string internationalHost = host == "" ? "" : ToUnicodeString(host);
-                        var existingBindings = from b in siteToUpdate.Bindings where b.Host == internationalHost && b.Protocol == "https" select b;
-                        if (!existingBindings.Any())
+                        string bindingSpec = $"{(!String.IsNullOrEmpty(ipAddress) ? ipAddress : "*")}:{sslPort}:{internationalHost}";
+                        action.Key = $"[{site.Id}]:{bindingSpec}:{useSNI}";
+
+                        var existingHttpsBindings = from b in siteToUpdate.Bindings where b.Host == internationalHost && b.Protocol == "https" select b;
+                        if (!existingHttpsBindings.Any())
                         {
                             //there are no existing https bindings to update for this domain
 
                             //add new https binding at default port "<ip>:port:hostDnsName";
-                            string bindingSpec = $"{(!String.IsNullOrEmpty(ipAddress) ? ipAddress : "*")}:{sslPort}:{internationalHost}";
 
                             action.Description = $"Add new https binding: [{siteToUpdate.Name}] {bindingSpec}";
 
@@ -816,7 +822,7 @@ namespace Certify.Management.Servers
                         {
                             // update one or more existing https bindings with new cert
                             var updateDescription = "";
-                            foreach (var existingBinding in existingBindings)
+                            foreach (var existingBinding in existingHttpsBindings)
                             {
                                 if (!isPreviewOnly)
                                 {

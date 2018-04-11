@@ -246,7 +246,7 @@ namespace Certify.Management
             });
         }
 
-        public async Task<CertificateRequestResult> ReapplyCertificateBindings(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false)
+        public async Task<CertificateRequestResult> ApplyCertificateBindings(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false)
         {
             if (_tc != null) _tc.TrackEvent("ReapplyCertBindings");
             string logPrefix = "";

@@ -147,7 +147,7 @@ namespace Certify.Service
              //begin monitoring progress
              _certifyManager.BeginTrackingProgress(progressState);*/
 
-            var result = await _certifyManager.ReapplyCertificateBindings(managedCertificate, null, isPreviewOnly);
+            var result = await _certifyManager.ApplyCertificateBindings(managedCertificate, null, isPreviewOnly);
             return result;
         }
     }

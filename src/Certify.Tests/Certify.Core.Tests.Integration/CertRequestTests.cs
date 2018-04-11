@@ -474,19 +474,20 @@ namespace Certify.Core.Tests
         }
 
         [TestMethod]
-        public async Task TestPreview()
+        public async Task TestPreviewWildcard()
         {
             var testStr = Guid.NewGuid().ToString().Substring(0, 6);
             PrimaryTestDomain = $"test-{testStr}." + PrimaryTestDomain;
             var wildcardDomain = "*.test." + PrimaryTestDomain;
-            string testWildcardSiteName = "TestWildcard_" + testStr;
+            string testPreviewSiteName = "TestPreview_" + testStr;
 
-            if (iisManager.SiteExists(testWildcardSiteName))
+            if (iisManager.SiteExists(testPreviewSiteName))
             {
-                iisManager.DeleteSite(testWildcardSiteName);
+                iisManager.DeleteSite(testPreviewSiteName);
             }
 
-            var site = iisManager.CreateSite(testWildcardSiteName, "test" + testStr + "." + PrimaryTestDomain, PrimaryIISRoot, "DefaultAppPool", port: testSiteHttpPort);
+            string hostname = "test" + testStr + "." + PrimaryTestDomain;
+            var site = iisManager.CreateSite(testPreviewSiteName, hostname, PrimaryIISRoot, "DefaultAppPool", port: testSiteHttpPort);
 
             ManagedCertificate managedCertificate = null;
             X509Certificate2 certInfo = null;
@@ -496,7 +497,7 @@ namespace Certify.Core.Tests
                 var dummyManagedCertificate = new ManagedCertificate
                 {
                     Id = Guid.NewGuid().ToString(),
-                    Name = testWildcardSiteName,
+                    Name = testPreviewSiteName,
                     GroupId = site.Id.ToString(),
                     RequestConfig = new CertRequestConfig
                     {
@@ -518,11 +519,13 @@ namespace Certify.Core.Tests
                     ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
                 };
 
-                var preview = certifyManager.GeneratePreview(dummyManagedCertificate);
-                var result = await certifyManager.PerformCertificateRequest(_log, dummyManagedCertificate);
+                var preview = await certifyManager.GeneratePreview(dummyManagedCertificate);
+                string previewSummary = GetPreviewSummary(preview);
+                System.Diagnostics.Debug.WriteLine(previewSummary);
 
-                var deployStep = result.Actions[3];
-                Assert.IsTrue(deployStep.Title.StartsWith("Deploy to IIS Site"));
+                var deployStep = preview[3].Substeps[0];
+                Assert.IsTrue(preview[3].Substeps.Count == 1, "Only 1 binding deployment expected");
+                Assert.IsTrue(deployStep.Description == $"Add new https binding: [{testPreviewSiteName}] *:443:{hostname}");
             }
             finally
             {
@@ -530,11 +533,28 @@ namespace Certify.Core.Tests
                 if (managedCertificate != null) await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
 
                 // remove IIS site
-                iisManager.DeleteSite(testWildcardSiteName);
+                iisManager.DeleteSite(testPreviewSiteName);
 
                 // cleanup certificate
                 if (certInfo != null) CertificateManager.RemoveCertificate(certInfo);
             }
+        }
+
+        private string GetPreviewSummary(List<ActionStep> steps)
+        {
+            string output = "";
+            foreach (var s in steps)
+            {
+                output += $"{s.Title} : {s.Description}\r\n";
+                if (s.Substeps != null)
+                {
+                    foreach (var sub in s.Substeps)
+                    {
+                        output += $"\t{s.Title} : {s.Description}\r\n";
+                    }
+                }
+            }
+            return output;
         }
     }
 }
