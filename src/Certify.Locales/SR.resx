@@ -357,8 +357,8 @@
   <data name="ManagedCertificateSettings_Tab_Options" xml:space="preserve">
     <value>Options</value>
   </data>
-  <data name="ManagedCertificateSettings_SelectIISSite" xml:space="preserve">
-    <value>Select IIS Site:</value>
+  <data name="ManagedCertificateSettings_SelectWebsite" xml:space="preserve">
+    <value>Select Website (optional):</value>
   </data>
   <data name="ManagedCertificateSettings_DisplayName" xml:space="preserve">
     <value>Display Name:</value>

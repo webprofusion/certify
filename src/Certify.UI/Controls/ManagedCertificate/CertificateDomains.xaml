@@ -45,7 +45,7 @@
                     Margin="0,4,0,0"
                     DockPanel.Dock="Top"
                     Orientation="Horizontal">
-                    <Label Width="160" Content="{x:Static Resources:SR.ManagedCertificateSettings_SelectIISSite}" />
+                    <Label Width="160" Content="{x:Static Resources:SR.ManagedCertificateSettings_SelectWebsite}" />
                     <ComboBox
                         x:Name="WebsiteDropdown"
                         Width="240"
@@ -133,8 +133,8 @@
                     <DataGrid
                         x:Name="DomainOptionsList"
                         AutoGenerateColumns="False"
-                        EnableRowVirtualization="True"
                         CanUserAddRows="False"
+                        EnableRowVirtualization="True"
                         ItemsSource="{Binding SelectedItem.DomainOptions}"
                         MouseLeftButtonUp="DataGrid_MouseLeftButtonUp"
                         ScrollViewer.CanContentScroll="True"

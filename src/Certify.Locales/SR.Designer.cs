@@ -1026,20 +1026,20 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select IIS Site:.
-        /// </summary>
-        public static string ManagedCertificateSettings_SelectIISSite {
-            get {
-                return ResourceManager.GetString("ManagedCertificateSettings_SelectIISSite", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Select None.
         /// </summary>
         public static string ManagedCertificateSettings_SelectNone {
             get {
                 return ResourceManager.GetString("ManagedCertificateSettings_SelectNone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select Website (optional):.
+        /// </summary>
+        public static string ManagedCertificateSettings_SelectWebsite {
+            get {
+                return ResourceManager.GetString("ManagedCertificateSettings_SelectWebsite", resourceCulture);
             }
         }
         
