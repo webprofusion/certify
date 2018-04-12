@@ -38,5 +38,15 @@ namespace Certify.Models.Providers
         Task<ActionResult> DeleteRecord(DnsDeleteRecordRequest request);
 
         Task<List<DnsZone>> GetZones();
+
+        int PropagationDelaySeconds { get; }
+
+        string ProviderId { get; }
+
+        string ProviderTitle { get; }
+
+        string ProviderDescription { get; }
+
+        List<ProviderParameter> ProviderParameters { get; }
     }
 }

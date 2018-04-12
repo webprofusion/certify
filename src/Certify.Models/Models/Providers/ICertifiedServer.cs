@@ -9,7 +9,7 @@ namespace Certify.Models.Providers
     /// </summary>
     public interface ICertifiedServer
     {
-        List<SiteBindingItem> GetSiteBindingList(
+        Task<List<SiteBindingItem>> GetSiteBindingList(
             bool ignoreStoppedSites,
             string siteId = null
             );
@@ -21,7 +21,7 @@ namespace Certify.Models.Providers
             bool isPreviewOnly
             );
 
-        ActionStep InstallCertificateforBinding(
+        Task<List<ActionStep>> InstallCertificateforBinding(
             string certStoreName,
             byte[] certificateHash,
             ManagedCertificate managedCertificate,
@@ -33,20 +33,16 @@ namespace Certify.Models.Providers
             bool isPreviewOnly = false
             );
 
-        List<SiteBindingItem> GetPrimarySites(bool ignoreStoppedSites);
+        Task<List<SiteBindingItem>> GetPrimarySites(bool ignoreStoppedSites);
 
-        SiteInfo GetSiteById(string siteId);
+        Task<SiteInfo> GetSiteById(string siteId);
 
-        void RemoveHttpsBinding(ManagedCertificate managedCertificate, string sni);
+        Task RemoveHttpsBinding(ManagedCertificate managedCertificate, string sni);
 
-        Version GetServerVersion();
+        Task<Version> GetServerVersion();
 
-        Task<Version> GetServerVersionAsync();
+        Task<bool> IsAvailable();
 
-        bool IsAvailable();
-
-        Task<bool> IsAvailableAsync();
-
-        bool IsSiteRunning(string id);
+        Task<bool> IsSiteRunning(string id);
     }
 }
