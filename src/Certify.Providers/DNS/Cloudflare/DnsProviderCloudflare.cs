@@ -80,6 +80,19 @@ namespace Certify.Providers.DNS.Cloudflare
         private const string _deleteRecordUri = _baseUri + "zones/{0}/dns_records/{1}";
         private const string _updateRecordUri = _baseUri + "zones/{0}/dns_records/{1}";
 
+        public int PropagationDelaySeconds => 60;
+
+        public string ProviderId => "DNS01.API.Cloudflare";
+
+        public string ProviderTitle => "Cloudflare DNS API";
+
+        public string ProviderDescription => "Validates via Cloudflare DNS APIs using credentials";
+
+        public List<ProviderParameter> ProviderParameters => new List<ProviderParameter>{
+                    new ProviderParameter{Key="emailaddress", Name="Email Address", IsRequired=true },
+                    new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true }
+                };
+
         public DnsProviderCloudflare(Dictionary<string, string> credentials)
         {
             _authKey = credentials["authkey"];

@@ -14,6 +14,22 @@ namespace Certify.Providers.DNS.Azure
         private DnsManagementClient _dnsClient;
         private Dictionary<string, string> _credentials;
 
+        public int PropagationDelaySeconds => 60;
+
+        public string ProviderId => "DNS01.API.Azure";
+
+        public string ProviderTitle => "Azure DNS API";
+
+        public string ProviderDescription => "Validates via Azure DNS APIs using credentials";
+
+        public List<ProviderParameter> ProviderParameters => new List<ProviderParameter>{
+                    new ProviderParameter{Key="tenantid", Name="Tenant Id", IsRequired=false },
+                    new ProviderParameter{Key="clientid", Name="Application Id", IsRequired=false },
+                    new ProviderParameter{Key="secret",Name="Svc Principal Secret", IsRequired=true , IsPassword=true},
+                    new ProviderParameter{Key="subscriptionid",Name="DNS Subscription Id", IsRequired=true , IsPassword=false},
+                    new ProviderParameter{Key="resourcegroupname",Name="Resource Group Name", IsRequired=true , IsPassword=false}
+                };
+
         public DnsProviderAzure(Dictionary<string, string> credentials)
         {
             _credentials = credentials;

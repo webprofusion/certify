@@ -108,8 +108,10 @@ namespace Certify.Core.Management.Challenges
                     }
                     */
 
-                    // FIXME: need a proper way to tell if DNS has updated
-                    await Task.Delay(5000); // hold on a sec
+                    // wait for provider specific propogation delay
+
+                    // FIXME: perform validation check in DNS nameservers
+                    await Task.Delay(dnsAPIProvider.PropagationDelaySeconds * 1000);
 
                     return result;
                 }

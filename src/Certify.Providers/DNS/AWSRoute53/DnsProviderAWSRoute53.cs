@@ -13,6 +13,20 @@ namespace Certify.Providers.DNS.AWSRoute53
     {
         private AmazonRoute53Client route53Client;
 
+        public int PropagationDelaySeconds => 60;
+
+        public string ProviderId => "DNS01.API.Route53";
+
+        public string ProviderTitle => "Amazon Route 53 DNS API";
+
+        public string ProviderDescription => "Validates via Route 53 APIs using AMI service credentials";
+
+        public List<ProviderParameter> ProviderParameters =>
+                new List<ProviderParameter>{
+                    new ProviderParameter{ Key="accesskey",Name="Access Key", IsRequired=true, IsPassword=false },
+                    new ProviderParameter{ Key="secretaccesskey",Name="Secret Access Key", IsRequired=true, IsPassword=true }
+                };
+
         public DnsProviderAWSRoute53(Dictionary<string, string> credentials)
         {
             route53Client = new AmazonRoute53Client(credentials["accesskey"], credentials["secretaccesskey"], Amazon.RegionEndpoint.USEast1);

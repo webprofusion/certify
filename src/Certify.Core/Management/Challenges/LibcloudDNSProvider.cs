@@ -19,6 +19,16 @@ namespace Certify.Core.Management.Challenges
             _pythonPath = Certify.Management.Util.GetAppDataFolder("python-embedded") + "\\python.exe";
         }
 
+        public int PropagationDelaySeconds => 60;
+
+        public string ProviderId => "DNS01.Apache.Libcloud";
+
+        public string ProviderTitle => "Apache Libcloud";
+
+        public string ProviderDescription => "Multi provider DNS API";
+
+        public List<ProviderParameter> ProviderParameters => new List<ProviderParameter>();
+
         public async Task<ActionResult> CreateRecord(DnsCreateRecordRequest request)
         {
             // for a given managed site configuration, attempt to complete the required challenge by

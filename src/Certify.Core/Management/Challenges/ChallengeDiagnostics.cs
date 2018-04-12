@@ -28,7 +28,7 @@ namespace Certify.Core.Management.Challenges
         /// Simulates responding to a challenge, performs a sample configuration and attempts to
         /// verify it.
         /// </summary>
-        /// <param name="iisManager"></param>
+        /// <param name="serverManager"></param>
         /// <param name="managedCertificate"></param>
         /// <returns> APIResult </returns>
         /// <remarks>
@@ -36,7 +36,7 @@ namespace Certify.Core.Management.Challenges
         /// submitting a request to the ACME server, to avoid creating failed requests and hitting
         /// usage limits.
         /// </remarks>
-        public async Task<List<StatusMessage>> TestChallengeResponse(ILog log, ICertifiedServer iisManager, ManagedCertificate managedCertificate, bool isPreviewMode, bool enableDnsChecks)
+        public async Task<List<StatusMessage>> TestChallengeResponse(ILog log, ICertifiedServer serverManager, ManagedCertificate managedCertificate, bool isPreviewMode, bool enableDnsChecks)
         {
             _actionLogs.Clear(); // reset action logs
 
@@ -114,15 +114,15 @@ namespace Certify.Core.Management.Challenges
 
                         generatedAuthorizations.Add(simulatedAuthorization);
 
-                        var resultOK = await PrepareChallengeResponse_Http01(
-                           log, iisManager, domain, managedCertificate, simulatedAuthorization
-                        )();
+                        var httpChallengeResult = await PerformChallengeResponse_Http01(
+                           log, serverManager, domain, managedCertificate, simulatedAuthorization
+                        );
 
-                        if (!resultOK)
+                        if (!httpChallengeResult.IsSuccess)
                         {
                             result.IsOK = false;
                             result.FailedItemSummary.Add($"Config checks failed to verify http://{domain} is both publicly accessible and can serve extensionless files e.g. {challengeFileUrl}");
-
+                            result.Message = httpChallengeResult.Message;
                             results.Add(result);
                             // don't check any more after first failure
                             break;
@@ -130,7 +130,8 @@ namespace Certify.Core.Management.Challenges
                     }
                     else if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
                     {
-                        if (iisManager.GetServerVersion().Major < 8)
+                        var serverVersion = await serverManager.GetServerVersion();
+                        if (serverVersion.Major < 8)
                         {
                             result.IsOK = false;
                             result.FailedItemSummary.Add($"The {SupportedChallengeTypes.CHALLENGE_TYPE_SNI} challenge is only available for IIS versions 8+.");
@@ -153,7 +154,7 @@ namespace Certify.Core.Management.Challenges
                         generatedAuthorizations.Add(simulatedAuthorization);
                         result.IsOK =
                              PrepareChallengeResponse_TlsSni01(
-                                log, iisManager, domain, managedCertificate, simulatedAuthorization
+                                log, serverManager, domain, managedCertificate, simulatedAuthorization
                             )();
 
                         results.Add(result);
@@ -240,10 +241,10 @@ namespace Certify.Core.Management.Challenges
                     if (requiredChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
                     {
                         // perform http-01 challenge response
-                        var check = PrepareChallengeResponse_Http01(log, iisManager, domain, managedCertificate, pendingAuth);
+                        var check = await PerformChallengeResponse_Http01(log, iisManager, domain, managedCertificate, pendingAuth);
                         if (requestConfig.PerformExtensionlessConfigChecks)
                         {
-                            pendingAuth.AttemptedChallenge.ConfigCheckedOK = await check();
+                            pendingAuth.AttemptedChallenge.ConfigCheckedOK = check.IsSuccess;
                         }
                     }
 
@@ -276,18 +277,17 @@ namespace Certify.Core.Management.Challenges
         /// <summary>
         /// Prepares IIS to respond to a http-01 challenge 
         /// </summary>
-        /// <returns>
-        /// A Boolean returning Func. Invoke the Func to test the challenge response locally.
-        /// </returns>
-        private Func<Task<bool>> PrepareChallengeResponse_Http01(ILog log, ICertifiedServer iisManager, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
+        /// <returns> Test the challenge response locally. </returns>
+        private async Task<ActionResult> PerformChallengeResponse_Http01(ILog log, ICertifiedServer iisManager, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
         {
             var requestConfig = managedCertificate.RequestConfig;
             var httpChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP);
 
             if (httpChallenge == null)
             {
-                log.Warning($"No http challenge to complete for {managedCertificate.Name}. Request cannot continue.");
-                return () => Task.FromResult(false);
+                var msg = $"No http challenge to complete for {managedCertificate.Name}. Request cannot continue.";
+                log.Warning(msg);
+                return new ActionResult { IsSuccess = false, Message = msg };
             }
 
             log.Information("Preparing challenge response for Let's Encrypt server to check at: {uri}", httpChallenge.ResourceUri);
@@ -298,7 +298,7 @@ namespace Certify.Core.Management.Challenges
 
             if (!String.IsNullOrEmpty(managedCertificate.ServerSiteId))
             {
-                var siteInfo = iisManager.GetSiteById(managedCertificate.ServerSiteId);
+                var siteInfo = await iisManager.GetSiteById(managedCertificate.ServerSiteId);
 
                 // if website root path not specified, determine it now
                 if (String.IsNullOrEmpty(websiteRootPath))
@@ -326,8 +326,10 @@ namespace Certify.Core.Management.Challenges
             {
                 // our website no longer appears to exist on disk, continuing would potentially
                 // create unwanted folders, so it's time for us to give up
-                log.Error($"The website root path for {managedCertificate.Name} could not be determined. Request cannot continue.");
-                return () => Task.FromResult(false);
+
+                var msg = $"The website root path for {managedCertificate.Name} could not be determined. Request cannot continue.";
+                log.Error(msg);
+                return new ActionResult { IsSuccess = false, Message = msg };
             }
 
             // copy temp file to path challenge expects in web folder
@@ -343,8 +345,10 @@ namespace Certify.Core.Management.Challenges
                 catch (Exception exp)
                 {
                     // failed to create directory, probably permissions or may be invalid config
-                    log.Error(exp, $"Pre-config check failed: Could not create directory: {destPath}");
-                    return () => Task.FromResult(false);
+
+                    var msg = $"Pre-config check failed: Could not create directory: {destPath}";
+                    log.Error(exp, msg);
+                    return new ActionResult { IsSuccess = false, Message = msg };
                 }
             }
 
@@ -359,33 +363,42 @@ namespace Certify.Core.Management.Challenges
                 catch (Exception exp)
                 {
                     // failed to create configcheck file, probably permissions or may be invalid config
-                    log.Error(exp, $"Pre-config check failed: Could not create file: {destFile}");
-                    return () => Task.FromResult(false);
+
+                    var msg = $"Pre-config check failed: Could not create file: {destFile}";
+                    log.Error(exp, msg);
+                    return new ActionResult { IsSuccess = false, Message = msg };
                 }
             }
 
-            // configure cleanup - should this be configurable? Because in some case many sites
+            // prepare cleanup - should this be configurable? Because in some case many sites
             // renewing may all point to the same web root, we keep the configcheck file
             pendingAuth.Cleanup = () =>
             {
                 if (!destFile.EndsWith("configcheck") && File.Exists(destFile))
                 {
                     log.Verbose("Challenge Cleanup: Removing {file}", destFile);
-                    File.Delete(destFile);
+                    try
+                    {
+                        File.Delete(destFile);
+                    }
+                    catch { }
                 }
             };
 
-            return async () =>
+            if (requestConfig.PerformExtensionlessConfigChecks)
             {
                 // first check if it already works with no changes
                 if (await _netUtil.CheckURL(log, httpChallenge.ResourceUri))
                 {
-                    return true;
+                    return new ActionResult { IsSuccess = true, Message = $"Verified URL is accessible: {httpChallenge.ResourceUri}" };
                 }
 
                 // initial check didn't work, if auto config enabled attempt to find a working config
                 if (requestConfig.PerformAutoConfig)
                 {
+                    // FIXME: need to only overwrite config we have auto populated, not user
+                    //        specified config, compare to our preconfig and only overwrite if same
+                    //        as ours? Or include preset key in our config, or make behaviour configurable
                     this.LogAction($"Pre-config check failed: Auto-config will overwrite existing config: {destPath}\\web.config");
 
                     var configOptions = Directory.EnumerateFiles(Environment.CurrentDirectory + "\\Scripts\\Web.config\\", "*.config");
@@ -409,21 +422,28 @@ namespace Certify.Core.Management.Challenges
                             this.LogAction($"Failed to write config: " + exp.Message);
                         }
 
-                        if (await _netUtil.CheckURL(log, $"http://{domain}/{httpChallenge.ResourcePath}"))
+                        if (await _netUtil.CheckURL(log, httpChallenge.ResourceUri))
                         {
-                            return true;
+                            return new ActionResult { IsSuccess = true, Message = $"Verified URL is accessible: {httpChallenge.ResourceUri}" };
                         }
                     }
+                }
 
-                    //couldn't auto configure
-                    return false;
-                }
-                else
+                // failed to auto configure or confirm resource is accessible
+                return new ActionResult
                 {
-                    // auto config not enabled, just have to fail
-                    return false;
-                }
-            };
+                    IsSuccess = false,
+                    Message = $"Could not verify URL is accessible: {httpChallenge.ResourceUri}"
+                };
+            }
+            else
+            {
+                return new ActionResult
+                {
+                    IsSuccess = false,
+                    Message = $"Config checks disabled. Could not verify URL: {httpChallenge.ResourceUri}"
+                };
+            }
         }
 
         private Func<bool> PrepareChallengeResponse_TlsSni01(ILog log, ICertifiedServer iisManager, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
