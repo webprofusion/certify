@@ -92,7 +92,7 @@ namespace Certify.Management
                     {
                         try
                         {
-                            var siteInfo = serverProvider.GetSiteById(item.ServerSiteId);
+                            var siteInfo = await serverProvider.GetSiteById(item.ServerSiteId);
                             deploymentDescription = $"Deploy to IIS Site [{siteInfo.Id}]: {siteInfo.Name} {item.RequestConfig.WebsiteRootPath} ";
                         }
                         catch (Exception exp)
@@ -160,16 +160,18 @@ namespace Certify.Management
         /// local IIS, scan sites and recommend actions)
         /// </summary>
         /// <returns></returns>
-        public Task<List<ManagedCertificate>> PreviewManagedCertificates(StandardServerTypes serverType, ICertifiedServer serverProvider, ICertifyManager certifyManager)
+        public async Task<List<ManagedCertificate>> PreviewManagedCertificates(StandardServerTypes serverType, ICertifiedServer serverProvider, ICertifyManager certifyManager)
         {
             List<ManagedCertificate> sites = new List<ManagedCertificate>();
 
-            // FIXME: IIS query is not async
             if (serverType == StandardServerTypes.IIS)
             {
                 try
                 {
-                    var iisSites = serverProvider.GetSiteBindingList(ignoreStoppedSites: CoreAppSettings.Current.IgnoreStoppedSites).OrderBy(s => s.SiteId).ThenBy(s => s.Host);
+                    var allSites = await serverProvider.GetSiteBindingList(ignoreStoppedSites: CoreAppSettings.Current.IgnoreStoppedSites);
+                    var iisSites = allSites
+                                        .OrderBy(s => s.SiteId)
+                                        .ThenBy(s => s.Host);
 
                     var siteIds = iisSites.GroupBy(x => x.SiteId);
 
@@ -197,7 +199,7 @@ namespace Certify.Management
                     Debug.WriteLine("Can't get IIS site list.");
                 }
             }
-            return Task.FromResult(sites);
+            return sites;
         }
     }
 }

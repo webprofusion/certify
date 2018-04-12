@@ -218,9 +218,9 @@ namespace Certify.Management
             }
         }
 
-        public List<SiteBindingItem> GetPrimaryWebSites(bool ignoreStoppedSites)
+        public async Task<List<SiteBindingItem>> GetPrimaryWebSites(bool ignoreStoppedSites)
         {
-            return _serverProvider.GetPrimarySites(ignoreStoppedSites);
+            return await _serverProvider.GetPrimarySites(ignoreStoppedSites);
         }
 
         private void ReportProgress(IProgress<RequestProgressState> progress, RequestProgressState state, bool logThisEvent = true)
@@ -728,12 +728,12 @@ namespace Certify.Management
             if (_tc != null) _tc.TrackEvent("UpdateManagedCertificatesStatus_" + status.ToString());
         }
 
-        public List<DomainOption> GetDomainOptionsFromSite(string siteId)
+        public async Task<List<DomainOption>> GetDomainOptionsFromSite(string siteId)
         {
             var defaultNoDomainHost = "";
             var domainOptions = new List<DomainOption>();
 
-            var matchingSites = _serverProvider.GetSiteBindingList(CoreAppSettings.Current.IgnoreStoppedSites, siteId);
+            var matchingSites = await _serverProvider.GetSiteBindingList(CoreAppSettings.Current.IgnoreStoppedSites, siteId);
             var siteBindingList = matchingSites.Where(s => s.SiteId == siteId);
 
             bool includeEmptyHostnameBindings = false;
@@ -984,7 +984,7 @@ namespace Certify.Management
             if (managedCertificate != null)
             {
                 if (iis == null) iis = _serverProvider;
-                return iis.IsSiteRunning(managedCertificate.GroupId);
+                return await iis.IsSiteRunning(managedCertificate.GroupId);
             }
             else
             {
@@ -997,14 +997,14 @@ namespace Certify.Management
         {
             if (serverType == StandardServerTypes.IIS)
             {
-                return await this._serverProvider.IsAvailableAsync();
+                return await this._serverProvider.IsAvailable();
             }
             return false;
         }
 
         public async Task<Version> GetServerTypeVersion(StandardServerTypes serverType)
         {
-            return await this._serverProvider.GetServerVersionAsync();
+            return await this._serverProvider.GetServerVersion();
         }
 
         public RequestProgressState GetRequestProgressState(string managedItemId)

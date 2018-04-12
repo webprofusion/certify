@@ -32,11 +32,11 @@ namespace Certify.Service
         }
 
         [HttpGet, Route("sitelist/{serverType}")]
-        public List<SiteBindingItem> GetServerSiteList(StandardServerTypes serverType)
+        public async Task<List<SiteBindingItem>> GetServerSiteList(StandardServerTypes serverType)
         {
             if (serverType == StandardServerTypes.IIS)
             {
-                return _certifyManager.GetPrimaryWebSites(Management.CoreAppSettings.Current.IgnoreStoppedSites);
+                return await _certifyManager.GetPrimaryWebSites(Management.CoreAppSettings.Current.IgnoreStoppedSites);
             }
             else
             {
@@ -45,11 +45,11 @@ namespace Certify.Service
         }
 
         [HttpGet, Route("sitedomains/{serverType}/{serverSiteId}")]
-        public List<DomainOption> GetServerSiteDomainOptions(StandardServerTypes serverType, string serverSiteId)
+        public async Task<List<DomainOption>> GetServerSiteDomainOptions(StandardServerTypes serverType, string serverSiteId)
         {
             if (serverType == StandardServerTypes.IIS)
             {
-                return _certifyManager.GetDomainOptionsFromSite(serverSiteId);
+                return await _certifyManager.GetDomainOptionsFromSite(serverSiteId);
             }
             else
             {

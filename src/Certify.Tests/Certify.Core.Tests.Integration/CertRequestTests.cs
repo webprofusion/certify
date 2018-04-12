@@ -3,6 +3,7 @@ using Certify.Management.Servers;
 using Certify.Models;
 using Certify.Models.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -26,11 +27,16 @@ namespace Certify.Core.Tests
         private string testSitePath = "c:\\inetpub\\wwwroot";
         private int testSiteHttpPort = 81;
         private string _awsCredStorageKey = "";
-        private ILog _log = new Loggy(null);
+        private ILog _log;
         private string _siteId = "";
 
         public CertRequestTests()
         {
+            var log = new LoggerConfiguration()
+                     .WriteTo.Debug()
+                     .CreateLogger();
+
+            _log = new Loggy(log);
             certifyManager = new CertifyManager();
             iisManager = new ServerProviderIIS();
 
@@ -41,7 +47,7 @@ namespace Certify.Core.Tests
             _awsCredStorageKey = ConfigurationManager.AppSettings["TestCredentialsKey_Route53"];
 
             //perform setup for IIS
-            SetupIIS();
+            SetupIIS().Wait();
         }
 
         /// <summary>
@@ -49,31 +55,31 @@ namespace Certify.Core.Tests
         /// </summary>
         public void Dispose()
         {
-            TeardownIIS();
+            TeardownIIS().Wait();
         }
 
-        public void SetupIIS()
+        public async Task SetupIIS()
         {
-            if (iisManager.SiteExists(testSiteName))
+            if (await iisManager.SiteExists(testSiteName))
             {
-                iisManager.DeleteSite(testSiteName);
+                await iisManager.DeleteSite(testSiteName);
             }
 
-            var site = iisManager.CreateSite(testSiteName, testSiteDomain, PrimaryIISRoot, "DefaultAppPool", port: testSiteHttpPort);
-            Assert.IsTrue(iisManager.SiteExists(testSiteName));
+            var site = await iisManager.CreateSite(testSiteName, testSiteDomain, PrimaryIISRoot, "DefaultAppPool", port: testSiteHttpPort);
+            Assert.IsTrue(await iisManager.SiteExists(testSiteName));
             _siteId = site.Id.ToString();
         }
 
-        public void TeardownIIS()
+        public async Task TeardownIIS()
         {
-            iisManager.DeleteSite(testSiteName);
-            Assert.IsFalse(iisManager.SiteExists(testSiteName));
+            await iisManager.DeleteSite(testSiteName);
+            Assert.IsFalse(await iisManager.SiteExists(testSiteName));
         }
 
         [TestMethod, TestCategory("MegaTest")]
         public async Task TestChallengeRequestHttp01()
         {
-            var site = iisManager.GetIISSiteById(_siteId);
+            var site = await iisManager.GetIISSiteById(_siteId);
             Assert.AreEqual(site.Name, testSiteName);
 
             var dummyManagedCertificate = new ManagedCertificate
@@ -137,12 +143,12 @@ namespace Certify.Core.Tests
         {
             var testIDNDomain = "å🤔." + PrimaryTestDomain;
 
-            if (iisManager.SiteExists(testIDNDomain))
+            if (await iisManager.SiteExists(testIDNDomain))
             {
-                iisManager.DeleteSite(testIDNDomain);
+                await iisManager.DeleteSite(testIDNDomain);
             }
 
-            var site = iisManager.CreateSite(testIDNDomain, testIDNDomain, testSitePath, "DefaultAppPool", port: testSiteHttpPort);
+            var site = await iisManager.CreateSite(testIDNDomain, testIDNDomain, testSitePath, "DefaultAppPool", port: testSiteHttpPort);
 
             Assert.AreEqual(site.Name, testIDNDomain);
 
@@ -209,15 +215,15 @@ namespace Certify.Core.Tests
                 domainList.Add($"bazillion-1-{i}." + PrimaryTestDomain);
             }
 
-            if (iisManager.SiteExists("TestBazillionDomains"))
+            if (await iisManager.SiteExists("TestBazillionDomains"))
             {
-                iisManager.DeleteSite("TestBazillionDomains");
+                await iisManager.DeleteSite("TestBazillionDomains");
             }
 
             var site = iisManager.CreateSite("TestBazillionDomains", domainList[0], testSitePath, "DefaultAppPool", port: testSiteHttpPort);
 
             // add bindings
-            iisManager.AddSiteBindings(site.Id.ToString(), domainList, testSiteHttpPort);
+            await iisManager.AddSiteBindings(site.Id.ToString(), domainList, testSiteHttpPort);
 
             var dummyManagedCertificate = new ManagedCertificate
             {
@@ -255,7 +261,7 @@ namespace Certify.Core.Tests
             }
             finally
             {
-                iisManager.DeleteSite("TestBazillionDomains");
+                await iisManager.DeleteSite("TestBazillionDomains");
             }
         }
 
@@ -273,15 +279,15 @@ namespace Certify.Core.Tests
                 domainList.Add($"bazillion-2-{i}." + PrimaryTestDomain);
             }
 
-            if (iisManager.SiteExists("TestBazillionDomains"))
+            if (await iisManager.SiteExists("TestBazillionDomains"))
             {
-                iisManager.DeleteSite("TestBazillionDomains");
+                await iisManager.DeleteSite("TestBazillionDomains");
             }
 
             var site = iisManager.CreateSite("TestBazillionDomains", domainList[0], testSitePath, "DefaultAppPool", port: testSiteHttpPort);
 
             // add bindings
-            iisManager.AddSiteBindings(site.Id.ToString(), domainList, testSiteHttpPort);
+            await iisManager.AddSiteBindings(site.Id.ToString(), domainList, testSiteHttpPort);
 
             var dummyManagedCertificate = new ManagedCertificate
             {
@@ -318,14 +324,14 @@ namespace Certify.Core.Tests
             }
             finally
             {
-                iisManager.DeleteSite("TestBazillionDomains");
+                await iisManager.DeleteSite("TestBazillionDomains");
             }
         }
 
         [TestMethod, TestCategory("MegaTest")]
         public async Task TestChallengeRequestDNS()
         {
-            var site = iisManager.GetIISSiteById(_siteId);
+            var site = await iisManager.GetIISSiteById(_siteId);
             Assert.AreEqual(site.Name, testSiteName);
 
             var dummyManagedCertificate = new ManagedCertificate
@@ -395,9 +401,9 @@ namespace Certify.Core.Tests
             var wildcardDomain = "*.test." + PrimaryTestDomain;
             string testWildcardSiteName = "TestWildcard_" + testStr;
 
-            if (iisManager.SiteExists(testWildcardSiteName))
+            if (await iisManager.SiteExists(testWildcardSiteName))
             {
-                iisManager.DeleteSite(testWildcardSiteName);
+                await iisManager.DeleteSite(testWildcardSiteName);
             }
 
             var site = iisManager.CreateSite(testWildcardSiteName, "test" + testStr + "." + PrimaryTestDomain, PrimaryIISRoot, "DefaultAppPool", port: testSiteHttpPort);
@@ -425,7 +431,8 @@ namespace Certify.Core.Tests
                             new CertRequestChallengeConfig{
                                 ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                                 ChallengeProvider = "DNS01.API.Route53",
-                                ChallengeCredentialKey = _awsCredStorageKey
+                                ChallengeCredentialKey = _awsCredStorageKey,
+                                ZoneId = ConfigSettings["AWS_ZoneId"]
                             }
                         }
                     },
@@ -466,7 +473,7 @@ namespace Certify.Core.Tests
                 if (managedCertificate != null) await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
 
                 // remove IIS site
-                iisManager.DeleteSite(testWildcardSiteName);
+                await iisManager.DeleteSite(testWildcardSiteName);
 
                 // cleanup certificate
                 if (certInfo != null) CertificateManager.RemoveCertificate(certInfo);
@@ -476,18 +483,18 @@ namespace Certify.Core.Tests
         [TestMethod]
         public async Task TestPreviewWildcard()
         {
-            var testStr = Guid.NewGuid().ToString().Substring(0, 6);
+            var testStr = "abc7363";
             PrimaryTestDomain = $"test-{testStr}." + PrimaryTestDomain;
             var wildcardDomain = "*.test." + PrimaryTestDomain;
             string testPreviewSiteName = "TestPreview_" + testStr;
 
-            if (iisManager.SiteExists(testPreviewSiteName))
+            if (await iisManager.SiteExists(testPreviewSiteName))
             {
-                iisManager.DeleteSite(testPreviewSiteName);
+                await iisManager.DeleteSite(testPreviewSiteName);
             }
 
             string hostname = "test" + testStr + "." + PrimaryTestDomain;
-            var site = iisManager.CreateSite(testPreviewSiteName, hostname, PrimaryIISRoot, "DefaultAppPool", port: testSiteHttpPort);
+            var site = await iisManager.CreateSite(testPreviewSiteName, hostname, PrimaryIISRoot, "DefaultAppPool", port: testSiteHttpPort);
 
             ManagedCertificate managedCertificate = null;
             X509Certificate2 certInfo = null;
@@ -533,7 +540,7 @@ namespace Certify.Core.Tests
                 if (managedCertificate != null) await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
 
                 // remove IIS site
-                iisManager.DeleteSite(testPreviewSiteName);
+                await iisManager.DeleteSite(testPreviewSiteName);
 
                 // cleanup certificate
                 if (certInfo != null) CertificateManager.RemoveCertificate(certInfo);

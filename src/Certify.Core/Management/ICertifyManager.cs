@@ -36,7 +36,7 @@ namespace Certify.Management
 
         void RemoveAllContacts();
 
-        List<SiteBindingItem> GetPrimaryWebSites(bool ignoreStoppedSites);
+        Task<List<SiteBindingItem>> GetPrimaryWebSites(bool ignoreStoppedSites);
 
         void BeginTrackingProgress(RequestProgressState state);
 
@@ -44,7 +44,7 @@ namespace Certify.Management
 
         Task<CertificateRequestResult> PerformCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null);
 
-        List<DomainOption> GetDomainOptionsFromSite(string siteId);
+        Task<List<DomainOption>> GetDomainOptionsFromSite(string siteId);
 
         Task<List<CertificateRequestResult>> PerformRenewalAllManagedCertificates(bool autoRenewalOnly = true, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null);
 
@@ -56,10 +56,10 @@ namespace Certify.Management
 
         Task<bool> PerformDailyTasks();
 
+        Task<List<ActionStep>> GeneratePreview(ManagedCertificate item);
+
         event Action<RequestProgressState> OnRequestProgressStateUpdated;
 
         event Action<ManagedCertificate> OnManagedCertificateUpdated;
-
-        Task<List<ActionStep>> GeneratePreview(ManagedCertificate item);
     }
 }

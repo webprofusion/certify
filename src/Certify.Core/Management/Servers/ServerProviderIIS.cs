@@ -27,7 +27,7 @@ namespace Certify.Management.Servers
         /// </summary>
         private static readonly object _iisAPILock = new object();
 
-        public bool IsAvailable()
+        public Task<bool> IsAvailable()
         {
             if (!_isIISAvailable)
             {
@@ -36,47 +36,23 @@ namespace Certify.Management.Servers
                     using (var srv = GetDefaultServerManager())
                     {
                         // _isIISAvaillable will be updated by query against server manager
-                        if (srv != null) return _isIISAvailable;
+                        if (srv != null) return Task.FromResult(_isIISAvailable);
                     }
                 }
                 catch
                 {
                     // IIS not available
-                    return false;
+                    return Task.FromResult(false);
                 }
             }
-
-            return _isIISAvailable;
+            return Task.FromResult(_isIISAvailable);
         }
 
-        public async Task<bool> IsAvailableAsync()
-        {
-            // FIXME: blocking async
-            var isAvailable = false;
-            try
-            {
-                using (var srv = GetDefaultServerManager())
-                {
-                    if (srv != null) isAvailable = true;
-                }
-            }
-            catch
-            {
-                // iis not available
-            }
-            return await Task.FromResult(isAvailable);
-        }
-
-        public async Task<Version> GetServerVersionAsync()
-        {
-            // FIXME: blocking async
-
-            return await Task.FromResult(GetServerVersion());
-        }
-
-        public Version GetServerVersion()
+        public Task<Version> GetServerVersion()
         {
             //http://stackoverflow.com/questions/446390/how-to-detect-iis-version-using-c
+            Version result = null;
+
             using (RegistryKey componentsKey = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\InetStp", false))
             {
                 if (componentsKey != null)
@@ -88,15 +64,17 @@ namespace Certify.Management.Servers
 
                     if (majorVersion != -1 && minorVersion != -1)
                     {
-                        return new Version(majorVersion, minorVersion);
+                        result = new Version(majorVersion, minorVersion);
                     }
                 }
-
-                return new Version(0, 0);
             }
+
+            if (result == null) result = new Version(0, 0);
+
+            return Task.FromResult(result);
         }
 
-        private ServerManager GetDefaultServerManager()
+        private async Task<ServerManager> GetDefaultServerManager()
         {
             ServerManager srv = null;
             try
@@ -116,20 +94,22 @@ namespace Certify.Management.Servers
             }
 
             _isIISAvailable = false;
+
             if (srv != null)
             {
                 //check iis version
-                var v = GetServerVersion();
+                var v = await GetServerVersion();
                 if (v.Major < 7)
                 {
                     _isIISAvailable = false;
                 }
             }
+
             // may be null if could not create server manager
             return srv;
         }
 
-        public IEnumerable<Site> GetSites(ServerManager iisManager, bool includeOnlyStartedSites, string siteId = null)
+        private IEnumerable<Site> GetSites(ServerManager iisManager, bool includeOnlyStartedSites, string siteId = null)
         {
             try
             {
@@ -171,13 +151,13 @@ namespace Certify.Management.Servers
         /// </summary>
         /// <param name="includeOnlyStartedSites"></param>
         /// <returns></returns>
-        public List<SiteBindingItem> GetPrimarySites(bool includeOnlyStartedSites)
+        public async Task<List<SiteBindingItem>> GetPrimarySites(bool includeOnlyStartedSites)
         {
             var result = new List<SiteBindingItem>();
 
             try
             {
-                using (var iisManager = GetDefaultServerManager())
+                using (var iisManager = await GetDefaultServerManager())
                 {
                     if (iisManager != null)
                     {
@@ -218,11 +198,11 @@ namespace Certify.Management.Servers
             return result.OrderBy(s => s.SiteName).ToList();
         }
 
-        public void AddSiteBindings(string siteId, List<string> domains, int port = 80)
+        public async Task AddSiteBindings(string siteId, List<string> domains, int port = 80)
         {
-            lock (_iisAPILock)
+            using (var iisManager = await GetDefaultServerManager())
             {
-                using (var iisManager = GetDefaultServerManager())
+                lock (_iisAPILock)
                 {
                     var site = iisManager.Sites.FirstOrDefault(s => s.Id == long.Parse(siteId));
 
@@ -240,11 +220,11 @@ namespace Certify.Management.Servers
             }
         }
 
-        public List<SiteBindingItem> GetSiteBindingList(bool ignoreStoppedSites, string siteId = null)
+        public async Task<List<SiteBindingItem>> GetSiteBindingList(bool ignoreStoppedSites, string siteId = null)
         {
             var result = new List<SiteBindingItem>();
 
-            using (var iisManager = GetDefaultServerManager())
+            using (var iisManager = await GetDefaultServerManager())
             {
                 if (iisManager != null)
                 {
@@ -290,12 +270,12 @@ namespace Certify.Management.Servers
             };
         }
 
-        public Site GetIISSiteByDomain(string domain)
+        private async Task<Site> GetIISSiteByDomain(string domain)
         {
             if (string.IsNullOrEmpty(domain)) return null;
 
             domain = _idnMapping.GetUnicode(domain);
-            using (var iisManager = GetDefaultServerManager())
+            using (var iisManager = await GetDefaultServerManager())
             {
                 var sites = GetSites(iisManager, false).ToList();
                 foreach (var s in sites)
@@ -312,11 +292,11 @@ namespace Certify.Management.Servers
             return null;
         }
 
-        public SiteBindingItem GetSiteBindingByDomain(string domain)
+        public async Task<SiteBindingItem> GetSiteBindingByDomain(string domain)
         {
             domain = _idnMapping.GetUnicode(domain);
 
-            var site = GetIISSiteByDomain(domain);
+            var site = await GetIISSiteByDomain(domain);
             if (site != null)
             {
                 foreach (var binding in site.Bindings.OrderByDescending(b => b?.EndPoint?.Port))
@@ -338,13 +318,13 @@ namespace Certify.Management.Servers
         /// <param name="hostname"></param>
         /// <param name="phyPath"></param>
         /// <param name="appPoolName"></param>
-        public Site CreateSite(string siteName, string hostname, string phyPath, string appPoolName, string protocol = "http", string ipAddress = "*", int? port = 80)
+        public async Task<Site> CreateSite(string siteName, string hostname, string phyPath, string appPoolName, string protocol = "http", string ipAddress = "*", int? port = 80)
         {
             Site result = null;
 
-            lock (_iisAPILock)
+            using (var iisManager = await GetDefaultServerManager())
             {
-                using (var iisManager = GetDefaultServerManager())
+                lock (_iisAPILock)
                 {
                     // usual binding format is ip:port:dnshostname but can also be *:port,
                     // *:port:hostname or just hostname
@@ -375,19 +355,19 @@ namespace Certify.Management.Servers
         /// </summary>
         /// <param name="siteName"></param>
         /// <returns></returns>
-        public bool SiteExists(string siteName)
+        public async Task<bool> SiteExists(string siteName)
         {
-            using (var iisManager = GetDefaultServerManager())
+            using (var iisManager = await GetDefaultServerManager())
             {
                 return (iisManager.Sites[siteName] != null);
             }
         }
 
-        public void DeleteSite(string siteName)
+        public async Task DeleteSite(string siteName)
         {
-            lock (_iisAPILock)
+            using (var iisManager = await GetDefaultServerManager())
             {
-                using (var iisManager = GetDefaultServerManager())
+                lock (_iisAPILock)
                 {
                     Site siteToRemove = iisManager.Sites[siteName];
                     if (siteToRemove != null)
@@ -425,27 +405,27 @@ namespace Certify.Management.Servers
             }
         }
 
-        public SiteInfo GetSiteById(string id)
+        public async Task<SiteInfo> GetSiteById(string id)
         {
-            using (var iisManager = GetDefaultServerManager())
+            using (var iisManager = await GetDefaultServerManager())
             {
                 Site siteDetails = iisManager.Sites.FirstOrDefault(s => s.Id.ToString() == id);
                 return Map(siteDetails);
             }
         }
 
-        public Site GetIISSiteById(string id)
+        public async Task<Site> GetIISSiteById(string id)
         {
-            using (var iisManager = GetDefaultServerManager())
+            using (var iisManager = await GetDefaultServerManager())
             {
                 Site siteDetails = iisManager.Sites.FirstOrDefault(s => s.Id.ToString() == id);
                 return siteDetails;
             }
         }
 
-        public bool IsSiteRunning(string id)
+        public async Task<bool> IsSiteRunning(string id)
         {
-            using (var iisManager = GetDefaultServerManager())
+            using (var iisManager = await GetDefaultServerManager())
             {
                 Site siteDetails = iisManager.Sites.FirstOrDefault(s => s.Id.ToString() == id);
 
@@ -465,12 +445,12 @@ namespace Certify.Management.Servers
         /// </summary>
         /// <param name="managedCertificate"> Configured site. </param>
         /// <returns> The matching IIS Site if found, otherwise null. </returns>
-        private SiteInfo FindManagedCertificate(ManagedCertificate managedCertificate)
+        private async Task<SiteInfo> FindManagedCertificate(ManagedCertificate managedCertificate)
         {
             if (managedCertificate == null)
                 throw new ArgumentNullException(nameof(managedCertificate));
 
-            var site = GetSiteById(managedCertificate.GroupId);
+            var site = await GetSiteById(managedCertificate.GroupId);
 
             if (site != null)
             {
@@ -480,7 +460,7 @@ namespace Certify.Management.Servers
             if (site == null)
             {
                 site = Map(
-                    GetIISSiteByDomain(managedCertificate.RequestConfig.PrimaryDomain)
+                    await GetIISSiteByDomain(managedCertificate.RequestConfig.PrimaryDomain)
                     );
             }
 
@@ -557,11 +537,15 @@ namespace Certify.Management.Servers
 
                 // depending on our deployment mode we decide which sites/bindings to update:
                 actions.AddRange(
-                    DeployToBindings(managedCertificate, requestConfig, certStoreName, certHash, dnsHosts, isPreviewOnly)
+                    await DeployToBindings(managedCertificate, requestConfig, certStoreName, certHash, dnsHosts, isPreviewOnly)
                 );
 
                 // if required, cleanup old certs we are replacing. Only applied if we have deployed
                 // the certificate, otherwise we keep the old one
+
+                // FIXME: need strategy to analyse if there are any users of cert we haven't
+                //        accounted for (manually added etc) otherwise we are disposing of a cert
+                // which could still be in use
                 if (!isPreviewOnly)
                 {
                     if (cleanupCertStore
@@ -573,8 +557,9 @@ namespace Certify.Management.Servers
                         CertificateManager.CleanupCertificateDuplicates(storedCert, requestConfig.PrimaryDomain);
                     }
                 }
-                // deployment tasks completed
             }
+
+            // deployment tasks completed
             return actions;
         }
 
@@ -588,7 +573,7 @@ namespace Certify.Management.Servers
             return sb.ToString();
         }
 
-        private List<ActionStep> DeployToBindings(ManagedCertificate managedCertificate, CertRequestConfig requestConfig, string certStoreName, byte[] certHash, List<string> dnsHosts, bool isPreviewOnly = false)
+        private async Task<List<ActionStep>> DeployToBindings(ManagedCertificate managedCertificate, CertRequestConfig requestConfig, string certStoreName, byte[] certHash, List<string> dnsHosts, bool isPreviewOnly = false)
         {
             List<ActionStep> actions = new List<ActionStep>();
             List<Site> targetSites = new List<Site>();
@@ -596,14 +581,14 @@ namespace Certify.Management.Servers
             // if single site, add that
             if (requestConfig.DeploymentSiteOption == DeploymentOption.SingleSite)
             {
-                var site = GetIISSiteById(managedCertificate.ServerSiteId);
+                var site = await GetIISSiteById(managedCertificate.ServerSiteId);
                 if (site != null) targetSites.Add(site);
             }
 
             // or add all sites (if required)
             if (requestConfig.DeploymentSiteOption == DeploymentOption.AllSites)
             {
-                using (ServerManager serverManager = GetDefaultServerManager())
+                using (ServerManager serverManager = await GetDefaultServerManager())
                 {
                     targetSites.AddRange(GetSites(serverManager, true));
                 }
@@ -674,7 +659,7 @@ namespace Certify.Management.Servers
                     {
                         //create/update binding and associate new cert
                         //if any binding elements configured, use those, otherwise auto bind using defaults and SNI
-                        var action = InstallCertificateforBinding(
+                        var stepActions = await InstallCertificateforBinding(
                             certStoreName,
                             certHash,
                             site,
@@ -686,7 +671,7 @@ namespace Certify.Management.Servers
                             isPreviewOnly: isPreviewOnly
                         );
 
-                        actions.Add(action);
+                        actions.AddRange(stepActions);
                     }
                 }
                 //
@@ -700,13 +685,13 @@ namespace Certify.Management.Servers
         /// </summary>
         /// <param name="managedCertificate"></param>
         /// <param name="host"></param>
-        public void RemoveHttpsBinding(ManagedCertificate managedCertificate, string host)
+        public async Task RemoveHttpsBinding(ManagedCertificate managedCertificate, string host)
         {
             if (string.IsNullOrEmpty(managedCertificate.GroupId)) throw new Exception("RemoveHttpsBinding: Managed site has no GroupID for IIS Site");
 
-            lock (_iisAPILock)
+            using (var iisManager = await GetDefaultServerManager())
             {
-                using (var iisManager = GetDefaultServerManager())
+                lock (_iisAPILock)
                 {
                     var site = iisManager.Sites.FirstOrDefault(s => s.Id.ToString() == managedCertificate.GroupId);
 
@@ -739,12 +724,21 @@ namespace Certify.Management.Servers
         /// <param name="sslPort"></param>
         /// <param name="useSNI"></param>
         /// <param name="ipAddress"></param>
-        public ActionStep InstallCertificateforBinding(string certStoreName, byte[] certificateHash, ManagedCertificate managedCertificate, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null, bool alwaysRecreateBindings = false, bool isPreviewOnly = false)
+        public async Task<List<ActionStep>> InstallCertificateforBinding(string certStoreName, byte[] certificateHash, ManagedCertificate managedCertificate, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null, bool alwaysRecreateBindings = false, bool isPreviewOnly = false)
         {
-            var site = GetIISSiteById(managedCertificate.ServerSiteId);
-            if (site == null) return new ActionStep { Title = "Install Certificate For Binding", Description = "Managed site not found", HasError = true };
+            var site = await GetIISSiteById(managedCertificate.ServerSiteId);
+            if (site == null)
+            {
+                return new List<ActionStep>{
+                    new ActionStep {
+                        Title = "Install Certificate For Binding",
+                        Description = "Managed site not found",
+                        HasError = true
+                    }
+                };
+            }
 
-            return InstallCertificateforBinding(certStoreName, certificateHash, site, host, sslPort, useSNI, ipAddress, alwaysRecreateBindings, isPreviewOnly);
+            return await InstallCertificateforBinding(certStoreName, certificateHash, site, host, sslPort, useSNI, ipAddress, alwaysRecreateBindings, isPreviewOnly);
         }
 
         /// <summary>
@@ -757,15 +751,17 @@ namespace Certify.Management.Servers
         /// <param name="sslPort"></param>
         /// <param name="useSNI"></param>
         /// <param name="ipAddress"></param>
-        public ActionStep InstallCertificateforBinding(string certStoreName, byte[] certificateHash, Site site, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null, bool alwaysRecreateBindings = false, bool isPreviewOnly = false)
+        public async Task<List<ActionStep>> InstallCertificateforBinding(string certStoreName, byte[] certificateHash, Site site, string host, int sslPort = 443, bool useSNI = true, string ipAddress = null, bool alwaysRecreateBindings = false, bool isPreviewOnly = false)
         {
-            ActionStep action = new ActionStep { Title = "Install Certificate For Binding", Description = "No action" };
+            List<ActionStep> steps = new List<ActionStep>();
 
-            lock (_iisAPILock)
+            using (var iisManager = await GetDefaultServerManager())
             {
-                using (var iisManager = GetDefaultServerManager())
+                var v = await GetServerVersion();
+
+                lock (_iisAPILock)
                 {
-                    if (GetServerVersion().Major < 8)
+                    if (v.Major < 8)
                     {
                         // IIS ver < 8 doesn't support SNI - default to host/SNI-less bindings
                         useSNI = false;
@@ -778,7 +774,6 @@ namespace Certify.Management.Servers
                     {
                         string internationalHost = host == "" ? "" : ToUnicodeString(host);
                         string bindingSpec = $"{(!String.IsNullOrEmpty(ipAddress) ? ipAddress : "*")}:{sslPort}:{internationalHost}";
-                        action.Key = $"[{site.Id}]:{bindingSpec}:{useSNI}";
 
                         var existingHttpsBindings = from b in siteToUpdate.Bindings where b.Host == internationalHost && b.Protocol == "https" select b;
                         if (!existingHttpsBindings.Any())
@@ -787,7 +782,13 @@ namespace Certify.Management.Servers
 
                             //add new https binding at default port "<ip>:port:hostDnsName";
 
-                            action.Description = $"Add new https binding: [{siteToUpdate.Name}] {bindingSpec}";
+                            var action = new ActionStep
+                            {
+                                Title = "Install Certificate For Binding",
+                                Category = "Deployment.AddBinding",
+                                Description = $"Add new https binding: [{siteToUpdate.Name}] {bindingSpec}",
+                                Key = $"[{site.Id}]:{bindingSpec}:{useSNI}"
+                            };
 
                             if (!isPreviewOnly)
                             {
@@ -810,18 +811,21 @@ namespace Certify.Management.Servers
                                         //failed to set requested SNI flag
 
                                         action.Description += $" Failed to set SNI attribute";
-                                        return action;
+
+                                        steps.Add(action);
+                                        return steps;
                                     }
                                 }
 
                                 // Add the binding to the site
                                 siteToUpdate.Bindings.Add(binding);
                             }
+
+                            steps.Add(action);
                         }
                         else
                         {
                             // update one or more existing https bindings with new cert
-                            var updateDescription = "";
                             foreach (var existingBinding in existingHttpsBindings)
                             {
                                 if (!isPreviewOnly)
@@ -830,16 +834,27 @@ namespace Certify.Management.Servers
                                     existingBinding.CertificateHash = certificateHash;
                                     existingBinding.CertificateStoreName = certStoreName;
                                 }
-                                updateDescription += $"Update existing binding: [{siteToUpdate.Name}] {existingBinding.BindingInformation} \r\n";
+
+                                steps.Add(new ActionStep
+                                {
+                                    Title = "Install Certificate For Binding",
+                                    Category = "Deployment.UpdateBinding",
+                                    Description = $"Update existing binding: [{siteToUpdate.Name}] {existingBinding.BindingInformation} \r\n"
+                                });
                             }
-                            action.Description = updateDescription;
                         }
                     }
                     else
                     {
                         //could not match site to bind to
-                        action.Description = $"Site not found, could not update bindings.";
-                        return action;
+
+                        steps.Add(new ActionStep
+                        {
+                            Title = "No Deployment Target Match",
+                            Category = "Deployment.UmatchedBinding",
+                            Description = $"Site not found, could not update bindings."
+                        });
+                        return steps;
                     }
 
                     if (!isPreviewOnly)
@@ -847,7 +862,7 @@ namespace Certify.Management.Servers
                         iisManager.CommitChanges();
                     }
 
-                    return action;
+                    return steps;
                 }
             }
         }

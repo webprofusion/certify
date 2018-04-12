@@ -26,7 +26,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             ToggleAdvancedView();
         }
 
-        private async void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (e.PropertyName == "SelectedItem")
             {
