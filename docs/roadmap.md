@@ -79,6 +79,9 @@ if any other deployment (cert only etc) chosen preview still says IIS
 
 # Future:
 
+## Authorization
+* multi auth (auth type, auth credentials etc) per managed cert to support single certs with multiple domains from different zones/DNS providers, or mixing http auth with DNS.
+
 ## Deployment
 * Option to export pfx/cert with fixed file name to shared cert store after renewal completed
 
