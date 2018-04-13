@@ -87,6 +87,8 @@ if any other deployment (cert only etc) chosen preview still says IIS
 
 ## Portal/API
 * Website looks awful, clean up
+* use githb markdown as source for website content
+* Add help/guide content to websites
 * Separate dashboard from main website
 * Move API to AWS/Azure
 
