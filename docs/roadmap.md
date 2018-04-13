@@ -5,7 +5,7 @@ Current Project Roadmap (Mid 2018-2019)
 ## Deployment:
 
 * Cleanup UI for different options and ensure deployment is happening as described (unit tests, preview)
-* IIS bindings (2hrs) : should only show IP options for Single Site 
+* IIS bindings: should only show IP options for Single Site 
 * Maybe have an advanced mode for bindings UI so that IP specific bindings etc is hidden by default, Single site auto bindings (existing https hostname bindings updated, new https bindings created if http binding already exists) could be basic mode.
 * Child managed cert deployment type
 * Cert cleanup: Need way to tell if cert in use for other things (ftp etc) and either update them or inform user. Manually added https bindings lose cert if deleted through another association 
