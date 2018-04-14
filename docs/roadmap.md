@@ -6,7 +6,6 @@ Current Project Roadmap (Mid 2018-2019)
 
 * Cleanup UI for different options and ensure deployment is happening as described (unit tests, preview)
 * IIS bindings: should only show IP options for Single Site 
-* Maybe have an advanced mode for bindings UI so that IP specific bindings etc is hidden by default, Single site auto bindings (existing https hostname bindings updated, new https bindings created if http binding already exists) could be basic mode.
 * Child managed cert deployment type
 * Cert cleanup: Need way to tell if cert in use for other things (ftp etc) and either update them or inform user. Manually added https bindings lose cert if deleted through another association 
 * Auto config tests
@@ -46,7 +45,7 @@ if any other deployment (cert only etc) chosen preview still says IIS
 * Check and fix current accessibility for core functions
 
 ## Installer
-* Install needs to unininstall previous version, stopping service, uninstalling service first
+* Install needs to uninstall previous version, stopping service, uninstalling service first
 * 32-bit to 64-bit migration
 
 ## Misc beta issues
@@ -62,6 +61,7 @@ if any other deployment (cert only etc) chosen preview still says IIS
 * EFS not implemented yet
 * Revoke not implemented yet
 * Set http client user agent in external API calls
+* Basic/advanced mode for bindings UI so that IP specific bindings etc is hidden by default, Single site auto bindings (existing https hostname bindings updated, new https bindings created if http binding already exists) could be basic mode.
 
 ## Improve config checks
 * Ensure config check/validation wrote to disk before proceeding.
@@ -103,3 +103,4 @@ if any other deployment (cert only etc) chosen preview still says IIS
 * Web farm: output to shared certificate store, or have secondary servers configured to pickup from a shared location
 * Credential export option (backup credentials). Should email the primary contact when it occurs. Should we email the primary contact when their details are changed in the app? Could be a pref controlled in the dashboard.
 * Full config backup/restore - needs to be protected if it contains credentials
+* Windows Admin Center extension?
