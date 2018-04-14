@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Certify.UI.Controls.ManagedCertificate"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:wpf="clr-namespace:Markdig.Wpf;assembly=Markdig.Wpf"
     d:DesignHeight="300"
     d:DesignWidth="300"
     IsVisibleChanged="UserControl_IsVisibleChanged"
@@ -18,44 +19,8 @@
                     DockPanel.Dock="Top"
                     Style="{StaticResource Instructions}"
                     Text="The following is a preview of the actions which will be performed based on these settings:" />
-                <ItemsControl
-                    x:Name="PreviewSteps"
-                    Margin="16,0,0,0"
-                    DockPanel.Dock="Top">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Grid Margin="0,0,0,5">
-                                <StackPanel>
-                                    <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
-                                    <TextBlock
-                                        Margin="16,0,0,0"
-                                        Style="{StaticResource Instructions}"
-                                        Text="{Binding Description}" />
-                                    <ItemsControl
-                                        x:Name="PreviewSubSteps"
-                                        Margin="16,0,0,0"
-                                        ItemsSource="{Binding Substeps}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Grid Margin="16,0,0,5">
-                                                    <StackPanel>
-                                                        <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
-                                                        <TextBlock
-                                                            Margin="16,0,0,0"
-                                                            Style="{StaticResource Instructions}"
-                                                            Text="{Binding Description}" />
-                                                    </StackPanel>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
-                            </Grid>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <WebBrowser x:Name="MarkdownView" DockPanel.Dock="Top" />
             </DockPanel>
-
         </DockPanel>
     </ScrollViewer>
 </UserControl>

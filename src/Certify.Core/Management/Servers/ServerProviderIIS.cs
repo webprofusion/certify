@@ -786,7 +786,7 @@ namespace Certify.Management.Servers
                             {
                                 Title = "Install Certificate For Binding",
                                 Category = "Deployment.AddBinding",
-                                Description = $"Add new https binding: [{siteToUpdate.Name}] {bindingSpec}",
+                                Description = $"* Add new https binding: [{siteToUpdate.Name}] **{bindingSpec}**",
                                 Key = $"[{site.Id}]:{bindingSpec}:{useSNI}"
                             };
 
@@ -839,7 +839,7 @@ namespace Certify.Management.Servers
                                 {
                                     Title = "Install Certificate For Binding",
                                     Category = "Deployment.UpdateBinding",
-                                    Description = $"Update existing binding: [{siteToUpdate.Name}] {existingBinding.BindingInformation} \r\n"
+                                    Description = $"* Update existing binding: [{siteToUpdate.Name}] **{existingBinding.BindingInformation}** \r\n"
                                 });
                             }
                         }
@@ -852,7 +852,7 @@ namespace Certify.Management.Servers
                         {
                             Title = "No Deployment Target Match",
                             Category = "Deployment.UmatchedBinding",
-                            Description = $"Site not found, could not update bindings."
+                            Description = $"* Site not found, could not update bindings."
                         });
                         return steps;
                     }

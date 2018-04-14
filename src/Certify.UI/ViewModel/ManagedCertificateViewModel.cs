@@ -351,7 +351,7 @@ namespace Certify.UI.ViewModel
         /// For the given set of options get a new CertRequestConfig to store 
         /// </summary>
         /// <returns></returns>
-        public void UpdateManagedCertificateSettings()
+        public void UpdateManagedCertificateSettings(bool throwOnInvalidSettings = true)
         {
             var item = SelectedItem;
             var config = item.RequestConfig;
@@ -363,11 +363,14 @@ namespace Certify.UI.ViewModel
             }
 
             //if no primary domain need to go back and select one
-            if (primaryDomain == null) throw new ArgumentException("Primary subject domain must be set.");
+            if (primaryDomain == null && throwOnInvalidSettings) throw new ArgumentException("Primary subject domain must be set.");
 
-            if (config.PrimaryDomain != primaryDomain.Domain)
+            if (primaryDomain != null)
             {
-                config.PrimaryDomain = primaryDomain.Domain.Trim();
+                if (config.PrimaryDomain != primaryDomain.Domain)
+                {
+                    config.PrimaryDomain = primaryDomain.Domain.Trim();
+                }
             }
 
             //apply remaining selected domains as subject alternative names
