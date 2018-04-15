@@ -89,12 +89,9 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void UserControl_IsVisibleChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)
         {
-            if (!_isPreviewLoading)
+            if (this.IsVisible)
             {
-                if (this.IsVisible)
-                {
-                    Task.Run(() => UpdatePreview());
-                }
+                Task.Run(() => UpdatePreview());
             }
         }
     }

@@ -19,7 +19,6 @@ namespace Certify.Management
         /// <returns></returns>
         public async Task<List<ActionStep>> GeneratePreview(ManagedCertificate item, ICertifiedServer serverProvider, ICertifyManager certifyManager)
         {
-            bool enableMarkdown = true;
             string newLine = "\r\n";
             List<ActionStep> steps = new List<ActionStep>();
             var allCredentials = await new CredentialsManager().GetStoredCredentials();
@@ -63,7 +62,7 @@ namespace Certify.Management
 
                 if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                 {
-                    validationDescription += $"This will involve the creation of a DNS TXT record named *_acme-challenge.yourdomain.com* for each domain included in the certificate. " + newLine;
+                    validationDescription += $"This will involve the creation of a DNS TXT record named `_acme-challenge.yourdomain.com` for each domain included in the certificate. " + newLine;
                     if (!String.IsNullOrEmpty(challengeConfig.ChallengeCredentialKey))
                     {
                         var creds = allCredentials.FirstOrDefault();
@@ -71,7 +70,7 @@ namespace Certify.Management
 
                         if (!String.IsNullOrEmpty(challengeConfig.ZoneId))
                         {
-                            validationDescription += $"The Zone Id to be updated is:  **{challengeConfig.ZoneId}** " + newLine;
+                            validationDescription += $"The Zone Id to be updated is:  `{challengeConfig.ZoneId}` " + newLine;
                         }
                         else
                         {
@@ -162,7 +161,7 @@ namespace Certify.Management
                             {
                                 var siteInfo = await serverProvider.GetSiteById(item.ServerSiteId);
                                 deploymentDescription += $"## Deploying to Site" + newLine + newLine +
-                                    "* [{siteInfo.Id}]: **{siteInfo.Name}**" + newLine;
+                                    $"### {siteInfo.Name}" + newLine;
                             }
                             catch (Exception exp)
                             {

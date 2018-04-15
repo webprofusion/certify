@@ -536,9 +536,10 @@ namespace Certify.Management.Servers
                 dnsHosts = dnsHosts.Distinct().ToList();
 
                 // depending on our deployment mode we decide which sites/bindings to update:
-                actions.AddRange(
-                    await DeployToBindings(managedCertificate, requestConfig, certStoreName, certHash, dnsHosts, isPreviewOnly)
-                );
+
+                var deployments = await DeployToBindings(managedCertificate, requestConfig, certStoreName, certHash, dnsHosts, isPreviewOnly);
+
+                actions.AddRange(deployments);
 
                 // if required, cleanup old certs we are replacing. Only applied if we have deployed
                 // the certificate, otherwise we keep the old one
@@ -597,84 +598,95 @@ namespace Certify.Management.Servers
             // for each sites we want to target, identify bindings to add/update as required
             foreach (var site in targetSites)
             {
-                var existingBindings = site.Bindings.ToList();
-
-                //remove https bindings which already have an https equivalent (specific hostname or blank)
-                existingBindings.RemoveAll(b => b.Protocol == "http" && existingBindings.Any(e => e.Host == b.Host && e.Protocol == "https"));
-                existingBindings = existingBindings.OrderBy(b => b.Protocol).ThenBy(b => b.Host).ToList();
-
-                // for each binding create or update an https binding
-                foreach (var b in existingBindings)
+                try
                 {
-                    bool updateBinding = false;
+                    var existingBindings = site.Bindings.ToList();
 
-                    //if binding is http and there is no https binding, create one
-                    string hostname = b.Host;
+                    var existingHttps = existingBindings.Where(e => e.Protocol == "https").ToList();
 
-                    // install the cert for this binding if the hostname matches, or we have a
-                    // matching wildcard, or if there is no hostname specified in the binding
+                    //remove https bindings which already have an https equivalent (specific hostname or blank)
+                    existingBindings.RemoveAll(b => existingHttps.Any(e => e.Host == b.Host) && b.Protocol == "http");
 
-                    if (requestConfig.DeploymentBindingReplacePrevious)
+                    existingBindings = existingBindings.OrderBy(b => b.Protocol).ThenBy(b => b.Host).ToList();
+
+                    // for each binding create or update an https binding
+                    foreach (var b in existingBindings)
                     {
-                        // if replacing previous, check if current binding cert hash matches previous
-                        // cert hash
-                        if (b.CertificateHash != null && managedCertificate.CertificatePreviousThumbprintHash != null)
+                        bool updateBinding = false;
+
+                        //if binding is http and there is no https binding, create one
+                        string hostname = b.Host;
+
+                        // install the cert for this binding if the hostname matches, or we have a
+                        // matching wildcard, or if there is no hostname specified in the binding
+
+                        if (requestConfig.DeploymentBindingReplacePrevious)
                         {
-                            if (String.Equals(ByteToHex(b.CertificateHash), managedCertificate.CertificatePreviousThumbprintHash))
+                            // if replacing previous, check if current binding cert hash matches
+                            // previous cert hash
+                            if (b.CertificateHash != null && managedCertificate.CertificatePreviousThumbprintHash != null)
+                            {
+                                if (String.Equals(ByteToHex(b.CertificateHash), managedCertificate.CertificatePreviousThumbprintHash))
+                                {
+                                    updateBinding = true;
+                                }
+                            }
+                        }
+
+                        if (updateBinding == false)
+                        {
+                            // TODO: add wildcard match
+                            if (String.IsNullOrEmpty(hostname) && requestConfig.DeploymentBindingBlankHostname)
                             {
                                 updateBinding = true;
                             }
-                        }
-                    }
-
-                    if (updateBinding == false)
-                    {
-                        // TODO: add wildcard match
-                        if (String.IsNullOrEmpty(hostname) && requestConfig.DeploymentBindingBlankHostname)
-                        {
-                            updateBinding = true;
-                        }
-                        else
-                        {
-                            if (requestConfig.DeploymentBindingMatchHostname)
+                            else
                             {
-                                updateBinding = IsDomainOrWildcardMatch(dnsHosts, hostname);
+                                if (requestConfig.DeploymentBindingMatchHostname)
+                                {
+                                    updateBinding = IsDomainOrWildcardMatch(dnsHosts, hostname);
+                                }
                             }
                         }
-                    }
 
-                    if (requestConfig.DeploymentBindingOption == DeploymentBindingOption.UpdateOnly)
-                    {
-                        // update existing bindings only, so only update if this is already an https binding
-                        if (b.Protocol != "https") updateBinding = false;
-                    }
+                        if (requestConfig.DeploymentBindingOption == DeploymentBindingOption.UpdateOnly)
+                        {
+                            // update existing bindings only, so only update if this is already an
+                            // https binding
+                            if (b.Protocol != "https") updateBinding = false;
+                        }
 
-                    if (b.Protocol != "http" && b.Protocol != "https")
-                    {
-                        // skip bindings for other service types
-                        updateBinding = false;
-                    }
+                        if (b.Protocol != "http" && b.Protocol != "https")
+                        {
+                            // skip bindings for other service types
+                            updateBinding = false;
+                        }
 
-                    if (updateBinding)
-                    {
-                        //create/update binding and associate new cert
-                        //if any binding elements configured, use those, otherwise auto bind using defaults and SNI
-                        var stepActions = await InstallCertificateforBinding(
-                            certStoreName,
-                            certHash,
-                            site,
-                            hostname,
-                            sslPort: !String.IsNullOrWhiteSpace(requestConfig.BindingPort) ? int.Parse(requestConfig.BindingPort) : 443,
-                            useSNI: (requestConfig.BindingUseSNI != null ? (bool)requestConfig.BindingUseSNI : true),
-                            ipAddress: !String.IsNullOrWhiteSpace(requestConfig.BindingIPAddress) ? requestConfig.BindingIPAddress : null,
-                            alwaysRecreateBindings: requestConfig.AlwaysRecreateBindings,
-                            isPreviewOnly: isPreviewOnly
-                        );
+                        if (updateBinding)
+                        {
+                            //create/update binding and associate new cert
+                            //if any binding elements configured, use those, otherwise auto bind using defaults and SNI
+                            var stepActions = await InstallCertificateforBinding(
+                                certStoreName,
+                                certHash,
+                                site,
+                                hostname,
+                                sslPort: !String.IsNullOrWhiteSpace(requestConfig.BindingPort) ? int.Parse(requestConfig.BindingPort) : 443,
+                                useSNI: (requestConfig.BindingUseSNI != null ? (bool)requestConfig.BindingUseSNI : true),
+                                ipAddress: !String.IsNullOrWhiteSpace(requestConfig.BindingIPAddress) ? requestConfig.BindingIPAddress : null,
+                                alwaysRecreateBindings: requestConfig.AlwaysRecreateBindings,
+                                isPreviewOnly: isPreviewOnly
+                            );
 
-                        actions.AddRange(stepActions);
+                            actions.AddRange(stepActions);
+                        }
                     }
+                    //
                 }
-                //
+                catch (Exception exp)
+                {
+                    actions.Add(new ActionStep { Title = site.Name, HasError = true, Description = exp.ToString() });
+                }
             }
 
             return actions;
