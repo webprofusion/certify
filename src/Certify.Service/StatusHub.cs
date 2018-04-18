@@ -40,10 +40,10 @@ namespace Certify.Service
             HubContext.Clients.All.RequestProgressStateUpdated(state);
         }
 
-        public static void SendManagedSiteUpdate(ManagedSite site)
+        public static void SendManagedCertificateUpdate(ManagedCertificate site)
         {
             Debug.WriteLine("Sending updated managed site..");
-            HubContext.Clients.All.ManagedSiteUpdated(site);
+            HubContext.Clients.All.ManagedCertificateUpdated(site);
         }
     }
 }

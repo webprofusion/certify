@@ -24,7 +24,7 @@ namespace Certify.UI.Windows
             InitializeComponent();
 
             //check if scheduled task already configured
-            this.TaskSettings.UseBackgroundService = AppModel.Current.Preferences.UseBackgroundServiceAutoRenewal;
+            this.TaskSettings.UseBackgroundService = AppViewModel.Current.Preferences.UseBackgroundServiceAutoRenewal;
 
             var taskScheduler = new Shared.TaskScheduler();
             this.TaskSettings.TaskConfigured = taskScheduler.IsWindowsScheduledTaskPresent();
@@ -55,11 +55,11 @@ namespace Certify.UI.Windows
             if (TaskSettings.UseBackgroundService)
             {
                 // let background service do renewals
-                var prefs = await AppModel.Current.CertifyClient.GetPreferences();
+                var prefs = await AppViewModel.Current.CertifyClient.GetPreferences();
 
                 prefs.UseBackgroundServiceAutoRenewal = true;
 
-                await AppModel.Current.SetPreferences(prefs);
+                await AppViewModel.Current.SetPreferences(prefs);
 
                 //remove any existing scheduled task
                 taskScheduler.DeleteWindowsScheduledTask();
@@ -74,9 +74,9 @@ namespace Certify.UI.Windows
                     if (taskScheduler.CreateWindowsScheduledTask(Username.Text, Password.Password))
                     {
                         // set pref to use scheduled task for auto renewal let background service do renewals
-                        var prefs = await AppModel.Current.CertifyClient.GetPreferences();
+                        var prefs = await AppViewModel.Current.CertifyClient.GetPreferences();
                         prefs.UseBackgroundServiceAutoRenewal = false;
-                        await AppModel.Current.SetPreferences(prefs);
+                        await AppViewModel.Current.SetPreferences(prefs);
 
                         MessageBox.Show(SR.ScheduledTaskConfig_TaskCreated);
                         this.Close();

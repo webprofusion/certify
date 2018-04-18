@@ -1,4 +1,5 @@
-﻿using Certify.Models;
+﻿using Certify.Management;
+using Certify.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Web.Http;
@@ -8,7 +9,7 @@ namespace Certify.Service
     [RoutePrefix("api/server")]
     public class ServerController : Controllers.ControllerBase
     {
-        private Management.ICertifyManager _certifyManager = null;
+        private ICertifyManager _certifyManager = null;
 
         public ServerController(Management.ICertifyManager manager)
         {
@@ -31,11 +32,11 @@ namespace Certify.Service
         }
 
         [HttpGet, Route("sitelist/{serverType}")]
-        public List<SiteBindingItem> GetServerSiteList(StandardServerTypes serverType)
+        public async Task<List<SiteBindingItem>> GetServerSiteList(StandardServerTypes serverType)
         {
             if (serverType == StandardServerTypes.IIS)
             {
-                return _certifyManager.GetPrimaryWebSites(Management.CoreAppSettings.Current.IgnoreStoppedSites);
+                return await _certifyManager.GetPrimaryWebSites(Management.CoreAppSettings.Current.IgnoreStoppedSites);
             }
             else
             {
@@ -44,11 +45,11 @@ namespace Certify.Service
         }
 
         [HttpGet, Route("sitedomains/{serverType}/{serverSiteId}")]
-        public List<DomainOption> GetServerSiteDomainOptions(StandardServerTypes serverType, string serverSiteId)
+        public async Task<List<DomainOption>> GetServerSiteDomainOptions(StandardServerTypes serverType, string serverSiteId)
         {
             if (serverType == StandardServerTypes.IIS)
             {
-                return _certifyManager.GetDomainOptionsFromSite(serverSiteId);
+                return await _certifyManager.GetDomainOptionsFromSite(serverSiteId);
             }
             else
             {

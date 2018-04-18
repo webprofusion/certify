@@ -1,0 +1,35 @@
+﻿<UserControl
+    x:Class="Certify.UI.Controls.ManagedCertificate.TestProgress"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:certifyui="clr-namespace:Certify.UI"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Certify.UI.Controls.ManagedCertificate"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DataContext="{d:DesignInstance Type=certifyui:ManagedCertificateDesignViewModel,
+                                     IsDesignTimeCreatable=True}"
+    d:DesignHeight="300"
+    d:DesignWidth="300"
+    mc:Ignorable="d">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <DockPanel Margin="8,0,8,8">
+            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Config Check Results</TextBlock>
+
+            <ItemsControl
+                x:Name="Results"
+                Margin="0,0,0,0"
+                DockPanel.Dock="Top"
+                ItemsSource="{Binding ConfigCheckResults}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+
+                        <StackPanel Margin="0,4,0,0">
+                            <TextBlock Style="{StaticResource Instructions}" Text="{Binding Path=Message}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </DockPanel>
+    </ScrollViewer>
+</UserControl>

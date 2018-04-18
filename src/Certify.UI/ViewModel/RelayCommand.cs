@@ -13,7 +13,7 @@ namespace Certify.UI.ViewModel
 
         private readonly Action<T> _execute = null;
         private readonly Predicate<T> _canExecute = null;
-        private UI.ViewModel.AppModel _viewModel = null;
+        private UI.ViewModel.AppViewModel _viewModel = null;
 
         #endregion Fields
 
@@ -27,7 +27,7 @@ namespace Certify.UI.ViewModel
         /// up a CanExecute delegate.
         /// </param>
         /// <remarks> <seealso cref="CanExecute" /> will always return true. </remarks>
-        public RelayCommand(Action<T> execute, UI.ViewModel.AppModel viewModel = null)
+        public RelayCommand(Action<T> execute, UI.ViewModel.AppViewModel viewModel = null)
             : this(execute, canExecute: null)
         {
             _viewModel = viewModel;

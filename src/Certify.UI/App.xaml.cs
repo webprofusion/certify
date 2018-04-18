@@ -8,26 +8,27 @@ namespace Certify.UI
     /// </summary>
     public partial class App : Application
     {
-        protected Certify.UI.ViewModel.AppModel MainViewModel
+        protected Certify.UI.ViewModel.AppViewModel MainViewModel
         {
             get
             {
-                return UI.ViewModel.AppModel.Current;
+                return UI.ViewModel.AppViewModel.Current;
             }
         }
 
         protected override void OnStartup(StartupEventArgs e)
         {
             /*
+
             // get the current app style (theme and accent) from the application you can then use the
             // current theme and custom accent instead set a new theme
-            Tuple<AppTheme, Accent> appStyle = ThemeManager.DetectAppStyle(Application.Current);
+            Tuple<MahApps.Metro.AppTheme, MahApps.Metro.Accent> appStyle = MahApps.Metro.ThemeManager.DetectAppStyle(Application.Current);
 
             // now set the Green accent and dark theme
-            ThemeManager.ChangeAppStyle(Application.Current,
-                                        ThemeManager.GetAccent("Green"),
-                                        ThemeManager.GetAppTheme("BaseLight")); // or appStyle.Item1
-            */
+            MahApps.Metro.ThemeManager.ChangeAppStyle(Application.Current,
+                                        MahApps.Metro.ThemeManager.GetAccent("Red"),
+                                        MahApps.Metro.ThemeManager.GetAppTheme("BaseLight"));
+*/
 
             // Test translations
             //System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("zh-HANS");

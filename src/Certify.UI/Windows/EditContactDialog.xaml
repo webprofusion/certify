@@ -1,25 +1,70 @@
 <Controls:MetroWindow
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-              xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
-        xmlns:local="clr-namespace:Certify.UI.Windows"
-        xmlns:Models="clr-namespace:Certify.Models;assembly=Certify.Core" x:Class="Certify.UI.Windows.EditContactDialog"
-        xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-        mc:Ignorable="d"
-        GlowBrush="{DynamicResource AccentColorBrush}"
-        BorderThickness="1" ResizeMode="NoResize"
-        Title="{x:Static res:SR.New_Contact}" Height="319.69" Width="514.703" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner">
+    x:Class="Certify.UI.Windows.EditContactDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:Models="clr-namespace:Certify.Models;assembly=Certify.Core"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Certify.UI.Windows"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+    Title="{x:Static res:SR.New_Contact}"
+    Width="514.703"
+    Height="319.69"
+    BorderThickness="1"
+    GlowBrush="{DynamicResource AccentColorBrush}"
+    ResizeMode="NoResize"
+    WindowStartupLocation="CenterOwner"
+    WindowTransitionsEnabled="False"
+    mc:Ignorable="d">
     <Grid>
 
-        <TextBlock HorizontalAlignment="Left" Margin="12,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="472" Foreground="{DynamicResource AccentColorBrush}" ><Run Text="{x:Static res:SR.New_Contact_Tip1}" /><LineBreak /><Run /><LineBreak /><Run Text="{x:Static res:SR.New_Contact_Tip2}" /></TextBlock>
-        <Label Content="{x:Static res:SR.Email_Address}" Padding="0,5,5,5" HorizontalAlignment="Left" Margin="12,119,0,0" VerticalAlignment="Top" />
-        <TextBox HorizontalAlignment="Left" Height="23" Margin="96,119,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="367" Text="{Binding EmailAddress}">
-        </TextBox>
-        <TextBlock Margin="10,150,33.6,0" TextWrapping="Wrap" Text="{x:Static res:SR.NewContact_AgreeConfirm}" VerticalAlignment="Top" Foreground="{DynamicResource AccentColorBrush}" />
-        <CheckBox Content="{x:Static res:SR.Yes_I_Agree}" HorizontalAlignment="Left" Margin="10,218,0,0" VerticalAlignment="Top" IsChecked="{Binding AgreedToTermsAndConditions}" />
-        <Button x:Name="Save" Content="{x:Static res:SR.Register_Contact}" Margin="302,251,17.6,0" VerticalAlignment="Top" Click="Save_Click" />
-        <Button x:Name="Cancel" Content="{x:Static res:SR.Cancel}" HorizontalAlignment="Left" Margin="10,251,0,0" VerticalAlignment="Top" Width="135" Click="Cancel_Click" />
+        <TextBlock
+            Width="472"
+            Margin="12,10,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Style="{StaticResource Instructions}"
+            TextWrapping="Wrap"><Run Text="{x:Static res:SR.New_Contact_Tip1}" /><LineBreak /><Run /><LineBreak /><Run Text="{x:Static res:SR.New_Contact_Tip2}" /></TextBlock>
+        <Label
+            Margin="12,119,0,0"
+            Padding="0,5,5,5"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Content="{x:Static res:SR.Email_Address}" />
+        <TextBox
+            Width="367"
+            Height="23"
+            Margin="96,119,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Text="{Binding EmailAddress}"
+            TextWrapping="Wrap" />
+        <TextBlock
+            Margin="10,150,33.6,0"
+            VerticalAlignment="Top"
+            Style="{StaticResource Instructions}"
+            Text="{x:Static res:SR.NewContact_AgreeConfirm}"
+            TextWrapping="Wrap" />
+        <CheckBox
+            Margin="10,218,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Content="{x:Static res:SR.Yes_I_Agree}"
+            IsChecked="{Binding AgreedToTermsAndConditions}" />
+        <Button
+            x:Name="Save"
+            Margin="12,251,307.6,0"
+            VerticalAlignment="Top"
+            Click="Save_Click"
+            Content="{x:Static res:SR.Register_Contact}" />
+        <Button
+            x:Name="Cancel"
+            Width="135"
+            Margin="349,251,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Click="Cancel_Click"
+            Content="{x:Static res:SR.Cancel}" />
     </Grid>
 </Controls:MetroWindow>

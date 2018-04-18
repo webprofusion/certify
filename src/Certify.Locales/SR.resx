@@ -145,7 +145,7 @@
     <value>Update Available</value>
   </data>
   <data name="Managed_Sites" xml:space="preserve">
-    <value>Managed Sites</value>
+    <value> Managed Certificates</value>
   </data>
   <data name="In_Progress" xml:space="preserve">
     <value>In Progress</value>
@@ -196,13 +196,13 @@
     <value>Certify - Import</value>
   </data>
   <data name="ImportDlg_OpTitle" xml:space="preserve">
-    <value>Import Managed Sites</value>
+    <value>Import  Managed Certificates</value>
   </data>
   <data name="ImportDlg_OpComment" xml:space="preserve">
-    <value>You are upgrading from an older version of Certify. This will create new Managed Sites which you can then edit to adjust the renewal settings etc.</value>
+    <value>You are upgrading from an older version of Certify. This will create new  Managed Certificates which you can then edit to adjust the renewal settings etc.</value>
   </data>
   <data name="ImportDlg_Merge" xml:space="preserve">
-    <value>Merge multiple domains/certificates per site into one Managed Site</value>
+    <value>Merge multiple domains/certificates per site into one  Managed Certificate</value>
   </data>
   <data name="ImportDlg_Skip" xml:space="preserve">
     <value>Skip Import</value>
@@ -288,16 +288,16 @@
   <data name="UpdateCheckLatestVersion" xml:space="preserve">
     <value>You are using the latest version.</value>
   </data>
-  <data name="ManagedSites_Filter" xml:space="preserve">
+  <data name="ManagedCertificates_Filter" xml:space="preserve">
     <value>Filter...</value>
   </data>
-  <data name="ManagedSites_NoItemSelectedDesc" xml:space="preserve">
+  <data name="ManagedCertificates_NoItemSelectedDesc" xml:space="preserve">
     <value>Free SSL Certificates provided via the Let's Encrypt service (https://letsencrypt.org).</value>
   </data>
-  <data name="ManagedSites_NoItemSelectedTip" xml:space="preserve">
-    <value>Select a Managed Site or select New Certificate to begin.</value>
+  <data name="ManagedCertificates_NoItemSelectedTip" xml:space="preserve">
+    <value>Select a Managed Certificate or select New Certificate to begin.</value>
   </data>
-  <data name="ManagedSites_UnsavedWarning" xml:space="preserve">
+  <data name="ManagedCertificates_UnsavedWarning" xml:space="preserve">
     <value>There are unsaved changes to the selected site. Discard changes?</value>
   </data>
   <data name="ProgressMonitor_NoProgress" xml:space="preserve">
@@ -342,76 +342,76 @@
   <data name="Delete" xml:space="preserve">
     <value>Delete</value>
   </data>
-  <data name="ManagedItemSettings_RequestCertificate" xml:space="preserve">
+  <data name="ManagedCertificateSettings_RequestCertificate" xml:space="preserve">
     <value>Request Certificate</value>
   </data>
-  <data name="ManagedItemSettings_EnableAutoRenewal" xml:space="preserve">
+  <data name="ManagedCertificateSettings_EnableAutoRenewal" xml:space="preserve">
     <value>Enable Auto Renewal</value>
   </data>
-  <data name="ManagedItemSettings_NotifyPrimaryContactOnRenewalFailure" xml:space="preserve">
+  <data name="ManagedCertificateSettings_NotifyPrimaryContactOnRenewalFailure" xml:space="preserve">
     <value>Notify Primary Contact On Renewal Failure</value>
   </data>
-  <data name="ManagedItemSettings_NoHostNameBindingWarning" xml:space="preserve">
+  <data name="ManagedCertificateSettings_NoHostNameBindingWarning" xml:space="preserve">
     <value>There are no http or https hostname bindings associated with the selected site in IIS. At least one fully qualified hostname (e.g 'github.com') is required to create a certificate.</value>
   </data>
-  <data name="ManagedItemSettings_Tab_Options" xml:space="preserve">
+  <data name="ManagedCertificateSettings_Tab_Options" xml:space="preserve">
     <value>Options</value>
   </data>
-  <data name="ManagedItemSettings_SelectIISSite" xml:space="preserve">
-    <value>Select IIS Site:</value>
+  <data name="ManagedCertificateSettings_SelectWebsite" xml:space="preserve">
+    <value>Select Website (optional):</value>
   </data>
-  <data name="ManagedItemSettings_DisplayName" xml:space="preserve">
+  <data name="ManagedCertificateSettings_DisplayName" xml:space="preserve">
     <value>Display Name:</value>
   </data>
-  <data name="ManagedItemSettings_DomainIncluded" xml:space="preserve">
+  <data name="ManagedCertificateSettings_DomainIncluded" xml:space="preserve">
     <value>The following selected domains will be included as a single certificate request. The Lets Encrypt service must be able to access all of these domains via port 80 (for HTTP challenges) or port 443 (for TLS-SNI challenges) for the certification process to work.</value>
   </data>
-  <data name="ManagedItemSettings_SelectDomain" xml:space="preserve">
+  <data name="ManagedCertificateSettings_SelectDomain" xml:space="preserve">
     <value>Domains and Subdomains to include:</value>
   </data>
   <data name="SelectAll" xml:space="preserve">
     <value>Select All</value>
   </data>
-  <data name="ManagedItemSettings_SelectNone" xml:space="preserve">
+  <data name="ManagedCertificateSettings_SelectNone" xml:space="preserve">
     <value>Select None</value>
   </data>
-  <data name="ManagedItemSettings_Primary" xml:space="preserve">
+  <data name="ManagedCertificateSettings_Primary" xml:space="preserve">
     <value>Primary</value>
   </data>
-  <data name="ManagedItemSettings_Include" xml:space="preserve">
+  <data name="ManagedCertificateSettings_Include" xml:space="preserve">
     <value>Include</value>
   </data>
-  <data name="ManagedItemSettings_Domain" xml:space="preserve">
+  <data name="ManagedCertificateSettings_Domain" xml:space="preserve">
     <value>Domain</value>
   </data>
   <data name="Advanced" xml:space="preserve">
     <value>Advanced</value>
   </data>
-  <data name="ManagedItemSettings_ChallengeTypes" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ChallengeTypes" xml:space="preserve">
     <value>Challenge Type:</value>
   </data>
-  <data name="ManagedItemSettings_WebsiteRoot" xml:space="preserve">
+  <data name="ManagedCertificateSettings_WebsiteRoot" xml:space="preserve">
     <value>Website Root Directory</value>
   </data>
-  <data name="ManagedItemSettings_BrowseFolder" xml:space="preserve">
+  <data name="ManagedCertificateSettings_BrowseFolder" xml:space="preserve">
     <value>...</value>
   </data>
-  <data name="ManagedItemSettings_PerformChallengeResponseConfigCheck" xml:space="preserve">
+  <data name="ManagedCertificateSettings_PerformChallengeResponseConfigCheck" xml:space="preserve">
     <value>Perform challenge response config checks</value>
   </data>
-  <data name="ManagedItemSettings_PerformWebAppAutoConfig" xml:space="preserve">
+  <data name="ManagedCertificateSettings_PerformWebAppAutoConfig" xml:space="preserve">
     <value>Perform web application auto config</value>
   </data>
-  <data name="ManagedItemSettings_BindIP" xml:space="preserve">
+  <data name="ManagedCertificateSettings_BindIP" xml:space="preserve">
     <value>Bind to Specific IP:</value>
   </data>
-  <data name="ManagedItemSettings_BindPort" xml:space="preserve">
+  <data name="ManagedCertificateSettings_BindPort" xml:space="preserve">
     <value>Bind to Specific Port:</value>
   </data>
-  <data name="ManagedItemSettings_UseSNI" xml:space="preserve">
+  <data name="ManagedCertificateSettings_UseSNI" xml:space="preserve">
     <value>Use SNI (IIS 8+):</value>
   </data>
-  <data name="ManagedItemSettings_PerRequsetScript" xml:space="preserve">
+  <data name="ManagedCertificateSettings_PerRequsetScript" xml:space="preserve">
     <value>Pre-request PS Script:</value>
   </data>
   <data name="Test" xml:space="preserve">
@@ -420,77 +420,77 @@
   <data name="Browser" xml:space="preserve">
     <value>...</value>
   </data>
-  <data name="ManagedItemSettings_ExportTip" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ExportTip" xml:space="preserve">
     <value>Note: To export this certificate use the Manage Computer Certificates option in Windows. </value>
   </data>
-  <data name="ManagedItemSettings_OpenLogFile" xml:space="preserve">
+  <data name="ManagedCertificateSettings_OpenLogFile" xml:space="preserve">
     <value>Open Log File</value>
   </data>
-  <data name="ManagedItemSettings_ViewCertificate" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ViewCertificate" xml:space="preserve">
     <value>View Certificate</value>
   </data>
-  <data name="ManagedItemSettings_CertificateRevokeWarning" xml:space="preserve">
+  <data name="ManagedCertificateSettings_CertificateRevokeWarning" xml:space="preserve">
     <value>WARNING: This certificate has been revoked.</value>
   </data>
   <data name="SaveError" xml:space="preserve">
     <value>Save Error</value>
   </data>
-  <data name="ManagedItemSettings_SelectWebsiteOrCert" xml:space="preserve">
+  <data name="ManagedCertificateSettings_SelectWebsiteOrCert" xml:space="preserve">
     <value>Select the website to create a certificate for.</value>
   </data>
-  <data name="ManagedItemSettings_NameRequired" xml:space="preserve">
+  <data name="ManagedCertificateSettings_NameRequired" xml:space="preserve">
     <value>A name is required for this item.</value>
   </data>
-  <data name="ManagedItemSettings_NeedPrimaryDomain" xml:space="preserve">
+  <data name="ManagedCertificateSettings_NeedPrimaryDomain" xml:space="preserve">
     <value>A Primary Domain must be included</value>
   </data>
-  <data name="ManagedItemSettings_ChallengeNotAvailable" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ChallengeNotAvailable" xml:space="preserve">
     <value>The {0} challenge is only available for IIS versions 8+.</value>
   </data>
-  <data name="ManagedItemSettings_HookMustBeValidUrl" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookMustBeValidUrl" xml:space="preserve">
     <value>The Url for the webhook must be set to a valid Url.</value>
   </data>
-  <data name="ManagedItemSettings_HookMethodMustBeSet" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookMethodMustBeSet" xml:space="preserve">
     <value>The Method for the webhook must be set.</value>
   </data>
-  <data name="ManagedItemSettings_NoChanges" xml:space="preserve">
+  <data name="ManagedCertificateSettings_NoChanges" xml:space="preserve">
     <value>No changes were made, skipping save</value>
   </data>
   <data name="ConfirmDelete" xml:space="preserve">
     <value>Confirm Delete</value>
   </data>
-  <data name="ManagedItemSettings_ConfirmDelete" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ConfirmDelete" xml:space="preserve">
     <value>Are you sure you want to delete this item? Deleting the item will not affect IIS settings etc.</value>
   </data>
-  <data name="ManagedItemSettings_LogNotCreated" xml:space="preserve">
+  <data name="ManagedCertificateSettings_LogNotCreated" xml:space="preserve">
     <value>The log file for this item has not been created yet.</value>
   </data>
-  <data name="ManagedItemSettings_CertificateNotReady" xml:space="preserve">
+  <data name="ManagedCertificateSettings_CertificateNotReady" xml:space="preserve">
     <value>The certificate file for this item has not been created yet.</value>
   </data>
   <data name="ChallengeError" xml:space="preserve">
     <value>Challenge Error</value>
   </data>
-  <data name="ManagedItemSettings_CannotChallengeWithoutIIS" xml:space="preserve">
+  <data name="ManagedCertificateSettings_CannotChallengeWithoutIIS" xml:space="preserve">
     <value>Cannot check challenges if IIS is not available.</value>
   </data>
   <data name="Challenge" xml:space="preserve">
     <value>Challenge</value>
   </data>
-  <data name="ManagedItemSettings_ConfigurationCheckOk" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ConfigurationCheckOk" xml:space="preserve">
     <value>Configuration Checked OK</value>
   </data>
-  <data name="ManagedItemSettings_ConfigurationCheckFailed" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ConfigurationCheckFailed" xml:space="preserve">
     <value>Configuration Check Failed:
 {0}</value>
   </data>
-  <data name="ManagedItemSettings_ChallengeTestFailed" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ChallengeTestFailed" xml:space="preserve">
     <value>Challenge Test Failed</value>
   </data>
-  <data name="ManagedItemSettings_WebhookTestFailed" xml:space="preserve">
+  <data name="ManagedCertificateSettings_WebhookTestFailed" xml:space="preserve">
     <value>Webhook Test Failed</value>
   </data>
-  <data name="ManagedItemSettings_WebhookTest" xml:space="preserve">
+  <data name="ManagedCertificateSettings_WebhookTest" xml:space="preserve">
     <value>Webhook Test</value>
   </data>
   <data name="succeed" xml:space="preserve">
@@ -499,10 +499,10 @@
   <data name="failed" xml:space="preserve">
     <value>failed</value>
   </data>
-  <data name="ManagedItemSettings_WebhookRequestResult" xml:space="preserve">
+  <data name="ManagedCertificateSettings_WebhookRequestResult" xml:space="preserve">
     <value>Webhook request {0}: HTTP {1}</value>
   </data>
-  <data name="ManagedItemSettings_WebhookRequestError" xml:space="preserve">
+  <data name="ManagedCertificateSettings_WebhookRequestError" xml:space="preserve">
     <value>Webhook request error: {0}</value>
   </data>
   <data name="Alert" xml:space="preserve">
@@ -511,14 +511,14 @@
   <data name="Error" xml:space="preserve">
     <value>Error</value>
   </data>
-  <data name="ManagedItemSettings_Certificate_Revoked" xml:space="preserve">
+  <data name="ManagedCertificateSettings_Certificate_Revoked" xml:space="preserve">
     <value>Certificate Revoked.</value>
   </data>
-  <data name="ManagedItemSettings_RevokeCertificateError" xml:space="preserve">
+  <data name="ManagedCertificateSettings_RevokeCertificateError" xml:space="preserve">
     <value>Error Revoking Certificate:
 {0}</value>
   </data>
-  <data name="ManagedItemSettings_ConfirmRevokeCertificate" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ConfirmRevokeCertificate" xml:space="preserve">
     <value>Are you sure you want to revoke this certificate?</value>
   </data>
   <data name="MainWindow_TrialLimitationReached" xml:space="preserve">
@@ -551,34 +551,34 @@
   <data name="Comments" xml:space="preserve">
     <value>Comments: </value>
   </data>
-  <data name="ManagedItemSettings_RevokeCertificate" xml:space="preserve">
+  <data name="ManagedCertificateSettings_RevokeCertificate" xml:space="preserve">
     <value>Revoke Certificate</value>
   </data>
-  <data name="ManagedItemSettings_HookUrl" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookUrl" xml:space="preserve">
     <value>Url:</value>
   </data>
-  <data name="ManagedItemSettings_HookMethod" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookMethod" xml:space="preserve">
     <value>Method:</value>
   </data>
-  <data name="ManagedItemSettings_HookBody" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookBody" xml:space="preserve">
     <value>Body:</value>
   </data>
-  <data name="ManagedItemSettings_HookContentType" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookContentType" xml:space="preserve">
     <value>ContentType:</value>
   </data>
-  <data name="ManagedItemSettings_PostRequestScript" xml:space="preserve">
+  <data name="ManagedCertificateSettings_PostRequestScript" xml:space="preserve">
     <value>Post-request PS Script:</value>
   </data>
-  <data name="ManagedItemSettings_AutoUpdateBinding" xml:space="preserve">
+  <data name="ManagedCertificateSettings_AutoUpdateBinding" xml:space="preserve">
     <value>Auto create/update IIS bindings (uses SNI)</value>
   </data>
-  <data name="ManagedItemSettings_UseSpecificBinding" xml:space="preserve">
+  <data name="ManagedCertificateSettings_UseSpecificBinding" xml:space="preserve">
     <value>Use specific IP/Port bindings</value>
   </data>
-  <data name="ManagedItemSettings_HookTrigger" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookTrigger" xml:space="preserve">
     <value>Webhook Trigger:</value>
   </data>
-  <data name="ManagedItemSettings_CertificatePathEmpty" xml:space="preserve">
+  <data name="ManagedCertificateSettings_CertificatePathEmpty" xml:space="preserve">
     <value>Certificate Path: [to be set]</value>
   </data>
   <data name="ExpiryDateConverter_NoCurrentCertificate" xml:space="preserve">
@@ -593,10 +593,10 @@
   <data name="Update_MandatoryUpdateQuit" xml:space="preserve">
     <value>The current app version is no longer supported. Please update to proceed.</value>
   </data>
-  <data name="ManagedItemSettings_BindingNote" xml:space="preserve">
+  <data name="ManagedCertificateSettings_BindingNote" xml:space="preserve">
     <value>Note: these setting only apply to new https bindings, existing bindings are only updated with the new certificate.</value>
   </data>
-  <data name="ManagedItemSettings_ReapplyCertificate" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ReapplyCertificate" xml:space="preserve">
     <value>Re-apply Certificate to Bindings</value>
   </data>
   <data name="Dashboard_Register" xml:space="preserve">
@@ -629,7 +629,7 @@
   <data name="ScheduledTaskConfig_UseScheduledTask" xml:space="preserve">
     <value>Use a Scheduled Task (runs as specified user)</value>
   </data>
-  <data name="ManagedItemsSettings_RefreshDomains" xml:space="preserve">
+  <data name="ManagedCertificatesSettings_RefreshDomains" xml:space="preserve">
     <value>Refresh</value>
   </data>
   <data name="Update_DownloadNow" xml:space="preserve">
@@ -638,7 +638,22 @@
   <data name="Update_ReadyToApply" xml:space="preserve">
     <value>A new update is ready to apply. Would you like to install it now?</value>
   </data>
-  <data name="ManagedItemSettings_InvalidSNI" xml:space="preserve">
+  <data name="ManagedCertificateSettings_InvalidSNI" xml:space="preserve">
     <value>You are attempting to create an SNI binding that also has a specific bound IP address. It is recommended that SNI bindings use All Unassigned instead. Do you wish to continue saving?</value>
+  </data>
+  <data name="Credentials_EditCredential" xml:space="preserve">
+    <value>Add/Update Stored Credential</value>
+  </data>
+  <data name="Update_DownloadFailed" xml:space="preserve">
+    <value>Sorry, the update could not be downloaded. Please try again later.</value>
+  </data>
+  <data name="Managed_Certificates" xml:space="preserve">
+    <value>Managed Certificates</value>
+  </data>
+  <data name="ManagedCertificateSettings_DefaultTitle" xml:space="preserve">
+    <value>New Managed Certificate</value>
+  </data>
+  <data name="ManagedCertificateSettings_AddDomainsToCertificate" xml:space="preserve">
+    <value>Add domains to certificate:</value>
   </data>
 </root>

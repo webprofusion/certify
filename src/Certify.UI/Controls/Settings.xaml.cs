@@ -9,16 +9,17 @@ namespace Certify.UI.Controls
     /// </summary>
     public partial class Settings : UserControl
     {
-        protected Certify.UI.ViewModel.AppModel MainViewModel
+        protected Certify.UI.ViewModel.AppViewModel MainViewModel
         {
             get
             {
-                return ViewModel.AppModel.Current;
+                return ViewModel.AppViewModel.Current;
             }
         }
 
         private bool settingsInitialised = false;
         private Models.Preferences _prefs = null;
+        private Models.Config.StoredCredential _selectedStoredCredential = null;
 
         public Settings()
         {
@@ -50,6 +51,10 @@ namespace Certify.UI.Controls
 
             settingsInitialised = true;
             Save.IsEnabled = false;
+
+            //load stored credentials list
+            await MainViewModel.RefreshStoredCredentialsList();
+            this.CredentialsList.ItemsSource = MainViewModel.StoredCredentials;
         }
 
         private void Button_NewContact(object sender, RoutedEventArgs e)
@@ -60,9 +65,14 @@ namespace Certify.UI.Controls
                 Owner = Window.GetWindow(this)
             };
             d.ShowDialog();
+        }
 
-            //refresh primary contact
-            //MainViewModel.LoadVaultTree();
+        private void Button_ScheduledTaskConfig(object sender, RoutedEventArgs e)
+        {
+            //show UI to update auto renewal task
+            var d = new Windows.ScheduledTaskConfig { Owner = App.Current.MainWindow };
+
+            d.ShowDialog();
         }
 
         private void SettingsUpdated(object sender, RoutedEventArgs e)
@@ -110,6 +120,66 @@ namespace Certify.UI.Controls
         {
             MainViewModel.CertifyClient.SetPreferences(_prefs);
             Save.IsEnabled = false;
+        }
+
+        private void AddStoredCredential_Click(object sender, RoutedEventArgs e)
+        {
+            var cred = new Windows.EditCredential
+            {
+                Owner = Window.GetWindow(this)
+            };
+            cred.ShowDialog();
+
+            //refresh credentials list on complete
+            cred.Closed += async (object s, System.EventArgs ev) =>
+            {
+                await MainViewModel.RefreshStoredCredentialsList();
+                this.CredentialsList.ItemsSource = MainViewModel.StoredCredentials;
+            };
+        }
+
+        private void ModifyStoredCredential_Click(object sender, RoutedEventArgs e)
+        {
+            //modify the selected credential
+            if (_selectedStoredCredential != null)
+            {
+                var d = new Windows.EditCredential(_selectedStoredCredential);
+                d.Owner = Window.GetWindow(this);
+
+                d.ShowDialog();
+            }
+
+            //TODO: option to test a credential
+        }
+
+        private async void DeleteStoredCredential_Click(object sender, RoutedEventArgs e)
+        {
+            //delete the selected credential, if not currently in use
+            if (_selectedStoredCredential != null)
+            {
+                if (MessageBox.Show("Are you sure you wish to delete this stored credential?", "Confirm Delete", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
+                {
+                    //confirm item not used then delete
+                    var deleted = await MainViewModel.DeleteCredential(_selectedStoredCredential.StorageKey);
+                    if (!deleted)
+                    {
+                        MessageBox.Show("This stored credential could not be removed. It may still be in use by a managed site.");
+                    }
+                }
+                this.CredentialsList.ItemsSource = MainViewModel.StoredCredentials;
+            }
+        }
+
+        private void CredentialsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems != null && e.AddedItems.Count > 0)
+            {
+                _selectedStoredCredential = (Models.Config.StoredCredential)e.AddedItems[0];
+            }
+            else
+            {
+                _selectedStoredCredential = null;
+            }
         }
     }
 }

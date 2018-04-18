@@ -1,13 +1,15 @@
 ﻿<Application
-    x:Class="Certify.UI.App" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:vm="clr-namespace:Certify.UI.ViewModel"
+    x:Class="Certify.UI.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="clr-namespace:Certify.UI"
+    xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:d1p1="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
-    StartupUri="MainWindow.xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" d1p1:Ignorable="d"
-     xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
-    xmlns:d1p1="http://schemas.openxmlformats.org/markup-compatibility/2006">
+    xmlns:local="clr-namespace:Certify.UI"
+    xmlns:vm="clr-namespace:Certify.UI.ViewModel"
+    d1p1:Ignorable="d"
+    StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -17,8 +19,80 @@
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Accents/BaseLight.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Accents/Green.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            <Style TargetType="{x:Type Controls:WindowButtonCommands}"
-                   BasedOn="{StaticResource MahApps.Metro.Styles.WindowButtonCommands.Win10}" />
+            <!--  Heading  -->
+            <Style x:Key="Subheading" TargetType="TextBlock">
+                <Setter Property="HorizontalAlignment" Value="Left" />
+                <Setter Property="FontFamily" Value="Segoe UI Semibold" />
+                <Setter Property="FontSize" Value="16" />
+                <Setter Property="Padding" Value="0,0,0,4" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+            </Style>
+            <!--  Heading With Top Margin  -->
+            <Style x:Key="SubheadingWithMargin" TargetType="TextBlock">
+                <Setter Property="HorizontalAlignment" Value="Left" />
+                <Setter Property="FontFamily" Value="Segoe UI Semibold" />
+                <Setter Property="FontSize" Value="16" />
+                <Setter Property="Padding" Value="0,8,0,4" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+            </Style>
+            <!--  Instruction Text  -->
+            <Style x:Key="Instructions" TargetType="TextBlock">
+                <Setter Property="HorizontalAlignment" Value="Left" />
+                <Setter Property="FontFamily" Value="Segoe UI" />
+
+                <Setter Property="Padding" Value="0,4,0,4" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                <Setter Property="Foreground" Value="DimGray" />
+                <Setter Property="TextWrapping" Value="WrapWithOverflow" />
+            </Style>
+            <Style BasedOn="{StaticResource MahApps.Metro.Styles.WindowButtonCommands.Win10}" TargetType="{x:Type Controls:WindowButtonCommands}" />
+
+            <!--  Style for the Individual Tab Item  -->
+            <Style x:Key="TabHeaderWithImage" TargetType="{x:Type TabItem}">
+                <Setter Property="Foreground" Value="White" />
+                <Setter Property="Height" Value="25" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type Controls:MetroTabItem}">
+                            <Grid>
+                                <Border
+                                    Name="Border"
+                                    Background="LightBlue"
+                                    BorderThickness="0"
+                                    CornerRadius="6,6,0,0">
+                                    <ContentPresenter
+                                        x:Name="ContentSite"
+                                        Margin="12,2,12,2"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        ContentSource="Header" />
+                                </Border>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="Border" Property="Background" Value="#550000" />
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="False">
+                                    <Setter TargetName="Border" Property="Background">
+                                        <Setter.Value>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Offset="0" Color="#ffffff" />
+                                                <GradientStop Offset="1" Color="#000000" />
+                                            </LinearGradientBrush>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter TargetName="Border" Property="BorderBrush" Value="#164A7C" />
+                                    <Setter TargetName="Border" Property="BorderThickness" Value="1,1,1,0" />
+                                    <Setter Property="Foreground" Value="Black" />
+                                </Trigger>
+                                <Trigger Property="Background" Value="Transparent">
+                                    <Setter TargetName="Border" Property="Background" Value="Transparent" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

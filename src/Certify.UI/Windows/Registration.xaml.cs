@@ -17,7 +17,7 @@ namespace Certify.UI.Windows
 
         private async void ValidateKey_Click(object sender, RoutedEventArgs e)
         {
-            var productTypeId = ViewModel.AppModel.ProductTypeId;
+            var productTypeId = ViewModel.AppViewModel.ProductTypeId;
 
             var email = EmailAddress.Text?.Trim().ToLower();
             var key = LicenseKey.Text?.Trim().ToLower();
@@ -37,7 +37,7 @@ namespace Certify.UI.Windows
             ValidateKey.IsEnabled = false;
             Mouse.OverrideCursor = Cursors.Wait;
 
-            var licensingManager = ViewModel.AppModel.Current.PluginManager?.LicensingManager;
+            var licensingManager = ViewModel.AppViewModel.Current.PluginManager?.LicensingManager;
 
             if (licensingManager != null)
             {
@@ -48,7 +48,7 @@ namespace Certify.UI.Windows
                     {
                         var instance = new Models.Shared.RegisteredInstance
                         {
-                            InstanceId = ViewModel.AppModel.Current.Preferences.InstanceId,
+                            InstanceId = ViewModel.AppViewModel.Current.Preferences.InstanceId,
                             AppVersion = new Management.Util().GetAppVersion().ToString()
                         };
 
@@ -60,7 +60,7 @@ namespace Certify.UI.Windows
                             var settingsPath = Util.GetAppDataFolder();
                             if (licensingManager.FinaliseInstall(productTypeId, installRegistration, settingsPath))
                             {
-                                ViewModel.AppModel.Current.IsRegisteredVersion = true;
+                                ViewModel.AppViewModel.Current.IsRegisteredVersion = true;
                                 MessageBox.Show(installRegistration.Message);
 
                                 this.Close();
@@ -94,6 +94,11 @@ namespace Certify.UI.Windows
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
+        }
+
+        private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        {
+            System.Diagnostics.Process.Start(e.Uri.ToString());
         }
     }
 }

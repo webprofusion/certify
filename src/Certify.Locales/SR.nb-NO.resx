@@ -282,16 +282,16 @@
   <data name="UpdateCheckLatestVersion" xml:space="preserve">
     <value>Du har siste versjon</value>
   </data>
-  <data name="ManagedSites_Filter" xml:space="preserve">
+  <data name="ManagedCertificates_Filter" xml:space="preserve">
     <value>Filter...</value>
   </data>
-  <data name="ManagedSites_NoItemSelectedDesc" xml:space="preserve">
+  <data name="ManagedCertificates_NoItemSelectedDesc" xml:space="preserve">
     <value>Gratis SSL-sertifikater levert via Let's Encrypt-tjenesten (https://letsencrypt.org).</value>
   </data>
-  <data name="ManagedSites_NoItemSelectedTip" xml:space="preserve">
+  <data name="ManagedCertificates_NoItemSelectedTip" xml:space="preserve">
     <value>Velg et administrert nettsted, eller velg nytt sertifikat for å begynne.</value>
   </data>
-  <data name="ManagedSites_UnsavedWarning" xml:space="preserve">
+  <data name="ManagedCertificates_UnsavedWarning" xml:space="preserve">
     <value>Det er endringer på det valgte nettstedet som ikke er lagret. Forkaste endringer?</value>
   </data>
   <data name="ProgressMonitor_NoProgress" xml:space="preserve">
@@ -336,73 +336,73 @@
   <data name="Delete" xml:space="preserve">
     <value>Slett</value>
   </data>
-  <data name="ManagedItemSettings_RequestCertificate" xml:space="preserve">
+  <data name="ManagedCertificateSettings_RequestCertificate" xml:space="preserve">
     <value>Forespør sertifikat</value>
   </data>
-  <data name="ManagedItemSettings_EnableAutoRenewal" xml:space="preserve">
+  <data name="ManagedCertificateSettings_EnableAutoRenewal" xml:space="preserve">
     <value>Aktiver automatisk fornyelse</value>
   </data>
-  <data name="ManagedItemSettings_NotifyPrimaryContactOnRenewalFailure" xml:space="preserve">
+  <data name="ManagedCertificateSettings_NotifyPrimaryContactOnRenewalFailure" xml:space="preserve">
     <value>Informer hovedkontakt om feil ved fornyelse</value>
   </data>
-  <data name="ManagedItemSettings_NoHostNameBindingWarning" xml:space="preserve">
+  <data name="ManagedCertificateSettings_NoHostNameBindingWarning" xml:space="preserve">
     <value>Det er ingen http- eller https-vertsnavnbinding knyttet til det valgte nettstedet i IIS. Minst ett fullt kvalifisert vertsnavn (for eksempel 'github.com') kreves for å opprette et sertifikat.</value>
   </data>
-  <data name="ManagedItemSettings_Tab_Options" xml:space="preserve">
+  <data name="ManagedCertificateSettings_Tab_Options" xml:space="preserve">
     <value>Valg</value>
   </data>
-  <data name="ManagedItemSettings_SelectIISSite" xml:space="preserve">
+  <data name="ManagedCertificateSettings_SelectWebsite" xml:space="preserve">
     <value>Velg IIS-nettsted</value>
   </data>
-  <data name="ManagedItemSettings_DisplayName" xml:space="preserve">
+  <data name="ManagedCertificateSettings_DisplayName" xml:space="preserve">
     <value>Visningsnavn</value>
   </data>
-  <data name="ManagedItemSettings_DomainIncluded" xml:space="preserve">
+  <data name="ManagedCertificateSettings_DomainIncluded" xml:space="preserve">
     <value>Følgende utvalgte domener vil bli inkludert som en enkelt sertifikatforespørsel. Lets Encrypt-tjenesten må kunne få tilgang til alle disse domenene via port 80 (for HTTP-utfordringer) eller port 443 (for TLS-SNI-utfordringer) for sertifiseringsprosessen til å fungere.</value>
   </data>
-  <data name="ManagedItemSettings_SelectDomain" xml:space="preserve">
+  <data name="ManagedCertificateSettings_SelectDomain" xml:space="preserve">
     <value>Domener og underdomener for å inkludere:</value>
   </data>
   <data name="SelectAll" xml:space="preserve">
     <value>Velg alle</value>
   </data>
-  <data name="ManagedItemSettings_Primary" xml:space="preserve">
+  <data name="ManagedCertificateSettings_Primary" xml:space="preserve">
     <value>Hoved</value>
   </data>
-  <data name="ManagedItemSettings_Include" xml:space="preserve">
+  <data name="ManagedCertificateSettings_Include" xml:space="preserve">
     <value>Inkluder</value>
   </data>
-  <data name="ManagedItemSettings_Domain" xml:space="preserve">
+  <data name="ManagedCertificateSettings_Domain" xml:space="preserve">
     <value>Domene</value>
   </data>
   <data name="Advanced" xml:space="preserve">
     <value>Avansert</value>
   </data>
-  <data name="ManagedItemSettings_SelectNone" xml:space="preserve">
+  <data name="ManagedCertificateSettings_SelectNone" xml:space="preserve">
     <value>Ikke velg noen</value>
   </data>
-  <data name="ManagedItemSettings_ChallengeTypes" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ChallengeTypes" xml:space="preserve">
     <value>Utfordringstype:</value>
   </data>
-  <data name="ManagedItemSettings_WebsiteRoot" xml:space="preserve">
+  <data name="ManagedCertificateSettings_WebsiteRoot" xml:space="preserve">
     <value>Nettstedets rotkatalog</value>
   </data>
-  <data name="ManagedItemSettings_BrowseFolder" xml:space="preserve">
+  <data name="ManagedCertificateSettings_BrowseFolder" xml:space="preserve">
     <value>...</value>
   </data>
-  <data name="ManagedItemSettings_PerformChallengeResponseConfigCheck" xml:space="preserve">
+  <data name="ManagedCertificateSettings_PerformChallengeResponseConfigCheck" xml:space="preserve">
     <value>Utfør utfordringsreaksjonskontrollkontroller</value>
   </data>
-  <data name="ManagedItemSettings_PerformWebAppAutoConfig" xml:space="preserve">
+  <data name="ManagedCertificateSettings_PerformWebAppAutoConfig" xml:space="preserve">
     <value>Automatisk konfigurasjon</value>
   </data>
-  <data name="ManagedItemSettings_BindIP" xml:space="preserve">
+  <data name="ManagedCertificateSettings_BindIP" xml:space="preserve">
     <value>Bind til spesifikk IP:</value>
   </data>
-  <data name="ManagedItemSettings_BindPort" xml:space="preserve">
+  <data name="ManagedCertificateSettings_BindPort" xml:space="preserve">
     <value>Bind til spesifikk port:</value>
   </data>
-  <data name="ManagedItemSettings_UseSNI" xml:space="preserve">
+  <data name="ManagedCertificateSettings_UseSNI" xml:space="preserve">
     <value>Bruk SNI (IIS 8+)</value>
   </data>
   <data name="Test" xml:space="preserve">
@@ -411,77 +411,77 @@
   <data name="Browser" xml:space="preserve">
     <value>...</value>
   </data>
-  <data name="ManagedItemSettings_ExportTip" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ExportTip" xml:space="preserve">
     <value>Merk: For å eksportere dette sertifikatet, bruk alternativet Manage Computer Certificates i Windows.</value>
   </data>
-  <data name="ManagedItemSettings_OpenLogFile" xml:space="preserve">
+  <data name="ManagedCertificateSettings_OpenLogFile" xml:space="preserve">
     <value>Åpne loggfil</value>
   </data>
-  <data name="ManagedItemSettings_ViewCertificate" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ViewCertificate" xml:space="preserve">
     <value>Vis sertifikat</value>
   </data>
-  <data name="ManagedItemSettings_CertificateRevokeWarning" xml:space="preserve">
+  <data name="ManagedCertificateSettings_CertificateRevokeWarning" xml:space="preserve">
     <value>ADVARSEL: Dette sertifikatet er tilbakekalt.</value>
   </data>
   <data name="SaveError" xml:space="preserve">
     <value>Feil ved lagring</value>
   </data>
-  <data name="ManagedItemSettings_SelectWebsiteOrCert" xml:space="preserve">
+  <data name="ManagedCertificateSettings_SelectWebsiteOrCert" xml:space="preserve">
     <value>Velg nettsiden for å opprette et sertifikat for.</value>
   </data>
-  <data name="ManagedItemSettings_NameRequired" xml:space="preserve">
+  <data name="ManagedCertificateSettings_NameRequired" xml:space="preserve">
     <value>Et navn kreves for dette elementet.</value>
   </data>
-  <data name="ManagedItemSettings_NeedPrimaryDomain" xml:space="preserve">
+  <data name="ManagedCertificateSettings_NeedPrimaryDomain" xml:space="preserve">
     <value>Et hoveddomene må inkluderes</value>
   </data>
-  <data name="ManagedItemSettings_ChallengeNotAvailable" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ChallengeNotAvailable" xml:space="preserve">
     <value>Utfordringen {0} er bare tilgjengelig for IIS-versjon 8 eller nyere.</value>
   </data>
-  <data name="ManagedItemSettings_HookMustBeValidUrl" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookMustBeValidUrl" xml:space="preserve">
     <value>Nettadressen til webhook må settes til en gyldig URL.</value>
   </data>
-  <data name="ManagedItemSettings_HookMethodMustBeSet" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookMethodMustBeSet" xml:space="preserve">
     <value>Metoden for webhook må settes.</value>
   </data>
-  <data name="ManagedItemSettings_NoChanges" xml:space="preserve">
+  <data name="ManagedCertificateSettings_NoChanges" xml:space="preserve">
     <value>Ingen endringer ble gjort</value>
   </data>
   <data name="ConfirmDelete" xml:space="preserve">
     <value>Bekreft sletting</value>
   </data>
-  <data name="ManagedItemSettings_ConfirmDelete" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ConfirmDelete" xml:space="preserve">
     <value>Er du sikker på at du vil slette dette elementet? Slette elementet påvirker ikke IIS-innstillinger, etc.</value>
   </data>
-  <data name="ManagedItemSettings_LogNotCreated" xml:space="preserve">
+  <data name="ManagedCertificateSettings_LogNotCreated" xml:space="preserve">
     <value>Loggfilen for dette elementet er ikke opprettet ennå.</value>
   </data>
-  <data name="ManagedItemSettings_CertificateNotReady" xml:space="preserve">
+  <data name="ManagedCertificateSettings_CertificateNotReady" xml:space="preserve">
     <value>Sertifikatfilen for dette elementet er ikke opprettet ennå.</value>
   </data>
   <data name="ChallengeError" xml:space="preserve">
     <value>Utfordringsfeil</value>
   </data>
-  <data name="ManagedItemSettings_CannotChallengeWithoutIIS" xml:space="preserve">
+  <data name="ManagedCertificateSettings_CannotChallengeWithoutIIS" xml:space="preserve">
     <value>Du kan ikke bekrefte utfordringene hvis IIS ikke er tilgjengelig.</value>
   </data>
   <data name="Challenge" xml:space="preserve">
     <value>Utfordring</value>
   </data>
-  <data name="ManagedItemSettings_ConfigurationCheckOk" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ConfigurationCheckOk" xml:space="preserve">
     <value>Konfigurasjon OK</value>
   </data>
-  <data name="ManagedItemSettings_ConfigurationCheckFailed" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ConfigurationCheckFailed" xml:space="preserve">
     <value>Konfigurasjon feilet:
 {0}</value>
   </data>
-  <data name="ManagedItemSettings_ChallengeTestFailed" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ChallengeTestFailed" xml:space="preserve">
     <value>Utfordringstest feilet</value>
   </data>
-  <data name="ManagedItemSettings_WebhookTestFailed" xml:space="preserve">
+  <data name="ManagedCertificateSettings_WebhookTestFailed" xml:space="preserve">
     <value>Webhook-test feilet</value>
   </data>
-  <data name="ManagedItemSettings_WebhookTest" xml:space="preserve">
+  <data name="ManagedCertificateSettings_WebhookTest" xml:space="preserve">
     <value>Webhook-test</value>
   </data>
   <data name="failed" xml:space="preserve">
@@ -490,10 +490,10 @@
   <data name="succeed" xml:space="preserve">
     <value>lyktes</value>
   </data>
-  <data name="ManagedItemSettings_WebhookRequestResult" xml:space="preserve">
+  <data name="ManagedCertificateSettings_WebhookRequestResult" xml:space="preserve">
     <value>Webhook-forespørsel {0}: HTTP {1}</value>
   </data>
-  <data name="ManagedItemSettings_WebhookRequestError" xml:space="preserve">
+  <data name="ManagedCertificateSettings_WebhookRequestError" xml:space="preserve">
     <value>Webhook-forespørselfeil: {0}</value>
   </data>
   <data name="Alert" xml:space="preserve">
@@ -502,14 +502,14 @@
   <data name="Error" xml:space="preserve">
     <value>Feil</value>
   </data>
-  <data name="ManagedItemSettings_Certificate_Revoked" xml:space="preserve">
+  <data name="ManagedCertificateSettings_Certificate_Revoked" xml:space="preserve">
     <value>Sertifikat tilbakekalt</value>
   </data>
-  <data name="ManagedItemSettings_RevokeCertificateError" xml:space="preserve">
+  <data name="ManagedCertificateSettings_RevokeCertificateError" xml:space="preserve">
     <value>Feil med tilbakekalling av sertifikat:
 {0}</value>
   </data>
-  <data name="ManagedItemSettings_ConfirmRevokeCertificate" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ConfirmRevokeCertificate" xml:space="preserve">
     <value>Er du sikker på at du vil tilbakekalle dette sertifikatet?</value>
   </data>
   <data name="MainWindow_TrialLimitationReached" xml:space="preserve">
@@ -542,31 +542,31 @@
   <data name="Comments" xml:space="preserve">
     <value>Kommentar:</value>
   </data>
-  <data name="ManagedItemSettings_RevokeCertificate" xml:space="preserve">
+  <data name="ManagedCertificateSettings_RevokeCertificate" xml:space="preserve">
     <value>Tilbakekall sertifikat</value>
   </data>
-  <data name="ManagedItemSettings_HookUrl" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookUrl" xml:space="preserve">
     <value>URL:</value>
   </data>
-  <data name="ManagedItemSettings_HookMethod" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookMethod" xml:space="preserve">
     <value>Metode:</value>
   </data>
-  <data name="ManagedItemSettings_HookBody" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookBody" xml:space="preserve">
     <value>Body:</value>
   </data>
-  <data name="ManagedItemSettings_HookContentType" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookContentType" xml:space="preserve">
     <value>ContentType:</value>
   </data>
-  <data name="ManagedItemSettings_AutoUpdateBinding" xml:space="preserve">
+  <data name="ManagedCertificateSettings_AutoUpdateBinding" xml:space="preserve">
     <value>Automatisk opprett/oppdater IIS-bindinger (bruker SNI)</value>
   </data>
-  <data name="ManagedItemSettings_UseSpecificBinding" xml:space="preserve">
+  <data name="ManagedCertificateSettings_UseSpecificBinding" xml:space="preserve">
     <value>Benytt spesifikk IP/port-bindinger</value>
   </data>
-  <data name="ManagedItemSettings_HookTrigger" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookTrigger" xml:space="preserve">
     <value>Webhook trigger</value>
   </data>
-  <data name="ManagedItemSettings_CertificatePathEmpty" xml:space="preserve">
+  <data name="ManagedCertificateSettings_CertificatePathEmpty" xml:space="preserve">
     <value>Sertifikatsti: [skal settes]</value>
   </data>
   <data name="ExpiryDateConverter_NoCurrentCertificate" xml:space="preserve">

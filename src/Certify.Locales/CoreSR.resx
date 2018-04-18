@@ -117,10 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="ManagedItemType_LocalIIS" xml:space="preserve">
+  <data name="ManagedCertificateType_LocalIIS" xml:space="preserve">
     <value>Local IIS, SSL Certificate via Let's Encrypt</value>
   </data>
-  <data name="ManagedItemType_Manual" xml:space="preserve">
+  <data name="ManagedCertificateType_Manual" xml:space="preserve">
     <value>Manual SSL Certificate via Let's Encrypt</value>
   </data>
   <data name="Finish" xml:space="preserve">

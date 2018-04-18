@@ -291,91 +291,91 @@
   <data name="DiscardChanges" xml:space="preserve">
     <value>放弃修改</value>
   </data>
-  <data name="ManagedItemSettings_BindIP" xml:space="preserve">
+  <data name="ManagedCertificateSettings_BindIP" xml:space="preserve">
     <value>绑定 IP：</value>
   </data>
-  <data name="ManagedItemSettings_BindPort" xml:space="preserve">
+  <data name="ManagedCertificateSettings_BindPort" xml:space="preserve">
     <value>绑定到端口：</value>
   </data>
-  <data name="ManagedItemSettings_BrowseFolder" xml:space="preserve">
+  <data name="ManagedCertificateSettings_BrowseFolder" xml:space="preserve">
     <value>...</value>
   </data>
-  <data name="ManagedItemSettings_CertificateRevokeWarning" xml:space="preserve">
+  <data name="ManagedCertificateSettings_CertificateRevokeWarning" xml:space="preserve">
     <value>警告：此证书已吊销</value>
   </data>
-  <data name="ManagedItemSettings_ChallengeTypes" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ChallengeTypes" xml:space="preserve">
     <value>验证类型：</value>
   </data>
-  <data name="ManagedItemSettings_DisplayName" xml:space="preserve">
+  <data name="ManagedCertificateSettings_DisplayName" xml:space="preserve">
     <value>显示名称：</value>
   </data>
-  <data name="ManagedItemSettings_Domain" xml:space="preserve">
+  <data name="ManagedCertificateSettings_Domain" xml:space="preserve">
     <value>域名</value>
   </data>
-  <data name="ManagedItemSettings_DomainIncluded" xml:space="preserve">
+  <data name="ManagedCertificateSettings_DomainIncluded" xml:space="preserve">
     <value>以下选定的域名将会在一次证书请求中同时发送。Lets Encrypt服务需要能通过80端口(HTTP验证)或443端口(TLS-SNI验证)访问所有这些域名才能继续。</value>
   </data>
-  <data name="ManagedItemSettings_EnableAutoRenewal" xml:space="preserve">
+  <data name="ManagedCertificateSettings_EnableAutoRenewal" xml:space="preserve">
     <value>允许自动续期</value>
   </data>
-  <data name="ManagedItemSettings_ExportTip" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ExportTip" xml:space="preserve">
     <value>提示：可以通过Windows的证书管理来导出证书</value>
   </data>
-  <data name="ManagedItemSettings_Include" xml:space="preserve">
+  <data name="ManagedCertificateSettings_Include" xml:space="preserve">
     <value>包含</value>
   </data>
-  <data name="ManagedItemSettings_NoHostNameBindingWarning" xml:space="preserve">
+  <data name="ManagedCertificateSettings_NoHostNameBindingWarning" xml:space="preserve">
     <value>选定站点没有任何HTTP或HTTPS域名绑定。至少需要一个完整的域名（如 github.com）才能继续申请证书。</value>
   </data>
-  <data name="ManagedItemSettings_NotifyPrimaryContactOnRenewalFailure" xml:space="preserve">
+  <data name="ManagedCertificateSettings_NotifyPrimaryContactOnRenewalFailure" xml:space="preserve">
     <value>续期失败时通知主要联系账户</value>
   </data>
-  <data name="ManagedItemSettings_OpenLogFile" xml:space="preserve">
+  <data name="ManagedCertificateSettings_OpenLogFile" xml:space="preserve">
     <value>打开日志文件</value>
   </data>
-  <data name="ManagedItemSettings_PerformWebAppAutoConfig" xml:space="preserve">
+  <data name="ManagedCertificateSettings_PerformWebAppAutoConfig" xml:space="preserve">
     <value>执行Web应用自动配置</value>
   </data>
-  <data name="ManagedItemSettings_PerRequsetScript" xml:space="preserve">
+  <data name="ManagedCertificateSettings_PerRequsetScript" xml:space="preserve">
     <value>请求前PS脚本：</value>
   </data>
-  <data name="ManagedItemSettings_Primary" xml:space="preserve">
+  <data name="ManagedCertificateSettings_Primary" xml:space="preserve">
     <value>主要</value>
   </data>
-  <data name="ManagedItemSettings_RequestCertificate" xml:space="preserve">
+  <data name="ManagedCertificateSettings_RequestCertificate" xml:space="preserve">
     <value>请求证书</value>
   </data>
-  <data name="ManagedItemSettings_SelectDomain" xml:space="preserve">
+  <data name="ManagedCertificateSettings_SelectDomain" xml:space="preserve">
     <value>要包含的域名或子域名：</value>
   </data>
-  <data name="ManagedItemSettings_SelectIISSite" xml:space="preserve">
+  <data name="ManagedCertificateSettings_SelectWebsite" xml:space="preserve">
     <value>选择IIS站点：</value>
   </data>
-  <data name="ManagedItemSettings_SelectNone" xml:space="preserve">
+  <data name="ManagedCertificateSettings_SelectNone" xml:space="preserve">
     <value>全部不选</value>
   </data>
-  <data name="ManagedItemSettings_Tab_Options" xml:space="preserve">
+  <data name="ManagedCertificateSettings_Tab_Options" xml:space="preserve">
     <value>选项</value>
   </data>
-  <data name="ManagedItemSettings_UseSNI" xml:space="preserve">
+  <data name="ManagedCertificateSettings_UseSNI" xml:space="preserve">
     <value>使用SNI（IIS 8+）：</value>
   </data>
-  <data name="ManagedItemSettings_ViewCertificate" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ViewCertificate" xml:space="preserve">
     <value>查看证书</value>
   </data>
-  <data name="ManagedItemSettings_WebsiteRoot" xml:space="preserve">
+  <data name="ManagedCertificateSettings_WebsiteRoot" xml:space="preserve">
     <value>网站根目录</value>
   </data>
-  <data name="ManagedSites_Filter" xml:space="preserve">
+  <data name="ManagedCertificates_Filter" xml:space="preserve">
     <value>查找...</value>
   </data>
-  <data name="ManagedSites_NoItemSelectedDesc" xml:space="preserve">
+  <data name="ManagedCertificates_NoItemSelectedDesc" xml:space="preserve">
     <value>由 Let's Encrypt (https://letsencrypt.org) 提供的免费 SSL 证书。</value>
   </data>
-  <data name="ManagedSites_NoItemSelectedTip" xml:space="preserve">
+  <data name="ManagedCertificates_NoItemSelectedTip" xml:space="preserve">
     <value>选择一个已管理的站点或选择新建证书来继续。</value>
   </data>
-  <data name="ManagedSites_UnsavedWarning" xml:space="preserve">
+  <data name="ManagedCertificates_UnsavedWarning" xml:space="preserve">
     <value>选择中有未保存的更改。 放弃更改？ </value>
   </data>
   <data name="ProgressMonitor_NoProgress" xml:space="preserve">
@@ -447,70 +447,70 @@
   <data name="failed" xml:space="preserve">
     <value>失败</value>
   </data>
-  <data name="ManagedItemSettings_CannotChallengeWithoutIIS" xml:space="preserve">
+  <data name="ManagedCertificateSettings_CannotChallengeWithoutIIS" xml:space="preserve">
     <value>IIS不可用时无法进行验证</value>
   </data>
-  <data name="ManagedItemSettings_Certificate_Revoked" xml:space="preserve">
+  <data name="ManagedCertificateSettings_Certificate_Revoked" xml:space="preserve">
     <value>证书已吊销。</value>
   </data>
-  <data name="ManagedItemSettings_CertificateNotReady" xml:space="preserve">
+  <data name="ManagedCertificateSettings_CertificateNotReady" xml:space="preserve">
     <value>此项尚未创建证书。</value>
   </data>
-  <data name="ManagedItemSettings_ChallengeNotAvailable" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ChallengeNotAvailable" xml:space="preserve">
     <value>验证类型 {0} 只能在IIS8+上使用。</value>
   </data>
-  <data name="ManagedItemSettings_ChallengeTestFailed" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ChallengeTestFailed" xml:space="preserve">
     <value>验证测试失败</value>
   </data>
-  <data name="ManagedItemSettings_ConfigurationCheckFailed" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ConfigurationCheckFailed" xml:space="preserve">
     <value>配置测试失败： {0}</value>
   </data>
-  <data name="ManagedItemSettings_ConfigurationCheckOk" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ConfigurationCheckOk" xml:space="preserve">
     <value>配置测试通过</value>
   </data>
-  <data name="ManagedItemSettings_ConfirmDelete" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ConfirmDelete" xml:space="preserve">
     <value>确定删除此项吗？删除并不会影响IIS设置。</value>
   </data>
-  <data name="ManagedItemSettings_ConfirmRevokeCertificate" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ConfirmRevokeCertificate" xml:space="preserve">
     <value>确定要吊销此证书吗？</value>
   </data>
-  <data name="ManagedItemSettings_HookMethodMustBeSet" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookMethodMustBeSet" xml:space="preserve">
     <value>Web钩子方法必须设置。</value>
   </data>
-  <data name="ManagedItemSettings_HookMustBeValidUrl" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookMustBeValidUrl" xml:space="preserve">
     <value>Web钩子的URL必须有效。</value>
   </data>
-  <data name="ManagedItemSettings_LogNotCreated" xml:space="preserve">
+  <data name="ManagedCertificateSettings_LogNotCreated" xml:space="preserve">
     <value>暂无日志。</value>
   </data>
-  <data name="ManagedItemSettings_NameRequired" xml:space="preserve">
+  <data name="ManagedCertificateSettings_NameRequired" xml:space="preserve">
     <value>请输入显示名称。</value>
   </data>
-  <data name="ManagedItemSettings_NeedPrimaryDomain" xml:space="preserve">
+  <data name="ManagedCertificateSettings_NeedPrimaryDomain" xml:space="preserve">
     <value>至少需要一个主要域名</value>
   </data>
-  <data name="ManagedItemSettings_NoChanges" xml:space="preserve">
+  <data name="ManagedCertificateSettings_NoChanges" xml:space="preserve">
     <value>没有修改，跳过保存</value>
   </data>
-  <data name="ManagedItemSettings_PerformChallengeResponseConfigCheck" xml:space="preserve">
+  <data name="ManagedCertificateSettings_PerformChallengeResponseConfigCheck" xml:space="preserve">
     <value>执行验证响应配置检查</value>
   </data>
-  <data name="ManagedItemSettings_RevokeCertificateError" xml:space="preserve">
+  <data name="ManagedCertificateSettings_RevokeCertificateError" xml:space="preserve">
     <value>吊销证书错误：{0}</value>
   </data>
-  <data name="ManagedItemSettings_SelectWebsiteOrCert" xml:space="preserve">
+  <data name="ManagedCertificateSettings_SelectWebsiteOrCert" xml:space="preserve">
     <value>选择要创建证书的站点。</value>
   </data>
-  <data name="ManagedItemSettings_WebhookRequestError" xml:space="preserve">
+  <data name="ManagedCertificateSettings_WebhookRequestError" xml:space="preserve">
     <value>Web钩子请求失败：{0}</value>
   </data>
-  <data name="ManagedItemSettings_WebhookRequestResult" xml:space="preserve">
+  <data name="ManagedCertificateSettings_WebhookRequestResult" xml:space="preserve">
     <value>Web钩子请求 {0}: HTTP {1}</value>
   </data>
-  <data name="ManagedItemSettings_WebhookTest" xml:space="preserve">
+  <data name="ManagedCertificateSettings_WebhookTest" xml:space="preserve">
     <value>Web钩子测试</value>
   </data>
-  <data name="ManagedItemSettings_WebhookTestFailed" xml:space="preserve">
+  <data name="ManagedCertificateSettings_WebhookTestFailed" xml:space="preserve">
     <value>Web钩子测试失败</value>
   </data>
   <data name="SaveError" xml:space="preserve">
@@ -549,34 +549,34 @@
   <data name="Comments" xml:space="preserve">
     <value>注释：</value>
   </data>
-  <data name="ManagedItemSettings_RevokeCertificate" xml:space="preserve">
+  <data name="ManagedCertificateSettings_RevokeCertificate" xml:space="preserve">
     <value>吊销证书</value>
   </data>
-  <data name="ManagedItemSettings_HookUrl" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookUrl" xml:space="preserve">
     <value>地址：</value>
   </data>
-  <data name="ManagedItemSettings_HookMethod" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookMethod" xml:space="preserve">
     <value>方法：</value>
   </data>
-  <data name="ManagedItemSettings_HookBody" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookBody" xml:space="preserve">
     <value>内容：</value>
   </data>
-  <data name="ManagedItemSettings_HookContentType" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookContentType" xml:space="preserve">
     <value>ContentType：</value>
   </data>
-  <data name="ManagedItemSettings_PostRequestScript" xml:space="preserve">
+  <data name="ManagedCertificateSettings_PostRequestScript" xml:space="preserve">
     <value>请求后PS脚本：</value>
   </data>
-  <data name="ManagedItemSettings_UseSpecificBinding" xml:space="preserve">
+  <data name="ManagedCertificateSettings_UseSpecificBinding" xml:space="preserve">
     <value>使用指定的IP/端口绑定</value>
   </data>
-  <data name="ManagedItemSettings_HookTrigger" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookTrigger" xml:space="preserve">
     <value>Web钩子触发：</value>
   </data>
-  <data name="ManagedItemSettings_AutoUpdateBinding" xml:space="preserve">
+  <data name="ManagedCertificateSettings_AutoUpdateBinding" xml:space="preserve">
     <value>自动创建或更新IIS绑定（启用SNI）</value>
   </data>
-  <data name="ManagedItemSettings_CertificatePathEmpty" xml:space="preserve">
+  <data name="ManagedCertificateSettings_CertificatePathEmpty" xml:space="preserve">
     <value>证书路径（等待设置）</value>
   </data>
   <data name="ExpiryDateConverter_NoCurrentCertificate" xml:space="preserve">
@@ -584,5 +584,74 @@
   </data>
   <data name="ExpiryDateConverter_CertificateExpiresIn" xml:space="preserve">
     <value>{0} 天后过期</value>
+  </data>
+  <data name="General_Loading" xml:space="preserve">
+    <value>加载中...</value>
+  </data>
+  <data name="Update_MandatoryUpdateQuit" xml:space="preserve">
+    <value>当前的APP版本已经不再提供支持，请更新后继续使用。</value>
+  </data>
+  <data name="ManagedCertificateSettings_BindingNote" xml:space="preserve">
+    <value>这些设置仅会应用到新建的HTTPS绑定，已有的绑定将只会应用新证书。</value>
+  </data>
+  <data name="ManagedCertificateSettings_ReapplyCertificate" xml:space="preserve">
+    <value>重新应用证书</value>
+  </data>
+  <data name="Dashboard_Register" xml:space="preserve">
+    <value>添加</value>
+  </data>
+  <data name="Dashboard_Password" xml:space="preserve">
+    <value>密码</value>
+  </data>
+  <data name="GettingStarted_AddToDashboard" xml:space="preserve">
+    <value>添加到报表看板</value>
+  </data>
+  <data name="GettingStarted_Dashboard" xml:space="preserve">
+    <value>看板</value>
+  </data>
+  <data name="GettingStarted_DashboardIntro" xml:space="preserve">
+    <value>你可以使用报表看板来很方便地查看一台或多台服务器的更新状态，并设置通知选项。</value>
+  </data>
+  <data name="GettingStarted_ViewDashboard" xml:space="preserve">
+    <value>查看看板</value>
+  </data>
+  <data name="Dashboard_NewAccount" xml:space="preserve">
+    <value>创建新账户</value>
+  </data>
+  <data name="Dashboard_AddIntro" xml:space="preserve">
+    <value>要添加这台服务器到您的看板，请提供您在 https://certifytheweb.com/profile 上的登录信息或注册新账户。</value>
+  </data>
+  <data name="ScheduledTaskConfig_UseBackgroundService" xml:space="preserve">
+    <value>使用后台服务（以本地系统帐户运行）</value>
+  </data>
+  <data name="ScheduledTaskConfig_UseScheduledTask" xml:space="preserve">
+    <value>使用计划任务（以特定帐户运行）</value>
+  </data>
+  <data name="ManagedCertificatesSettings_RefreshDomains" xml:space="preserve">
+    <value>刷新</value>
+  </data>
+  <data name="Update_DownloadNow" xml:space="preserve">
+    <value>您希望自动下载更新吗？在准备就绪的时候将会通知您。</value>
+  </data>
+  <data name="Update_ReadyToApply" xml:space="preserve">
+    <value>更新已就绪，现在就安装吗？</value>
+  </data>
+  <data name="ManagedCertificateSettings_InvalidSNI" xml:space="preserve">
+    <value>您正在试图在一个已绑定IP的地址上创建一个SNI绑定。我们推荐在使用SNI绑定的时候使用未指定地址。确定继续保存吗？</value>
+  </data>
+  <data name="Credentials_EditCredential" xml:space="preserve">
+    <value>添加/更新证书存储</value>
+  </data>
+  <data name="Update_DownloadFailed" xml:space="preserve">
+    <value>抱歉，更新无法下载，请稍候重试。</value>
+  </data>
+  <data name="Managed_Certificates" xml:space="preserve">
+    <value>受管理证书</value>
+  </data>
+  <data name="ManagedCertificateSettings_DefaultTitle" xml:space="preserve">
+    <value>新建受管理证书</value>
+  </data>
+  <data name="ManagedCertificateSettings_AddDomainsToCertificate" xml:space="preserve">
+    <value>添加域名:</value>
   </data>
 </root>

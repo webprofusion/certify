@@ -150,79 +150,13 @@ This software uses the following Open Source software (or significant portions o
   <data name="BetaWarning" xml:space="preserve">
     <value>Warning: This software is a pre-release version for testing and feedback purposes. You should expect bugs. Do not rely on this software for important production sites.</value>
   </data>
-  <data name="IISWebConfig" xml:space="preserve">
-    <value>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-
-&lt;configuration&gt;
-  &lt;system.webServer&gt;
-    &lt;validation validateIntegratedModeConfiguration="false" /&gt;
-    &lt;staticContent&gt;
-        &lt;mimeMap fileExtension="." mimeType="text/json" /&gt;
-    &lt;/staticContent&gt;
-  &lt;handlers&gt;
-      &lt;clear /&gt;
-    &lt;add name="StaticFile" path="*" verb="*" type="" modules="StaticFileModule,DefaultDocumentModule,DirectoryListingModule" scriptProcessor="" resourceType="Either" requireAccess="Read" allowPathInfo="false" preCondition="" responseBufferLimit="4194304" /&gt;
-  &lt;/handlers&gt;
-  &lt;/system.webServer&gt;
-  &lt;system.web&gt;
-    &lt;authorization&gt;
-      &lt;allow users="*" /&gt;
-    &lt;/authorization&gt;
-  &lt;/system.web&gt;
-&lt;/configuration&gt;</value>
-    <comment>Do not translate</comment>
-  </data>
   <data name="AIInstrumentationKey" xml:space="preserve">
     <value>63154103-66ba-4636-8c6b-7081084daa0e</value>
-    <comment>Do not translate</comment>
-  </data>
-  <data name="IISWebConfigAlt" xml:space="preserve">
-    <value>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-
-&lt;configuration&gt;
-  &lt;system.webServer&gt;
-    &lt;validation validateIntegratedModeConfiguration="false" /&gt;
-    &lt;staticContent&gt;
-      &lt;mimeMap fileExtension="." mimeType="text/json" /&gt;
-    &lt;/staticContent&gt;
-  &lt;/system.webServer&gt;
-  &lt;system.web&gt;
-    &lt;authorization&gt;
-      &lt;allow users="*" /&gt;
-    &lt;/authorization&gt;
-  &lt;/system.web&gt;
-&lt;/configuration&gt;</value>
-    <comment>Do not translate</comment>
-  </data>
-  <data name="IISWebConfigAlt2" xml:space="preserve">
-    <value>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-
-&lt;configuration&gt;
-  &lt;system.webServer&gt;
-    &lt;validation validateIntegratedModeConfiguration="false" /&gt;
-    &lt;staticContent&gt;
-        &lt;mimeMap fileExtension=".*" mimeType="text/json" /&gt;
-    &lt;/staticContent&gt;
-  &lt;handlers&gt;
-      &lt;clear /&gt;
-    &lt;add name="StaticFile" path="*" verb="*" type="" modules="StaticFileModule,DefaultDocumentModule,DirectoryListingModule" scriptProcessor="" resourceType="Either" requireAccess="Read" allowPathInfo="false" preCondition="" responseBufferLimit="4194304" /&gt;
-  &lt;/handlers&gt;
-  &lt;/system.webServer&gt;
-  &lt;system.web&gt;
-    &lt;authorization&gt;
-      &lt;allow users="*" /&gt;
-    &lt;/authorization&gt;
-  &lt;/system.web&gt;
-&lt;/configuration&gt;</value>
     <comment>Do not translate</comment>
   </data>
   <data name="APIBaseURI" xml:space="preserve">
     <value>https://api.certifytheweb.com/v1/</value>
     <comment>Do not translate - Used to communication with proxy API</comment>
-  </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\icon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="LocalServiceBaseURI" xml:space="preserve">
     <value>http://localhost:9696</value>

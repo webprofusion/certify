@@ -1,19 +1,22 @@
-<Controls:MetroWindow x:Class="Certify.UI.Windows.AddToDashboard"
-        xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-
-        xmlns:local="clr-namespace:Certify.UI.Windows"
-
+<Controls:MetroWindow
+    x:Class="Certify.UI.Windows.AddToDashboard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Certify.UI.Windows"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-
-        mc:Ignorable="d"
-        Title="{x:Static res:SR.GettingStarted_AddToDashboard}" Height="360" Width="480"
-        GlowBrush="{DynamicResource AccentColorBrush}" ResizeMode="NoResize"
-        BorderThickness="1" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner">
-    <StackPanel Orientation="Vertical" Margin="8">
+    Title="{x:Static res:SR.GettingStarted_AddToDashboard}"
+    Width="480"
+    Height="360"
+    BorderThickness="1"
+    GlowBrush="{DynamicResource AccentColorBrush}"
+    ResizeMode="NoResize"
+    WindowStartupLocation="CenterOwner"
+    WindowTransitionsEnabled="False"
+    mc:Ignorable="d">
+    <StackPanel Margin="8" Orientation="Vertical">
         <Grid Margin="0,0,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="200*" />
@@ -25,18 +28,54 @@
                 <RowDefinition />
                 <RowDefinition />
             </Grid.RowDefinitions>
-            <TextBlock Grid.Row="0" Grid.ColumnSpan="2" TextWrapping="Wrap" Margin="8,8,0,0" ><Run Text="{x:Static res:SR.Dashboard_AddIntro}" /></TextBlock>
+            <TextBlock
+                Grid.Row="0"
+                Grid.ColumnSpan="2"
+                Margin="8,8,0,0"
+                TextWrapping="Wrap"><Run Text="{x:Static res:SR.Dashboard_AddIntro}" /></TextBlock>
 
-            <Label Grid.Row="1" Grid.Column="0" Content="{x:Static res:SR.RegistrationEmailAddress}" HorizontalAlignment="Left" />
-            <TextBox Grid.Row="1" Grid.Column="1" x:Name="EmailAddress" TextWrapping="Wrap" Text="" VerticalAlignment="Bottom" />
-            <Label Grid.Row="2" Grid.Column="0" Content="{x:Static res:SR.Password}" HorizontalAlignment="Left" VerticalAlignment="Top" />
-            <PasswordBox  Grid.Row="2" Grid.Column="1"  x:Name="Password" />
-            <CheckBox Grid.Row="3" Grid.Column="1" x:Name="CreateNewAccount" Content="{x:Static res:SR.Dashboard_NewAccount}" />
+            <Label
+                Grid.Row="1"
+                Grid.Column="0"
+                HorizontalAlignment="Left"
+                Content="{x:Static res:SR.RegistrationEmailAddress}" />
+            <TextBox
+                x:Name="EmailAddress"
+                Grid.Row="1"
+                Grid.Column="1"
+                VerticalAlignment="Bottom"
+                Text=""
+                TextWrapping="Wrap" />
+            <Label
+                Grid.Row="2"
+                Grid.Column="0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Content="{x:Static res:SR.Password}" />
+            <PasswordBox
+                x:Name="Password"
+                Grid.Row="2"
+                Grid.Column="1" />
+            <CheckBox
+                x:Name="CreateNewAccount"
+                Grid.Row="3"
+                Grid.Column="1"
+                Content="{x:Static res:SR.Dashboard_NewAccount}" />
         </Grid>
         <StackPanel>
             <StackPanel Orientation="Horizontal">
-                <Button x:Name="ValidateKey" Content="{x:Static res:SR.OK}"  VerticalAlignment="Bottom" Click="ValidateKey_Click" Grid.Column="1" />
-                <Button x:Name="Cancel" Content="{x:Static res:SR.Cancel}" HorizontalAlignment="Left"  VerticalAlignment="Bottom"  Click="Cancel_Click" />
+                <Button
+                    x:Name="ValidateKey"
+                    Grid.Column="1"
+                    VerticalAlignment="Bottom"
+                    Click="ValidateKey_Click"
+                    Content="{x:Static res:SR.OK}" />
+                <Button
+                    x:Name="Cancel"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Click="Cancel_Click"
+                    Content="{x:Static res:SR.Cancel}" />
             </StackPanel>
         </StackPanel>
     </StackPanel>

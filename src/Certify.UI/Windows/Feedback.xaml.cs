@@ -13,7 +13,7 @@ namespace Certify.UI.Windows
         public string FeedbackMessage { get; set; }
         public bool IsException { get; set; }
 
-        protected Certify.UI.ViewModel.AppModel MainViewModel => ViewModel.AppModel.Current;
+        protected Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
 
         public Feedback(string feedbackMsg, bool isException)
         {

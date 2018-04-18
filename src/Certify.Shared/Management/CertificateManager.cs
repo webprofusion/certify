@@ -284,7 +284,6 @@ namespace Certify.Management
         {
             // TODO: remove distinction, this is legacy from the old version which didn't have a
             //       clear app specific prefix
-            bool requireCertifySpecificCerts = true;
 
             if (certificate.FriendlyName.Length < 10) return;
 
@@ -294,22 +293,11 @@ namespace Certify.Management
             var certsToRemove = new List<X509Certificate2>();
             foreach (var c in store.Certificates)
             {
-                //TODO: add tests for this then remove the check because these two branches are the same, obviously not as intended
-                if (requireCertifySpecificCerts)
+                // queue removal of any existing cert which has same hostname prefix and includes
+                // [Certify] text.
+                if (c.FriendlyName.StartsWith(hostPrefix, StringComparison.InvariantCulture) && c.FriendlyName.Contains("[Certify]") && c.GetCertHashString() != certificate.GetCertHashString())
                 {
-                    if (c.FriendlyName.StartsWith(hostPrefix, StringComparison.InvariantCulture) && c.FriendlyName.Contains("[Certify]") && c.GetCertHashString() != certificate.GetCertHashString())
-                    {
-                        //going to remove certs with same friendly name
-                        certsToRemove.Add(c);
-                    }
-                }
-                else
-                {
-                    if (c.FriendlyName.StartsWith(hostPrefix, StringComparison.InvariantCulture) && c.GetCertHashString() != certificate.GetCertHashString())
-                    {
-                        //going to remove certs with same friendly name
-                        certsToRemove.Add(c);
-                    }
+                    certsToRemove.Add(c);
                 }
             }
 

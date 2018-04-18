@@ -1,4 +1,5 @@
 ﻿using Certify.Models;
+using Certify.Models.Config;
 using Microsoft.AspNet.SignalR.Client;
 using Newtonsoft.Json;
 using System;
@@ -23,7 +24,7 @@ namespace Certify.Client
 
         public event Action<RequestProgressState> OnRequestProgressStateUpdated;
 
-        public event Action<ManagedSite> OnManagedSiteUpdated;
+        public event Action<ManagedCertificate> OnManagedCertificateUpdated;
 
         public event Action<string, string> OnMessageFromService;
 
@@ -55,7 +56,7 @@ namespace Certify.Client
             connection.Credentials = System.Net.CredentialCache.DefaultCredentials;
             hubProxy = connection.CreateHubProxy("StatusHub");
 
-            hubProxy.On<ManagedSite>("ManagedSiteUpdated", (u) => OnManagedSiteUpdated?.Invoke(u));
+            hubProxy.On<ManagedCertificate>("ManagedCertificateUpdated", (u) => OnManagedCertificateUpdated?.Invoke(u));
             hubProxy.On<RequestProgressState>("RequestProgressStateUpdated", (s) => OnRequestProgressStateUpdated?.Invoke(s));
             hubProxy.On<string, string>("SendMessage", (a, b) => OnMessageFromService?.Invoke(a, b));
 
@@ -163,52 +164,55 @@ namespace Certify.Client
 
         #endregion Preferences
 
-        #region Managed Sites
+        #region Managed Certificates
 
-        public async Task<List<ManagedSite>> GetManagedSites(ManagedSiteFilter filter)
+        public async Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter)
         {
-            var response = await PostAsync("managedsites/search/", filter);
+            var response = await PostAsync("managedcertificates/search/", filter);
             var sites = await response.Content.ReadAsStringAsync();
             var serializer = new JsonSerializer();
             using (StreamReader sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
             using (JsonTextReader reader = new JsonTextReader(sr))
             {
-                var managedSiteList = serializer.Deserialize<List<ManagedSite>>(reader);
-                foreach (var s in managedSiteList) s.IsChanged = false;
-                return managedSiteList;
+                var managedCertificateList = serializer.Deserialize<List<ManagedCertificate>>(reader);
+                foreach (var s in managedCertificateList)
+                {
+                    s.IsChanged = false;
+                }
+                return managedCertificateList;
             }
         }
 
-        public async Task<ManagedSite> GetManagedSite(string managedSiteId)
+        public async Task<ManagedCertificate> GetManagedCertificate(string managedItemId)
         {
-            var result = await FetchAsync($"managedsites/{managedSiteId}");
-            var site = JsonConvert.DeserializeObject<ManagedSite>(result);
+            var result = await FetchAsync($"managedcertificates/{managedItemId}");
+            var site = JsonConvert.DeserializeObject<ManagedCertificate>(result);
             if (site != null) site.IsChanged = false;
             return site;
         }
 
-        public async Task<ManagedSite> UpdateManagedSite(ManagedSite site)
+        public async Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate site)
         {
-            var response = await PostAsync("managedsites/update", site);
+            var response = await PostAsync("managedcertificates/update", site);
             var json = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<ManagedSite>(json);
+            return JsonConvert.DeserializeObject<ManagedCertificate>(json);
         }
 
-        public async Task<bool> DeleteManagedSite(string managedSiteId)
+        public async Task<bool> DeleteManagedCertificate(string managedItemId)
         {
-            var response = await DeleteAsync($"managedsites/delete/{managedSiteId}");
+            var response = await DeleteAsync($"managedcertificates/delete/{managedItemId}");
             return JsonConvert.DeserializeObject<bool>(await response.Content.ReadAsStringAsync());
         }
 
-        public async Task<APIResult> RevokeManageSiteCertificate(string managedSiteId)
+        public async Task<StatusMessage> RevokeManageSiteCertificate(string managedItemId)
         {
-            var response = await FetchAsync($"managedsites/revoke/{managedSiteId}");
-            return JsonConvert.DeserializeObject<APIResult>(response);
+            var response = await FetchAsync($"managedcertificates/revoke/{managedItemId}");
+            return JsonConvert.DeserializeObject<StatusMessage>(response);
         }
 
         public async Task<List<CertificateRequestResult>> BeginAutoRenewal()
         {
-            var response = await PostAsync("managedsites/autorenew", null);
+            var response = await PostAsync("managedcertificates/autorenew", null);
             var serializer = new JsonSerializer();
             using (StreamReader sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
             using (JsonTextReader reader = new JsonTextReader(sr))
@@ -218,31 +222,37 @@ namespace Certify.Client
             }
         }
 
-        public async Task<CertificateRequestResult> BeginCertificateRequest(string managedSiteId)
+        public async Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId)
         {
-            var response = await FetchAsync($"managedsites/renewcert/{managedSiteId}");
+            var response = await FetchAsync($"managedcertificates/renewcert/{managedItemId}");
             return JsonConvert.DeserializeObject<CertificateRequestResult>(response);
         }
 
-        public async Task<RequestProgressState> CheckCertificateRequest(string managedSiteId)
+        public async Task<RequestProgressState> CheckCertificateRequest(string managedItemId)
         {
-            string json = await FetchAsync($"managedsites/requeststatus/{managedSiteId}");
+            string json = await FetchAsync($"managedcertificates/requeststatus/{managedItemId}");
             return JsonConvert.DeserializeObject<RequestProgressState>(json);
         }
 
-        public async Task<APIResult> TestChallengeConfiguration(ManagedSite site)
+        public async Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate site)
         {
-            var response = await PostAsync($"managedsites/testconfig", site);
-            return JsonConvert.DeserializeObject<APIResult>(await response.Content.ReadAsStringAsync());
+            var response = await PostAsync($"managedcertificates/testconfig", site);
+            return JsonConvert.DeserializeObject<List<StatusMessage>>(await response.Content.ReadAsStringAsync());
         }
 
-        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedSiteId)
+        public async Task<List<ActionStep>> PreviewActions(ManagedCertificate site)
         {
-            var response = await FetchAsync($"managedsites/reapply/{managedSiteId}");
+            var response = await PostAsync($"managedcertificates/preview", site);
+            return JsonConvert.DeserializeObject<List<ActionStep>>(await response.Content.ReadAsStringAsync());
+        }
+
+        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly)
+        {
+            var response = await FetchAsync($"managedcertificates/reapply/{managedItemId}/{isPreviewOnly}");
             return JsonConvert.DeserializeObject<CertificateRequestResult>(response);
         }
 
-        #endregion Managed Sites
+        #endregion Managed Certificates
 
         #region Contacts
 
@@ -255,6 +265,24 @@ namespace Certify.Client
         public async Task<bool> SetPrimaryContact(ContactRegistration contact)
         {
             var result = await PostAsync("contacts/primary", contact);
+            return JsonConvert.DeserializeObject<bool>(await result.Content.ReadAsStringAsync());
+        }
+
+        public async Task<List<StoredCredential>> GetCredentials()
+        {
+            var result = await FetchAsync("credentials");
+            return JsonConvert.DeserializeObject<List<StoredCredential>>(result);
+        }
+
+        public async Task<StoredCredential> UpdateCredentials(StoredCredential credential)
+        {
+            var result = await PostAsync("credentials", credential);
+            return JsonConvert.DeserializeObject<StoredCredential>(await result.Content.ReadAsStringAsync());
+        }
+
+        public async Task<bool> DeleteCredential(string credentialKey)
+        {
+            var result = await DeleteAsync($"credentials/{credentialKey}");
             return JsonConvert.DeserializeObject<bool>(await result.Content.ReadAsStringAsync());
         }
 

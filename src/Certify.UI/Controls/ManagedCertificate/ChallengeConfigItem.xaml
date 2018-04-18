@@ -1,0 +1,119 @@
+﻿<UserControl
+    x:Class="Certify.UI.Controls.ManagedCertificate.ChallengeConfigItem"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:Certify.Models;assembly=Certify.Models"
+    d:DesignHeight="200"
+    d:DesignWidth="468"
+    mc:Ignorable="d">
+    <DockPanel>
+        <!--  challenge type selection  -->
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+            <Label Width="160" Content="{x:Static Resources:SR.ManagedCertificateSettings_ChallengeTypes}" />
+            <ComboBox
+                x:Name="ChallengeTypeList"
+                Width="270"
+                ItemsSource="{Binding ChallengeTypes}"
+                SelectedItem="{Binding SelectedItem.ChallengeType}"
+                SelectionChanged="ChallengeTypeList_SelectionChanged" />
+        </StackPanel>
+        <StackPanel
+            Margin="0,4"
+            DockPanel.Dock="Top"
+            Orientation="Horizontal"
+            Visibility="Collapsed">
+            <Label Width="160" Content="Domain Match" />
+            <TextBox
+                x:Name="DomainMatchText"
+                Width="270"
+                mah:TextBoxHelper.Watermark="(optional, domain this challenge applies to)"
+                Text="{Binding SelectedItem.DomainMatch}" />
+        </StackPanel>
+
+        <!--  http-01 Challenge Config UI  -->
+        <StackPanel x:Name="ChallengeConfigHttp" DockPanel.Dock="Top">
+            <StackPanel.Style>
+                <Style>
+                    <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SelectedItem.ChallengeType}" Value="{x:Static models:SupportedChallengeTypes.CHALLENGE_TYPE_HTTP}">
+                            <Setter Property="UIElement.Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                <Label Width="160" Content="{x:Static Resources:SR.ManagedCertificateSettings_WebsiteRoot}" />
+                <TextBox Width="225" Text="{Binding ParentManagedCertificate.RequestConfig.WebsiteRootPath}" />
+                <Button
+                    x:Name="Button_WebRoot"
+                    Margin="4,0,0,0"
+                    Click="DirectoryBrowse_Click"
+                    Content="{x:Static Resources:SR.ManagedCertificateSettings_BrowseFolder}" />
+            </StackPanel>
+
+            <StackPanel Margin="160,8,0,0" Orientation="Vertical">
+                <CheckBox Content="{x:Static Resources:SR.ManagedCertificateSettings_PerformChallengeResponseConfigCheck}" IsChecked="{Binding ParentManagedCertificate.RequestConfig.PerformExtensionlessConfigChecks}" />
+                <CheckBox Content="{x:Static Resources:SR.ManagedCertificateSettings_PerformWebAppAutoConfig}" IsChecked="{Binding ParentManagedCertificate.RequestConfig.PerformAutoConfig}" />
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Style="{StaticResource Instructions}"><Run Text="For HTTP validation the app will automatically create the validation file required. Your website must answer http requests on port 80 (redirections permitted) and be able to serve randomly named extensionless text files from the .well-known/acme-challenge/ path." /></TextBlock>
+            </StackPanel>
+        </StackPanel>
+
+        <!--  dns-01 Challenge Config UI  -->
+        <StackPanel x:Name="ChallengeConfigDns" DockPanel.Dock="Top">
+            <StackPanel.Style>
+                <Style>
+                    <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SelectedItem.ChallengeType}" Value="{x:Static models:SupportedChallengeTypes.CHALLENGE_TYPE_DNS}">
+                            <Setter Property="UIElement.Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+
+            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                <Label Width="160" Content="API Provider:" />
+                <StackPanel Orientation="Vertical">
+                    <ComboBox
+                        x:Name="ChallengeAPIProviderList"
+                        Margin="0,0,0,8"
+                        DisplayMemberPath="Title"
+                        ItemsSource="{Binding ChallengeProviders}"
+                        SelectedValue="{Binding SelectedItem.ChallengeProvider}"
+                        SelectedValuePath="Id"
+                        SelectionChanged="ChallengeAPIProviderList_SelectionChanged" />
+
+                    <StackPanel Orientation="Horizontal">
+                        <ComboBox
+                            x:Name="StoredCredentialList"
+                            Width="225"
+                            Margin="0,0,8,0"
+                            DisplayMemberPath="Title"
+                            ItemsSource="{Binding FilteredCredentials}"
+                            SelectedValue="{Binding SelectedItem.ChallengeCredentialKey, UpdateSourceTrigger=PropertyChanged}"
+                            SelectedValuePath="StorageKey" />
+
+                        <Button
+                            x:Name="AddStoredCredential"
+                            Click="AddStoredCredential_Click"
+                            Content="New" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                <Label Width="160" Content="Zone Id:" />
+                <TextBox Width="225" Text="{Binding SelectedItem.ZoneId}" />
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Style="{StaticResource Instructions}"><Run Text="For DNS validation the app will automatically create a TXT record in the DNS zone of your domain(s) as an answer to the authorization challenge. The DNS provider for your domain(s) must provide an API and be supported by this app." /></TextBlock>
+            </StackPanel>
+        </StackPanel>
+    </DockPanel>
+</UserControl>
