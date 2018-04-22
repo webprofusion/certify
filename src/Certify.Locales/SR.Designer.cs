@@ -908,7 +908,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There are no http or https hostname bindings associated with the selected site in IIS. At least one fully qualified hostname (e.g &apos;github.com&apos;) is required to create a certificate..
+        ///   Looks up a localized string similar to At least one fully qualified hostname (e.g &apos;github.com&apos;) or wildcard (e.g. &apos;*.github.com) is required to create a certificate..
         /// </summary>
         public static string ManagedCertificateSettings_NoHostNameBindingWarning {
             get {

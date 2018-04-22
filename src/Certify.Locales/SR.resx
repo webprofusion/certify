@@ -352,7 +352,7 @@
     <value>Notify Primary Contact On Renewal Failure</value>
   </data>
   <data name="ManagedCertificateSettings_NoHostNameBindingWarning" xml:space="preserve">
-    <value>There are no http or https hostname bindings associated with the selected site in IIS. At least one fully qualified hostname (e.g 'github.com') is required to create a certificate.</value>
+    <value>At least one fully qualified hostname (e.g 'github.com') or wildcard (e.g. '*.github.com) is required to create a certificate.</value>
   </data>
   <data name="ManagedCertificateSettings_Tab_Options" xml:space="preserve">
     <value>Options</value>

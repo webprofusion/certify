@@ -583,7 +583,4 @@
   <data name="ManagedCertificateSettings_WebhookRequestError" xml:space="preserve">
     <value>Error de solicitud de Webhook: {0}</value>
   </data>
-  <data name="ManagedCertificateSettings_NoHostNameBindingWarning" xml:space="preserve">
-    <value>No hay enlaces de nombre de host http o https asociados con el sitio seleccionado en IIS. Se requiere al menos un nombre de host completo (por ejemplo, 'github.com') para crear un certificado.</value>
-  </data>
 </root>

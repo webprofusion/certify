@@ -345,9 +345,6 @@
   <data name="ManagedCertificateSettings_NotifyPrimaryContactOnRenewalFailure" xml:space="preserve">
     <value>Informer hovedkontakt om feil ved fornyelse</value>
   </data>
-  <data name="ManagedCertificateSettings_NoHostNameBindingWarning" xml:space="preserve">
-    <value>Det er ingen http- eller https-vertsnavnbinding knyttet til det valgte nettstedet i IIS. Minst ett fullt kvalifisert vertsnavn (for eksempel 'github.com') kreves for å opprette et sertifikat.</value>
-  </data>
   <data name="ManagedCertificateSettings_Tab_Options" xml:space="preserve">
     <value>Valg</value>
   </data>
