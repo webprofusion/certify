@@ -235,6 +235,12 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private async void TestChallenge_Click(object sender, EventArgs e)
         {
+            if (ItemViewModel.IsTestInProgress)
+            {
+                ShowTestResultsUI();
+                return;
+            }
+
             ItemViewModel.IsTestInProgress = true;
 
             var challengeConfig = ItemViewModel.SelectedItem.GetChallengeConfig(null);
@@ -260,11 +266,15 @@ namespace Certify.UI.Controls.ManagedCertificate
                     MessageBox.Show(exp.Message);
                     return;
                 }
+
                 ItemViewModel.ConfigCheckResults = new System.Collections.ObjectModel.ObservableCollection<StatusMessage> {
                     new StatusMessage{IsOK=true, Message="Testing in progress.."}
                 };
 
                 ShowTestResultsUI();
+
+                // begin listening for progress info
+                AppViewModel.TrackProgress(ItemViewModel.SelectedItem);
 
                 var results = await ItemViewModel.TestChallengeResponse(ItemViewModel.SelectedItem);
                 ItemViewModel.ConfigCheckResults =
@@ -272,7 +282,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 ItemViewModel.RaisePropertyChangedEvent(nameof(ItemViewModel.ConfigCheckResults));
 
-                if (ItemViewModel.ConfigCheckResults.All(a => a.IsOK))
+                /*if (ItemViewModel.ConfigCheckResults.All(a => a.IsOK))
                 {
                     MessageBox.Show(SR.ManagedCertificateSettings_ConfigurationCheckOk, SR.Challenge, MessageBoxButton.OK, MessageBoxImage.Information);
                 }
@@ -281,7 +291,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                     // MessageBox.Show(string.Format(SR.ManagedCertificateSettings_ConfigurationCheckFailed,
                     // String.Join("\r\n", ItemViewModel.ConfigCheckResults.FailedItemSummary)),
                     // SR.ManagedCertificateSettings_ChallengeTestFailed, MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                }*/
 
                 //TODO: just use viewmodel to determine if test button should be enabled
                 Button_TestChallenge.IsEnabled = true;

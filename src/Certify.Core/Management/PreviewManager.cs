@@ -161,7 +161,7 @@ namespace Certify.Management
                             {
                                 var siteInfo = await serverProvider.GetSiteById(item.ServerSiteId);
                                 deploymentDescription += $"## Deploying to Site" + newLine + newLine +
-                                    $"### {siteInfo.Name}" + newLine;
+                                    $"`{siteInfo.Name}`" + newLine;
                             }
                             catch (Exception exp)
                             {
@@ -177,6 +177,13 @@ namespace Certify.Management
                     // add deployment sub-steps (if any)
                     var bindingRequest = await certifyManager.ApplyCertificateBindings(item, null, isPreviewOnly: true);
                     if (bindingRequest.Actions != null) deploymentStep.Substeps = bindingRequest.Actions;
+
+                    if (deploymentStep.Substeps == null)
+                    {
+                        deploymentStep.Substeps = new List<ActionStep> {
+                        new ActionStep{ Title="No matching bindings to deploy to." }
+                        };
+                    }
                 }
                 else
                 {

@@ -26,7 +26,7 @@ namespace Certify.Management
 
         string GetPrimaryContactEmail();
 
-        Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate, bool isPreviewMode);
+        Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate, bool isPreviewMode, IProgress<RequestProgressState> progress = null);
 
         Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate);
 
@@ -61,5 +61,7 @@ namespace Certify.Management
         event Action<RequestProgressState> OnRequestProgressStateUpdated;
 
         event Action<ManagedCertificate> OnManagedCertificateUpdated;
+
+        void ReportProgress(IProgress<RequestProgressState> progress, RequestProgressState state, bool logThisEvent = true);
     }
 }

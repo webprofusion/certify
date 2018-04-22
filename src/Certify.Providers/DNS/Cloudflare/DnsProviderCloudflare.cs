@@ -213,6 +213,11 @@ namespace Certify.Providers.DNS.Cloudflare
         public async Task<ActionResult> CreateRecord(DnsCreateRecordRequest request)
         {
             //check if record already exists
+
+            try
+            {
+
+           
             var records = await GetDnsRecords(request.ZoneId);
             var record = records.FirstOrDefault(x => x.Name == request.RecordName);
 
@@ -223,6 +228,10 @@ namespace Certify.Providers.DNS.Cloudflare
             else
             {
                 return await AddDnsRecord(request.ZoneId, request.RecordName, request.RecordValue);
+            }
+            } catch (Exception exp)
+            {
+                return new ActionResult { IsSuccess = false, Message = exp.Message };
             }
         }
 

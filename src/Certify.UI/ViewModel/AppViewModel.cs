@@ -326,17 +326,21 @@ namespace Certify.UI.ViewModel
             {
                 MainUITabIndex = (int)MainWindow.PrimaryUITabs.CurrentProgress;
 
-                //add request to observable list of progress state
-                RequestProgressState progressState = new RequestProgressState(RequestState.Running, "Starting..", managedCertificate);
-
-                //begin monitoring progress
-                UpdateRequestTrackingProgress(progressState);
-
-                var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
-
+                TrackProgress(managedCertificate);
                 // start request
                 var result = await CertifyClient.BeginCertificateRequest(managedCertificate.Id);
             }
+        }
+
+        public void TrackProgress(ManagedCertificate managedCertificate)
+        {
+            //add request to observable list of progress state
+            RequestProgressState progressState = new RequestProgressState(RequestState.Running, "Starting..", managedCertificate);
+
+            //begin monitoring progress
+            UpdateRequestTrackingProgress(progressState);
+
+            //var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
         }
 
         public async void RenewAll(bool autoRenewalsOnly)

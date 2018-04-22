@@ -1,25 +1,24 @@
-﻿using System;
-using System.Linq;
-
-namespace Certify.Models
+﻿namespace Certify.Models
 {
     public enum RequestState
     {
-        NotRunning=0,
-        Running=1,
-        Error=2,
-        Success=3
+        NotRunning = 0,
+        Running = 1,
+        Error = 2,
+        Success = 3
     }
 
     public class RequestProgressState : BindableBase
     {
+        public bool IsPreviewMode { get; set; }
         public ManagedCertificate ManagedCertificate { get; set; }
 
-        public RequestProgressState(RequestState currentState, string msg, ManagedCertificate item)
+        public RequestProgressState(RequestState currentState, string msg, ManagedCertificate item, bool isPreviewMode = false)
         {
             CurrentState = currentState;
             Message = msg;
             ManagedCertificate = item;
+            IsPreviewMode = isPreviewMode;
         }
 
         public bool IsRunning

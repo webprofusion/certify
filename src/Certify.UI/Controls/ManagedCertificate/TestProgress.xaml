@@ -2,20 +2,38 @@
     x:Class="Certify.UI.Controls.ManagedCertificate.TestProgress"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="clr-namespace:Certify.UI.Controls"
     xmlns:certifyui="clr-namespace:Certify.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fa="http://schemas.fontawesome.io/icons/"
     xmlns:local="clr-namespace:Certify.UI.Controls.ManagedCertificate"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:utils="clr-namespace:Certify.UI.Utils"
     d:DataContext="{d:DesignInstance Type=certifyui:ManagedCertificateDesignViewModel,
                                      IsDesignTimeCreatable=True}"
     d:DesignHeight="300"
     d:DesignWidth="300"
     mc:Ignorable="d">
 
+    <UserControl.Resources>
+        <utils:OptionalBooleanToVisibilityConverter
+            x:Key="BooleanToVisibilityConverter"
+            False="Hidden"
+            True="Visible" />
+        <utils:OptionalBooleanToVisibilityConverter
+            x:Key="InverseBooleanToVisibilityConverter"
+            False="Visible"
+            True="Hidden" />
+    </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <DockPanel Margin="8,0,8,8">
-            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Config Check Results</TextBlock>
-
+            <TextBlock
+                Margin="0,8,0,0"
+                DockPanel.Dock="Top"
+                Style="{StaticResource Subheading}">
+                Configuration Test Results
+            </TextBlock>
+            <Controls:ProgressMonitor Margin="4,0,0,0" DockPanel.Dock="Top" />
             <ItemsControl
                 x:Name="Results"
                 Margin="0,0,0,0"
@@ -24,9 +42,25 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
 
-                        <StackPanel Margin="0,4,0,0">
-                            <TextBlock Style="{StaticResource Instructions}" Text="{Binding Path=Message}" />
-                        </StackPanel>
+                        <DockPanel Margin="8,4,0,0">
+                            <fa:FontAwesome
+                                Margin="0,8,0,0"
+                                DockPanel.Dock="Left"
+                                Foreground="Green"
+                                Icon="CheckCircle"
+                                Visibility="{Binding IsOK, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                            <fa:FontAwesome
+                                Margin="0,8,0,0"
+                                DockPanel.Dock="Left"
+                                Foreground="Red"
+                                Icon="ExclamationTriangle"
+                                Visibility="{Binding IsOK, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
+                            <TextBlock
+                                DockPanel.Dock="Left"
+                                Style="{StaticResource Instructions}"
+                                Text="{Binding Path=Message}"
+                                TextWrapping="WrapWithOverflow" />
+                        </DockPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

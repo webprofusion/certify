@@ -36,10 +36,15 @@ namespace Certify.Core.Management.Challenges
         /// submitting a request to the ACME server, to avoid creating failed requests and hitting
         /// usage limits.
         /// </remarks>
-        public async Task<List<StatusMessage>> TestChallengeResponse(ILog log, ICertifiedServer serverManager, ManagedCertificate managedCertificate, bool isPreviewMode, bool enableDnsChecks)
+        public async Task<List<StatusMessage>> TestChallengeResponse(
+            ILog log,
+            ICertifiedServer serverManager,
+            ManagedCertificate managedCertificate,
+            bool isPreviewMode,
+            bool enableDnsChecks,
+            IProgress<RequestProgressState> progress = null
+            )
         {
-            _actionLogs.Clear(); // reset action logs
-
             List<StatusMessage> results = new List<StatusMessage>();
 
             var requestConfig = managedCertificate.RequestConfig;
@@ -126,6 +131,10 @@ namespace Certify.Core.Management.Challenges
                             results.Add(result);
                             // don't check any more after first failure
                             break;
+                        }
+                        else
+                        {
+                            results.Add(new StatusMessage { IsOK = true, Message = httpChallengeResult.Message, Result = httpChallengeResult });
                         }
                     }
                     else if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)

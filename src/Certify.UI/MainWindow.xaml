@@ -22,6 +22,7 @@
     GlowBrush="{DynamicResource AccentColorBrush}"
     Loaded="Window_Loaded"
     TitleCaps="False"
+    WindowButtonCommandsOverlayBehavior="Never"
     WindowStyle="ToolWindow"
     WindowTransitionsEnabled="False"
     mc:Ignorable="d">
@@ -132,7 +133,7 @@
             <TabItem
                 MinWidth="80"
                 HorizontalAlignment="Left"
-                HorizontalContentAlignment="Left"
+                HorizontalContentAlignment="Stretch"
                 VerticalContentAlignment="Stretch"
                 Controls:ControlsHelper.HeaderFontSize="12"
                 Header="{x:Static res:SR.In_Progress}">

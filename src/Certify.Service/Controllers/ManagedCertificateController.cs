@@ -1,6 +1,5 @@
 ﻿using Certify.Models;
 using Serilog;
-using Serilog.Sinks.ListOfString;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -55,19 +54,28 @@ namespace Certify.Service
         }
 
         [HttpPost, Route("testconfig")]
-        public async Task<List<StatusMessage>> TestChallengeResponse(ManagedCertificate site)
+        public async Task<List<StatusMessage>> TestChallengeResponse(ManagedCertificate managedCertificate)
         {
             DebugLog();
+
+            RequestProgressState progressState = new RequestProgressState(RequestState.Running, "Starting Tests..", managedCertificate);
+
+            var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
+
+            //begin monitoring progress
+            _certifyManager.BeginTrackingProgress(progressState);
 
             // perform challenge response test, log to string list and return in result
             List<string> logList = new List<string>();
             using (var log = new LoggerConfiguration()
                      .WriteTo.Debug()
-                     .WriteTo.StringList(logList)
+                     .WriteTo.Sink(new ProgressLogSink(progressIndicator, managedCertificate, _certifyManager))
                      .CreateLogger())
             {
                 Loggy theLog = new Loggy(log);
-                return await _certifyManager.TestChallenge(theLog, site, isPreviewMode: true);
+                var results = await _certifyManager.TestChallenge(theLog, managedCertificate, isPreviewMode: true, progress: progressIndicator);
+
+                return results;
             }
         }
 
@@ -149,6 +157,30 @@ namespace Certify.Service
 
             var result = await _certifyManager.ApplyCertificateBindings(managedCertificate, null, isPreviewOnly);
             return result;
+        }
+    }
+
+    public class ProgressLogSink : Serilog.Core.ILogEventSink
+    {
+        private IProgress<RequestProgressState> _progress;
+        private ManagedCertificate _item;
+        private Management.ICertifyManager _certifyManager;
+
+        public ProgressLogSink(IProgress<RequestProgressState> progress, ManagedCertificate item, Management.ICertifyManager certifyManager)
+        {
+            _progress = progress;
+            _item = item;
+            _certifyManager = certifyManager;
+        }
+
+        public void Emit(Serilog.Events.LogEvent logEvent)
+        {
+            var message = logEvent.RenderMessage();
+
+            _certifyManager.ReportProgress(_progress,
+                new RequestProgressState(RequestState.Running, message, _item, true),
+                logThisEvent: false
+                );
         }
     }
 }

@@ -139,9 +139,22 @@ namespace Certify.Management
         /// If true, perform full set of checks (DNS etc), if false performs minimal/basic checks
         /// </param>
         /// <returns></returns>
-        public async Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate, bool isPreviewMode)
+        public async Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate, bool isPreviewMode, IProgress<RequestProgressState> progress = null)
         {
-            return await _challengeDiagnostics.TestChallengeResponse(log, _serverProvider, managedCertificate, isPreviewMode, CoreAppSettings.Current.EnableDNSValidationChecks);
+            var results = await _challengeDiagnostics.TestChallengeResponse(log, _serverProvider, managedCertificate, isPreviewMode, CoreAppSettings.Current.EnableDNSValidationChecks, progress);
+
+            if (progress != null)
+            {
+                if (results.Any(r => r.IsOK == false))
+                {
+                    ReportProgress(progress, new RequestProgressState(RequestState.Error, "One or more tests failed", managedCertificate, isPreviewMode));
+                }
+                else
+                {
+                    ReportProgress(progress, new RequestProgressState(RequestState.Success, "All Tests Completed OK", managedCertificate, isPreviewMode));
+                }
+            }
+            return results;
         }
 
         public async Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate)
@@ -223,7 +236,7 @@ namespace Certify.Management
             return await _serverProvider.GetPrimarySites(ignoreStoppedSites);
         }
 
-        private void ReportProgress(IProgress<RequestProgressState> progress, RequestProgressState state, bool logThisEvent = true)
+        public void ReportProgress(IProgress<RequestProgressState> progress, RequestProgressState state, bool logThisEvent = true)
         {
             if (progress != null) progress.Report(state);
 

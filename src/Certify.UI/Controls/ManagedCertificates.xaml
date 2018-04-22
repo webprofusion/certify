@@ -14,7 +14,7 @@
     xmlns:utils="clr-namespace:Certify.UI.Utils"
     Width="970"
     Height="487"
-    d:DataContext="{d:DesignInstance Type=certifyui:DesignViewModel,
+    d:DataContext="{d:DesignInstance Type=certifyui:AppDesignViewModel,
                                      IsDesignTimeCreatable=True}"
     Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
     Loaded="UserControl_OnLoaded"
