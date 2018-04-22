@@ -19,7 +19,6 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private Markdig.MarkdownPipeline _markdownPipeline;
         private string _css = "";
-        private bool _isPreviewLoading = false;
 
         public Preview()
         {
@@ -36,8 +35,6 @@ namespace Certify.UI.Controls.ManagedCertificate
             // generate preview
             if (ItemViewModel.SelectedItem != null)
             {
-                _isPreviewLoading = true;
-
                 var loadingMsg = "<html><head><meta http-equiv='Content-Type' content='text/html;charset=UTF-8'><style>" + _css + "</style></head><body>Generating Preview..</body></html>";
                 List<ActionStep> steps = new List<ActionStep>();
                 try
@@ -52,8 +49,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                 }
 
                 Steps = new ObservableCollection<ActionStep>(steps);
-
-                _isPreviewLoading = false;
 
                 App.Current.Dispatcher.Invoke((Action)delegate
                 {

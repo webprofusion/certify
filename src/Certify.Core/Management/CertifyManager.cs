@@ -286,7 +286,7 @@ namespace Certify.Management
 
                     result.IsSuccess = true;
                     result.Message = logPrefix + string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
-                    ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedCertificate));
+                    if (!isPreviewOnly) ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedCertificate));
                 }
                 else
                 {
@@ -597,7 +597,7 @@ namespace Certify.Management
 
                     var actionLogMsg = "";
 
-                    LogMessage(managedCertificate.Id, $"Could not begin authorization for domain with Let's Encrypt: [{ domain }] {(authorization?.AuthorizationError != null ? authorization?.AuthorizationError : "Could not register domain identifier")} - {actionLogMsg}");
+                    LogMessage(managedCertificate.Id, $"Could not begin authorization for domain with Let's Encrypt: [{ domain }] {(authorization?.AuthorizationError ?? "Could not register domain identifier")} - {actionLogMsg}");
                     failureSummaryMessage = $"[{domain}] : {authorization?.AuthorizationError}";
 
                     allIdentifiersValidated = false;
@@ -702,7 +702,7 @@ namespace Certify.Management
             else
             {
                 //failed to validate all identifiers
-                result.Message = string.Format(CoreSR.CertifyManager_ValidationForChallengeNotSuccess, (failureSummaryMessage != null ? failureSummaryMessage : ""));
+                result.Message = string.Format(CoreSR.CertifyManager_ValidationForChallengeNotSuccess, (failureSummaryMessage ?? ""));
 
                 await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
 
@@ -812,7 +812,7 @@ namespace Certify.Management
             // if we know the last renewal date, check whether we should renew again, otherwise
             // assume it's more than 30 days ago by default and attempt renewal
 
-            var timeSinceLastRenewal = (s.DateRenewed.HasValue ? s.DateRenewed.Value : DateTime.Now.AddDays(-30)) - DateTime.Now;
+            var timeSinceLastRenewal = (s.DateRenewed ?? DateTime.Now.AddDays(-30)) - DateTime.Now;
 
             bool isRenewalRequired = Math.Abs(timeSinceLastRenewal.TotalDays) > renewalIntervalDays;
 
