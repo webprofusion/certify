@@ -176,7 +176,7 @@
                         </StackPanel>
                     </Button>
                 </StackPanel>
-                <ScrollViewer VerticalScrollBarVisibility="Visible">
+                <ScrollViewer VerticalScrollBarVisibility="Visible" Visibility="Hidden">
                     <DockPanel>
 
                         <DataGrid
