@@ -10,6 +10,23 @@ using System.Threading.Tasks;
 
 namespace Certify.Client
 {
+    public class ServiceCommsException : Exception
+    {
+        public ServiceCommsException()
+        {
+        }
+
+        public ServiceCommsException(string message)
+            : base(message)
+        {
+        }
+
+        public ServiceCommsException(string message, Exception inner)
+            : base(message, inner)
+        {
+        }
+    }
+
     // This version of the client communicates with the Certify.Service instance on the local machine
     public class CertifyServiceClient : ICertifyClient
     {
@@ -72,7 +89,15 @@ namespace Certify.Client
         private async Task<string> FetchAsync(string endpoint)
         {
             var response = await _client.GetAsync(_baseUri + endpoint);
-            return await response.Content.ReadAsStringAsync();
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsStringAsync();
+            }
+            else
+            {
+                string error = await response.Content.ReadAsStringAsync();
+                throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error} ");
+            }
         }
 
         private async Task<HttpResponseMessage> PostAsync(string endpoint, object data)
@@ -81,17 +106,44 @@ namespace Certify.Client
             {
                 var json = JsonConvert.SerializeObject(data);
                 var content = new StringContent(json, System.Text.UnicodeEncoding.UTF8, "application/json");
-                return await _client.PostAsync(_baseUri + endpoint, content);
+                var response = await _client.PostAsync(_baseUri + endpoint, content);
+                if (response.IsSuccessStatusCode)
+                {
+                    return response;
+                }
+                else
+                {
+                    string error = await response.Content.ReadAsStringAsync();
+                    throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
+                }
             }
             else
             {
-                return await _client.PostAsync(_baseUri + endpoint, new StringContent(""));
+                var response = await _client.PostAsync(_baseUri + endpoint, new StringContent(""));
+                if (response.IsSuccessStatusCode)
+                {
+                    return response;
+                }
+                else
+                {
+                    string error = await response.Content.ReadAsStringAsync();
+                    throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
+                }
             }
         }
 
         private async Task<HttpResponseMessage> DeleteAsync(string endpoint)
         {
-            return await _client.DeleteAsync(_baseUri + endpoint);
+            var response = await _client.DeleteAsync(_baseUri + endpoint);
+            if (response.IsSuccessStatusCode)
+            {
+                return response;
+            }
+            else
+            {
+                string error = await response.Content.ReadAsStringAsync();
+                throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
+            }
         }
 
         #region System
