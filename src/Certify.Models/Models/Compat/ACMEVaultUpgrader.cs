@@ -1,4 +1,6 @@
-﻿namespace Certify.Models.Compat
+﻿using System;
+
+namespace Certify.Models.Compat
 {
     public class ACMEVaultUpgrader
     {
@@ -12,12 +14,19 @@
 
         public string GetContact()
         {
-            string vault = System.IO.File.ReadAllText(_vaultPath);
-            var contactString = vault.Substring(vault.IndexOf("\"Contacts\""), vault.IndexOf("PublicKey") - vault.IndexOf("\"Contacts\""));
-            contactString = contactString.Substring(contactString.IndexOf("["), contactString.IndexOf("]") - contactString.IndexOf("["));
-            contactString = contactString.Substring(contactString.IndexOf(":") + 1, (contactString.LastIndexOf("\"") - contactString.IndexOf(":")) - 1).Trim();
+            try
+            {
+                string vault = System.IO.File.ReadAllText(_vaultPath);
+                var contactString = vault.Substring(vault.IndexOf("\"Contacts\""), vault.IndexOf("PublicKey") - vault.IndexOf("\"Contacts\""));
+                contactString = contactString.Substring(contactString.IndexOf("["), contactString.IndexOf("]") - contactString.IndexOf("["));
+                contactString = contactString.Substring(contactString.IndexOf(":") + 1, (contactString.LastIndexOf("\"") - contactString.IndexOf(":")) - 1).Trim();
 
-            return contactString;
+                return contactString;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
     }
 }
