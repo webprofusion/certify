@@ -25,8 +25,8 @@
             False="Visible"
             True="Hidden" />
     </UserControl.Resources>
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <DockPanel Margin="8,0,8,8">
+    <ScrollViewer x:Name="ResultScrollviewer" VerticalScrollBarVisibility="Auto">
+        <DockPanel Margin="8,0,8,8" HorizontalAlignment="Stretch">
             <TextBlock
                 Margin="0,8,0,0"
                 DockPanel.Dock="Top"

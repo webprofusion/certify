@@ -9,11 +9,14 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     xmlns:utils="clr-namespace:Certify.UI.Utils"
+    HorizontalAlignment="Stretch"
     d:DataContext="{d:DesignInstance Type=certifyui:AppDesignViewModel,
                                      IsDesignTimeCreatable=True}"
+    d:DesignHeight="300"
+    d:DesignWidth="300"
     mc:Ignorable="d">
 
-    <DockPanel HorizontalAlignment="Stretch">
+    <DockPanel Width="Auto" HorizontalAlignment="Stretch">
         <DockPanel.Resources>
             <utils:OptionalBooleanToVisibilityConverter
                 x:Key="InverseBooleanToVisibilityConverter"
@@ -35,20 +38,26 @@
             Visibility="{Binding HasRequestsInProgress, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
 
         <ListView
-            MinWidth="100"
-            MinHeight="60"
+            Margin="0,0,0,0"
             HorizontalContentAlignment="Stretch"
             BorderBrush="{DynamicResource IdealForegroundDisabledBrush}"
             ItemsSource="{Binding ProgressResults}"
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             SelectionMode="Single">
+
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <DockPanel Margin="0,8,0,0" MouseUp="ManagedCertificate_ViewLog">
-                        <DockPanel HorizontalAlignment="Stretch" DockPanel.Dock="Top">
-                            <fa:FontAwesome
-                                Margin="0,4,12,0"
-                                DockPanel.Dock="Left"
-                                Icon="Globe" />
+                    <StackPanel
+                        Width="Auto"
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Left"
+                        MouseUp="ManagedCertificate_ViewLog"
+                        Orientation="Vertical">
+                        <DockPanel
+                            HorizontalAlignment="Stretch"
+                            DockPanel.Dock="Top"
+                            LastChildFill="False">
+
                             <TextBlock
                                 Margin="0,0,8,0"
                                 DockPanel.Dock="Left"
@@ -57,11 +66,12 @@
                                 Text="{Binding ManagedCertificate.Name}" />
                         </DockPanel>
                         <DockPanel
-                            Margin="14,0,0,0"
+                            Margin="14,4,0,0"
                             HorizontalAlignment="Stretch"
                             DockPanel.Dock="Top">
                             <TextBlock
-                                Margin="8,0,0,0"
+                                Margin="8,0,4,0"
+                                FontWeight="DemiBold"
                                 Foreground="{Binding CurrentState, Converter={StaticResource StateToColorConverter}}"
                                 Text="{Binding CurrentState}" />
                             <ProgressBar
@@ -73,13 +83,14 @@
                         </DockPanel>
 
                         <TextBlock
-                            Margin="22,0,0,0"
+                            Margin="22,8,8,8"
+                            HorizontalAlignment="Stretch"
                             DockPanel.Dock="Top"
                             FontSize="10"
                             Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
                             Text="{Binding Message}"
                             TextWrapping="WrapWithOverflow" />
-                    </DockPanel>
+                    </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>

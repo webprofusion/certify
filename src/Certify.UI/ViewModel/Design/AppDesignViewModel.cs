@@ -82,6 +82,12 @@ namespace Certify.UI
             MockDataStore = JsonConvert.SerializeObject(ManagedCertificates);
             foreach (var site in ManagedCertificates) site.IsChanged = false;
             ManagedCertificates = new ObservableCollection<ManagedCertificate>(ManagedCertificates);
+
+            this.ProgressResults = new ObservableCollection<RequestProgressState>
+            {
+                new RequestProgressState( RequestState.Running, "This is a long message to test text overflow and wrapping", ManagedCertificates[0], false),
+                new RequestProgressState( RequestState.Error, "This is another long message to test text overflow and wrapping", ManagedCertificates[1], false),
+            };
         }
 
         private string MockDataStore;

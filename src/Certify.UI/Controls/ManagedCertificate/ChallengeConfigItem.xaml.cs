@@ -1,6 +1,7 @@
 ﻿using Certify.UI.ViewModel;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using WinForms = System.Windows.Forms;
@@ -29,26 +30,28 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        private void AddStoredCredential_Click(object sender, RoutedEventArgs e)
+        private async void AddStoredCredential_Click(object sender, RoutedEventArgs e)
         {
             var cred = new Windows.EditCredential
             {
                 Owner = Window.GetWindow(this)
             };
+            cred.Item.ProviderType = EditModel.SelectedItem.ChallengeProvider;
+
             cred.ShowDialog();
 
             //refresh credentials list on complete
-            cred.Closed += async (object s, System.EventArgs ev) =>
-            {
-                var credential = cred.Item;
-                await AppViewModel.RefreshStoredCredentialsList();
 
-                if (cred.Item != null)
-                {
-                    // create a new challenge config based on new credentialsSelectedItem
-                    EditModel.SelectedItem.ChallengeCredentialKey = cred.Item.StorageKey;
-                }
-            };
+            await RefreshCredentialOptions();
+
+            var credential = cred.Item;
+
+            if (cred.Item != null && cred.Item.StorageKey != null)
+            {
+                // create a new challenge config based on new credentialsSelectedItem
+                EditModel.SelectedItem.ChallengeProvider = credential.ProviderType;
+                EditModel.SelectedItem.ChallengeCredentialKey = credential.StorageKey;
+            }
         }
 
         private void DirectoryBrowse_Click(object sender, EventArgs e)
@@ -78,9 +81,10 @@ namespace Certify.UI.Controls.ManagedCertificate
          */
         }
 
-        private void RefreshCredentialOptions()
+        private async Task RefreshCredentialOptions()
         {
             // filter list of matching credentials
+            await AppViewModel.RefreshStoredCredentialsList();
             var credentials = AppViewModel.StoredCredentials.Where(s => s.ProviderType == EditModel.SelectedItem.ChallengeProvider);
             StoredCredentialList.ItemsSource = credentials;
 
@@ -99,7 +103,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        private void ChallengeAPIProviderList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void ChallengeAPIProviderList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             string challengeProviderType = (sender as ComboBox)?.SelectedValue?.ToString();
 
@@ -107,7 +111,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 EditModel.SelectedItem.ChallengeProvider = challengeProviderType;
 
-                RefreshCredentialOptions();
+                await RefreshCredentialOptions();
             }
 
             //EditModel.RaisePropertyChangedEvent(nameof(EditModel.PrimaryChallengeConfig));
