@@ -34,7 +34,14 @@ namespace Certify.Core.Management.Challenges
             if (!String.IsNullOrEmpty(challengeConfig.ChallengeCredentialKey))
             {
                 // decode credentials string array
-                credentials = await credentialsManager.GetUnlockedCredentialsDictionary(challengeConfig.ChallengeCredentialKey);
+                try
+                {
+                    credentials = await credentialsManager.GetUnlockedCredentialsDictionary(challengeConfig.ChallengeCredentialKey);
+                }
+                catch (Exception)
+                {
+                    return new ActionResult { IsSuccess = false, Message = "DNS Challenge API Credentials could not be decrypted. The original user must be used for decryption." };
+                }
             }
             else
             {

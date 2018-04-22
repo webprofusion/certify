@@ -50,6 +50,7 @@ if any other deployment (cert only etc) chosen preview still says IIS
 
 ## Misc beta issues
 * Internal API errors throw generic JSON serialization error, need proper exception handling (retry support?)
+* Make credential encryption scope option (CurrentUser vs LocalMachine), provide migration between options.
 
 # Release (post-beta) issues
 
