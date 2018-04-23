@@ -468,10 +468,12 @@ namespace Certify.Management
                 var wait = result.ChallengeResponsePropagationSeconds;
                 while (wait > 0)
                 {
-                    ReportProgress(progress,
-                                     new RequestProgressState(RequestState.Paused, $"Pausing for {wait} seconds to allow for challenge response propagation.", managedCertificate)
-                                     );
-                    await Task.Delay(result.ChallengeResponsePropagationSeconds * 1000);
+                    ReportProgress(
+                        progress,
+                        new RequestProgressState(RequestState.Paused, $"Pausing for {wait} seconds to allow for challenge response propagation.", managedCertificate),
+                        logThisEvent: false
+                        );
+                    await Task.Delay(1000);
                     wait--;
                 }
             }
