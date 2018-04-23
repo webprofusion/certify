@@ -13,14 +13,20 @@ namespace Certify.Models.Plugins
 
         Task<bool> AddNewAccountAndAcceptTOS(ILog log, string email);
 
-        Task<List<PendingAuthorization>> BeginCertificateOrder(ILog log, CertRequestConfig config);
+        Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config);
 
         Task<StatusMessage> SubmitChallenge(ILog log, string challengeType, AuthorizationChallengeItem attemptedChallenge);
 
         Task<PendingAuthorization> CheckValidationCompleted(ILog log, string challengeType, PendingAuthorization pendingAuthorization);
 
-        Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config);
+        Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId);
 
         Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate);
+    }
+
+    public class PendingOrder
+    {
+        public List<PendingAuthorization> Authorizations { get; set; }
+        public string OrderUri { get; set; }
     }
 }

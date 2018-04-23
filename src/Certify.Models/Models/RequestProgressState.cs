@@ -2,10 +2,30 @@
 {
     public enum RequestState
     {
+        /// <summary>
+        /// Request is not running 
+        /// </summary>
         NotRunning = 0,
+
+        /// <summary>
+        /// Request is in progress 
+        /// </summary>
         Running = 1,
+
+        /// <summary>
+        /// Request has failed 
+        /// </summary>
         Error = 2,
-        Success = 3
+
+        /// <summary>
+        /// Request has succeeded 
+        /// </summary>
+        Success = 3,
+
+        /// <summary>
+        /// Request is waiting on user input 
+        /// </summary>
+        Paused = 4
     }
 
     public class RequestProgressState : BindableBase

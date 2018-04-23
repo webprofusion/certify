@@ -137,6 +137,7 @@ namespace Certify.Models
         public string CertificateThumbprintHash { get; set; }
         public string CertificatePreviousThumbprintHash { get; set; }
         public bool CertificateRevoked { get; set; }
+        public string CurrentOrderUri { get; set; }
 
         public override string ToString()
         {

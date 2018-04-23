@@ -174,9 +174,6 @@ Compruebe que tiene enlaces https de SNI para su sitio
   <data name="CertifyManager_LetsEncryptServiceTimeout" xml:space="preserve">
     <value>El servicio Let's Encrypt no emitió un certificado válido en el tiempo permitido. {0}</value>
   </data>
-  <data name="CertifyManager_PerformingChallengeResponseViaIISX0" xml:space="preserve">
-    <value>Ejecutando Respuesta al Desafío vía IIS: {0}</value>
-  </data>
   <data name="CertifyManager_PerformingConfigTests" xml:space="preserve">
     <value>Ejecutando Pruebas de Configuración</value>
   </data>

@@ -10,5 +10,11 @@ namespace Certify.Models
         public string Message { get; set; }
         public object Result { get; set; }
         public List<ActionStep> Actions { get; set; }
+
+        /// <summary>
+        /// if specified, one or more of our automated challenges required a propagation delay before
+        /// checking responses.
+        /// </summary>
+        public int ChallengeResponsePropagationSeconds { get; set; }
     }
 }

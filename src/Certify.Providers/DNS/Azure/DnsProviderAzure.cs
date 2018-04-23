@@ -85,7 +85,7 @@ namespace Certify.Providers.DNS.Azure
             }
             catch (Exception exp)
             {
-                return new ActionResult { IsSuccess = false, Message = exp.InnerException.Message };
+                return new ActionResult { IsSuccess = false, Message = (exp.InnerException != null ? exp.InnerException.Message : exp.Message) };
             }
 
             return new ActionResult { IsSuccess = false, Message = "DNS TXT Record create failed" };

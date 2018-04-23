@@ -176,7 +176,7 @@ namespace Certify.Core.Management.Challenges
                                      new AuthorizationChallengeItem
                                      {
                                           ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                                            Key= "_acme-challenge-test."+domain,
+                                            Key=$"_acme-challenge-test.{domain}".Replace("*.", ""),
                                             Value = GenerateSimulatedKeyAuth()
                                      }
                                  }

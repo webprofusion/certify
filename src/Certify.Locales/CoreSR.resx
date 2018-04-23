@@ -172,9 +172,6 @@
   <data name="CertifyManager_RegisteringAndValidatingX0" xml:space="preserve">
     <value>Registering and Validating {0} </value>
   </data>
-  <data name="CertifyManager_PerformingChallengeResponseViaIISX0" xml:space="preserve">
-    <value>Performing Challenge Response via IIS: {0} </value>
-  </data>
   <data name="CertifyManager_FailedPrerequisiteCheck" xml:space="preserve">
     <value>Failed prerequisite configuration checks ({0})</value>
   </data>

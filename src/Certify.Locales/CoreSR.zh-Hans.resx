@@ -193,9 +193,6 @@
   <data name="CertifyManager_RegisteringAndValidatingX0" xml:space="preserve">
     <value>注册并验证 {0}</value>
   </data>
-  <data name="CertifyManager_PerformingChallengeResponseViaIISX0" xml:space="preserve">
-    <value>通过IIS进行认证: {0}</value>
-  </data>
   <data name="CertifyManager_RegisterDomainIdentity" xml:space="preserve">
     <value>注册域名标识符</value>
   </data>

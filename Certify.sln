@@ -1,5 +1,5 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Blend for Visual Studio 15
+# Visual Studio 15
 VisualStudioVersion = 15.0.27130.2020
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{B92D2D90-CB9F-4ED7-BA98-EA3E1E4F8C56}"
@@ -36,9 +36,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Core", "src\Certify
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Providers.Certes", "src\Certify.Providers\ACME\Certes\Certify.Providers.Certes.csproj", "{D7D2D121-B796-49ED-9CF9-158C624857A1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Locales", "src\Certify.Locales\Certify.Locales.csproj", "{1EFDEBE9-468B-4AA0-AFD4-1C6D0A321BE5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Locales", "src\Certify.Locales\Certify.Locales.csproj", "{1EFDEBE9-468B-4AA0-AFD4-1C6D0A321BE5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Models", "src\Certify.Models\Certify.Models.csproj", "{BAAA9B8C-E44B-43F6-AC9C-B5666E69EE27}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Models", "src\Certify.Models\Certify.Models.csproj", "{BAAA9B8C-E44B-43F6-AC9C-B5666E69EE27}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.UI.Tests.Integration", "src\Certify.Tests\Certify.UI.Tests.Integration\Certify.UI.Tests.Integration.csproj", "{1C2D4CAC-7093-415A-8805-4C949CA1266A}"
 EndProject
@@ -47,6 +47,11 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure", "src\Certify.Providers\DNS\Azure\Azure.csproj", "{533CFB5B-D443-4AB6-A289-90C689A71B81}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cloudflare", "src\Certify.Providers\DNS\Cloudflare\Cloudflare.csproj", "{24849DD8-F1DB-42FB-A4E2-45A7A4CF694B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{12876723-F648-4E76-9242-110F5635A4B1}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

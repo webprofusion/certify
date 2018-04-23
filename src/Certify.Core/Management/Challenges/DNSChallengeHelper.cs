@@ -117,8 +117,8 @@ namespace Certify.Core.Management.Challenges
 
                     // wait for provider specific propogation delay
 
-                    // FIXME: perform validation check in DNS nameservers
-                    await Task.Delay(dnsAPIProvider.PropagationDelaySeconds * 1000);
+                    // FIXME: perform validation check in DNS nameservers await
+                    // Task.Delay(dnsAPIProvider.PropagationDelaySeconds * 1000);
 
                     return result;
                 }

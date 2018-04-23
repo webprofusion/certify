@@ -59,5 +59,7 @@ namespace Certify.Models
         public AuthorizationChallengeItem AttemptedChallenge { get; set; }
 
         public object AuthorizationContext { get; set; }
+
+        public string OrderUri { get; set; }
     }
 }

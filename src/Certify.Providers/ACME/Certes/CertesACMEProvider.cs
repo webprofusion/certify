@@ -222,8 +222,10 @@ namespace Certify.Providers.Certes
         /// <param name="log"></param>
         /// <param name="config"></param>
         /// <returns></returns>
-        public async Task<List<PendingAuthorization>> BeginCertificateOrder(ILog log, CertRequestConfig config)
+        public async Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config)
         {
+            PendingOrder pendingOrder = new PendingOrder();
+
             // prepare a list of all pending authorization we need to complete, or those we have
             // already satisfied
             List<PendingAuthorization> authzList = new List<PendingAuthorization>();
@@ -249,15 +251,18 @@ namespace Certify.Providers.Certes
             {
                 var order = await _acme.NewOrder(domainOrders);
 
-                log.Information($"Created ACME Order {order}");
+                string orderUri = order.Location.ToString();
+                pendingOrder.OrderUri = orderUri;
 
-                // track order in memory, keyed in primary domain
-                if (_currentOrders.Keys.Contains(config.PrimaryDomain))
+                log.Information($"Created ACME Order: {orderUri}");
+
+                // track order in memory, keyed on order Uri
+                if (_currentOrders.Keys.Contains(orderUri))
                 {
-                    _currentOrders.Remove(config.PrimaryDomain);
+                    _currentOrders.Remove(orderUri);
                 }
 
-                _currentOrders.Add(config.PrimaryDomain, order);
+                _currentOrders.Add(orderUri, order);
 
                 // get all required pending (or already valid) authorizations for this order
 
@@ -313,7 +318,7 @@ namespace Certify.Providers.Certes
                             log.Error($"DNS challenge has an invalid status");
                         }
 
-                        var dnsValue = ComputeDnsValue(dnsChallenge, _acme.AccountKey);
+                        var dnsValue = _acme.AccountKey.DnsTxt(dnsChallenge.Token); //ComputeDnsValue(dnsChallenge, _acme.AccountKey);
                         var dnsKey = $"_acme-challenge.{authzDomain}".Replace("*.", "");
 
                         challenges.Add(new AuthorizationChallengeItem
@@ -353,24 +358,28 @@ namespace Certify.Providers.Certes
                              IsAuthorizationPending = !challenges.Any(c => c.IsValidated) //auth is pending if we have no challenges already validated
                          },
                          AuthorizationContext = authz,
-                         IsValidated = challenges.Any(c => c.IsValidated)
+                         IsValidated = challenges.Any(c => c.IsValidated),
+                         OrderUri = orderUri
                      });
                 }
 
-                return authzList;
+                pendingOrder.Authorizations = authzList;
+                return pendingOrder;
             }
             catch (Exception exp)
             {
                 // failed to register the domain identifier with LE (invalid, rate limit or CAA fail?)
                 log.Error("New Order Failed [" + config.PrimaryDomain + "]", exp.Message);
-
-                return new List<PendingAuthorization> {
+                pendingOrder.Authorizations =
+                 new List<PendingAuthorization> {
                     new PendingAuthorization
                     {
                         AuthorizationError = exp.Message,
                         IsFailure=true
                     }
                 };
+
+                return pendingOrder;
             }
         }
 
@@ -388,9 +397,15 @@ namespace Certify.Providers.Certes
                 IChallengeContext challenge = (IChallengeContext)attemptedChallenge.ChallengeData;
                 try
                 {
-                    var result = await challenge.Validate();
+                    Challenge result = await challenge.Validate();
+                    int attempts = 10;
 
-                    if (result.Status == ChallengeStatus.Valid || result.Status == ChallengeStatus.Pending)
+                    while (attempts > 0 && result.Status == ChallengeStatus.Pending || result.Status == ChallengeStatus.Processing)
+                    {
+                        result = await challenge.Resource();
+                    }
+
+                    if (result.Status == ChallengeStatus.Valid)
                     {
                         return new StatusMessage
                         {
@@ -490,9 +505,9 @@ namespace Certify.Providers.Certes
         /// <param name="alternativeDnsIdentifiers"></param>
         /// <param name="config"></param>
         /// <returns></returns>
-        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config)
+        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId)
         {
-            var orderContext = _currentOrders[config.PrimaryDomain];
+            var orderContext = _currentOrders[orderId];
 
             //update order status
             var order = await orderContext.Resource();

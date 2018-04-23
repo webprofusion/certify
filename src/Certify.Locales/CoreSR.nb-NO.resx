@@ -147,9 +147,6 @@
   <data name="CertifyManager_PerformingConfigTests" xml:space="preserve">
     <value>Utfører konfigurasjonstester</value>
   </data>
-  <data name="CertifyManager_PerformingChallengeResponseViaIISX0" xml:space="preserve">
-    <value>Utfører utfordringsrespons via IIS: {0}</value>
-  </data>
   <data name="CertifyManager_AutomateConfigurationCheckFailed_HTTP" xml:space="preserve">
     <value>Registrering og validering av {0}</value>
   </data>
