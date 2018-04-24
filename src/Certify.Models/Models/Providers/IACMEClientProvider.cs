@@ -1,7 +1,7 @@
-﻿using Certify.Models.Config;
-using Certify.Models.Providers;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Certify.Models.Config;
+using Certify.Models.Providers;
 
 namespace Certify.Models.Plugins
 {
@@ -13,7 +13,7 @@ namespace Certify.Models.Plugins
 
         Task<bool> AddNewAccountAndAcceptTOS(ILog log, string email);
 
-        Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config);
+        Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config, string orderUri = null);
 
         Task<StatusMessage> SubmitChallenge(ILog log, string challengeType, AuthorizationChallengeItem attemptedChallenge);
 

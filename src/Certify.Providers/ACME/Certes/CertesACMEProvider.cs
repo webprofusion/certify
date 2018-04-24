@@ -1,4 +1,10 @@
-﻿using Certes;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Certes;
 using Certes.Acme;
 using Certes.Acme.Resource;
 using Certes.Jws;
@@ -9,12 +15,6 @@ using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Org.BouncyCastle.Crypto.Digests;
 using Serilog;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Certify.Providers.Certes
 {
@@ -221,8 +221,9 @@ namespace Certify.Providers.Certes
         /// </summary>
         /// <param name="log"></param>
         /// <param name="config"></param>
+        /// <param name="orderUri"> Uri of existing order to resume </param>
         /// <returns></returns>
-        public async Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config)
+        public async Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config, string orderUri = null)
         {
             PendingOrder pendingOrder = new PendingOrder();
 
@@ -249,9 +250,21 @@ namespace Certify.Providers.Certes
 
             try
             {
-                var order = await _acme.NewOrder(domainOrders);
+                IOrderContext order;
 
-                string orderUri = order.Location.ToString();
+                if (orderUri != null)
+                {
+                    order = _acme.Order(new Uri(orderUri));
+                }
+                else
+                {
+                    order = await _acme.NewOrder(domainOrders);
+                }
+
+                if (order == null) throw new Exception("Could not create certificate order.");
+
+                orderUri = order.Location.ToString();
+
                 pendingOrder.OrderUri = orderUri;
 
                 log.Information($"Created ACME Order: {orderUri}");
@@ -267,8 +280,10 @@ namespace Certify.Providers.Certes
                 // get all required pending (or already valid) authorizations for this order
 
                 log.Verbose($"Fetching Authorizations.");
+
                 var orderAuthorizations = await order.Authorizations();
 
+                // get the challenges for each authorization
                 foreach (IAuthorizationContext authz in orderAuthorizations)
                 {
                     log.Verbose($"Fetching Authz Challenges.");
@@ -364,12 +379,14 @@ namespace Certify.Providers.Certes
                 }
 
                 pendingOrder.Authorizations = authzList;
+
                 return pendingOrder;
             }
             catch (Exception exp)
             {
                 // failed to register the domain identifier with LE (invalid, rate limit or CAA fail?)
                 log.Error("New Order Failed [" + config.PrimaryDomain + "]", exp.Message);
+
                 pendingOrder.Authorizations =
                  new List<PendingAuthorization> {
                     new PendingAuthorization
@@ -398,6 +415,7 @@ namespace Certify.Providers.Certes
                 try
                 {
                     Challenge result = await challenge.Validate();
+
                     int attempts = 10;
 
                     while (attempts > 0 && result.Status == ChallengeStatus.Pending || result.Status == ChallengeStatus.Processing)
@@ -516,7 +534,8 @@ namespace Certify.Providers.Certes
 
             // generate temp keypair for signing CSR var csrKey = KeyFactory.NewKey(KeyAlgorithm.RS256);
             var keyAlg = KeyAlgorithm.RS256;
-            if (!String.IsNullOrEmpty(config.CSRKeyAlg))
+
+            if (!string.IsNullOrEmpty(config.CSRKeyAlg))
             {
                 if (config.CSRKeyAlg == "RS256") keyAlg = KeyAlgorithm.RS256;
                 if (config.CSRKeyAlg == "ECDSA256") keyAlg = KeyAlgorithm.ES256;

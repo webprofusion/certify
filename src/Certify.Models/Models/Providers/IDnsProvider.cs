@@ -1,6 +1,6 @@
-﻿using Certify.Models.Config;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Certify.Models.Config;
 
 namespace Certify.Models.Providers
 {
@@ -46,6 +46,8 @@ namespace Certify.Models.Providers
         string ProviderTitle { get; }
 
         string ProviderDescription { get; }
+
+        bool RequireFullyQualifiedRecordName { get; }
 
         List<ProviderParameter> ProviderParameters { get; }
     }

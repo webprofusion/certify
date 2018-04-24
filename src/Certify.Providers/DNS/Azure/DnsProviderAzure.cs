@@ -1,17 +1,18 @@
-﻿using Certify.Models.Config;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Certify.Models.Config;
 using Certify.Models.Providers;
 using Microsoft.Azure.Management.Dns;
 using Microsoft.Azure.Management.Dns.Models;
 using Microsoft.Rest.Azure.Authentication;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Certify.Providers.DNS.Azure
 {
     public class DnsProviderAzure : IDnsProvider
     {
         private DnsManagementClient _dnsClient;
+
         private Dictionary<string, string> _credentials;
 
         public int PropagationDelaySeconds => 60;
@@ -21,6 +22,8 @@ namespace Certify.Providers.DNS.Azure
         public string ProviderTitle => "Azure DNS API";
 
         public string ProviderDescription => "Validates via Azure DNS APIs using credentials";
+
+        public bool RequireFullyQualifiedRecordName => false;
 
         public List<ProviderParameter> ProviderParameters => new List<ProviderParameter>{
                     new ProviderParameter{Key="tenantid", Name="Tenant Id", IsRequired=false },
@@ -39,7 +42,7 @@ namespace Certify.Providers.DNS.Azure
         {
             // https://docs.microsoft.com/en-us/dotnet/api/overview/azure/dns?view=azure-dotnet
 
-            Microsoft.Rest.ServiceClientCredentials serviceCreds = await ApplicationTokenProvider.LoginSilentAsync(
+            var serviceCreds = await ApplicationTokenProvider.LoginSilentAsync(
                 _credentials["tenantid"],
                 _credentials["clientid"],
                 _credentials["secret"]
@@ -112,7 +115,7 @@ namespace Certify.Providers.DNS.Azure
 
         public async Task<List<DnsZone>> GetZones()
         {
-            List<DnsZone> results = new List<DnsZone>();
+            var results = new List<DnsZone>();
             var list = await _dnsClient.Zones.ListAsync();
             foreach (var z in list)
             {

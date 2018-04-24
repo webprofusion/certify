@@ -1,13 +1,13 @@
-﻿using Certify.Management;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Providers.DNS.Azure;
 using Certify.Providers.DNS.Cloudflare;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Certify.Core.Management.Challenges
 {
@@ -87,6 +87,11 @@ namespace Certify.Core.Management.Challenges
 
             if (dnsAPIProvider != null)
             {
+                if (!dnsAPIProvider.RequireFullyQualifiedRecordName)
+                {
+                    txtRecordName = txtRecordName.Replace(domain.Replace("*.", ""), "");
+                }
+
                 var result = await dnsAPIProvider.CreateRecord(new DnsCreateRecordRequest
                 {
                     RecordType = "TXT",
@@ -96,10 +101,12 @@ namespace Certify.Core.Management.Challenges
                     ZoneId = challengeConfig.ZoneId.Trim()
                 });
 
+                return result;
+                /*
                 if (result.IsSuccess)
                 {
                     // do our own txt record query before proceeding with challenge completion
-                    /*
+
                     int attempts = 3;
                     bool recordCheckedOK = false;
                     var networkUtil = new NetworkUtils(false);
@@ -113,19 +120,19 @@ namespace Certify.Core.Management.Challenges
                             await Task.Delay(1000); // hold on a sec
                         }
                     }
-                    */
 
-                    // wait for provider specific propogation delay
+                // wait for provider specific propogation delay
 
-                    // FIXME: perform validation check in DNS nameservers await
-                    // Task.Delay(dnsAPIProvider.PropagationDelaySeconds * 1000);
+                // FIXME: perform validation check in DNS nameservers await
+                // Task.Delay(dnsAPIProvider.PropagationDelaySeconds * 1000);
 
-                    return result;
-                }
-                else
-                {
-                    return result;
-                }
+                return result;
+            }
+            else
+            {
+                return result;
+            }
+          */
             }
             else
             {

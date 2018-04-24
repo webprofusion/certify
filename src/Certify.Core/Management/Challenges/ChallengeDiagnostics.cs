@@ -1,14 +1,14 @@
-﻿using Certify.Management;
-using Certify.Models;
-using Certify.Models.Config;
-using Certify.Models.Providers;
-using Certify.Models.Shared;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Certify.Management;
+using Certify.Models;
+using Certify.Models.Config;
+using Certify.Models.Providers;
+using Certify.Models.Shared;
 
 namespace Certify.Core.Management.Challenges
 {
@@ -45,7 +45,7 @@ namespace Certify.Core.Management.Challenges
             IProgress<RequestProgressState> progress = null
             )
         {
-            List<StatusMessage> results = new List<StatusMessage>();
+            var results = new List<StatusMessage>();
 
             var requestConfig = managedCertificate.RequestConfig;
             var result = new StatusMessage { IsOK = true };
@@ -102,7 +102,7 @@ namespace Certify.Core.Management.Challenges
 
                     if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
                     {
-                        string challengeFileUrl = $"http://{domain}/.well-known/acme-challenge/configcheck";
+                        var challengeFileUrl = $"http://{domain}/.well-known/acme-challenge/configcheck";
 
                         var simulatedAuthorization = new PendingAuthorization
                         {
@@ -129,6 +129,7 @@ namespace Certify.Core.Management.Challenges
                             result.FailedItemSummary.Add($"Config checks failed to verify http://{domain} is both publicly accessible and can serve extensionless files e.g. {challengeFileUrl}");
                             result.Message = httpChallengeResult.Message;
                             results.Add(result);
+
                             // don't check any more after first failure
                             break;
                         }
@@ -140,6 +141,7 @@ namespace Certify.Core.Management.Challenges
                     else if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
                     {
                         var serverVersion = await serverManager.GetServerVersion();
+
                         if (serverVersion.Major < 8)
                         {
                             result.IsOK = false;
@@ -160,7 +162,9 @@ namespace Certify.Core.Management.Challenges
                                      }
                                  }
                         };
+
                         generatedAuthorizations.Add(simulatedAuthorization);
+
                         result.IsOK =
                              PrepareChallengeResponse_TlsSni01(
                                 log, serverManager, domain, managedCertificate, simulatedAuthorization
@@ -223,13 +227,21 @@ namespace Certify.Core.Management.Challenges
         private string GenerateSimulatedKeyAuth()
         {
             // create simulated challenge
+
             var random = new Random();
+
             var simulated_token_data = new byte[24]; // generate 192 bits of data
+
             random.NextBytes(simulated_token_data);
-            string simulated_token = Convert.ToBase64String(simulated_token_data);
+
+            var simulated_token = Convert.ToBase64String(simulated_token_data);
+
             var sha256 = System.Security.Cryptography.SHA256.Create();
+
             byte[] thumbprint_data = sha256.ComputeHash(Encoding.UTF8.GetBytes(simulated_token));
+
             var thumbprint = BitConverter.ToString(thumbprint_data).Replace("-", "").ToLower();
+
             return $"{simulated_token}.{thumbprint}";
         }
 
@@ -270,13 +282,10 @@ namespace Certify.Core.Management.Challenges
 
                     if (requiredChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                     {
-                        // perform dns-01 challenge response FIXME:
+                        // perform dns-01 challenge response
                         var check = await PerformChallengeResponse_Dns01(log, domain, managedCertificate, pendingAuth);
-                        /*if (requestConfig.PerformTlsSniBindingConfigChecks)
-                        {
-                            // set config check OK if all checks return true
-                            pendingAuth.AttemptedChallenge.ConfigCheckedOK = check();
-                        }*/
+                        pendingAuth.AttemptedChallenge.ConfigCheckedOK = check.IsSuccess;
+                        pendingAuth.AttemptedChallenge.ChallengeResultMsg = check.Message;
                     }
                 }
             }
@@ -303,19 +312,19 @@ namespace Certify.Core.Management.Challenges
             log.Information("If the challenge response file is not accessible at this exact URL the validation will fail and a certificate will not be issued.");
 
             // get website root path, expand environment variables if required
-            string websiteRootPath = requestConfig.WebsiteRootPath;
+            var websiteRootPath = requestConfig.WebsiteRootPath;
 
-            if (!String.IsNullOrEmpty(managedCertificate.ServerSiteId))
+            if (!string.IsNullOrEmpty(managedCertificate.ServerSiteId))
             {
                 var siteInfo = await iisManager.GetSiteById(managedCertificate.ServerSiteId);
 
                 // if website root path not specified, determine it now
-                if (String.IsNullOrEmpty(websiteRootPath))
+                if (string.IsNullOrEmpty(websiteRootPath))
                 {
                     websiteRootPath = siteInfo.Path;
                 }
 
-                if (!String.IsNullOrEmpty(websiteRootPath) && websiteRootPath.Contains("%"))
+                if (!string.IsNullOrEmpty(websiteRootPath) && websiteRootPath.Contains("%"))
                 {
                     // if websiteRootPath contains %websiteroot% variable, replace that with the
                     // current physical path for the site
@@ -408,7 +417,7 @@ namespace Certify.Core.Management.Challenges
                     // FIXME: need to only overwrite config we have auto populated, not user
                     //        specified config, compare to our preconfig and only overwrite if same
                     //        as ours? Or include preset key in our config, or make behaviour configurable
-                    this.LogAction($"Pre-config check failed: Auto-config will overwrite existing config: {destPath}\\web.config");
+                    LogAction($"Pre-config check failed: Auto-config will overwrite existing config: {destPath}\\web.config");
 
                     var configOptions = Directory.EnumerateFiles(Environment.CurrentDirectory + "\\Scripts\\Web.config\\", "*.config");
 
@@ -417,10 +426,10 @@ namespace Certify.Core.Management.Challenges
                         // create a web.config for extensionless files, then test it (make a request
                         // for the extensionless configcheck file over http)
 
-                        string webConfigContent = File.ReadAllText(configFile);
+                        var webConfigContent = File.ReadAllText(configFile);
 
                         // no existing config, attempt auto config and perform test
-                        this.LogAction($"Testing config alternative: " + configFile);
+                        LogAction($"Testing config alternative: " + configFile);
 
                         try
                         {
@@ -458,6 +467,7 @@ namespace Certify.Core.Management.Challenges
         private Func<bool> PrepareChallengeResponse_TlsSni01(ILog log, ICertifiedServer iisManager, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
         {
             var requestConfig = managedCertificate.RequestConfig;
+
             var tlsSniChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI);
 
             if (tlsSniChallenge == null)
@@ -467,10 +477,12 @@ namespace Certify.Core.Management.Challenges
             }
 
             var sha256 = System.Security.Cryptography.SHA256.Create();
+
             var z = new byte[tlsSniChallenge.HashIterationCount][];
 
             // compute n sha256 hashes, where n=challengedata.iterationcount
             z[0] = sha256.ComputeHash(Encoding.UTF8.GetBytes(tlsSniChallenge.Value));
+
             for (int i = 1; i < z.Length; i++)
             {
                 z[i] = sha256.ComputeHash(z[i - 1]);
@@ -478,16 +490,20 @@ namespace Certify.Core.Management.Challenges
 
             // generate certs and install iis bindings
             var cleanupQueue = new List<Action>();
+
             var checkQueue = new List<Func<bool>>();
 
             foreach (string hex in z.Select(b =>
                 BitConverter.ToString(b).Replace("-", "").ToLower()))
             {
-                string sni = $"{hex.Substring(0, 32)}.{hex.Substring(32)}.acme.invalid";
+                var sni = $"{hex.Substring(0, 32)}.{hex.Substring(32)}.acme.invalid";
+
                 log.Information($"Preparing binding at: https://{domain}, sni: {sni}");
 
                 var x509 = CertificateManager.GenerateTlsSni01Certificate(sni);
+
                 CertificateManager.StoreCertificate(x509);
+
                 var certStoreName = CertificateManager.GetDefaultStore().Name;
 
                 iisManager.InstallCertificateforBinding(certStoreName, x509.GetCertHash(), managedCertificate, sni);
@@ -497,6 +513,7 @@ namespace Certify.Core.Management.Challenges
 
                 // add cleanup actions to queue
                 cleanupQueue.Add(() => iisManager.RemoveHttpsBinding(managedCertificate, sni));
+
                 cleanupQueue.Add(() => CertificateManager.RemoveCertificate(x509));
             }
 
@@ -510,6 +527,7 @@ namespace Certify.Core.Management.Challenges
         private async Task<ActionResult> PerformChallengeResponse_Dns01(ILog log, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
         {
             var requestConfig = managedCertificate.RequestConfig;
+
             var dnsChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
 
             if (dnsChallenge == null)
@@ -527,15 +545,16 @@ namespace Certify.Core.Management.Challenges
 
             // create DNS records (manually or via automation)
             var dnsHelper = new DNSChallengeHelper();
+
             var dnsResult = await dnsHelper.CompleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value);
 
             if (!dnsResult.IsSuccess)
             {
-                log.Error("DNS update failed: Failed {err}", dnsResult.Message);
+                log.Error($"DNS update failed: Failed {dnsResult.Message}");
             }
             else
             {
-                log.Information("DNS updated OK : {msg}", dnsResult.Message);
+                log.Information($"DNS updated OK : {dnsResult.Message}");
             }
 
             var cleanupQueue = new List<Action> { };

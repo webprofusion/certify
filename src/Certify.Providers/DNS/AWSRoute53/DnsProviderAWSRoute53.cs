@@ -1,11 +1,11 @@
-﻿using Amazon.Route53;
-using Amazon.Route53.Model;
-using Certify.Models.Config;
-using Certify.Models.Providers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Amazon.Route53;
+using Amazon.Route53.Model;
+using Certify.Models.Config;
+using Certify.Models.Providers;
 
 namespace Certify.Providers.DNS.AWSRoute53
 {
@@ -20,6 +20,7 @@ namespace Certify.Providers.DNS.AWSRoute53
         public string ProviderTitle => "Amazon Route 53 DNS API";
 
         public string ProviderDescription => "Validates via Route 53 APIs using AMI service credentials";
+        public bool RequireFullyQualifiedRecordName => false;
 
         public List<ProviderParameter> ProviderParameters =>
                 new List<ProviderParameter>{

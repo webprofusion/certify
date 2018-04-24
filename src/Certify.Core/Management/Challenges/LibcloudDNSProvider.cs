@@ -1,10 +1,10 @@
-﻿using Certify.Models.Config;
-using Certify.Models.Providers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using Certify.Models.Config;
+using Certify.Models.Providers;
 
 namespace Certify.Core.Management.Challenges
 {
@@ -28,6 +28,8 @@ namespace Certify.Core.Management.Challenges
         public string ProviderDescription => "Multi provider DNS API";
 
         public List<ProviderParameter> ProviderParameters => new List<ProviderParameter>();
+
+        public bool RequireFullyQualifiedRecordName => false;
 
         public async Task<ActionResult> CreateRecord(DnsCreateRecordRequest request)
         {

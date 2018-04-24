@@ -1,9 +1,9 @@
-﻿using Certify.Models;
-using Serilog;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Web.Http;
+using Certify.Models;
+using Serilog;
 
 namespace Certify.Service
 {
@@ -58,7 +58,7 @@ namespace Certify.Service
         {
             DebugLog();
 
-            RequestProgressState progressState = new RequestProgressState(RequestState.Running, "Starting Tests..", managedCertificate);
+            var progressState = new RequestProgressState(RequestState.Running, "Starting Tests..", managedCertificate);
 
             var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
 
@@ -66,13 +66,13 @@ namespace Certify.Service
             _certifyManager.BeginTrackingProgress(progressState);
 
             // perform challenge response test, log to string list and return in result
-            List<string> logList = new List<string>();
+            var logList = new List<string>();
             using (var log = new LoggerConfiguration()
                      .WriteTo.Debug()
                      .WriteTo.Sink(new ProgressLogSink(progressIndicator, managedCertificate, _certifyManager))
                      .CreateLogger())
             {
-                Loggy theLog = new Loggy(log);
+                var theLog = new Loggy(log);
                 var results = await _certifyManager.TestChallenge(theLog, managedCertificate, isPreviewMode: true, progress: progressIndicator);
 
                 return results;
@@ -106,7 +106,7 @@ namespace Certify.Service
 
             var managedCertificate = await _certifyManager.GetManagedCertificate(managedItemId);
 
-            RequestProgressState progressState = new RequestProgressState(RequestState.Running, "Starting..", managedCertificate);
+            var progressState = new RequestProgressState(RequestState.Running, "Starting..", managedCertificate);
 
             var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
 

@@ -1,11 +1,11 @@
-﻿using Certify.Models.Config;
-using Certify.Models.Providers;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Certify.Models.Config;
+using Certify.Models.Providers;
+using Newtonsoft.Json;
 
 namespace Certify.Providers.DNS.Cloudflare
 {
@@ -87,6 +87,8 @@ namespace Certify.Providers.DNS.Cloudflare
         public string ProviderTitle => "Cloudflare DNS API";
 
         public string ProviderDescription => "Validates via Cloudflare DNS APIs using credentials";
+
+        public bool RequireFullyQualifiedRecordName => false;
 
         public List<ProviderParameter> ProviderParameters => new List<ProviderParameter>{
                     new ProviderParameter{Key="emailaddress", Name="Email Address", IsRequired=true },
@@ -216,20 +218,19 @@ namespace Certify.Providers.DNS.Cloudflare
 
             try
             {
+                var records = await GetDnsRecords(request.ZoneId);
+                var record = records.FirstOrDefault(x => x.Name == request.RecordName);
 
-           
-            var records = await GetDnsRecords(request.ZoneId);
-            var record = records.FirstOrDefault(x => x.Name == request.RecordName);
-
-            if (record != null)
-            {
-                return await UpdateDnsRecord(request.ZoneId, record, request.RecordValue);
+                if (record != null)
+                {
+                    return await UpdateDnsRecord(request.ZoneId, record, request.RecordValue);
+                }
+                else
+                {
+                    return await AddDnsRecord(request.ZoneId, request.RecordName, request.RecordValue);
+                }
             }
-            else
-            {
-                return await AddDnsRecord(request.ZoneId, request.RecordName, request.RecordValue);
-            }
-            } catch (Exception exp)
+            catch (Exception exp)
             {
                 return new ActionResult { IsSuccess = false, Message = exp.Message };
             }
