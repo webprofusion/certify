@@ -40,15 +40,13 @@ namespace Certify.Management
 
         void BeginTrackingProgress(RequestProgressState state);
 
-        Task<CertificateRequestResult> ApplyCertificateBindings(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false);
+        Task<CertificateRequestResult> DeployCertificate(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false);
 
         Task<CertificateRequestResult> PerformCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null);
 
         Task<List<DomainOption>> GetDomainOptionsFromSite(string siteId);
 
         Task<List<CertificateRequestResult>> PerformRenewalAllManagedCertificates(bool autoRenewalOnly = true, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null);
-
-        Task<List<ManagedCertificate>> PreviewManagedCertificates(StandardServerTypes serverType);
 
         RequestProgressState GetRequestProgressState(string managedItemId);
 

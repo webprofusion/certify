@@ -145,17 +145,13 @@ namespace Certify.Service
         }
 
         [HttpGet, Route("reapply/{managedItemId}/{isPreviewOnly}")]
-        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly)
+        public async Task<CertificateRequestResult> RedeployCertificate(string managedItemId, bool isPreviewOnly)
         {
             DebugLog();
 
             var managedCertificate = await _certifyManager.GetManagedCertificate(managedItemId);
 
-            /* RequestProgressState progressState = new RequestProgressState(RequestState.Running, "Starting..", managedCertificate);
-             //begin monitoring progress
-             _certifyManager.BeginTrackingProgress(progressState);*/
-
-            var result = await _certifyManager.ApplyCertificateBindings(managedCertificate, null, isPreviewOnly);
+            var result = await _certifyManager.DeployCertificate(managedCertificate, null, isPreviewOnly);
             return result;
         }
     }

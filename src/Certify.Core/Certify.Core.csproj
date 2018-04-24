@@ -48,12 +48,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Management\CertifyManager.cs" />
+    <Compile Include="Management\CertifyManager\CertifyManager.Account.cs" />
+    <Compile Include="Management\CertifyManager\CertifyManager.cs" />
+    <Compile Include="Management\CertifyManager\CertifyManager.ManagedCertificates.cs" />
+    <Compile Include="Management\CertifyManager\CertifyManager.ServerType.cs" />
     <Compile Include="Management\Challenges\ChallengeDiagnostics.cs" />
     <Compile Include="Management\Challenges\DNSChallengeHelper.cs" />
     <Compile Include="Management\Challenges\LibcloudDNSProvider.cs" />
     <Compile Include="Management\CredentialsManager.cs" />
-    <Compile Include="Management\ICertifyManager.cs">
+    <Compile Include="Management\CertifyManager\ICertifyManager.cs">
       <DependentUpon>CertifyManager.cs</DependentUpon>
     </Compile>
     <Compile Include="Management\PreviewManager.cs" />
@@ -95,6 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <Compile Include="Management\CertifyManager\CertifyManager.CertificateRequest.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.ApplicationInsights">

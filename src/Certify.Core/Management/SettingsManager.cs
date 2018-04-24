@@ -28,13 +28,11 @@ namespace Certify.Management
         {
             get
             {
-                if (instance == null)
+                if (instance != null) return instance;
+                lock (syncRoot)
                 {
-                    lock (syncRoot)
-                    {
-                        if (instance == null)
-                            instance = new CoreAppSettings();
-                    }
+                    if (instance == null)
+                        instance = new CoreAppSettings();
                 }
 
                 return instance;
@@ -69,19 +67,19 @@ namespace Certify.Management
         public bool LegacySettingsUpgraded { get; set; }
 
         /// <summary>
-        /// If true, this instance has been added to server dashboard 
+        /// If true, this instance has been added to server dashboard
         /// </summary>
         public bool IsInstanceRegistered { get; set; }
 
         public string VaultPath { get; set; }
 
         /// <summary>
-        /// If user opts for renewal failure reporting, generated instance id is used to group results 
+        /// If user opts for renewal failure reporting, generated instance id is used to group results
         /// </summary>
         public string InstanceId { get; set; }
 
         /// <summary>
-        /// If set, specifies the UI language preference 
+        /// If set, specifies the UI language preference
         /// </summary>
         public string Language { get; set; }
 

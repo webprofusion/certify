@@ -74,7 +74,7 @@ namespace Certify.Management
         #endregion Registry
 
         /// <summary>
-        /// Add/update registry keys to disable insecure SSL/TLS protocols 
+        /// Add/update registry keys to disable insecure SSL/TLS protocols
         /// </summary>
         public void PerformSSLProtocolLockdown()
         {

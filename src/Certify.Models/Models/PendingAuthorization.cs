@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Certify.Models
 {
     /// <summary>
-    /// Generic representation of a proof of ownership challenge 
+    /// Generic representation of a proof of ownership challenge
     /// </summary>
     public class AuthorizationChallengeItem
     {
@@ -24,6 +24,11 @@ namespace Certify.Models
         public bool IsValidated { get; set; }
 
         /// <summary>
+        /// If true, wait for user intervention before proceeding with this challenge (i.e. manual DNS record creation)
+        /// </summary>
+        public bool IsAwaitingUser { get; set; }
+
+        /// <summary>
         /// Depending on configuration we may perform a config check confirming we can meet the
         /// validation challenge requirements before performing request against ACME server
         /// </summary>
@@ -31,17 +36,17 @@ namespace Certify.Models
     }
 
     /// <summary>
-    /// Fora given (domain) identifier, list of Challenges we can satisfy to prove ownership/control 
+    /// Fora given (domain) identifier, list of Challenges we can satisfy to prove ownership/control
     /// </summary>
     public class PendingAuthorization
     {
         /// <summary>
-        /// List of possible challenge we can attempt for this authorization 
+        /// List of possible challenge we can attempt for this authorization
         /// </summary>
         public List<AuthorizationChallengeItem> Challenges { get; set; }
 
         /// <summary>
-        /// Identifier (Dns domain) we are attempting to get authorization for 
+        /// Identifier (Dns domain) we are attempting to get authorization for
         /// </summary>
         public IdentifierItem Identifier { get; set; }
 
@@ -54,7 +59,7 @@ namespace Certify.Models
         public bool IsFailure { get; set; }
 
         /// <summary>
-        /// The challenge we have attempted for this authorization request 
+        /// The challenge we have attempted for this authorization request
         /// </summary>
         public AuthorizationChallengeItem AttemptedChallenge { get; set; }
 
