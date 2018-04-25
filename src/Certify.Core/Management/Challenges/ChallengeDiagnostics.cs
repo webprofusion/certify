@@ -58,6 +58,26 @@ namespace Certify.Core.Management.Challenges
 
             domains = domains.Distinct().ToList();
 
+            // if wildcard domain included, check first level labels not also specified, i.e.
+            // *.example.com & www.example.com cannot be mixed, but *.example.com &
+            //  test.wwww.example.com can
+            var invalidLabels = new List<string>();
+            if (domains.Any(d => d.StartsWith("*.")))
+            {
+                foreach (var wildcard in domains.Where(d => d.StartsWith("*.")))
+                {
+                    var rootDomain = wildcard.Replace("*.", "");
+                    // add list of domains where label count exceeds root domain label count
+                    invalidLabels.AddRange(domains.Where(domain => domain == rootDomain || (domain != wildcard && domain.EndsWith(rootDomain) && domain.Count(s => s == '.') == wildcard.Count(s => s == '.'))));
+
+                    if (invalidLabels.Any())
+                    {
+                        results.Add(new StatusMessage { IsOK = false, Message = $"Wildcard domain certificate requests (e.g. {wildcard}) cannot be mixed with requests including immediate subdomains (e.g. {invalidLabels[0]})." });
+                        return results;
+                    }
+                }
+            }
+
             var generatedAuthorizations = new List<PendingAuthorization>();
 
             try
@@ -67,32 +87,25 @@ namespace Certify.Core.Management.Challenges
                 {
                     log.Information("Performing preview DNS tests. {managedItem}", managedCertificate);
 
-                    // check all domain configs
-                    Parallel.ForEach(domains, new ParallelOptions
-                    {
-                        // check 8 domains at a time
-                        MaxDegreeOfParallelism = 8
-                    },
-                    domain =>
-                    {
-                        var (ok, message) = _netUtil.CheckDNS(log, domain);
-                        if (!ok)
-                        {
-                            result.IsOK = false;
-                            result.FailedItemSummary.Add(message);
-                        }
-                        else
-                        {
-                            result.IsOK = true;
-                            result.Message = message;
-                        }
-                        results.Add(result);
-                    });
+                    var tasks = new List<Task<List<ActionResult>>>();
 
-                    if (!result.IsOK)
+                    foreach (var d in domains)
                     {
-                        results.Add(result);
-                        return results;
+                        tasks.Add(_netUtil.CheckDNS(log, d.Replace("*.", "")));
+                    }
+
+                    var allResults = await Task.WhenAll(tasks);
+
+                    foreach (var checkResults in allResults)
+                    {
+                        foreach (var c in checkResults)
+                        {
+                            results.Add(new StatusMessage
+                            {
+                                IsOK = c.IsSuccess,
+                                Message = c.Message
+                            });
+                        }
                     }
                 }
 
@@ -102,6 +115,13 @@ namespace Certify.Core.Management.Challenges
 
                     if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
                     {
+                        // if dns validation not selected but one or more domains is a wildcard, reject
+                        if (domain.StartsWith("*."))
+                        {
+                            results.Add(new StatusMessage { IsOK = false, Message = $"http-01 authorization cannot be used for wildcard domains: {domain}. Use DNS (dns-01) validation instead." });
+                            return results;
+                        }
+
                         var challengeFileUrl = $"http://{domain}/.well-known/acme-challenge/configcheck";
 
                         var simulatedAuthorization = new PendingAuthorization
@@ -215,15 +235,6 @@ namespace Certify.Core.Management.Challenges
             return results;
         }
 
-        /// <summary>
-        /// Creates a realistic-looking simulated Key Authorization 
-        /// </summary>
-        /// <remarks>
-        /// example KeyAuthorization (from
-        /// https://tools.ietf.org/html/draft-ietf-acme-acme-01#section-7.2):
-        /// "evaGxfADs6pSRb2LAv9IZf17Dt3juxGJ-PCt92wr-oA.nP1qzpXGymHBrUEepNY9HCsQk7K8KhOypzEt62jcerQ"
-        /// i.e. [token-string].[sha256(token-string bytes)] where token-string is &gt;= 128 bits of data
-        /// </remarks>
         private string GenerateSimulatedKeyAuth()
         {
             // create simulated challenge
@@ -509,7 +520,7 @@ namespace Certify.Core.Management.Challenges
                 iisManager.InstallCertificateforBinding(certStoreName, x509.GetCertHash(), managedCertificate, sni);
 
                 // add check to the queue
-                checkQueue.Add(() => _netUtil.CheckSNI(domain, sni));
+                checkQueue.Add(() => _netUtil.CheckSNI(domain, sni).Result);
 
                 // add cleanup actions to queue
                 cleanupQueue.Add(() => iisManager.RemoveHttpsBinding(managedCertificate, sni));
