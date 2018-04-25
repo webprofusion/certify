@@ -1,7 +1,7 @@
-﻿using Certify.Models.Providers;
-using Serilog;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Certify.Models.Providers;
+using Serilog;
 
 namespace Certify.Models
 {
@@ -140,11 +140,11 @@ namespace Certify.Models
 
         public static void DisposeLoggers()
         {
-            if (_managedItemLoggers.Count > 0)
+            if (_managedItemLoggers?.Count > 0)
             {
                 foreach (var l in _managedItemLoggers.Values)
                 {
-                    l.Dispose();
+                    l?.Dispose();
                 }
             }
         }
