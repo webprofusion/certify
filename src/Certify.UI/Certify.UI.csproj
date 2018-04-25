@@ -152,6 +152,7 @@
     <Compile Include="Windows\ScheduledTaskConfig.xaml.cs">
       <DependentUpon>ScheduledTaskConfig.xaml</DependentUpon>
     </Compile>
+    <Resource Include="Assets\Images\QuickStart\PreviewDeployment.PNG" />
     <Page Include="Controls\AboutControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -401,7 +402,6 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\Images\QuickStart\ChooseAuth.PNG" />
-    <Resource Include="Assets\Images\QuickStart\ChooseDeployment.PNG" />
     <Resource Include="Assets\Images\QuickStart\ChooseDomains.PNG" />
     <Resource Include="Assets\Images\QuickStart\RequestCertificate.PNG" />
   </ItemGroup>

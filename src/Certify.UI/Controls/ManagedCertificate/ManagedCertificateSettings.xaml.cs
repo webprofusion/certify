@@ -1,11 +1,11 @@
-using Certify.Locales;
-using Certify.Models;
-using MahApps.Metro.Controls;
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using Certify.Locales;
+using Certify.Models;
+using MahApps.Metro.Controls;
 
 namespace Certify.UI.Controls.ManagedCertificate
 {
@@ -281,17 +281,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                     new System.Collections.ObjectModel.ObservableCollection<StatusMessage>(results);
 
                 ItemViewModel.RaisePropertyChangedEvent(nameof(ItemViewModel.ConfigCheckResults));
-
-                /*if (ItemViewModel.ConfigCheckResults.All(a => a.IsOK))
-                {
-                    MessageBox.Show(SR.ManagedCertificateSettings_ConfigurationCheckOk, SR.Challenge, MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                else
-                {
-                    // MessageBox.Show(string.Format(SR.ManagedCertificateSettings_ConfigurationCheckFailed,
-                    // String.Join("\r\n", ItemViewModel.ConfigCheckResults.FailedItemSummary)),
-                    // SR.ManagedCertificateSettings_ChallengeTestFailed, MessageBoxButton.OK, MessageBoxImage.Error);
-                }*/
 
                 //TODO: just use viewmodel to determine if test button should be enabled
                 Button_TestChallenge.IsEnabled = true;

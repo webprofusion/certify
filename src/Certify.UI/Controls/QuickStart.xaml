@@ -56,7 +56,7 @@
                         DockPanel.Dock="Top"
                         FontFamily="Segoe UI Light"
                         FontSize="16"
-                        Text="Choose how you want to prove your control of the domains on your certificate. This can be via http requests to your website or using your DNS providers API."
+                        Text="Choose how you want to prove your control of the domains on your certificate. This can be via http requests to your website or using your DNS providers API (required for wildcard domains)."
                         TextWrapping="WrapWithOverflow" />
                     <Image
                         Height="300"
@@ -75,18 +75,18 @@
                         DockPanel.Dock="Top"
                         FontFamily="Segoe UI Light"
                         FontSize="24"
-                        Text="Step 3. Deployment" />
+                        Text="Step 3. Preview" />
                     <TextBlock
                         DockPanel.Dock="Top"
                         FontFamily="Segoe UI Light"
                         FontSize="16"
-                        Text="You can simply choose to apply your certificate to the selected website, or you can choose from more advanced options."
+                        Text="Preview the steps which will be performed to request your certificate. You can optionally use the Test option to check if your configuration is OK (recommended). You can also Show Advanced Options to refine your settings."
                         TextWrapping="WrapWithOverflow" />
                     <Image
                         Height="300"
                         Margin="0,16,0,0"
                         DockPanel.Dock="Top"
-                        Source="/Certify.UI;component/Assets/Images/QuickStart/ChooseDeployment.PNG">
+                        Source="/Certify.UI;component/Assets/Images/QuickStart/PreviewDeployment.PNG">
                         <Image.Effect>
                             <DropShadowEffect Color="#FFE0E0E0" />
                         </Image.Effect>
