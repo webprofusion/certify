@@ -826,8 +826,6 @@ namespace Certify.Management
                 {
                     // could not begin authorization
 
-                    var actionLogMsg = "";
-
                     LogMessage(managedCertificate.Id,
                         $"Could not begin authorization for domain with Let's Encrypt: [{domain}] {(authorization?.AuthorizationError ?? "Could not register domain identifier")} ");
                     failureSummaryMessage = $"[{domain}] : {authorization?.AuthorizationError}";

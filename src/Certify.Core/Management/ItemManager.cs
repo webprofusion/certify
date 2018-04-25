@@ -1,12 +1,12 @@
-﻿using Certify.Models;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Certify.Models;
+using Newtonsoft.Json;
 
 namespace Certify.Management
 {
@@ -297,6 +297,8 @@ namespace Certify.Management
 
             if (saveAfterUpdate)
             {
+                if (!System.IO.File.Exists(GetDbPath())) await UpgradeSettings();
+
                 using (var db = new SQLiteConnection($"Data Source={GetDbPath()}"))
                 {
                     db.Open();
