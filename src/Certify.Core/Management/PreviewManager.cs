@@ -11,7 +11,7 @@ namespace Certify.Management
     public class PreviewManager
     {
         /// <summary>
-        ///     Generate a list of actions which will be performed on the next renewal of this managed certificate
+        /// Generate a list of actions which will be performed on the next renewal of this managed certificate 
         /// </summary>
         /// <param name="item"></param>
         /// <param name="serverProvider"></param>
@@ -78,21 +78,30 @@ namespace Certify.Management
                 if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                 {
                     validationDescription +=
-                        $"This will involve the creation of a DNS TXT record named `_acme-challenge.yourdomain.com` for each domain included in the certificate. " +
+                        $"This will involve the creation of a DNS TXT record named `_acme-challenge.yourdomain.com` for each domain or subdomain included in the certificate. " +
                         newLine;
                     if (!string.IsNullOrEmpty(challengeConfig.ChallengeCredentialKey))
                     {
-                        var creds = allCredentials.FirstOrDefault();
-                        validationDescription +=
-                            $"The following DNS API Credentials will be used:  **{creds.Title}** " + newLine;
+                        var creds = allCredentials.FirstOrDefault(c => c.StorageKey == challengeConfig.ChallengeCredentialKey);
+                        if (creds != null)
+                        {
+                            validationDescription +=
+                           $"The following DNS API Credentials will be used:  **{creds.Title}** " + newLine + newLine;
 
-                        if (!string.IsNullOrEmpty(challengeConfig.ZoneId))
-                            validationDescription +=
-                                $"The Zone Id to be updated is:  `{challengeConfig.ZoneId}` " + newLine;
+                            if (!string.IsNullOrEmpty(challengeConfig.ZoneId))
+                                validationDescription +=
+                                    $"The Zone Id to be updated with the new TXT record is:  `{challengeConfig.ZoneId}` " + newLine;
+                            else
+                                validationDescription +=
+                                    $"**No Zone Id has been set.**  A Zone Id or Zone Name is normally required to identify which DNS zone to update." +
+                                    newLine;
+                        }
                         else
+                        {
                             validationDescription +=
-                                $"**No Zone Id has been set.**  A Zone Id or Zone Name is normally required to identify which DNS zone to update." +
+                                $"**Invalid credential settngs.**  The currently selected credential does not exist." +
                                 newLine;
+                        }
                     }
                     else
                     {
@@ -102,7 +111,7 @@ namespace Certify.Management
                     }
 
                     validationDescription +=
-                        $"Let's Encrypt will follow any redirection in place (such as a substitute CNAME pointing to another domain) but the initial request will be made against any of the domain's nameservers. " +
+                        newLine + $"Let's Encrypt will follow any redirection in place (such as a substitute CNAME pointing to another domain) but the initial request will be made against any of the domain's nameservers. " +
                         newLine;
                 }
             }
@@ -255,8 +264,8 @@ namespace Certify.Management
         }
 
         /// <summary>
-        ///     WIP: For current configured environment, show preview of recommended site management (for
-        ///     local IIS, scan sites and recommend actions)
+        /// WIP: For current configured environment, show preview of recommended site management (for
+        ///      local IIS, scan sites and recommend actions)
         /// </summary>
         /// <returns></returns>
         public async Task<List<ManagedCertificate>> PreviewManagedCertificates(StandardServerTypes serverType,
