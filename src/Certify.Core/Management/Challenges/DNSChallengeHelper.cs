@@ -87,11 +87,6 @@ namespace Certify.Core.Management.Challenges
 
             if (dnsAPIProvider != null)
             {
-                if (!dnsAPIProvider.RequireFullyQualifiedRecordName)
-                {
-                    txtRecordName = txtRecordName.Replace(domain.Replace("*.", ""), "");
-                }
-
                 var result = await dnsAPIProvider.CreateRecord(new DnsCreateRecordRequest
                 {
                     RecordType = "TXT",

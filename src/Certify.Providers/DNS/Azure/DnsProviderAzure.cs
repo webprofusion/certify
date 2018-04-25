@@ -54,8 +54,47 @@ namespace Certify.Providers.DNS.Azure
             return true;
         }
 
+        /// <summary>
+        /// Where a record name is in the form _acme-challenge.www.subdomain.domain.com, determine
+        /// the root domain (i.e domain.com or subdomain.domain.com) info
+        /// </summary>
+        /// <param name="recordName"></param>
+        /// <returns></returns>
+        public async Task<DnsRecordRequest> DetermineDomainRoot(string recordName)
+        {
+            var zones = await _dnsClient.Zones.ListAsync();
+
+            DnsRecordRequest info = new DnsRecordRequest { RecordType = "TXT" };
+
+            foreach (var z in zones)
+            {
+                if (recordName.EndsWith(z.Name) && (info.RootDomain == null || z.Name.Length < info.RootDomain.Length))
+                {
+                    info.RootDomain = z.Name;
+                    info.ZoneId = z.Id;
+                }
+            }
+            return info;
+        }
+
+        public string NormaliseRecordName(DnsRecordRequest info, string recordName)
+        {
+            var result = recordName.Replace(info.RootDomain, "");
+            result = result.TrimEnd('.');
+            return result;
+        }
+
         public async Task<ActionResult> CreateRecord(DnsCreateRecordRequest request)
         {
+            var domainInfo = await DetermineDomainRoot(request.RecordName);
+
+            if (string.IsNullOrEmpty(domainInfo.RootDomain))
+            {
+                return new ActionResult { IsSuccess = false, Message = "Failed to determine root domain in zone." };
+            }
+
+            var recordName = NormaliseRecordName(domainInfo, request.RecordName);
+
             var recordSetParams = new RecordSet
             {
                 TTL = 5,
@@ -72,7 +111,7 @@ namespace Certify.Providers.DNS.Azure
                 var result = await _dnsClient.RecordSets.CreateOrUpdateAsync(
                        _credentials["resourcegroupname"],
                        request.ZoneId,
-                       request.RecordName,
+                       recordName,
                        RecordType.TXT,
                        recordSetParams
                );
@@ -82,7 +121,7 @@ namespace Certify.Providers.DNS.Azure
                     return new ActionResult
                     {
                         IsSuccess = true,
-                        Message = $"DNS TXT Record Created: {request.RecordName} with value: {request.RecordValue} "
+                        Message = $"DNS TXT Record Created: {recordName} in root domain {domainInfo.RootDomain} with value: {request.RecordValue} "
                     };
                 }
             }
@@ -96,20 +135,29 @@ namespace Certify.Providers.DNS.Azure
 
         public async Task<ActionResult> DeleteRecord(DnsDeleteRecordRequest request)
         {
+            var domainInfo = await DetermineDomainRoot(request.RecordName);
+
+            if (string.IsNullOrEmpty(domainInfo.RootDomain))
+            {
+                return new ActionResult { IsSuccess = false, Message = "Failed to determine root domain in zone." };
+            }
+
+            var recordName = NormaliseRecordName(domainInfo, request.RecordName);
+
             try
             {
                 await _dnsClient.RecordSets.DeleteAsync(
                        _credentials["resourcegroupname"],
                        request.ZoneId,
-                       request.RecordName,
+                       recordName,
                        RecordType.TXT
                );
 
-                return new ActionResult { IsSuccess = true, Message = "DNS TXT Record Deleted" };
+                return new ActionResult { IsSuccess = true, Message = $"DNS TXT Record '{recordName}' Deleted" };
             }
             catch (Exception exp)
             {
-                return new ActionResult { IsSuccess = false, Message = "DNS TXT Record Delete failed: " + exp.InnerException.Message };
+                return new ActionResult { IsSuccess = false, Message = "DNS TXT Record '{recordName}' Delete failed: " + exp.InnerException.Message };
             }
         }
 

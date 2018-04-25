@@ -15,6 +15,7 @@ namespace Certify.Models.Providers
         public string ZoneId { get; set; }
         public string TargetDomainName { get; set; }
         public string RecordType { get; set; } = "TXT";
+        public string RootDomain { get; set; }
     }
 
     public class DnsCreateRecordRequest : DnsRecordRequest
