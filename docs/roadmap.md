@@ -10,6 +10,7 @@ Current Project Roadmap (Mid 2018-2019)
 * Cert cleanup: Need way to tell if cert in use for other things (ftp etc) and either update them or inform user. Manually added https bindings lose cert if deleted through another association 
 * Auto config tests
 * If requesting a cert for test.com but target site is *:443, https binding needs to be Update only? Add would have a risk of binding conflict with other sites (if present).
+* Need support for wildcard bindings (*.example.com) - only when cert has matching wildcard?
 
 ## Preview
 * If binding exists (http & https 4 sets show up for 2 domains)

@@ -14,7 +14,7 @@ namespace Certify.Management
     public partial class CertifyManager
     {
         /// <summary>
-        /// Perform Renew All: identify all items to renew then initiate renewal process 
+        /// Perform Renew All: identify all items to renew then initiate renewal process
         /// </summary>
         /// <param name="autoRenewalOnly"></param>
         /// <param name="progressTrackers"></param>
@@ -209,7 +209,7 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Test dummy method for async UI testing etc 
+        /// Test dummy method for async UI testing etc
         /// </summary>
         /// <param name="vaultManager"></param>
         /// <param name="managedCertificate"></param>
@@ -235,7 +235,7 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Initiate or resume the certificate request workflow for a given managed certificate 
+        /// Initiate or resume the certificate request workflow for a given managed certificate
         /// </summary>
         /// <param name="log"></param>
         /// <param name="managedCertificate"></param>
