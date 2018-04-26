@@ -1,8 +1,8 @@
-﻿using Certify.Management;
-using Certify.Models.Config;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Web.Http;
+using Certify.Management;
+using Certify.Models.Config;
 
 namespace Certify.Service
 {
@@ -31,6 +31,14 @@ namespace Certify.Service
             DebugLog();
 
             return await credentialsManager.DeleteCredential(storageKey);
+        }
+
+        [HttpPost, Route("{storageKey}/test")]
+        public async Task<ActionResult> TestCredentials(string storageKey)
+        {
+            DebugLog();
+
+            return await credentialsManager.TestCredentials(storageKey);
         }
     }
 }

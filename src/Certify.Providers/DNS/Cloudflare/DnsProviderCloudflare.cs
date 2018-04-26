@@ -88,8 +88,6 @@ namespace Certify.Providers.DNS.Cloudflare
 
         public string ProviderDescription => "Validates via Cloudflare DNS APIs using credentials";
 
-        public bool RequireFullyQualifiedRecordName => false;
-
         public List<ProviderParameter> ProviderParameters => new List<ProviderParameter>{
                     new ProviderParameter{Key="emailaddress", Name="Email Address", IsRequired=true },
                     new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true }
@@ -99,6 +97,28 @@ namespace Certify.Providers.DNS.Cloudflare
         {
             _authKey = credentials["authkey"];
             _emailAddress = credentials["emailaddress"];
+        }
+
+        public async Task<ActionResult> Test()
+        {
+            // test connection and credentials
+            try
+            {
+                var zones = await this.GetZones();
+
+                if (zones != null && zones.Any())
+                {
+                    return new ActionResult { IsSuccess = true, Message = "Test Completed OK." };
+                }
+                else
+                {
+                    return new ActionResult { IsSuccess = true, Message = "Test completed, but no zones returned." };
+                }
+            }
+            catch (Exception exp)
+            {
+                return new ActionResult { IsSuccess = true, Message = $"Test Failed: {exp.Message}" };
+            }
         }
 
         private HttpRequestMessage CreateRequest(HttpMethod method, string url)

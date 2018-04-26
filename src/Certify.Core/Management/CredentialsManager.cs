@@ -1,6 +1,4 @@
-﻿using Certify.Models.Config;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
@@ -8,6 +6,9 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Certify.Core.Management.Challenges;
+using Certify.Models.Config;
+using Newtonsoft.Json;
 
 namespace Certify.Management
 {
@@ -62,6 +63,31 @@ namespace Certify.Management
             {
                 //could not delete
                 return false;
+            }
+        }
+
+        public async Task<ActionResult> TestCredentials(string storageKey)
+        {
+            // create instance of provider type then test credentials
+            var storedCredential = await GetStoredCredential(storageKey);
+
+            if (storedCredential == null) return new ActionResult { IsSuccess = false, Message = "No credentials found." };
+
+            var credentials = await GetUnlockedCredentialsDictionary(storedCredential.StorageKey);
+
+            if (credentials == null) return new ActionResult { IsSuccess = false, Message = "Failed to retrieve decrypted credentials." };
+
+            if (storedCredential.ProviderType.StartsWith("DNS"))
+            {
+                var dnsProvider = await (new DNSChallengeHelper().GetDnsProvider(storedCredential.ProviderType, credentials));
+
+                if (dnsProvider == null) return new ActionResult { IsSuccess = false, Message = "Could not create DNS provider API. Invalid or unrecognised." };
+
+                return await dnsProvider.Test();
+            }
+            else
+            {
+                return new ActionResult { IsSuccess = true, Message = "Nothing to test" };
             }
         }
 
@@ -162,6 +188,12 @@ namespace Certify.Management
             }
         }
 
+        public async Task<StoredCredential> GetStoredCredential(string storageKey)
+        {
+            var credentials = await GetStoredCredentials();
+            return credentials.FirstOrDefault(c => c.StorageKey == storageKey);
+        }
+
         public async Task<string> GetUnlockedCredential(string storageKey)
         {
             string protectedString = null;
@@ -194,9 +226,17 @@ namespace Certify.Management
 
         public async Task<Dictionary<string, string>> GetUnlockedCredentialsDictionary(string storageKey)
         {
-            string val = await this.GetUnlockedCredential(storageKey);
+            try
+            {
+                string val = await this.GetUnlockedCredential(storageKey);
 
-            return JsonConvert.DeserializeObject<Dictionary<string, string>>(val);
+                return JsonConvert.DeserializeObject<Dictionary<string, string>>(val);
+            }
+            catch (Exception exp)
+            {
+                // failed to decrypt or credential inaccessible
+                return null;
+            }
         }
 
         public async Task<StoredCredential> UpdateCredential(StoredCredential credentialInfo)

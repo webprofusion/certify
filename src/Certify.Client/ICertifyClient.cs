@@ -1,8 +1,8 @@
-﻿using Certify.Models;
-using Certify.Models.Config;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Certify.Models;
+using Certify.Models.Config;
 
 namespace Certify.Client
 {
@@ -93,6 +93,8 @@ namespace Certify.Client
         Task<StoredCredential> UpdateCredentials(StoredCredential credential);
 
         Task<bool> DeleteCredential(string credentialKey);
+
+        Task<ActionResult> TestCredentials(string credentialKey);
 
         #endregion Credentials
 

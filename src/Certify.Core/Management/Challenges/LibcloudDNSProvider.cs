@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models.Config;
 using Certify.Models.Providers;
@@ -29,7 +30,27 @@ namespace Certify.Core.Management.Challenges
 
         public List<ProviderParameter> ProviderParameters => new List<ProviderParameter>();
 
-        public bool RequireFullyQualifiedRecordName => false;
+        public async Task<ActionResult> Test()
+        {
+            // test connection and credentials
+            try
+            {
+                var zones = await this.GetZones();
+
+                if (zones != null && zones.Any())
+                {
+                    return new ActionResult { IsSuccess = true, Message = "Test Completed OK." };
+                }
+                else
+                {
+                    return new ActionResult { IsSuccess = true, Message = "Test completed, but no zones returned." };
+                }
+            }
+            catch (Exception exp)
+            {
+                return new ActionResult { IsSuccess = true, Message = $"Test Failed: {exp.Message}" };
+            }
+        }
 
         public async Task<ActionResult> CreateRecord(DnsCreateRecordRequest request)
         {

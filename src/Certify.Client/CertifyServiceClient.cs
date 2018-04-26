@@ -1,12 +1,12 @@
-﻿using Certify.Models;
-using Certify.Models.Config;
-using Microsoft.AspNet.SignalR.Client;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Certify.Models;
+using Certify.Models.Config;
+using Microsoft.AspNet.SignalR.Client;
+using Newtonsoft.Json;
 
 namespace Certify.Client
 {
@@ -336,6 +336,12 @@ namespace Certify.Client
         {
             var result = await DeleteAsync($"credentials/{credentialKey}");
             return JsonConvert.DeserializeObject<bool>(await result.Content.ReadAsStringAsync());
+        }
+
+        public async Task<ActionResult> TestCredentials(string credentialKey)
+        {
+            var result = await PostAsync($"credentials/{credentialKey}/test", new { });
+            return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
 
         #endregion Contacts

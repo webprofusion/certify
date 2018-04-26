@@ -34,6 +34,8 @@ namespace Certify.Models.Providers
     {
         Task<bool> InitProvider();
 
+        Task<ActionResult> Test();
+
         Task<ActionResult> CreateRecord(DnsCreateRecordRequest request);
 
         Task<ActionResult> DeleteRecord(DnsDeleteRecordRequest request);
@@ -47,8 +49,6 @@ namespace Certify.Models.Providers
         string ProviderTitle { get; }
 
         string ProviderDescription { get; }
-
-        bool RequireFullyQualifiedRecordName { get; }
 
         List<ProviderParameter> ProviderParameters { get; }
     }

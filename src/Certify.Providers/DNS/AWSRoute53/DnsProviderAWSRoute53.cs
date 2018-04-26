@@ -11,7 +11,7 @@ namespace Certify.Providers.DNS.AWSRoute53
 {
     public class DnsProviderAWSRoute53 : IDnsProvider
     {
-        private AmazonRoute53Client route53Client;
+        private AmazonRoute53Client _route53Client;
 
         public int PropagationDelaySeconds => 60;
 
@@ -20,7 +20,6 @@ namespace Certify.Providers.DNS.AWSRoute53
         public string ProviderTitle => "Amazon Route 53 DNS API";
 
         public string ProviderDescription => "Validates via Route 53 APIs using AMI service credentials";
-        public bool RequireFullyQualifiedRecordName => false;
 
         public List<ProviderParameter> ProviderParameters =>
                 new List<ProviderParameter>{
@@ -30,7 +29,29 @@ namespace Certify.Providers.DNS.AWSRoute53
 
         public DnsProviderAWSRoute53(Dictionary<string, string> credentials)
         {
-            route53Client = new AmazonRoute53Client(credentials["accesskey"], credentials["secretaccesskey"], Amazon.RegionEndpoint.USEast1);
+            _route53Client = new AmazonRoute53Client(credentials["accesskey"], credentials["secretaccesskey"], Amazon.RegionEndpoint.USEast1);
+        }
+
+        public async Task<ActionResult> Test()
+        {
+            // test connection and credentials
+            try
+            {
+                var zones = await this.GetZones();
+
+                if (zones != null && zones.Any())
+                {
+                    return new ActionResult { IsSuccess = true, Message = "Test Completed OK." };
+                }
+                else
+                {
+                    return new ActionResult { IsSuccess = true, Message = "Test completed, but no zones returned." };
+                }
+            }
+            catch (Exception exp)
+            {
+                return new ActionResult { IsSuccess = true, Message = $"Test Failed: {exp.Message}" };
+            }
         }
 
         private async Task<HostedZone> ResolveMatchingZone(DnsRecordRequest request)
@@ -39,12 +60,12 @@ namespace Certify.Providers.DNS.AWSRoute53
             {
                 if (!String.IsNullOrEmpty(request.ZoneId))
                 {
-                    var zone = await route53Client.GetHostedZoneAsync(new GetHostedZoneRequest { Id = request.ZoneId });
+                    var zone = await _route53Client.GetHostedZoneAsync(new GetHostedZoneRequest { Id = request.ZoneId });
                     return zone.HostedZone;
                 }
                 else
                 {
-                    var zones = route53Client.ListHostedZones();
+                    var zones = _route53Client.ListHostedZones();
                     var zone = zones.HostedZones.Where(z => z.Name.Contains(request.TargetDomainName)).FirstOrDefault();
                     return zone;
                 }
@@ -77,7 +98,7 @@ namespace Certify.Providers.DNS.AWSRoute53
                 ChangeBatch = changeBatch
             };
 
-            var recordsetResponse = route53Client.ChangeResourceRecordSets(recordsetRequest);
+            var recordsetResponse = _route53Client.ChangeResourceRecordSets(recordsetRequest);
 
             // Monitor the change status
             var changeRequest = new GetChangeRequest()
@@ -85,7 +106,7 @@ namespace Certify.Providers.DNS.AWSRoute53
                 Id = recordsetResponse.ChangeInfo.Id
             };
 
-            while (ChangeStatus.PENDING == route53Client.GetChange(changeRequest).ChangeInfo.Status)
+            while (ChangeStatus.PENDING == _route53Client.GetChange(changeRequest).ChangeInfo.Status)
             {
                 System.Diagnostics.Debug.WriteLine("DNS change is pending.");
                 await Task.Delay(1500);
@@ -161,7 +182,7 @@ namespace Certify.Providers.DNS.AWSRoute53
 
         public async Task<List<DnsZone>> GetZones()
         {
-            var zones = await route53Client.ListHostedZonesAsync();
+            var zones = await _route53Client.ListHostedZonesAsync();
 
             List<DnsZone> results = new List<DnsZone>();
             foreach (var z in zones.HostedZones)

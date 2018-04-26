@@ -1,9 +1,10 @@
-﻿using Certify.Models.Config;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
+using System.Windows.Input;
+using Certify.Models.Config;
 
 namespace Certify.UI.Windows
 {
@@ -145,6 +146,20 @@ namespace Certify.UI.Windows
         private void Cancel_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             this.Close();
+        }
+
+        private async void Test_Click(object sender, RoutedEventArgs e)
+        {
+            if (Item.StorageKey != null)
+            {
+                Mouse.OverrideCursor = Cursors.Wait;
+
+                var result = await MainViewModel.TestCredentials(Item.StorageKey);
+
+                Mouse.OverrideCursor = Cursors.Arrow;
+
+                MessageBox.Show(result.Message);
+            }
         }
     }
 }

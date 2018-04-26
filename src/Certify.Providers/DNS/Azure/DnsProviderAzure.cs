@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models.Config;
 using Certify.Models.Providers;
@@ -23,8 +24,6 @@ namespace Certify.Providers.DNS.Azure
 
         public string ProviderDescription => "Validates via Azure DNS APIs using credentials";
 
-        public bool RequireFullyQualifiedRecordName => false;
-
         public List<ProviderParameter> ProviderParameters => new List<ProviderParameter>{
                     new ProviderParameter{Key="tenantid", Name="Tenant Id", IsRequired=false },
                     new ProviderParameter{Key="clientid", Name="Application Id", IsRequired=false },
@@ -36,6 +35,28 @@ namespace Certify.Providers.DNS.Azure
         public DnsProviderAzure(Dictionary<string, string> credentials)
         {
             _credentials = credentials;
+        }
+
+        public async Task<ActionResult> Test()
+        {
+            // test connection and credentials
+            try
+            {
+                var zones = await this.GetZones();
+
+                if (zones != null && zones.Any())
+                {
+                    return new ActionResult { IsSuccess = true, Message = "Test Completed OK." };
+                }
+                else
+                {
+                    return new ActionResult { IsSuccess = true, Message = "Test completed, but no zones returned." };
+                }
+            }
+            catch (Exception exp)
+            {
+                return new ActionResult { IsSuccess = true, Message = $"Test Failed: {exp.Message}" };
+            }
         }
 
         public async Task<bool> InitProvider()

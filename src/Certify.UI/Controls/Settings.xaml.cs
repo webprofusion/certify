@@ -1,6 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace Certify.UI.Controls
 {
@@ -128,14 +130,10 @@ namespace Certify.UI.Controls
             {
                 Owner = Window.GetWindow(this)
             };
+
             cred.ShowDialog();
 
-            //refresh credentials list on complete
-            cred.Closed += async (object s, System.EventArgs ev) =>
-            {
-                await MainViewModel.RefreshStoredCredentialsList();
-                this.CredentialsList.ItemsSource = MainViewModel.StoredCredentials;
-            };
+            UpdateDisplayedCredentialsList();
         }
 
         private void ModifyStoredCredential_Click(object sender, RoutedEventArgs e)
@@ -147,9 +145,17 @@ namespace Certify.UI.Controls
                 d.Owner = Window.GetWindow(this);
 
                 d.ShowDialog();
-            }
 
-            //TODO: option to test a credential
+                UpdateDisplayedCredentialsList();
+            }
+        }
+
+        private void UpdateDisplayedCredentialsList()
+        {
+            App.Current.Dispatcher.Invoke((Action)delegate
+            {
+                this.CredentialsList.ItemsSource = MainViewModel.StoredCredentials;
+            });
         }
 
         private async void DeleteStoredCredential_Click(object sender, RoutedEventArgs e)
@@ -166,7 +172,23 @@ namespace Certify.UI.Controls
                         MessageBox.Show("This stored credential could not be removed. It may still be in use by a managed site.");
                     }
                 }
-                this.CredentialsList.ItemsSource = MainViewModel.StoredCredentials;
+
+                UpdateDisplayedCredentialsList();
+            }
+        }
+
+        private async void TestStoredCredential_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedStoredCredential != null)
+
+            {
+                Mouse.OverrideCursor = Cursors.Wait;
+
+                var result = await MainViewModel.TestCredentials(_selectedStoredCredential.StorageKey);
+
+                Mouse.OverrideCursor = Cursors.Arrow;
+
+                MessageBox.Show(result.Message);
             }
         }
 

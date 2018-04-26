@@ -1,10 +1,4 @@
-﻿using Certify.Client;
-using Certify.Locales;
-using Certify.Management;
-using Certify.Models;
-using Certify.Models.Config;
-using PropertyChanged;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -12,6 +6,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
+using Certify.Client;
+using Certify.Locales;
+using Certify.Management;
+using Certify.Models;
+using Certify.Models.Config;
+using PropertyChanged;
 
 namespace Certify.UI.ViewModel
 {
@@ -441,10 +441,20 @@ namespace Certify.UI.ViewModel
             return result;
         }
 
+        public async Task<ActionResult> TestCredentials(string credentialKey)
+        {
+            var result = await CertifyClient.TestCredentials(credentialKey);
+
+            return result;
+        }
+
         public async Task RefreshStoredCredentialsList()
         {
             var list = await CertifyClient.GetCredentials();
-            StoredCredentials = new System.Collections.ObjectModel.ObservableCollection<Models.Config.StoredCredential>(list);
+            App.Current.Dispatcher.Invoke((Action)delegate
+            {
+                StoredCredentials = new System.Collections.ObjectModel.ObservableCollection<Models.Config.StoredCredential>(list);
+            });
         }
 
         public ICommand RenewAllCommand => new RelayCommand<bool>(RenewAll);

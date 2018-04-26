@@ -193,13 +193,21 @@
                         VerticalAlignment="Top"
                         Orientation="Horizontal">
                         <Button
+                            x:Name="TestStoredCredential"
+                            Width="128"
+                            Margin="0,0,8,0"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Click="TestStoredCredential_Click"
+                            Content="Test" />
+                        <Button
                             x:Name="ModifyStoredCredential"
                             Width="128"
                             Margin="0,0,8,0"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Top"
                             Click="ModifyStoredCredential_Click"
-                            Content="Modify" />
+                            Content="Replace" />
                         <Button
                             x:Name="DeleteStoredCredential"
                             Width="128"
