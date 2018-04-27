@@ -8,6 +8,7 @@ using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Providers.DNS.Azure;
 using Certify.Providers.DNS.Cloudflare;
+using Certify.Providers.DNS.GoDaddy;
 
 namespace Certify.Core.Management.Challenges
 {
@@ -52,9 +53,15 @@ namespace Certify.Core.Management.Challenges
                         var azureDns = new DnsProviderCloudflare(credentials);
                         dnsAPIProvider = azureDns;
                     }
+
+                    if (providerDefinition.Id == "DNS01.API.GoDaddy")
+                    {
+                        var azureDns = new DnsProviderGoDaddy(credentials);
+                        dnsAPIProvider = azureDns;
+
+                    }
                 }
             }
-
             return dnsAPIProvider;
         }
 

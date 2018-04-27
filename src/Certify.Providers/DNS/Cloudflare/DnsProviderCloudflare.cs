@@ -90,7 +90,8 @@ namespace Certify.Providers.DNS.Cloudflare
 
         public List<ProviderParameter> ProviderParameters => new List<ProviderParameter>{
                     new ProviderParameter{Key="emailaddress", Name="Email Address", IsRequired=true },
-                    new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true }
+                    new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true },
+                    new ProviderParameter{Key="propdelay", Name="Propegation Delay", IsRequired=true, Value="60" }
                 };
 
         public DnsProviderCloudflare(Dictionary<string, string> credentials)

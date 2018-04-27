@@ -91,6 +91,10 @@
       <Project>{24849dd8-f1db-42fb-a4e2-45a7a4cf694b}</Project>
       <Name>Cloudflare</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Certify.Providers\DNS\GoDaddy\GoDaddy.csproj">
+      <Project>{52ef94fe-157b-48af-8241-428624b3034f}</Project>
+      <Name>GoDaddy</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Certify.Shared\Certify.Shared.csproj">
       <Project>{ed48b479-b619-4c16-afa3-83dd3cd89338}</Project>
       <Name>Certify.Shared</Name>

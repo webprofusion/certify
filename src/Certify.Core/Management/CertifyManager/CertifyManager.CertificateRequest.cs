@@ -729,11 +729,32 @@ namespace Certify.Management
 
                 var challengeConfig = managedCertificate.GetChallengeConfig(domain);
 
+                var credentialsManager = new CredentialsManager();
+
+                Dictionary<string, string> credentials = new Dictionary<string, string>();
+
                 // if our challenge takes a while to propagate, wait
                 if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                 {
-                    result.ChallengeResponsePropagationSeconds =
-                        60; // TODO: make cconfig based on max delay required by providers used
+                    if (!String.IsNullOrEmpty(challengeConfig.ChallengeCredentialKey))
+                    {
+                        // decode credentials string array
+                        try
+                        {
+                            credentials = await credentialsManager.GetUnlockedCredentialsDictionary(challengeConfig.ChallengeCredentialKey);
+                        }
+                        catch { }
+                    }
+                    int propdelay;
+                    if (int.TryParse(credentials["propdelay"], out propdelay))
+                    {
+                        result.ChallengeResponsePropagationSeconds = propdelay;
+                    }
+                    else
+                    {
+                        result.ChallengeResponsePropagationSeconds = 60;
+                    }
+
                 }
 
                 if (authorization?.Identifier != null)
