@@ -46,16 +46,15 @@ public class DnsProviderGoDaddy : IDnsProvider
     private HttpClient _client = new HttpClient();
     private readonly string _authKey;
     private readonly string _authSecret;
-    private readonly string _propDelay;
     private const string _baseUri = "https://api.godaddy.com/v1/";
     private const string _listZonesUri = _baseUri + "domains?limit=500";
     private const string _createRecordUri = _baseUri + "domains/{0}/records";
-    private const string _listRecordsUri = _baseUri + "domains/{0}/records";
+    private const string _listRecordsUri = _baseUri + "domains/{0}/records/{1}";
     private const string _deleteRecordUri = _baseUri + "domains/{0}/records/{1}";
     private const string _updateRecordUri = _baseUri + "domains/{0}/records/{1}/{2}";
         //public int PropagationDelaySeconds => 64800;
 
-        public int PropagationDelaySeconds { get; set; }
+        public int PropagationDelaySeconds => 60;
 
         public string ProviderId => "DNS01.API.GoDaddy";
 
@@ -65,15 +64,13 @@ public class DnsProviderGoDaddy : IDnsProvider
 
         public List<ProviderParameter> ProviderParameters => new List<ProviderParameter>{
                     new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true },
-                    new ProviderParameter{Key="authsecret", Name="Auth Secret", IsRequired=true },
-                    new ProviderParameter{Key="propdelay", Name="Propegation Delay", IsRequired=true, Value="60" }
+                    new ProviderParameter{Key="authsecret", Name="Auth Secret", IsRequired=true }
                 };
 
         public DnsProviderGoDaddy(Dictionary<string, string> credentials)
-    {
+        {
              _authKey = credentials["authkey"];
              _authSecret = credentials["authsecret"];
-            _propDelay = credentials["propdelay"];
         }
         public async Task<ActionResult> Test()
         {
@@ -81,7 +78,6 @@ public class DnsProviderGoDaddy : IDnsProvider
             try
             {
                 var zones = await this.GetZones();
-
                 if (zones != null && zones.Any())
                 {
                     return new ActionResult { IsSuccess = true, Message = "Test Completed OK." };
@@ -101,7 +97,8 @@ public class DnsProviderGoDaddy : IDnsProvider
     {
         var request = new HttpRequestMessage(method, url);
         request.Headers.Add("Authorization", $"sso-key {_authKey}:{_authSecret}");
-        return request;
+
+            return request;
     }
 
     private async Task<List<DnsRecord>> GetDnsRecords(string zoneName)
@@ -115,7 +112,7 @@ public class DnsProviderGoDaddy : IDnsProvider
                 sub += domains[i];
             }
 
-            var request = CreateRequest(HttpMethod.Get, $"{string.Format(_listRecordsUri, tldName)}");
+            var request = CreateRequest(HttpMethod.Get, $"{string.Format(_listRecordsUri, tldName, "TXT")}");
 
             var result = await _client.SendAsync(request);
 
@@ -137,7 +134,6 @@ public class DnsProviderGoDaddy : IDnsProvider
 
     private async Task<ActionResult> AddDnsRecord(string zoneName, string recordname, string value)
     {
- 
             var request = CreateRequest(new HttpMethod("PATCH"), string.Format(_createRecordUri, zoneName));
             var rec = new DnsRecord();
             rec.type = "TXT"; rec.name = recordname; rec.data = value; rec.ttl = 600;
@@ -170,6 +166,7 @@ public class DnsProviderGoDaddy : IDnsProvider
 
     private async Task<ActionResult> UpdateDnsRecord(string zoneName, DnsRecord record, string value)
     {
+            await Test();
 
             var request = CreateRequest(HttpMethod.Put, string.Format(_updateRecordUri, zoneName, record.type, record.name));
         request.Content = new StringContent(
@@ -230,38 +227,38 @@ public class DnsProviderGoDaddy : IDnsProvider
 
     public async Task<ActionResult> DeleteRecord(DnsDeleteRecordRequest request)
     {
-            //todo: godaddy does not have a delete api function. would need to 
             // grab all the txt records for the zone as a json array, remove the txt record in question, and send an update command. 
-            var record = request.RecordName;
-
-            /*
-        var records = await GetDnsRecords(request.TargetDomainName);
-        var record = records.FirstOrDefault(x => x.Name == request.RecordName);
-
-        if (record == null)
-        {
-            return new ActionResult { IsSuccess = true, Message = "DNS record does not exist, nothing to delete." };
-        }
-
-        var req = CreateRequest(HttpMethod.Delete, string.Format(_deleteRecordUri, request.TargetDomainName, record.Id));
-
-        var result = await _client.SendAsync(req);
-
-        if (result.IsSuccessStatusCode)
-        {
-            return new ActionResult { IsSuccess = true, Message = "DNS record deleted." };
-        }
-        else
-        {
-            return new ActionResult
+            var domainrecords = await GetDnsRecords(request.RootDomain);
+            var record = domainrecords.FirstOrDefault(x => x.name + "." + request.RootDomain == request.RecordName+"."+request.TargetDomainName);
+            if (record == null)
             {
-                IsSuccess = false,
-                Message = $"Could not delete record {request.RecordName}. Result: {result.StatusCode} - {await result.Content.ReadAsStringAsync()}"
-            };
-        }
-        */
-            return new ActionResult { IsSuccess = true, Message = "DNS record deleted." };
-        }
+                return new ActionResult { IsSuccess = true, Message = "DNS record does not exist, nothing to delete." };
+            }
+
+            domainrecords.Remove(record);
+
+            var req = CreateRequest(HttpMethod.Put, string.Format(_deleteRecordUri, request.RootDomain, "TXT"));
+
+            req.Content = new StringContent(
+                JsonConvert.SerializeObject(domainrecords)
+                );
+            req.Content.Headers.ContentType.MediaType = "application/json";
+
+            var result = await _client.SendAsync(req);
+
+            if (result.IsSuccessStatusCode)
+            {
+                return new ActionResult { IsSuccess = true, Message = "DNS record deleted." };
+            }
+            else
+            {
+                return new ActionResult
+                {
+                    IsSuccess = false,
+                    Message = $"Could not delete record {request.RecordName}. Result: {result.StatusCode} - {await result.Content.ReadAsStringAsync()}"
+                };
+            }
+    }
 
     public async Task<List<DnsZone>> GetZones()
     {

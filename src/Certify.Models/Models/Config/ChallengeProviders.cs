@@ -24,8 +24,7 @@ namespace Certify.Models.Config
                 Description = "Validates via Route 53 APIs using AMI service credentials",
                 ProviderParameters= new List<ProviderParameter>{
                     new ProviderParameter{ Key="accesskey",Name="Access Key", IsRequired=true, IsPassword=false },
-                    new ProviderParameter{ Key="secretaccesskey",Name="Secret Access Key", IsRequired=true, IsPassword=true },
-                    new ProviderParameter{Key="propdelay", Name="Propegation Delay", IsRequired=true, Value="60" }
+                    new ProviderParameter{ Key="secretaccesskey",Name="Secret Access Key", IsRequired=true, IsPassword=true }
                 },
                 Config="Provider=Certify.Providers.DNS.AWSRoute53",
                 HandlerType = ChallengeHandlerType.INTERNAL
@@ -42,8 +41,7 @@ namespace Certify.Models.Config
                     new ProviderParameter{Key="clientid", Name="Application Id", IsRequired=false },
                     new ProviderParameter{Key="secret",Name="Svc Principal Secret", IsRequired=true , IsPassword=true},
                     new ProviderParameter{Key="subscriptionid",Name="DNS Subscription Id", IsRequired=true , IsPassword=false},
-                    new ProviderParameter{Key="resourcegroupname",Name="Resource Group Name", IsRequired=true , IsPassword=false},
-                    new ProviderParameter{Key="propdelay", Name="Propegation Delay", IsRequired=true, Value="60" }
+                    new ProviderParameter{Key="resourcegroupname",Name="Resource Group Name", IsRequired=true , IsPassword=false}
                 },
                 Config="Provider=Certify.Providers.DNS.Azure",
                 HandlerType = ChallengeHandlerType.INTERNAL
@@ -57,8 +55,7 @@ namespace Certify.Models.Config
                 HelpUrl="https://api.cloudflare.com/#dns-records-for-a-zone-dns-record-details",
                 ProviderParameters = new List<ProviderParameter>{
                     new ProviderParameter{Key="emailaddress", Name="Email Address", IsRequired=true },
-                    new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true },
-                    new ProviderParameter{Key="propdelay", Name="Propegation Delay", IsRequired=true, Value="60" }
+                    new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true }
                 },
                 Config="Provider=Certify.Providers.DNS.Azure",
                 HandlerType = ChallengeHandlerType.INTERNAL
@@ -72,8 +69,7 @@ namespace Certify.Models.Config
                 HelpUrl="https://developer.Godaddy.com",
                 ProviderParameters = new List<ProviderParameter>{
                     new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true },
-                    new ProviderParameter{Key="authsecret", Name="Auth Secret", IsRequired=true },
-                    new ProviderParameter{Key="propdelay", Name="Propegation Delay", IsRequired=true, Value="60" }
+                    new ProviderParameter{Key="authsecret", Name="Auth Secret", IsRequired=true }
                 },
                 Config="Provider=Certify.Providers.DNS.GoDaddy",
                 HandlerType = ChallengeHandlerType.INTERNAL

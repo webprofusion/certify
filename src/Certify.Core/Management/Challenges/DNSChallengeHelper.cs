@@ -56,8 +56,8 @@ namespace Certify.Core.Management.Challenges
 
                     if (providerDefinition.Id == "DNS01.API.GoDaddy")
                     {
-                        var azureDns = new DnsProviderGoDaddy(credentials);
-                        dnsAPIProvider = azureDns;
+                        var goDaddyDns = new DnsProviderGoDaddy(credentials);
+                        dnsAPIProvider = goDaddyDns;
 
                     }
                 }

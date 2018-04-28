@@ -24,8 +24,7 @@ namespace Certify.Providers.DNS.AWSRoute53
         public List<ProviderParameter> ProviderParameters =>
                 new List<ProviderParameter>{
                     new ProviderParameter{ Key="accesskey",Name="Access Key", IsRequired=true, IsPassword=false },
-                    new ProviderParameter{ Key="secretaccesskey",Name="Secret Access Key", IsRequired=true, IsPassword=true },
-                    new ProviderParameter{Key="propdelay", Name="Propegation Delay", IsRequired=true, Value="60" }
+                    new ProviderParameter{ Key="secretaccesskey",Name="Secret Access Key", IsRequired=true, IsPassword=true }
                 };
 
         public DnsProviderAWSRoute53(Dictionary<string, string> credentials)

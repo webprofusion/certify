@@ -29,8 +29,7 @@ namespace Certify.Providers.DNS.Azure
                     new ProviderParameter{Key="clientid", Name="Application Id", IsRequired=false },
                     new ProviderParameter{Key="secret",Name="Svc Principal Secret", IsRequired=true , IsPassword=true},
                     new ProviderParameter{Key="subscriptionid",Name="DNS Subscription Id", IsRequired=true , IsPassword=false},
-                    new ProviderParameter{Key="resourcegroupname",Name="Resource Group Name", IsRequired=true , IsPassword=false},
-                    new ProviderParameter{Key="propdelay", Name="Propegation Delay", IsRequired=true, Value="60" }
+                    new ProviderParameter{Key="resourcegroupname",Name="Resource Group Name", IsRequired=true , IsPassword=false}
                 };
 
         public DnsProviderAzure(Dictionary<string, string> credentials)
