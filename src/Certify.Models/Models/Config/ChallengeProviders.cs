@@ -59,7 +59,22 @@ namespace Certify.Models.Config
                 },
                 Config="Provider=Certify.Providers.DNS.Azure",
                 HandlerType = ChallengeHandlerType.INTERNAL
+            },
+            new ProviderDefinition
+            {
+                Id = "DNS01.API.GoDaddy",
+                ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Title = "GoDaddy DNS API",
+                Description = "Validates via GoDaddy DNS APIs using credentials",
+                HelpUrl="https://developer.Godaddy.com",
+                ProviderParameters = new List<ProviderParameter>{
+                    new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true },
+                    new ProviderParameter{Key="authsecret", Name="Auth Secret", IsRequired=true }
+                },
+                Config="Provider=Certify.Providers.DNS.GoDaddy",
+                HandlerType = ChallengeHandlerType.INTERNAL
             }
+
 
             /*
              *  new ProviderDefinition

@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2020
+VisualStudioVersion = 15.0.27004.2009
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{B92D2D90-CB9F-4ED7-BA98-EA3E1E4F8C56}"
 	ProjectSection(SolutionItems) = preProject
@@ -52,6 +52,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoDaddy", "src\Certify.Providers\DNS\GoDaddy\GoDaddy.csproj", "{52EF94FE-157B-48AF-8241-428624B3034F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -123,6 +125,10 @@ Global
 		{24849DD8-F1DB-42FB-A4E2-45A7A4CF694B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{24849DD8-F1DB-42FB-A4E2-45A7A4CF694B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{24849DD8-F1DB-42FB-A4E2-45A7A4CF694B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52EF94FE-157B-48AF-8241-428624B3034F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52EF94FE-157B-48AF-8241-428624B3034F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52EF94FE-157B-48AF-8241-428624B3034F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52EF94FE-157B-48AF-8241-428624B3034F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -138,6 +144,7 @@ Global
 		{5A15CAD6-EB62-4F0E-8229-83336D7C1D4B} = {3BE55972-6A8A-454E-9C79-DBDBC9ADAB18}
 		{533CFB5B-D443-4AB6-A289-90C689A71B81} = {3BE55972-6A8A-454E-9C79-DBDBC9ADAB18}
 		{24849DD8-F1DB-42FB-A4E2-45A7A4CF694B} = {3BE55972-6A8A-454E-9C79-DBDBC9ADAB18}
+		{52EF94FE-157B-48AF-8241-428624B3034F} = {3BE55972-6A8A-454E-9C79-DBDBC9ADAB18}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D27296BB-12D3-44A5-B5A2-B79EB1AB223D}

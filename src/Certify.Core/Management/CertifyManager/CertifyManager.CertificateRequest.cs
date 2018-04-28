@@ -732,8 +732,7 @@ namespace Certify.Management
                 // if our challenge takes a while to propagate, wait
                 if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                 {
-                    result.ChallengeResponsePropagationSeconds =
-                        60; // TODO: make cconfig based on max delay required by providers used
+                        result.ChallengeResponsePropagationSeconds = 60;
                 }
 
                 if (authorization?.Identifier != null)
