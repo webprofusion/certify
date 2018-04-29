@@ -80,20 +80,39 @@ namespace Certify.Providers.DNS.Cloudflare
         private const string _deleteRecordUri = _baseUri + "zones/{0}/dns_records/{1}";
         private const string _updateRecordUri = _baseUri + "zones/{0}/dns_records/{1}";
 
-        public int PropagationDelaySeconds => 60;
+        public int PropagationDelaySeconds => Definition.PropagationDelaySeconds;
 
-        public string ProviderId => "DNS01.API.Cloudflare";
+        public string ProviderId => Definition.Id;
 
-        public string ProviderTitle => "Cloudflare DNS API";
+        public string ProviderTitle => Definition.Title;
 
-        public string ProviderDescription => "Validates via Cloudflare DNS APIs using credentials";
+        public string ProviderDescription => Definition.Description;
 
-        public string ProviderHelpUrl => "https://certifytheweb.com/docs/dns/cloudflare";
+        public string ProviderHelpUrl => Definition.HelpUrl;
 
-        public List<ProviderParameter> ProviderParameters => new List<ProviderParameter>{
-                    new ProviderParameter{Key="emailaddress", Name="Email Address", IsRequired=true },
-                    new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true }
+        public List<ProviderParameter> ProviderParameters => Definition.ProviderParameters;
+
+        public static ProviderDefinition Definition
+        {
+            get
+            {
+                return new ProviderDefinition
+                {
+                    Id = "DNS01.API.Cloudflare",
+                    Title = "Cloudflare DNS API",
+                    Description = "Validates via Cloudflare DNS APIs using credentials",
+                    HelpUrl = "https://docs.certifytheweb.com/docs/dns-cloudflare.html",
+                    PropagationDelaySeconds = 60,
+                    ProviderParameters = new List<ProviderParameter>{
+                        new ProviderParameter{Key="emailaddress", Name="Email Address", IsRequired=true },
+                        new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true }
+                     },
+                    ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                    Config = "Provider=Certify.Providers.DNS.Cloudflare",
+                    HandlerType = ChallengeHandlerType.INTERNAL
                 };
+            }
+        }
 
         public DnsProviderCloudflare(Dictionary<string, string> credentials)
         {

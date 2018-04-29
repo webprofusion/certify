@@ -1,76 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
-using Certify.Providers.DNS.Azure;
-using Certify.Providers.DNS.Cloudflare;
-using Certify.Providers.DNS.DnsMadeEasy;
-using Certify.Providers.DNS.GoDaddy;
 
 namespace Certify.Core.Management.Challenges
 {
     public class DNSChallengeHelper
     {
-        public async Task<IDnsProvider> GetDnsProvider(string providerType, Dictionary<string, string> credentials)
-        {
-            ProviderDefinition providerDefinition;
-            IDnsProvider dnsAPIProvider = null;
-
-            if (!String.IsNullOrEmpty(providerType))
-            {
-                providerDefinition = (await new ChallengeProviders().GetChallengeAPIProviders()).FirstOrDefault(p => p.Id == providerType);
-            }
-            else
-            {
-                return null;
-            }
-
-            if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.PYTHON_HELPER)
-            {
-                dnsAPIProvider = new LibcloudDNSProvider(credentials);
-            }
-            else
-            {
-                if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.INTERNAL)
-                {
-                    if (providerDefinition.Id == "DNS01.API.Route53")
-                    {
-                        dnsAPIProvider = new Providers.DNS.AWSRoute53.DnsProviderAWSRoute53(credentials);
-                    }
-
-                    if (providerDefinition.Id == "DNS01.API.Azure")
-                    {
-                        var azureDns = new DnsProviderAzure(credentials);
-                        await azureDns.InitProvider();
-                        dnsAPIProvider = azureDns;
-                    }
-
-                    if (providerDefinition.Id == "DNS01.API.Cloudflare")
-                    {
-                        var azureDns = new DnsProviderCloudflare(credentials);
-                        dnsAPIProvider = azureDns;
-                    }
-
-                    if (providerDefinition.Id == "DNS01.API.GoDaddy")
-                    {
-                        var goDaddyDns = new DnsProviderGoDaddy(credentials);
-                        dnsAPIProvider = goDaddyDns;
-                    }
-
-                    if (providerDefinition.Id == "DNS01.API.DnsMadeEasy")
-                    {
-                        var dnsMadeEasy = new DnsProviderDnsMadeEasy(credentials);
-                        dnsAPIProvider = dnsMadeEasy;
-                    }
-                }
-            }
-            return dnsAPIProvider;
-        }
-
         public async Task<ActionResult> CompleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, string domain, string txtRecordName, string txtRecordValue)
         {
             // for a given managed site configuration, attempt to complete the required challenge by
@@ -105,7 +44,7 @@ namespace Certify.Core.Management.Challenges
                 return new ActionResult { IsSuccess = false, Message = "DNS Challenge API Credentials not set. Add or select API credentials to proceed." };
             }
 
-            dnsAPIProvider = await GetDnsProvider(challengeConfig.ChallengeProvider, credentials);
+            dnsAPIProvider = await ChallengeProviders.GetDnsProvider(challengeConfig.ChallengeProvider, credentials);
 
             if (dnsAPIProvider == null)
             {

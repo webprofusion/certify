@@ -16,23 +16,42 @@ namespace Certify.Providers.DNS.Azure
 
         private Dictionary<string, string> _credentials;
 
-        public int PropagationDelaySeconds => 60;
+        public int PropagationDelaySeconds => Definition.PropagationDelaySeconds;
 
-        public string ProviderId => "DNS01.API.Azure";
+        public string ProviderId => Definition.Id;
 
-        public string ProviderTitle => "Azure DNS API";
+        public string ProviderTitle => Definition.Title;
 
-        public string ProviderDescription => "Validates via Azure DNS APIs using credentials";
+        public string ProviderDescription => Definition.Description;
 
-        public string ProviderHelpUrl => "https://certifytheweb.com/docs/dns/azure";
+        public string ProviderHelpUrl => Definition.HelpUrl;
 
-        public List<ProviderParameter> ProviderParameters => new List<ProviderParameter>{
-                    new ProviderParameter{Key="tenantid", Name="Tenant Id", IsRequired=false },
-                    new ProviderParameter{Key="clientid", Name="Application Id", IsRequired=false },
-                    new ProviderParameter{Key="secret",Name="Svc Principal Secret", IsRequired=true , IsPassword=true},
-                    new ProviderParameter{Key="subscriptionid",Name="DNS Subscription Id", IsRequired=true , IsPassword=false},
-                    new ProviderParameter{Key="resourcegroupname",Name="Resource Group Name", IsRequired=true , IsPassword=false}
+        public List<ProviderParameter> ProviderParameters => Definition.ProviderParameters;
+
+        public static ProviderDefinition Definition
+        {
+            get
+            {
+                return new ProviderDefinition
+                {
+                    Id = "DNS01.API.Azure",
+                    Title = "Azure DNS API",
+                    Description = "Validates via Azure DNS APIs using credentials",
+                    HelpUrl = "http://docs.certifytheweb.com/docs/dns-azuredns.html",
+                    PropagationDelaySeconds = 60,
+                    ProviderParameters = new List<ProviderParameter>{
+                        new ProviderParameter{Key="tenantid", Name="Tenant Id", IsRequired=false },
+                        new ProviderParameter{Key="clientid", Name="Application Id", IsRequired=false },
+                        new ProviderParameter{Key="secret",Name="Svc Principal Secret", IsRequired=true , IsPassword=true},
+                        new ProviderParameter{Key="subscriptionid",Name="DNS Subscription Id", IsRequired=true , IsPassword=false},
+                        new ProviderParameter{Key="resourcegroupname",Name="Resource Group Name", IsRequired=true , IsPassword=false}
+                    },
+                    ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                    Config = "Provider=Certify.Providers.DNS.Azure",
+                    HandlerType = ChallengeHandlerType.INTERNAL
                 };
+            }
+        }
 
         public DnsProviderAzure(Dictionary<string, string> credentials)
         {

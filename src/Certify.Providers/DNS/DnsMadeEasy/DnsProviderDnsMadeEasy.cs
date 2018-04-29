@@ -32,27 +32,45 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             public string Type { get; set; }
         }
 
-        public int PropagationDelaySeconds => 60;
-
-        public string ProviderId => "DNS01.API.DnsMadeEasy";
-
-        public string ProviderTitle => "DnsMadeEasy (dnsmadeeasy.com)";
-
-        public string ProviderDescription => "Validates via DnsMadeEasy APIs using credentials found in your DnsMadeEasy control panel under Config - Account.";
-
-        public string ProviderHelpUrl => "https://certifytheweb.com/docs/dns/dnsmadeeasy";
-
-        public List<ProviderParameter> ProviderParameters => new List<ProviderParameter>{
-                    new ProviderParameter{Key="apikey", Name="API Key", IsRequired=true },
-                    new ProviderParameter{Key="apisecret", Name="API Secret", IsRequired=true }
-                };
-
-        // private static string _apiUrl = "https://api.dnsmadeeasy.com/V2.0/";
-        private static string _apiUrl = "https://api.sandbox.dnsmadeeasy.com/V2.0/";
+        private static string _apiUrl = "https://api.dnsmadeeasy.com/V2.0/";
 
         private HttpClient _httpClient;
         private string _apiKey;
         private string _apiSecret;
+
+        public int PropagationDelaySeconds => Definition.PropagationDelaySeconds;
+
+        public string ProviderId => Definition.Id;
+
+        public string ProviderTitle => Definition.Title;
+
+        public string ProviderDescription => Definition.Description;
+
+        public string ProviderHelpUrl => Definition.HelpUrl;
+
+        public List<ProviderParameter> ProviderParameters => Definition.ProviderParameters;
+
+        public static ProviderDefinition Definition
+        {
+            get
+            {
+                return new ProviderDefinition
+                {
+                    Id = "DNS01.API.DnsMadeEasy",
+                    Title = "DnsMadeEasy DNS API",
+                    Description = "Validates via DnsMadeEasy APIs using credentials found in your DnsMadeEasy control panel under Config - Account Settings",
+                    HelpUrl = "http://docs.certifytheweb.com/docs/dns-dnsmadeeasy.html",
+                    PropagationDelaySeconds = 60,
+                    ProviderParameters = new List<ProviderParameter>{
+                        new ProviderParameter{Key="apikey", Name="API Key", IsRequired=true },
+                        new ProviderParameter{Key="apisecret", Name="API Secret", IsRequired=true }
+                    },
+                    ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                    Config = "Provider=Certify.Providers.DNS.DnsMadeEasy",
+                    HandlerType = ChallengeHandlerType.INTERNAL
+                };
+            }
+        }
 
         public DnsProviderDnsMadeEasy(Dictionary<string, string> credentials)
         {

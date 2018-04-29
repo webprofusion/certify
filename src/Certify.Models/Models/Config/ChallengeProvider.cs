@@ -22,6 +22,7 @@ namespace Certify.Models.Config
         public string RequiredCredentials { get; set; }
         public List<ProviderParameter> ProviderParameters { get; set; }
         public string Config { get; set; }
+        public int PropagationDelaySeconds { get; set; }
 
         public ProviderDefinition()
         {

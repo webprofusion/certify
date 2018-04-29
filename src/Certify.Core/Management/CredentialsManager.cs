@@ -79,7 +79,7 @@ namespace Certify.Management
 
             if (storedCredential.ProviderType.StartsWith("DNS"))
             {
-                var dnsProvider = await (new DNSChallengeHelper().GetDnsProvider(storedCredential.ProviderType, credentials));
+                var dnsProvider = await ChallengeProviders.GetDnsProvider(storedCredential.ProviderType, credentials);
 
                 if (dnsProvider == null) return new ActionResult { IsSuccess = false, Message = "Could not create DNS provider API. Invalid or unrecognised." };
 

@@ -44,22 +44,40 @@ namespace Certify.Providers.DNS.GoDaddy
         private const string _listRecordsUri = _baseUri + "domains/{0}/records/{1}";
         private const string _deleteRecordUri = _baseUri + "domains/{0}/records/{1}";
         private const string _updateRecordUri = _baseUri + "domains/{0}/records/{1}/{2}";
-        //public int PropagationDelaySeconds => 64800;
 
-        public int PropagationDelaySeconds => 60;
+        public int PropagationDelaySeconds => Definition.PropagationDelaySeconds;
 
-        public string ProviderId => "DNS01.API.GoDaddy";
+        public string ProviderId => Definition.Id;
 
-        public string ProviderTitle => "GoDaddy DNS API";
+        public string ProviderTitle => Definition.Title;
 
-        public string ProviderDescription => "Validates via GoDaddy DNS APIs using credentials";
+        public string ProviderDescription => Definition.Description;
 
-        public string ProviderHelpUrl => "https://developer.Godaddy.com";
+        public string ProviderHelpUrl => Definition.HelpUrl;
 
-        public List<ProviderParameter> ProviderParameters => new List<ProviderParameter>{
-                    new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true },
-                    new ProviderParameter{Key="authsecret", Name="Auth Secret", IsRequired=true }
+        public List<ProviderParameter> ProviderParameters => Definition.ProviderParameters;
+
+        public static ProviderDefinition Definition
+        {
+            get
+            {
+                return new ProviderDefinition
+                {
+                    Id = "DNS01.API.GoDaddy",
+                    Title = "GoDaddy DNS API",
+                    Description = "Validates via GoDaddy DNS APIs using credentials",
+                    HelpUrl = "http://docs.certifytheweb.com/docs/dns-godaddy.html",
+                    PropagationDelaySeconds = 60,
+                    ProviderParameters = new List<ProviderParameter>{
+                        new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true },
+                        new ProviderParameter{Key="authsecret", Name="Auth Secret", IsRequired=true }
+                    },
+                    ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                    Config = "Provider=Certify.Providers.DNS.GoDaddy",
+                    HandlerType = ChallengeHandlerType.INTERNAL
                 };
+            }
+        }
 
         public DnsProviderGoDaddy(Dictionary<string, string> credentials)
         {
