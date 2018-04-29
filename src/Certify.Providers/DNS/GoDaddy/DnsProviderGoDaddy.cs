@@ -20,7 +20,7 @@ namespace Certify.Providers.DNS.GoDaddy
         public string DomainId { get; set; }
     }
 
-    internal class DnsRecord
+    internal class DnsRecordGoDaddy
     {
         public string data { get; set; }
         public string type { get; set; }
@@ -28,7 +28,7 @@ namespace Certify.Providers.DNS.GoDaddy
         public int ttl { get; set; }
     }
 
-    internal class DnsResult
+    internal class DnsResultGoDaddy
     {
         public DnsRecord[] Result { get; set; }
     }
@@ -99,9 +99,11 @@ namespace Certify.Providers.DNS.GoDaddy
         private async Task<List<DnsRecord>> GetDnsRecords(string zoneName)
         {
             List<DnsRecord> records = new List<DnsRecord>();
+
             string[] domains = zoneName.Split(new char[] { '.' });
             string tldName = domains[domains.Length - 2] + "." + domains[domains.Length - 1];
             string sub = "";
+
             for (int i = 0; i < domains.Length - 1; i++)
             {
                 sub += domains[i];
@@ -114,13 +116,13 @@ namespace Certify.Providers.DNS.GoDaddy
             if (result.IsSuccessStatusCode)
             {
                 var content = await result.Content.ReadAsStringAsync();
-                var dnsResult = JsonConvert.DeserializeObject<DnsRecord[]>(content);
+                var dnsResult = JsonConvert.DeserializeObject<DnsRecordGoDaddy[]>(content);
 
-                records.AddRange(dnsResult);
+                records.AddRange(dnsResult.Select(x => new DnsRecord { RecordId = x.name, RecordName = x.name, RecordType = x.type, RecordValue = x.data }));
             }
             else
             {
-                throw new Exception($"Could not get DNS records for zone {tldName}. Result: {result.StatusCode} - {result.Content.ReadAsStringAsync().GetAwaiter().GetResult()}");
+                throw new Exception($"Could not get DNS records for zone {tldName}. Result: {result.StatusCode} - {await result.Content.ReadAsStringAsync()}");
             }
 
             return records;
@@ -129,7 +131,7 @@ namespace Certify.Providers.DNS.GoDaddy
         private async Task<ActionResult> AddDnsRecord(string zoneName, string recordname, string value)
         {
             var request = CreateRequest(new HttpMethod("PATCH"), string.Format(_createRecordUri, zoneName));
-            var rec = new DnsRecord();
+            var rec = new DnsRecordGoDaddy();
             rec.type = "TXT"; rec.name = recordname; rec.data = value; rec.ttl = 600;
             var recarr = new object[] { rec };
             request.Content = new StringContent(
@@ -162,13 +164,15 @@ namespace Certify.Providers.DNS.GoDaddy
         {
             await Test();
 
-            var request = CreateRequest(HttpMethod.Put, string.Format(_updateRecordUri, zoneName, record.type, record.name));
+            var request = CreateRequest(HttpMethod.Put, string.Format(_updateRecordUri, zoneName, record.RecordType, record.RecordName));
+
             request.Content = new StringContent(
                 JsonConvert.SerializeObject(new object[] { new
-            {
-                data = value,
-                ttl = 600
-            } })
+                        {
+                            data = value,
+                            ttl = 600
+                        }
+                    })
                 );
 
             request.Content.Headers.ContentType.MediaType = "application/json";
@@ -180,7 +184,7 @@ namespace Certify.Providers.DNS.GoDaddy
                 return new ActionResult
                 {
                     IsSuccess = false,
-                    Message = $"Could not update dns record {record.name} to zone {zoneName}. Result: {result.StatusCode} - {await result.Content.ReadAsStringAsync()}"
+                    Message = $"Could not update dns record {record.RecordName} to zone {zoneName}. Result: {result.StatusCode} - {await result.Content.ReadAsStringAsync()}"
                 };
             }
             else
@@ -189,7 +193,7 @@ namespace Certify.Providers.DNS.GoDaddy
             }
         }
 
-        public async Task<ActionResult> CreateRecord(DnsCreateRecordRequest request)
+        public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
             //check if record already exists
             string[] domains = request.RecordName.Split(new char[] { '.' });
@@ -207,7 +211,7 @@ namespace Certify.Providers.DNS.GoDaddy
                 }
             }
             var records = await GetDnsRecords(tldName);
-            var record = records.FirstOrDefault(x => x.name == sub);
+            var record = records.FirstOrDefault(x => x.RecordName == sub);
 
             if (record != null)
             {
@@ -219,12 +223,12 @@ namespace Certify.Providers.DNS.GoDaddy
             }
         }
 
-        public async Task<ActionResult> DeleteRecord(DnsDeleteRecordRequest request)
+        public async Task<ActionResult> DeleteRecord(DnsRecord request)
         {
             // grab all the txt records for the zone as a json array, remove the txt record in
             // question, and send an update command.
             var domainrecords = await GetDnsRecords(request.RootDomain);
-            var record = domainrecords.FirstOrDefault(x => x.name + "." + request.RootDomain == request.RecordName + "." + request.TargetDomainName);
+            var record = domainrecords.FirstOrDefault(x => x.RecordName + "." + request.RootDomain == request.RecordName + "." + request.TargetDomainName);
             if (record == null)
             {
                 return new ActionResult { IsSuccess = true, Message = "DNS record does not exist, nothing to delete." };
@@ -270,13 +274,8 @@ namespace Certify.Providers.DNS.GoDaddy
 
                 foreach (var zone in zonesResult)
                 {
-                    zones.Add(new DnsZone { ZoneId = zone.DomainId, Description = zone.Domain });
+                    zones.Add(new DnsZone { ZoneId = zone.DomainId, Name = zone.Domain });
                 }
-
-                //foreach (var z in zonesResult.Result)
-                //{
-                //    zones.Add(new DnsZone { ZoneId = z.Id, Description = z.Name });
-                //}
             }
             else
             {

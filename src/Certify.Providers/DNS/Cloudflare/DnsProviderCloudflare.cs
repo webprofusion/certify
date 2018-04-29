@@ -44,7 +44,7 @@ namespace Certify.Providers.DNS.Cloudflare
         public int TotalCount { get; set; }
     }
 
-    internal class DnsRecord
+    internal class DnsRecordCloudflare
     {
         public string Id { get; set; }
         public string Type { get; set; }
@@ -52,9 +52,9 @@ namespace Certify.Providers.DNS.Cloudflare
         public string Content { get; set; }
     }
 
-    internal class DnsResult
+    internal class DnsResultCloudflare
     {
-        public DnsRecord[] Result { get; set; }
+        public DnsRecordCloudflare[] Result { get; set; }
 
         [JsonProperty("result_info")]
         public ResultInfo ResultInfo { get; set; }
@@ -131,9 +131,9 @@ namespace Certify.Providers.DNS.Cloudflare
             return request;
         }
 
-        private async Task<List<DnsRecord>> GetDnsRecords(string zoneId)
+        private async Task<List<DnsRecordCloudflare>> GetDnsRecords(string zoneId)
         {
-            List<DnsRecord> records = new List<DnsRecord>();
+            List<DnsRecordCloudflare> records = new List<DnsRecordCloudflare>();
             bool finishedPaginating = false;
             int page = 1;
 
@@ -146,7 +146,7 @@ namespace Certify.Providers.DNS.Cloudflare
                 if (result.IsSuccessStatusCode)
                 {
                     var content = await result.Content.ReadAsStringAsync();
-                    var dnsResult = JsonConvert.DeserializeObject<DnsResult>(content);
+                    var dnsResult = JsonConvert.DeserializeObject<DnsResultCloudflare>(content);
 
                     records.AddRange(dnsResult.Result);
 
@@ -203,7 +203,7 @@ namespace Certify.Providers.DNS.Cloudflare
             }
         }
 
-        private async Task<ActionResult> UpdateDnsRecord(string zoneId, DnsRecord record, string value)
+        private async Task<ActionResult> UpdateDnsRecord(string zoneId, DnsRecordCloudflare record, string value)
         {
             var request = CreateRequest(HttpMethod.Put, string.Format(_updateRecordUri, zoneId, record.Id));
             request.Content = new StringContent(
@@ -234,7 +234,7 @@ namespace Certify.Providers.DNS.Cloudflare
             }
         }
 
-        public async Task<ActionResult> CreateRecord(DnsCreateRecordRequest request)
+        public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
             //check if record already exists
 
@@ -258,7 +258,7 @@ namespace Certify.Providers.DNS.Cloudflare
             }
         }
 
-        public async Task<ActionResult> DeleteRecord(DnsDeleteRecordRequest request)
+        public async Task<ActionResult> DeleteRecord(DnsRecord request)
         {
             var records = await GetDnsRecords(request.ZoneId);
             var record = records.FirstOrDefault(x => x.Name == request.RecordName);
@@ -305,7 +305,7 @@ namespace Certify.Providers.DNS.Cloudflare
 
                     foreach (var z in zonesResult.Result)
                     {
-                        zones.Add(new DnsZone { ZoneId = z.Id, Description = z.Name });
+                        zones.Add(new DnsZone { ZoneId = z.Id, Name = z.Name });
                     }
 
                     if (zonesResult.ResultInfo.Page == zonesResult.ResultInfo.TotalPages)

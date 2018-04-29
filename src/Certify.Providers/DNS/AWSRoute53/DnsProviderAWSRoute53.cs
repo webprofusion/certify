@@ -69,7 +69,7 @@ namespace Certify.Providers.DNS.AWSRoute53
             }
         }
 
-        private async Task<HostedZone> ResolveMatchingZone(DnsRecordRequest request)
+        private async Task<HostedZone> ResolveMatchingZone(DnsRecord request)
         {
             try
             {
@@ -132,7 +132,7 @@ namespace Certify.Providers.DNS.AWSRoute53
             return true;
         }
 
-        public async Task<ActionResult> CreateRecord(DnsCreateRecordRequest request)
+        public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
             // https://docs.aws.amazon.com/sdk-for-net/v2/developer-guide/route53-apis-intro.html
             // find zone
@@ -168,7 +168,7 @@ namespace Certify.Providers.DNS.AWSRoute53
             }
         }
 
-        public async Task<ActionResult> DeleteRecord(DnsDeleteRecordRequest request)
+        public async Task<ActionResult> DeleteRecord(DnsRecord request)
         {
             var zone = await ResolveMatchingZone(request);
 
@@ -205,7 +205,7 @@ namespace Certify.Providers.DNS.AWSRoute53
                 results.Add(new DnsZone
                 {
                     ZoneId = z.Id,
-                    Description = z.Name
+                    Name = z.Name
                 });
             }
 

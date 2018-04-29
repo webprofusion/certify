@@ -8,6 +8,7 @@ using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Providers.DNS.Azure;
 using Certify.Providers.DNS.Cloudflare;
+using Certify.Providers.DNS.DnsMadeEasy;
 using Certify.Providers.DNS.GoDaddy;
 
 namespace Certify.Core.Management.Challenges
@@ -59,6 +60,12 @@ namespace Certify.Core.Management.Challenges
                         var goDaddyDns = new DnsProviderGoDaddy(credentials);
                         dnsAPIProvider = goDaddyDns;
                     }
+
+                    if (providerDefinition.Id == "DNS01.API.DnsMadeEasy")
+                    {
+                        var dnsMadeEasy = new DnsProviderDnsMadeEasy(credentials);
+                        dnsAPIProvider = dnsMadeEasy;
+                    }
                 }
             }
             return dnsAPIProvider;
@@ -107,7 +114,7 @@ namespace Certify.Core.Management.Challenges
 
             if (dnsAPIProvider != null)
             {
-                var result = await dnsAPIProvider.CreateRecord(new DnsCreateRecordRequest
+                var result = await dnsAPIProvider.CreateRecord(new DnsRecord
                 {
                     RecordType = "TXT",
                     TargetDomainName = domain,

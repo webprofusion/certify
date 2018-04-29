@@ -83,11 +83,11 @@ namespace Certify.Providers.DNS.Azure
         /// </summary>
         /// <param name="recordName"></param>
         /// <returns></returns>
-        public async Task<DnsRecordRequest> DetermineDomainRoot(string recordName)
+        public async Task<DnsRecord> DetermineDomainRoot(string recordName)
         {
             var zones = await _dnsClient.Zones.ListAsync();
 
-            DnsRecordRequest info = new DnsRecordRequest { RecordType = "TXT" };
+            DnsRecord info = new DnsRecord { RecordType = "TXT" };
 
             foreach (var z in zones)
             {
@@ -100,14 +100,14 @@ namespace Certify.Providers.DNS.Azure
             return info;
         }
 
-        public string NormaliseRecordName(DnsRecordRequest info, string recordName)
+        public string NormaliseRecordName(DnsRecord info, string recordName)
         {
             var result = recordName.Replace(info.RootDomain, "");
             result = result.TrimEnd('.');
             return result;
         }
 
-        public async Task<ActionResult> CreateRecord(DnsCreateRecordRequest request)
+        public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
             var domainInfo = await DetermineDomainRoot(request.RecordName);
 
@@ -156,7 +156,7 @@ namespace Certify.Providers.DNS.Azure
             return new ActionResult { IsSuccess = false, Message = "DNS TXT Record create failed" };
         }
 
-        public async Task<ActionResult> DeleteRecord(DnsDeleteRecordRequest request)
+        public async Task<ActionResult> DeleteRecord(DnsRecord request)
         {
             var domainInfo = await DetermineDomainRoot(request.RecordName);
 
@@ -190,7 +190,7 @@ namespace Certify.Providers.DNS.Azure
             var list = await _dnsClient.Zones.ListAsync();
             foreach (var z in list)
             {
-                results.Add(new DnsZone { ZoneId = z.Name, Description = z.Name });
+                results.Add(new DnsZone { ZoneId = z.Name, Name = z.Name });
             }
             return results;
         }

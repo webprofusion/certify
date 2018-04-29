@@ -1,8 +1,8 @@
-﻿using Certify.Models.Providers;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Certify.Models.Providers;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Core.Tests
 {
@@ -16,7 +16,7 @@ namespace Certify.Core.Tests
         [TestMethod, TestCategory("DNS")]
         public async Task TestCreateRecord()
         {
-            DnsCreateRecordRequest createRequest = new DnsCreateRecordRequest
+            var createRequest = new DnsRecord
             {
                 RecordName = "dns-test." + PrimaryTestDomain,
                 RecordType = "TXT",
@@ -38,7 +38,7 @@ namespace Certify.Core.Tests
         [TestMethod, TestCategory("DNS")]
         public async Task TestDeleteRecord()
         {
-            DnsDeleteRecordRequest deleteRequest = new DnsDeleteRecordRequest
+            var deleteRequest = new DnsRecord
             {
                 RecordName = "dns-test." + PrimaryTestDomain,
                 RecordType = "TXT",

@@ -7,25 +7,19 @@ namespace Certify.Models.Providers
     public class DnsZone
     {
         public string ZoneId { get; set; }
-        public string Description { get; set; }
+        public string Name { get; set; }
     }
 
-    public class DnsRecordRequest
+    public class DnsRecord
     {
         public string ZoneId { get; set; }
+        public string RecordId { get; set; }
+
         public string TargetDomainName { get; set; }
+
         public string RecordType { get; set; } = "TXT";
         public string RootDomain { get; set; }
-    }
 
-    public class DnsCreateRecordRequest : DnsRecordRequest
-    {
-        public string RecordName { get; set; }
-        public string RecordValue { get; set; }
-    }
-
-    public class DnsDeleteRecordRequest : DnsRecordRequest
-    {
         public string RecordName { get; set; }
         public string RecordValue { get; set; }
     }
@@ -36,9 +30,9 @@ namespace Certify.Models.Providers
 
         Task<ActionResult> Test();
 
-        Task<ActionResult> CreateRecord(DnsCreateRecordRequest request);
+        Task<ActionResult> CreateRecord(DnsRecord request);
 
-        Task<ActionResult> DeleteRecord(DnsDeleteRecordRequest request);
+        Task<ActionResult> DeleteRecord(DnsRecord request);
 
         Task<List<DnsZone>> GetZones();
 

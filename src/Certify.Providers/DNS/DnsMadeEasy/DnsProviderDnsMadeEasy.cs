@@ -7,14 +7,31 @@ using System.Text;
 using System.Threading.Tasks;
 using Certify.Models.Config;
 using Certify.Models.Providers;
+using Newtonsoft.Json;
 
 namespace Certify.Providers.DNS.DnsMadeEasy
 {
     /// <summary>
     /// API calls based on https://api-docs.dnsmadeeasy.com/ 
     /// </summary>
-    public class DnsProviderDnsMadeEasy : IDnsProvider
+    public class DnsProviderDnsMadeEasy : IDnsProvider, IDisposable
     {
+        private class DnsQueryResults
+        {
+            public int TotalRecords { get; set; }
+            public int TotalPages { get; set; }
+            public List<DnsQueryResult> Data { get; set; }
+            public int Page { get; set; }
+        }
+
+        private class DnsQueryResult
+        {
+            public string Id { get; set; }
+            public string Name { get; set; }
+            public string Value { get; set; }
+            public string Type { get; set; }
+        }
+
         public int PropagationDelaySeconds => 60;
 
         public string ProviderId => "DNS01.API.DnsMadeEasy";
@@ -41,6 +58,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
         {
             _apiKey = credentials["apikey"];
             _apiSecret = credentials["apisecret"];
+            _httpClient = new HttpClient();
         }
 
         private static string ComputeHMAC(string input, string key)
@@ -79,16 +97,84 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             return request;
         }
 
-        public Task<ActionResult> CreateRecord(DnsCreateRecordRequest request)
+        /// <summary>
+        /// Where a record name is in the form _acme-challenge.www.subdomain.domain.com, determine
+        /// the root domain (i.e domain.com or subdomain.domain.com) info
+        /// </summary>
+        /// <param name="recordName"></param>
+        /// <returns></returns>
+        public async Task<DnsRecord> DetermineDomainRoot(string recordName)
         {
-            string url = $"{_apiUrl}/dns/managed/{request.ZoneId}/records/";
+            var zones = await GetZones();
 
-            ///{"name":"mail","type":"A","value":"1.1.1.1","gtdLocation":"DEFAULT","ttl":86400}
-            ///
-            throw new System.NotImplementedException();
+            DnsRecord info = new DnsRecord { RecordType = "TXT" };
+
+            foreach (var z in zones)
+            {
+                if (recordName.EndsWith(z.Name) && (info.RootDomain == null || z.Name.Length < info.RootDomain.Length))
+                {
+                    info.RootDomain = z.Name;
+                    info.ZoneId = z.ZoneId;
+                }
+            }
+            return info;
         }
 
-        public Task<ActionResult> DeleteRecord(DnsDeleteRecordRequest request)
+        public string NormaliseRecordName(DnsRecord info, string recordName)
+        {
+            var result = recordName.Replace(info.RootDomain, "");
+            result = result.TrimEnd('.');
+            return result;
+        }
+
+        public async Task<ActionResult> CreateRecord(DnsRecord request)
+        {
+            var domainInfo = await DetermineDomainRoot(request.RecordName);
+
+            if (string.IsNullOrEmpty(domainInfo.RootDomain))
+            {
+                return new ActionResult { IsSuccess = false, Message = "Failed to determine root domain in zone." };
+            }
+
+            var recordName = NormaliseRecordName(domainInfo, request.RecordName);
+
+            string url = $"{_apiUrl}dns/managed/{request.ZoneId}/records/";
+
+            var apiRequest = CreateRequest(HttpMethod.Post, url, DateTimeOffset.Now);
+
+            apiRequest.Content = new StringContent(
+                    JsonConvert.SerializeObject(new
+                    {
+                        type = request.RecordType,
+                        name = recordName,
+                        value = request.RecordValue,
+                        ttl = 5
+                    })
+                );
+
+            apiRequest.Content.Headers.ContentType.MediaType = "application/json";
+
+            var result = await _httpClient.SendAsync(apiRequest);
+
+            if (!result.IsSuccessStatusCode)
+            {
+                return new ActionResult
+                {
+                    IsSuccess = false,
+                    Message = $"Could not add dns record {recordName} to zone {request.ZoneId}. Result: {result.StatusCode} - {await result.Content.ReadAsStringAsync()}"
+                };
+            }
+            else
+            {
+                return new ActionResult
+                {
+                    IsSuccess = true,
+                    Message = "DNS record added."
+                };
+            }
+        }
+
+        public Task<ActionResult> DeleteRecord(DnsRecord request)
         {
             // https://api-docs.dnsmadeeasy.com/ determine record id, if it exists
 
@@ -98,10 +184,53 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             throw new System.NotImplementedException();
         }
 
+        public async Task<List<DnsRecord>> GetDnsRecords(string zoneId)
+        {
+            string url = $"{_apiUrl}dns/managed/{zoneId}/records/";
+
+            var request = CreateRequest(HttpMethod.Get, url, DateTimeOffset.Now);
+            var response = await _httpClient.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                var results = Newtonsoft.Json.JsonConvert.DeserializeObject<DnsQueryResults>(json);
+
+                // TODO: paging
+
+                var dnsRecords = results.Data.Select(x => new DnsRecord { RecordId = x.Id, RecordName = x.Name, RecordType = x.Type, RecordValue = x.Value }).ToList();
+                return dnsRecords;
+            }
+            else
+            {
+                // failed
+                throw new Exception("DnsMadeEasy: Failed to query DNS Records.");
+            }
+        }
+
         public async Task<List<DnsZone>> GetZones()
         {
             // return all managed domains https://api.dnsmadeeasy.com/V2.0/dns/managed/
-            throw new System.NotImplementedException();
+            var url = $"{_apiUrl}dns/managed/";
+
+            var request = CreateRequest(HttpMethod.Get, url, DateTimeOffset.Now);
+            var response = await _httpClient.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                var results = Newtonsoft.Json.JsonConvert.DeserializeObject<DnsQueryResults>(json);
+
+                // TODO: paging
+
+                var dnsZones = results.Data.Select(x => new DnsZone { ZoneId = x.Id, Name = x.Name }).ToList();
+                return dnsZones;
+            }
+            else
+            {
+                // failed
+                throw new Exception("DnsMadeEasy: Failed to query DNS Zones.");
+            }
         }
 
         public async Task<bool> InitProvider()
@@ -128,6 +257,14 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             catch (Exception exp)
             {
                 return new ActionResult { IsSuccess = true, Message = $"Test Failed: {exp.Message}" };
+            }
+        }
+
+        public void Dispose()
+        {
+            if (this._httpClient != null)
+            {
+                _httpClient.Dispose();
             }
         }
     }

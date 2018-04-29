@@ -54,7 +54,7 @@ namespace Certify.Core.Management.Challenges
             }
         }
 
-        public async Task<ActionResult> CreateRecord(DnsCreateRecordRequest request)
+        public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
             // for a given managed site configuration, attempt to complete the required challenge by
             // creating the required TXT record
@@ -101,7 +101,7 @@ namespace Certify.Core.Management.Challenges
             }
         }
 
-        public async Task<ActionResult> DeleteRecord(DnsDeleteRecordRequest request)
+        public async Task<ActionResult> DeleteRecord(DnsRecord request)
         {
             throw new NotImplementedException();
         }

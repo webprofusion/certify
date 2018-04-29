@@ -30,11 +30,12 @@ namespace Certify.Core.Management.Challenges
                 ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Title = "Amazon Route 53 DNS API",
                 Description = "Validates via Route 53 APIs using AMI service credentials",
-                ProviderParameters= new List<ProviderParameter>{
+                ProviderParameters=  new List<ProviderParameter>{
                     new ProviderParameter{ Key="accesskey",Name="Access Key", IsRequired=true, IsPassword=false },
                     new ProviderParameter{ Key="secretaccesskey",Name="Secret Access Key", IsRequired=true, IsPassword=true }
                 },
-                Config="Provider=Certify.Providers.DNS.AWSRoute53",
+
+                Config ="Provider=Certify.Providers.DNS.AWSRoute53",
                 HandlerType = ChallengeHandlerType.INTERNAL
             },
             new ProviderDefinition
@@ -51,7 +52,7 @@ namespace Certify.Core.Management.Challenges
                     new ProviderParameter{Key="subscriptionid",Name="DNS Subscription Id", IsRequired=true , IsPassword=false},
                     new ProviderParameter{Key="resourcegroupname",Name="Resource Group Name", IsRequired=true , IsPassword=false}
                 },
-                Config="Provider=Certify.Providers.DNS.Azure",
+                Config ="Provider=Certify.Providers.DNS.Azure",
                 HandlerType = ChallengeHandlerType.INTERNAL
             },
               new ProviderDefinition
@@ -79,7 +80,21 @@ namespace Certify.Core.Management.Challenges
                     new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true },
                     new ProviderParameter{Key="authsecret", Name="Auth Secret", IsRequired=true }
                 },
-                Config="Provider=Certify.Providers.DNS.GoDaddy",
+                Config ="Provider=Certify.Providers.DNS.GoDaddy",
+                HandlerType = ChallengeHandlerType.INTERNAL
+            },
+             new ProviderDefinition
+            {
+                Id = "DNS01.API.DnsMadeEasy",
+                ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Title = "DnsMadeEasy DNS API",
+                Description = "Validates via DnsMadeEasy using credentials",
+                HelpUrl="https://api-docs.dnsmadeeasy.com/",
+                ProviderParameters = new List<ProviderParameter>{
+                    new ProviderParameter{Key="apikey", Name="API Key", IsRequired=true },
+                    new ProviderParameter{Key="apisecret", Name="API Secret", IsRequired=true }
+                },
+                Config="Provider=Certify.Providers.DNS.DnsMadeEasy",
                 HandlerType = ChallengeHandlerType.INTERNAL
             }
 
