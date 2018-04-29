@@ -24,6 +24,8 @@ namespace Certify.Providers.DNS.Azure
 
         public string ProviderDescription => "Validates via Azure DNS APIs using credentials";
 
+        public string ProviderHelpUrl => "https://certifytheweb.com/docs/dns/azure";
+
         public List<ProviderParameter> ProviderParameters => new List<ProviderParameter>{
                     new ProviderParameter{Key="tenantid", Name="Tenant Id", IsRequired=false },
                     new ProviderParameter{Key="clientid", Name="Application Id", IsRequired=false },

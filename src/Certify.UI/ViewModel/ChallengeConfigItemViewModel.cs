@@ -1,8 +1,8 @@
-﻿using Certify.Models;
-using Certify.Models.Config;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Certify.Models;
+using Certify.Models.Config;
 
 namespace Certify.UI.ViewModel
 {
@@ -34,7 +34,7 @@ namespace Certify.UI.ViewModel
             get
             {
                 return new ObservableCollection<ProviderDefinition>(
-                    Certify.Models.Config.ChallengeProviders.Providers
+                    _appViewModel.ChallengeAPIProviders
                     .Where(p => p.ProviderParameters.Any())
                     .OrderBy(p => p.Title)
                     .ToList());

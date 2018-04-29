@@ -21,7 +21,7 @@ namespace Certify.Core.Management.Challenges
 
             if (!String.IsNullOrEmpty(providerType))
             {
-                providerDefinition = Models.Config.ChallengeProviders.Providers.FirstOrDefault(p => p.Id == providerType);
+                providerDefinition = (await new ChallengeProviders().GetChallengeAPIProviders()).FirstOrDefault(p => p.Id == providerType);
             }
             else
             {
@@ -58,7 +58,6 @@ namespace Certify.Core.Management.Challenges
                     {
                         var goDaddyDns = new DnsProviderGoDaddy(credentials);
                         dnsAPIProvider = goDaddyDns;
-
                     }
                 }
             }

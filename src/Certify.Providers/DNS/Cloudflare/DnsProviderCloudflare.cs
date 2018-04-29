@@ -88,6 +88,8 @@ namespace Certify.Providers.DNS.Cloudflare
 
         public string ProviderDescription => "Validates via Cloudflare DNS APIs using credentials";
 
+        public string ProviderHelpUrl => "https://certifytheweb.com/docs/dns/cloudflare";
+
         public List<ProviderParameter> ProviderParameters => new List<ProviderParameter>{
                     new ProviderParameter{Key="emailaddress", Name="Email Address", IsRequired=true },
                     new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Amazon.Route53;
 using Amazon.Route53.Model;
+using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 
@@ -20,6 +21,20 @@ namespace Certify.Providers.DNS.AWSRoute53
         public string ProviderTitle => "Amazon Route 53 DNS API";
 
         public string ProviderDescription => "Validates via Route 53 APIs using AMI service credentials";
+
+        public string ProviderHelpUrl => "https://certifytheweb.com/docs/dns/awsroute53";
+
+        public static ProviderDefinition Definition
+        {
+            get
+            {
+                return new ProviderDefinition
+                {
+                    ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS
+                    // etc TODO
+                };
+            }
+        }
 
         public List<ProviderParameter> ProviderParameters =>
                 new List<ProviderParameter>{

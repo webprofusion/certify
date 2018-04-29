@@ -42,7 +42,13 @@ namespace Certify.UI.Windows
 
             this.DataContext = EditViewModel;
 
-            EditViewModel.ChallengeProviders = ChallengeProviders.Providers.Where(p => p.ProviderParameters.Any()).ToList();
+            // TODO: move to async
+            if (MainViewModel.ChallengeAPIProviders == null && MainViewModel.ChallengeAPIProviders.Count == 0)
+            {
+                MainViewModel.RefreshChallengeAPIList().Wait();
+            }
+
+            EditViewModel.ChallengeProviders = MainViewModel.ChallengeAPIProviders.Where(p => p.ProviderParameters.Any()).ToList();
 
             if (editItem != null)
             {
@@ -53,7 +59,7 @@ namespace Certify.UI.Windows
             {
                 EditViewModel.Item = new StoredCredential
                 {
-                    ProviderType = ChallengeProviders.Providers.First().Id
+                    ProviderType = EditViewModel.ChallengeProviders.First().Id
                 };
             }
 

@@ -122,6 +122,8 @@ namespace Certify.Client
 
         Task<List<ActionStep>> PreviewActions(ManagedCertificate site);
 
+        Task<List<ProviderDefinition>> GetChallengeAPIList();
+
         #endregion Managed Certificates
 
         #region Contacts

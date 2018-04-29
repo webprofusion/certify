@@ -28,6 +28,8 @@ namespace Certify.Core.Management.Challenges
 
         public string ProviderDescription => "Multi provider DNS API";
 
+        public string ProviderHelpUrl => "";
+
         public List<ProviderParameter> ProviderParameters => new List<ProviderParameter>();
 
         public async Task<ActionResult> Test()

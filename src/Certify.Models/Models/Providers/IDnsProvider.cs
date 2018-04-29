@@ -50,6 +50,8 @@ namespace Certify.Models.Providers
 
         string ProviderDescription { get; }
 
+        string ProviderHelpUrl { get; }
+
         List<ProviderParameter> ProviderParameters { get; }
     }
 }

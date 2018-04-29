@@ -279,6 +279,8 @@ namespace Certify.UI.ViewModel
 
             PrimaryContactEmail = await CertifyClient.GetPrimaryContact();
 
+            await RefreshChallengeAPIList();
+
             await RefreshStoredCredentialsList();
         }
 
@@ -454,6 +456,17 @@ namespace Certify.UI.ViewModel
             App.Current.Dispatcher.Invoke((Action)delegate
             {
                 StoredCredentials = new System.Collections.ObjectModel.ObservableCollection<Models.Config.StoredCredential>(list);
+            });
+        }
+
+        public ObservableCollection<ProviderDefinition> ChallengeAPIProviders { get; set; } = new ObservableCollection<ProviderDefinition> { };
+
+        public async Task RefreshChallengeAPIList()
+        {
+            var list = await CertifyClient.GetChallengeAPIList();
+            App.Current.Dispatcher.Invoke((Action)delegate
+            {
+                ChallengeAPIProviders = new System.Collections.ObjectModel.ObservableCollection<Models.Config.ProviderDefinition>(list);
             });
         }
 

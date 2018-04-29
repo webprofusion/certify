@@ -1,10 +1,18 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Certify.Models;
+using Certify.Models.Config;
 
-namespace Certify.Models.Config
+namespace Certify.Core.Management.Challenges
 {
     public class ChallengeProviders
     {
-        public static List<ProviderDefinition> Providers = new List<ProviderDefinition>
+        public async Task<List<ProviderDefinition>> GetChallengeAPIProviders()
+        {
+            //TODO: most of this information could come from each provider class if it was provided statically
+
+            var providers = new List<ProviderDefinition>
+
         {
             // IIS
             new ProviderDefinition
@@ -75,7 +83,6 @@ namespace Certify.Models.Config
                 HandlerType = ChallengeHandlerType.INTERNAL
             }
 
-
             /*
              *  new ProviderDefinition
             {
@@ -95,5 +102,7 @@ namespace Certify.Models.Config
                 HandlerType = ChallengeHandlerType.PYTHON_HELPER
             }*/
         };
+            return await Task.FromResult(providers);
+        }
     }
 }

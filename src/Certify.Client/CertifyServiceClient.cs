@@ -304,6 +304,12 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<CertificateRequestResult>(response);
         }
 
+        public async Task<List<ProviderDefinition>> GetChallengeAPIList()
+        {
+            var response = await FetchAsync($"managedcertificates/challengeapis/");
+            return JsonConvert.DeserializeObject<List<ProviderDefinition>>(response);
+        }
+
         #endregion Managed Certificates
 
         #region Contacts

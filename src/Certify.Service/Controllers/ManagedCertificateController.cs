@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Web.Http;
+using Certify.Management;
 using Certify.Models;
+using Certify.Models.Config;
 using Serilog;
 
 namespace Certify.Service
@@ -10,7 +12,7 @@ namespace Certify.Service
     [RoutePrefix("api/managedcertificates")]
     public class ManagedCertificatesController : Controllers.ControllerBase
     {
-        private Management.ICertifyManager _certifyManager = null;
+        private ICertifyManager _certifyManager = null;
 
         public ManagedCertificatesController(Management.ICertifyManager manager)
         {
@@ -154,15 +156,21 @@ namespace Certify.Service
             var result = await _certifyManager.DeployCertificate(managedCertificate, null, isPreviewOnly);
             return result;
         }
+
+        [HttpGet, Route("challengeapis/")]
+        public async Task<List<ProviderDefinition>> GetChallengeAPIList()
+        {
+            return await new Core.Management.Challenges.ChallengeProviders().GetChallengeAPIProviders();
+        }
     }
 
     public class ProgressLogSink : Serilog.Core.ILogEventSink
     {
         private IProgress<RequestProgressState> _progress;
         private ManagedCertificate _item;
-        private Management.ICertifyManager _certifyManager;
+        private ICertifyManager _certifyManager;
 
-        public ProgressLogSink(IProgress<RequestProgressState> progress, ManagedCertificate item, Management.ICertifyManager certifyManager)
+        public ProgressLogSink(IProgress<RequestProgressState> progress, ManagedCertificate item, ICertifyManager certifyManager)
         {
             _progress = progress;
             _item = item;
