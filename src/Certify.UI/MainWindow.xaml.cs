@@ -1,10 +1,11 @@
-using Certify.Locales;
-using Microsoft.ApplicationInsights;
-using System;
+﻿using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using Certify.Locales;
+using Microsoft.ApplicationInsights;
 
 namespace Certify.UI
 {
@@ -137,6 +138,11 @@ namespace Certify.UI
                 return;
             }
 
+            var diagnostics = await Management.Util.PerformAppDiagnostics();
+            if (diagnostics.Any(d => d.IsSuccess == false))
+            {
+                MessageBox.Show(diagnostics.First(d => d.IsSuccess == false).Message);
+            }
             //init telemetry if enabled
             InitTelemetry();
 

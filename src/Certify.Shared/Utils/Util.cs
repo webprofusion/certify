@@ -1,8 +1,4 @@
-using Certify.Locales;
-using Certify.Models;
-using Microsoft.ApplicationInsights;
-using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -10,12 +6,48 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using Certify.Locales;
+using Certify.Models;
+using Certify.Models.Config;
+using Microsoft.ApplicationInsights;
+using Microsoft.Win32;
 
 namespace Certify.Management
 {
     public class Util
     {
         public const string APPDATASUBFOLDER = "Certify";
+
+        /// <summary>
+        /// check for problems which could affect app use 
+        /// </summary>
+        /// <returns></returns>
+        public static Task<List<ActionResult>> PerformAppDiagnostics()
+        {
+            var results = new List<ActionResult>();
+
+            string tempPath = "";
+            string tempFolder = Path.GetTempPath();
+
+            // attempt to create a 1MB temp file, detect if it fails
+            try
+            {
+                tempPath = Path.GetTempFileName();
+
+                FileStream fs = new FileStream(tempPath, FileMode.Open);
+                fs.Seek(1024 * 1024, SeekOrigin.Begin);
+                fs.WriteByte(0);
+                fs.Close();
+
+                File.Delete(tempPath);
+                results.Add(new ActionResult { IsSuccess = true, Message = $"Created test temp file OK." });
+            }
+            catch (Exception exp)
+            {
+                results.Add(new ActionResult { IsSuccess = false, Message = $"Could not create a temp file ({tempPath}). Windows has a limit of 65535 files in the temp folder ({tempFolder}). Clear temp files  before proceeding. {exp.Message}" });
+            }
+            return Task.FromResult(results);
+        }
 
         public static void SetSupportedTLSVersions()
         {
