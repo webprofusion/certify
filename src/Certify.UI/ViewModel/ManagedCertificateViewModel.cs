@@ -53,14 +53,14 @@ namespace Certify.UI.ViewModel
         internal async Task RefreshWebsiteList()
         {
             var list = await _appViewModel.CertifyClient.GetServerSiteList(StandardServerTypes.IIS);
-            list.Insert(0, new SiteBindingItem { SiteName = "(No IIS Website Selected)", SiteId = "" });
-            this.WebSiteList = new ObservableCollection<SiteBindingItem>(list);
+            list.Insert(0, new BindingInfo { Name = "(No IIS Website Selected)", Id = "" });
+            this.WebSiteList = new ObservableCollection<BindingInfo>(list);
         }
 
         /// <summary>
         /// List of websites from the selected web server (if any) 
         /// </summary>
-        public ObservableCollection<SiteBindingItem> WebSiteList { get; set; } = new ObservableCollection<SiteBindingItem>();
+        public ObservableCollection<BindingInfo> WebSiteList { get; set; } = new ObservableCollection<BindingInfo>();
 
         public bool HasSelectedItemWebsiteSelection
         {
@@ -167,7 +167,7 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public SiteBindingItem SelectedWebSite
+        public BindingInfo SelectedWebSite
         {
             get; set;
         }
@@ -393,8 +393,8 @@ namespace Certify.UI.ViewModel
                 // optionally append webserver site ID (if used)
                 if (SelectedWebSite != null)
                 {
-                    item.Id += ":" + SelectedWebSite.SiteId;
-                    item.GroupId = SelectedWebSite.SiteId;
+                    item.Id += ":" + SelectedWebSite.Id;
+                    item.GroupId = SelectedWebSite.Id;
                     item.ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS;
                 }
                 else
@@ -411,17 +411,17 @@ namespace Certify.UI.ViewModel
 
             if (SelectedWebSite != null)
             {
-                if (managedCertificate.GroupId != SelectedWebSite.SiteId)
+                if (managedCertificate.GroupId != SelectedWebSite.Id)
                 {
                     // update website association
-                    managedCertificate.GroupId = SelectedWebSite.SiteId;
+                    managedCertificate.GroupId = SelectedWebSite.Id;
 
                     // if not already set, use website name as default name
                     if (managedCertificate.Id == null || String.IsNullOrEmpty(managedCertificate.Name))
                     {
-                        if (!String.IsNullOrEmpty(SelectedWebSite.SiteName))
+                        if (!String.IsNullOrEmpty(SelectedWebSite.Name))
                         {
-                            managedCertificate.Name = SelectedWebSite.SiteName;
+                            managedCertificate.Name = SelectedWebSite.Name;
                         }
 
                         //set defaults first

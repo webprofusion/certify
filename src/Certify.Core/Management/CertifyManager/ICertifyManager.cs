@@ -36,7 +36,7 @@ namespace Certify.Management
 
         void RemoveAllContacts();
 
-        Task<List<SiteBindingItem>> GetPrimaryWebSites(bool ignoreStoppedSites);
+        Task<List<BindingInfo>> GetPrimaryWebSites(bool ignoreStoppedSites);
 
         void BeginTrackingProgress(RequestProgressState state);
 

@@ -8,7 +8,7 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
-        public async Task<List<SiteBindingItem>> GetPrimaryWebSites(bool ignoreStoppedSites)
+        public async Task<List<BindingInfo>> GetPrimaryWebSites(bool ignoreStoppedSites)
         {
             return await _serverProvider.GetPrimarySites(ignoreStoppedSites);
         }
@@ -20,7 +20,7 @@ namespace Certify.Management
 
             var matchingSites =
                 await _serverProvider.GetSiteBindingList(CoreAppSettings.Current.IgnoreStoppedSites, siteId);
-            var siteBindingList = matchingSites.Where(s => s.SiteId == siteId);
+            var siteBindingList = matchingSites.Where(s => s.Id == siteId);
 
             bool includeEmptyHostnameBindings = false;
 

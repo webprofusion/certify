@@ -138,7 +138,7 @@ namespace Certify.Core.Tests
             {
                 domains.Add(Guid.NewGuid().ToString() + ".toomany.com");
             }
-            await iisManager.AddSiteBindings(site.SiteId, domains);
+            await iisManager.AddSiteBindings(site.Id, domains);
         }
 
         [TestMethod]

@@ -1,8 +1,8 @@
-using Certify.Locales;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Certify.Locales;
+using Newtonsoft.Json;
 
 namespace Certify.Models
 {
@@ -258,21 +258,5 @@ namespace Certify.Models
         /// a primary domain certificate
         /// </summary>
         public bool IsSubjectAlternativeName { get; set; }
-    }
-
-    //TODO: deprecate and remove
-    public class SiteBindingItem
-    {
-        public string SiteId { get; set; }
-        public string SiteName { get; set; }
-        public string Host { get; set; }
-        public string IP { get; set; }
-        public string PhysicalPath { get; set; }
-        public bool IsHTTPS { get; set; }
-        public string Protocol { get; set; }
-        public int? Port { get; set; }
-        public bool HasCertificate { get; set; }
-
-        public bool IsEnabled { get; set; }
     }
 }

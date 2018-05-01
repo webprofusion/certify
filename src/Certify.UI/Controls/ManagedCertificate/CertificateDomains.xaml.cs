@@ -59,7 +59,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                     // if website previously selected, preselect in dropdown
                     if (SelectedItem.GroupId == null) SelectedItem.GroupId = "";
 
-                    var selectedWebsite = ItemViewModel.WebSiteList.FirstOrDefault(w => w.SiteId == SelectedItem.GroupId);
+                    var selectedWebsite = ItemViewModel.WebSiteList.FirstOrDefault(w => w.Id == SelectedItem.GroupId);
                     if (selectedWebsite != null)
                     {
                         ItemViewModel.SelectedWebSite = selectedWebsite;
@@ -76,7 +76,7 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             if (ItemViewModel.SelectedWebSite != null)
             {
-                string siteId = ItemViewModel.SelectedWebSite.SiteId;
+                string siteId = ItemViewModel.SelectedWebSite.Id;
 
                 SiteQueryInProgress.Visibility = Visibility.Visible;
 

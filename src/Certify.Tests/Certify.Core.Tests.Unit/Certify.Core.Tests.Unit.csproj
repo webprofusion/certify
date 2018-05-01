@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConnectionCheckTests.cs" />
+    <Compile Include="BindingMatchTests.cs" />
     <Compile Include="DnsQueryTests.cs" />
     <Compile Include="ManagedSiteTests.cs" />
     <Compile Include="SettingsTests.cs" />

@@ -278,17 +278,17 @@ namespace Certify.Management
                 {
                     var allSites = await serverProvider.GetSiteBindingList(CoreAppSettings.Current.IgnoreStoppedSites);
                     var iisSites = allSites
-                        .OrderBy(s => s.SiteId)
+                        .OrderBy(s => s.Id)
                         .ThenBy(s => s.Host);
 
-                    var siteIds = iisSites.GroupBy(x => x.SiteId);
+                    var siteIds = iisSites.GroupBy(x => x.Id);
 
                     foreach (var s in siteIds)
                     {
                         var managedCertificate = new ManagedCertificate { Id = s.Key };
                         managedCertificate.ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS;
                         managedCertificate.TargetHost = "localhost";
-                        managedCertificate.Name = iisSites.First(i => i.SiteId == s.Key).SiteName;
+                        managedCertificate.Name = iisSites.First(i => i.Id == s.Key).Name;
 
                         //TODO: replace site binding with domain options
                         //managedCertificate.SiteBindings = new List<ManagedCertificateBinding>();

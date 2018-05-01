@@ -177,10 +177,10 @@ namespace Certify.Client
             return bool.Parse(result);
         }
 
-        public async Task<List<SiteBindingItem>> GetServerSiteList(StandardServerTypes serverType)
+        public async Task<List<BindingInfo>> GetServerSiteList(StandardServerTypes serverType)
         {
             var result = await FetchAsync($"server/sitelist/{serverType}");
-            return JsonConvert.DeserializeObject<List<SiteBindingItem>>(result);
+            return JsonConvert.DeserializeObject<List<BindingInfo>>(result);
         }
 
         public async Task<System.Version> GetServerVersion(StandardServerTypes serverType)

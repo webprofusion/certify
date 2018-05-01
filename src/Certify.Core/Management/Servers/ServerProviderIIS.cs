@@ -1,13 +1,13 @@
-using Certify.Models;
-using Certify.Models.Providers;
-using Microsoft.Web.Administration;
-using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using Certify.Models;
+using Certify.Models.Providers;
+using Microsoft.Web.Administration;
+using Microsoft.Win32;
 
 namespace Certify.Management.Servers
 {
@@ -151,9 +151,9 @@ namespace Certify.Management.Servers
         /// </summary>
         /// <param name="includeOnlyStartedSites"></param>
         /// <returns></returns>
-        public async Task<List<SiteBindingItem>> GetPrimarySites(bool includeOnlyStartedSites)
+        public async Task<List<BindingInfo>> GetPrimarySites(bool includeOnlyStartedSites)
         {
-            var result = new List<SiteBindingItem>();
+            var result = new List<BindingInfo>();
 
             try
             {
@@ -167,10 +167,10 @@ namespace Certify.Management.Servers
                         {
                             if (site != null)
                             {
-                                var b = new SiteBindingItem()
+                                var b = new BindingInfo()
                                 {
-                                    SiteId = site.Id.ToString(),
-                                    SiteName = site.Name
+                                    Id = site.Id.ToString(),
+                                    Name = site.Name
                                 };
 
                                 b.PhysicalPath = site.Applications["/"].VirtualDirectories["/"].PhysicalPath;
@@ -195,7 +195,7 @@ namespace Certify.Management.Servers
                 //IIS not available
             }
 
-            return result.OrderBy(s => s.SiteName).ToList();
+            return result.OrderBy(s => s.Name).ToList();
         }
 
         public async Task AddSiteBindings(string siteId, List<string> domains, int port = 80)
@@ -220,9 +220,9 @@ namespace Certify.Management.Servers
             }
         }
 
-        public async Task<List<SiteBindingItem>> GetSiteBindingList(bool ignoreStoppedSites, string siteId = null)
+        public async Task<List<BindingInfo>> GetSiteBindingList(bool ignoreStoppedSites, string siteId = null)
         {
-            var result = new List<SiteBindingItem>();
+            var result = new List<BindingInfo>();
 
             using (var iisManager = await GetDefaultServerManager())
             {
@@ -249,21 +249,21 @@ namespace Certify.Management.Servers
                 }
             }
 
-            return result.OrderBy(r => r.SiteName).ToList();
+            return result.OrderBy(r => r.Name).ToList();
         }
 
-        private SiteBindingItem GetSiteBinding(Site site, Binding binding)
+        private BindingInfo GetSiteBinding(Site site, Binding binding)
         {
             var siteInfo = Map(site);
 
-            return new SiteBindingItem()
+            return new BindingInfo()
             {
-                SiteId = siteInfo.Id,
-                SiteName = siteInfo.Name,
+                Id = siteInfo.Id,
+                Name = siteInfo.Name,
                 PhysicalPath = siteInfo.Path,
                 Host = binding.Host,
                 IP = binding.EndPoint?.Address?.ToString(),
-                Port = binding.EndPoint?.Port,
+                Port = binding.EndPoint?.Port ?? 0,
                 IsHTTPS = binding.Protocol.ToLower() == "https",
                 Protocol = binding.Protocol,
                 HasCertificate = (binding.CertificateHash != null)
@@ -292,7 +292,7 @@ namespace Certify.Management.Servers
             return null;
         }
 
-        public async Task<SiteBindingItem> GetSiteBindingByDomain(string domain)
+        public async Task<BindingInfo> GetSiteBindingByDomain(string domain)
         {
             domain = _idnMapping.GetUnicode(domain);
 
@@ -476,7 +476,7 @@ namespace Certify.Management.Servers
         }
 
         /// <summary>
-        /// Creates or updates the htttps bindings associated with the dns names in the current
+        /// Creates or updates the https bindings associated with the dns names in the current
         /// request config, using the requested port/ips or autobinding
         /// </summary>
         /// <param name="requestConfig"></param>

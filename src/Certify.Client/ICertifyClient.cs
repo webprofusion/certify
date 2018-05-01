@@ -70,7 +70,7 @@ namespace Certify.Client
 
         Task<bool> IsServerAvailable(StandardServerTypes serverType);
 
-        Task<List<SiteBindingItem>> GetServerSiteList(StandardServerTypes serverType);
+        Task<List<BindingInfo>> GetServerSiteList(StandardServerTypes serverType);
 
         Task<Version> GetServerVersion(StandardServerTypes serverType);
 

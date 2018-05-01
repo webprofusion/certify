@@ -9,7 +9,7 @@ namespace Certify.Models.Providers
     /// </summary>
     public interface ICertifiedServer
     {
-        Task<List<SiteBindingItem>> GetSiteBindingList(
+        Task<List<BindingInfo>> GetSiteBindingList(
             bool ignoreStoppedSites,
             string siteId = null
             );
@@ -33,7 +33,7 @@ namespace Certify.Models.Providers
             bool isPreviewOnly = false
             );
 
-        Task<List<SiteBindingItem>> GetPrimarySites(bool ignoreStoppedSites);
+        Task<List<BindingInfo>> GetPrimarySites(bool ignoreStoppedSites);
 
         Task<SiteInfo> GetSiteById(string siteId);
 
