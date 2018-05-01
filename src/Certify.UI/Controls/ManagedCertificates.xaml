@@ -52,12 +52,14 @@
                 Grid.Row="0"
                 Controls:TextBoxHelper.ClearTextButton="True"
                 Controls:TextBoxHelper.Watermark="{x:Static res:SR.ManagedCertificates_Filter}"
+                AutomationProperties.Name="{x:Static res:SR.ManagedCertificates_Filter}"
                 PreviewKeyDown="TxtFilter_PreviewKeyDown"
                 TextChanged="TxtFilter_TextChanged" />
 
             <ListView
                 Name="lvManagedCertificates"
                 Grid.Row="1"
+                AutomationProperties.Name="Managed Certificates List"
                 Background="#FCFCFC"
                 ItemsSource="{Binding ManagedCertificates}"
                 ScrollViewer.CanContentScroll="True"
@@ -93,7 +95,10 @@
                 </ListView.ItemContainerStyle>
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Margin="0,8,0,0" Orientation="Vertical">
+                        <StackPanel
+                            Margin="0,8,0,0"
+                            AutomationProperties.Name="{Binding Name}"
+                            Orientation="Vertical">
                             <StackPanel Orientation="Horizontal">
                                 <fa:FontAwesome Margin="0,0,8,0" Icon="Globe" />
                                 <TextBlock

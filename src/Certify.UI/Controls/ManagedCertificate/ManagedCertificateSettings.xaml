@@ -47,6 +47,7 @@
             <TextBlock
                 Margin="16,0,0,4"
                 VerticalAlignment="Top"
+                AutomationProperties.Name="{Binding SelectedItem.Name}"
                 DockPanel.Dock="Left"
                 FontSize="20"
                 Foreground="#FF494949"
@@ -55,6 +56,7 @@
                 x:Name="Dismiss"
                 Margin="0,4,8,4"
                 VerticalAlignment="Top"
+                AutomationProperties.Name="Dismiss"
                 Background="White"
                 BorderBrush="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}"
                 Click="Dismiss_Click"
@@ -188,6 +190,7 @@
 
                 <CheckBox
                     x:Name="CheckAdvancedView"
+                    AutomationProperties.Name="Show Advanced Options"
                     BorderBrush="{DynamicResource {x:Static SystemColors.InactiveCaptionTextBrushKey}}"
                     Checked="CheckAdvancedView_Checked"
                     Content="Show Advanced Options"
@@ -211,7 +214,8 @@
                     x:Name="TabStatusInfo"
                     MinWidth="100"
                     Controls:ControlsHelper.HeaderFontSize="12"
-                    Controls:TabControlHelper.UnderlineBrush="White">
+                    Controls:TabControlHelper.UnderlineBrush="White"
+                    AutomationProperties.Name="Status">
                     <TabItem.HeaderTemplate>
                         <DataTemplate>
                             <managedcertificate:TabHeader HeaderText="Status" IconName="Support" />
@@ -225,6 +229,7 @@
                     MinWidth="130"
                     Margin="0"
                     Controls:ControlsHelper.HeaderFontSize="12"
+                    AutomationProperties.Name="Certificate Domains"
                     IsSelected="True">
                     <TabItem.HeaderTemplate>
                         <DataTemplate>
@@ -234,7 +239,10 @@
                     <managedcertificate:CertificateDomains Margin="0,8,0,0" />
                 </TabItem>
 
-                <TabItem MinWidth="100" Controls:ControlsHelper.HeaderFontSize="12">
+                <TabItem
+                    MinWidth="100"
+                    Controls:ControlsHelper.HeaderFontSize="12"
+                    AutomationProperties.Name="Authorization">
                     <TabItem.HeaderTemplate>
                         <DataTemplate>
                             <managedcertificate:TabHeader HeaderText="Authorization" IconName="Lock" />
@@ -247,7 +255,8 @@
                 <TabItem
                     x:Name="TabDeployment"
                     MinWidth="100"
-                    Controls:ControlsHelper.HeaderFontSize="12">
+                    Controls:ControlsHelper.HeaderFontSize="12"
+                    AutomationProperties.Name="Deployment">
                     <TabItem.HeaderTemplate>
                         <DataTemplate>
                             <managedcertificate:TabHeader HeaderText="Deployment" IconName="Cog" />
@@ -259,7 +268,8 @@
                 <TabItem
                     x:Name="TabScripting"
                     MinWidth="100"
-                    Controls:ControlsHelper.HeaderFontSize="12">
+                    Controls:ControlsHelper.HeaderFontSize="12"
+                    AutomationProperties.Name="Scripting">
                     <TabItem.HeaderTemplate>
                         <DataTemplate>
                             <managedcertificate:TabHeader HeaderText="Scripting" IconName="Code" />
@@ -270,7 +280,8 @@
                 <TabItem
                     x:Name="TabOptions"
                     MinWidth="100"
-                    Controls:ControlsHelper.HeaderFontSize="12">
+                    Controls:ControlsHelper.HeaderFontSize="12"
+                    AutomationProperties.Name="Other Options">
                     <TabItem.HeaderTemplate>
                         <DataTemplate>
                             <managedcertificate:TabHeader HeaderText="Other Options" IconName="Cog" />
@@ -281,7 +292,8 @@
                 <TabItem
                     x:Name="TabPreview"
                     MinWidth="100"
-                    Controls:ControlsHelper.HeaderFontSize="12">
+                    Controls:ControlsHelper.HeaderFontSize="12"
+                    AutomationProperties.Name="Preview">
                     <TabItem.HeaderTemplate>
                         <DataTemplate>
                             <managedcertificate:TabHeader HeaderText="Preview" IconName="Comment" />
