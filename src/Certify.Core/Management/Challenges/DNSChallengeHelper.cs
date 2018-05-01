@@ -53,16 +53,24 @@ namespace Certify.Core.Management.Challenges
 
             if (dnsAPIProvider != null)
             {
-                var result = await dnsAPIProvider.CreateRecord(new DnsRecord
+                try
                 {
-                    RecordType = "TXT",
-                    TargetDomainName = domain,
-                    RecordName = txtRecordName,
-                    RecordValue = txtRecordValue,
-                    ZoneId = challengeConfig.ZoneId.Trim()
-                });
+                    var result = await dnsAPIProvider.CreateRecord(new DnsRecord
+                    {
+                        RecordType = "TXT",
+                        TargetDomainName = domain,
+                        RecordName = txtRecordName,
+                        RecordValue = txtRecordValue,
+                        ZoneId = challengeConfig.ZoneId.Trim()
+                    });
 
-                return result;
+                    return result;
+                }
+                catch (Exception exp)
+                {
+                    return new ActionResult { IsSuccess = false, Message = $"Failed [{dnsAPIProvider.ProviderTitle}]: " + exp.Message };
+                }
+
                 /*
                 if (result.IsSuccess)
                 {

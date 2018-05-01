@@ -147,11 +147,20 @@ namespace Certify.Providers.DNS.DnsMadeEasy
 
         public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
-            var domainInfo = await DetermineDomainRoot(request.RecordName);
+            DnsRecord domainInfo = null;
 
-            if (string.IsNullOrEmpty(domainInfo.RootDomain))
+            try
             {
-                return new ActionResult { IsSuccess = false, Message = "Failed to determine root domain in zone." };
+                domainInfo = await DetermineDomainRoot(request.RecordName);
+
+                if (string.IsNullOrEmpty(domainInfo.RootDomain))
+                {
+                    return new ActionResult { IsSuccess = false, Message = "Failed to determine root domain in zone." };
+                }
+            }
+            catch (Exception exp)
+            {
+                return new ActionResult { IsSuccess = false, Message = $"[{ProviderTitle}] Failed to create record: {exp.Message}" };
             }
 
             var recordName = NormaliseRecordName(domainInfo, request.RecordName);
@@ -247,7 +256,8 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             else
             {
                 // failed
-                throw new Exception("DnsMadeEasy: Failed to query DNS Zones.");
+                string msg = await response.Content.ReadAsStringAsync();
+                throw new Exception($"DnsMadeEasy: Failed to query DNS Zones. :: {msg}");
             }
         }
 
