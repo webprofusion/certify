@@ -7,7 +7,7 @@ namespace Certify.Models.Providers
     /// <summary>
     /// An example certified server would be an IIS server 
     /// </summary>
-    public interface ICertifiedServer
+    public interface ICertifiedServer : IDisposable
     {
         Task<List<BindingInfo>> GetSiteBindingList(
             bool ignoreStoppedSites,
@@ -44,5 +44,9 @@ namespace Certify.Models.Providers
         Task<bool> IsAvailable();
 
         Task<bool> IsSiteRunning(string id);
+
+        Task<bool> CreateManagementContext();
+
+        Task<bool> CommitChanges();
     }
 }

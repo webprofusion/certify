@@ -27,6 +27,10 @@ namespace Certify.Management.Servers
         /// </summary>
         private static readonly object _iisAPILock = new object();
 
+        public ServerProviderIIS()
+        {
+        }
+
         public Task<bool> IsAvailable()
         {
             if (!_isIISAvailable)
@@ -918,6 +922,20 @@ namespace Certify.Management.Servers
             }
 
             return isMatch;
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public Task<bool> CreateManagementContext()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> CommitChanges()
+        {
+            throw new NotImplementedException();
         }
     }
 }

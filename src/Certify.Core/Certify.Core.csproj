@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Management\BindingDeploymentManager.cs" />
     <Compile Include="Management\CertifyManager\CertifyManager.Account.cs" />
     <Compile Include="Management\CertifyManager\CertifyManager.cs" />
     <Compile Include="Management\CertifyManager\CertifyManager.ManagedCertificates.cs" />
