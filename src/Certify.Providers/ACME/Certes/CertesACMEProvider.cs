@@ -19,7 +19,7 @@ using Serilog;
 namespace Certify.Providers.Certes
 {
     /// <summary>
-    /// Certes Provider settings for serialization 
+    /// Certes Provider settings for serialization
     /// </summary>
     public class CertesSettings
     {
@@ -27,7 +27,7 @@ namespace Certify.Providers.Certes
     }
 
     /// <summary>
-    /// ACME Provider using certes https://github.com/fszlin/certes 
+    /// ACME Provider using certes https://github.com/fszlin/certes
     /// </summary>
     public class CertesACMEProvider : IACMEClientProvider, IVaultProvider
     {
@@ -62,7 +62,7 @@ namespace Certify.Providers.Certes
         }
 
         /// <summary>
-        /// Initialise provider settings, allocating account key if required 
+        /// Initialise provider settings, allocating account key if required
         /// </summary>
         private void InitProvider()
         {
@@ -79,7 +79,7 @@ namespace Certify.Providers.Certes
         }
 
         /// <summary>
-        /// Load provider settings or create new 
+        /// Load provider settings or create new
         /// </summary>
         private void LoadSettings()
         {
@@ -100,7 +100,7 @@ namespace Certify.Providers.Certes
         }
 
         /// <summary>
-        /// Save current provider settings 
+        /// Save current provider settings
         /// </summary>
         private void SaveSettings()
         {
@@ -108,7 +108,7 @@ namespace Certify.Providers.Certes
         }
 
         /// <summary>
-        /// Load the current account key 
+        /// Load the current account key
         /// </summary>
         /// <returns></returns>
         private bool LoadAccountKey()
@@ -127,7 +127,7 @@ namespace Certify.Providers.Certes
         }
 
         /// <summary>
-        /// Save the current account key 
+        /// Save the current account key
         /// </summary>
         /// <returns></returns>
         private bool SaveAccountKey()
@@ -137,7 +137,7 @@ namespace Certify.Providers.Certes
         }
 
         /// <summary>
-        /// Determine if we have a currently registered account with the ACME CA (Let's Encrypt) 
+        /// Determine if we have a currently registered account with the ACME CA (Let's Encrypt)
         /// </summary>
         /// <returns></returns>
         public bool IsAccountRegistered()
@@ -153,7 +153,7 @@ namespace Certify.Providers.Certes
         }
 
         /// <summary>
-        /// Set a new account key from PEM encoded text 
+        /// Set a new account key from PEM encoded text
         /// </summary>
         /// <param name="pem"></param>
         private void SetAccountKey(string pem)
@@ -164,7 +164,7 @@ namespace Certify.Providers.Certes
         }
 
         /// <summary>
-        /// Register a new account with the ACME CA (Let's Encrypt), accepting terms and conditions 
+        /// Register a new account with the ACME CA (Let's Encrypt), accepting terms and conditions
         /// </summary>
         /// <param name="log"></param>
         /// <param name="email"></param>
@@ -385,13 +385,14 @@ namespace Certify.Providers.Certes
             catch (Exception exp)
             {
                 // failed to register the domain identifier with LE (invalid, rate limit or CAA fail?)
-                log.Error("New Order Failed [" + config.PrimaryDomain + "]", exp.Message);
+                var msg = $"New Order Failed [{config.PrimaryDomain}] : {(exp.InnerException != null ? exp.InnerException.Message : exp.Message)}";
+                log.Error(msg);
 
                 pendingOrder.Authorizations =
                  new List<PendingAuthorization> {
                     new PendingAuthorization
                     {
-                        AuthorizationError = exp.Message,
+                        AuthorizationError = msg,
                         IsFailure=true
                     }
                 };
@@ -401,7 +402,7 @@ namespace Certify.Providers.Certes
         }
 
         /// <summary>
-        /// if not already validate, ask ACME CA to check we have answered the nominated challenges correctly 
+        /// if not already validate, ask ACME CA to check we have answered the nominated challenges correctly
         /// </summary>
         /// <param name="log"></param>
         /// <param name="challengeType"></param>

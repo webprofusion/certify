@@ -10,7 +10,7 @@ using MahApps.Metro.Controls;
 namespace Certify.UI.Controls.ManagedCertificate
 {
     /// <summary>
-    /// Interaction logic for ManagedCertificateSettings.xaml 
+    /// Interaction logic for ManagedCertificateSettings.xaml
     /// </summary>
     public partial class ManagedCertificateSettings : UserControl
     {
@@ -245,7 +245,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             var challengeConfig = ItemViewModel.SelectedItem.GetChallengeConfig(null);
 
-            if (!AppViewModel.IsIISAvailable)
+            if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP && !AppViewModel.IsIISAvailable)
             {
                 MessageBox.Show(SR.ManagedCertificateSettings_CannotChallengeWithoutIIS, SR.ChallengeError, MessageBoxButton.OK, MessageBoxImage.Error);
             }

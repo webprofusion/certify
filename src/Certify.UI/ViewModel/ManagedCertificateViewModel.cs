@@ -14,7 +14,7 @@ namespace Certify.UI.ViewModel
     public class ManagedCertificateViewModel : BindableBase
     {
         /// <summary>
-        /// Provide single static instance of model for all consumers 
+        /// Provide single static instance of model for all consumers
         /// </summary>
         //public static AppModel AppViewModel = new DesignViewModel(); // for UI testing
         public static ManagedCertificateViewModel Current = ManagedCertificateViewModel.GetModel();
@@ -58,7 +58,7 @@ namespace Certify.UI.ViewModel
         }
 
         /// <summary>
-        /// List of websites from the selected web server (if any) 
+        /// List of websites from the selected web server (if any)
         /// </summary>
         public ObservableCollection<BindingInfo> WebSiteList { get; set; } = new ObservableCollection<BindingInfo>();
 
@@ -113,10 +113,13 @@ namespace Certify.UI.ViewModel
                     if (SelectedItem.RequestConfig.Challenges == null || !SelectedItem.RequestConfig.Challenges.Any())
                     {
                         // populate challenge config info
-                        SelectedItem.RequestConfig.Challenges.Add(new CertRequestChallengeConfig
+                        SelectedItem.RequestConfig.Challenges = new ObservableCollection<CertRequestChallengeConfig>
                         {
-                            ChallengeType = SelectedItem.RequestConfig.ChallengeType
-                        });
+                            new CertRequestChallengeConfig
+                            {
+                                ChallengeType = SelectedItem.RequestConfig.ChallengeType
+                            }
+                        };
                     }
 
                     return new ObservableCollection<ChallengeConfigItemViewModel>(
@@ -348,7 +351,7 @@ namespace Certify.UI.ViewModel
         }
 
         /// <summary>
-        /// For the given set of options get a new CertRequestConfig to store 
+        /// For the given set of options get a new CertRequestConfig to store
         /// </summary>
         /// <returns></returns>
         public void UpdateManagedCertificateSettings(bool throwOnInvalidSettings = true)
