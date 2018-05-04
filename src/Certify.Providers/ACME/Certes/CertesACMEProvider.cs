@@ -385,7 +385,8 @@ namespace Certify.Providers.Certes
             catch (Exception exp)
             {
                 // failed to register the domain identifier with LE (invalid, rate limit or CAA fail?)
-                var msg = $"New Order Failed [{config.PrimaryDomain}] : {(exp.InnerException != null ? exp.InnerException.Message : exp.Message)}";
+                var msg = $"New Order Failed [{config.PrimaryDomain}] : {GetExceptionMessage(exp)}";
+
                 log.Error(msg);
 
                 pendingOrder.Authorizations =
@@ -399,6 +400,25 @@ namespace Certify.Providers.Certes
 
                 return pendingOrder;
             }
+        }
+
+        private string GetExceptionMessage(Exception exp)
+        {
+            string msg = exp.Message;
+
+            if (exp.InnerException != null)
+            {
+                if (exp.InnerException is AcmeRequestException)
+                {
+                    msg += ":: " + ((AcmeRequestException)exp.InnerException).Error.Detail;
+                }
+                else
+                {
+                    msg += ":: " + exp.InnerException.Message;
+                }
+            }
+
+            return msg;
         }
 
         /// <summary>
