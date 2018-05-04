@@ -15,6 +15,8 @@ namespace Certify.Core.Management
 
         Task<IBindingDeploymentTargetItem> GetTargetItem(string id);
 
+        Task<List<IBindingDeploymentTargetItem>> GetAllTargetItems();
+
         ICertifiedServer GetDeploymentManager();
 
         bool HasExistingBinding(string targetItemid, string protocol, string ipAddress, int port, string hostname);
@@ -24,7 +26,6 @@ namespace Certify.Core.Management
         bool UpdateBinding(string targetItemid, string protocol, string ipAddress, int port, string hostname, string certStoreName, byte[] certificateHash);
 
         List<BindingInfo> GetBindings(string targetItemId);
-       
     }
 
     public interface IBindingDeploymentTargetItem
@@ -45,20 +46,35 @@ namespace Certify.Core.Management
 
         public async Task<IBindingDeploymentTargetItem> GetTargetItem(string id)
         {
-            return await Task.FromResult(new MockBindingDeploymentTargetItem { Id = "1", Name = "Test1" });
+            var firstMatch = AllBindings.FirstOrDefault(f => f.Id == id);
+            if (firstMatch != null)
+            {
+                return new MockBindingDeploymentTargetItem { Id = firstMatch.Id, Name = firstMatch.Name };
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public async Task<List<IBindingDeploymentTargetItem>> GetAllTargetItems()
         {
-            return await Task.FromResult(new List<IBindingDeploymentTargetItem> {
-                new MockBindingDeploymentTargetItem { Id = "1", Name = "Test1" },
-                new MockBindingDeploymentTargetItem { Id = "2", Name = "Test2" }
-            });
+            var all = new List<IBindingDeploymentTargetItem>();
+
+            foreach (var b in AllBindings)
+            {
+                if (!all.Any(site => site.Id == b.Id))
+                {
+                    all.Add(new MockBindingDeploymentTargetItem { Id = b.Id, Name = b.Name });
+                }
+            }
+
+            return await Task.FromResult(all);
         }
 
         public List<BindingInfo> GetBindings(string targetItemId)
         {
-            return AllBindings;
+            return AllBindings.Where(b => b.Id == targetItemId).ToList();
         }
 
         public ICertifiedServer GetDeploymentManager()
@@ -73,22 +89,28 @@ namespace Certify.Core.Management
 
         public void Dispose()
         {
-            throw new NotImplementedException();
         }
 
         public bool AddBinding(string targetItemid, string protocol, string ipAddress, int port, string hostname, string certStoreName, byte[] certificateHash)
         {
-            throw new NotImplementedException();
+            return true;
         }
 
         public bool HasExistingBinding(string targetItemid, string protocol, string ipAddress, int port, string hostname)
         {
-            throw new NotImplementedException();
+            if (AllBindings.Any(b => b.Id == targetItemid && b.Protocol == protocol && b.Host == hostname && b.Port == port && b.IP == ipAddress))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public bool UpdateBinding(string targetItemid, string protocol, string ipAddress, int port, string hostname, string certStoreName, byte[] certificateHash)
         {
-            throw new NotImplementedException();
+            return true;
         }
     }
 
@@ -96,17 +118,16 @@ namespace Certify.Core.Management
     {
         public Task<bool> CommitChanges()
         {
-            throw new NotImplementedException();
+            return Task.FromResult(true);
         }
 
         public Task<bool> CreateManagementContext()
         {
-            throw new NotImplementedException();
+            return Task.FromResult(true);
         }
 
         public void Dispose()
         {
-            throw new NotImplementedException();
         }
 
         public Task<List<BindingInfo>> GetPrimarySites(bool ignoreStoppedSites)
@@ -273,10 +294,7 @@ namespace Certify.Core.Management
             // or add all sites (if required)
             if (requestConfig.DeploymentSiteOption == DeploymentOption.AllSites)
             {
-                /* using (ServerManager serverManager = await GetDefaultServerManager())
-                 {
-                     targetSites.AddRange(GetSites(serverManager, true));
-                 }*/
+                targetSites.AddRange(await deploymentTarget.GetAllTargetItems());
             }
 
             // for each sites we want to target, identify bindings to add/update as required
@@ -284,7 +302,7 @@ namespace Certify.Core.Management
             {
                 try
                 {
-                    var existingBindings = new List<BindingInfo>(); //site.Bindings.ToList();
+                    var existingBindings = deploymentTarget.GetBindings(site.Id);
 
                     var existingHttps = existingBindings.Where(e => e.Protocol == "https").ToList();
 
@@ -428,110 +446,93 @@ namespace Certify.Core.Management
         {
             List<ActionStep> steps = new List<ActionStep>();
 
+            // servers managers like IIS need to operate in a single current context
+
             using (var serverManager = deploymentTarget.GetDeploymentManager())
             {
-                // servers managers like IIS need to operate in a single current context
-                var siteToUpdate = await serverManager.GetSiteById(site.Id);
+                var internationalHost = host == "" ? "" : ToUnicodeString(host);
+                var bindingSpec = $"{(!string.IsNullOrEmpty(ipAddress) ? ipAddress : "*")}:{sslPort}:{internationalHost}";
 
-                if (siteToUpdate != null)
+                var hasExistingBinding = deploymentTarget.HasExistingBinding(site.Id, "https", ipAddress, sslPort, internationalHost); //. //from b in siteToUpdate.Bindings where b.Host == internationalHost && b.Protocol == "https" select b;
+
+                if (!hasExistingBinding)
                 {
-                    var internationalHost = host == "" ? "" : ToUnicodeString(host);
-                    var bindingSpec = $"{(!string.IsNullOrEmpty(ipAddress) ? ipAddress : "*")}:{sslPort}:{internationalHost}";
+                    //there are no existing https bindings to update for this domain
+                    //add new https binding at default port "<ip>:port:hostDnsName";
 
-                    var hasExistingBinding = deploymentTarget.HasExistingBinding(siteToUpdate.Id, "https", ipAddress, sslPort, internationalHost); //. //from b in siteToUpdate.Bindings where b.Host == internationalHost && b.Protocol == "https" select b;
-
-                    if (!hasExistingBinding)
+                    var action = new ActionStep
                     {
-                        //there are no existing https bindings to update for this domain
-                        //add new https binding at default port "<ip>:port:hostDnsName";
+                        Title = "Install Certificate For Binding",
+                        Category = "Deployment.AddBinding",
+                        Description = $"* Add new https binding: [{site.Name}] **{bindingSpec}**",
+                        Key = $"[{site.Id}]:{bindingSpec}:{useSNI}"
+                    };
 
-                        var action = new ActionStep
+                    if (!isPreviewOnly)
+                    {
+                        deploymentTarget.AddBinding(site.Id, "https", ipAddress, sslPort, internationalHost, certStoreName, certificateHash);
+                        /*var binding = siteToUpdate.Bindings.CreateElement();
+
+                        // Set binding values
+                        binding.Protocol = "https";
+                        binding.BindingInformation = bindingSpec;
+                        binding.CertificateStoreName = certStoreName;
+                        binding.CertificateHash = certificateHash;
+
+                        if (!String.IsNullOrEmpty(internationalHost) && useSNI)
                         {
-                            Title = "Install Certificate For Binding",
-                            Category = "Deployment.AddBinding",
-                            Description = $"* Add new https binding: [{siteToUpdate.Name}] **{bindingSpec}**",
-                            Key = $"[{site.Id}]:{bindingSpec}:{useSNI}"
-                        };
-
-                        if (!isPreviewOnly)
-                        {
-                            deploymentTarget.AddBinding(siteToUpdate.Id, "https", ipAddress, sslPort, internationalHost, certStoreName, certificateHash);
-                            /*var binding = siteToUpdate.Bindings.CreateElement();
-
-                            // Set binding values
-                            binding.Protocol = "https";
-                            binding.BindingInformation = bindingSpec;
-                            binding.CertificateStoreName = certStoreName;
-                            binding.CertificateHash = certificateHash;
-
-                            if (!String.IsNullOrEmpty(internationalHost) && useSNI)
+                            try
                             {
-                                try
-                                {
-                                    binding["sslFlags"] = 1; // enable SNI
-                                }
-                                catch (Exception)
-                                {
-                                    //failed to set requested SNI flag
-
-                                    action.Description += $" Failed to set SNI attribute";
-
-                                    steps.Add(action);
-                                    return steps;
-                                }
+                                binding["sslFlags"] = 1; // enable SNI
                             }
+                            catch (Exception)
+                            {
+                                //failed to set requested SNI flag
 
-                            // Add the binding to the site
-                            siteToUpdate.Bindings.Add(binding);*/
+                                action.Description += $" Failed to set SNI attribute";
+
+                                steps.Add(action);
+                                return steps;
+                            }
                         }
 
-                        steps.Add(action);
+                        // Add the binding to the site
+                        siteToUpdate.Bindings.Add(binding);*/
                     }
-                    else
-                    {
-                        // update one or more existing https bindings with new cert
-                        deploymentTarget.UpdateBinding(siteToUpdate.Id, "https", ipAddress, sslPort, internationalHost, certStoreName, certificateHash);
-                        /*foreach (var existingBinding in existingHttpsBindings)
-                        {
-                            if (!isPreviewOnly)
-                            {
-                                // Update existing https Binding
-                                existingBinding.CertificateHash = certificateHash;
-                                existingBinding.CertificateStoreName = certStoreName;
-                            }
 
-                            steps.Add(new ActionStep
-                            {
-                                Title = "Install Certificate For Binding",
-                                Category = "Deployment.UpdateBinding",
-                                Description = $"* Update existing binding: [{siteToUpdate.Name}] **{existingBinding.BindingInformation}** \r\n"
-                            });
-                        }*/
-                    }
+                    steps.Add(action);
                 }
                 else
                 {
-                    //could not match site to bind to
-
-                    steps.Add(new ActionStep
+                    // update one or more existing https bindings with new cert
+                    deploymentTarget.UpdateBinding(site.Id, "https", ipAddress, sslPort, internationalHost, certStoreName, certificateHash);
+                    /*foreach (var existingBinding in existingHttpsBindings)
                     {
-                        Title = "No Deployment Target Match",
-                        Category = "Deployment.UmatchedBinding",
-                        Description = $"* Site not found, could not update bindings."
-                    });
-                    return steps;
+                        if (!isPreviewOnly)
+                        {
+                            // Update existing https Binding
+                            existingBinding.CertificateHash = certificateHash;
+                            existingBinding.CertificateStoreName = certStoreName;
+                        }
+
+                        steps.Add(new ActionStep
+                        {
+                            Title = "Install Certificate For Binding",
+                            Category = "Deployment.UpdateBinding",
+                            Description = $"* Update existing binding: [{siteToUpdate.Name}] **{existingBinding.BindingInformation}** \r\n"
+                        });
+                    }*/
                 }
 
                 if (!isPreviewOnly)
                 {
-                    serverManager.CommitChanges();
+                    await serverManager.CommitChanges();
                 }
-
-                return steps;
             }
+            return steps;
         }
 
-        private static bool IsDomainOrWildcardMatch(List<string> dnsNames, string hostname)
+        public static bool IsDomainOrWildcardMatch(List<string> dnsNames, string hostname)
         {
             var isMatch = false;
             if (!String.IsNullOrEmpty(hostname))
