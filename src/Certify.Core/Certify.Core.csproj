@@ -61,6 +61,7 @@
     <Compile Include="Management\CertifyManager\ICertifyManager.cs">
       <DependentUpon>CertifyManager.cs</DependentUpon>
     </Compile>
+    <Compile Include="Management\Servers\ServerProviderMock.cs" />
     <Compile Include="Management\PreviewManager.cs" />
     <Compile Include="Management\Servers\ServerProviderIIS.cs" />
     <Compile Include="Management\ItemManager.cs" />

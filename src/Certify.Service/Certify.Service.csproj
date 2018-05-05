@@ -107,16 +107,16 @@
       <Version>2.2.3</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNet.WebApi.Client">
-      <Version>5.2.4</Version>
+      <Version>5.2.5</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNet.WebApi.Core">
-      <Version>5.2.4</Version>
+      <Version>5.2.5</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNet.WebApi.Owin">
-      <Version>5.2.4</Version>
+      <Version>5.2.5</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNet.WebApi.OwinSelfHost">
-      <Version>5.2.4</Version>
+      <Version>5.2.5</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Bcl">
       <Version>1.1.10</Version>

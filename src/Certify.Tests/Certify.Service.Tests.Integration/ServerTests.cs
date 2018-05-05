@@ -48,7 +48,7 @@ namespace Certify.Service.Tests.Integration
 
             var site = sites[0];
 
-            var result = await _client.GetServerSiteDomains(Models.StandardServerTypes.IIS, site.Id);
+            var result = await _client.GetServerSiteDomains(Models.StandardServerTypes.IIS, site.SiteId);
 
             Assert.IsNotNull(result, "Domain Options List returned");
 

@@ -226,11 +226,13 @@ namespace Certify.Management
 
                     if (bindingRequest.Actions != null) deploymentStep.Substeps = bindingRequest.Actions;
 
-                    if (deploymentStep.Substeps == null)
+                    if (bindingRequest.Actions == null || !bindingRequest.Actions.Any())
+                    {
                         deploymentStep.Substeps = new List<ActionStep>
                         {
-                            new ActionStep {Title = "No matching bindings to deploy to."}
+                            new ActionStep {Description = "**There are no matching targets to deploy to. Certificate will be stored but currently no bindings will be updated.**"}
                         };
+                    }
                 }
                 else
                 {
@@ -278,17 +280,17 @@ namespace Certify.Management
                 {
                     var allSites = await serverProvider.GetSiteBindingList(CoreAppSettings.Current.IgnoreStoppedSites);
                     var iisSites = allSites
-                        .OrderBy(s => s.Id)
+                        .OrderBy(s => s.SiteId)
                         .ThenBy(s => s.Host);
 
-                    var siteIds = iisSites.GroupBy(x => x.Id);
+                    var siteIds = iisSites.GroupBy(x => x.SiteId);
 
                     foreach (var s in siteIds)
                     {
                         var managedCertificate = new ManagedCertificate { Id = s.Key };
                         managedCertificate.ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS;
                         managedCertificate.TargetHost = "localhost";
-                        managedCertificate.Name = iisSites.First(i => i.Id == s.Key).Name;
+                        managedCertificate.Name = iisSites.First(i => i.SiteId == s.Key).SiteName;
 
                         //TODO: replace site binding with domain options
                         //managedCertificate.SiteBindings = new List<ManagedCertificateBinding>();

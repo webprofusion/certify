@@ -517,13 +517,14 @@ namespace Certify.Core.Management.Challenges
 
                 var certStoreName = CertificateManager.GetDefaultStore().Name;
 
-                iisManager.InstallCertificateforBinding(certStoreName, x509.GetCertHash(), managedCertificate, sni);
+                // iisManager.InstallCertificateforBinding(certStoreName, x509.GetCertHash(),
+                // managedCertificate.ServerSiteId, sni);
 
                 // add check to the queue
                 checkQueue.Add(() => _netUtil.CheckSNI(domain, sni).Result);
 
                 // add cleanup actions to queue
-                cleanupQueue.Add(() => iisManager.RemoveHttpsBinding(managedCertificate, sni));
+                cleanupQueue.Add(() => iisManager.RemoveHttpsBinding(managedCertificate.ServerSiteId, sni));
 
                 cleanupQueue.Add(() => CertificateManager.RemoveCertificate(x509));
             }

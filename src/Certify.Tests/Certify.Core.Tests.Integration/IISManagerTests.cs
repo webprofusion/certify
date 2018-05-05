@@ -1,14 +1,15 @@
-﻿using Certify.Management;
-using Certify.Management.Servers;
-using Certify.Models;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Certify.Core.Management;
+using Certify.Management;
+using Certify.Management.Servers;
+using Certify.Models;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Core.Tests
 {
@@ -138,7 +139,7 @@ namespace Certify.Core.Tests
             {
                 domains.Add(Guid.NewGuid().ToString() + ".toomany.com");
             }
-            await iisManager.AddSiteBindings(site.Id, domains);
+            await iisManager.AddSiteBindings(site.SiteId, domains);
         }
 
         [TestMethod]
@@ -154,7 +155,16 @@ namespace Certify.Core.Tests
 
             var certStoreName = "MY";
             var cert = CertificateManager.GetCertificatesFromStore().First();
-            await iisManager.InstallCertificateforBinding(certStoreName, cert.GetCertHash(), site, testDomainName);
+            await new IISBindingDeploymentTarget().AddBinding(
+                new BindingInfo
+                {
+                    Host = testDomainName,
+                    CertificateHashBytes = cert.GetCertHash(),
+                    CertificateStore = certStoreName,
+                    Port = 443,
+                    Protocol = "https"
+                }
+               );
 
             Assert.IsTrue(await iisManager.SiteExists(testName));
         }
@@ -237,7 +247,12 @@ namespace Certify.Core.Tests
                 CertificatePath = dummyCertPath
             };
 
-            var actions = await iisManager.InstallCertForRequest(managedCertificate, dummyCertPath, false, false);
+            var actions = await new BindingDeploymentManager().StoreAndDeployManagedCertificate(
+                iisManager.GetDeploymentTarget(),
+                managedCertificate, dummyCertPath,
+                false,
+                false);
+
             foreach (var a in actions)
             {
                 System.Console.WriteLine(a.Description);

@@ -14,30 +14,31 @@ namespace Certify.Models.Providers
             string siteId = null
             );
 
-        Task<List<ActionStep>> InstallCertForRequest(
-            ManagedCertificate managedCertificate,
-            string pfxPath,
-            bool cleanupCertStore,
-            bool isPreviewOnly
-            );
+        /* Task<List<ActionStep>> InstallCertForRequest(
+             ManagedCertificate managedCertificate,
+             string pfxPath,
+             bool cleanupCertStore,
+             bool isPreviewOnly
+             );
 
-        Task<List<ActionStep>> InstallCertificateforBinding(
-            string certStoreName,
-            byte[] certificateHash,
-            ManagedCertificate managedCertificate,
-            string host,
-            int sslPort = 443,
-            bool useSNI = true,
-            string ipAddress = null,
-            bool alwaysRecreateBindings = false,
-            bool isPreviewOnly = false
-            );
+         Task<List<ActionStep>> InstallCertificateforBinding(
+             string certStoreName,
+             byte[] certificateHash,
+             ManagedCertificate managedCertificate,
+             string host,
+             int sslPort = 443,
+             bool useSNI = true,
+             string ipAddress = null,
+             bool alwaysRecreateBindings = false,
+             bool isPreviewOnly = false
+             );
+             */
 
         Task<List<BindingInfo>> GetPrimarySites(bool ignoreStoppedSites);
 
         Task<SiteInfo> GetSiteById(string siteId);
 
-        Task RemoveHttpsBinding(ManagedCertificate managedCertificate, string sni);
+        Task RemoveHttpsBinding(string siteId, string sni);
 
         Task<Version> GetServerVersion();
 
@@ -48,5 +49,7 @@ namespace Certify.Models.Providers
         Task<bool> CreateManagementContext();
 
         Task<bool> CommitChanges();
+
+        IBindingDeploymentTarget GetDeploymentTarget();
     }
 }

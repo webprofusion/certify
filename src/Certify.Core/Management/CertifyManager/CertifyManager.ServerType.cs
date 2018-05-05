@@ -20,7 +20,7 @@ namespace Certify.Management
 
             var matchingSites =
                 await _serverProvider.GetSiteBindingList(CoreAppSettings.Current.IgnoreStoppedSites, siteId);
-            var siteBindingList = matchingSites.Where(s => s.Id == siteId);
+            var siteBindingList = matchingSites.Where(s => s.SiteId == siteId);
 
             bool includeEmptyHostnameBindings = false;
 

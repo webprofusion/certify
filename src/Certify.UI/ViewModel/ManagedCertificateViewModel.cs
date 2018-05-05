@@ -1,20 +1,20 @@
-﻿using Certify.Locales;
-using Certify.Models;
-using PropertyChanged;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
+using Certify.Locales;
+using Certify.Models;
+using PropertyChanged;
 
 namespace Certify.UI.ViewModel
 {
     public class ManagedCertificateViewModel : BindableBase
     {
         /// <summary>
-        /// Provide single static instance of model for all consumers
+        /// Provide single static instance of model for all consumers 
         /// </summary>
         //public static AppModel AppViewModel = new DesignViewModel(); // for UI testing
         public static ManagedCertificateViewModel Current = ManagedCertificateViewModel.GetModel();
@@ -53,12 +53,12 @@ namespace Certify.UI.ViewModel
         internal async Task RefreshWebsiteList()
         {
             var list = await _appViewModel.CertifyClient.GetServerSiteList(StandardServerTypes.IIS);
-            list.Insert(0, new BindingInfo { Name = "(No IIS Website Selected)", Id = "" });
+            list.Insert(0, new BindingInfo { SiteName = "(No IIS Website Selected)", SiteId = "" });
             this.WebSiteList = new ObservableCollection<BindingInfo>(list);
         }
 
         /// <summary>
-        /// List of websites from the selected web server (if any)
+        /// List of websites from the selected web server (if any) 
         /// </summary>
         public ObservableCollection<BindingInfo> WebSiteList { get; set; } = new ObservableCollection<BindingInfo>();
 
@@ -351,7 +351,7 @@ namespace Certify.UI.ViewModel
         }
 
         /// <summary>
-        /// For the given set of options get a new CertRequestConfig to store
+        /// For the given set of options get a new CertRequestConfig to store 
         /// </summary>
         /// <returns></returns>
         public void UpdateManagedCertificateSettings(bool throwOnInvalidSettings = true)
@@ -396,8 +396,8 @@ namespace Certify.UI.ViewModel
                 // optionally append webserver site ID (if used)
                 if (SelectedWebSite != null)
                 {
-                    item.Id += ":" + SelectedWebSite.Id;
-                    item.GroupId = SelectedWebSite.Id;
+                    item.Id += ":" + SelectedWebSite.SiteId;
+                    item.GroupId = SelectedWebSite.SiteId;
                     item.ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS;
                 }
                 else
@@ -414,17 +414,17 @@ namespace Certify.UI.ViewModel
 
             if (SelectedWebSite != null)
             {
-                if (managedCertificate.GroupId != SelectedWebSite.Id)
+                if (managedCertificate.GroupId != SelectedWebSite.SiteId)
                 {
                     // update website association
-                    managedCertificate.GroupId = SelectedWebSite.Id;
+                    managedCertificate.GroupId = SelectedWebSite.SiteId;
 
                     // if not already set, use website name as default name
                     if (managedCertificate.Id == null || String.IsNullOrEmpty(managedCertificate.Name))
                     {
-                        if (!String.IsNullOrEmpty(SelectedWebSite.Name))
+                        if (!String.IsNullOrEmpty(SelectedWebSite.SiteName))
                         {
-                            managedCertificate.Name = SelectedWebSite.Name;
+                            managedCertificate.Name = SelectedWebSite.SiteName;
                         }
 
                         //set defaults first

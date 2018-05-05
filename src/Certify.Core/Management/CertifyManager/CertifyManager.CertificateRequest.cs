@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Certify.Core.Management;
 using Certify.Locales;
 using Certify.Models;
 using Certify.Models.Plugins;
@@ -14,7 +15,7 @@ namespace Certify.Management
     public partial class CertifyManager
     {
         /// <summary>
-        /// Perform Renew All: identify all items to renew then initiate renewal process
+        /// Perform Renew All: identify all items to renew then initiate renewal process 
         /// </summary>
         /// <param name="autoRenewalOnly"></param>
         /// <param name="progressTrackers"></param>
@@ -209,7 +210,7 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Test dummy method for async UI testing etc
+        /// Test dummy method for async UI testing etc 
         /// </summary>
         /// <param name="vaultManager"></param>
         /// <param name="managedCertificate"></param>
@@ -235,7 +236,7 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Initiate or resume the certificate request workflow for a given managed certificate
+        /// Initiate or resume the certificate request workflow for a given managed certificate 
         /// </summary>
         /// <param name="log"></param>
         /// <param name="managedCertificate"></param>
@@ -653,9 +654,21 @@ namespace Certify.Management
                             new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding,
                                 managedCertificate));
 
-                        // Install certificate into certificate store and bind to IIS site
-                        var actions = await _serverProvider.InstallCertForRequest(managedCertificate, pfxPath,
-                            cleanupCertStore: true, isPreviewOnly: false);
+                        // Install certificate into certificate store and bind to matching sites on server
+                        var deploymentManager = new BindingDeploymentManager();
+
+                        var actions = await deploymentManager.StoreAndDeployManagedCertificate(
+                                _serverProvider.GetDeploymentTarget(),
+                                managedCertificate,
+                                pfxPath,
+                                cleanupCertStore: true,
+                                isPreviewOnly: false
+                            );
+
+                        // var actions = await
+                        // _serverProvider.InstallCertForRequest(managedCertificate, pfxPath,
+                        // cleanupCertStore: true, isPreviewOnly: false);
+
                         if (!actions.Any(a => a.HasError))
                         {
                             //all done
@@ -732,7 +745,7 @@ namespace Certify.Management
                 // if our challenge takes a while to propagate, wait
                 if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                 {
-                        result.ChallengeResponsePropagationSeconds = 60;
+                    result.ChallengeResponsePropagationSeconds = 60;
                 }
 
                 if (authorization?.Identifier != null)
@@ -849,7 +862,16 @@ namespace Certify.Management
                 if (!isPreviewOnly) ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding, managedCertificate));
 
                 // Install certificate into certificate store and bind to IIS site
-                var actions = await _serverProvider.InstallCertForRequest(managedCertificate, pfxPath, cleanupCertStore: true, isPreviewOnly: isPreviewOnly);
+                var deploymentManager = new BindingDeploymentManager();
+
+                var actions = await deploymentManager.StoreAndDeployManagedCertificate(
+                        _serverProvider.GetDeploymentTarget(),
+                        managedCertificate,
+                        pfxPath,
+                        cleanupCertStore: true,
+                        isPreviewOnly: isPreviewOnly
+                    );
+
                 result.Actions = actions;
 
                 if (!actions.Any(a => a.HasError))

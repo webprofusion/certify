@@ -20,27 +20,27 @@ namespace Certify.Core.Tests.Unit
             _allSites = new List<BindingInfo>
             {
                 // Site 1 : test.com and www.test.com bindings, both existing https
-                new BindingInfo{ Name="TestDotCom", Host="test.com", IP="*", HasCertificate=true, Protocol="https", Port=443, Id="1"},
-                new BindingInfo{ Name="TestDotCom", Host="www.test.com", IP="*", HasCertificate=true, Protocol="https", Port=443, Id="1"},
+                new BindingInfo{ SiteName="TestDotCom", Host="test.com", IP="*", HasCertificate=true, Protocol="https", Port=443, SiteId="1"},
+                new BindingInfo{ SiteName="TestDotCom", Host="www.test.com", IP="*", HasCertificate=true, Protocol="https", Port=443, SiteId="1"},
 
                 // Site 1.1.: same top level as site 1, different subdomains
-                new BindingInfo{ Name="TestDotCom", Host="ignore.test.com", IP="*", HasCertificate=true, Protocol="https", Port=443, Id="1.1"},
-                new BindingInfo{ Name="TestDotCom", Host="www.ignore.test.com", IP="*", HasCertificate=true, Protocol="https", Port=443, Id="1.1"},
+                new BindingInfo{ SiteName="TestDotCom", Host="ignore.test.com", IP="*", HasCertificate=true, Protocol="https", Port=443, SiteId="1.1"},
+                new BindingInfo{ SiteName="TestDotCom", Host="www.ignore.test.com", IP="*", HasCertificate=true, Protocol="https", Port=443, SiteId="1.1"},
 
                 // Site 2 : test.co.uk and www.test.co.uk bindings, no existing https
-                new BindingInfo{ Name="Test.co.uk", Host="test.co.uk", IP="*", HasCertificate=true, Protocol="http", Port=80, Id="2"},
-                new BindingInfo{ Name="Test.co.uk", Host="www.test.co.uk", IP="*", HasCertificate=true, Protocol="http", Port=80, Id="2"},
+                new BindingInfo{ SiteName="Test.co.uk", Host="test.co.uk", IP="*", HasCertificate=true, Protocol="http", Port=80, SiteId="2"},
+                new BindingInfo{ SiteName="Test.co.uk", Host="www.test.co.uk", IP="*", HasCertificate=true, Protocol="http", Port=80, SiteId="2"},
 
                 // Site 3 : test.com.au and www.test.com.au bindings, http and existing https
-                new BindingInfo{ Name="Test.com.au", Host="test.com.au", IP="*", HasCertificate=true, Protocol="https", Port=443, Id="3"},
-                new BindingInfo{ Name="Test.com.au", Host="www.test.com.au", IP="*", HasCertificate=true, Protocol="http", Port=80, Id="3"},
-                new BindingInfo{ Name="Test.com.au", Host="dev.www.test.com.au", IP="*", HasCertificate=true, Protocol="http", Port=80, Id="3"},
+                new BindingInfo{ SiteName="Test.com.au", Host="test.com.au", IP="*", HasCertificate=true, Protocol="https", Port=443, SiteId="3"},
+                new BindingInfo{ SiteName="Test.com.au", Host="www.test.com.au", IP="*", HasCertificate=true, Protocol="http", Port=80, SiteId="3"},
+                new BindingInfo{ SiteName="Test.com.au", Host="dev.www.test.com.au", IP="*", HasCertificate=true, Protocol="http", Port=80, SiteId="3"},
 
                 // Site 4 : 1 one deeply nested subdomain and an alt domain, wilcard should mathch on
                 // one item
-                new BindingInfo{ Name="Test", Host="test.com.hk", IP="*", HasCertificate=true, Protocol="https", Port=443, Id="4"},
-                new BindingInfo{ Name="Test", Host="dev.test.com", IP="*", HasCertificate=true, Protocol="http", Port=80, Id="4"},
-                new BindingInfo{ Name="Test", Host="dev.sub.test.com", IP="*", HasCertificate=true, Protocol="http", Port=80, Id="4"}
+                new BindingInfo{ SiteName="Test", Host="test.com.hk", IP="*", HasCertificate=true, Protocol="https", Port=443, SiteId="4"},
+                new BindingInfo{ SiteName="Test", Host="dev.test.com", IP="*", HasCertificate=true, Protocol="http", Port=80, SiteId="4"},
+                new BindingInfo{ SiteName="Test", Host="dev.sub.test.com", IP="*", HasCertificate=true, Protocol="http", Port=80, SiteId="4"}
             };
         }
 
@@ -114,7 +114,7 @@ namespace Certify.Core.Tests.Unit
             managedCertificate.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
             managedCertificate.RequestConfig.PrimaryDomain = "*.test.com";
             preview = await bindingManager.StoreAndDeployManagedCertificate(deploymentTarget, managedCertificate, null, false, isPreviewOnly: true);
-            Assert.IsTrue(preview.Count == 2, "Should match 4 bindings across all sites");
+            Assert.IsTrue(preview.Count == 4, "Should match 4 bindings across all sites");
 
             foreach (var a in preview)
             {
@@ -127,13 +127,8 @@ namespace Certify.Core.Tests.Unit
         {
             var domains = new List<string>
             {
-                "test.com",
-                "www.test.com",
-                "fred.test.com",
-                "dev.sub.test.com",
-                "dev1.dev2.test.com",
-                "test.co.uk",
-                "test.com.au"
+                "*.test.com",
+                "*.test.co.uk"
             };
 
             Assert.IsTrue(BindingDeploymentManager.IsDomainOrWildcardMatch(domains, "test.com"));
@@ -144,7 +139,55 @@ namespace Certify.Core.Tests.Unit
 
             Assert.IsTrue(BindingDeploymentManager.IsDomainOrWildcardMatch(domains, "*.test.com"));
 
-            Assert.IsTrue(BindingDeploymentManager.IsDomainOrWildcardMatch(domains, "*.test.com.uk"));
+            Assert.IsTrue(BindingDeploymentManager.IsDomainOrWildcardMatch(domains, "www.test.co.uk"));
+
+            Assert.IsFalse(BindingDeploymentManager.IsDomainOrWildcardMatch(domains, "www.dev.test.co.uk"));
+        }
+
+        [TestMethod, Description("Detect if binding already exists")]
+        public void ExistingBindingChecks()
+        {
+            List<BindingInfo> bindings = new List<BindingInfo> {
+                new BindingInfo{ Host="test.com", IP="0.0.0.0", Port=443, Protocol="https" },
+                new BindingInfo{ Host="www.test.com", IP="*", Port=80, Protocol="http" },
+                new BindingInfo{ Host="dev.test.com", IP="192.168.1.1", Port=80, Protocol="http" },
+            };
+
+            var spec = new BindingInfo
+            {
+                Host = "test.com",
+                IP = "*",
+                Port = 443,
+                Protocol = "https"
+            };
+            Assert.IsTrue(BindingDeploymentManager.HasExistingBinding(bindings, spec));
+
+            spec = new BindingInfo
+            {
+                Host = "www.test.com",
+                IP = "*",
+                Port = 443,
+                Protocol = "https"
+            };
+            Assert.IsFalse(BindingDeploymentManager.HasExistingBinding(bindings, spec));
+
+            spec = new BindingInfo
+            {
+                Host = "dev.test.com",
+                IP = "192.168.1.1",
+                Port = 443,
+                Protocol = "https"
+            };
+            Assert.IsFalse(BindingDeploymentManager.HasExistingBinding(bindings, spec));
+
+            spec = new BindingInfo
+            {
+                Host = "dev.test.com",
+                IP = "192.168.1.1",
+                Port = 80,
+                Protocol = "http"
+            };
+            Assert.IsTrue(BindingDeploymentManager.HasExistingBinding(bindings, spec));
         }
     }
 }
