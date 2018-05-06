@@ -4,7 +4,7 @@ Current Project Roadmap (Mid 2018-2019)
 
 ## Deployment:
 
-* Cleanup UI for different options and ensure deployment is happening as described (unit tests, preview)
+* ~~Cleanup UI for different options and ensure deployment is happening as described (unit tests, preview)~~
 * IIS bindings: should only show IP options for Single Site 
 * Child managed cert deployment type
 * Cert cleanup: Need way to tell if cert in use for other things (ftp etc) and either update them or inform user. Manually added https bindings lose cert if deleted through another association 
@@ -13,13 +13,13 @@ Current Project Roadmap (Mid 2018-2019)
 * Need support for wildcard bindings (*.example.com) - only when cert has matching wildcard?
 
 ## Preview
-* If binding exists (http & https 4 sets show up for 2 domains)
-if any other deployment (cert only etc) chosen preview still says IIS
-* Needs to cater for all selected options (deployment modes etc)
+* ~~If binding exists (http & https 4 sets show up for 2 domains)
+if any other deployment (cert only etc) chosen preview still says IIS~~
+* ~~Needs to cater for all selected options (deployment modes etc)~~
 
 ## Test results UI:
-* Progressively updated UI to show status of the current config tests in progress
-* Capture description, result OK and error for each test attempted (so config check can consist of multiple results, stream results via SignalR progress changed?)
+* ~~Progressively updated UI to show status of the current config tests in progress~~
+* ~~Capture description, result OK and error for each test attempted (so config check can consist of multiple results, stream results via SignalR progress changed?)~~
 
 ## Domain options
 * Ensure wildcard can't be entered alongside label for same domain (*.test.com and www.test.com)
@@ -50,13 +50,13 @@ if any other deployment (cert only etc) chosen preview still says IIS
 * 32-bit to 64-bit migration
 
 ## Misc beta issues
-* Internal API errors throw generic JSON serialization error, need proper exception handling (retry support?)
-* Make credential encryption scope option (CurrentUser vs LocalMachine), provide migration between options.
+* ~~Internal API errors throw generic JSON serialization error, need proper exception handling (retry support?)~~
+* Make credential encryption scope optional (CurrentUser vs LocalMachine), provide migration between options.
 
 # Release (post-beta) issues
 
 ## Misc
-* Diagnostic check for disk space or repair database i.e System.Data.SQLite.SQLiteException (0x80004005): database or disk is full
+* ~~Diagnostic check for disk space or repair database i.e System.Data.SQLite.SQLiteException (0x80004005): database or disk is full~~
 * Remove unnecessary text mentions of IIS
 * Localization text updates
 * Check if primary domain selection toggle bug is fixed
@@ -71,7 +71,7 @@ if any other deployment (cert only etc) chosen preview still says IIS
 
 ## Blank hostname bindings
 
-* Warn user if no bindings will be created/updated and deployment is not storage only etc
+* ~~Warn user if no bindings will be created/updated and deployment is not storage only etc~~
 
 ## DNS Provider extensions
 * Scripted DNS update provider
@@ -90,7 +90,7 @@ if any other deployment (cert only etc) chosen preview still says IIS
 ## Portal/API
 * Website looks awful, clean up
 * use githb markdown as source for website content
-* Add help/guide content to websites
+* ~~Add help/guide content to websites~~
 * Separate dashboard from main website
 * Move API to AWS/Azure
 
@@ -98,7 +98,7 @@ if any other deployment (cert only etc) chosen preview still says IIS
 * Allow http validation to wait a delay before completing validation (web farm volume sync)
 * Method to cancel config check mid tests
 * Capture config check logs so full details can be viewed
-* Stream test results as they are performed
+* ~~Stream test results as they are performed~~
 * Failed validations can be retried later? would need to store validation status info
 * Report on IIS sites/bindings not currently managed
 * check localhost bindings to 127.0.0.1 and not an IP e.g. netsh http show iplisten, netsh http delete, iplisten ipaddress=195.43.64.112 
