@@ -1,9 +1,9 @@
-﻿using Certify.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using Certify.Models;
 
 namespace Certify.UI.Controls.ManagedCertificate
 {
@@ -26,7 +26,9 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             Steps = new ObservableCollection<ActionStep>();
 
-            _markdownPipeline = new Markdig.MarkdownPipelineBuilder().Build();
+            var _markdownPipelineBuilder = new Markdig.MarkdownPipelineBuilder();
+            _markdownPipelineBuilder.Extensions.Add(new Markdig.Extensions.Tables.PipeTableExtension());
+            _markdownPipeline = _markdownPipelineBuilder.Build();
             _css = System.IO.File.ReadAllText(System.AppDomain.CurrentDomain.BaseDirectory + "\\Assets\\CSS\\markdown.css");
         }
 
@@ -68,7 +70,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             foreach (var s in Steps)
             {
                 markdownText += "# " + s.Title + "\r\n";
-                markdownText += s.Description + "\r\n";
+                markdownText += s.Description;
 
                 if (s.Substeps != null)
                 {

@@ -205,10 +205,19 @@ img {
 table {
     border-collapse: collapse;
     border-spacing: 0;
+    border:1px solid gainsboro;
+    width:100%;
 }
-
+tr {
+    border-bottom:1px solid gainsboro;
+}
 td {
     vertical-align: top;
+    padding:0.3em;
+}
+
+td,th {
+    font-size:0.8em;
 }
 /*
 @media only screen and (min-width: 480px) {

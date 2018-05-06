@@ -107,7 +107,7 @@ namespace Certify.Management
         public async Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate,
             bool isPreviewMode, IProgress<RequestProgressState> progress = null)
         {
-            List<StatusMessage> results = new List<StatusMessage>();
+            var results = new List<StatusMessage>();
 
             if (managedCertificate.RequestConfig.PerformAutoConfig && managedCertificate.GetChallengeConfig(null).ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
             {

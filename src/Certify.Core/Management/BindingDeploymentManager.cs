@@ -136,7 +136,7 @@ namespace Certify.Core.Management
             }
 
             // or add all sites (if required)
-            if (requestConfig.DeploymentSiteOption == DeploymentOption.AllSites)
+            if (requestConfig.DeploymentSiteOption == DeploymentOption.AllSites || requestConfig.DeploymentSiteOption == DeploymentOption.Auto)
             {
                 targetSites.AddRange(await deploymentTarget.GetAllTargetItems());
             }
@@ -316,7 +316,7 @@ namespace Certify.Core.Management
                 {
                     Title = "Install Certificate For Binding",
                     Category = "Deployment.AddBinding",
-                    Description = $"* Add new https binding: [{site.Name}] **{bindingSpecString}**",
+                    Description = $"Add https binding | {site.Name} | **{bindingSpecString}**",
                     Key = $"[{site.Id}]:{bindingSpecString}:{useSNI}"
                 };
 
@@ -346,7 +346,7 @@ namespace Certify.Core.Management
                 {
                     Title = "Install Certificate For Binding",
                     Category = "Deployment.UpdateBinding",
-                    Description = $"* Update existing binding: [{site.Name}] **{bindingSpecString}** \r\n"
+                    Description = $"Update https binding | {site.Name} | **{bindingSpecString}**"
                 });
             }
 

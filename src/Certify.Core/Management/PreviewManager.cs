@@ -177,6 +177,7 @@ namespace Certify.Management
             };
 
             if (
+                item.RequestConfig.DeploymentSiteOption == DeploymentOption.Auto ||
                 item.RequestConfig.DeploymentSiteOption == DeploymentOption.AllSites ||
                 item.RequestConfig.DeploymentSiteOption == DeploymentOption.SingleSite
             )
@@ -219,6 +220,9 @@ namespace Certify.Management
                     else
                     {
                         deploymentDescription += $"## Deploying to all matching sites:" + newLine;
+
+                        deploymentDescription += " Action | Site | Binding " + newLine;
+                        deploymentDescription += " ------ | ---- | ------- " + newLine;
                     }
 
                     // add deployment sub-steps (if any)
