@@ -1,12 +1,12 @@
-﻿using Certify.Client;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Certify.Client;
 using Certify.Management;
 using Certify.Models;
 using Microsoft.ApplicationInsights;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Text.RegularExpressions;
 
 namespace Certify.CLI
 {
@@ -54,7 +54,7 @@ namespace Certify.CLI
                     p.ListManagedCertificates();
                 }
 
-                if (args.Contains("certdiag", StringComparer.InvariantCultureIgnoreCase))
+                if (args.Contains("diag", StringComparer.InvariantCultureIgnoreCase))
                 {
                     p.RunCertDiagnostics();
                 }
@@ -201,6 +201,11 @@ namespace Certify.CLI
             System.Console.WriteLine("Usage: certify <command> \n");
             System.Console.WriteLine("certify renew : renew certificates for all auto renewed managed sites");
             System.Console.WriteLine("certify list : list managed certificates and current running/not running status in IIS");
+            System.Console.WriteLine("certify diag : check existing ssl bindings and managed certificate integrity");
+            System.Console.WriteLine("certify importcsv : import managed certificates from a CSV file.");
+            System.Console.WriteLine("\n\n");
+            System.Console.WriteLine("\n\n");
+            System.Console.WriteLine("For help, see the docs at https://docs.certifytheweb.com");
 
             System.Console.WriteLine("\n");
         }
@@ -270,6 +275,33 @@ namespace Certify.CLI
         {
             var managedCertificates = _certifyClient.GetManagedCertificates(new ManagedCertificateFilter()).Result;
             Console.ForegroundColor = ConsoleColor.White;
+
+            Console.WriteLine("Checking existing bindings..");
+
+            var bindingConfig = Certify.Utils.Networking.GetCertificateBindings();
+
+            foreach (var b in bindingConfig)
+            {
+                Console.WriteLine($"{b.IP}:{b.Port}");
+            }
+
+            var dupeBindings = bindingConfig.GroupBy(x => x.IP + ":" + x.Port)
+              .Where(g => g.Count() > 1)
+              .Select(y => y.Key)
+              .ToList();
+
+            if (dupeBindings.Any())
+            {
+                foreach (var d in dupeBindings)
+                {
+                    Console.WriteLine($"Duplicate binding will fail:  {d}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No duplicate IP:Port bindings identified.");
+            }
+
             Console.WriteLine("Running cert diagnostics..");
 
             foreach (var site in managedCertificates)
@@ -288,19 +320,19 @@ namespace Certify.CLI
                                 var storedCert = CertificateManager.GetCertificateFromStore(site.RequestConfig.PrimaryDomain);
                                 if (storedCert != null)
                                 {
-                                    Console.WriteLine($"Stored cert " + storedCert.FriendlyName);
+                                    Console.WriteLine($"Stored cert :: " + storedCert.FriendlyName);
                                     var test = fileCert.PrivateKey.KeyExchangeAlgorithm;
                                     Console.WriteLine(test.ToString());
 
                                     var access = CertificateManager.GetUserAccessInfoForCertificatePrivateKey(storedCert);
                                     foreach (System.Security.AccessControl.AuthorizationRule a in access.GetAccessRules(true, false, typeof(System.Security.Principal.NTAccount)))
                                     {
-                                        Console.WriteLine("Access: " + a.IdentityReference.Value.ToString());
+                                        Console.WriteLine("\t Access: " + a.IdentityReference.Value.ToString());
                                     }
                                 }
                                 else
                                 {
-                                    Console.WriteLine("Stored cert not found");
+                                    Console.WriteLine($"{site.RequestConfig.PrimaryDomain} :: Stored cert not found");
                                 }
                             }
                             catch (Exception exp)
@@ -380,7 +412,8 @@ namespace Certify.CLI
 
                         foreach (var title in columnTitles)
                         {
-                            // because we never know how people are going to put data in the csv, convert titles to lowercase before searching for the column index
+                            // because we never know how people are going to put data in the csv,
+                            // convert titles to lowercase before searching for the column index
                             var cleanTitle = title.Trim().ToLower();
 
                             // set the column ids
@@ -389,54 +422,71 @@ namespace Certify.CLI
                                 case "siteid":
                                     siteIdIdx = colID;
                                     break;
+
                                 case "name":
                                     nameIdx = colID;
                                     break;
+
                                 case "domains":
                                     domainsIdx = colID;
                                     break;
+
                                 case "primarydomain":
                                     primaryDomainIdx = colID;
                                     break;
+
                                 case "includeinautorenew":
                                     includeInAutoRenewIdx = colID;
                                     break;
+
                                 case "performautoconfig":
                                     performAutoConfigIdx = colID;
                                     break;
+
                                 case "performchallengefilecopy":
                                     performChallengeFileCopyIdx = colID;
                                     break;
+
                                 case "performextensionlessconfigchecks":
                                     performExtensionlessConfigChecksIdx = colID;
                                     break;
+
                                 case "performtlssnibindingconfigchecks":
                                     performTlsSniBindingConfigChecksIdx = colID;
                                     break;
+
                                 case "performautomatedcertbinding":
                                     performAutomatedCertBindingIdx = colID;
                                     break;
+
                                 case "enablefailurenotifications":
                                     enableFailureNotificationsIdx = colID;
                                     break;
+
                                 case "prerequestpowershellscript":
                                     preRequestPowerShellScriptIdx = colID;
                                     break;
+
                                 case "postrequestpowershellscript":
                                     postRequestPowerShellScriptIdx = colID;
                                     break;
+
                                 case "webhooktrigger":
                                     webhookTriggerIdx = colID;
                                     break;
+
                                 case "webhookmethod":
                                     webhookMethodIdx = colID;
                                     break;
+
                                 case "webhookurl":
                                     webhookUrlIdx = colID;
                                     break;
+
                                 case "webhookcontenttype":
                                     webhookContentTypeIdx = colID;
                                     break;
+
                                 case "webhookcontentbody":
                                     webhookContentBodyIdx = colID;
                                     break;
@@ -447,8 +497,7 @@ namespace Certify.CLI
                     }
                     else
                     {
-                        // required fields
-                        // SiteId, Name, Domain;Domain2;Domain3
+                        // required fields SiteId, Name, Domain;Domain2;Domain3
                         string[] values = Regex.Split(row, @",(?![^\{]*\})"); // get all values separated by commas except those found between {}
                         string siteId = values[(int)siteIdIdx].Trim();
                         string siteName = values[(int)nameIdx].Trim();
@@ -559,7 +608,8 @@ namespace Certify.CLI
 
                         bool isPrimaryDomain = true;
 
-                        // if we have passed in a primary domain into the csv file, use that instead of the first domain in the list
+                        // if we have passed in a primary domain into the csv file, use that instead
+                        // of the first domain in the list
                         if (primaryDomain != "")
                         {
                             isPrimaryDomain = false;
@@ -594,8 +644,9 @@ namespace Certify.CLI
                                         }
                                     }
                                 }
-                                
-                                // if the current san entry doesn't exist in our certificate list, let's add it
+
+                                // if the current san entry doesn't exist in our certificate list,
+                                // let's add it
                                 if (!sanExists)
                                 {
                                     newManagedCertificate.DomainOptions.Add(new DomainOption { Domain = cleanDomainName, IsPrimaryDomain = isPrimaryDomain, IsSelected = true, Title = d });
@@ -607,7 +658,8 @@ namespace Certify.CLI
                             }
                         }
 
-                        // if the new certificate to be imported has sans, then add the certificate request to the system
+                        // if the new certificate to be imported has sans, then add the certificate
+                        // request to the system
                         if (sans.Count() > 0)
                         {
                             newManagedCertificate.RequestConfig.SubjectAlternativeNames = sans.ToArray();

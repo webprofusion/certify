@@ -1,12 +1,49 @@
-﻿using Certify.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.NetworkInformation;
+using Certify.Models;
 
 namespace Certify.Utils
 {
     public class Networking
     {
+        public static List<BindingInfo> GetCertificateBindings()
+        {
+            try
+            {
+                var config = new SslCertBinding.Net.CertificateBindingConfiguration();
+                var results = config.Query();
+
+                return results.Select(b => new BindingInfo
+                {
+                    Host = b.ToString(),
+                    IP = b.IpPort.Address.MapToIPv4().ToString(),
+                    Port = b.IpPort.Port,
+                    CertificateHash = b.Thumbprint
+                }).ToList();
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine("Failed to query ssl bindings: " + exp.ToString());
+                return new List<BindingInfo>();
+            }
+        }
+
+        public static bool EndpointBindingExists(System.Net.IPEndPoint endpoint)
+        {
+            var config = new SslCertBinding.Net.CertificateBindingConfiguration();
+            var results = config.Query(endpoint);
+            if (results.Any())
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         public static List<IPAddressOption> GetIPAddresses()
         {
             var list = new List<IPAddressOption>();
