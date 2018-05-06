@@ -130,5 +130,10 @@ namespace Certify.Core.Management
         {
             return new MockBindingDeploymentTarget();
         }
+
+        public Task<List<ActionStep>> RunConfigurationDiagnostics(string siteId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

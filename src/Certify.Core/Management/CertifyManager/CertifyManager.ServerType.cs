@@ -95,5 +95,10 @@ namespace Certify.Management
         {
             return await this._serverProvider.GetServerVersion();
         }
+
+        public async Task<List<ActionStep>> RunServerDiagnostics(StandardServerTypes serverType, string siteId)
+        {
+            return await this._serverProvider.RunConfigurationDiagnostics(siteId);
+        }
     }
 }

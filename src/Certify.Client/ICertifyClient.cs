@@ -76,6 +76,8 @@ namespace Certify.Client
 
         Task<List<DomainOption>> GetServerSiteDomains(StandardServerTypes serverType, string serverSiteId);
 
+        Task<List<ActionStep>> RunConfigurationDiagnostics(StandardServerTypes serverType, string serverSiteId);
+
         #endregion Server
 
         #region Preferences

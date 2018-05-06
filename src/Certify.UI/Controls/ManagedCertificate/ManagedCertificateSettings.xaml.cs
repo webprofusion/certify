@@ -10,7 +10,7 @@ using MahApps.Metro.Controls;
 namespace Certify.UI.Controls.ManagedCertificate
 {
     /// <summary>
-    /// Interaction logic for ManagedCertificateSettings.xaml
+    /// Interaction logic for ManagedCertificateSettings.xaml 
     /// </summary>
     public partial class ManagedCertificateSettings : UserControl
     {
@@ -270,6 +270,8 @@ namespace Certify.UI.Controls.ManagedCertificate
                 ItemViewModel.ConfigCheckResults = new System.Collections.ObjectModel.ObservableCollection<StatusMessage> {
                     new StatusMessage{IsOK=true, Message="Testing in progress.."}
                 };
+
+                AppViewModel.ClearRequestProgressResults();
 
                 ShowTestResultsUI();
 

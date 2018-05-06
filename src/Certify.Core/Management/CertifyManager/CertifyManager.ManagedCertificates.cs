@@ -107,8 +107,23 @@ namespace Certify.Management
         public async Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate,
             bool isPreviewMode, IProgress<RequestProgressState> progress = null)
         {
-            var results = await _challengeDiagnostics.TestChallengeResponse(log, _serverProvider, managedCertificate,
-                isPreviewMode, CoreAppSettings.Current.EnableDNSValidationChecks, progress);
+            List<StatusMessage> results = new List<StatusMessage>();
+
+            if (managedCertificate.RequestConfig.PerformAutoConfig && managedCertificate.GetChallengeConfig(null).ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
+            {
+                var serverCheck = await _serverProvider.RunConfigurationDiagnostics(managedCertificate.ServerSiteId);
+                results.AddRange(serverCheck.ConvertAll(x => new StatusMessage { IsOK = !x.HasError, HasWarning = x.HasWarning, Message = x.Description }));
+            }
+
+            results.AddRange(
+                await _challengeDiagnostics.TestChallengeResponse(
+                        log,
+                        _serverProvider,
+                        managedCertificate,
+                        isPreviewMode,
+                        CoreAppSettings.Current.EnableDNSValidationChecks, progress
+                    )
+                 );
 
             if (progress != null)
             {

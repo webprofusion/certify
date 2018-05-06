@@ -8,6 +8,7 @@ namespace Certify.Models
         public string Category { get; set; }
         public string Description { get; set; }
         public bool HasError { get; set; } = false;
+        public bool HasWarning { get; set; } = false;
         public List<ActionStep> Substeps { get; set; }
         public string Key { get; set; }
     }

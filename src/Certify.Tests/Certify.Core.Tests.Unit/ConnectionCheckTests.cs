@@ -7,10 +7,10 @@ using Serilog;
 namespace Certify.Core.Tests.Unit
 {
     [TestClass]
-    public class ConenctionCheckTests
+    public class ConnectionCheckTests
     {
         [TestMethod, Description("Ensure that an http service is available")]
-        public async Task TestDNSTests()
+        public async Task TestPortConnection()
         {
             var net = new NetworkUtils(enableProxyValidationAPI: true);
 

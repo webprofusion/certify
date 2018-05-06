@@ -51,5 +51,7 @@ namespace Certify.Models.Providers
         Task<bool> CommitChanges();
 
         IBindingDeploymentTarget GetDeploymentTarget();
+
+        Task<List<ActionStep>> RunConfigurationDiagnostics(string siteId);
     }
 }

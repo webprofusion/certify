@@ -212,7 +212,7 @@ namespace Certify.Core.Management
                         {
                             //create/update binding and associate new cert
                             //if any binding elements configured, use those, otherwise auto bind using defaults and SNI
-                            var stepActions = await AddOrUpdateBinding(
+                            var stepActions = await UpdateBinding(
                                 deploymentTarget,
                                 site,
                                 existingBindings,
@@ -275,7 +275,7 @@ namespace Certify.Core.Management
         /// <param name="sslPort"></param>
         /// <param name="useSNI"></param>
         /// <param name="ipAddress"></param>
-        public async Task<List<ActionStep>> AddOrUpdateBinding(
+        public async Task<List<ActionStep>> UpdateBinding(
                                                                 IBindingDeploymentTarget deploymentTarget,
                                                                 IBindingDeploymentTargetItem site,
                                                                 List<BindingInfo> existingBindings,

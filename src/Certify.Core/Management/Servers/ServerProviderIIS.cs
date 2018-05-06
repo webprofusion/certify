@@ -80,6 +80,35 @@ namespace Certify.Management.Servers
             return Task.FromResult(result);
         }
 
+        public async Task<List<ActionStep>> RunConfigurationDiagnostics(string siteId)
+        {
+            List<ActionStep> configChecks = new List<ActionStep>();
+            using (var serverManager = await GetDefaultServerManager())
+            {
+                var config = serverManager.GetApplicationHostConfiguration();
+
+                if ((bool?)serverManager.ApplicationPoolDefaults["enableConfigurationOverride"] == false)
+                {
+                    configChecks.Add(new ActionStep
+                    {
+                        HasWarning = true,
+                        Title = "Application Pool: Configuration Override Disabled",
+                        Description = "Configuration warning: enableConfigurationOverride in system.applicationHost / applicationPools is set to false.This prevents auto confgiuration from clearing or rearranging static file handler mappings."
+                    });
+                }
+                else
+                {
+                    configChecks.Add(new ActionStep
+                    {
+                        HasError = false,
+                        Title = "Application Pool: Configuration Override Enabled",
+                        Description = "Application Pool: Configuration Override Enabled"
+                    });
+                }
+            }
+            return configChecks;
+        }
+
         private async Task<ServerManager> GetDefaultServerManager()
         {
             ServerManager srv = null;

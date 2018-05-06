@@ -1,8 +1,8 @@
-﻿using Certify.Models;
-using Certify.Models.Providers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Certify.Models;
+using Certify.Models.Providers;
 
 namespace Certify.Management
 {
@@ -11,6 +11,8 @@ namespace Certify.Management
         Task<bool> IsServerTypeAvailable(StandardServerTypes serverType);
 
         Task<Version> GetServerTypeVersion(StandardServerTypes serverType);
+
+        Task<List<ActionStep>> RunServerDiagnostics(StandardServerTypes serverType, string siteId);
 
         Task<bool> LoadSettingsAsync(bool skipIfLoaded);
 

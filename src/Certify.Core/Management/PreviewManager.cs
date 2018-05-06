@@ -59,7 +59,7 @@ namespace Certify.Management
 
                     if (!string.IsNullOrEmpty(item.RequestConfig.WebsiteRootPath))
                         validationDescription +=
-                            $"The file will be created at the path `{item.RequestConfig.WebsiteRootPath}.well-known\\acme-challenge\\` " +
+                            $"The file will be created at the path `{item.RequestConfig.WebsiteRootPath}\\.well-known\\acme-challenge\\` " +
                             newLine + newLine;
 
                     validationDescription +=

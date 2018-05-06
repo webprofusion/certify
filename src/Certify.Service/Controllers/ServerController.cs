@@ -1,8 +1,8 @@
-﻿using Certify.Management;
-using Certify.Models;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Web.Http;
+using Certify.Management;
+using Certify.Models;
 
 namespace Certify.Service
 {
@@ -64,6 +64,19 @@ namespace Certify.Service
             {
                 var version = await _certifyManager.GetServerTypeVersion(serverType);
                 return version.ToString();
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        [HttpGet, Route("diagnostics/{serverType}/{siteId?}")]
+        public async Task<List<ActionStep>> RunServerDiagnostics(StandardServerTypes serverType, string siteId)
+        {
+            if (serverType == StandardServerTypes.IIS)
+            {
+                return await _certifyManager.RunServerDiagnostics(serverType, siteId);
             }
             else
             {

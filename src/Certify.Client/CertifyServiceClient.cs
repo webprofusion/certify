@@ -198,6 +198,12 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<List<DomainOption>>(result);
         }
 
+        public async Task<List<ActionStep>> RunConfigurationDiagnostics(StandardServerTypes serverType, string serverSiteId)
+        {
+            var results = await FetchAsync($"server/diagnostics/{serverType}/{serverSiteId}");
+            return JsonConvert.DeserializeObject<List<ActionStep>>(results);
+        }
+
         #endregion Server
 
         #region Preferences

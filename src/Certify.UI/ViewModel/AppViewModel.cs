@@ -423,6 +423,13 @@ namespace Certify.UI.ViewModel
             });
         }
 
+        public void ClearRequestProgressResults()
+        {
+            ProgressResults = new ObservableCollection<RequestProgressState>();
+            RaisePropertyChangedEvent(nameof(HasRequestsInProgress));
+            RaisePropertyChangedEvent(nameof(ProgressResults));
+        }
+
         /* Stored Credentials */
 
         public ObservableCollection<StoredCredential> StoredCredentials { get; set; }
