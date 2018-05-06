@@ -101,8 +101,18 @@ namespace Certify.UI.Controls.ManagedCertificate
                 item.Name = ItemViewModel.PrimarySubjectDomain.Domain;
             }
 
+            if (ItemViewModel.SelectedItem.DomainOptions.Any(d => d.IsSelected && d.Domain.StartsWith("*."))
+                &&
+                 item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
+                )
+            {
+                // if we still can't decide on the primary domain ask user to define it
+                MessageBox.Show("Wildcard domains cannot use http-01 validation for domain authorization. Use dns-01 instead.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
             if (item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI) &&
-                AppViewModel.IISVersion.Major < 8)
+            AppViewModel.IISVersion.Major < 8)
             {
                 MessageBox.Show(string.Format(SR.ManagedCertificateSettings_ChallengeNotAvailable, SupportedChallengeTypes.CHALLENGE_TYPE_SNI), SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;

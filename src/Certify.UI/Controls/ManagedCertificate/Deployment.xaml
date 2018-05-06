@@ -56,6 +56,35 @@
                 </DockPanel.Style>
                 <TextBlock Style="{StaticResource Instructions}" Text="Certificate will be deployed based on the default settings. See the Preview tab to review the bindings which will be updated." />
             </DockPanel>
+
+            <DockPanel x:Name="StoreOnly" DockPanel.Dock="Top">
+                <DockPanel.Style>
+                    <Style>
+                        <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedItem.RequestConfig.DeploymentSiteOption}" Value="{x:Static models:DeploymentOption.DeploymentStoreOnly}">
+                                <Setter Property="UIElement.Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DockPanel.Style>
+                <TextBlock Style="{StaticResource Instructions}" Text="Certificate will be imported into the Certificate Store on the Local Machine. No auto deployment." />
+            </DockPanel>
+
+            <DockPanel x:Name="NoDeployment" DockPanel.Dock="Top">
+                <DockPanel.Style>
+                    <Style>
+                        <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedItem.RequestConfig.DeploymentSiteOption}" Value="{x:Static models:DeploymentOption.NoDeployment}">
+                                <Setter Property="UIElement.Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DockPanel.Style>
+                <TextBlock Style="{StaticResource Instructions}" Text="Certificate will be saved to disk but will not be imported automatically into the Certificate Store." />
+            </DockPanel>
+
             <DockPanel x:Name="AdvancedBindingOptions">
                 <DockPanel.Style>
                     <Style>
@@ -140,6 +169,16 @@
                         DockPanel.Dock="Top"
                         IsEnabled="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}"
                         Orientation="Vertical">
+                        <StackPanel.Style>
+                            <Style>
+                                <Setter Property="UIElement.Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" Value="True">
+                                        <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
                         <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
                             <Label Width="130" Content="{x:Static Resources:SR.ManagedCertificateSettings_BindIP}" />
                             <ComboBox

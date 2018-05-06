@@ -205,32 +205,30 @@ img {
 table {
     border-collapse: collapse;
     border-spacing: 0;
-    border:1px solid gainsboro;
-    width:100%;
+    border: 1px solid gainsboro;
+    width: 100%;
 }
+
 tr {
-    border-bottom:1px solid gainsboro;
+    border-bottom: 1px solid gainsboro;
 }
+
 td {
     vertical-align: top;
-    padding:0.3em;
+    padding: 0.3em;
 }
 
-td,th {
-    font-size:0.8em;
-}
-/*
-@media only screen and (min-width: 480px) {
-  body {
-    font-size: 14px;
-  }
+td, th {
+    font-size: 0.8em;
 }
 
-@media only screen and (min-width: 768px) {
-  body {
-    font-size: 16px;
-  }
-}*/
+tr:nth-child(even) {
+    background: #e0e0e0
+}
+
+tr:nth-child(odd) {
+    background: #FFF
+}
 
 @media print {
     * {

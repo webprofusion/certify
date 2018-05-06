@@ -57,7 +57,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                     string markdown = GetStepsAsMarkdown(Steps);
 
                     var result = Markdig.Markdown.ToHtml(markdown, _markdownPipeline);
-                    result = "<html><head><meta http-equiv='Content-Type' content='text/html;charset=UTF-8'>" +
+                    result = "<html><head><meta http-equiv='Content-Type' content='text/html;charset=UTF-8'><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />" +
                             "<style>" + _css + "</style></head><body>" + result + "</body></html>";
                     MarkdownView.NavigateToString(result);
                 });
@@ -67,17 +67,17 @@ namespace Certify.UI.Controls.ManagedCertificate
         private string GetStepsAsMarkdown(IEnumerable<ActionStep> steps)
         {
             var markdownText = "";
+            var newLine = "\r\n";
             foreach (var s in Steps)
             {
-                markdownText += "# " + s.Title + "\r\n";
+                markdownText += newLine + "# " + s.Title + newLine;
                 markdownText += s.Description;
 
                 if (s.Substeps != null)
                 {
                     foreach (var sub in s.Substeps)
                     {
-                        // markdownText += "## " + sub.Title + "\r\n";
-                        markdownText += sub.Description + "\r\n";
+                        markdownText += sub.Description + newLine;
                     }
                 }
             }
