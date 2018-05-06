@@ -278,7 +278,7 @@ namespace Certify.CLI
 
             Console.WriteLine("Checking existing bindings..");
 
-            var bindingConfig = Certify.Utils.Networking.GetCertificateBindings();
+            var bindingConfig = Certify.Utils.Networking.GetCertificateBindings().Where(b => b.Port == 443);
 
             foreach (var b in bindingConfig)
             {
