@@ -209,7 +209,7 @@ namespace Certify.Management
                             {
                                 var siteInfo = await serverProvider.GetSiteById(item.ServerSiteId);
                                 deploymentDescription += $"## Deploying to Site" + newLine + newLine +
-                                                         $"`{siteInfo.Name}`" + newLine;
+                                                         $"`{siteInfo.Name}`" + newLine + newLine;
                             }
                             catch (Exception exp)
                             {
@@ -220,9 +220,6 @@ namespace Certify.Management
                     else
                     {
                         deploymentDescription += $"## Deploying to all matching sites:" + newLine;
-
-                        deploymentDescription += " Action | Site | Binding " + newLine;
-                        deploymentDescription += " ------ | ---- | ------- " + newLine;
                     }
 
                     // add deployment sub-steps (if any)
@@ -234,8 +231,13 @@ namespace Certify.Management
                     {
                         deploymentStep.Substeps = new List<ActionStep>
                         {
-                            new ActionStep {Description = "**There are no matching targets to deploy to. Certificate will be stored but currently no bindings will be updated.**"}
+                            new ActionStep {Description = newLine + "**There are no matching targets to deploy to. Certificate will be stored but currently no bindings will be updated.**"}
                         };
+                    }
+                    else
+                    {
+                        deploymentDescription += " Action | Site | Binding " + newLine;
+                        deploymentDescription += " ------ | ---- | ------- " + newLine;
                     }
                 }
                 else

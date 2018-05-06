@@ -335,10 +335,7 @@ namespace Certify.Management.Servers
                             //ignore bindings which are not http or https
                             if (bindingDetails.Protocol?.ToLower().StartsWith("http") == true)
                             {
-                                if (!String.IsNullOrEmpty(bindingDetails.Host) && bindingDetails.Host.Contains("."))
-                                {
-                                    result.Add(bindingDetails);
-                                }
+                                result.Add(bindingDetails);
                             }
                         }
                     }
