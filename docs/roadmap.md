@@ -11,6 +11,7 @@ Current Project Roadmap (Mid 2018-2019)
 * Auto config tests
 * If requesting a cert for test.com but target site is *:443, https binding needs to be Update only? Add would have a risk of binding conflict with other sites (if present).
 * Need support for wildcard bindings (*.example.com) - only when cert has matching wildcard?
+* If using 'Auto' deployment and blank hostnames present on target site, need to prompt user to create hostname bindings or use advanced deployment.
 
 ## Preview
 * ~~If binding exists (http & https 4 sets show up for 2 domains)
