@@ -93,7 +93,7 @@ namespace Certify.Management.Servers
                     {
                         HasWarning = true,
                         Title = "Application Pool: Configuration Override Disabled",
-                        Description = "Configuration warning: enableConfigurationOverride in system.applicationHost / applicationPools is set to false.This prevents auto confgiuration from clearing or rearranging static file handler mappings."
+                        Description = "Configuration warning: enableConfigurationOverride in system.applicationHost / applicationPools is set to false. This may prevent auto configuration from clearing or rearranging static file handler mappings."
                     });
                 }
                 else
