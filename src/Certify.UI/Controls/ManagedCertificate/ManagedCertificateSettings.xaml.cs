@@ -308,13 +308,11 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             if (CheckAdvancedView.IsChecked == false)
             {
-                this.TabDeployment.Visibility = Visibility.Collapsed;
                 this.TabScripting.Visibility = Visibility.Collapsed;
                 this.TabOptions.Visibility = Visibility.Collapsed;
             }
             else
             {
-                this.TabDeployment.Visibility = Visibility.Visible;
                 this.TabScripting.Visibility = Visibility.Visible;
                 this.TabOptions.Visibility = Visibility.Visible;
             }

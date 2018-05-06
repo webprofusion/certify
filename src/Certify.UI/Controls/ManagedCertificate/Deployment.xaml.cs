@@ -21,6 +21,11 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             this.DeploymentSiteOptions.ItemsSource = new List<ListOption>
             {
+                  new ListOption{
+                    Title ="Auto",
+                    Value = Models.DeploymentOption.Auto,
+                    Description="Automatic Deployment, Use Defaults"
+                },
                 new ListOption{
                     Title ="Single Site",
                     Value = Models.DeploymentOption.SingleSite,

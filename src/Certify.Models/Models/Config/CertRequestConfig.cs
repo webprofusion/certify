@@ -162,7 +162,7 @@ namespace Certify.Models
         /// <summary>
         /// Deployment site options (single/all etc) 
         /// </summary>
-        public DeploymentOption DeploymentSiteOption { get; set; } = DeploymentOption.SingleSite;
+        public DeploymentOption DeploymentSiteOption { get; set; } = DeploymentOption.Auto;
 
         /// <summary>
         /// Binding options: Add/Update or Update 

@@ -3,6 +3,11 @@
     public enum DeploymentOption
     {
         /// <summary>
+        /// Use defaults/best guess for deployment 
+        /// </summary>
+        Auto = 5,
+
+        /// <summary>
         /// Apply certificate to single site 
         /// </summary>
         SingleSite = 10,
