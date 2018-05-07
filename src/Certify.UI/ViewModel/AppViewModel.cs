@@ -207,6 +207,8 @@ namespace Certify.UI.ViewModel
             {
                 IISVersion = await CertifyClient.GetServerVersion(StandardServerTypes.IIS);
             }
+
+            RaisePropertyChangedEvent(nameof(IISVersion));
             return IsIISAvailable;
         }
 

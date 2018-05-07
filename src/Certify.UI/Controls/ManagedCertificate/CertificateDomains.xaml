@@ -45,10 +45,16 @@
                     Margin="0,4,0,0"
                     DockPanel.Dock="Top"
                     Orientation="Horizontal">
-                    <Label Width="160" Content="{x:Static Resources:SR.ManagedCertificateSettings_SelectWebsite}" />
+                    <Label
+                        x:Name="SelectWebsite"
+                        Width="160"
+                        AutomationProperties.Name="{x:Static Resources:SR.ManagedCertificateSettings_SelectWebsite}"
+                        Content="{x:Static Resources:SR.ManagedCertificateSettings_SelectWebsite}" />
                     <ComboBox
                         x:Name="WebsiteDropdown"
                         Width="240"
+                        AutomationProperties.HelpText="You can optionally select a website hosted on this server to populate the list of domains in your certificate. "
+                        AutomationProperties.Name="{x:Static Resources:SR.ManagedCertificateSettings_SelectWebsite}"
                         DisplayMemberPath="SiteName"
                         ItemsSource="{Binding WebSiteList, UpdateSourceTrigger=Default}"
                         SelectedItem="{Binding SelectedWebSite}"
@@ -74,10 +80,13 @@
                         <TextBox
                             x:Name="ManualDomains"
                             Width="240"
-                            Controls:TextBoxHelper.Watermark="e.g. test.com, www.test.com or *.test.com" />
+                            Controls:TextBoxHelper.Watermark="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsHelpText}"
+                            AutomationProperties.HelpText="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsHelpText}"
+                            AutomationProperties.Name="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsToCertificate}" />
                         <Button
                             x:Name="AddDomains"
                             Margin="4,0,0,0"
+                            AutomationProperties.Name="Add Domains"
                             Click="AddDomains_Click"
                             Content="Add Domains" />
                     </StackPanel>
@@ -128,6 +137,7 @@
                         <TextBox
                             x:Name="DomainFilter"
                             Width="120"
+                            AutomationProperties.Name="Filter domains"
                             TextChanged="DomainFilter_TextChanged" />
                     </StackPanel>
                     <DataGrid

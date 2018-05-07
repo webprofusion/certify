@@ -32,6 +32,11 @@ namespace Certify.UI.ViewModel
             {
                 RaiseSelectedItemChanges();
             }
+
+            if (e.PropertyName == nameof(_appViewModel.IISVersion))
+            {
+                RaisePropertyChangedEvent(nameof(ShowIISWarning));
+            }
         }
 
         public void RaiseSelectedItemChanges()
@@ -48,6 +53,25 @@ namespace Certify.UI.ViewModel
             RaisePropertyChangedEvent(nameof(SelectedItem));
             RaisePropertyChangedEvent(nameof(HasSelectedItemDomainOptions));
             RaisePropertyChangedEvent(nameof(HasSelectedItemWebsiteSelection));
+        }
+
+        /// <summary>
+        /// If an IIS Version is present and it is lower than v8.0 the SNI is not supported and
+        /// limitations apply
+        /// </summary>
+        public bool ShowIISWarning
+        {
+            get
+            {
+                if (_appViewModel.IsIISAvailable && _appViewModel.IISVersion?.Major < 8)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
         }
 
         internal async Task RefreshWebsiteList()

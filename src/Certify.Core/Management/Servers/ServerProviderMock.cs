@@ -64,14 +64,14 @@ namespace Certify.Core.Management
         {
         }
 
-        public async Task<bool> AddBinding(BindingInfo targetBinding)
+        public async Task<ActionStep> AddBinding(BindingInfo targetBinding)
         {
-            return true;
+            return new ActionStep { Description = "Added Binding" };
         }
 
-        public async Task<bool> UpdateBinding(BindingInfo targetBinding)
+        public async Task<ActionStep> UpdateBinding(BindingInfo targetBinding)
         {
-            return true;
+            return new ActionStep { Description = "Updated Binding" };
         }
     }
 

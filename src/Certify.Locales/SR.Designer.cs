@@ -574,6 +574,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to e.g. test.com, www.test.com or *.test.com.
+        /// </summary>
+        public static string ManagedCertificateSettings_AddDomainsHelpText {
+            get {
+                return ResourceManager.GetString("ManagedCertificateSettings_AddDomainsHelpText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add domains to certificate:.
         /// </summary>
         public static string ManagedCertificateSettings_AddDomainsToCertificate {

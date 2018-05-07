@@ -22,14 +22,14 @@ namespace Certify.Models.Providers
         /// </summary>
         /// <param name="targetBinding"></param>
         /// <returns></returns>
-        Task<bool> AddBinding(BindingInfo targetBinding);
+        Task<ActionStep> AddBinding(BindingInfo targetBinding);
 
         /// <summary>
         /// Updates the certificate hash and certificate store assignment for an existing binding 
         /// </summary>
         /// <param name="updatedBindingInfo"></param>
         /// <returns></returns>
-        Task<bool> UpdateBinding(BindingInfo targetBinding);
+        Task<ActionStep> UpdateBinding(BindingInfo targetBinding);
 
         Task<List<BindingInfo>> GetBindings(string targetItemId);
     }

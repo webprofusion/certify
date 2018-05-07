@@ -88,6 +88,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 autoPrimaryDomain.IsPrimaryDomain = true;
             }
 
+            // a primary subject domain must be set
             if (ItemViewModel.PrimarySubjectDomain == null)
             {
                 // if we still can't decide on the primary domain ask user to define it
@@ -101,6 +102,18 @@ namespace Certify.UI.Controls.ManagedCertificate
                 item.Name = ItemViewModel.PrimarySubjectDomain.Domain;
             }
 
+            // certificates cannot include requests for 'localhost'
+            if (ItemViewModel.SelectedItem.DomainOptions.Any(d => d.IsSelected && d.Domain.StartsWith("*."))
+               &&
+                item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
+               )
+            {
+                // if we still can't decide on the primary domain ask user to define it
+                MessageBox.Show("Wildcard domains cannot use http-01 validation for domain authorization. Use dns-01 instead.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            // certificates cannot request wildcards and use http validation (dns only)
             if (ItemViewModel.SelectedItem.DomainOptions.Any(d => d.IsSelected && d.Domain.StartsWith("*."))
                 &&
                  item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
@@ -111,8 +124,8 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return false;
             }
 
-            if (item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI) &&
-            AppViewModel.IISVersion.Major < 8)
+            // TLS-SNI-01 (deprecated) would only work on IIS 8 or higher
+            if (item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI) & AppViewModel.IISVersion.Major < 8)
             {
                 MessageBox.Show(string.Format(SR.ManagedCertificateSettings_ChallengeNotAvailable, SupportedChallengeTypes.CHALLENGE_TYPE_SNI), SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;

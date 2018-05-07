@@ -322,11 +322,20 @@ namespace Certify.Core.Management
 
                 if (!isPreviewOnly)
                 {
-                    if (!await deploymentTarget.AddBinding(bindingSpec))
+                    var result = await deploymentTarget.AddBinding(bindingSpec);
+                    if (result.HasError)
                     {
                         // failed to add
                         action.HasError = true;
-                        action.Description += " Failed to add binding. Check SNI is supported.";
+                        action.Description += $" Failed to add binding. [{result.Description}]";
+                    }
+                    else
+                    {
+                        if (result.HasWarning)
+                        {
+                            action.HasWarning = true;
+                            action.Description += $" [{result.Description}]";
+                        }
                     }
                 }
 
@@ -335,19 +344,36 @@ namespace Certify.Core.Management
             else
             {
                 // update one or more existing https bindings with new cert
-
-                if (!isPreviewOnly)
-                {
-                    // Update existing https Binding
-                    await deploymentTarget.UpdateBinding(bindingSpec);
-                }
-
-                steps.Add(new ActionStep
+                var action = new ActionStep
                 {
                     Title = "Install Certificate For Binding",
                     Category = "Deployment.UpdateBinding",
                     Description = $"Update https binding | {site.Name} | **{bindingSpecString}**"
-                });
+                };
+
+                if (!isPreviewOnly)
+                {
+                    // Update existing https Binding
+                    var result = await deploymentTarget.UpdateBinding(bindingSpec);
+
+                    if (result.HasError)
+                    {
+                        // failed to update
+                        action.HasError = true;
+                        action.Description += $" Failed to update binding. [{result.Description}]";
+                    }
+                    else
+                    {
+                        if (result.HasWarning)
+                        {
+                            // has update warning
+                            action.HasWarning = true;
+                            action.Description += $" [{result.Description}]";
+                        }
+                    }
+                }
+
+                steps.Add(action);
             }
 
             return steps;

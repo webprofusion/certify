@@ -656,4 +656,7 @@
   <data name="ManagedCertificateSettings_AddDomainsToCertificate" xml:space="preserve">
     <value>Add domains to certificate:</value>
   </data>
+  <data name="ManagedCertificateSettings_AddDomainsHelpText" xml:space="preserve">
+    <value>e.g. test.com, www.test.com or *.test.com</value>
+  </data>
 </root>
