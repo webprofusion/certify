@@ -1,6 +1,6 @@
-﻿using Certify.Management;
+﻿using System.Threading.Tasks;
+using Certify.Management;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Threading.Tasks;
 
 namespace Certify.Core.Tests
 {
@@ -22,6 +22,18 @@ namespace Certify.Core.Tests
 
             _provider = new Providers.DNS.AWSRoute53.DnsProviderAWSRoute53(_credentials);
             await _provider.InitProvider();
+        }
+
+        [TestMethod, TestCategory("DNS")]
+        public override async Task TestCreateRecord()
+        {
+            await base.TestCreateRecord();
+        }
+
+        [TestMethod, TestCategory("DNS")]
+        public override async Task TestDeleteRecord()
+        {
+            await base.TestDeleteRecord();
         }
     }
 }

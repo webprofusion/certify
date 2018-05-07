@@ -45,7 +45,7 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(result.All(r => r.IsSuccess), "correctly configured DNSSEC record should pass dns check");
 
             // dnssec-failed.org = incorrectly configured DNSSEC record
-            result = await net.CheckDNS(log, "example.com");
+            result = await net.CheckDNS(log, "dnssec-failed.org");
             Assert.IsFalse(result.All(r => r.IsSuccess), "incorrectly configured DNSSEC record should fail dns check");
         }
 

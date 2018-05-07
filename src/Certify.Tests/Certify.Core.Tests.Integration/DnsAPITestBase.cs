@@ -13,8 +13,7 @@ namespace Certify.Core.Tests
         protected string _zoneId = "";
         protected IDnsProvider _provider = null;
 
-        [TestMethod, TestCategory("DNS")]
-        public async Task TestCreateRecord()
+        public virtual async Task TestCreateRecord()
         {
             var createRequest = new DnsRecord
             {
@@ -35,8 +34,7 @@ namespace Certify.Core.Tests
             System.Diagnostics.Debug.WriteLine($"Create DNS Record {createRequest.RecordName} took {stopwatch.Elapsed.TotalSeconds} seconds");
         }
 
-        [TestMethod, TestCategory("DNS")]
-        public async Task TestDeleteRecord()
+        public virtual async Task TestDeleteRecord()
         {
             var deleteRequest = new DnsRecord
             {

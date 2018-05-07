@@ -298,8 +298,8 @@ namespace Certify.Management
 
                 results.Add(new ActionResult
                 {
-                    IsSuccess = false,
-                    Message = $"CheckDNS: '{domain}' failed to resolve to an IP Address. "
+                    IsSuccess = true,
+                    Message = $"CheckDNS: '{domain}' resolved to an IP Address {result.AddressList[0].ToString()}. "
                 });
             }
             catch
