@@ -14,7 +14,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
     /// <summary>
     /// API calls based on https://api-docs.dnsmadeeasy.com/ 
     /// </summary>
-    public class DnsProviderDnsMadeEasy : IDnsProvider, IDisposable
+    public class DnsProviderDnsMadeEasy : DnsProviderBase, IDnsProvider, IDisposable
     {
         private class DnsQueryResults
         {
@@ -115,43 +115,13 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             return request;
         }
 
-        /// <summary>
-        /// Where a record name is in the form _acme-challenge.www.subdomain.domain.com, determine
-        /// the root domain (i.e domain.com or subdomain.domain.com) info
-        /// </summary>
-        /// <param name="recordName"></param>
-        /// <returns></returns>
-        public async Task<DnsRecord> DetermineDomainRoot(string recordName)
-        {
-            var zones = await GetZones();
-
-            DnsRecord info = new DnsRecord { RecordType = "TXT" };
-
-            foreach (var z in zones)
-            {
-                if (recordName.EndsWith(z.Name) && (info.RootDomain == null || z.Name.Length < info.RootDomain.Length))
-                {
-                    info.RootDomain = z.Name;
-                    info.ZoneId = z.ZoneId;
-                }
-            }
-            return info;
-        }
-
-        public string NormaliseRecordName(DnsRecord info, string recordName)
-        {
-            var result = recordName.Replace(info.RootDomain, "");
-            result = result.TrimEnd('.');
-            return result;
-        }
-
         public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
             DnsRecord domainInfo = null;
 
             try
             {
-                domainInfo = await DetermineDomainRoot(request.RecordName);
+                domainInfo = await DetermineZoneDomainRoot(request.RecordName, request.ZoneId);
 
                 if (string.IsNullOrEmpty(domainInfo.RootDomain))
                 {
@@ -235,7 +205,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             }
         }
 
-        public async Task<List<DnsZone>> GetZones()
+        public override async Task<List<DnsZone>> GetZones()
         {
             // return all managed domains https://api.dnsmadeeasy.com/V2.0/dns/managed/
             var url = $"{_apiUrl}dns/managed/";

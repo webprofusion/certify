@@ -20,5 +20,10 @@
 
         public bool IsSNIEnabled { get; set; }
         public bool IsEnabled { get; set; }
+
+        public override string ToString()
+        {
+            return string.IsNullOrEmpty(SiteName) ? $"{Protocol}://{Host}:{Port}" : SiteName;
+        }
     }
 }

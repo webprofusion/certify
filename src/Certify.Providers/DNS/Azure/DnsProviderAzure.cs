@@ -10,7 +10,7 @@ using Microsoft.Rest.Azure.Authentication;
 
 namespace Certify.Providers.DNS.Azure
 {
-    public class DnsProviderAzure : IDnsProvider
+    public class DnsProviderAzure : DnsProviderBase, IDnsProvider
     {
         private DnsManagementClient _dnsClient;
 
@@ -96,39 +96,9 @@ namespace Certify.Providers.DNS.Azure
             return true;
         }
 
-        /// <summary>
-        /// Where a record name is in the form _acme-challenge.www.subdomain.domain.com, determine
-        /// the root domain (i.e domain.com or subdomain.domain.com) info
-        /// </summary>
-        /// <param name="recordName"></param>
-        /// <returns></returns>
-        public async Task<DnsRecord> DetermineDomainRoot(string recordName)
-        {
-            var zones = await _dnsClient.Zones.ListAsync();
-
-            DnsRecord info = new DnsRecord { RecordType = "TXT" };
-
-            foreach (var z in zones)
-            {
-                if (recordName.EndsWith(z.Name) && (info.RootDomain == null || z.Name.Length < info.RootDomain.Length))
-                {
-                    info.RootDomain = z.Name;
-                    info.ZoneId = z.Id;
-                }
-            }
-            return info;
-        }
-
-        public string NormaliseRecordName(DnsRecord info, string recordName)
-        {
-            var result = recordName.Replace(info.RootDomain, "");
-            result = result.TrimEnd('.');
-            return result;
-        }
-
         public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
-            var domainInfo = await DetermineDomainRoot(request.RecordName);
+            var domainInfo = await DetermineZoneDomainRoot(request.RecordName, request.ZoneId);
 
             if (string.IsNullOrEmpty(domainInfo.RootDomain))
             {
@@ -177,7 +147,7 @@ namespace Certify.Providers.DNS.Azure
 
         public async Task<ActionResult> DeleteRecord(DnsRecord request)
         {
-            var domainInfo = await DetermineDomainRoot(request.RecordName);
+            var domainInfo = await DetermineZoneDomainRoot(request.RecordName, request.ZoneId);
 
             if (string.IsNullOrEmpty(domainInfo.RootDomain))
             {
@@ -203,7 +173,7 @@ namespace Certify.Providers.DNS.Azure
             }
         }
 
-        public async Task<List<DnsZone>> GetZones()
+        public override async Task<List<DnsZone>> GetZones()
         {
             var results = new List<DnsZone>();
             var list = await _dnsClient.Zones.ListAsync();
