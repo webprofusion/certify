@@ -124,10 +124,10 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return false;
             }
 
-            // TLS-SNI-01 (deprecated) would only work on IIS 8 or higher
-            if (item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI) & AppViewModel.IISVersion.Major < 8)
+            // TLS-SNI-01 (deprecated)
+            if (item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
             {
-                MessageBox.Show(string.Format(SR.ManagedCertificateSettings_ChallengeNotAvailable, SupportedChallengeTypes.CHALLENGE_TYPE_SNI), SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("The tls-sni-01 challenge type is no longer available. You need to switch to either http-01 or dns-01.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 
