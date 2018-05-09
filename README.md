@@ -6,6 +6,8 @@
 
 The SSL/TLS Certificate Management GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/), allowing you to generate and install free SSL certificates for IIS (with automated renewal).
 
+![Certify App Screenshot](docs/images/app-screenshot.png)
+
 Features:
 - Easy certificate requests & automated SSL bindings
 - Auto renewal, with configurable renewal frequency
@@ -18,7 +20,8 @@ From v4 onwards we also support:
 - DNS Validation via supported APIs (currently including Azure DNS, AWS Route53, Cloudflare, DnsMadeEasy, GoDaddy)
 - Stored Credentials (API access keys etc)
 - Preview mode to see which actions the app will perform
-![App Screenshot](https://certifytheweb.com/images/screen3.png)
+
+
 
 ----------
 Quick Start
