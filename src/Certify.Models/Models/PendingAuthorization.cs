@@ -38,6 +38,13 @@ namespace Certify.Models
         public string ChallengeResultMsg { get; set; }
     }
 
+    public class SimpleAuthorizationChallengeItem
+    {
+        public string ChallengeType { get; set; }
+        public string Key { get; set; }
+        public string Value { get; set; }
+    }
+
     /// <summary>
     /// Fora given (domain) identifier, list of Challenges we can satisfy to prove ownership/control 
     /// </summary>

@@ -16,21 +16,6 @@ namespace Certify.CLI
         {
             var p = new CertifyCLI();
 
-            p.ShowVersion();
-
-            if (!p.IsServiceAvailable().Result)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                System.Console.WriteLine("Certify SSL Manager service not started.");
-                Console.ForegroundColor = ConsoleColor.White;
-                return -1;
-            }
-
-            Task.Run(async () =>
-            {
-                await p.LoadPreferences();
-            });
-
             if (args.Length == 0)
             {
                 p.ShowHelp();
@@ -38,6 +23,45 @@ namespace Certify.CLI
             }
             else
             {
+                if (args.Contains("httpchallenge", StringComparer.InvariantCultureIgnoreCase))
+                {
+                    System.Console.WriteLine("Starting Certify Http Challenge Server");
+                    var task = Task.Run(async () =>
+                    {
+                        // start an http challenge server
+                        var challengeServer = new Core.Management.Challenges.HttpChallengeServer();
+                        if (!challengeServer.Start())
+                        {
+                            // failed to start http challenge server
+                            return -1;
+                        }
+
+                        // wait for server to stop
+                        while (challengeServer.IsRunning())
+                        {
+                            await Task.Delay(500);
+                        }
+                        return 0;
+                    });
+
+                    return task.Result;
+                }
+
+                p.ShowVersion();
+
+                if (!p.IsServiceAvailable().Result)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    System.Console.WriteLine("Certify SSL Manager service not started.");
+                    Console.ForegroundColor = ConsoleColor.White;
+                    return -1;
+                }
+
+                Task.Run(async () =>
+                {
+                    await p.LoadPreferences();
+                });
+
                 p.ShowACMEInfo();
 
                 if (args.Contains("renew", StringComparer.InvariantCultureIgnoreCase))

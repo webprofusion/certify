@@ -162,29 +162,35 @@ namespace Certify.Service
         {
             return await Core.Management.Challenges.ChallengeProviders.GetChallengeAPIProviders();
         }
-    }
 
-    public class ProgressLogSink : Serilog.Core.ILogEventSink
-    {
-        private IProgress<RequestProgressState> _progress;
-        private ManagedCertificate _item;
-        private ICertifyManager _certifyManager;
-
-        public ProgressLogSink(IProgress<RequestProgressState> progress, ManagedCertificate item, ICertifyManager certifyManager)
+        [HttpGet, Route("currentchallenges/")]
+        public async Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallenges()
         {
-            _progress = progress;
-            _item = item;
-            _certifyManager = certifyManager;
+            return await _certifyManager.GetCurrentChallengeResponses(SupportedChallengeTypes.CHALLENGE_TYPE_HTTP);
         }
 
-        public void Emit(Serilog.Events.LogEvent logEvent)
+        public class ProgressLogSink : Serilog.Core.ILogEventSink
         {
-            var message = logEvent.RenderMessage();
+            private IProgress<RequestProgressState> _progress;
+            private ManagedCertificate _item;
+            private ICertifyManager _certifyManager;
 
-            _certifyManager.ReportProgress(_progress,
-                new RequestProgressState(RequestState.Running, message, _item, true),
-                logThisEvent: false
-                );
+            public ProgressLogSink(IProgress<RequestProgressState> progress, ManagedCertificate item, ICertifyManager certifyManager)
+            {
+                _progress = progress;
+                _item = item;
+                _certifyManager = certifyManager;
+            }
+
+            public void Emit(Serilog.Events.LogEvent logEvent)
+            {
+                var message = logEvent.RenderMessage();
+
+                _certifyManager.ReportProgress(_progress,
+                    new RequestProgressState(RequestState.Running, message, _item, true),
+                    logThisEvent: false
+                    );
+            }
         }
     }
 }

@@ -342,6 +342,18 @@ namespace Certify.Management
             return result;
         }
 
+        public async Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallengeResponses(string challengeType)
+        {
+            return new List<SimpleAuthorizationChallengeItem> {
+                new SimpleAuthorizationChallengeItem
+                {
+                     ChallengeType=SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
+                     Key="TEST123",
+                     Value= "ABCDEEEFGEE"
+                }
+            };
+        }
+
         private List<string> GetAllRequestedDomains(CertRequestConfig config)
         {
             var allDomains = new List<string> { config.PrimaryDomain };

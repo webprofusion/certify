@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
@@ -27,6 +26,8 @@ namespace Certify.Management
         private TelemetryClient _tc = null;
         private bool _isRenewAllInProgress { get; set; }
         private ILog _serviceLog { get; set; }
+        private HttpChallengeServer _httpChallengeServer = null;
+        private bool _enableInProcessHttpChallengeServer = true;
 
         private ObservableCollection<RequestProgressState> _progressResults { get; set; }
 
@@ -65,6 +66,8 @@ namespace Certify.Management
             {
                 _tc = new Util().InitTelemetry();
             }
+
+            if (_enableInProcessHttpChallengeServer) _httpChallengeServer = new HttpChallengeServer();
 
             PerformUpgrades();
         }
@@ -139,7 +142,7 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// When called, look for periodic tasks we can perform such as renewal
+        /// When called, look for periodic tasks we can perform such as renewal 
         /// </summary>
         /// <returns></returns>
         public async Task<bool> PerformPeriodicTasks()

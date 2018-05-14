@@ -24,6 +24,8 @@ namespace Certify.Management
 
         Task DeleteManagedCertificate(string id);
 
+        Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallengeResponses(string challengeType);
+
         List<RegistrationItem> GetContactRegistrations();
 
         string GetPrimaryContactEmail();

@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Management\NetworkUtils.cs" />
+    <Compile Include="Utils\HttpChallengeServer.cs" />
     <Compile Include="Utils\ManagedCertificateLog.cs" />
     <Compile Include="Management\CertificateManager.cs" />
     <Compile Include="Management\PluginManager.cs" />
