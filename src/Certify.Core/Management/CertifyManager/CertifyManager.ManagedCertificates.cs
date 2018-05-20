@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models;
@@ -95,6 +96,76 @@ namespace Certify.Management
             }
         }
 
+        private ProcessStartInfo _httpChallengeProcessInfo;
+        private Process _httpChallengeProcess;
+        private string _httpChallengeControlKey = Guid.NewGuid().ToString();
+        private string _httpChallengeCheckKey = "configcheck";
+        private System.Net.Http.HttpClient _httpChallengeServerClient;
+        private int _httpChallengePort = 80;
+
+        private async Task<bool> StartHttpChallengeServer()
+        {
+            var cliPath = $"{AppContext.BaseDirectory}certify.exe";
+            _httpChallengeProcessInfo = new ProcessStartInfo(cliPath, $"httpchallenge keys={_httpChallengeControlKey},{_httpChallengeCheckKey}")
+            {
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = false,
+
+                WorkingDirectory = AppContext.BaseDirectory
+            };
+
+            try
+            {
+                _httpChallengeProcess = new Process { StartInfo = _httpChallengeProcessInfo };
+                _httpChallengeProcess.Start();
+            }
+            catch (Exception)
+            {
+                // failed to start process
+                return false;
+            }
+
+            if (_httpChallengeServerClient == null) _httpChallengeServerClient = new System.Net.Http.HttpClient();
+
+            var testUrl = $"http://127.0.0.1:{_httpChallengePort}/.well-known/acme-challenge/{_httpChallengeCheckKey}";
+
+            var response = await _httpChallengeServerClient.GetAsync(testUrl);
+            if (response.IsSuccessStatusCode)
+            {
+                var status = await _httpChallengeServerClient.GetStringAsync(testUrl);
+
+                if (status == "OK")
+                {
+                    return true;
+                }
+            }
+
+            //not found, server not started?
+            return false;
+        }
+
+        private async Task<bool> StopHttpChallengeServer()
+        {
+            var response = await _httpChallengeServerClient.GetAsync($"http://127.0.0.1:{_httpChallengePort}/.well-known/acme-challenge/{_httpChallengeControlKey}");
+            if (response.IsSuccessStatusCode)
+            {
+                return true;
+            }
+            else
+            {
+                try
+                {
+                    _httpChallengeProcess.CloseMainWindow();
+                }
+                catch { }
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// Perform set of test challenges and configuration checks to determine if site appears
         /// valid for certificate requests
@@ -115,15 +186,32 @@ namespace Certify.Management
                 results.AddRange(serverCheck.ConvertAll(x => new StatusMessage { IsOK = !x.HasError, HasWarning = x.HasWarning, Message = x.Description }));
             }
 
+            if (managedCertificate.GetChallengeConfig(null).ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
+            {
+                if (CoreAppSettings.Current.EnableHttpChallengeServer)
+                {
+                    _httpChallengeServerAvailable = await StartHttpChallengeServer();
+
+                    if (_httpChallengeServerAvailable)
+                    {
+                        results.Add(new StatusMessage { IsOK = true, Message = "Http Challenge Server process available." });
+                    }
+                    else
+                    {
+                        results.Add(new StatusMessage { HasWarning = true, Message = "Built-in Http Challenge Server process unavailable or could not start. Challenge responses will fall back to IIS." });
+                    }
+                }
+            }
+
             results.AddRange(
-                await _challengeDiagnostics.TestChallengeResponse(
-                        log,
-                        _serverProvider,
-                        managedCertificate,
-                        isPreviewMode,
-                        CoreAppSettings.Current.EnableDNSValidationChecks, progress
-                    )
-                 );
+            await _challengeDiagnostics.TestChallengeResponse(
+                    log,
+                    _serverProvider,
+                    managedCertificate,
+                    isPreviewMode,
+                    CoreAppSettings.Current.EnableDNSValidationChecks, progress
+                )
+             );
 
             if (progress != null)
             {
@@ -140,6 +228,8 @@ namespace Certify.Management
                             isPreviewMode));
                 }
             }
+
+            if (CoreAppSettings.Current.EnableHttpChallengeServer) await StopHttpChallengeServer();
 
             return results;
         }

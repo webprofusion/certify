@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
@@ -26,8 +27,8 @@ namespace Certify.Management
         private TelemetryClient _tc = null;
         private bool _isRenewAllInProgress { get; set; }
         private ILog _serviceLog { get; set; }
-        private HttpChallengeServer _httpChallengeServer = null;
-        private bool _enableInProcessHttpChallengeServer = true;
+        private bool _httpChallengeServerAvailable = false;
+        private List<SimpleAuthorizationChallengeItem> _currentChallenges = new List<SimpleAuthorizationChallengeItem>();
 
         private ObservableCollection<RequestProgressState> _progressResults { get; set; }
 
@@ -66,8 +67,6 @@ namespace Certify.Management
             {
                 _tc = new Util().InitTelemetry();
             }
-
-            if (_enableInProcessHttpChallengeServer) _httpChallengeServer = new HttpChallengeServer();
 
             PerformUpgrades();
         }

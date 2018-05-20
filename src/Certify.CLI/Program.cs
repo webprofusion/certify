@@ -26,11 +26,16 @@ namespace Certify.CLI
                 if (args.Contains("httpchallenge", StringComparer.InvariantCultureIgnoreCase))
                 {
                     System.Console.WriteLine("Starting Certify Http Challenge Server");
+
+                    //syntax: certify httpchallenge keys=CONTROLKEY,CHECKKEY
+
+                    var keys = args[1].Replace("keys=", "").Split(',');
+
                     var task = Task.Run(async () =>
                     {
                         // start an http challenge server
                         var challengeServer = new Core.Management.Challenges.HttpChallengeServer();
-                        if (!challengeServer.Start())
+                        if (!challengeServer.Start(80, controlKey: keys[0], checkKey: keys[1]))
                         {
                             // failed to start http challenge server
                             return -1;

@@ -344,14 +344,7 @@ namespace Certify.Management
 
         public async Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallengeResponses(string challengeType)
         {
-            return new List<SimpleAuthorizationChallengeItem> {
-                new SimpleAuthorizationChallengeItem
-                {
-                     ChallengeType=SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
-                     Key="TEST123",
-                     Value= "ABCDEEEFGEE"
-                }
-            };
+            return _currentChallenges;
         }
 
         private List<string> GetAllRequestedDomains(CertRequestConfig config)
@@ -376,9 +369,6 @@ namespace Certify.Management
                 new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RegisterDomainIdentity, managedCertificate)
             );
 
-            // begin by assuming all identifiers are valid
-            var allIdentifiersValidated = true;
-
             if (config.ChallengeType == null && (config.Challenges == null || !config.Challenges.Any()))
             {
                 config.Challenges = new ObservableCollection<CertRequestChallengeConfig>(
@@ -392,7 +382,6 @@ namespace Certify.Management
             var distinctDomains = GetAllRequestedDomains((config));
 
             var identifierAuthorizations = new List<PendingAuthorization>();
-            string failureSummaryMessage = null;
 
             // start the validation process for each domain
 

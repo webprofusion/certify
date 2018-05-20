@@ -14,7 +14,7 @@ namespace Certify.Core.Management.Challenges
         private HttpClient _apiClient;
         private Task _serverTask;
 
-        private string _controlKey = "";
+        private string _controlKey = "QUIT123";
         private string _checkKey = "TESTING123";
         private string _challengePrefix = "/.well-known/acme-challenge/";
 
@@ -30,6 +30,14 @@ namespace Certify.Core.Management.Challenges
         _debugMode = false;
 #endif
 
+        private void Log(string msg)
+        {
+            msg = DateTime.Now + ": " + msg + "\r\n";
+#if DEBUG
+            System.IO.File.AppendAllText(@"C:\Temp\httpChallengeServer.log", msg);
+#endif
+        }
+
         /// <summary>
         /// Start http challenge server. 
         /// </summary>
@@ -39,8 +47,14 @@ namespace Certify.Core.Management.Challenges
         /// <returns></returns>
         public bool Start(int port = 80, string controlKey = null, string checkKey = null)
         {
+#if DEBUG
+            _debugMode = true;
+#endif
             try
             {
+                if (controlKey != null) _controlKey = controlKey;
+                if (checkKey != null) _checkKey = checkKey;
+
                 _httpListener = new HttpListener();
                 _apiClient = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true });
                 _apiClient.Timeout = new TimeSpan(0, 0, 5);
@@ -51,7 +65,7 @@ namespace Certify.Core.Management.Challenges
                 _challengeResponses = new Dictionary<string, string>();
 
                 _httpListener.Start();
-
+                Log("Http Challenge Server Started");
                 _serverTask = Task.Run(ServerTask);
                 return true;
             }
@@ -65,6 +79,8 @@ namespace Certify.Core.Management.Challenges
 
                 _apiClient.Dispose();
                 _apiClient = null;
+
+                Log("Failed to Start Http Challenge Server");
             }
 
             return false;
@@ -78,20 +94,31 @@ namespace Certify.Core.Management.Challenges
 
                 var path = server.Request.Url.LocalPath;
 
-                if (_debugMode) System.Console.Out.WriteLine(path);
+                if (_debugMode) Log(path);
 
                 var key = path.Replace(_challengePrefix, "").ToLower();
 
-                if (key == _controlKey)
+                if (key == _controlKey.ToLower())
                 {
+                    server.Response.StatusCode = (int)HttpStatusCode.OK;
+                    server.Response.ContentType = "text/plain";
+                    using (var stream = new StreamWriter(server.Response.OutputStream))
+                    {
+                        stream.Write("Stopping");
+                        stream.Flush();
+                        stream.Close();
+                    }
                     server.Response.Close();
                     Stop();
                     return;
                 }
 
-                if (key == _checkKey)
+                if (key == _checkKey.ToLower())
                 {
-                    if (_debugMode) System.Console.Out.WriteLine("Check key sent. OK.");
+                    if (_debugMode) Log("Check key sent. OK.");
+                    server.Response.StatusCode = (int)HttpStatusCode.OK;
+                    server.Response.ContentType = "text/plain";
+
                     using (var stream = new StreamWriter(server.Response.OutputStream))
                     {
                         stream.Write("OK");
@@ -106,17 +133,25 @@ namespace Certify.Core.Management.Challenges
                         // if challenge response not in our cache, fetch from local API
                         try
                         {
-                            if (_debugMode) System.Console.Out.WriteLine($"Key {key} not found: Refreshing challenges..");
-                            var json = await _apiClient.GetStringAsync($"{_baseUri}managedcertificates/currentchallenges/");
+                            if (_debugMode) Log($"Key {key} not found: Refreshing challenges..");
+                            var response = await _apiClient.GetAsync($"{_baseUri}managedcertificates/currentchallenges/");
+                            if (response.IsSuccessStatusCode)
+                            {
+                                var json = await response.Content.ReadAsStringAsync();
 
-                            if (_debugMode) System.Console.Out.WriteLine(json);
-                            var list = Newtonsoft.Json.JsonConvert.DeserializeObject<List<SimpleAuthorizationChallengeItem>>(json);
-                            _challengeResponses = new Dictionary<string, string>();
-                            list.ForEach(i => _challengeResponses.Add(i.Key.ToLower(), i.Value));
+                                if (_debugMode) Log(json);
+                                var list = Newtonsoft.Json.JsonConvert.DeserializeObject<List<SimpleAuthorizationChallengeItem>>(json);
+                                _challengeResponses = new Dictionary<string, string>();
+                                list.ForEach(i => _challengeResponses.Add(i.Key.ToLower(), i.Value));
+                            }
+                            else
+                            {
+                                Log("Failed to refresh current challenges");
+                            }
                         }
                         catch (Exception exp)
                         {
-                            System.Console.Out.WriteLine(exp);
+                            Log(exp.ToString());
                             _maxLookups--;
                         }
                     }
@@ -138,6 +173,8 @@ namespace Certify.Core.Management.Challenges
                                 stream.Flush();
                                 stream.Close();
                             }
+
+                            if (_debugMode) Log("Challenge Reponse Served OK.");
                         }
                         else
                         {
@@ -150,13 +187,15 @@ namespace Certify.Core.Management.Challenges
                     }
                 }
                 server.Response.Close();
-                if (_debugMode) System.Console.Out.WriteLine("End request.");
+                if (_debugMode) Log("End request.");
 
                 if (_maxLookups == 0)
                 {
                     // give up trying to resolve challenges, we have been queried too many times for
                     // challenge responses we don't know about
                     Stop();
+
+                    if (_debugMode) Log("Max lookups failed.");
                 }
             }
         }
@@ -168,6 +207,7 @@ namespace Certify.Core.Management.Challenges
 
         public void Stop()
         {
+            Log("Stopping Server");
             if (_httpListener != null)
             {
                 try
