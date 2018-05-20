@@ -59,6 +59,8 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return false;
             }*/
 
+            if (item.RequestConfig.Challenges == null) item.RequestConfig.Challenges = new System.Collections.ObjectModel.ObservableCollection<CertRequestChallengeConfig>();
+
             if (item.Id == null && item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
             {
                 MessageBox.Show("Sorry, the tls-sni-01 challenge type is no longer supported by Let's Encrypt for new certificates.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
@@ -128,6 +130,12 @@ namespace Certify.UI.Controls.ManagedCertificate
             if (item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
             {
                 MessageBox.Show("The tls-sni-01 challenge type is no longer available. You need to switch to either http-01 or dns-01.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            if (item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS && c.ChallengeProvider == null))
+            {
+                MessageBox.Show("The dns-01 challenge type requires a provider selection.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 

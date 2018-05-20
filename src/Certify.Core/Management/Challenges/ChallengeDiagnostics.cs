@@ -59,7 +59,7 @@ namespace Certify.Core.Management.Challenges
             domains = domains.Distinct().ToList();
 
             // if wildcard domain included, check first level labels not also specified, i.e.
-            // *.example.com & www.example.com cannot be mixed, but *.example.com &
+            // *.example.com & www.example.com cannot be mixed, but example.com, *.example.com &
             //  test.wwww.example.com can
             var invalidLabels = new List<string>();
             if (domains.Any(d => d.StartsWith("*.")))
@@ -68,7 +68,7 @@ namespace Certify.Core.Management.Challenges
                 {
                     var rootDomain = wildcard.Replace("*.", "");
                     // add list of domains where label count exceeds root domain label count
-                    invalidLabels.AddRange(domains.Where(domain => domain == rootDomain || (domain != wildcard && domain.EndsWith(rootDomain) && domain.Count(s => s == '.') == wildcard.Count(s => s == '.'))));
+                    invalidLabels.AddRange(domains.Where(domain => domain != wildcard && domain.EndsWith(rootDomain) && domain.Count(s => s == '.') == wildcard.Count(s => s == '.')));
 
                     if (invalidLabels.Any())
                     {
@@ -85,13 +85,19 @@ namespace Certify.Core.Management.Challenges
                 // if DNS checks enabled, attempt them here
                 if (isPreviewMode && enableDnsChecks)
                 {
+                    bool includeIPResolution = false;
+                    if (managedCertificate.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP))
+                    {
+                        includeIPResolution = true;
+                    }
+
                     log.Information("Performing preview DNS tests. {managedItem}", managedCertificate);
 
                     var tasks = new List<Task<List<ActionResult>>>();
 
                     foreach (var d in domains)
                     {
-                        tasks.Add(_netUtil.CheckDNS(log, d.Replace("*.", "")));
+                        tasks.Add(_netUtil.CheckDNS(log, d.Replace("*.", ""), includeIPResolution));
                     }
 
                     var allResults = await Task.WhenAll(tasks);

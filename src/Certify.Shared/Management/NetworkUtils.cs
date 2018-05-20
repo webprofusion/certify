@@ -267,7 +267,7 @@ namespace Certify.Management
             }
         }
 
-        public async Task<List<ActionResult>> CheckDNS(ILog log, string domain, bool? useProxyAPI = null)
+        public async Task<List<ActionResult>> CheckDNS(ILog log, string domain, bool? useProxyAPI = null, bool includeIPCheck = true)
         {
             var results = new List<ActionResult>();
 
@@ -289,29 +289,32 @@ namespace Certify.Management
                 // TODO: update proxy and implement proxy check here return (ok, message);
             }
 
-            // check dns
-            try
+            // check dns resolves to IP
+            if (includeIPCheck)
             {
-                log.Information($"Checking DNS name resolves to IP: {domain}");
-
-                var result = await Dns.GetHostEntryAsync(domain); // this throws SocketException for bad DNS
-
-                results.Add(new ActionResult
+                try
                 {
-                    IsSuccess = true,
-                    Message = $"CheckDNS: '{domain}' resolved to an IP Address {result.AddressList[0].ToString()}. "
-                });
-            }
-            catch
-            {
-                results.Add(new ActionResult
-                {
-                    IsSuccess = false,
-                    Message = $"CheckDNS: '{domain}' failed to resolve to an IP Address. "
-                });
+                    log.Information($"Checking DNS name resolves to IP: {domain}");
 
-                log.Error(results.Last().Message);
-                return results;
+                    var result = await Dns.GetHostEntryAsync(domain); // this throws SocketException for bad DNS
+
+                    results.Add(new ActionResult
+                    {
+                        IsSuccess = true,
+                        Message = $"CheckDNS: '{domain}' resolved to an IP Address {result.AddressList[0].ToString()}. "
+                    });
+                }
+                catch
+                {
+                    results.Add(new ActionResult
+                    {
+                        IsSuccess = false,
+                        Message = $"CheckDNS: '{domain}' failed to resolve to an IP Address. "
+                    });
+
+                    log.Error(results.Last().Message);
+                    return results;
+                }
             }
 
             DnsMessage caa_query = null;

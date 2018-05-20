@@ -55,6 +55,12 @@
                                 Foreground="Red"
                                 Icon="ExclamationTriangle"
                                 Visibility="{Binding IsOK, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
+                            <fa:FontAwesome
+                                Margin="0,8,4,0"
+                                DockPanel.Dock="Left"
+                                Foreground="Orange"
+                                Icon="ExclamationCircle"
+                                Visibility="{Binding HasWarning, Converter={StaticResource BooleanToVisibilityConverter}}" />
                             <TextBlock
                                 DockPanel.Dock="Left"
                                 Style="{StaticResource Instructions}"
