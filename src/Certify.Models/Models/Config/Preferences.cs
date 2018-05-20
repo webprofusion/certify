@@ -23,5 +23,7 @@
         public string Language { get; set; }
 
         public bool UseBackgroundServiceAutoRenewal { get; set; } = true;
+
+        public bool EnableHttpChallengeServer { get; set; } = true;
     }
 }

@@ -45,6 +45,7 @@ namespace Certify.UI.Controls
             this.IgnoreStoppedSites.IsChecked = _prefs.IgnoreStoppedSites;
 
             this.EnableDNSValidationChecks.IsChecked = _prefs.EnableDNSValidationChecks;
+            this.EnableDNSValidationChecks.IsChecked = _prefs.EnableHttpChallengeServer;
 
             this.RenewalIntervalDays.Value = _prefs.RenewalIntervalDays;
             this.RenewalMaxRequests.Value = _prefs.MaxRenewalRequests;
@@ -85,6 +86,7 @@ namespace Certify.UI.Controls
                 _prefs.EnableAppTelematics = (this.EnableTelematicsCheckbox.IsChecked == true);
                 _prefs.EnableValidationProxyAPI = (this.EnableProxyAPICheckbox.IsChecked == true);
                 _prefs.EnableDNSValidationChecks = (this.EnableDNSValidationChecks.IsChecked == true);
+                _prefs.EnableHttpChallengeServer = (this.EnableHttpChallengeServer.IsChecked == true);
 
                 _prefs.EnableEFS = (this.EnableEFS.IsChecked == true);
                 _prefs.IgnoreStoppedSites = (this.IgnoreStoppedSites.IsChecked == true);

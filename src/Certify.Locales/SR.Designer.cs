@@ -1557,6 +1557,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Enable Http Challenge Server.
+        /// </summary>
+        public static string Settings_EnableHttpChallengeServer {
+            get {
+                return ResourceManager.GetString("Settings_EnableHttpChallengeServer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Enable proxy API for domain config checks.
         /// </summary>
         public static string Settings_EnableProxyApiForDomainConfig {

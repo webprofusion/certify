@@ -659,4 +659,7 @@
   <data name="ManagedCertificateSettings_AddDomainsHelpText" xml:space="preserve">
     <value>e.g. test.com, www.test.com or *.test.com</value>
   </data>
+  <data name="Settings_EnableHttpChallengeServer" xml:space="preserve">
+    <value>Enable Http Challenge Server</value>
+  </data>
 </root>

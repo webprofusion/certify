@@ -19,6 +19,7 @@ namespace Certify.Management
             this.EnableEFS = false;
             this.RenewalIntervalDays = 14;
             this.MaxRenewalRequests = 0;
+            this.EnableHttpChallengeServer = true;
             this.LegacySettingsUpgraded = false;
             this.VaultPath = @"C:\ProgramData\ACMESharp";
             this.InstanceId = null;
@@ -64,22 +65,24 @@ namespace Certify.Management
 
         public int MaxRenewalRequests { get; set; }
 
+        public bool EnableHttpChallengeServer { get; set; }
+
         public bool LegacySettingsUpgraded { get; set; }
 
         /// <summary>
-        /// If true, this instance has been added to server dashboard
+        /// If true, this instance has been added to server dashboard 
         /// </summary>
         public bool IsInstanceRegistered { get; set; }
 
         public string VaultPath { get; set; }
 
         /// <summary>
-        /// If user opts for renewal failure reporting, generated instance id is used to group results
+        /// If user opts for renewal failure reporting, generated instance id is used to group results 
         /// </summary>
         public string InstanceId { get; set; }
 
         /// <summary>
-        /// If set, specifies the UI language preference
+        /// If set, specifies the UI language preference 
         /// </summary>
         public string Language { get; set; }
 
@@ -106,6 +109,7 @@ namespace Certify.Management
             CoreAppSettings.Current.IsInstanceRegistered = prefs.IsInstanceRegistered;
             CoreAppSettings.Current.Language = prefs.Language;
             CoreAppSettings.Current.UseBackgroundServiceAutoRenewal = prefs.UseBackgroundServiceAutoRenewal;
+            CoreAppSettings.Current.EnableHttpChallengeServer = prefs.EnableHttpChallengeServer;
             return true;
         }
 
@@ -125,6 +129,7 @@ namespace Certify.Management
             prefs.IsInstanceRegistered = CoreAppSettings.Current.IsInstanceRegistered;
             prefs.Language = CoreAppSettings.Current.Language;
             prefs.UseBackgroundServiceAutoRenewal = CoreAppSettings.Current.UseBackgroundServiceAutoRenewal;
+            prefs.EnableHttpChallengeServer = CoreAppSettings.Current.EnableHttpChallengeServer;
             return prefs;
         }
 
@@ -173,6 +178,7 @@ namespace Certify.Management
                 CoreAppSettings.Current.IsInstanceRegistered = false;
                 CoreAppSettings.Current.Language = null;
                 CoreAppSettings.Current.UseBackgroundServiceAutoRenewal = true;
+                CoreAppSettings.Current.EnableHttpChallengeServer = true;
 
                 CoreAppSettings.Current.InstanceId = Guid.NewGuid().ToString();
                 SaveAppSettings();
