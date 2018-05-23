@@ -260,12 +260,41 @@ namespace Certify.Management.Servers
 
                     if (site != null)
                     {
+                        var binding = site.Bindings.CreateElement();
+                        string bindingSpecString = "";
+                        bool bindingError = false;
+
                         if (addNew)
                         {
-                            var binding = site.Bindings.CreateElement();
+                            bindingSpecString = $"{(!string.IsNullOrEmpty(bindingSpec.IP) ? bindingSpec.IP : "*")}:{bindingSpec.Port}:{bindingSpec.Host}";
+                        }
+                        else
+                        {
+                            var existingBinding = site.Bindings.FirstOrDefault(b =>
+                                            b.Host == bindingSpec.Host
+                                            && b.Protocol == bindingSpec.Protocol
+                                        );
 
-                            var bindingSpecString = $"{(!string.IsNullOrEmpty(bindingSpec.IP) ? bindingSpec.IP : "*")}:{bindingSpec.Port}:{bindingSpec.Host}";
+                            if (existingBinding != null)
+                            {
+                                // save off old binding information
+                                bindingSpecString = existingBinding.BindingInformation;
 
+                                // remove old binding
+                                site.Bindings.Remove(existingBinding);
+
+                                result = new ActionStep { HasWarning = false, Description = $"Existing binding removed : {bindingSpec}" };
+                            }
+                            else
+                            {
+                                result = new ActionStep { HasError = true, Description = $"Existing binding not found : {bindingSpec}" };
+                                bindingError = true;
+                            }
+                        }
+
+                        // If there are no errors, proceed with adding new binding
+                        if (!bindingError)
+                        {
                             // Set binding values
                             binding.Protocol = "https";
                             binding.BindingInformation = bindingSpecString;
@@ -300,25 +329,8 @@ namespace Certify.Management.Servers
 
                             // Add the binding to the site
                             site.Bindings.Add(binding);
-                        }
-                        else
-                        {
-                            var existingBinding = site.Bindings.FirstOrDefault(b =>
-                                            b.Host == bindingSpec.Host
-                                            && b.Protocol == bindingSpec.Protocol
-                                        );
 
-                            if (existingBinding != null)
-                            {
-                                existingBinding.CertificateHash = bindingSpec.CertificateHashBytes;
-                                existingBinding.CertificateStoreName = bindingSpec.CertificateStore;
-
-                                result = new ActionStep { HasWarning = false, Description = $"Existing binding updated : {bindingSpec}" };
-                            }
-                            else
-                            {
-                                result = new ActionStep { HasError = true, Description = $"Existing binding not found : {bindingSpec}" };
-                            }
+                            result = new ActionStep { HasWarning = false, Description = $"New binding added : {bindingSpec}" };
                         }
                     }
 
