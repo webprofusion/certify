@@ -562,7 +562,7 @@ namespace Certify.Core.Management.Challenges
             }
 
             // create DNS records (manually or via automation)
-            var dnsHelper = new DNSChallengeHelper();
+            var dnsHelper = new DnsChallengeHelper();
 
             var dnsResult = await dnsHelper.CompleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value);
 

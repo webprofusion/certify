@@ -8,7 +8,7 @@ using Certify.Models.Providers;
 
 namespace Certify.Core.Management.Challenges
 {
-    public class DNSChallengeHelper
+    public class DnsChallengeHelper
     {
         public async Task<ActionResult> CompleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, string domain, string txtRecordName, string txtRecordValue)
         {

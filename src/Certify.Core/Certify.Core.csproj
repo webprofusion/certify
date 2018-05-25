@@ -73,9 +73,10 @@
     <Compile Include="Management\CertifyManager\CertifyManager.ServerType.cs" />
     <Compile Include="Management\Challenges\ChallengeDiagnostics.cs" />
     <Compile Include="Management\Challenges\ChallengeProviders.cs" />
-    <Compile Include="Management\Challenges\DNS\DNSChallengeHelper.cs" />
-    <Compile Include="Management\Challenges\DNS\LibcloudDNSProvider.cs" />
-    <Compile Include="Management\Challenges\DNS\ScriptingDNSProvider.cs" />
+    <Compile Include="Management\Challenges\DNS\DnsChallengeHelper.cs" />
+    <Compile Include="Management\Challenges\DNS\DnsProviderLibcloud.cs" />
+    <Compile Include="Management\Challenges\DNS\DnsProviderManual.cs" />
+    <Compile Include="Management\Challenges\DNS\DnsProviderScripting.cs" />
     <Compile Include="Management\CredentialsManager.cs" />
     <Compile Include="Management\CertifyManager\ICertifyManager.cs">
       <DependentUpon>CertifyManager.cs</DependentUpon>

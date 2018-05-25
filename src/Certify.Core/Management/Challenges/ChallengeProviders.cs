@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Certify.Core.Management.Challenges.DNS;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
@@ -36,6 +37,18 @@ namespace Certify.Core.Management.Challenges
             {
                 if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.INTERNAL)
                 {
+                    if (providerDefinition.Id == "DNS01.Scripting")
+                    {
+                        var scriptingProvider = new DNS.DnsProviderScripting(credentials);
+                        dnsAPIProvider = scriptingProvider;
+                    }
+
+                    if (providerDefinition.Id == "DNS01.Manual")
+                    {
+                        var manualProvider = new DNS.DnsProviderManual(credentials);
+                        dnsAPIProvider = manualProvider;
+                    }
+
                     if (providerDefinition.Id == "DNS01.API.Route53")
                     {
                         dnsAPIProvider = new DnsProviderAWSRoute53(credentials);
@@ -84,30 +97,13 @@ namespace Certify.Core.Management.Challenges
                     HandlerType = ChallengeHandlerType.INTERNAL
                 },
                 // DNS
+                DnsProviderManual.Definition,
+                DnsProviderScripting.Definition,
                 Providers.DNS.AWSRoute53.DnsProviderAWSRoute53.Definition,
                 Providers.DNS.Azure.DnsProviderAzure.Definition,
                 Providers.DNS.Cloudflare.DnsProviderCloudflare.Definition,
                 Providers.DNS.GoDaddy.DnsProviderGoDaddy.Definition,
                 Providers.DNS.DnsMadeEasy.DnsProviderDnsMadeEasy.Definition,
-
-                /*
-                 *  new ProviderDefinition
-                {
-                    Id = "DNS01.API.Azure",
-                    ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                    Title = "Azure DNS API",
-                    Description = "Validates via Azure DNS APIs using credentials",
-                    HelpUrl="https://docs.microsoft.com/en-us/azure/dns/dns-sdk",
-                    ProviderParameters = new List<ProviderParameter>{
-                        new ProviderParameter{Name="TenantId", IsRequired=true },
-                        new ProviderParameter{Name="ClientId", IsRequired=true },
-                        new ProviderParameter{Name="Secret", IsRequired=true , IsPassword=true},
-                        new ProviderParameter{Name="DNS Subscription Id", IsRequired=true , IsPassword=true},
-                        new ProviderParameter{Name="Resource Group Name", IsRequired=true , IsPassword=false},
-                    },
-                    Config="Provider=PythonHelper;Driver=AZURE",
-                    HandlerType = ChallengeHandlerType.PYTHON_HELPER
-                }*/
             };
 
             return await Task.FromResult(providers);
