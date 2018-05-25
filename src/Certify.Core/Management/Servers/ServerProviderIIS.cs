@@ -261,8 +261,9 @@ namespace Certify.Management.Servers
                     if (site != null)
                     {
                         var binding = site.Bindings.CreateElement();
-                        string bindingSpecString = "";
-                        bool bindingError = false;
+                        var bindingSpecString = "";
+                        var bindingError = false;
+                        List<ConfigurationAttribute> existingBindingAttributes = null;
 
                         if (addNew)
                         {
@@ -270,18 +271,25 @@ namespace Certify.Management.Servers
                         }
                         else
                         {
-                            var existingBinding = site.Bindings.FirstOrDefault(b =>
-                                            b.Host == bindingSpec.Host
-                                            && b.Protocol == bindingSpec.Protocol
+                            var existingBinding = site.Bindings
+                                    .FirstOrDefault(b =>
+                                            b.Host?.ToLower() == bindingSpec.Host?.ToLower()
+                                            && b.Protocol.ToLower() == bindingSpec.Protocol.ToLower()
                                         );
 
                             if (existingBinding != null)
                             {
-                                // save off old binding information
+                                // copy previous binding information
                                 bindingSpecString = existingBinding.BindingInformation;
+                                existingBindingAttributes = existingBinding.Attributes.ToList();
 
-                                // remove old binding
-                                site.Bindings.Remove(existingBinding);
+                                // remove old binding (including all shared SSL bindings)
+
+                                // if removing a binding with an IP:Port association and there are
+                                // other non-sni bindings using the same cert this will also
+                                // invalidate those bindings
+                                // TODO: pre-validate shared bindings
+                                site.Bindings.Remove(existingBinding, removeConfigOnly: true);
 
                                 result = new ActionStep { HasWarning = false, Description = $"Existing binding removed : {bindingSpec}" };
                             }
@@ -301,6 +309,33 @@ namespace Certify.Management.Servers
                             binding.CertificateStoreName = bindingSpec.CertificateStore;
                             binding.CertificateHash = bindingSpec.CertificateHashBytes;
 
+                            if (existingBindingAttributes != null)
+                            {
+                                //clone existing binding attributes
+
+                                var skippedAttributes = new[] {
+                                    "protocol",
+                                    "bindingInformation",
+                                    "certificateStoreName",
+                                    "certificateHash"
+                                };
+
+                                foreach (var a in existingBindingAttributes)
+                                {
+                                    try
+                                    {
+                                        if (!skippedAttributes.Contains(a.Name) && a.Value != null)
+                                        {
+                                            binding.SetAttributeValue(a.Name, a.Value);
+                                        }
+                                    }
+                                    catch
+                                    {
+                                        return new ActionStep { HasError = true, Description = $"Failed to set binding attribute on updated IIS Binding: {a.Name}" };
+                                    }
+                                }
+                            }
+
                             if (isSNISupported)
                             {
                                 if (!string.IsNullOrEmpty(bindingSpec.Host) && bindingSpec.IsSNIEnabled)
@@ -313,7 +348,6 @@ namespace Certify.Management.Servers
                                     {
                                         //failed to set requested SNI flag
                                         //TODO: log
-                                        // action.Description += $" Failed to set SNI attribute";
 
                                         return new ActionStep { HasError = true, Description = $"Failed to set SNI flag on IIS Binding: {bindingSpec}" };
                                     }
@@ -337,6 +371,7 @@ namespace Certify.Management.Servers
                     iisManager.CommitChanges();
                 }
             }
+
             await Task.Delay(250); // pause to give IIS config time to write to disk before attempting more writes
 
             return result;
@@ -402,11 +437,11 @@ namespace Certify.Management.Servers
                 SiteId = siteInfo.Id,
                 SiteName = siteInfo.Name,
                 PhysicalPath = siteInfo.Path,
-                Host = binding.Host,
+                Host = binding.Host.ToLower(),
                 IP = binding.EndPoint?.Address?.ToString(),
                 Port = binding.EndPoint?.Port ?? 0,
                 IsHTTPS = binding.Protocol.ToLower() == "https",
-                Protocol = binding.Protocol,
+                Protocol = binding.Protocol.ToLower(),
                 HasCertificate = (binding.CertificateHash != null)
             };
         }
@@ -600,9 +635,7 @@ namespace Certify.Management.Servers
 
             if (site == null)
             {
-                site = Map(
-                    await GetIISSiteByDomain(managedCertificate.RequestConfig.PrimaryDomain)
-                    );
+                site = Map(await GetIISSiteByDomain(managedCertificate.RequestConfig.PrimaryDomain));
             }
 
             return site;
@@ -637,7 +670,7 @@ namespace Certify.Management.Servers
 
                         var binding = site.Bindings.Where(b =>
                             b.Host == internationalHost &&
-                            b.Protocol == "https"
+                            b.Protocol.ToLower() == "https"
                         ).FirstOrDefault();
 
                         if (binding != null)
