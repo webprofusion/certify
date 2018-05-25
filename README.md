@@ -6,6 +6,12 @@
 
 The SSL/TLS Certificate Management GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/), allowing you to generate and install free SSL certificates for IIS (with automated renewal).
 
+![Build](https://ci.appveyor.com/api/projects/status/5y1xjrmr2l50db75/branch/development?svg=true)
+![MIT License](https://img.shields.io/github/license/webprofusion/certify.svg)
+![Stars](
+https://img.shields.io/github/stars/webprofusion/certify.svg)
+
+
 ![Certify App Screenshot](docs/images/app-screenshot.png)
 
 Features:
