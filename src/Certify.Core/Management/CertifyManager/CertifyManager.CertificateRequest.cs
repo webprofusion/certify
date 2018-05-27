@@ -421,24 +421,45 @@ namespace Certify.Management
                 // for user intervention
                 if (authorizations.Any(a => a.AttemptedChallenge?.IsAwaitingUser == true))
                 {
-                    var msg = $"Awaiting user input. See Managed Certificate details for more information.";
+                    var instructions = "";
+                    foreach (var a in authorizations.Where(auth => auth.AttemptedChallenge?.IsAwaitingUser == true))
+                    {
+                        instructions += a.AttemptedChallenge.ChallengeResultMsg + "\r\n";
+                    }
 
                     ReportProgress(
                         progress,
-                        new RequestProgressState(RequestState.Paused, msg, managedCertificate),
+                        new RequestProgressState(RequestState.Paused, instructions, managedCertificate),
                         logThisEvent: true
                     );
 
-                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Paused, msg);
+                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Paused, instructions);
 
+                    return;
+                }
+
+                // if authorization requires manual input, quit and wait for user
+
+                if (authorizations.Any(a => a.AttemptedChallenge?.IsAwaitingUser == true))
+                {
+                    // we have one or more manual authorizations to complete, suspend the request
+                    ReportProgress(
+                            progress,
+                            new RequestProgressState(RequestState.Paused, $"Paused to wait for user to confirm challenge responses.", managedCertificate),
+                            logThisEvent: false
+                            );
+
+                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Paused, "User input is required to complete challenge responses.");
                     return;
                 }
 
                 // if any of our authorizations require a delay for challenge response propagation,
                 // wait now.
-                if (authorizations.Any() && result.ChallengeResponsePropagationSeconds > 0)
+
+                var propagationSecondsRequired = authorizations.Max(a => a.AttemptedChallenge?.PropagationSeconds);
+                if (authorizations.Any() && propagationSecondsRequired > 0)
                 {
-                    var wait = result.ChallengeResponsePropagationSeconds;
+                    var wait = propagationSecondsRequired;
                     while (wait > 0)
                     {
                         ReportProgress(

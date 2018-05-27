@@ -221,8 +221,8 @@ namespace Certify.Core.Management.Challenges
                                 simulatedAuthorization
                             );
 
-                        result.Message = dnsResult.Message;
-                        result.IsOK = dnsResult.IsSuccess;
+                        result.Message = dnsResult.Result.Message;
+                        result.IsOK = dnsResult.Result.IsSuccess;
 
                         results.Add(result);
                     }
@@ -301,8 +301,10 @@ namespace Certify.Core.Management.Challenges
                     {
                         // perform dns-01 challenge response
                         var check = await PerformChallengeResponse_Dns01(log, domain, managedCertificate, pendingAuth);
-                        pendingAuth.AttemptedChallenge.ConfigCheckedOK = check.IsSuccess;
-                        pendingAuth.AttemptedChallenge.ChallengeResultMsg = check.Message;
+                        pendingAuth.AttemptedChallenge.ConfigCheckedOK = check.Result.IsSuccess;
+                        pendingAuth.AttemptedChallenge.ChallengeResultMsg = check.Result.Message;
+                        pendingAuth.AttemptedChallenge.IsAwaitingUser = check.IsAwaitingUser;
+                        pendingAuth.AttemptedChallenge.PropagationSeconds = check.PropagationSeconds;
                     }
                 }
             }
@@ -542,7 +544,7 @@ namespace Certify.Core.Management.Challenges
             return () => checkQueue.All(check => check());
         }
 
-        private async Task<ActionResult> PerformChallengeResponse_Dns01(ILog log, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
+        private async Task<DnsChallengeHelperResult> PerformChallengeResponse_Dns01(ILog log, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
         {
             var requestConfig = managedCertificate.RequestConfig;
 
@@ -554,10 +556,15 @@ namespace Certify.Core.Management.Challenges
 
                 log.Warning(msg);
 
-                return new ActionResult
+                return new DnsChallengeHelperResult
                 {
-                    IsSuccess = false,
-                    Message = msg
+                    Result = new ActionResult
+                    {
+                        IsSuccess = false,
+                        Message = msg
+                    },
+                    IsAwaitingUser = false,
+                    PropagationSeconds = 0
                 };
             }
 
@@ -566,13 +573,13 @@ namespace Certify.Core.Management.Challenges
 
             var dnsResult = await dnsHelper.CompleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value);
 
-            if (!dnsResult.IsSuccess)
+            if (!dnsResult.Result.IsSuccess)
             {
-                log.Error($"DNS update failed: Failed {dnsResult.Message}");
+                log.Error($"DNS update failed: {dnsResult.Result.Message}");
             }
             else
             {
-                log.Information($"DNS updated OK : {dnsResult.Message}");
+                log.Information($"DNS: {dnsResult.Result.Message}");
             }
 
             var cleanupQueue = new List<Action> { };

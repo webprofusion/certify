@@ -33,7 +33,9 @@ namespace Certify.UI.Controls.ManagedCertificate
                 this.SettingsTab.SelectedIndex = 0;
 
                 // show status tab for existing managed certs
-                if (ItemViewModel.SelectedItem?.Id != null)
+                bool showStatus = ItemViewModel.SelectedItem?.Id != null && ItemViewModel.SelectedItem.DateLastRenewalAttempt != null;
+
+                if (showStatus)
                 {
                     this.TabStatusInfo.Visibility = Visibility.Visible;
                     this.SettingsTab.SelectedItem = this.TabStatusInfo;
@@ -142,7 +144,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             // validate settings for authorizations non-optional parmaeters
             foreach (var c in item.RequestConfig.Challenges)
             {
-                if (c.Parameters != null & c.Parameters.Any())
+                if (c.Parameters != null && c.Parameters.Any())
                 {
                     //validate parmeters
                     foreach (var p in c.Parameters)
