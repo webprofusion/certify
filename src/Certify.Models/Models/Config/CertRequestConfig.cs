@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using Certify.Models.Config;
 
 namespace Certify.Models
 {
@@ -34,6 +35,8 @@ namespace Certify.Models
         /// Optional, DNS Zone ID if using a DNS challenge provider 
         /// </summary>
         public string ZoneId { get; set; }
+
+        public ObservableCollection<ProviderParameter> Parameters { get; set; }
     }
 
     public class CertRequestConfig : BindableBase

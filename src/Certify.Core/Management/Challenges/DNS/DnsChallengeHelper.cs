@@ -8,9 +8,16 @@ using Certify.Models.Providers;
 
 namespace Certify.Core.Management.Challenges
 {
+    public struct DnsChallengeHelperResult
+    {
+        public ActionResult Result;
+        public int PropagationSeconds;
+        public bool IsAwaitingUser;
+    }
+
     public class DnsChallengeHelper
     {
-        public async Task<ActionResult> CompleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, string domain, string txtRecordName, string txtRecordValue)
+        public async Task<DnsChallengeHelperResult> CompleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, string domain, string txtRecordName, string txtRecordValue)
         {
             // for a given managed site configuration, attempt to complete the required challenge by
             // creating the required TXT record
@@ -22,10 +29,10 @@ namespace Certify.Core.Management.Challenges
 
             var challengeConfig = managedcertificate.GetChallengeConfig(domain);
 
-            if (String.IsNullOrEmpty(challengeConfig.ZoneId))
+            /*if (String.IsNullOrEmpty(challengeConfig.ZoneId))
             {
                 return new ActionResult { IsSuccess = false, Message = "DNS Challenge Zone Id not set. Set the Zone Id to proceed." };
-            }
+            }*/
 
             if (!String.IsNullOrEmpty(challengeConfig.ChallengeCredentialKey))
             {
@@ -36,19 +43,48 @@ namespace Certify.Core.Management.Challenges
                 }
                 catch (Exception)
                 {
-                    return new ActionResult { IsSuccess = false, Message = "DNS Challenge API Credentials could not be decrypted. The original user must be used for decryption." };
+                    return new DnsChallengeHelperResult
+                    {
+                        Result = new ActionResult { IsSuccess = false, Message = "DNS Challenge API Credentials could not be decrypted. The original user must be used for decryption." },
+                        PropagationSeconds = 0,
+                        IsAwaitingUser = false
+                    };
                 }
             }
-            else
+            /* else
+             {
+                 return new ActionResult { IsSuccess = false, Message = "DNS Challenge API Credentials not set. Add or select API credentials to proceed." };
+             }*/
+
+            var parameters = new Dictionary<String, string>();
+            if (challengeConfig.Parameters != null)
             {
-                return new ActionResult { IsSuccess = false, Message = "DNS Challenge API Credentials not set. Add or select API credentials to proceed." };
+                foreach (var p in challengeConfig.Parameters)
+                {
+                    parameters.Add(p.Key, p.Value);
+                }
             }
 
-            dnsAPIProvider = await ChallengeProviders.GetDnsProvider(challengeConfig.ChallengeProvider, credentials);
+            dnsAPIProvider = await ChallengeProviders.GetDnsProvider(challengeConfig.ChallengeProvider, credentials, parameters);
 
             if (dnsAPIProvider == null)
             {
-                return new ActionResult { IsSuccess = false, Message = "DNS Challenge API Provider not set or not recognised. Select an API to proceed." };
+                return new DnsChallengeHelperResult
+                {
+                    Result = new ActionResult { IsSuccess = false, Message = "DNS Challenge API Provider not set or not recognised. Select an API to proceed." },
+                    PropagationSeconds = 0,
+                    IsAwaitingUser = false
+                };
+            }
+
+            string zoneId = null;
+            if (parameters != null && parameters.ContainsKey("zoneid"))
+            {
+                zoneId = parameters["zoneid"]?.Trim();
+            }
+            else
+            {
+                zoneId = challengeConfig.ZoneId?.Trim();
             }
 
             if (dnsAPIProvider != null)
@@ -61,14 +97,24 @@ namespace Certify.Core.Management.Challenges
                         TargetDomainName = domain,
                         RecordName = txtRecordName,
                         RecordValue = txtRecordValue,
-                        ZoneId = challengeConfig.ZoneId.Trim()
+                        ZoneId = zoneId
                     });
 
-                    return result;
+                    return new DnsChallengeHelperResult
+                    {
+                        Result = result,
+                        PropagationSeconds = dnsAPIProvider.PropagationDelaySeconds,
+                        IsAwaitingUser = challengeConfig.ChallengeProvider.Contains(".Manual")
+                    };
                 }
                 catch (Exception exp)
                 {
-                    return new ActionResult { IsSuccess = false, Message = $"Failed [{dnsAPIProvider.ProviderTitle}]: " + exp.Message };
+                    return new DnsChallengeHelperResult
+                    {
+                        Result = new ActionResult { IsSuccess = false, Message = $"Failed [{dnsAPIProvider.ProviderTitle}]: " + exp.Message },
+                        PropagationSeconds = 0,
+                        IsAwaitingUser = false
+                    };
                 }
 
                 /*
@@ -105,7 +151,12 @@ namespace Certify.Core.Management.Challenges
             }
             else
             {
-                return new ActionResult { IsSuccess = false, Message = "Error: Could not determine DNS API Provider." };
+                return new DnsChallengeHelperResult
+                {
+                    Result = new ActionResult { IsSuccess = false, Message = "Error: Could not determine DNS API Provider." },
+                    PropagationSeconds = 0,
+                    IsAwaitingUser = false
+                };
             }
         }
     }

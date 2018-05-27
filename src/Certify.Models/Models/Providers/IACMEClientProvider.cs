@@ -28,5 +28,6 @@ namespace Certify.Models.Plugins
     {
         public List<PendingAuthorization> Authorizations { get; set; }
         public string OrderUri { get; set; }
+        public bool IsPendingAuthorizations { get; set; } = true;
     }
 }

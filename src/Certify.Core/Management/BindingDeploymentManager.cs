@@ -74,7 +74,10 @@ namespace Certify.Core.Management
                     }
                 }
 
-                dnsHosts = dnsHosts.Distinct().ToList();
+                dnsHosts = dnsHosts
+                    .Distinct()
+                    .Where(d => !string.IsNullOrEmpty(d))
+                    .ToList();
 
                 // depending on our deployment mode we decide which sites/bindings to update:
 
@@ -437,6 +440,7 @@ namespace Certify.Core.Management
 
         private string ToUnicodeString(string input)
         {
+            if (string.IsNullOrEmpty(input)) return input;
             //if string already has (non-ascii range) unicode characters return original
             if (input.Any(c => c > 255)) return input;
 

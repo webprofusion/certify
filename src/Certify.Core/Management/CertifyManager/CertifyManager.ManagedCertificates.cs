@@ -149,20 +149,22 @@ namespace Certify.Management
 
         private async Task<bool> StopHttpChallengeServer()
         {
-            var response = await _httpChallengeServerClient.GetAsync($"http://127.0.0.1:{_httpChallengePort}/.well-known/acme-challenge/{_httpChallengeControlKey}");
-            if (response.IsSuccessStatusCode)
+            if (_httpChallengeServerClient != null)
             {
-                return true;
-            }
-            else
-            {
-                try
+                var response = await _httpChallengeServerClient.GetAsync($"http://127.0.0.1:{_httpChallengePort}/.well-known/acme-challenge/{_httpChallengeControlKey}");
+                if (response.IsSuccessStatusCode)
                 {
-                    _httpChallengeProcess.CloseMainWindow();
+                    return true;
                 }
-                catch { }
+                else
+                {
+                    try
+                    {
+                        _httpChallengeProcess.CloseMainWindow();
+                    }
+                    catch { }
+                }
             }
-
             return true;
         }
 

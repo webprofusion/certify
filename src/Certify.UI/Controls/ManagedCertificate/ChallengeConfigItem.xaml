@@ -78,19 +78,34 @@
                 </Style>
             </StackPanel.Style>
 
-            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
-                <Label Width="160" Content="DNS Update Method:" />
-                <StackPanel Orientation="Vertical">
+            <StackPanel Margin="0,8,0,0" Orientation="Vertical">
+                <StackPanel Orientation="Horizontal">
+                    <Label Width="160" Content="DNS Update Method:" />
+
                     <ComboBox
                         x:Name="ChallengeAPIProviderList"
-                        Margin="0,0,0,8"
+                        Margin="0,0,0,0"
                         DisplayMemberPath="Title"
                         ItemsSource="{Binding ChallengeProviders}"
                         SelectedValue="{Binding SelectedItem.ChallengeProvider}"
                         SelectedValuePath="Id"
                         SelectionChanged="ChallengeAPIProviderList_SelectionChanged" />
+                </StackPanel>
 
-                    <StackPanel Orientation="Horizontal">
+                <StackPanel x:Name="ProviderCredentials" Orientation="Vertical">
+                    <StackPanel.Style>
+                        <Style>
+                            <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding UsesCredentials}" Value="True">
+                                    <Setter Property="UIElement.Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                        <Label Width="160" Content="Credentials" />
+
                         <ComboBox
                             x:Name="StoredCredentialList"
                             Width="225"
@@ -107,12 +122,32 @@
                     </StackPanel>
                 </StackPanel>
             </StackPanel>
-            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
-                <Label Width="160" Content="Zone Id:" />
-                <TextBox Width="225" Text="{Binding SelectedItem.ZoneId}" />
-            </StackPanel>
+
+            <ItemsControl
+                MinHeight="60"
+                Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}"
+                DockPanel.Dock="Top"
+                ItemsSource="{Binding SelectedItem.Parameters, UpdateSourceTrigger=PropertyChanged}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+
+                        <StackPanel
+                            Margin="0,8,0,0"
+                            DockPanel.Dock="Left"
+                            Orientation="Horizontal">
+                            <Label Width="160" Content="{Binding Name}" />
+                            <TextBox
+                                Width="250"
+                                mah:TextBoxHelper.Watermark="{Binding Description}"
+                                KeyUp="ParameterInput_KeyUp"
+                                Text="{Binding Value}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
             <StackPanel>
-                <TextBlock Style="{StaticResource Instructions}"><Run Text="For DNS validation the app will automatically create a TXT record in the DNS zone of your domain(s) as an answer to the authorization challenge. The DNS provider for your domain(s) must provide an API and be supported by this app." /></TextBlock>
+                <TextBlock Style="{StaticResource Instructions}"><Run Text="For automatic DNS validation the app will create a TXT record in the DNS zone of your domain(s) as an answer to the authorization challenge." /></TextBlock>
             </StackPanel>
         </StackPanel>
     </DockPanel>
