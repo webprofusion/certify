@@ -1,20 +1,20 @@
-﻿using Certify.UI.ViewModel;
-using System;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using Certify.Models.Config;
+using Certify.UI.ViewModel;
 using WinForms = System.Windows.Forms;
 
 namespace Certify.UI.Controls.ManagedCertificate
 {
     /// <summary>
-    /// Interaction logic for ChallengeConfigItem.xaml 
+    /// Handles UI interaction for defining Challenge Configuration 
     /// </summary>
     public partial class ChallengeConfigItem : System.Windows.Controls.UserControl
     {
-        //ChallengeAPIProviderList.ItemsSource = Models.Config.ChallengeProviders.Providers.Where(p => p.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
-
         protected Certify.UI.ViewModel.AppViewModel AppViewModel => UI.ViewModel.AppViewModel.Current;
 
         public ChallengeConfigItem()
@@ -103,6 +103,20 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
+        private void RefreshParameters()
+        {
+            EditModel.SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();
+            var definition = AppViewModel.ChallengeAPIProviders.FirstOrDefault(p => p.Id == EditModel.SelectedItem.ChallengeProvider);
+
+            if (definition != null)
+            {
+                foreach (var pa in definition.ProviderParameters.Where(p => p.IsCredential == false))
+                {
+                    EditModel.SelectedItem.Parameters.Add(pa);
+                }
+            }
+        }
+
         private async void ChallengeAPIProviderList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             string challengeProviderType = (sender as ComboBox)?.SelectedValue?.ToString();
@@ -112,9 +126,9 @@ namespace Certify.UI.Controls.ManagedCertificate
                 EditModel.SelectedItem.ChallengeProvider = challengeProviderType;
 
                 await RefreshCredentialOptions();
-            }
 
-            //EditModel.RaisePropertyChangedEvent(nameof(EditModel.PrimaryChallengeConfig));
+                RefreshParameters();
+            }
         }
     }
 }

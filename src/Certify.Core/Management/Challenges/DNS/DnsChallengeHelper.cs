@@ -22,10 +22,10 @@ namespace Certify.Core.Management.Challenges
 
             var challengeConfig = managedcertificate.GetChallengeConfig(domain);
 
-            if (String.IsNullOrEmpty(challengeConfig.ZoneId))
+            /*if (String.IsNullOrEmpty(challengeConfig.ZoneId))
             {
                 return new ActionResult { IsSuccess = false, Message = "DNS Challenge Zone Id not set. Set the Zone Id to proceed." };
-            }
+            }*/
 
             if (!String.IsNullOrEmpty(challengeConfig.ChallengeCredentialKey))
             {
@@ -39,16 +39,34 @@ namespace Certify.Core.Management.Challenges
                     return new ActionResult { IsSuccess = false, Message = "DNS Challenge API Credentials could not be decrypted. The original user must be used for decryption." };
                 }
             }
-            else
+            /* else
+             {
+                 return new ActionResult { IsSuccess = false, Message = "DNS Challenge API Credentials not set. Add or select API credentials to proceed." };
+             }*/
+
+            var parameters = new Dictionary<String, string>();
+            if (challengeConfig.Parameters != null)
             {
-                return new ActionResult { IsSuccess = false, Message = "DNS Challenge API Credentials not set. Add or select API credentials to proceed." };
+                foreach (var p in challengeConfig.Parameters)
+                {
+                    parameters.Add(p.Key, p.Value);
+                }
             }
 
-            dnsAPIProvider = await ChallengeProviders.GetDnsProvider(challengeConfig.ChallengeProvider, credentials);
+            dnsAPIProvider = await ChallengeProviders.GetDnsProvider(challengeConfig.ChallengeProvider, credentials, parameters);
 
             if (dnsAPIProvider == null)
             {
                 return new ActionResult { IsSuccess = false, Message = "DNS Challenge API Provider not set or not recognised. Select an API to proceed." };
+            }
+            string zoneId = null;
+            if (parameters != null && parameters.ContainsKey("zoneid"))
+            {
+                zoneId = parameters["zoneid"]?.Trim();
+            }
+            else
+            {
+                zoneId = challengeConfig.ZoneId?.Trim();
             }
 
             if (dnsAPIProvider != null)
@@ -61,7 +79,7 @@ namespace Certify.Core.Management.Challenges
                         TargetDomainName = domain,
                         RecordName = txtRecordName,
                         RecordValue = txtRecordValue,
-                        ZoneId = challengeConfig.ZoneId.Trim()
+                        ZoneId = zoneId
                     });
 
                     return result;

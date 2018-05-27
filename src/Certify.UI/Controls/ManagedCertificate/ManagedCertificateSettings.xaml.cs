@@ -135,8 +135,25 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             if (item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS && c.ChallengeProvider == null))
             {
-                MessageBox.Show("The dns-01 challenge type requires a provider selection.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("The dns-01 challenge type requires a DNS Update Method selection.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
+            }
+
+            // validate settings for authorizations non-optional parmaeters
+            foreach (var c in item.RequestConfig.Challenges)
+            {
+                if (c.Parameters != null & c.Parameters.Any())
+                {
+                    //validate parmeters
+                    foreach (var p in c.Parameters)
+                    {
+                        if (p.IsRequired && String.IsNullOrEmpty(p.Value))
+                        {
+                            MessageBox.Show($"Challenge configuration parameter required: {p.Name}", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                            return false;
+                        }
+                    }
+                }
             }
 
             if (item.RequestConfig.PerformAutomatedCertBinding)

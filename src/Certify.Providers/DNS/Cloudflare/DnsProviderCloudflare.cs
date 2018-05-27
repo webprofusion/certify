@@ -105,7 +105,8 @@ namespace Certify.Providers.DNS.Cloudflare
                     PropagationDelaySeconds = 60,
                     ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{Key="emailaddress", Name="Email Address", IsRequired=true },
-                        new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true }
+                        new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true },
+                        new ProviderParameter{ Key="zoneid",Name="Dns Zone Id", IsRequired=true, IsPassword=false, IsCredential=false }
                      },
                     ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                     Config = "Provider=Certify.Providers.DNS.Cloudflare",

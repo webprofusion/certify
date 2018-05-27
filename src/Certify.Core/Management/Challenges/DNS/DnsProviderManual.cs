@@ -35,7 +35,7 @@ namespace Certify.Core.Management.Challenges.DNS
                     Description = "When a DSN update is required, wait for manual changes.",
                     HelpUrl = "http://docs.certifytheweb.com/",
                     PropagationDelaySeconds = -1,
-                    ProviderParameters = new List<ProviderParameter>() { new ProviderParameter { Description = "Email address to prompt changes", IsRequired = false, Key = "email", Name = "Email to Notify (optional)" } },
+                    ProviderParameters = new List<ProviderParameter>() { new ProviderParameter { Description = "Email address to prompt changes", IsRequired = false, Key = "email", Name = "Email to Notify (optional)", IsCredential = false } },
                     ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                     Config = "Provider=Certify.Providers.DNS.Manual",
                     HandlerType = ChallengeHandlerType.MANUAL
@@ -43,7 +43,7 @@ namespace Certify.Core.Management.Challenges.DNS
             }
         }
 
-        public DnsProviderManual(Dictionary<string, string> credentials)
+        public DnsProviderManual(Dictionary<string, string> parameters)
         {
         }
 

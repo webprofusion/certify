@@ -107,10 +107,30 @@
                     </StackPanel>
                 </StackPanel>
             </StackPanel>
+
             <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
                 <Label Width="160" Content="Zone Id:" />
                 <TextBox Width="225" Text="{Binding SelectedItem.ZoneId}" />
             </StackPanel>
+
+            <ItemsControl
+                MinHeight="60"
+                Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}"
+                DockPanel.Dock="Top"
+                ItemsSource="{Binding SelectedItem.Parameters, UpdateSourceTrigger=PropertyChanged}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+
+                        <DockPanel>
+                            <StackPanel Margin="16,0,0,0" DockPanel.Dock="Left">
+                                <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                                <TextBox mah:TextBoxHelper.Watermark="{Binding Description}" Text="{Binding Value}" />
+                            </StackPanel>
+                        </DockPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
             <StackPanel>
                 <TextBlock Style="{StaticResource Instructions}"><Run Text="For DNS validation the app will automatically create a TXT record in the DNS zone of your domain(s) as an answer to the authorization challenge. The DNS provider for your domain(s) must provide an API and be supported by this app." /></TextBlock>
             </StackPanel>
