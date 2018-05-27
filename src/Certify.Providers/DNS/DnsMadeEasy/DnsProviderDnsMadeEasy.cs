@@ -64,7 +64,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
                     ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{Key="apikey", Name="API Key", IsRequired=true },
                         new ProviderParameter{Key="apisecret", Name="API Secret", IsRequired=true },
-                        new ProviderParameter{ Key="zoneid",Name="Dns Zone Id", IsRequired=true, IsPassword=false, IsCredential=false }
+                        new ProviderParameter{ Key="zoneid",Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false }
                     },
                     ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                     Config = "Provider=Certify.Providers.DNS.DnsMadeEasy",

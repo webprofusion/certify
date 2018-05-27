@@ -40,7 +40,7 @@ namespace Certify.Providers.DNS.AWSRoute53
                     ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{ Key="accesskey",Name="Access Key", IsRequired=true, IsPassword=false },
                         new ProviderParameter{ Key="secretaccesskey",Name="Secret Access Key", IsRequired=true, IsPassword=true },
-                        new ProviderParameter{ Key="zoneid",Name="Dns Zone Id", IsRequired=true, IsPassword=false, IsCredential=false }
+                        new ProviderParameter{ Key="zoneid",Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false }
                     },
                     ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                     Config = "Provider=Certify.Providers.DNS.AWSRoute53",
