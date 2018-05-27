@@ -29,6 +29,8 @@ namespace Certify.Models
         /// </summary>
         public bool IsAwaitingUser { get; set; }
 
+        public int PropagationSeconds { get; set; }
+
         /// <summary>
         /// Depending on configuration we may perform a config check confirming we can meet the
         /// validation challenge requirements before performing request against ACME server

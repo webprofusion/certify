@@ -24,7 +24,6 @@ namespace Certify.Core.Management.Challenges.DNS
 
         private string _createScriptPath = "";
         private string _deleteScriptPath = "";
-        private ILog _log;
 
         public static ProviderDefinition Definition
         {
@@ -38,8 +37,9 @@ namespace Certify.Core.Management.Challenges.DNS
                     HelpUrl = "http://docs.certifytheweb.com/",
                     PropagationDelaySeconds = 60,
                     ProviderParameters = new List<ProviderParameter>{
-                        new ProviderParameter{Key="CreateScriptPath", Name="Create Script Path", IsRequired=true },
-                        new ProviderParameter{Key="DeleteScriptPath", Name="Delete Script Path", IsRequired=false },
+                        new ProviderParameter{Key="createscriptpath", Name="Create Script Path", IsRequired=true , IsCredential=false},
+                        new ProviderParameter{Key="deletescriptpath", Name="Delete Script Path", IsRequired=false, IsCredential=false },
+                        new ProviderParameter{ Key="zoneid",Name="Dns Zone Id (optional)", IsRequired=false, IsPassword=false, IsCredential=false }
                     },
                     ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                     Config = "Provider=Certify.Providers.DNS.Scripting",
@@ -48,20 +48,25 @@ namespace Certify.Core.Management.Challenges.DNS
             }
         }
 
-        public DnsProviderScripting(Dictionary<string, string> credentials)
+        public DnsProviderScripting(Dictionary<string, string> parameters)
         {
-            _createScriptPath = credentials["CreateScriptPath"];
-            _deleteScriptPath = credentials["DeleteScriptPath"];
+            if (parameters.ContainsKey("createscriptpath")) _createScriptPath = parameters["createscriptpath"];
+            if (parameters.ContainsKey("deletescriptpath")) _deleteScriptPath = parameters["deletescriptpath"];
         }
 
         public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
-            // standard parameters are the subject domain/subdomain, full txt record name to create,
-            // txt record value, zone id
-            string parameters = $"{request.TargetDomainName} {request.RecordName} {request.RecordValue} {request.ZoneId}";
-            await RunScript(_createScriptPath, parameters);
-
-            return null;
+            if (!string.IsNullOrEmpty(_createScriptPath))
+            {
+                // standard parameters are the subject domain/subdomain, full txt record name to
+                // create, txt record value, zone id
+                string parameters = $"{request.TargetDomainName} {request.RecordName} {request.RecordValue} {request.ZoneId}";
+                return await RunScript(_createScriptPath, parameters);
+            }
+            else
+            {
+                return new ActionResult { IsSuccess = false, Message = "Dns Script: No Create Script Path provided." };
+            }
         }
 
         Task<ActionResult> IDnsProvider.DeleteRecord(DnsRecord request)
@@ -84,8 +89,9 @@ namespace Certify.Core.Management.Challenges.DNS
             throw new NotImplementedException();
         }
 
-        private async Task RunScript(string script, string parameters)
+        private async Task<ActionResult> RunScript(string script, string parameters)
         {
+            StringBuilder _log = new StringBuilder();
             // https://stackoverflow.com/questions/5519328/executing-batch-file-in-c-sharp and
             // attempting to have some argument compat with https://github.com/PKISharp/win-acme/blob/master/letsencrypt-win-simple/Plugins/ValidationPlugins/Dns/Script.cs
 
@@ -104,7 +110,7 @@ namespace Certify.Core.Management.Challenges.DNS
             }
             else
             {
-                _log.Information($"{Definition.Title}: Running DNS script [{script} {parameters}]");
+                _log.AppendLine($"{Definition.Title}: Running DNS script [{script} {parameters}]");
             }
 
             try
@@ -124,31 +130,43 @@ namespace Certify.Core.Management.Challenges.DNS
                     if (!string.IsNullOrWhiteSpace(args.Data))
                     {
                         logMessages.AppendLine($"Error: {args.Data}");
-                        _log.Error("Script error: {0}", args.Data);
                     }
                 };
 
-                process.Start();
+                try
+                {
+                    process.Start();
 
-                process.BeginOutputReadLine();
-                process.BeginErrorReadLine();
+                    process.BeginOutputReadLine();
+                    process.BeginErrorReadLine();
 
-                process.WaitForExit((60 + Definition.PropagationDelaySeconds) * 1000);
+                    process.WaitForExit((60 + Definition.PropagationDelaySeconds) * 1000);
+                }
+                catch (Exception exp)
+                {
+                    _log.AppendLine("Error Running Script: " + exp.ToString());
+                }
 
-                // send output to log
-                _log.Information(logMessages.ToString());
+                // append output to main log
+                _log.Append(logMessages.ToString());
 
                 if (!process.HasExited)
                 {
-                    //process still running, kill task?
+                    //process still running, kill task
+                    process.CloseMainWindow();
+
+                    _log.AppendLine("Warning: Script ran but took too long to exit and was closed.");
                 }
                 else if (process.ExitCode != 0)
                 {
-                    //process.ExitCode
+                    _log.AppendLine("Warning: Script exited with the following ExitCode: " + process.ExitCode);
                 }
+                return new ActionResult { IsSuccess = true, Message = _log.ToString() };
             }
             catch (Exception exp)
             {
+                _log.AppendLine("Error: " + exp.ToString());
+                return new ActionResult { IsSuccess = false, Message = _log.ToString() };
             }
         }
     }

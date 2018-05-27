@@ -15,7 +15,7 @@ namespace Certify.Core.Management.Challenges
 {
     public class ChallengeProviders
     {
-        public static async Task<IDnsProvider> GetDnsProvider(string providerType, Dictionary<string, string> credentials)
+        public static async Task<IDnsProvider> GetDnsProvider(string providerType, Dictionary<string, string> credentials, Dictionary<string, string> parameters)
         {
             ProviderDefinition providerDefinition;
             IDnsProvider dnsAPIProvider = null;
@@ -33,51 +33,47 @@ namespace Certify.Core.Management.Challenges
             {
                 dnsAPIProvider = new LibcloudDNSProvider(credentials);
             }
-            else
+            else if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.INTERNAL)
             {
-                if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.INTERNAL)
+                if (providerDefinition.Id == "DNS01.API.Route53")
                 {
-                    if (providerDefinition.Id == "DNS01.Scripting")
-                    {
-                        var scriptingProvider = new DNS.DnsProviderScripting(credentials);
-                        dnsAPIProvider = scriptingProvider;
-                    }
+                    dnsAPIProvider = new DnsProviderAWSRoute53(credentials);
+                }
 
-                    if (providerDefinition.Id == "DNS01.Manual")
-                    {
-                        var manualProvider = new DNS.DnsProviderManual(credentials);
-                        dnsAPIProvider = manualProvider;
-                    }
+                if (providerDefinition.Id == "DNS01.API.Azure")
+                {
+                    var azureDns = new DnsProviderAzure(credentials);
+                    await azureDns.InitProvider();
+                    dnsAPIProvider = azureDns;
+                }
 
-                    if (providerDefinition.Id == "DNS01.API.Route53")
-                    {
-                        dnsAPIProvider = new DnsProviderAWSRoute53(credentials);
-                    }
+                if (providerDefinition.Id == "DNS01.API.Cloudflare")
+                {
+                    dnsAPIProvider = new DnsProviderCloudflare(credentials);
+                }
 
-                    if (providerDefinition.Id == "DNS01.API.Azure")
-                    {
-                        var azureDns = new DnsProviderAzure(credentials);
-                        await azureDns.InitProvider();
-                        dnsAPIProvider = azureDns;
-                    }
+                if (providerDefinition.Id == "DNS01.API.GoDaddy")
+                {
+                    dnsAPIProvider = new DnsProviderGoDaddy(credentials);
+                }
 
-                    if (providerDefinition.Id == "DNS01.API.Cloudflare")
-                    {
-                        var azureDns = new DnsProviderCloudflare(credentials);
-                        dnsAPIProvider = azureDns;
-                    }
-
-                    if (providerDefinition.Id == "DNS01.API.GoDaddy")
-                    {
-                        var goDaddyDns = new DnsProviderGoDaddy(credentials);
-                        dnsAPIProvider = goDaddyDns;
-                    }
-
-                    if (providerDefinition.Id == "DNS01.API.DnsMadeEasy")
-                    {
-                        var dnsMadeEasy = new DnsProviderDnsMadeEasy(credentials);
-                        dnsAPIProvider = dnsMadeEasy;
-                    }
+                if (providerDefinition.Id == "DNS01.API.DnsMadeEasy")
+                {
+                    dnsAPIProvider = new DnsProviderDnsMadeEasy(credentials);
+                }
+            }
+            else if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.MANUAL)
+            {
+                if (providerDefinition.Id == "DNS01.Manual")
+                {
+                     dnsAPIProvider = new DNS.DnsProviderManual(parameters);
+                }
+            }
+            else if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.CUSTOM_SCRIPT)
+            {
+                if (providerDefinition.Id == "DNS01.Scripting")
+                {
+                    dnsAPIProvider = new DNS.DnsProviderScripting(parameters);
                 }
             }
             return dnsAPIProvider;

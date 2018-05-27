@@ -35,7 +35,7 @@ namespace Certify.Core.Management.Challenges.DNS
                     Description = "When a DSN update is required, wait for manual changes.",
                     HelpUrl = "http://docs.certifytheweb.com/",
                     PropagationDelaySeconds = -1,
-                    ProviderParameters = new List<ProviderParameter>() { new ProviderParameter { Description = "Email address to prompt changes", IsRequired = false, Key = "email", Name = "Email to Notify (optional)" } },
+                    ProviderParameters = new List<ProviderParameter>() { new ProviderParameter { Description = "Email address to prompt changes", IsRequired = false, Key = "email", Name = "Email to Notify (optional)", IsCredential = false } },
                     ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                     Config = "Provider=Certify.Providers.DNS.Manual",
                     HandlerType = ChallengeHandlerType.MANUAL
@@ -43,18 +43,26 @@ namespace Certify.Core.Management.Challenges.DNS
             }
         }
 
-        public DnsProviderManual(Dictionary<string, string> credentials)
+        public DnsProviderManual(Dictionary<string, string> parameters)
         {
         }
 
         public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
-            return new ActionResult { IsSuccess = true, Message = "User Action Required" };
+            return new ActionResult
+            {
+                IsSuccess = true,
+                Message = $"User Action Required: Please login to your DNS control panel for the domain '{request.TargetDomainName}' and create a new TXT record named '{request.RecordName}' with the value '{request.RecordValue}' (not including quotes). Once completed you can resume the certificate request."
+            };
         }
 
-        Task<ActionResult> IDnsProvider.DeleteRecord(DnsRecord request)
+        public async Task<ActionResult> DeleteRecord(DnsRecord request)
         {
-            throw new NotImplementedException();
+            return new ActionResult
+            {
+                IsSuccess = true,
+                Message = $"User Action Required: Please login to your DNS control panel for the domain '{request.TargetDomainName}' and delete the TXT record named '{request.RecordName}'."
+            };
         }
 
         Task<List<DnsZone>> IDnsProvider.GetZones()

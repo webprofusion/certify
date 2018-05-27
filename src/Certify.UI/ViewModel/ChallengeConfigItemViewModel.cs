@@ -29,6 +29,8 @@ namespace Certify.UI.ViewModel
             //SupportedChallengeTypes.CHALLENGE_TYPE_SNI
         };
 
+        public bool UsesCredentials { get; set; }
+
         public ObservableCollection<ProviderDefinition> ChallengeProviders
         {
             get
@@ -60,28 +62,6 @@ namespace Certify.UI.ViewModel
 
         public CertRequestChallengeConfig SelectedItem
         {
-            /* get
-             {
-                 var managedCertificate = _appViewModel.SelectedItem;
-
-                 if (managedCertificate.RequestConfig.Challenges == null) managedCertificate.RequestConfig.Challenges = new ObservableCollection<CertRequestChallengeConfig> { };
-
-                 if (managedCertificate.RequestConfig.Challenges.Any())
-                 {
-                     return managedCertificate.RequestConfig.Challenges[0];
-                 }
-                 else
-                 {
-                     // no challenge config defined, create a default, migrate settings
-                     managedCertificate.RequestConfig.Challenges.Add(new CertRequestChallengeConfig
-                     {
-                         ChallengeType = managedCertificate.RequestConfig.ChallengeType
-                     });
-                     managedCertificate.RequestConfig.ChallengeType = null;
-
-                     return managedCertificate.RequestConfig.Challenges[0];
-                 }
-             }*/
             get; set;
         }
 

@@ -144,7 +144,7 @@ namespace Certify.Management
                     return true;
                 };
 
-                log.Information("Checking URL is accessible: {url} proxyAPI: {proxyAPI}, timeoutMs: ", url, useProxy, request.Timeout);
+                log.Information($"Checking URL is accessible: {url} [proxyAPI: {useProxy}, timeout: {request.Timeout}ms]");
 
                 var response = (HttpWebResponse)await request.GetResponseAsync();
 
@@ -168,7 +168,7 @@ namespace Certify.Management
                             }
                             else
                             {
-                                log.Information("(proxy api) URL is not accessible. Result: {result}", result);
+                                log.Information($"(proxy api) URL is not accessible. Result: [{result.StatusCode}] {result.Message}");
                             }
                         }
                     }
@@ -196,7 +196,7 @@ namespace Certify.Management
             {
                 if (useProxy)
                 {
-                    log.Warning($"Problem checking URL is accessible : {url} {exp.Message}", url);
+                    log.Warning($"Problem checking URL is accessible : {url} {exp.Message}");
 
                     // failed to call proxy API (maybe offline?), let's try a local check
                     return await CheckURL(log, url, false);
@@ -204,7 +204,7 @@ namespace Certify.Management
                 else
                 {
                     // failed to check URL locally
-                    log.Error(exp, "Failed to confirm URL is accessible : {url} ", url);
+                    log.Error(exp, $"Failed to confirm URL is accessible : {url} ");
 
                     return false;
                 }

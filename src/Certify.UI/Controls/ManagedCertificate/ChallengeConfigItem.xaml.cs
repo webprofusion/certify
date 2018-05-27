@@ -1,20 +1,20 @@
-﻿using Certify.UI.ViewModel;
-using System;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using Certify.Models.Config;
+using Certify.UI.ViewModel;
 using WinForms = System.Windows.Forms;
 
 namespace Certify.UI.Controls.ManagedCertificate
 {
     /// <summary>
-    /// Interaction logic for ChallengeConfigItem.xaml 
+    /// Handles UI interaction for defining Challenge Configuration 
     /// </summary>
     public partial class ChallengeConfigItem : System.Windows.Controls.UserControl
     {
-        //ChallengeAPIProviderList.ItemsSource = Models.Config.ChallengeProviders.Providers.Where(p => p.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
-
         protected Certify.UI.ViewModel.AppViewModel AppViewModel => UI.ViewModel.AppViewModel.Current;
 
         public ChallengeConfigItem()
@@ -91,6 +91,9 @@ namespace Certify.UI.Controls.ManagedCertificate
             //select first credential by default
             if (credentials.Count() > 0)
             {
+                EditModel.UsesCredentials = true;
+                EditModel.RaisePropertyChangedEvent(nameof(EditModel.UsesCredentials));
+
                 var selectedCredential = credentials.FirstOrDefault(c => c.StorageKey == EditModel.SelectedItem.ChallengeCredentialKey);
                 if (selectedCredential != null)
                 {
@@ -99,6 +102,31 @@ namespace Certify.UI.Controls.ManagedCertificate
                 else
                 {
                     EditModel.SelectedItem.ChallengeCredentialKey = credentials.First().StorageKey;
+                }
+            }
+            else
+            {
+                EditModel.UsesCredentials = false;
+                EditModel.RaisePropertyChangedEvent(nameof(EditModel.UsesCredentials));
+            }
+        }
+
+        private void RefreshParameters()
+        {
+            EditModel.SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();
+            var definition = AppViewModel.ChallengeAPIProviders.FirstOrDefault(p => p.Id == EditModel.SelectedItem.ChallengeProvider);
+
+            if (definition != null)
+            {
+                foreach (var pa in definition.ProviderParameters.Where(p => p.IsCredential == false))
+                {
+                    // if zoneid previously stored, migrate to provider param
+                    if (pa.Key == "zoneid" && !String.IsNullOrEmpty(EditModel.SelectedItem.ZoneId))
+                    {
+                        pa.Value = EditModel.SelectedItem.ZoneId;
+                    }
+
+                    EditModel.SelectedItem.Parameters.Add(pa);
                 }
             }
         }
@@ -112,9 +140,14 @@ namespace Certify.UI.Controls.ManagedCertificate
                 EditModel.SelectedItem.ChallengeProvider = challengeProviderType;
 
                 await RefreshCredentialOptions();
-            }
 
-            //EditModel.RaisePropertyChangedEvent(nameof(EditModel.PrimaryChallengeConfig));
+                RefreshParameters();
+            }
+        }
+
+        private void ParameterInput_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            EditModel.SelectedItem.IsChanged = true;
         }
     }
 }
