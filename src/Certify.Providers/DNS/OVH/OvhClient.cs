@@ -1,5 +1,5 @@
-﻿// This file is inspired from https://github.com/ovh/csharp-ovh/blob/master/csharp-ovh/Client.cs , which has been adapted to Certify in order to reduce dependencies 
-
+﻿// This file is inspired by https://github.com/ovh/csharp-ovh/blob/master/csharp-ovh/Client.cs , which 
+// has been adapted to Certify in order to reduce dependencies and remove features useless in our context
 // Original file is copyright OVH SAS :
 
 //Copyright(c) 2013-2016, OVH SAS.
