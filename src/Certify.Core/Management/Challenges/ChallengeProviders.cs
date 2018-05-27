@@ -10,6 +10,7 @@ using Certify.Providers.DNS.Azure;
 using Certify.Providers.DNS.Cloudflare;
 using Certify.Providers.DNS.DnsMadeEasy;
 using Certify.Providers.DNS.GoDaddy;
+using Certify.Providers.DNS.OVH;
 
 namespace Certify.Core.Management.Challenges
 {
@@ -78,6 +79,12 @@ namespace Certify.Core.Management.Challenges
                         var dnsMadeEasy = new DnsProviderDnsMadeEasy(credentials);
                         dnsAPIProvider = dnsMadeEasy;
                     }
+
+                    if (providerDefinition.Id == DnsProviderOvh.Definition.Id)
+                    {
+                        var dnsOvh = new DnsProviderOvh(credentials);
+                        dnsAPIProvider = dnsOvh;
+                    }
                 }
             }
             return dnsAPIProvider;
@@ -104,6 +111,7 @@ namespace Certify.Core.Management.Challenges
                 Providers.DNS.Cloudflare.DnsProviderCloudflare.Definition,
                 Providers.DNS.GoDaddy.DnsProviderGoDaddy.Definition,
                 Providers.DNS.DnsMadeEasy.DnsProviderDnsMadeEasy.Definition,
+                Providers.DNS.OVH.DnsProviderOvh.Definition,
             };
 
             return await Task.FromResult(providers);

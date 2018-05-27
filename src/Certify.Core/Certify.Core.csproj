@@ -122,6 +122,10 @@
       <Project>{52ef94fe-157b-48af-8241-428624b3034f}</Project>
       <Name>GoDaddy</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Certify.Providers\DNS\OVH\OVH.csproj">
+      <Project>{acba27a7-5c52-4c62-b5f0-37c062888636}</Project>
+      <Name>OVH</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Certify.Shared\Certify.Shared.csproj">
       <Project>{ed48b479-b619-4c16-afa3-83dd3cd89338}</Project>
       <Name>Certify.Shared</Name>
