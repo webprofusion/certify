@@ -391,63 +391,74 @@ namespace Certify.Management
             // step may fail.
             var pendingOrder = await _acmeClientProvider.BeginCertificateOrder(log, config);
 
-            var authorizations = pendingOrder.Authorizations;
-
-            if (authorizations.Any(a => a.IsFailure))
+            if (pendingOrder.IsPendingAuthorizations)
             {
-                //failed to begin the order
-                result.Message = $"Failed to create certificate order: {authorizations.FirstOrDefault(a => a.IsFailure)?.AuthorizationError}";
+                var authorizations = pendingOrder.Authorizations;
 
-                ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result });
-                await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
-                LogMessage(managedCertificate.Id, result.Message, LogItemType.CertficateRequestFailed);
+                if (authorizations.Any(a => a.IsFailure))
+                {
+                    //failed to begin the order
+                    result.Message = $"Failed to create certificate order: {authorizations.FirstOrDefault(a => a.IsFailure)?.AuthorizationError}";
 
-                return;
+                    ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result });
+                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
+                    LogMessage(managedCertificate.Id, result.Message, LogItemType.CertficateRequestFailed);
+
+                    return;
+                }
+                else
+                {
+                    // store the Order Uri so we can resume the order later if required
+                    managedCertificate.CurrentOrderUri = pendingOrder.OrderUri;
+                }
+
+                // perform all automated challenges (creating either http resources within the domain
+                // sites or creating DNS TXT records, depending on the challenge types)
+
+                await PerformAutomatedChallengeResponses(log, managedCertificate, distinctDomains, authorizations, result, config, progress);
+
+                // if any challenge responses require a manual step, pause our request here and wait
+                // for user intervention
+                if (authorizations.Any(a => a.AttemptedChallenge?.IsAwaitingUser == true))
+                {
+                    var msg = $"Awaiting user input. See Managed Certificate details for more information.";
+
+                    ReportProgress(
+                        progress,
+                        new RequestProgressState(RequestState.Paused, msg, managedCertificate),
+                        logThisEvent: true
+                    );
+
+                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Paused, msg);
+
+                    return;
+                }
+
+                // if any of our authorizations require a delay for challenge response propagation,
+                // wait now.
+                if (authorizations.Any() && result.ChallengeResponsePropagationSeconds > 0)
+                {
+                    var wait = result.ChallengeResponsePropagationSeconds;
+                    while (wait > 0)
+                    {
+                        ReportProgress(
+                            progress,
+                            new RequestProgressState(RequestState.Paused, $"Pausing for {wait} seconds to allow for challenge response propagation.", managedCertificate),
+                            logThisEvent: false
+                            );
+                        await Task.Delay(1000);
+                        wait--;
+                    }
+                }
             }
             else
             {
-                // store the Order Uri so we can resume the order later if required
-                managedCertificate.CurrentOrderUri = pendingOrder.OrderUri;
-            }
-
-            // perform all automated challenges (creating either http resources within the domain
-            // sites or creating DNS TXT records, depending on the challenge types)
-
-            await PerformAutomatedChallengeResponses(log, managedCertificate, distinctDomains, authorizations, result, config, progress);
-
-            // if any challenge responses require a manual step, pause our request here and wait for
-            // user intervention
-            if (authorizations.Any(a => a.AttemptedChallenge?.IsAwaitingUser == true))
-            {
-                var msg = $"Awaiting user input. See Managed Certificate details for more information.";
-
                 ReportProgress(
-                    progress,
-                    new RequestProgressState(RequestState.Paused, msg, managedCertificate),
-                    logThisEvent: true
-                );
-
-                await UpdateManagedCertificateStatus(managedCertificate, RequestState.Paused, msg);
-
-                return;
+                           progress,
+                           new RequestProgressState(RequestState.Running, $"Order authorizations already completed.", managedCertificate),
+                           logThisEvent: true
+                           );
             }
-
-            // if any of our authorizations require a delay for challenge response propagation, wait now.
-            if (authorizations.Any() && result.ChallengeResponsePropagationSeconds > 0)
-            {
-                var wait = result.ChallengeResponsePropagationSeconds;
-                while (wait > 0)
-                {
-                    ReportProgress(
-                        progress,
-                        new RequestProgressState(RequestState.Paused, $"Pausing for {wait} seconds to allow for challenge response propagation.", managedCertificate),
-                        logThisEvent: false
-                        );
-                    await Task.Delay(1000);
-                    wait--;
-                }
-            }
-
             await CompleteCertificateRequestProcessing(log, managedCertificate, progress, result, config, pendingOrder);
         }
 
@@ -463,146 +474,149 @@ namespace Certify.Management
                 if (pendingOrder == null) throw new Exception("No pending certificate order.");
             }
 
-            var authorizations = pendingOrder.Authorizations;
-
-            var distinctDomains = GetAllRequestedDomains(config);
-
+            var validationFailed = false;
             var failureSummaryMessage = "";
 
-            var validationFailed = false;
-
-            if (!authorizations.All(a => a.IsValidated))
+            if (pendingOrder.IsPendingAuthorizations)
             {
-                // resume process, ask CA to check our challenge responses
-                foreach (var domain in distinctDomains)
+                var authorizations = pendingOrder.Authorizations;
+
+                var distinctDomains = GetAllRequestedDomains(config);
+
+                if (!authorizations.All(a => a.IsValidated))
                 {
-                    var asciiDomain = _idnMapping.GetAscii(domain);
-
-                    // TODO: get fresh copy of authz info before proceeding
-                    var authorization = authorizations.FirstOrDefault(a => a.Identifier?.Dns == asciiDomain);
-
-                    var challengeConfig = managedCertificate.GetChallengeConfig(domain);
-
-                    if (authorization?.Identifier != null)
+                    // resume process, ask CA to check our challenge responses
+                    foreach (var domain in distinctDomains)
                     {
-                        LogMessage(managedCertificate.Id, $"Attempting Challenge Response Validation for Domain: {domain}",
-                            LogItemType.CertificateRequestStarted);
+                        var asciiDomain = _idnMapping.GetAscii(domain);
 
-                        ReportProgress(progress,
-                            new RequestProgressState(RequestState.Running,
-                                string.Format(Certify.Locales.CoreSR.CertifyManager_RegisteringAndValidatingX0, domain),
-                                managedCertificate)
-                        );
+                        // TODO: get fresh copy of authz info before proceeding
+                        var authorization = authorizations.FirstOrDefault(a => a.Identifier?.Dns == asciiDomain);
 
-                        // check if authorization is pending, it may already be valid if an existing
-                        // authorization was reused
-                        if (authorization.Identifier.IsAuthorizationPending)
+                        var challengeConfig = managedCertificate.GetChallengeConfig(domain);
+
+                        if (authorization?.Identifier != null)
                         {
+                            LogMessage(managedCertificate.Id, $"Attempting Challenge Response Validation for Domain: {domain}",
+                                LogItemType.CertificateRequestStarted);
+
                             ReportProgress(progress,
-                                new RequestProgressState(
-                                    RequestState.Running,
-                                    $"Checking automated challenge response for Domain: {domain}",
-                                    managedCertificate
-                                )
+                                new RequestProgressState(RequestState.Running,
+                                    string.Format(Certify.Locales.CoreSR.CertifyManager_RegisteringAndValidatingX0, domain),
+                                    managedCertificate)
                             );
 
-                            // ask LE to check our answer to their authorization challenge (http-01
-                            // or tls-sni-01), LE will then attempt to fetch our answer, if all
-                            // accessible and correct (authorized) LE will then allow us to request a certificate
-
-                            //TODO: if resuming a previous process, need to determine the attempted challenges again
-                            try
+                            // check if authorization is pending, it may already be valid if an
+                            // existing authorization was reused
+                            if (authorization.Identifier.IsAuthorizationPending)
                             {
-                                //ask LE to validate our challenge response
-                                var submissionStatus = await _acmeClientProvider.SubmitChallenge(log, challengeConfig.ChallengeType,
-                                    authorization.AttemptedChallenge);
+                                ReportProgress(progress,
+                                    new RequestProgressState(
+                                        RequestState.Running,
+                                        $"Checking automated challenge response for Domain: {domain}",
+                                        managedCertificate
+                                    )
+                                );
 
-                                if (submissionStatus.IsOK)
+                                // ask LE to check our answer to their authorization challenge
+                                // (http-01 or tls-sni-01), LE will then attempt to fetch our answer,
+                                // if all accessible and correct (authorized) LE will then allow us
+                                // to request a certificate
+
+                                //TODO: if resuming a previous process, need to determine the attempted challenges again
+                                try
                                 {
-                                    authorization =
-                                        await _acmeClientProvider.CheckValidationCompleted(log, challengeConfig.ChallengeType,
-                                            authorization);
+                                    //ask LE to validate our challenge response
+                                    var submissionStatus = await _acmeClientProvider.SubmitChallenge(log, challengeConfig.ChallengeType,
+                                        authorization.AttemptedChallenge);
 
-                                    if (!authorization.IsValidated)
+                                    if (submissionStatus.IsOK)
                                     {
-                                        var identifierInfo = authorization.Identifier;
-                                        var errorMsg = authorization.AuthorizationError;
-                                        var errorType = identifierInfo?.ValidationErrorType;
+                                        authorization =
+                                            await _acmeClientProvider.CheckValidationCompleted(log, challengeConfig.ChallengeType,
+                                                authorization);
 
-                                        failureSummaryMessage = string.Format(CoreSR.CertifyManager_DomainValidationFailed, domain,
-                                            errorMsg);
-                                        ReportProgress(progress,
-                                            new RequestProgressState(RequestState.Error, failureSummaryMessage,
-                                                managedCertificate));
+                                        if (!authorization.IsValidated)
+                                        {
+                                            var identifierInfo = authorization.Identifier;
+                                            var errorMsg = authorization.AuthorizationError;
+                                            var errorType = identifierInfo?.ValidationErrorType;
 
-                                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error,
-                                            failureSummaryMessage);
+                                            failureSummaryMessage = string.Format(CoreSR.CertifyManager_DomainValidationFailed, domain,
+                                                errorMsg);
+                                            ReportProgress(progress,
+                                                new RequestProgressState(RequestState.Error, failureSummaryMessage,
+                                                    managedCertificate));
 
-                                        validationFailed = true;
+                                            await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error,
+                                                failureSummaryMessage);
+
+                                            validationFailed = true;
+                                        }
+                                        else
+                                        {
+                                            ReportProgress(progress,
+                                                new RequestProgressState(RequestState.Running,
+                                                    string.Format(CoreSR.CertifyManager_DomainValidationCompleted, domain),
+                                                    managedCertificate));
+                                        }
                                     }
                                     else
                                     {
-                                        ReportProgress(progress,
-                                            new RequestProgressState(RequestState.Running,
-                                                string.Format(CoreSR.CertifyManager_DomainValidationCompleted, domain),
-                                                managedCertificate));
+                                        // challenge not submitted, already validated or failed submission
                                     }
+                                }
+                                catch (Exception exp)
+                                {
+                                    log.Error(exp, $"A problem occurred while checking challenge responses: {exp.Message}");
+                                }
+                                finally
+                                {
+                                    // clean up challenge answers (.well-known/acme-challenge/* files
+                                    // for http-01 or iis bindings for tls-sni-01)
+
+                                    authorization.Cleanup();
+                                }
+                            }
+                            else
+                            {
+                                // we already have a completed authorization, check it's valid
+                                if (authorization.IsValidated)
+                                {
+                                    LogMessage(managedCertificate.Id,
+                                        string.Format(CoreSR.CertifyManager_DomainValidationSkipVerifed, domain));
                                 }
                                 else
                                 {
-                                    // challenge not submitted, already validated or failed submission
-                                }
-                            }
-                            catch (Exception exp)
-                            {
-                                log.Error(exp, $"A problem occurred while checking challenge responses: {exp.Message}");
-                            }
-                            finally
-                            {
-                                // clean up challenge answers (.well-known/acme-challenge/* files for
-                                // http-01 or iis bindings for tls-sni-01)
+                                    var errorMsg = "";
+                                    if (authorization?.Identifier != null)
+                                    {
+                                        errorMsg = authorization.Identifier.ValidationError;
+                                        var errorType = authorization.Identifier.ValidationErrorType;
+                                    }
 
-                                authorization.Cleanup();
+                                    failureSummaryMessage = $"Domain validation failed: {domain} \r\n{errorMsg}";
+
+                                    LogMessage(managedCertificate.Id, failureSummaryMessage);
+
+                                    validationFailed = true;
+                                }
                             }
                         }
                         else
                         {
-                            // we already have a completed authorization, check it's valid
-                            if (authorization.IsValidated)
-                            {
-                                LogMessage(managedCertificate.Id,
-                                    string.Format(CoreSR.CertifyManager_DomainValidationSkipVerifed, domain));
-                            }
-                            else
-                            {
-                                var errorMsg = "";
-                                if (authorization?.Identifier != null)
-                                {
-                                    errorMsg = authorization.Identifier.ValidationError;
-                                    var errorType = authorization.Identifier.ValidationErrorType;
-                                }
+                            // could not begin authorization
 
-                                failureSummaryMessage = $"Domain validation failed: {domain} \r\n{errorMsg}";
+                            LogMessage(managedCertificate.Id,
+                                $"Could not complete authorization for domain with Let's Encrypt: [{domain}] {(authorization?.AuthorizationError ?? "Could not register domain identifier")}");
+                            failureSummaryMessage = $"[{domain}] : {authorization?.AuthorizationError}";
 
-                                LogMessage(managedCertificate.Id, failureSummaryMessage);
-
-                                validationFailed = true;
-                            }
+                            validationFailed = true;
                         }
+
+                        // abandon authorization attempts if one of our domains has failed verification
+                        if (validationFailed) break;
                     }
-                    else
-                    {
-                        // could not begin authorization
-
-                        LogMessage(managedCertificate.Id,
-                            $"Could not complete authorization for domain with Let's Encrypt: [{domain}] {(authorization?.AuthorizationError ?? "Could not register domain identifier")}");
-                        failureSummaryMessage = $"[{domain}] : {authorization?.AuthorizationError}";
-
-                        validationFailed = true;
-                    }
-
-                    // abandon authorization attempts if one of our domains has failed verification
-                    if (validationFailed) break;
                 }
             }
 
