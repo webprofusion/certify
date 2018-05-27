@@ -29,6 +29,8 @@ namespace Certify.UI.ViewModel
             //SupportedChallengeTypes.CHALLENGE_TYPE_SNI
         };
 
+        public bool UsesCredentials { get; set; }
+
         public ObservableCollection<ProviderDefinition> ChallengeProviders
         {
             get

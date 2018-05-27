@@ -91,6 +91,9 @@ namespace Certify.UI.Controls.ManagedCertificate
             //select first credential by default
             if (credentials.Count() > 0)
             {
+                EditModel.UsesCredentials = true;
+                EditModel.RaisePropertyChangedEvent(nameof(EditModel.UsesCredentials));
+
                 var selectedCredential = credentials.FirstOrDefault(c => c.StorageKey == EditModel.SelectedItem.ChallengeCredentialKey);
                 if (selectedCredential != null)
                 {
@@ -100,6 +103,11 @@ namespace Certify.UI.Controls.ManagedCertificate
                 {
                     EditModel.SelectedItem.ChallengeCredentialKey = credentials.First().StorageKey;
                 }
+            }
+            else
+            {
+                EditModel.UsesCredentials = false;
+                EditModel.RaisePropertyChangedEvent(nameof(EditModel.UsesCredentials));
             }
         }
 
@@ -112,6 +120,12 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 foreach (var pa in definition.ProviderParameters.Where(p => p.IsCredential == false))
                 {
+                    // if zoneid previously stored, migrate to provider param
+                    if (pa.Key == "zoneid" && !String.IsNullOrEmpty(EditModel.SelectedItem.ZoneId))
+                    {
+                        pa.Value = EditModel.SelectedItem.ZoneId;
+                    }
+
                     EditModel.SelectedItem.Parameters.Add(pa);
                 }
             }
@@ -129,6 +143,11 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 RefreshParameters();
             }
+        }
+
+        private void ParameterInput_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            EditModel.SelectedItem.IsChanged = true;
         }
     }
 }
