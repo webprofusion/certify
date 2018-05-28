@@ -27,6 +27,7 @@ namespace Certify.Models
     {
         Unknown,
         OK,
+        AwaitingUser,
         Warning,
         Error
     }
@@ -167,7 +168,14 @@ namespace Certify.Models
                 {
                     if (LastRenewalStatus != null)
                     {
-                        return ManagedCertificateHealth.OK;
+                        if (LastRenewalStatus.Value == RequestState.Paused)
+                        {
+                            return ManagedCertificateHealth.AwaitingUser;
+                        }
+                        else
+                        {
+                            return ManagedCertificateHealth.OK;
+                        }
                     }
                     else
                     {

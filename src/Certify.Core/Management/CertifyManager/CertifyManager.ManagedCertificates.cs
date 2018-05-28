@@ -41,6 +41,11 @@ namespace Certify.Management
                 managedCertificate.RenewalFailureCount = 0;
                 managedCertificate.LastRenewalStatus = RequestState.Success;
             }
+            else if (status == RequestState.Paused)
+            {
+                managedCertificate.RenewalFailureCount = 0;
+                managedCertificate.LastRenewalStatus = RequestState.Paused;
+            }
             else
             {
                 managedCertificate.RenewalFailureMessage = msg;
