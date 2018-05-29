@@ -4,9 +4,9 @@
 # top-most EditorConfig file
 root = true
 
-# Don't use tabs for indentation.
+# Use tabs
 [*]
-indent_style = space
+indent_style = tabs
 # (Please don't specify an indent_size here; that has too many unintended consequences.)
 
 # Code files
@@ -14,7 +14,7 @@ indent_style = space
 indent_size = 4
 insert_final_newline = true
 charset = utf-8-bom
-
+		
 # Xml project files
 [*.{csproj,vbproj,vcxproj,vcxproj.filters,proj,projitems,shproj}]
 indent_size = 2
