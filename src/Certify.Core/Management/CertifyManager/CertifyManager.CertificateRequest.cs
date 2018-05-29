@@ -34,7 +34,7 @@ namespace Certify.Management
 
             var testModeOnly = false;
 
-            IEnumerable<ManagedCertificate> sites = await _siteManager.GetManagedCertificates(
+            IEnumerable<ManagedCertificate> managedCertificates = await _itemManager.GetManagedCertificates(
                 new ManagedCertificateFilter
                 {
                     IncludeOnlyNextAutoRenew = true
@@ -43,7 +43,7 @@ namespace Certify.Management
             if (autoRenewalOnly)
             {
                 // auto renew enabled sites in order of oldest date renewed first
-                sites = sites.Where(s => s.IncludeInAutoRenew == true)
+                managedCertificates = managedCertificates.Where(s => s.IncludeInAutoRenew == true)
                              .OrderBy(s => s.DateRenewed ?? DateTime.MinValue);
             }
 
@@ -62,21 +62,21 @@ namespace Certify.Management
                 progressTrackers = new Dictionary<string, Progress<RequestProgressState>>();
             }
 
-            foreach (var s in sites.Where(s => s.IncludeInAutoRenew == true))
+            foreach (var managedCertificate in managedCertificates.Where(s => s.IncludeInAutoRenew == true))
             {
-                var progressState = new RequestProgressState(RequestState.Running, "Starting..", s);
+                var progressState = new RequestProgressState(RequestState.Running, "Starting..", managedCertificate);
                 var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
-                progressTrackers.Add(s.Id, progressIndicator);
+                progressTrackers.Add(managedCertificate.Id, progressIndicator);
 
                 BeginTrackingProgress(progressState);
 
                 // determine if this site requires renewal
-                var isRenewalRequired = IsRenewalRequired(s, renewalIntervalDays);
+                var isRenewalRequired = IsRenewalRequired(managedCertificate, renewalIntervalDays);
                 var isRenewalOnHold = false;
                 if (isRenewalRequired)
                 {
                     //check if we have renewal failures, if so wait a bit longer
-                    isRenewalOnHold = !IsRenewalRequired(s, renewalIntervalDays, checkFailureStatus: true);
+                    isRenewalOnHold = !IsRenewalRequired(managedCertificate, renewalIntervalDays, checkFailureStatus: true);
 
                     if (isRenewalOnHold) isRenewalRequired = false;
                 }
@@ -85,7 +85,7 @@ namespace Certify.Management
                 var isSiteRunning = true;
                 if (!CoreAppSettings.Current.IgnoreStoppedSites)
                 {
-                    isSiteRunning = await IsManagedCertificateRunning(s.Id);
+                    isSiteRunning = await IsManagedCertificateRunning(managedCertificate.Id);
                 }
 
                 if ((isRenewalRequired && isSiteRunning) || testModeOnly)
@@ -94,7 +94,7 @@ namespace Certify.Management
                     IProgress<RequestProgressState> tracker = null;
                     if (progressTrackers != null)
                     {
-                        tracker = progressTrackers[s.Id];
+                        tracker = progressTrackers[managedCertificate.Id];
                     }
 
                     // optionally limit the number of renewal tasks to attempt in this pass
@@ -103,11 +103,11 @@ namespace Certify.Management
                         if (testModeOnly)
                         {
                             //simulated request for UI testing
-                            renewalTasks.Add(this.PerformDummyCertificateRequest(s, tracker));
+                            renewalTasks.Add(this.PerformDummyCertificateRequest(managedCertificate, tracker));
                         }
                         else
                         {
-                            renewalTasks.Add(this.PerformCertificateRequest(null, s, tracker));
+                            renewalTasks.Add(this.PerformCertificateRequest(null, managedCertificate, tracker));
                         }
                     }
                     numRenewalTasks++;
@@ -127,15 +127,15 @@ namespace Certify.Management
                     {
                         //TODO: show this as warning rather than success
 
-                        msg = String.Format(CoreSR.CertifyManager_RenewalOnHold, s.RenewalFailureCount);
+                        msg = String.Format(CoreSR.CertifyManager_RenewalOnHold, managedCertificate.RenewalFailureCount);
                         logThisEvent = true;
                     }
 
                     if (progressTrackers != null)
                     {
                         //send progress back to report skip
-                        var progress = (IProgress<RequestProgressState>)progressTrackers[s.Id];
-                        ReportProgress(progress, new RequestProgressState(RequestState.Success, msg, s), logThisEvent);
+                        var progress = (IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id];
+                        ReportProgress(progress, new RequestProgressState(RequestState.Success, msg, managedCertificate), logThisEvent);
                     }
                 }
             }
@@ -242,7 +242,7 @@ namespace Certify.Management
         /// <param name="managedCertificate"></param>
         /// <param name="progress"></param>
         /// <returns></returns>
-        public async Task<CertificateRequestResult> PerformCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null)
+        public async Task<CertificateRequestResult> PerformCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool resumePaused = false)
         {
             // Perform pre-request checks and scripting hooks, invoke main request process, then
             // perform an post request scripting hooks
@@ -282,7 +282,16 @@ namespace Certify.Management
                 }
                 else
                 {
-                    await PerformCertificateRequestProcessing(log, managedCertificate, progress, result, config);
+                    if (resumePaused && managedCertificate.Health == ManagedCertificateHealth.AwaitingUser)
+                    {
+                        // resume a previously paused request
+                        await CompleteCertificateRequestProcessing(log, managedCertificate, progress, result, config, null);
+                    }
+                    else
+                    {
+                        // perform normal certificate challenge/response/renewal
+                        await PerformCertificateRequestProcessing(log, managedCertificate, progress, result, config);
+                    }
                 }
             }
             catch (Exception exp)
@@ -438,24 +447,8 @@ namespace Certify.Management
                     return;
                 }
 
-                // if authorization requires manual input, quit and wait for user
-
-                if (authorizations.Any(a => a.AttemptedChallenge?.IsAwaitingUser == true))
-                {
-                    // we have one or more manual authorizations to complete, suspend the request
-                    ReportProgress(
-                            progress,
-                            new RequestProgressState(RequestState.Paused, $"Paused to wait for user to confirm challenge responses.", managedCertificate),
-                            logThisEvent: false
-                            );
-
-                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Paused, "User input is required to complete challenge responses.");
-                    return;
-                }
-
                 // if any of our authorizations require a delay for challenge response propagation,
                 // wait now.
-
                 var propagationSecondsRequired = authorizations.Max(a => a.AttemptedChallenge?.PropagationSeconds);
                 if (authorizations.Any() && propagationSecondsRequired > 0)
                 {
@@ -548,8 +541,14 @@ namespace Certify.Management
                                 try
                                 {
                                     //ask LE to validate our challenge response
+
+                                    //FIXME: determine attempted challenge when resuming
+                                    if (authorization.AttemptedChallenge == null)
+                                    {
+                                        authorization.AttemptedChallenge = authorization.Challenges.FirstOrDefault(c => c.ChallengeType == challengeConfig.ChallengeType);
+                                    }
                                     var submissionStatus = await _acmeClientProvider.SubmitChallenge(log, challengeConfig.ChallengeType,
-                                        authorization.AttemptedChallenge);
+                                    authorization.AttemptedChallenge);
 
                                     if (submissionStatus.IsOK)
                                     {
@@ -584,12 +583,22 @@ namespace Certify.Management
                                     }
                                     else
                                     {
-                                        // challenge not submitted, already validated or failed submission
+                                        failureSummaryMessage = submissionStatus.Message;
+                                        ReportProgress(progress,
+                                               new RequestProgressState(RequestState.Error, submissionStatus.Message,
+                                                   managedCertificate));
+
+                                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error,
+                                            submissionStatus.Message);
+                                        validationFailed = true;
                                     }
                                 }
                                 catch (Exception exp)
                                 {
-                                    log.Error(exp, $"A problem occurred while checking challenge responses: {exp.Message}");
+                                    failureSummaryMessage = $"A problem occurred while checking challenge responses: {exp.ToString()}";
+
+                                    LogMessage(managedCertificate.Id, failureSummaryMessage);
+                                    validationFailed = true;
                                 }
                                 finally
                                 {

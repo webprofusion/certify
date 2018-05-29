@@ -17,7 +17,7 @@ namespace Certify.Management
 {
     public partial class CertifyManager : ICertifyManager, IDisposable
     {
-        private ItemManager _siteManager = null;
+        private ItemManager _itemManager = null;
         private IACMEClientProvider _acmeClientProvider = null;
         private IVaultProvider _vaultProvider = null;
         private ICertifiedServer _serverProvider = null;
@@ -46,7 +46,7 @@ namespace Certify.Management
 
             Util.SetSupportedTLSVersions();
 
-            _siteManager = new ItemManager();
+            _itemManager = new ItemManager();
             _serverProvider = (ICertifiedServer)new ServerProviderIIS();
 
             _progressResults = new ObservableCollection<RequestProgressState>();
@@ -100,7 +100,7 @@ namespace Certify.Management
 
         public async Task<bool> LoadSettingsAsync(bool skipIfLoaded)
         {
-            await _siteManager.LoadAllManagedCertificates(skipIfLoaded);
+            await _itemManager.LoadAllManagedCertificates(skipIfLoaded);
             return true;
         }
 

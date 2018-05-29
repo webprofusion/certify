@@ -1,7 +1,7 @@
-﻿using Certify.Locales;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Certify.Locales;
 
 namespace Certify.UI.Controls.ManagedCertificate
 {
@@ -30,14 +30,22 @@ namespace Certify.UI.Controls.ManagedCertificate
                     {
                         this.RenewalSuccess.Visibility = Visibility.Visible;
                         this.RenewalFailed.Visibility = Visibility.Collapsed;
+                        this.RenewalPaused.Visibility = Visibility.Collapsed;
                     }
-
-                    if (ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.Error ||
-                        ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.Warning
-                        )
+                    else if (ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.AwaitingUser)
+                    {
+                        this.RenewalSuccess.Visibility = Visibility.Collapsed;
+                        this.RenewalFailed.Visibility = Visibility.Collapsed;
+                        this.RenewalPaused.Visibility = Visibility.Visible;
+                    }
+                    else if (
+                      ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.Error ||
+                      ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.Warning
+                      )
                     {
                         this.RenewalSuccess.Visibility = Visibility.Collapsed;
                         this.RenewalFailed.Visibility = Visibility.Visible;
+                        this.RenewalPaused.Visibility = Visibility.Collapsed;
                     }
                 }
             }

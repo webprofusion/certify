@@ -116,7 +116,7 @@ namespace Certify.Client
 
         Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly);
 
-        Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId);
+        Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused);
 
         Task<RequestProgressState> CheckCertificateRequest(string managedItemId);
 

@@ -154,6 +154,41 @@
                 </StackPanel>
             </StackPanel>
 
+            <StackPanel x:Name="RenewalPaused">
+
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome
+                        Height="16"
+                        Margin="4"
+                        Foreground="{StaticResource ValidationSummaryColor1}"
+                        Icon="PauseCircle" />
+
+                    <TextBlock
+                        DockPanel.Dock="Top"
+                        Foreground="{StaticResource ResourceKey=ValidationSummaryColor1}"
+                        Style="{StaticResource Subheading}"
+                        Text="Waiting for User Action" />
+                </StackPanel>
+                <!--  Renewal warning messages  -->
+                <StackPanel>
+
+                    <TextBlock
+                        Margin="0,0,0,0"
+                        Style="{StaticResource Instructions}"
+                        Text="Your action is required to complete this certificate request. Once completed, select 'Request Certificate' to resume." />
+                </StackPanel>
+                <Border Margin="0,0,0,0" Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
+
+                    <TextBox
+                        Margin="8,8,8,8"
+                        Padding="8,8,8,8"
+                        Foreground="Black"
+                        IsReadOnly="True"
+                        Text="{Binding SelectedItem.RenewalFailureMessage}"
+                        TextWrapping="WrapWithOverflow" />
+                </Border>
+            </StackPanel>
+
             <StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Button

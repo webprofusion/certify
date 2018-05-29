@@ -321,7 +321,7 @@ namespace Certify.UI.ViewModel
             return false;
         }
 
-        public async Task BeginCertificateRequest(string managedItemId)
+        public async Task BeginCertificateRequest(string managedItemId, bool resumePaused = true)
         {
             //begin request process
             var managedCertificate = ManagedCertificates.FirstOrDefault(s => s.Id == managedItemId);
@@ -332,7 +332,7 @@ namespace Certify.UI.ViewModel
 
                 TrackProgress(managedCertificate);
                 // start request
-                var result = await CertifyClient.BeginCertificateRequest(managedCertificate.Id);
+                var result = await CertifyClient.BeginCertificateRequest(managedCertificate.Id, resumePaused);
             }
         }
 

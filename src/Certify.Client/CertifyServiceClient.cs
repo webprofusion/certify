@@ -280,9 +280,9 @@ namespace Certify.Client
             }
         }
 
-        public async Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId)
+        public async Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused)
         {
-            var response = await FetchAsync($"managedcertificates/renewcert/{managedItemId}");
+            var response = await FetchAsync($"managedcertificates/renewcert/{managedItemId}/{resumePaused}");
             return JsonConvert.DeserializeObject<CertificateRequestResult>(response);
         }
 

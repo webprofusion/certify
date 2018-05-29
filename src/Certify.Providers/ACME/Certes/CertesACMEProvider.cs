@@ -465,7 +465,7 @@ namespace Certify.Providers.Certes
                         return new StatusMessage
                         {
                             IsOK = false,
-                            Message = challengeError?.ToString()
+                            Message = challengeError.Error?.Detail
                         };
                     }
                 }
@@ -478,7 +478,7 @@ namespace Certify.Providers.Certes
                     return new StatusMessage
                     {
                         IsOK = false,
-                        Message = challengeError.ToString()
+                        Message = challengeError.Error.Detail
                     };
                 }
             }
