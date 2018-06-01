@@ -45,7 +45,7 @@ namespace Certify.UI.Controls
             this.IgnoreStoppedSites.IsChecked = _prefs.IgnoreStoppedSites;
 
             this.EnableDNSValidationChecks.IsChecked = _prefs.EnableDNSValidationChecks;
-            this.EnableDNSValidationChecks.IsChecked = _prefs.EnableHttpChallengeServer;
+            this.EnableHttpChallengeServer.IsChecked = _prefs.EnableHttpChallengeServer;
 
             this.RenewalIntervalDays.Value = _prefs.RenewalIntervalDays;
             this.RenewalMaxRequests.Value = _prefs.MaxRenewalRequests;
@@ -168,7 +168,7 @@ namespace Certify.UI.Controls
                 if (MessageBox.Show("Are you sure you wish to delete this stored credential?", "Confirm Delete", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
                 {
                     //confirm item not used then delete
-                    var deleted = await MainViewModel.DeleteCredential(_selectedStoredCredential.StorageKey);
+                    var deleted = await MainViewModel.DeleteCredential(_selectedStoredCredential?.StorageKey);
                     if (!deleted)
                     {
                         MessageBox.Show("This stored credential could not be removed. It may still be in use by a managed site.");

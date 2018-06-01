@@ -42,16 +42,39 @@
                 <TextBlock Style="{StaticResource Instructions}" Text="For a certificate to be issued you must prove you control the domains you are requesting in your certificate. If any included domain fails authorization the certificate request cannot be completed." />
                 <TextBlock Style="{StaticResource Instructions}" Text="You can choose to validate using HTTP (port 80), or via DNS." />
             </StackPanel>
+
             <ItemsControl
                 x:Name="ChallengeConfigurations"
-                Margin="16,0,0,0"
+                Margin="0,0,0,0"
                 ItemsSource="{Binding ChallengeConfigViewModels}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <managedcertificate:ChallengeConfigItem DataContext="{Binding}" />
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Subheading}">Authorization Settings</TextBlock>
+                                <TextBlock
+                                    Margin="8,0,0,0"
+                                    Style="{StaticResource Subheading}"
+                                    Text="{Binding SelectedItem.DomainMatch}" />
+                            </StackPanel>
+                            <Border Padding="8,8,8,8" Background="WhiteSmoke">
+                                <managedcertificate:ChallengeConfigItem DataContext="{Binding}" />
+                            </Border>
+                        </StackPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+
+            <StackPanel Orientation="Horizontal">
+
+                <TextBlock Style="{StaticResource Instructions}" Text="If you need to authorize multiple domains in different ways you can add another authorization config:" />
+                <Button
+                    x:Name="AddAuth"
+                    Margin="8,0,0,0"
+                    Click="AddAuth_Click">
+                    Add
+                </Button>
+            </StackPanel>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

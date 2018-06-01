@@ -446,6 +446,8 @@ namespace Certify.UI.ViewModel
 
         public async Task<bool> DeleteCredential(string credentialKey)
         {
+            if (credentialKey == null) return false;
+
             var result = await CertifyClient.DeleteCredential(credentialKey);
             await RefreshStoredCredentialsList();
 

@@ -10,7 +10,20 @@
     d:DesignHeight="200"
     d:DesignWidth="468"
     mc:Ignorable="d">
+
     <DockPanel>
+        <StackPanel
+            Margin="0,4"
+            DockPanel.Dock="Top"
+            Orientation="Horizontal"
+            Visibility="Visible">
+            <Label Width="160" Content="Domain Match" />
+            <TextBox
+                x:Name="DomainMatchText"
+                Width="270"
+                mah:TextBoxHelper.Watermark="(optional, leave blank to match any)"
+                Text="{Binding SelectedItem.DomainMatch}" />
+        </StackPanel>
         <!--  challenge type selection  -->
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
             <Label Width="160" Content="{x:Static Resources:SR.ManagedCertificateSettings_ChallengeTypes}" />
@@ -20,18 +33,6 @@
                 ItemsSource="{Binding ChallengeTypes}"
                 SelectedItem="{Binding SelectedItem.ChallengeType}"
                 SelectionChanged="ChallengeTypeList_SelectionChanged" />
-        </StackPanel>
-        <StackPanel
-            Margin="0,4"
-            DockPanel.Dock="Top"
-            Orientation="Horizontal"
-            Visibility="Collapsed">
-            <Label Width="160" Content="Domain Match" />
-            <TextBox
-                x:Name="DomainMatchText"
-                Width="270"
-                mah:TextBoxHelper.Watermark="(optional, domain this challenge applies to)"
-                Text="{Binding SelectedItem.DomainMatch}" />
         </StackPanel>
 
         <!--  http-01 Challenge Config UI  -->
@@ -91,6 +92,9 @@
                         SelectedValuePath="Id"
                         SelectionChanged="ChallengeAPIProviderList_SelectionChanged" />
                 </StackPanel>
+                <StackPanel Margin="160,0,0,0">
+                    <TextBlock Style="{StaticResource Instructions}"><Run Text="For DNS validation the app will need to create a 'TXT' record in the DNS zone of your domain(s) as an answer to the authorization challenge." /></TextBlock>
+                </StackPanel>
 
                 <StackPanel x:Name="ProviderCredentials" Orientation="Vertical">
                     <StackPanel.Style>
@@ -125,7 +129,6 @@
 
             <ItemsControl
                 MinHeight="60"
-                Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}"
                 DockPanel.Dock="Top"
                 ItemsSource="{Binding SelectedItem.Parameters, UpdateSourceTrigger=PropertyChanged}">
                 <ItemsControl.ItemTemplate>
@@ -145,10 +148,7 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-
-            <StackPanel>
-                <TextBlock Style="{StaticResource Instructions}"><Run Text="For automatic DNS validation the app will create a TXT record in the DNS zone of your domain(s) as an answer to the authorization challenge." /></TextBlock>
-            </StackPanel>
         </StackPanel>
     </DockPanel>
+
 </UserControl>
