@@ -289,8 +289,18 @@ namespace Certify.Management
                     }
                     else
                     {
-                        // perform normal certificate challenge/response/renewal
-                        await PerformCertificateRequestProcessing(log, managedCertificate, progress, result, config);
+                        if (managedCertificate.Health != ManagedCertificateHealth.AwaitingUser)
+                        {
+                            // perform normal certificate challenge/response/renewal
+                            await PerformCertificateRequestProcessing(log, managedCertificate, progress, result, config);
+                        }
+                        else
+                        {
+                            // request is waiting on user input but has been automatically initiated,
+                            // therefore skip for now
+                            result.Abort = true;
+                            LogMessage(managedCertificate.Id, $"Certificate Request Skipped, Awaiting User Input: {managedCertificate.Name}");
+                        }
                     }
                 }
             }
@@ -659,8 +669,7 @@ namespace Certify.Management
 
                 // Perform CSR request
 
-                var certRequestResult =
-                    await _acmeClientProvider.CompleteCertificateRequest(log, config, pendingOrder.OrderUri);
+                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, config, pendingOrder.OrderUri);
 
                 if (certRequestResult.IsSuccess)
                 {
