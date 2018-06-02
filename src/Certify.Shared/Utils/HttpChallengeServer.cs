@@ -20,14 +20,14 @@ namespace Certify.Core.Management.Challenges
 
         private Dictionary<string, string> _challengeResponses { get; set; }
 
-        private bool _debugMode = false;
         private int _maxLookups = 3;
 
 #if DEBUG
+        private bool _debugMode = true;
         private string _baseUri = Certify.Locales.ConfigResources.LocalServiceBaseURIDebug + "/api/";
 #else
         private string _baseUri = Certify.Locales.ConfigResources.LocalServiceBaseURI + "/api/";
-        _debugMode = false;
+        private bool _debugMode = false;
 #endif
 
         private void Log(string msg)
