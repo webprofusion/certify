@@ -8,32 +8,18 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     Title="{x:Static res:SR.GettingStarted_AddToDashboard}"
-    Width="480"
-    Height="360"
+    Width="430.4"
+    Height="288"
     BorderThickness="1"
     GlowBrush="{DynamicResource AccentColorBrush}"
     ResizeMode="NoResize"
     WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False"
     mc:Ignorable="d">
-    <StackPanel Margin="8" Orientation="Vertical">
-        <Grid Margin="0,0,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="200*" />
-                <ColumnDefinition Width="243*" />
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-            </Grid.RowDefinitions>
-            <TextBlock
-                Grid.Row="0"
-                Grid.ColumnSpan="2"
-                Margin="8,8,0,0"
-                TextWrapping="Wrap"><Run Text="{x:Static res:SR.Dashboard_AddIntro}" /></TextBlock>
+    <StackPanel Margin="16" Orientation="Vertical">
 
+        <TextBlock Style="{StaticResource Instructions}"><Run Text="{x:Static res:SR.Dashboard_AddIntro}" /></TextBlock>
+        <StackPanel>
             <Label
                 Grid.Row="1"
                 Grid.Column="0"
@@ -46,6 +32,8 @@
                 VerticalAlignment="Bottom"
                 Text=""
                 TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel>
             <Label
                 Grid.Row="2"
                 Grid.Column="0"
@@ -56,24 +44,23 @@
                 x:Name="Password"
                 Grid.Row="2"
                 Grid.Column="1" />
-            <CheckBox
-                x:Name="CreateNewAccount"
-                Grid.Row="3"
-                Grid.Column="1"
-                Content="{x:Static res:SR.Dashboard_NewAccount}" />
-        </Grid>
+        </StackPanel>
+        <CheckBox
+            x:Name="CreateNewAccount"
+            Margin="0,8,0,8"
+            Content="{x:Static res:SR.Dashboard_NewAccount}" />
+
         <StackPanel>
             <StackPanel Orientation="Horizontal">
                 <Button
                     x:Name="ValidateKey"
-                    Grid.Column="1"
-                    VerticalAlignment="Bottom"
+                    MinWidth="60"
+                    Margin="0,0,8,0"
                     Click="ValidateKey_Click"
                     Content="{x:Static res:SR.OK}" />
                 <Button
                     x:Name="Cancel"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Right"
                     Click="Cancel_Click"
                     Content="{x:Static res:SR.Cancel}" />
             </StackPanel>
