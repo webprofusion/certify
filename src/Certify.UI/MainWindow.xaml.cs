@@ -53,6 +53,10 @@ namespace Certify.UI
             MessageBox.Show("You are using an alpha version of Certify The Web. You should only use this version for testing and should not consider it suitable for use on production servers.");
 #endif
 
+#if BETA
+            MessageBox.Show("You are using a beta version of Certify The Web. Please report any issues you find.");
+#endif
+
             // save or discard site changes before creating a new site/certificate
             if (!await _itemViewModel.ConfirmDiscardUnsavedChanges()) return;
 
