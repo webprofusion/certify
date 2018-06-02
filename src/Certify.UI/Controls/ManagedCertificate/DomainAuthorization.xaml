@@ -65,14 +65,15 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <StackPanel Orientation="Horizontal">
+            <StackPanel>
 
                 <TextBlock Style="{StaticResource Instructions}" Text="If you need to authorize multiple domains in different ways you can add another authorization config:" />
                 <Button
                     x:Name="AddAuth"
+                    MaxWidth="160"
                     Margin="8,0,0,0"
                     Click="AddAuth_Click">
-                    Add
+                    Add Configuration
                 </Button>
             </StackPanel>
         </StackPanel>

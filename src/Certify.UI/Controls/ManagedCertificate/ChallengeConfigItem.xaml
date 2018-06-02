@@ -148,7 +148,18 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+
+
         </StackPanel>
+        <Button
+            x:Name="DeleteAuth"
+            MaxWidth="160"
+            Margin="8,0,0,0"
+            Click="DeleteAuth_Click"
+            DockPanel.Dock="Bottom"
+            Tag="{Binding SelectedItem}">
+            Delete Configuration
+        </Button>
     </DockPanel>
 
 </UserControl>

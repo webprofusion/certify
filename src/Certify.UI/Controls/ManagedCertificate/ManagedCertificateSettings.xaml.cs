@@ -141,6 +141,12 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return false;
             }
 
+            if (item.RequestConfig.Challenges.Count(c=>string.IsNullOrEmpty(c.DomainMatch))>1)
+            {
+                MessageBox.Show("Only one authorization configuration can be used match any domain (domain match blank). Specify domain(s) to match or remove additional configuration. ", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
             // validate settings for authorizations non-optional parmaeters
             foreach (var c in item.RequestConfig.Challenges)
             {

@@ -213,13 +213,17 @@ namespace Certify.Models
                     // start by matching first config with no specific domain
                     CertRequestChallengeConfig matchedConfig = RequestConfig.Challenges.FirstOrDefault(c => String.IsNullOrEmpty(c.DomainMatch));
 
-                    //if any more specific configs match, use that
-                    foreach (var config in RequestConfig.Challenges.Where(c => !String.IsNullOrEmpty(c.DomainMatch)).OrderByDescending(l => l.DomainMatch.Length))
+                    if (!string.IsNullOrEmpty(domain))
                     {
-                        if (config.DomainMatch.EndsWith(domain))
+                        //if a more specific config match the domain, use that, in order of longest domain name match first
+                        var allMatchingCconfig = RequestConfig.Challenges.Where(c => !String.IsNullOrEmpty(c.DomainMatch)).OrderByDescending(l => l.DomainMatch.Length);
+                        foreach (var config in allMatchingCconfig)
                         {
-                            // use longest matching domain (so subdomain.test.com takes priority over test.com)
-                            return config;
+                            if (config.DomainMatch.EndsWith(domain))
+                            {
+                                // use longest matching domain (so subdomain.test.com takes priority over test.com)
+                                return config;
+                            }
                         }
                     }
 

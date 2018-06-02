@@ -149,5 +149,24 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             EditModel.SelectedItem.IsChanged = true;
         }
+
+        private void DeleteAuth_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show("Are you sure you want to delete this configuration?", "Confirm Delete", MessageBoxButton.YesNoCancel)== MessageBoxResult.Yes)
+            {
+                // delete 
+                if (sender is Button)
+                {
+                    var config = (sender as Button).Tag;
+                    if (AppViewModel.SelectedItem.RequestConfig.Challenges.Count>1)
+                    {
+                        AppViewModel.SelectedItem.RequestConfig.Challenges.Remove((Models.CertRequestChallengeConfig)config);
+                    } else
+                    {
+                        MessageBox.Show("At least one authorization configuration is required.");
+                    }
+                }
+            }
+        }
     }
 }
