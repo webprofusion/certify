@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
-    <Configurations>Debug;Release;Debug;Release</Configurations>
+    <Configurations>Debug;Release;</Configurations>
     <AssemblyName>CertifySSLManager.Service</AssemblyName>
     <OutputType>Exe</OutputType>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
@@ -13,71 +13,12 @@
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <PlatformTarget>x64</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet>..\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PlatformTarget>x64</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>..\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>true</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>bin\x64\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{564BC244-6C8E-43F8-BC8B-3BA8DA93F04F}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>Certify.Service</RootNamespace>
-    <AssemblyName>CertifySSLManager.Service</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <NuGetPackageImportStamp />
-    <TargetFrameworkProfile />
-    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
-    <StartupObject>Certify.Service.Program</StartupObject>
-    <ApplicationIcon>icon.ico</ApplicationIcon>
-    <PreBuildEvent>REM :: Optionally stop Certify.Service before build
-REM sc stop Certify.Service</PreBuildEvent>
-    <PostBuildEvent>REM :: Optionally start Certify.Service after build
-REM sc start Certify.Service</PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PreBuildEvent>REM :: Optionally stop Certify.Service before build
-REM sc stop Certify.Service</PreBuildEvent>
-    <PostBuildEvent>REM :: Optionally start Certify.Service after build
-REM sc start Certify.Service</PostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Certify.CLI\Certify.CLI.csproj" />
@@ -87,39 +28,34 @@ REM sc start Certify.Service</PostBuildEvent>
     <ProjectReference Include="..\Certify.Shared\Certify.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="LightInject" Version="5.1.3" />
-    <PackageReference Include="LightInject.WebApi" Version="2.0.0" />
-    <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.2.3" />
-    <PackageReference Include="Microsoft.AspNet.SignalR.Core" Version="2.2.3" />
-    <PackageReference Include="Microsoft.AspNet.SignalR.SelfHost" Version="2.2.3" />
-    <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.5" />
-    <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.5" />
-    <PackageReference Include="Microsoft.AspNet.WebApi.Owin" Version="5.2.5" />
-    <PackageReference Include="Microsoft.AspNet.WebApi.OwinSelfHost" Version="5.2.5" />
-    <PackageReference Include="Microsoft.Bcl" Version="1.1.10" />
-    <PackageReference Include="Microsoft.Owin" Version="4.0.0" />
-    <PackageReference Include="Microsoft.Owin.Diagnostics" Version="4.0.0" />
-    <PackageReference Include="Microsoft.Owin.Host.HttpListener" Version="4.0.0" />
-    <PackageReference Include="Microsoft.Owin.Hosting" Version="4.0.0" />
-    <PackageReference Include="Microsoft.Owin.Security" Version="4.0.0" />
-    <PackageReference Include="Microsoft.Owin.SelfHost" Version="4.0.0" />
-    <PackageReference Include="NETStandard.Library" Version="2.0.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="Owin" Version="1.0.0" />
-    <PackageReference Include="Serilog" Version="2.6.0" />
-    <PackageReference Include="Serilog.Sinks.ListOfString" Version="4.0.8" />
-    <PackageReference Include="Swashbuckle.Core" Version="5.6.0" />
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.108" />
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.4.0" />
-    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
-    <PackageReference Include="Topshelf" Version="4.0.4" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Net.Http" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="App.config" />
     <Content Include="icon.ico" />
   </ItemGroup>
+ <ItemGroup> 
+    <PackageReference Include="LightInject" Version="5.1.3" /> 
+    <PackageReference Include="LightInject.WebApi" Version="2.0.0" /> 
+    <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.2.3" /> 
+    <PackageReference Include="Microsoft.AspNet.SignalR.Core" Version="2.2.3" /> 
+    <PackageReference Include="Microsoft.AspNet.SignalR.SelfHost" Version="2.2.3" /> 
+    <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.5" /> 
+    <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.5" /> 
+    <PackageReference Include="Microsoft.AspNet.WebApi.Owin" Version="5.2.5" /> 
+    <PackageReference Include="Microsoft.AspNet.WebApi.OwinSelfHost" Version="5.2.5" /> 
+    <PackageReference Include="Microsoft.Bcl" Version="1.1.10" /> 
+    <PackageReference Include="Microsoft.Owin" Version="4.0.0" /> 
+    <PackageReference Include="Microsoft.Owin.Diagnostics" Version="4.0.0" /> 
+    <PackageReference Include="Microsoft.Owin.Host.HttpListener" Version="4.0.0" /> 
+    <PackageReference Include="Microsoft.Owin.Hosting" Version="4.0.0" /> 
+    <PackageReference Include="Microsoft.Owin.Security" Version="4.0.0" /> 
+    <PackageReference Include="Microsoft.Owin.SelfHost" Version="4.0.0" /> 
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" /> 
+    <PackageReference Include="Owin" Version="1.0.0" /> 
+    <PackageReference Include="Serilog" Version="2.6.0" /> 
+    <PackageReference Include="Serilog.Sinks.ListOfString" Version="4.0.8" /> 
+    <PackageReference Include="Swashbuckle.Core" Version="5.6.0" /> 
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.108" /> 
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.4.0" /> 
+    <PackageReference Include="System.ValueTuple" Version="4.4.0" /> 
+    <PackageReference Include="Topshelf" Version="4.0.4" /> 
+  </ItemGroup> 
 </Project>

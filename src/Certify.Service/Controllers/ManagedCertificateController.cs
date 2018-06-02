@@ -70,7 +70,7 @@ namespace Certify.Service
             // perform challenge response test, log to string list and return in result
             var logList = new List<string>();
             using (var log = new LoggerConfiguration()
-                     .WriteTo.Debug()
+
                      .WriteTo.Sink(new ProgressLogSink(progressIndicator, managedCertificate, _certifyManager))
                      .CreateLogger())
             {

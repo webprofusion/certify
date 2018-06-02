@@ -134,8 +134,8 @@ namespace Certify.UI
             {
                 _appViewModel.IsLoading = false;
                 MessageBox.Show("Certify SSL Manager service is not started. Please restart the service.");
-                App.Current.Shutdown();
-                return;
+                //App.Current.Shutdown();
+                //return;
             }
 
             var diagnostics = await Management.Util.PerformAppDiagnostics();

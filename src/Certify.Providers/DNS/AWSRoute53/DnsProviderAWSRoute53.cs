@@ -87,7 +87,7 @@ namespace Certify.Providers.DNS.AWSRoute53
                 }
                 else
                 {
-                    var zones = _route53Client.ListHostedZones();
+                    var zones = await _route53Client.ListHostedZonesAsync();
                     var zone = zones.HostedZones.Where(z => z.Name.Contains(request.TargetDomainName)).FirstOrDefault();
                     return zone;
                 }
@@ -120,7 +120,7 @@ namespace Certify.Providers.DNS.AWSRoute53
                 ChangeBatch = changeBatch
             };
 
-            var recordsetResponse = _route53Client.ChangeResourceRecordSets(recordsetRequest);
+            var recordsetResponse = await _route53Client.ChangeResourceRecordSetsAsync(recordsetRequest);
 
             // Monitor the change status
             var changeRequest = new GetChangeRequest()
@@ -128,7 +128,7 @@ namespace Certify.Providers.DNS.AWSRoute53
                 Id = recordsetResponse.ChangeInfo.Id
             };
 
-            while (ChangeStatus.PENDING == _route53Client.GetChange(changeRequest).ChangeInfo.Status)
+            while (ChangeStatus.PENDING == (await _route53Client.GetChangeAsync(changeRequest)).ChangeInfo.Status)
             {
                 System.Diagnostics.Debug.WriteLine("DNS change is pending.");
                 await Task.Delay(1500);
