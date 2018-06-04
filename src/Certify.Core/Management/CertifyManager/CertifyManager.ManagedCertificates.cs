@@ -110,48 +110,69 @@ namespace Certify.Management
         private System.Net.Http.HttpClient _httpChallengeServerClient;
         private int _httpChallengePort = 80;
 
+        private async Task<bool> IsHttpChallengeProcessStarted()
+        {
+            if (_httpChallengeProcess != null)
+            {
+                var testUrl = $"http://127.0.0.1:{_httpChallengePort}/.well-known/acme-challenge/{_httpChallengeCheckKey}";
+
+                var response = await _httpChallengeServerClient.GetAsync(testUrl);
+                if (response.IsSuccessStatusCode)
+                {
+                    var status = await _httpChallengeServerClient.GetStringAsync(testUrl);
+
+                    if (status == "OK")
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         private async Task<bool> StartHttpChallengeServer()
         {
-            var cliPath = $"{AppContext.BaseDirectory}certify.exe";
-            _httpChallengeProcessInfo = new ProcessStartInfo(cliPath, $"httpchallenge keys={_httpChallengeControlKey},{_httpChallengeCheckKey}")
+            if (!await IsHttpChallengeProcessStarted())
             {
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = false,
+                var cliPath = $"{AppContext.BaseDirectory}certify.exe";
+                _httpChallengeProcessInfo = new ProcessStartInfo(cliPath, $"httpchallenge keys={_httpChallengeControlKey},{_httpChallengeCheckKey}")
+                {
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = false,
 
-                WorkingDirectory = AppContext.BaseDirectory
-            };
+                    WorkingDirectory = AppContext.BaseDirectory
+                };
 
-            try
-            {
-                _httpChallengeProcess = new Process { StartInfo = _httpChallengeProcessInfo };
-                _httpChallengeProcess.Start();
+                try
+                {
+                    _httpChallengeProcess = new Process { StartInfo = _httpChallengeProcessInfo };
+                    _httpChallengeProcess.Start();
+                    await Task.Delay(1000);
+                }
+                catch (Exception)
+                {
+                    // failed to start process
+                    _httpChallengeProcess = null;
+                    return false;
+                }
+
+                if (_httpChallengeServerClient == null) _httpChallengeServerClient = new System.Net.Http.HttpClient();
+
+                return await IsHttpChallengeProcessStarted();
             }
-            catch (Exception)
+            else
             {
-                // failed to start process
+                await StopHttpChallengeServer();
                 return false;
             }
 
-            if (_httpChallengeServerClient == null) _httpChallengeServerClient = new System.Net.Http.HttpClient();
-
-            var testUrl = $"http://127.0.0.1:{_httpChallengePort}/.well-known/acme-challenge/{_httpChallengeCheckKey}";
-
-            var response = await _httpChallengeServerClient.GetAsync(testUrl);
-            if (response.IsSuccessStatusCode)
-            {
-                var status = await _httpChallengeServerClient.GetStringAsync(testUrl);
-
-                if (status == "OK")
-                {
-                    return true;
-                }
-            }
-
-            //not found, server not started?
-            return false;
         }
 
         private async Task<bool> StopHttpChallengeServer()

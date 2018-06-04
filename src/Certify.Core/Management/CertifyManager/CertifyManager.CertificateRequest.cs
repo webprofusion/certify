@@ -802,6 +802,25 @@ namespace Certify.Management
                     result.ChallengeResponsePropagationSeconds = 60;
                 }
 
+                if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
+                {
+                    // startup http challenge server if required
+                    if (CoreAppSettings.Current.EnableHttpChallengeServer)
+                    {
+                        _httpChallengeServerAvailable = await StartHttpChallengeServer();
+
+                        if (_httpChallengeServerAvailable)
+                        {
+                            LogMessage(managedCertificate.Id, $"Http Challenge Server process available.", LogItemType.CertificateRequestStarted);
+
+                        }
+                        else
+                        {
+                            LogMessage(managedCertificate.Id, $"Http Challenge Server process unavailable.", LogItemType.CertificateRequestStarted);
+                        }
+                    }
+                }
+
                 if (authorization?.Identifier != null)
                 {
                     LogMessage(managedCertificate.Id, $"Attempting Domain Validation: {domain}",

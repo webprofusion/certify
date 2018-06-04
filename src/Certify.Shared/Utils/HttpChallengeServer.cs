@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
 
@@ -29,6 +30,7 @@ namespace Certify.Core.Management.Challenges
         private string _baseUri = Certify.Locales.ConfigResources.LocalServiceBaseURI + "/api/";
         private bool _debugMode = false;
 #endif
+        private DateTime _lastRequestTime { get; set; }
 
         private void Log(string msg)
         {
@@ -50,6 +52,7 @@ namespace Certify.Core.Management.Challenges
 #if DEBUG
             _debugMode = true;
 #endif
+            _lastRequestTime = DateTime.Now;
             try
             {
                 if (controlKey != null) _controlKey = controlKey;
@@ -67,6 +70,17 @@ namespace Certify.Core.Management.Challenges
                 _httpListener.Start();
                 Log("Http Challenge Server Started");
                 _serverTask = Task.Run(ServerTask);
+
+                var stateTimer = new Timer((Object stateInfo) => {
+                    Log("Checking for auto close.");
+                    var time = _lastRequestTime - DateTime.Now;
+                    if (Math.Abs(time.TotalSeconds) > 30)
+                    {
+                        Log("No requests recently, stopping server.");
+                        this.Stop();
+                    }
+                },null, 1000*10, 1000*10);
+
                 return true;
             }
             catch (Exception exp)
@@ -90,6 +104,8 @@ namespace Certify.Core.Management.Challenges
         {
             while (_httpListener != null && _httpListener.IsListening)
             {
+                _lastRequestTime = DateTime.Now;
+
                 var server = await _httpListener.GetContextAsync();
 
                 var path = server.Request.Url.LocalPath;
