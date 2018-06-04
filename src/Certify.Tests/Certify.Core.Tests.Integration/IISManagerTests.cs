@@ -162,7 +162,8 @@ namespace Certify.Core.Tests
                     CertificateHashBytes = cert.GetCertHash(),
                     CertificateStore = certStoreName,
                     Port = 443,
-                    Protocol = "https"
+                    Protocol = "https",
+                    SiteId= site.Id.ToString()
                 }
                );
 

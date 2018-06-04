@@ -353,7 +353,8 @@ namespace Certify.Core.Tests
                             ChallengeProvider= "DNS01.API.Route53",
                             ChallengeCredentialKey=_awsCredStorageKey
                         }
-                    }
+                    },
+                    DeploymentSiteOption = DeploymentOption.SingleSite
                 },
                 ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
             };

@@ -248,6 +248,8 @@ namespace Certify.Management.Servers
 
         public async Task<ActionStep> AddOrUpdateSiteBinding(BindingInfo bindingSpec, bool addNew)
         {
+            if (string.IsNullOrEmpty(bindingSpec.SiteId)) throw new Exception("IIS.AddOrUpdateSiteBinding: SiteId not specified");
+
             var result = new ActionStep { };
 
             using (var iisManager = await GetDefaultServerManager())

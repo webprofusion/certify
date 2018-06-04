@@ -76,7 +76,8 @@ namespace Certify.Core.Tests.Unit
                             }
                         }),
                     PerformAutomatedCertBinding = true,
-                    WebsiteRootPath = "c:\\inetpub\\wwwroot"
+                    WebsiteRootPath = "c:\\inetpub\\wwwroot",
+                    DeploymentSiteOption = DeploymentOption.SingleSite
                 },
                 ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
             };
