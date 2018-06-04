@@ -601,7 +601,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Note: these setting only apply to new https bindings, existing bindings are only updated with the new certificate..
+        ///   Looks up a localized string similar to Note: these setting only apply to new https bindings, existing bindings are only updated with the new certificate. Using a fixed IP for multiple certificates will cause a binding conflict on Windows, use with caution..
         /// </summary>
         public static string ManagedCertificateSettings_BindingNote {
             get {

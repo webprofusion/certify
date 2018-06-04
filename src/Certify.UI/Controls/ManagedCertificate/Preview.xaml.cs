@@ -30,14 +30,15 @@ namespace Certify.UI.Controls.ManagedCertificate
             _markdownPipelineBuilder.Extensions.Add(new Markdig.Extensions.Tables.PipeTableExtension());
             _markdownPipeline = _markdownPipelineBuilder.Build();
             _css = System.IO.File.ReadAllText(System.AppDomain.CurrentDomain.BaseDirectory + "\\Assets\\CSS\\markdown.css");
+
         }
 
-        private async Task UpdatePreview()
+        private async Task<string> UpdatePreview()
         {
             // generate preview
             if (ItemViewModel.SelectedItem != null)
             {
-                var loadingMsg = "<html><head><meta http-equiv='Content-Type' content='text/html;charset=UTF-8'><style>" + _css + "</style></head><body>Generating Preview..</body></html>";
+
                 List<ActionStep> steps = new List<ActionStep>();
                 try
                 {
@@ -52,15 +53,18 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 Steps = new ObservableCollection<ActionStep>(steps);
 
-                App.Current.Dispatcher.Invoke((Action)delegate
-                {
-                    string markdown = GetStepsAsMarkdown(Steps);
 
-                    var result = Markdig.Markdown.ToHtml(markdown, _markdownPipeline);
-                    result = "<html><head><meta http-equiv='Content-Type' content='text/html;charset=UTF-8'><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />" +
-                            "<style>" + _css + "</style></head><body>" + result + "</body></html>";
-                    MarkdownView.NavigateToString(result);
-                });
+                string markdown = GetStepsAsMarkdown(Steps);
+
+                var result = Markdig.Markdown.ToHtml(markdown, _markdownPipeline);
+                result = "<html><head><meta http-equiv='Content-Type' content='text/html;charset=UTF-8'><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />" +
+                        "<style>" + _css + "</style></head><body>" + result + "</body></html>";
+                return result;
+
+            }
+            else
+            {
+                return "";
             }
         }
 
@@ -84,11 +88,14 @@ namespace Certify.UI.Controls.ManagedCertificate
             return markdownText;
         }
 
-        private void UserControl_IsVisibleChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)
+        private async void UserControl_IsVisibleChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)
         {
             if (this.IsVisible)
             {
-                Task.Run(() => UpdatePreview());
+                LoadingProgess.Visibility = System.Windows.Visibility.Visible;
+                string result = await UpdatePreview();
+                MarkdownView.NavigateToString(result);
+                LoadingProgess.Visibility = System.Windows.Visibility.Hidden;
             }
         }
     }

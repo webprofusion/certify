@@ -588,9 +588,6 @@
   <data name="Update_MandatoryUpdateQuit" xml:space="preserve">
     <value>当前的APP版本已经不再提供支持，请更新后继续使用。</value>
   </data>
-  <data name="ManagedCertificateSettings_BindingNote" xml:space="preserve">
-    <value>这些设置仅会应用到新建的HTTPS绑定，已有的绑定将只会应用新证书。</value>
-  </data>
   <data name="ManagedCertificateSettings_ReapplyCertificate" xml:space="preserve">
     <value>重新应用证书</value>
   </data>

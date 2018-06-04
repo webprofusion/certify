@@ -39,7 +39,7 @@
             <!--  Authorization Types  -->
             <StackPanel>
                 <TextBlock Style="{StaticResource Subheading}">Domain Authorization</TextBlock>
-                <TextBlock Style="{StaticResource Instructions}" Text="For a certificate to be issued you must prove you control the domains you are requesting in your certificate. If any included domain fails authorization the certificate request cannot be completed." />
+                <TextBlock Style="{StaticResource Instructions}" Text="For a certificate to be issued you must prove control of the domains in your request. If any included domain fails authorization the certificate request cannot be completed." />
                 <TextBlock Style="{StaticResource Instructions}" Text="You can choose to validate using HTTP (port 80), or via DNS." />
             </StackPanel>
 
