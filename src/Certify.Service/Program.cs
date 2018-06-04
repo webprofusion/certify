@@ -95,16 +95,35 @@ namespace Certify.Service
 
         public void Start()
         {
-#if DEBUG
-            _webApp = WebApp.Start<APIHost>(Certify.Locales.ConfigResources.LocalServiceBaseURIDebug);
-#else
-            _webApp = WebApp.Start<APIHost>(Certify.Locales.ConfigResources.LocalServiceBaseURI);
-#endif
+            var serviceConfig = Certify.Management.Util.GetAppServiceConfig();
+
+            var serviceUri = $"http://{serviceConfig.Host}:{serviceConfig.Port}";
+
+            try
+            {
+                _webApp = WebApp.Start<APIHost>(serviceUri);
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine($"Service failed to listen on {serviceUri}. Attempting to reallocate port.");
+                // failed to listen on service uri, attempt reconfiguration of port.
+                int currentPort = serviceConfig.Port;
+
+                int newPort = currentPort+=2;
+                
+                serviceUri = $"http://{serviceConfig.Host}:{newPort}";
+                _webApp = WebApp.Start<APIHost>(serviceUri);
+
+                // if that worked, save the new port setting
+                Certify.Management.Util.SetAppServicePort(newPort);
+
+                System.Diagnostics.Debug.WriteLine($"Service started on {serviceUri}.");
+            }
         }
 
         public void Stop()
         {
-            _webApp.Dispose();
+            if (_webApp!=null) _webApp.Dispose();
         }
     }
 }

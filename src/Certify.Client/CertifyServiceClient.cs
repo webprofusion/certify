@@ -31,11 +31,6 @@ namespace Certify.Client
     public class CertifyServiceClient : ICertifyClient
     {
         private HttpClient _client;
-#if DEBUG
-        private string _baseUri = Certify.Locales.ConfigResources.LocalServiceBaseURIDebug + "/api/";
-#else
-        private string _baseUri = Certify.Locales.ConfigResources.LocalServiceBaseURI + "/api/";
-#endif
 
         #region Status (SignalR)
 
@@ -54,14 +49,16 @@ namespace Certify.Client
         private IHubProxy hubProxy;
         private HubConnection connection;
 
-#if DEBUG
-        private string url = Certify.Locales.ConfigResources.LocalServiceBaseURIDebug + "/api/status";
-#else
-        private string url = Certify.Locales.ConfigResources.LocalServiceBaseURI + "/api/status";
-#endif
+        private string _statusHubUri = "/api/status";
+        private string _baseUri = "/api/";
 
         public CertifyServiceClient()
         {
+            var serviceConfig = Certify.Management.Util.GetAppServiceConfig();
+
+            _baseUri = $"http://{serviceConfig.Host}:{serviceConfig.Port}" + _baseUri;
+            _statusHubUri = $"http://{serviceConfig.Host}:{serviceConfig.Port}" + _statusHubUri;
+
             // use windows authentication
             _client = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true });
             _client.Timeout = new TimeSpan(0, 20, 0); // 20 min timeout on service api calls
@@ -69,7 +66,7 @@ namespace Certify.Client
 
         public async Task ConnectStatusStreamAsync()
         {
-            connection = new HubConnection(url);
+            connection = new HubConnection(_statusHubUri);
             connection.Credentials = System.Net.CredentialCache.DefaultCredentials;
             hubProxy = connection.CreateHubProxy("StatusHub");
 

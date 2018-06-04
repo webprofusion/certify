@@ -9,8 +9,10 @@ using System.Threading.Tasks;
 using Certify.Locales;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Shared;
 using Microsoft.ApplicationInsights;
 using Microsoft.Win32;
+using Newtonsoft.Json;
 
 namespace Certify.Management
 {
@@ -72,6 +74,61 @@ namespace Certify.Management
             }
 
             return path;
+        }
+
+
+        /// <summary>
+        /// Get default or saved service config settings
+        /// </summary>
+        /// <returns></returns>
+        public static ServiceConfig GetAppServiceConfig()
+        {
+            var serviceConfig = new ServiceConfig();
+
+            var appDataPath = GetAppDataFolder();
+            var serviceConfigFile = appDataPath + "\\serviceconfig.json";
+#if DEBUG
+            serviceConfigFile = appDataPath + "\\serviceconfig.debug.json";
+#endif
+            if (File.Exists(serviceConfigFile))
+            {
+                serviceConfig = JsonConvert.DeserializeObject<ServiceConfig>(File.ReadAllText(serviceConfigFile));
+               
+            }
+            return serviceConfig;
+        }
+
+
+        /// <summary>
+        /// Stored updated config for app service
+        /// </summary>
+        /// <param name="port"></param>
+        /// <returns></returns>
+        public static bool SetAppServicePort(int port)
+        {
+            var appDataPath = GetAppDataFolder();
+            var serviceConfigFile = appDataPath + "\\serviceconfig.json";
+#if DEBUG
+            serviceConfigFile = appDataPath + "\\serviceconfig.debug.json";
+#endif
+            try
+            {
+                ServiceConfig settings = new ServiceConfig();
+
+                if (File.Exists(serviceConfigFile))
+                {
+                    settings = JsonConvert.DeserializeObject<ServiceConfig>(File.ReadAllText(serviceConfigFile));
+                }
+
+                settings.Port = port;
+
+                File.WriteAllText(serviceConfigFile, JsonConvert.SerializeObject(settings));
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public TelemetryClient InitTelemetry()
@@ -222,7 +279,7 @@ namespace Certify.Management
             {
                 Console.WriteLine("Error {0} : {1}", e.GetType(), e.Message);
                 Console.WriteLine("Couldn't parse the certificate." +
-                                  "Be sure it is a X.509 certificate");
+                                  "Be sure it is an X.509 certificate");
                 return null;
             }
             return cert;
