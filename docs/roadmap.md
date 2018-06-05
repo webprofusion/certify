@@ -63,6 +63,7 @@ if any other deployment (cert only etc) chosen preview still says IIS~~
 * Revoke not implemented yet
 * Set http client user agent in external API calls
 * Basic/advanced mode for bindings UI so that IP specific bindings etc is hidden by default, Single site auto bindings (existing https hostname bindings updated, new https bindings created if http binding already exists) could be basic mode.
+* Specific date/time renewal: target a specific time and day of week, month etc for a particular managed certificate renewal. Option to wait until next date before re-attempting if renewal fails.
 
 ## Improve config checks
 * Ensure config check/validation wrote to disk before proceeding.
