@@ -193,7 +193,7 @@ namespace Certify.Core.Management
                             {
                                 if (requestConfig.DeploymentBindingMatchHostname)
                                 {
-                                    updateBinding = IsDomainOrWildcardMatch(dnsHosts, hostname);
+                                    updateBinding = ManagedCertificate.IsDomainOrWildcardMatch(dnsHosts, hostname);
                                 }
                             }
                         }
@@ -382,52 +382,7 @@ namespace Certify.Core.Management
             return steps;
         }
 
-        public static bool IsDomainOrWildcardMatch(List<string> dnsNames, string hostname)
-        {
-            var isMatch = false;
-            if (!string.IsNullOrEmpty(hostname))
-            {
-                if (dnsNames.Contains(hostname))
-                {
-                    isMatch = true;
-                }
-                else
-                {
-                    //if any of our dnsHosts are a wildcard, check for a match
-                    var wildcards = dnsNames.Where(d => d.StartsWith("*."));
-                    foreach (var w in wildcards)
-                    {
-                        if (string.Equals(w, hostname, StringComparison.OrdinalIgnoreCase))
-                        {
-                            isMatch = true;
-                        }
-                        else
-                        {
-                            var domain = w.Replace("*.", "");
-                            if (string.Equals(domain, hostname, StringComparison.OrdinalIgnoreCase))
-                            {
-                                isMatch = true;
-                            }
-                            else
-                            {
-                                //if hostname ends with our domain and is only 1 label longer then it's a match
-                                if (hostname.EndsWith(domain))
-                                {
-                                    if (hostname.Count(c => c == '.') == domain.Count(c => c == '.') + 1)
-                                    {
-                                        isMatch = true;
-                                    }
-                                }
-                            }
-                        }
-                        if (isMatch) return isMatch;
-                    }
-                }
-            }
-
-            return isMatch;
-        }
-
+       
         private string ByteToHex(byte[] ba)
         {
             var sb = new System.Text.StringBuilder(ba.Length * 2);

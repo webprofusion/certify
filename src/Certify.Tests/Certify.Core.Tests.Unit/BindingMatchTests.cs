@@ -132,17 +132,17 @@ namespace Certify.Core.Tests.Unit
                 "*.test.co.uk"
             };
 
-            Assert.IsTrue(BindingDeploymentManager.IsDomainOrWildcardMatch(domains, "test.com"));
+            Assert.IsTrue(ManagedCertificate.IsDomainOrWildcardMatch(domains, "test.com"));
 
-            Assert.IsFalse(BindingDeploymentManager.IsDomainOrWildcardMatch(domains, "fred.com"));
+            Assert.IsFalse(ManagedCertificate.IsDomainOrWildcardMatch(domains, "fred.com"));
 
-            Assert.IsFalse(BindingDeploymentManager.IsDomainOrWildcardMatch(domains, "*.fred.com"));
+            Assert.IsFalse(ManagedCertificate.IsDomainOrWildcardMatch(domains, "*.fred.com"));
 
-            Assert.IsTrue(BindingDeploymentManager.IsDomainOrWildcardMatch(domains, "*.test.com"));
+            Assert.IsTrue(ManagedCertificate.IsDomainOrWildcardMatch(domains, "*.test.com"));
 
-            Assert.IsTrue(BindingDeploymentManager.IsDomainOrWildcardMatch(domains, "www.test.co.uk"));
+            Assert.IsTrue(ManagedCertificate.IsDomainOrWildcardMatch(domains, "www.test.co.uk"));
 
-            Assert.IsFalse(BindingDeploymentManager.IsDomainOrWildcardMatch(domains, "www.dev.test.co.uk"));
+            Assert.IsFalse(ManagedCertificate.IsDomainOrWildcardMatch(domains, "www.dev.test.co.uk"));
         }
 
         [TestMethod, Description("Detect if binding already exists")]

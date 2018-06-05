@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Certify.Locales;
@@ -193,6 +194,12 @@ namespace Certify.Models
         /// <returns></returns>
         public CertRequestChallengeConfig GetChallengeConfig(string domain)
         {
+            if (domain != null)
+            {
+                domain = domain.Trim().ToLower();
+                domain = domain.Replace("*.", "");
+            }
+
             if (RequestConfig.Challenges == null || RequestConfig.Challenges.Count == 0)
             {
                 // there are no challenge configs defined return a default based on the parent
@@ -210,19 +217,62 @@ namespace Certify.Models
                 }
                 else
                 {
+
                     // start by matching first config with no specific domain
                     CertRequestChallengeConfig matchedConfig = RequestConfig.Challenges.FirstOrDefault(c => String.IsNullOrEmpty(c.DomainMatch));
 
                     if (!string.IsNullOrEmpty(domain))
                     {
-                        //if a more specific config match the domain, use that, in order of longest domain name match first
-                        var allMatchingCconfig = RequestConfig.Challenges.Where(c => !String.IsNullOrEmpty(c.DomainMatch)).OrderByDescending(l => l.DomainMatch.Length);
-                        foreach (var config in allMatchingCconfig)
+                        // expand configs into per domain list
+                        Dictionary<string, CertRequestChallengeConfig> configsPerDomain = new Dictionary<string, CertRequestChallengeConfig>();
+                        foreach (var c in RequestConfig.Challenges.Where(config => !string.IsNullOrEmpty(config.DomainMatch)))
                         {
-                            if (config.DomainMatch.EndsWith(domain))
+                            if (!string.IsNullOrEmpty(c.DomainMatch) && !c.DomainMatch.Contains(";"))
                             {
-                                // use longest matching domain (so subdomain.test.com takes priority over test.com)
-                                return config;
+                                configsPerDomain.Add(c.DomainMatch?.Trim(), c);
+                            }
+                            else
+                            {
+                                var domains = c.DomainMatch.Split(';');
+                                foreach (var d in domains)
+                                {
+                                    if (!string.IsNullOrWhiteSpace(d))
+                                    {
+                                        configsPerDomain.Add(d.Trim().ToLower(), c);
+                                    }
+                                }
+                            }
+                        }
+
+                        // if exact match exists, use that
+                        if (configsPerDomain.ContainsKey(domain))
+                        {
+                            return configsPerDomain[domain];
+                        }
+
+                        // if explicit wildcard match exists, use that
+                        if (configsPerDomain.ContainsKey("*." + domain))
+                        {
+                            return configsPerDomain["*." + domain];
+                        }
+
+                        //if a more specific config matches the domain, use that, in order of longest domain name match first
+                        var allMatchingConfigKeys = configsPerDomain.Keys.OrderByDescending(l => l.Length);
+
+                        foreach (var wildcard in allMatchingConfigKeys.Where(k => k.StartsWith("*.")))
+                        {
+                            if (ManagedCertificate.IsDomainOrWildcardMatch(new List<string> { wildcard }, domain))
+                            {
+                                return configsPerDomain[wildcard];
+                            }
+                        }
+
+                        foreach (var configDomain in allMatchingConfigKeys)
+                        {
+                            if (configDomain.EndsWith(domain))
+                            {
+                                // use longest matching domain (so subdomain.test.com takes priority over test.com, )
+                                return configsPerDomain[configDomain];
                             }
                         }
                     }
@@ -243,6 +293,53 @@ namespace Certify.Models
                 }
             }
         }
+
+        public static bool IsDomainOrWildcardMatch(List<string> dnsNames, string hostname)
+        {
+            var isMatch = false;
+            if (!string.IsNullOrEmpty(hostname))
+            {
+                if (dnsNames.Contains(hostname))
+                {
+                    isMatch = true;
+                }
+                else
+                {
+                    //if any of our dnsHosts are a wildcard, check for a match
+                    var wildcards = dnsNames.Where(d => d.StartsWith("*."));
+                    foreach (var w in wildcards)
+                    {
+                        if (string.Equals(w, hostname, StringComparison.OrdinalIgnoreCase))
+                        {
+                            isMatch = true;
+                        }
+                        else
+                        {
+                            var domain = w.Replace("*.", "");
+                            if (string.Equals(domain, hostname, StringComparison.OrdinalIgnoreCase))
+                            {
+                                isMatch = true;
+                            }
+                            else
+                            {
+                                //if hostname ends with our domain and is only 1 label longer then it's a match
+                                if (hostname.EndsWith(domain))
+                                {
+                                    if (hostname.Count(c => c == '.') == domain.Count(c => c == '.') + 1)
+                                    {
+                                        isMatch = true;
+                                    }
+                                }
+                            }
+                        }
+                        if (isMatch) return isMatch;
+                    }
+                }
+            }
+
+            return isMatch;
+        }
+
     }
 
     //TODO: may deprecate, was mainly for preview of setup wizard
