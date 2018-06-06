@@ -2,17 +2,13 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Certify.Locales;
 using Newtonsoft.Json;
 
 namespace Certify.Models
 {
     public enum ManagedCertificateType
     {
-        [SRDescription("ManagedCertificateType_LocalIIS")]
         SSL_LetsEncrypt_LocalIIS = 1,
-
-        [SRDescription("ManagedCertificateType_Manual")]
         SSL_LetsEncrypt_Manual = 2
     }
 
@@ -37,7 +33,7 @@ namespace Certify.Models
     {
         public ManagedCertificate()
         {
-            Name = SR.ManagedCertificateSettings_DefaultTitle;
+            Name = "New Managed Certificate";
             IncludeInAutoRenew = true;
 
             DomainOptions = new ObservableCollection<DomainOption>();
