@@ -343,10 +343,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                 //TODO: just use viewmodel to determine if test button should be enabled
                 Button_TestChallenge.IsEnabled = true;
                 ItemViewModel.IsTestInProgress = false;
-
-                // show status tab
-
-                this.SettingsTab.SelectedItem = this.TabStatusInfo;
             }
         }
 

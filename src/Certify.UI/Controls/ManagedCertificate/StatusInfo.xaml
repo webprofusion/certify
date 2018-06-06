@@ -32,7 +32,7 @@
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="8,0,8,8">
-            <StackPanel x:Name="RenewalFailed">
+            <StackPanel x:Name="RenewalFailed" Visibility="Collapsed">
 
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
@@ -102,7 +102,7 @@
                         TextWrapping="Wrap" />
                 </Border>
             </StackPanel>
-            <StackPanel x:Name="RenewalSuccess">
+            <StackPanel x:Name="RenewalSuccess" Visibility="Collapsed">
 
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
@@ -154,7 +154,7 @@
                 </StackPanel>
             </StackPanel>
 
-            <StackPanel x:Name="RenewalPaused">
+        <StackPanel x:Name="RenewalPaused" Visibility="Collapsed">
 
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
