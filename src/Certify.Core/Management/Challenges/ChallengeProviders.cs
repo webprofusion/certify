@@ -10,6 +10,7 @@ using Certify.Providers.DNS.Azure;
 using Certify.Providers.DNS.Cloudflare;
 using Certify.Providers.DNS.DnsMadeEasy;
 using Certify.Providers.DNS.GoDaddy;
+using Certify.Providers.DNS.SimpleDNSPlus;
 using Certify.Providers.DNS.OVH;
 
 namespace Certify.Core.Management.Challenges
@@ -57,7 +58,10 @@ namespace Certify.Core.Management.Challenges
                 {
                     dnsAPIProvider = new DnsProviderGoDaddy(credentials);
                 }
-
+                if (providerDefinition.Id == "DNS01.API.SimpleDNSPlus")
+                {
+                    dnsAPIProvider = new DnsProviderSimpleDNSPlus(credentials);
+                }
                 if (providerDefinition.Id == "DNS01.API.DnsMadeEasy")
                 {
                     dnsAPIProvider = new DnsProviderDnsMadeEasy(credentials);
@@ -104,6 +108,7 @@ namespace Certify.Core.Management.Challenges
                 Providers.DNS.Azure.DnsProviderAzure.Definition,
                 Providers.DNS.Cloudflare.DnsProviderCloudflare.Definition,
                 Providers.DNS.GoDaddy.DnsProviderGoDaddy.Definition,
+                Providers.DNS.SimpleDNSPlus.DnsProviderSimpleDNSPlus.Definition,
                 Providers.DNS.DnsMadeEasy.DnsProviderDnsMadeEasy.Definition,
                 Providers.DNS.OVH.DnsProviderOvh.Definition,
             };
