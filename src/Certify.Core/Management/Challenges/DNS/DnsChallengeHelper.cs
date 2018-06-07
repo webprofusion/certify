@@ -89,6 +89,7 @@ namespace Certify.Core.Management.Challenges
 
             if (dnsAPIProvider != null)
             {
+                log.Information($"DNS: Creating TXT Record '{txtRecordName}' with value '{txtRecordValue}', in Zone Id '{zoneId}' using API provider '{dnsAPIProvider.ProviderTitle}'");
                 try
                 {
                     var result = await dnsAPIProvider.CreateRecord(new DnsRecord
