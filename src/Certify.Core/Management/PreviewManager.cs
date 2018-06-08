@@ -107,14 +107,6 @@ namespace Certify.Management
                             {
                                 validationDescription +=
                                $"The following DNS API Credentials will be used:  **{creds.Title}** " + newLine + newLine;
-
-                                if (!string.IsNullOrEmpty(challengeConfig.ZoneId))
-                                    validationDescription +=
-                                        $"The Zone Id to be updated with the new TXT record is:  `{challengeConfig.ZoneId}` " + newLine;
-                                else
-                                    validationDescription +=
-                                        $"**No Zone Id has been set.**  A Zone Id or Zone Name is normally required to identify which DNS zone to update." +
-                                        newLine;
                             }
                             else
                             {
