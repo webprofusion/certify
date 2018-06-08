@@ -42,7 +42,6 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
         private readonly string _authSecret;
         private readonly string _authServer;
         private string _baseUri;
-        //private const string _baseUri = "https://api.godaddy.com/v1/";
         private string _listZonesUri;
         private string _createRecordUri;
         private string _listRecordsUri;
@@ -122,10 +121,12 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
                 return new ActionResult { IsSuccess = true, Message = $"Test Failed: {exp.Message}" };
             }
         }
+
         private static string Base64Encode(string Txt) {
             var txtBytes = System.Text.Encoding.UTF8.GetBytes(Txt);
             return System.Convert.ToBase64String(txtBytes);
         }
+
         private HttpRequestMessage CreateRequest(HttpMethod method, string url)
         {
             ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
@@ -137,11 +138,11 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
 
         private async Task<List<DnsRecord>> GetDnsRecords(string zoneName)
         {
-            List<DnsRecord> records = new List<DnsRecord>();
+            var records = new List<DnsRecord>();
 
-            string[] domains = zoneName.Split(new char[] { '.' });
-            string tldName = domains[domains.Length - 2] + "." + domains[domains.Length - 1];
-            string sub = "";
+            var domains = zoneName.Split(new char[] { '.' });
+            var tldName = domains[domains.Length - 2] + "." + domains[domains.Length - 1];
+            var sub = "";
 
             for (int i = 0; i < domains.Length - 1; i++)
             {

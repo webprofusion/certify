@@ -41,7 +41,8 @@ namespace Certify.Providers.DNS.OVH
                         new ProviderParameter{Key=ApplicationSecretParamKey, Name="Application Secret", IsRequired=true },
                         new ProviderParameter{Key=ApplicationEndpointParamKey, Name="Endpoint name of OVH API", IsRequired=false,
                                               Description =$"Should be one of the following : {OvhClient.GetAvailableEndpointsAsString()}" },
-                        new ProviderParameter{Key=ConsumerKeyParamKey, Name="Consumer Key", IsRequired=true }
+                        new ProviderParameter{Key=ConsumerKeyParamKey, Name="Consumer Key", IsRequired=true },
+                        new ProviderParameter{Key="zoneid", Name="DNS Zone Id", Description="Zone Id is the root domain name e.g. example.com", IsRequired=true, IsPassword=false, IsCredential=false }
                     },
                     ChallengeType = Certify.Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                     Config = "Provider=Certify.Providers.DNS.Ovh",
@@ -69,7 +70,7 @@ namespace Certify.Providers.DNS.OVH
             try
             {
                 if (!request.RecordName.EndsWith(request.ZoneId, StringComparison.InvariantCultureIgnoreCase))
-                    return new ActionResult { IsSuccess = false, Message = $"DNS record creation failed for RecordName={request.RecordName} , because RecordName was expected to ends with ZoneId (wich is {request.ZoneId})." };
+                    return new ActionResult { IsSuccess = false, Message = $"DNS record creation failed for RecordName={request.RecordName} , because RecordName was expected to end with ZoneId (which is {request.ZoneId})." };
 
                 // record name received as argument : www.qwerty.sampledomain.com
                 // received zone id :                            sampledomain.com

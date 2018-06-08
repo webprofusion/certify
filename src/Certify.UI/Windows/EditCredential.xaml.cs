@@ -48,7 +48,11 @@ namespace Certify.UI.Windows
                 MainViewModel.RefreshChallengeAPIList().Wait();
             }
 
-            EditViewModel.ChallengeProviders = MainViewModel.ChallengeAPIProviders.Where(p => p.ProviderParameters.Any()).ToList();
+            EditViewModel.ChallengeProviders = MainViewModel
+                .ChallengeAPIProviders
+                .Where(p => p.ProviderParameters.Any(pa=>pa.IsCredential))
+                .OrderBy(p=>p.Title)
+                .ToList();
 
             if (editItem != null)
             {
@@ -145,7 +149,7 @@ namespace Certify.UI.Windows
             var selectedType = this.ProviderTypes.SelectedItem as ProviderDefinition;
             if (selectedType != null)
             {
-                this.EditViewModel.CredentialSet = new ObservableCollection<ProviderParameter>(selectedType.ProviderParameters);
+                this.EditViewModel.CredentialSet = new ObservableCollection<ProviderParameter>(selectedType.ProviderParameters.Where(p=>p.IsCredential));
             }
         }
 

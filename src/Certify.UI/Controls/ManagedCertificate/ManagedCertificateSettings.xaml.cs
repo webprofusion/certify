@@ -297,6 +297,9 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return;
             }
 
+            // validate and save before test
+            if (!await ValidateAndSave(ItemViewModel.SelectedItem)) return;
+           
             ItemViewModel.IsTestInProgress = true;
 
             var challengeConfig = ItemViewModel.SelectedItem.GetChallengeConfig(null);

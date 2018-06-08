@@ -12,11 +12,17 @@ using Certify.Providers.DNS.DnsMadeEasy;
 using Certify.Providers.DNS.GoDaddy;
 using Certify.Providers.DNS.SimpleDNSPlus;
 using Certify.Providers.DNS.OVH;
+using System;
 
 namespace Certify.Core.Management.Challenges
 {
     public class ChallengeProviders
     {
+        public class CredentialsRequiredException : Exception
+        {
+
+        }
+
         public static async Task<IDnsProvider> GetDnsProvider(string providerType, Dictionary<string, string> credentials, Dictionary<string, string> parameters)
         {
             ProviderDefinition providerDefinition;
@@ -33,54 +39,62 @@ namespace Certify.Core.Management.Challenges
 
             if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.PYTHON_HELPER)
             {
+                if (credentials==null || !credentials.Any())
+                {
+                    throw new CredentialsRequiredException();
+                }
+
                 dnsAPIProvider = new LibcloudDNSProvider(credentials);
             }
             else if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.INTERNAL)
             {
-                if (providerDefinition.Id == "DNS01.API.Route53")
+                if (credentials == null || !credentials.Any())
+                {
+                    throw new CredentialsRequiredException();
+                }
+
+                // instantiate/initialise the required DNS provider
+                if (providerDefinition.Id == DnsProviderAWSRoute53.Definition.Id)
                 {
                     dnsAPIProvider = new DnsProviderAWSRoute53(credentials);
                 }
-
-                if (providerDefinition.Id == "DNS01.API.Azure")
+                else if (providerDefinition.Id == DnsProviderAzure.Definition.Id)
                 {
                     var azureDns = new DnsProviderAzure(credentials);
                     await azureDns.InitProvider();
                     dnsAPIProvider = azureDns;
                 }
-
-                if (providerDefinition.Id == "DNS01.API.Cloudflare")
+                else if (providerDefinition.Id == DnsProviderCloudflare.Definition.Id)
                 {
                     dnsAPIProvider = new DnsProviderCloudflare(credentials);
                 }
-
-                if (providerDefinition.Id == "DNS01.API.GoDaddy")
+                else if (providerDefinition.Id == DnsProviderGoDaddy.Definition.Id)
                 {
                     dnsAPIProvider = new DnsProviderGoDaddy(credentials);
                 }
-                if (providerDefinition.Id == "DNS01.API.SimpleDNSPlus")
+                else if (providerDefinition.Id == DnsProviderSimpleDNSPlus.Definition.Id)
                 {
                     dnsAPIProvider = new DnsProviderSimpleDNSPlus(credentials);
                 }
-                if (providerDefinition.Id == "DNS01.API.DnsMadeEasy")
+                else if (providerDefinition.Id == DnsProviderDnsMadeEasy.Definition.Id)
                 {
                     dnsAPIProvider = new DnsProviderDnsMadeEasy(credentials);
                 }
-                if (providerDefinition.Id == DnsProviderOvh.Definition.Id)
+                else if (providerDefinition.Id == DnsProviderOvh.Definition.Id)
                 {
                     dnsAPIProvider = new DnsProviderOvh(credentials);
                 }
             }
             else if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.MANUAL)
             {
-                if (providerDefinition.Id == "DNS01.Manual")
+                if (providerDefinition.Id == DNS.DnsProviderManual.Definition.Id)
                 {
-                     dnsAPIProvider = new DNS.DnsProviderManual(parameters);
+                    dnsAPIProvider = new DNS.DnsProviderManual(parameters);
                 }
             }
             else if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.CUSTOM_SCRIPT)
             {
-                if (providerDefinition.Id == "DNS01.Scripting")
+                if (providerDefinition.Id == DNS.DnsProviderScripting.Definition.Id)
                 {
                     dnsAPIProvider = new DNS.DnsProviderScripting(parameters);
                 }

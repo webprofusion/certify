@@ -65,7 +65,28 @@ namespace Certify.Core.Management.Challenges
                 }
             }
 
-            dnsAPIProvider = await ChallengeProviders.GetDnsProvider(challengeConfig.ChallengeProvider, credentials, parameters);
+            try
+            {
+                dnsAPIProvider = await ChallengeProviders.GetDnsProvider(challengeConfig.ChallengeProvider, credentials, parameters);
+            }
+            catch (ChallengeProviders.CredentialsRequiredException)
+            {
+                return new DnsChallengeHelperResult
+                {
+                    Result = new ActionResult { IsSuccess = false, Message = "This DNS Challenge API requires one or more credentials to be specified." },
+                    PropagationSeconds = 0,
+                    IsAwaitingUser = false
+                };
+            }
+            catch (Exception exp)
+            {
+                return new DnsChallengeHelperResult
+                {
+                    Result = new ActionResult { IsSuccess = false, Message = $"DNS Challenge API Provider could not be created. Check all required credentials are set. {exp.ToString()}" },
+                    PropagationSeconds = 0,
+                    IsAwaitingUser = false
+                };
+            }
 
             if (dnsAPIProvider == null)
             {
