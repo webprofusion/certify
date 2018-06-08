@@ -1,26 +1,16 @@
 ﻿using Certify.Models.Plugins;
 using System;
-using System.ComponentModel.Composition;
-using System.Composition.Hosting;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 namespace Certify.Management
 {
     public class PluginManager
     {
-        [Import]
         public ILicensingManager LicensingManager { get; set; }
-
-        [Import]
         public IDashboardClient DashboardClient { get; set; }
-
-        [Import]
-        public IACMEClientProvider AcmeClientProvider { get; set; }
-
-        [Import]
-        public IVaultProvider VaultProvider { get; set; }
 
         private string GetPluginFolderPath()
         {
@@ -29,30 +19,34 @@ namespace Certify.Management
             return path;
         }
 
-        private object LoadPlugin(string dllFileName, Type interfaceType)
+        private T LoadPlugin<T>(string dllFileName, Type interfaceType)
         {
             try
             {
-                var assembly = Assembly.LoadFrom(Path.Combine(GetPluginFolderPath(), dllFileName));
-                var configuration = new ContainerConfiguration().WithAssembly(assembly);
+                // https://stackoverflow.com/questions/10732933/can-i-use-activator-createinstance-with-an-interface
+                var loadedType = (from t in Assembly.LoadFrom(GetPluginFolderPath() + "\\" + dllFileName).GetExportedTypes()
+                                  where !t.IsInterface && !t.IsAbstract
+                                  where interfaceType.IsAssignableFrom(t)
+                                  select t)
+                                     .FirstOrDefault();
 
-                using (var container = configuration.CreateContainer())
-                {
-                    object plugin = container.GetExport(interfaceType);
-                    return plugin;
-                }
+                var obj = (T)Activator.CreateInstance(loadedType);
+
+                return obj;
             }
             catch (Exception exp)
             {
                 PluginLog(exp.ToString());
             }
-            return null;
+            return default(T);
         }
 
         public void PluginLog(string msg)
         {
             var path = Certify.Management.Util.GetAppDataFolder() + "\\plugin_log.txt";
+
             msg = "\r\n[" + DateTime.UtcNow.ToString() + "] " + msg;
+
             if (System.IO.File.Exists(path))
             {
                 System.IO.File.AppendAllText(path, msg);
@@ -67,11 +61,8 @@ namespace Certify.Management
         {
             var s = Stopwatch.StartNew();
 
-            LicensingManager = LoadPlugin("Licensing.dll", typeof(ILicensingManager)) as ILicensingManager;
-            DashboardClient = LoadPlugin("DashboardClient.dll", typeof(IDashboardClient)) as IDashboardClient;
-
-            //AcmeClientProvider = LoadPlugin("Certify.Providers.ACMESharp.dll", typeof(IACMEClientProvider)) as IACMEClientProvider;
-            //VaultProvider = LoadPlugin("Certify.Providers.ACMESharp.dll", typeof(IVaultProvider)) as IVaultProvider;
+            LicensingManager = LoadPlugin<ILicensingManager>("Licensing.dll", typeof(ILicensingManager)) as ILicensingManager;
+            DashboardClient = LoadPlugin<IDashboardClient>("DashboardClient.dll", typeof(IDashboardClient)) as IDashboardClient;
 
             s.Stop();
 
