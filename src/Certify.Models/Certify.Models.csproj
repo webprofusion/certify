@@ -18,6 +18,6 @@
   <ItemGroup>
     <PackageReference Include="Fody" Version="3.0.3" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="PropertyChanged.Fody" Version="2.5.4" />
+    <PackageReference Include="PropertyChanged.Fody" Version="2.5.6" />
   </ItemGroup>
 </Project>
