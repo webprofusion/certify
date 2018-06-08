@@ -13,7 +13,7 @@
 
     <DockPanel>
         <StackPanel
-            Margin="0,4"
+            Margin="0,8"
             DockPanel.Dock="Top"
             Orientation="Horizontal"
             Visibility="Visible">
@@ -92,6 +92,7 @@
                         SelectedValuePath="Id"
                         SelectionChanged="ChallengeAPIProviderList_SelectionChanged" />
                 </StackPanel>
+
                 <StackPanel Margin="160,0,0,0">
                     <TextBlock Style="{StaticResource Instructions}"><Run Text="For DNS validation the app will need to create a 'TXT' record in the DNS zone of your domain(s) as an answer to the authorization challenge." /></TextBlock>
                 </StackPanel>
@@ -128,7 +129,7 @@
             </StackPanel>
 
             <ItemsControl
-                MinHeight="60"
+                MinHeight="30"
                 DockPanel.Dock="Top"
                 ItemsSource="{Binding SelectedItem.Parameters, UpdateSourceTrigger=PropertyChanged}">
                 <ItemsControl.ItemTemplate>
@@ -149,12 +150,33 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
+            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                <StackPanel.Style>
+                    <Style>
+                        <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding UsesZoneLookup}" Value="True">
+                                <Setter Property="UIElement.Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <Label Width="160" Content="DNS Zone Lookup:" />
 
+                <ComboBox
+                    x:Name="DnsZoneList"
+                    Margin="0,0,0,0"
+                    DisplayMemberPath="Name"
+                    ItemsSource="{Binding DnsZones}"
+                    SelectedValuePath="ZoneId"
+                    SelectionChanged="DnsZoneList_SelectionChanged" />
+                <Button x:Name="PerformDnsZoneLookup" Click="PerformDnsZoneLookup_Click">Zone Lookup</Button>
+            </StackPanel>
         </StackPanel>
         <Button
             x:Name="DeleteAuth"
             MaxWidth="160"
-            Margin="8,0,0,0"
+            Margin="8,16,0,0"
             Click="DeleteAuth_Click"
             DockPanel.Dock="Bottom"
             Tag="{Binding SelectedItem}">

@@ -283,5 +283,19 @@ namespace Certify.Management
         {
             return await new PreviewManager().GeneratePreview(item, _serverProvider, this);
         }
+
+        public async Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId)
+        {
+            var dnsHelper = new Core.Management.Challenges.DnsChallengeHelper();
+            var result = await dnsHelper.GetDnsProvider(providerTypeId, credentialsId, null);
+
+            if (result.Provider != null)
+            {
+                return await result.Provider.GetZones();
+            } else
+            {
+                return new List<DnsZone>();
+            }
+        }
     }
 }

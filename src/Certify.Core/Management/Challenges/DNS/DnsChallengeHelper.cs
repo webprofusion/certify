@@ -13,10 +13,76 @@ namespace Certify.Core.Management.Challenges
         public ActionResult Result;
         public int PropagationSeconds;
         public bool IsAwaitingUser;
+        public IDnsProvider Provider;
     }
 
     public class DnsChallengeHelper
     {
+        public async Task<DnsChallengeHelperResult> GetDnsProvider(string providerTypeId, string credentialsId, Dictionary<string,string> parameters)
+        {
+            var credentialsManager = new CredentialsManager();
+            var credentials = new Dictionary<string, string>();
+
+            IDnsProvider dnsAPIProvider = null;
+
+            if (!String.IsNullOrEmpty(credentialsId))
+            {
+                // decode credentials string array
+                try
+                {
+                    credentials = await credentialsManager.GetUnlockedCredentialsDictionary(credentialsId);
+                }
+                catch (Exception)
+                {
+                    return new DnsChallengeHelperResult
+                    {
+                        Result = new ActionResult { IsSuccess = false, Message = "DNS Challenge API Credentials could not be decrypted. The original user must be used for decryption." },
+                        PropagationSeconds = 0,
+                        IsAwaitingUser = false
+                    };
+                }
+            }
+
+            try
+            { 
+                dnsAPIProvider = await ChallengeProviders.GetDnsProvider(providerTypeId, credentials, parameters);
+            }
+            catch (ChallengeProviders.CredentialsRequiredException)
+            {
+                return new DnsChallengeHelperResult
+                {
+                    Result = new ActionResult { IsSuccess = false, Message = "This DNS Challenge API requires one or more credentials to be specified." },
+                    PropagationSeconds = 0,
+                    IsAwaitingUser = false
+                };
+            }
+            catch (Exception exp)
+            {
+                return new DnsChallengeHelperResult
+                {
+                    Result = new ActionResult { IsSuccess = false, Message = $"DNS Challenge API Provider could not be created. Check all required credentials are set. {exp.ToString()}" },
+                    PropagationSeconds = 0,
+                    IsAwaitingUser = false
+                };
+            }
+
+            if (dnsAPIProvider == null)
+            {
+                return new DnsChallengeHelperResult
+                {
+                    Result = new ActionResult { IsSuccess = false, Message = "DNS Challenge API Provider not set or not recognised. Select an API to proceed." },
+                    PropagationSeconds = 0,
+                    IsAwaitingUser = false
+                };
+            }
+
+            return new DnsChallengeHelperResult
+            {
+                Result = new ActionResult { IsSuccess = true, Message = "Create Provider Instance" },
+                Provider = dnsAPIProvider
+            };
+        }
+
         public async Task<DnsChallengeHelperResult> CompleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, string domain, string txtRecordName, string txtRecordValue)
         {
             // for a given managed site configuration, attempt to complete the required challenge by
@@ -107,7 +173,6 @@ namespace Certify.Core.Management.Challenges
             {
                 zoneId = challengeConfig.ZoneId?.Trim();
             }
-
             if (dnsAPIProvider != null)
             {
                 log.Information($"DNS: Creating TXT Record '{txtRecordName}' with value '{txtRecordValue}', in Zone Id '{zoneId}' using API provider '{dnsAPIProvider.ProviderTitle}'");

@@ -122,6 +122,8 @@ namespace Certify.Client
 
         Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate site);
 
+        Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId);
+
         Task<List<ActionStep>> PreviewActions(ManagedCertificate site);
 
         Task<List<ProviderDefinition>> GetChallengeAPIList();

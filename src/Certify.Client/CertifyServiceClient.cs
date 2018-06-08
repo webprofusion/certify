@@ -295,6 +295,12 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<List<StatusMessage>>(await response.Content.ReadAsStringAsync());
         }
 
+        public async Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId)
+        {
+            string json = await FetchAsync($"managedcertificates/dnszones/{providerTypeId}/{credentialsId}");
+            return JsonConvert.DeserializeObject<List<Models.Providers.DnsZone>>(json);
+        }
+
         public async Task<List<ActionStep>> PreviewActions(ManagedCertificate site)
         {
             var response = await PostAsync($"managedcertificates/preview", site);

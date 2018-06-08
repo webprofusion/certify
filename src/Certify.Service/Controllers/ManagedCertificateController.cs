@@ -170,6 +170,12 @@ namespace Certify.Service
             return await _certifyManager.GetCurrentChallengeResponses(SupportedChallengeTypes.CHALLENGE_TYPE_HTTP);
         }
 
+        [HttpGet, Route("dnszones/{providerTypeId}/{credentialId}")]
+        public async Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialId)
+        {
+            return await _certifyManager.GetDnsProviderZones(providerTypeId, credentialId);
+        }
+
         public class ProgressLogSink : Serilog.Core.ILogEventSink
         {
             private IProgress<RequestProgressState> _progress;

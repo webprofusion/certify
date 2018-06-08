@@ -122,12 +122,19 @@ namespace Certify.UI.Controls.ManagedCertificate
                     EditModel.RaisePropertyChangedEvent(nameof(EditModel.UsesCredentials));
                 }
 
+                EditModel.UsesZoneLookup = false;
+
                 foreach (var pa in definition.ProviderParameters.Where(p => p.IsCredential == false))
                 {
                     // if zoneid previously stored, migrate to provider param
-                    if (pa.Key == "zoneid" && !String.IsNullOrEmpty(EditModel.SelectedItem.ZoneId))
+                    if (pa.Key == "zoneid")
                     {
-                        pa.Value = EditModel.SelectedItem.ZoneId;
+                        if (!String.IsNullOrEmpty(EditModel.SelectedItem.ZoneId))
+                        {
+                            pa.Value = EditModel.SelectedItem.ZoneId;
+                            EditModel.SelectedItem.ZoneId = null;
+                        }
+                        EditModel.UsesZoneLookup = true;
                     }
 
                     EditModel.SelectedItem.Parameters.Add(pa);
@@ -146,8 +153,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                 RefreshParameters();
 
                 await RefreshCredentialOptions();
-
-               
             }
         }
 
@@ -171,6 +176,26 @@ namespace Certify.UI.Controls.ManagedCertificate
                     {
                         MessageBox.Show("At least one authorization configuration is required.");
                     }
+                }
+            }
+        }
+
+        private async void PerformDnsZoneLookup_Click(object sender, RoutedEventArgs e)
+        {
+            var zones = await AppViewModel.CertifyClient.GetDnsProviderZones(EditModel.SelectedItem.ChallengeProvider, EditModel.SelectedItem.ChallengeCredentialKey);
+            zones.Insert(0, new Models.Providers.DnsZone { ZoneId = "", Name = "(Select Zone)" });
+            this.EditModel.DnsZones = new ObservableCollection<Models.Providers.DnsZone>(zones);
+        }
+
+        private void DnsZoneList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (DnsZoneList.SelectedValue != null)
+            {
+                var param = EditModel.SelectedItem.Parameters.Where(pa => pa.Key == "zoneid").FirstOrDefault();
+                if (param != null)
+                {
+                    param.Value = DnsZoneList.SelectedValue.ToString();
+                    EditModel.RaisePropertyChangedEvent(nameof(EditModel.SelectedItem.Parameters));
                 }
             }
         }
