@@ -17,33 +17,15 @@ namespace Certify.CLI
             }
             else
             {
+                if (args.Contains("storeserverconfig", StringComparer.InvariantCultureIgnoreCase))
+                {
+                    Certify.Management.Util.StoreCurrentAppServiceConfig();
+                    return 0;
+                }
+
                 if (args.Contains("httpchallenge", StringComparer.InvariantCultureIgnoreCase))
                 {
-                    System.Console.WriteLine("Starting Certify Http Challenge Server");
-
-                    //syntax: certify httpchallenge keys=CONTROLKEY,CHECKKEY
-
-                    var keys = args[1].Replace("keys=", "").Split(',');
-
-                    var task = Task.Run(async () =>
-                    {
-                        // start an http challenge server
-                        var challengeServer = new Core.Management.Challenges.HttpChallengeServer();
-                        if (!challengeServer.Start(80, controlKey: keys[0], checkKey: keys[1]))
-                        {
-                            // failed to start http challenge server
-                            return -1;
-                        }
-
-                        // wait for server to stop
-                        while (challengeServer.IsRunning())
-                        {
-                            await Task.Delay(500);
-                        }
-                        return 0;
-                    });
-
-                    return task.Result;
+                    return StartHttpChallengeServer(args);
                 }
 
                 p.ShowVersion();
@@ -82,6 +64,8 @@ namespace Certify.CLI
                     p.RunCertDiagnostics();
                 }
 
+         
+
                 if (args.Contains("importcsv", StringComparer.InvariantCultureIgnoreCase))
                 {
                     var importTask = p.ImportCSV(args);
@@ -94,6 +78,37 @@ namespace Certify.CLI
             Console.ReadKey();
 #endif
             return 0;
+        }
+
+        private static int StartHttpChallengeServer(string[] args)
+        {
+            System.Console.WriteLine("Starting Certify Http Challenge Server");
+
+            //syntax: certify httpchallenge keys=CONTROLKEY,CHECKKEY
+
+            var keys = args[1].Replace("keys=", "").Split(',');
+
+            var task = Task.Run(async () =>
+            {
+                // start an http challenge server
+                var challengeServer = new Core.Management.Challenges.HttpChallengeServer();
+                var config = Certify.Management.Util.GetAppServiceConfig();
+
+                if (!challengeServer.Start(config.HttpChallengeServerPort, controlKey: keys[0], checkKey: keys[1]))
+                {
+                    // failed to start http challenge server
+                    return -1;
+                }
+
+                // wait for server to stop
+                while (challengeServer.IsRunning())
+                {
+                    await Task.Delay(500);
+                }
+                return 0;
+            });
+
+            return task.Result;
         }
     }
 }
