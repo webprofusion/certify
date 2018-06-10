@@ -183,6 +183,26 @@ namespace Certify.Models
         }
 
         /// <summary>
+        /// For the given challenge config and list of domains, return subset of domains which will be matched against the config (considering all other configs)
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="domains"></param>
+        /// <returns></returns>
+        public List<string> GetChallengeConfigDomainMatches(CertRequestChallengeConfig config, IEnumerable<string> domains)
+        {
+            List<string> matches = new List<string>();
+            foreach (var d in domains)
+            {
+                var matchedConfig = GetChallengeConfig(d);
+                if (matchedConfig == config)
+                {
+                    matches.Add(d);
+                }
+            }
+            return matches;
+        }
+
+        /// <summary>
         /// For the given domain, get the matching challenge config (DNS provider variant etc) 
         /// </summary>
         /// <param name="managedCertificate"></param>

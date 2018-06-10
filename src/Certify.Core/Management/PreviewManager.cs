@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Providers;
@@ -11,7 +12,8 @@ namespace Certify.Management
     public class PreviewManager
     {
         /// <summary>
-        /// Generate a list of actions which will be performed on the next renewal of this managed certificate 
+        /// Generate a list of actions which will be performed on the next renewal of this managed certificate, populating 
+        /// the description of each action with a Markdown format description
         /// </summary>
         /// <param name="item"></param>
         /// <param name="serverProvider"></param>
@@ -36,102 +38,164 @@ namespace Certify.Management
             {
                 var allCredentials = await new CredentialsManager().GetStoredCredentials();
 
+                var allDomains = new List<string> { item.RequestConfig.PrimaryDomain };
+
+                if (item.RequestConfig.SubjectAlternativeNames != null)
+                {
+                    allDomains.AddRange(item.RequestConfig.SubjectAlternativeNames);
+                }
+                allDomains = allDomains.Distinct().OrderBy(d => d).ToList();
+
+
                 // certificate summary
-                var certDescription =
-                    "A new certificate will be requested from the *Let's Encrypt* certificate authority for the following domains:" +
-                    newLine;
-                certDescription += $"\n**{item.RequestConfig.PrimaryDomain}** (Primary Domain) {newLine}";
+                var certDescription = new StringBuilder();
+                certDescription.AppendLine(
+                    "A new certificate will be requested from the *Let's Encrypt* certificate authority for the following domains:"
+                    );
+
+                certDescription.AppendLine($"\n**{item.RequestConfig.PrimaryDomain}** (Primary Domain)");
+
                 if (item.RequestConfig.SubjectAlternativeNames.Any(s => s != item.RequestConfig.PrimaryDomain))
                 {
-                    certDescription += $" and will include the following *Subject Alternative Names*:" + newLine;
+                    certDescription.AppendLine($" and will include the following *Subject Alternative Names*:");
 
-                    foreach (var d in item.RequestConfig.SubjectAlternativeNames) certDescription += $"* {d} " + newLine;
+                    foreach (var d in item.RequestConfig.SubjectAlternativeNames)
+                    {
+                        certDescription.AppendLine($"* {d} ");
+                    }
                 }
 
                 steps.Add(new ActionStep
                 {
                     Title = "Summary",
-                    Description = certDescription
+                    Description = certDescription.ToString()
                 });
 
-                // validation steps : FIXME: preview description should come from the challenge type
-                // provider itself
-                var validationDescription = "";
+                // validation steps :
+                // TODO: preview description should come from the challenge type provider
+
+                var challengeInfo = new StringBuilder();
                 foreach (var challengeConfig in item.RequestConfig.Challenges)
                 {
-                    validationDescription +=
-                        $"Authorization will be attempted using the **{challengeConfig.ChallengeType}** challenge type." +
-                        newLine + newLine;
+                    challengeInfo.AppendLine(
+                        $"{newLine}Authorization will be attempted using the **{challengeConfig.ChallengeType}** challenge type." +
+                        newLine
+                        );
+
+                    var matchingDomains = item.GetChallengeConfigDomainMatches(challengeConfig, allDomains);
+                    if (matchingDomains.Any())
+                    {
+                        challengeInfo.AppendLine(
+                            $"{newLine}The following matching domains will use this challenge: " + newLine
+                            );
+
+                        foreach (var d in matchingDomains)
+                        {
+                            challengeInfo.AppendLine($"{newLine} * {d}");
+                        }
+                    }
+                    else
+                    {
+                        challengeInfo.AppendLine(
+                        $"{newLine}**No domains will match this challenge type.** Either the challenge is not required or domain matches are not fully configured."
+                        );
+                    }
+
+                    challengeInfo.AppendLine(newLine);
 
                     if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
                     {
-                        validationDescription +=
-                            $"This will involve the creation of a randomly named (extensionless) text file for each domain (website) included in the certificate." +
-                            newLine + newLine;
+                        challengeInfo.AppendLine(
+                           $"This will involve the creation of a randomly named (extensionless) text file for each domain (website) included in the certificate." +
+                            newLine
+                            );
 
                         if (CoreAppSettings.Current.EnableHttpChallengeServer)
                         {
-                            validationDescription +=
+                            challengeInfo.AppendLine(
                                $"The *Http Challenge Server* option is enabled. This will create a temporary web service on port 80 during validation. This process co-exists with your main web server can listens for http challenge requests to /.well-known/acme-challenge/. If you are using a web server on port 80 other than IIS (or other http.sys enabled server), that will be used instead (if possible)." +
-                               newLine + newLine;
+                               newLine
+                               );
                         }
 
                         if (!string.IsNullOrEmpty(item.RequestConfig.WebsiteRootPath))
-                            validationDescription +=
+                            challengeInfo.AppendLine(
                                 $"The file will be created at the path `{item.RequestConfig.WebsiteRootPath}\\.well-known\\acme-challenge\\` " +
-                                newLine + newLine;
+                                newLine 
+                                );
 
-                        validationDescription +=
+                        challengeInfo.AppendLine(
                             $"The text file will need to be accessible from the URL `http://<yourdomain>/.well-known/acme-challenge/<randomfilename>` " +
-                            newLine + newLine;
+                            newLine);
+                            
 
-                        validationDescription +=
+                        challengeInfo.AppendLine(
                             $"Let's Encrypt will follow any redirection in place (such as rewriting the URL to *https*) but the initial request will be made via *http* on port 80. " +
-                            newLine + newLine;
+                            newLine );
 
-                        if (!string.IsNullOrEmpty(challengeConfig.DomainMatch))
-                            validationDescription +=
-                                $"This challenge type will be selected based on matching domain **{challengeConfig.DomainMatch}** " +
-                                newLine;
                     }
 
                     if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                     {
-                        validationDescription +=
+                        challengeInfo.AppendLine(
                             $"This will involve the creation of a DNS TXT record named `_acme-challenge.yourdomain.com` for each domain or subdomain included in the certificate. " +
-                            newLine;
+                            newLine);
+
                         if (!string.IsNullOrEmpty(challengeConfig.ChallengeCredentialKey))
                         {
                             var creds = allCredentials.FirstOrDefault(c => c.StorageKey == challengeConfig.ChallengeCredentialKey);
                             if (creds != null)
                             {
-                                validationDescription +=
-                               $"The following DNS API Credentials will be used:  **{creds.Title}** " + newLine + newLine;
+                                challengeInfo.AppendLine(
+                               $"The following DNS API Credentials will be used:  **{creds.Title}** " + newLine );
                             }
                             else
                             {
-                                validationDescription +=
-                                    $"**Invalid credential settngs.**  The currently selected credential does not exist." +
-                                    newLine;
+                                challengeInfo.AppendLine(
+                                    $"**Invalid credential settngs.**  The currently selected credential does not exist." 
+                                    );
                             }
                         }
                         else
                         {
-                            validationDescription +=
-                                $"No DNS API Credentials have been set.  API Credentials are normally required to make automatic updates to DNS records." +
-                                newLine;
+                            challengeInfo.AppendLine( 
+                                $"No DNS API Credentials have been set.  API Credentials are normally required to make automatic updates to DNS records." 
+                                );
                         }
 
-                        validationDescription +=
-                            newLine + $"Let's Encrypt will follow any redirection in place (such as a substitute CNAME pointing to another domain) but the initial request will be made against any of the domain's nameservers. " +
-                            newLine;
+                        challengeInfo.AppendLine( 
+                            newLine + $"Let's Encrypt will follow any redirection in place (such as a substitute CNAME pointing to another domain) but the initial request will be made against any of the domain's nameservers. "
+                            );
                     }
+
+                    if (!string.IsNullOrEmpty(challengeConfig.DomainMatch))
+                    {
+                        challengeInfo.AppendLine(
+                            $"{newLine}This challenge type will be selected based on matching domain **{challengeConfig.DomainMatch}** ");
+                    }
+                    else
+                    {
+                        if (item.RequestConfig.Challenges.Count > 1)
+                        {
+                            challengeInfo.AppendLine(
+                             $"{newLine}This challenge type will be selected for any domain not matched by another challenge. ");
+
+                            
+                        }
+                        else
+                        {
+                            challengeInfo.AppendLine(
+                          $"{newLine}**This challenge type will be selected for all domains.**");
+                        }
+                    }
+
+                    challengeInfo.AppendLine($"{newLine}---{newLine}");
                 }
 
                 steps.Add(new ActionStep
                 {
                     Title = $"{stepIndex}. Domain Validation",
-                    Description = validationDescription
+                    Description = challengeInfo.ToString()
                 });
                 stepIndex++;
 
@@ -181,11 +245,11 @@ namespace Certify.Management
 
                 // deployment & binding steps
 
-                var deploymentDescription = $"";
+                var deploymentDescription = new StringBuilder();
                 var deploymentStep = new ActionStep
                 {
                     Title = $"{stepIndex}. Deployment",
-                    Description = deploymentDescription
+                    Description = ""
                 };
 
                 if (
@@ -198,21 +262,20 @@ namespace Certify.Management
                     if (item.ItemType == ManagedCertificateType.SSL_LetsEncrypt_LocalIIS)
                     {
                         if (item.RequestConfig.DeploymentBindingMatchHostname)
-                            deploymentDescription +=
-                                "* Deploy to hostname bindings matching certificate domains." + newLine;
+                            deploymentDescription.AppendLine(
+                                "* Deploy to hostname bindings matching certificate domains.");
 
                         if (item.RequestConfig.DeploymentBindingBlankHostname)
-                            deploymentDescription += "* Deploy to bindings with blank hostname." + newLine;
+                            deploymentDescription.AppendLine("* Deploy to bindings with blank hostname.");
 
                         if (item.RequestConfig.DeploymentBindingReplacePrevious)
-                            deploymentDescription += "* Deploy to bindings with previous certificate." + newLine;
+                            deploymentDescription.AppendLine("* Deploy to bindings with previous certificate.");
 
                         if (item.RequestConfig.DeploymentBindingOption == DeploymentBindingOption.AddOrUpdate)
-                            deploymentDescription += "* Add or Update https bindings as required" + newLine;
+                            deploymentDescription.AppendLine("* Add or Update https bindings as required");
 
                         if (item.RequestConfig.DeploymentBindingOption == DeploymentBindingOption.UpdateOnly)
-                            deploymentDescription +=
-                                "* Update https bindings as required (no auto-created https bindings)" + newLine;
+                            deploymentDescription.AppendLine("* Update https bindings as required (no auto-created https bindings)");
 
                         if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.SingleSite)
                         {
@@ -220,18 +283,17 @@ namespace Certify.Management
                                 try
                                 {
                                     var siteInfo = await serverProvider.GetSiteById(item.ServerSiteId);
-                                    deploymentDescription += $"## Deploying to Site" + newLine + newLine +
-                                                             $"`{siteInfo.Name}`" + newLine + newLine;
+                                    deploymentDescription.AppendLine($"## Deploying to Site" + newLine + newLine +
+                                                             $"`{siteInfo.Name}`" + newLine );
                                 }
                                 catch (Exception exp)
                                 {
-                                    deploymentDescription +=
-                                        $"Error: **cannot identify selected site.** {exp.Message} " + newLine;
+                                    deploymentDescription.AppendLine($"Error: **cannot identify selected site.** {exp.Message} ");
                                 }
                         }
                         else
                         {
-                            deploymentDescription += $"## Deploying to all matching sites:" + newLine;
+                            deploymentDescription.AppendLine($"## Deploying to all matching sites:");
                         }
 
                         // add deployment sub-steps (if any)
@@ -248,32 +310,31 @@ namespace Certify.Management
                         }
                         else
                         {
-                            deploymentDescription += " Action | Site | Binding " + newLine;
-                            deploymentDescription += " ------ | ---- | ------- " + newLine;
+                            deploymentDescription.AppendLine(" Action | Site | Binding ");
+                            deploymentDescription.AppendLine(" ------ | ---- | ------- ");
                         }
                     }
                     else
                     {
                         // no website selected, maybe validating http with a manually specified path
                         if (!string.IsNullOrEmpty(item.RequestConfig.WebsiteRootPath))
-                            deploymentDescription += $"Manual deployment to site: *{item.RequestConfig.WebsiteRootPath}*" +
-                                                     newLine;
+                            deploymentDescription.AppendLine($"Manual deployment to site: *{item.RequestConfig.WebsiteRootPath}*");
                     }
                 }
                 else if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.DeploymentStoreOnly)
                 {
-                    deploymentDescription +=
-                        "* The certificate will be saved to the local machines Certificate Store only (Personal/MY Store)" +
+                    deploymentDescription.AppendLine(
+                        "* The certificate will be saved to the local machines Certificate Store only (Personal/My Store)" +
                         newLine +
-                        "* Previous certificates will not be removed";
+                        "* Previous certificates will not be removed");
                 }
                 else if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.NoDeployment)
                 {
-                    deploymentDescription += "* The certificate will be saved to local disk only." + newLine +
-                                             "* Previous certificates will not be removed." + newLine;
+                    deploymentDescription.AppendLine("* The certificate will be saved to local disk only." + newLine +
+                                             "* Previous certificates will not be removed.");
                 }
 
-                deploymentStep.Description = deploymentDescription;
+                deploymentStep.Description = deploymentDescription.ToString();
 
                 steps.Add(deploymentStep);
                 stepIndex++;
