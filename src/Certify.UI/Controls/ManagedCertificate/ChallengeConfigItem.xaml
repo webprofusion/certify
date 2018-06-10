@@ -4,13 +4,16 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fa="http://schemas.fontawesome.io/icons/"
     xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:Certify.Models;assembly=Certify.Models"
     d:DesignHeight="200"
     d:DesignWidth="468"
     mc:Ignorable="d">
-
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+    </UserControl.Resources>
     <DockPanel>
         <StackPanel
             Margin="0,8"
@@ -21,7 +24,7 @@
             <TextBox
                 x:Name="DomainMatchText"
                 Width="270"
-                mah:TextBoxHelper.Watermark="(optional, leave blank to match any)"
+                mah:TextBoxHelper.Watermark="(optional, *.example.com; www.sub.example.com)"
                 Text="{Binding SelectedItem.DomainMatch}" />
         </StackPanel>
         <!--  challenge type selection  -->
@@ -85,6 +88,7 @@
 
                     <ComboBox
                         x:Name="ChallengeAPIProviderList"
+                        Width="270"
                         Margin="0,0,0,0"
                         DisplayMemberPath="Title"
                         ItemsSource="{Binding ChallengeProviders}"
@@ -145,32 +149,60 @@
                                 mah:TextBoxHelper.Watermark="{Binding Description}"
                                 KeyUp="ParameterInput_KeyUp"
                                 Text="{Binding Value}" />
+                            <Button
+                                x:Name="ShowParamLookup"
+                                Padding="4"
+                                Click="ShowParamLookup_Click">
+                                <Button.Style>
+                                    <Style>
+                                        <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Key}" Value="zoneid">
+                                                <Setter Property="UIElement.Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                ...
+                            </Button>
                         </StackPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+            <StackPanel Margin="160,8,0,0" Orientation="Horizontal">
                 <StackPanel.Style>
                     <Style>
                         <Setter Property="UIElement.Visibility" Value="Collapsed" />
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding UsesZoneLookup}" Value="True">
+                            <DataTrigger Binding="{Binding ShowZoneLookup}" Value="True">
                                 <Setter Property="UIElement.Visibility" Value="Visible" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </StackPanel.Style>
-                <Label Width="160" Content="DNS Zone Lookup:" />
 
-                <ComboBox
-                    x:Name="DnsZoneList"
-                    Margin="0,0,0,0"
-                    DisplayMemberPath="Name"
-                    ItemsSource="{Binding DnsZones}"
-                    SelectedValuePath="ZoneId"
-                    SelectionChanged="DnsZoneList_SelectionChanged" />
-                <Button x:Name="PerformDnsZoneLookup" Click="PerformDnsZoneLookup_Click">Zone Lookup</Button>
+                <StackPanel Orientation="Horizontal">
+                    <ComboBox
+                        x:Name="DnsZoneList"
+                        Width="270"
+                        Margin="0,0,0,0"
+                        DisplayMemberPath="Name"
+                        DropDownOpened="DnsZoneList_DropDownOpened"
+                        ItemsSource="{Binding DnsZones}"
+                        SelectedValuePath="ZoneId"
+                        SelectionChanged="DnsZoneList_SelectionChanged" />
+                    <fa:ImageAwesome
+                        x:Name="RefreshingDnsZones"
+                        Height="12"
+                        Margin="4,0,0,0"
+                        Foreground="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                        Icon="Refresh"
+                        Spin="True"
+                        SpinDuration="1"
+                        Visibility="{Binding IsZoneLookupInProgress, Converter={StaticResource ResourceKey=BoolToVisConverter}}" />
+                </StackPanel>
+
             </StackPanel>
         </StackPanel>
         <Button
