@@ -388,24 +388,26 @@ namespace Certify.Providers.Certes
 
                 return pendingOrder;
             }
-            catch (Exception exp)
+            catch (AcmeRequestException exp)
             {
-                // failed to register the domain identifier with LE (invalid, rate limit or CAA fail?)
-                var msg = $"New Order Failed [{config.PrimaryDomain}] : {GetExceptionMessage(exp)}";
+                // failed to register one or more domain identifier with LE (invalid, rate limit or CAA fail?)
+
+                var msg = $"Failed to begin certificate order: {exp.Error?.Detail}";
 
                 log.Error(msg);
 
                 pendingOrder.Authorizations =
-                 new List<PendingAuthorization> {
+                new List<PendingAuthorization> {
                     new PendingAuthorization
                     {
                         AuthorizationError = msg,
                         IsFailure=true
                     }
-                };
+               };
 
                 return pendingOrder;
             }
+           
         }
 
         private string GetExceptionMessage(Exception exp)
@@ -468,18 +470,19 @@ namespace Certify.Providers.Certes
                         };
                     }
                 }
-                catch (Exception exp)
+                catch (AcmeRequestException exp)
                 {
-                    log.Error("Submit Challenge failed. ", exp.Message);
+                    var msg = $"Submit Challenge failed: {exp.Error?.Detail}";
 
-                    var challengeError = await challenge.Resource();
+                    log.Error(msg);
 
                     return new StatusMessage
                     {
                         IsOK = false,
-                        Message = challengeError.Error.Detail
+                        Message = msg
                     };
                 }
+
             }
             else
             {
@@ -554,12 +557,7 @@ namespace Certify.Providers.Certes
         {
             var orderContext = _currentOrders[orderId];
 
-            //update order status
-            var order = await orderContext.Resource();
-
-            // order.Generate()
-
-            // generate temp keypair for signing CSR var csrKey = KeyFactory.NewKey(KeyAlgorithm.RS256);
+            // generate temp keypair for signing CSR 
             var keyAlg = KeyAlgorithm.RS256;
 
             if (!string.IsNullOrEmpty(config.CSRKeyAlg))
@@ -571,83 +569,42 @@ namespace Certify.Providers.Certes
 
             var csrKey = KeyFactory.NewKey(keyAlg);
 
-            var csr = new CsrInfo
-            {
-                CommonName = _idnMapping.GetAscii(config.PrimaryDomain)
-            };
-
-            //alternative to certes IOrderContextExtension.Finalize
-            var builder = new CertificationRequestBuilder(csrKey);
-
-            foreach (var identifier in order.Identifiers)
-            {
-                if (!builder.SubjectAlternativeNames.Contains(identifier.Value))
-                {
-                    if (config.PrimaryDomain != $"*.{identifier.Value}")
-                    {
-                        //only add domain to SAN if it is not derived from a wildcard domain eg test.com from *.test.com
-                        builder.SubjectAlternativeNames.Add(identifier.Value);
-                    }
-                }
-            }
-
-            // if main request is for a wildcard domain, add that to SAN list
-            if (config.PrimaryDomain.StartsWith("*."))
-            {
-                //add wildcard domain to san
-                builder.SubjectAlternativeNames.Add(_idnMapping.GetAscii(config.PrimaryDomain));
-            }
-            builder.AddName("CN", _idnMapping.GetAscii(config.PrimaryDomain));
-
-            var csrBytes = builder.Generate();
-
-            // send our Certificate Signing Request
-
-            Order certOrder = null;
-
+            // generate cert
+            CertificateChain certificateChain = null;
             try
             {
-                certOrder = await orderContext.Finalize(csrBytes);
-            }
-            catch (Exception)
-            {
-                // can get error on finalize if the order is already valid
-                certOrder = await orderContext.Resource();
-
-                log.Error("Order.Finalize", $"Failed to finalize order. Status: {certOrder.Status} ");
-            }
-
-            //TODO: should we iterate here until valid or invalid?
-
-            if (certOrder.Status == OrderStatus.Valid)
-            {
-                // fetch our certificate info
-                var certificateChain = await orderContext.Download();
-
-                var certFriendlyName = config.PrimaryDomain + "[Certify]";
-                var certFolderPath = _settingsFolder + "\\assets\\pfx";
-
-                if (!System.IO.Directory.Exists(certFolderPath))
+                certificateChain = await orderContext.Generate(new CsrInfo
                 {
-                    System.IO.Directory.CreateDirectory(certFolderPath);
-                }
-
-                string certFile = Guid.NewGuid().ToString() + ".pfx";
-                string pfxPath = certFolderPath + "\\" + certFile;
-
-                var pfx = certificateChain.ToPfx(csrKey);
-                var pfxBytes = pfx.Build(certFriendlyName, "");
-
-                System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
-
-                return new ProcessStepResult { IsSuccess = true, Result = pfxPath };
+                    CountryName = "AU",
+                    State = "WA",
+                    Locality = "Perth",
+                    Organization = "Webprofusion",
+                    OrganizationUnit = "Dev",
+                    CommonName = config.PrimaryDomain,
+                }, csrKey);
             }
-            else
+            catch (AcmeRequestException exp)
             {
-                log.Error($"Certificate signing request, not valid: {certOrder.Status} {certOrder.Error}");
-                // TODO: is cert pending or failed?
-                return new ProcessStepResult { IsSuccess = false, ErrorMessage = "Certificate signing request could not complete." };
+                log.Error($"Failed to finalize certificate order:  {exp.Error?.Detail}");
             }
+
+            var certFriendlyName = config.PrimaryDomain + "[Certify]";
+            var certFolderPath = _settingsFolder + "\\assets\\pfx";
+
+            if (!System.IO.Directory.Exists(certFolderPath))
+            {
+                System.IO.Directory.CreateDirectory(certFolderPath);
+            }
+
+            string certFile = Guid.NewGuid().ToString() + ".pfx";
+            string pfxPath = certFolderPath + "\\" + certFile;
+
+            var pfx = certificateChain.ToPfx(csrKey);
+            var pfxBytes = pfx.Build(certFriendlyName, "");
+
+            System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
+
+            return new ProcessStepResult { IsSuccess = true, Result = pfxPath };
         }
 
         public async Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate)
