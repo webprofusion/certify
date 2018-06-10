@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -28,7 +29,7 @@ namespace Certify.Management
         private bool _isRenewAllInProgress { get; set; }
         private ILog _serviceLog { get; set; }
         private bool _httpChallengeServerAvailable = false;
-        private List<SimpleAuthorizationChallengeItem> _currentChallenges = new List<SimpleAuthorizationChallengeItem>();
+        private ConcurrentDictionary<string, SimpleAuthorizationChallengeItem> _currentChallenges = new ConcurrentDictionary<string, SimpleAuthorizationChallengeItem>();
 
         private ObservableCollection<RequestProgressState> _progressResults { get; set; }
 
@@ -69,6 +70,12 @@ namespace Certify.Management
             }
 
             PerformUpgrades();
+
+            var serverConfig = Util.GetAppServiceConfig();
+            _httpChallengePort = serverConfig.HttpChallengeServerPort;
+            _httpChallengeServerClient.Timeout = new TimeSpan(0, 0, 5);
+
+            if (_tc != null) _tc.TrackEvent("ServiceStarted");
         }
 
         public void PerformUpgrades()
@@ -162,6 +169,10 @@ namespace Certify.Management
         {
             Debug.WriteLine("Checking for daily tasks..");
 
+            // clear old cache of challenge responses
+            _currentChallenges = new ConcurrentDictionary<string, SimpleAuthorizationChallengeItem>();
+
+            // use latest settings
             SettingsManager.LoadAppSettings();
 
             if (_tc != null) _tc.TrackEvent("ServiceDailyTaskCheck");

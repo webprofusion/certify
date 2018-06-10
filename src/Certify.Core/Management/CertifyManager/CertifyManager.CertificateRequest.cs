@@ -361,9 +361,13 @@ namespace Certify.Management
             return result;
         }
 
-        public async Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallengeResponses(string challengeType)
+        public Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallengeResponses(string challengeType)
         {
-            return _currentChallenges;
+            var challengeResponses = _currentChallenges
+                .Where(c => c.Value.ChallengeType == challengeType)
+                .Select(a => a.Value).ToList();
+
+            return Task.FromResult(challengeResponses);
         }
 
         private List<string> GetAllRequestedDomains(CertRequestConfig config)
@@ -807,7 +811,15 @@ namespace Certify.Management
                     // startup http challenge server if required
                     if (CoreAppSettings.Current.EnableHttpChallengeServer)
                     {
-                        _httpChallengeServerAvailable = await StartHttpChallengeServer();
+                        if (await IsHttpChallengeProcessStarted())
+                        {
+                            _httpChallengeServerAvailable = true;
+
+                        }
+                        else
+                        {
+                            _httpChallengeServerAvailable = await StartHttpChallengeServer();
+                        }
 
                         if (_httpChallengeServerAvailable)
                         {
@@ -816,6 +828,7 @@ namespace Certify.Management
                         }
                         else
                         {
+
                             LogMessage(managedCertificate.Id, $"Http Challenge Server process unavailable.", LogItemType.CertificateRequestStarted);
                         }
                     }
@@ -843,6 +856,20 @@ namespace Certify.Management
                                 managedCertificate
                             )
                         );
+
+                        // store cache of key/value responses for http challenge server use
+                        var rc = authorization.Challenges?.FirstOrDefault(c => c.ChallengeType == challengeConfig.ChallengeType);
+                        if (rc != null)
+                        {
+                            _currentChallenges.TryAdd(rc.Key,
+                                new SimpleAuthorizationChallengeItem
+                                {
+                                    ChallengeType = rc.ChallengeType,
+                                    Key = rc.Key,
+                                    Value = rc.Value
+                                });
+                        }
+
 
                         // ask LE to check our answer to their authorization challenge (http-01 or
                         // tls-sni-01), LE will then attempt to fetch our answer, if all accessible

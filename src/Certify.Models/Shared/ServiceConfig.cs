@@ -12,5 +12,7 @@ namespace Certify.Shared
         public int Port { get; set; } = 9696;
 #endif
         public string Host { get; set; } = "localhost";
+
+        public int HttpChallengeServerPort { get; set; } = 80;
     }
 }

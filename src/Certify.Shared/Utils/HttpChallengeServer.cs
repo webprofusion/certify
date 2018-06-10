@@ -21,23 +21,37 @@ namespace Certify.Core.Management.Challenges
 
         private Dictionary<string, string> _challengeResponses { get; set; }
 
-        private int _maxLookups = 3;
+        private int _maxServiceLookups = 3;
+        private string _baseUri = "";
 
 #if DEBUG
         private bool _debugMode = true;
-        private string _baseUri = Certify.Locales.ConfigResources.LocalServiceBaseURIDebug + "/api/";
 #else
-        private string _baseUri = Certify.Locales.ConfigResources.LocalServiceBaseURI + "/api/";
+      
         private bool _debugMode = false;
 #endif
         private DateTime _lastRequestTime { get; set; }
 
-        private void Log(string msg)
+        private void Log(string msg, bool clearLog = false)
         {
             msg = DateTime.Now + ": " + msg + "\r\n";
-#if DEBUG
-            System.IO.File.AppendAllText(@"C:\Temp\httpChallengeServer.log", msg);
-#endif
+
+            try
+            {
+
+                if (clearLog)
+                {
+                    System.IO.File.WriteAllText(Util.GetAppDataFolder() + "\\logs\\httpChallengeServer.log", msg);
+                }
+                else
+                {
+                    System.IO.File.AppendAllText(Util.GetAppDataFolder() + "\\logs\\httpChallengeServer.log", msg);
+                }
+            }
+            catch
+            {
+                System.Diagnostics.Debug.WriteLine(msg);
+            }
         }
 
         /// <summary>
@@ -59,6 +73,10 @@ namespace Certify.Core.Management.Challenges
                 if (checkKey != null) _checkKey = checkKey;
 
                 _httpListener = new HttpListener();
+
+                var serverConfig = Certify.Management.Util.GetAppServiceConfig();
+                _baseUri = $"http://{serverConfig.Host}:{serverConfig.Port}/api/";
+
                 _apiClient = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true });
                 _apiClient.Timeout = new TimeSpan(0, 0, 5);
 
@@ -68,10 +86,14 @@ namespace Certify.Core.Management.Challenges
                 _challengeResponses = new Dictionary<string, string>();
 
                 _httpListener.Start();
-                Log("Http Challenge Server Started");
+
+                Log($"Http Challenge Server Started: {uriPrefix}", true);
+                Log($"Control Key: {_controlKey}: Check Key: {_checkKey}");
+
                 _serverTask = Task.Run(ServerTask);
 
-                var stateTimer = new Timer((Object stateInfo) => {
+                var stateTimer = new Timer((Object stateInfo) =>
+                {
                     Log("Checking for auto close.");
                     var time = _lastRequestTime - DateTime.Now;
                     if (Math.Abs(time.TotalSeconds) > 30)
@@ -79,7 +101,7 @@ namespace Certify.Core.Management.Challenges
                         Log("No requests recently, stopping server.");
                         this.Stop();
                     }
-                },null, 1000*10, 1000*10);
+                }, null, 1000 * 10, 1000 * 10);
 
                 return true;
             }
@@ -149,8 +171,12 @@ namespace Certify.Core.Management.Challenges
                         // if challenge response not in our cache, fetch from local API
                         try
                         {
-                            if (_debugMode) Log($"Key {key} not found: Refreshing challenges..");
-                            var response = await _apiClient.GetAsync($"{_baseUri}managedcertificates/currentchallenges/");
+                            _maxServiceLookups--;
+
+                            var apiUrl = $"{_baseUri}managedcertificates/currentchallenges/";
+
+                            if (_debugMode) Log($"Key {key} not found: Refreshing challenges.. {apiUrl}");
+                            var response = await _apiClient.GetAsync(apiUrl);
                             if (response.IsSuccessStatusCode)
                             {
                                 var json = await response.Content.ReadAsStringAsync();
@@ -168,7 +194,7 @@ namespace Certify.Core.Management.Challenges
                         catch (Exception exp)
                         {
                             Log(exp.ToString());
-                            _maxLookups--;
+
                         }
                     }
 
@@ -205,7 +231,7 @@ namespace Certify.Core.Management.Challenges
                 server.Response.Close();
                 if (_debugMode) Log("End request.");
 
-                if (_maxLookups == 0)
+                if (_maxServiceLookups == 0)
                 {
                     // give up trying to resolve challenges, we have been queried too many times for
                     // challenge responses we don't know about

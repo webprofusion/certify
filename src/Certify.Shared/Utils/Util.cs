@@ -98,6 +98,16 @@ namespace Certify.Management
             return serviceConfig;
         }
 
+        public static void StoreCurrentAppServiceConfig()
+        {
+            var appDataPath = GetAppDataFolder();
+            var config = GetAppServiceConfig();
+            var serviceConfigFile = appDataPath + "\\serviceconfig.json";
+#if DEBUG
+            serviceConfigFile = appDataPath + "\\serviceconfig.debug.json";
+#endif
+            File.WriteAllText(serviceConfigFile, JsonConvert.SerializeObject(config));
+        }
 
         /// <summary>
         /// Stored updated config for app service

@@ -107,12 +107,12 @@ namespace Certify.Management
         private Process _httpChallengeProcess;
         private string _httpChallengeControlKey = Guid.NewGuid().ToString();
         private string _httpChallengeCheckKey = "configcheck";
-        private System.Net.Http.HttpClient _httpChallengeServerClient;
+        private System.Net.Http.HttpClient _httpChallengeServerClient = new System.Net.Http.HttpClient();
         private int _httpChallengePort = 80;
 
         private async Task<bool> IsHttpChallengeProcessStarted()
         {
-            if (_httpChallengeProcess != null)
+            if (_httpChallengeServerClient != null)
             {
                 var testUrl = $"http://127.0.0.1:{_httpChallengePort}/.well-known/acme-challenge/{_httpChallengeCheckKey}";
 
