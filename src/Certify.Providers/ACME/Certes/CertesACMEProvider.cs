@@ -224,14 +224,14 @@ namespace Certify.Providers.Certes
         /// <returns></returns>
         public async Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config, string orderUri = null)
         {
-            PendingOrder pendingOrder = new PendingOrder { IsPendingAuthorizations = true };
+            var pendingOrder = new PendingOrder { IsPendingAuthorizations = true };
 
             // prepare a list of all pending authorization we need to complete, or those we have
             // already satisfied
-            List<PendingAuthorization> authzList = new List<PendingAuthorization>();
+            var authzList = new List<PendingAuthorization>();
 
             //if no alternative domain specified, use the primary domain as the subject
-            List<String> domainOrders = new List<string>();
+            var domainOrders = new List<string>();
 
             // order all of the distinct domains in the config (primary + SAN).
             domainOrders.Add(_idnMapping.GetAscii(config.PrimaryDomain));
@@ -299,7 +299,7 @@ namespace Certify.Providers.Certes
                     string authzDomain = res.Identifier.Value;
                     if (res.Wildcard == true) authzDomain = "*." + authzDomain;
 
-                    List<AuthorizationChallengeItem> challenges = new List<AuthorizationChallengeItem>();
+                    var challenges = new List<AuthorizationChallengeItem>();
 
                     // add http challenge (if any)
                     var httpChallenge = await authz.Http();
