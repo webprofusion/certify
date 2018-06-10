@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -114,7 +115,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void RefreshParameters()
         {
-            if (EditModel.SelectedItem.Parameters==null) EditModel.SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();
+            if (EditModel.SelectedItem.Parameters == null) EditModel.SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();
 
             var definition = AppViewModel.ChallengeAPIProviders.FirstOrDefault(p => p.Id == EditModel.SelectedItem.ChallengeProvider);
 
@@ -130,7 +131,8 @@ namespace Certify.UI.Controls.ManagedCertificate
                 }
 
                 // add or update provider parameters (if any) TODO: remove unused params
-                foreach (var pa in definition.ProviderParameters.Where(p => p.IsCredential == false))
+                var providerParams = definition.ProviderParameters.Where(p => p.IsCredential == false);
+                foreach (var pa in providerParams)
                 {
                     // if zoneid previously stored, migrate to provider param
                     if (pa.Key == "zoneid")
@@ -147,13 +149,21 @@ namespace Certify.UI.Controls.ManagedCertificate
                         EditModel.SelectedItem.Parameters.Add(pa);
                     }
                 }
+
+                var toRemove = new List<ProviderParameter>();
+
+                toRemove.AddRange(EditModel.SelectedItem.Parameters.Where(p => !providerParams.Any(pp => pp.Key == p.Key)));
+                foreach (var r in toRemove)
+                {
+                    EditModel.SelectedItem.Parameters.Remove(r);
+                }
             }
         }
 
         private async Task RefreshAllOptions()
         {
             RefreshParameters();
-           // await RefreshCredentialOptions();
+            await RefreshCredentialOptions();
         }
 
         private async void ChallengeAPIProviderList_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -217,8 +227,10 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 MessageBox.Show("Dns Zone Lookup could not be completed. Check credentials are correctly set.");
             }
-
-            EditModel.IsZoneLookupInProgress = false;
+            finally
+            {
+                EditModel.IsZoneLookupInProgress = false;
+            }
         }
 
         private async void PerformDnsZoneLookup_Click(object sender, RoutedEventArgs e)
