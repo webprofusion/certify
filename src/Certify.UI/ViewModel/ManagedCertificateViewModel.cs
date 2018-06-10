@@ -491,6 +491,7 @@ namespace Certify.UI.ViewModel
         public bool UpdateDomainOptions(string domains)
         {
             var item = SelectedItem;
+            var wildcardAdded = false;
 
             // parse text input to add as manual domain options
 
@@ -518,6 +519,11 @@ namespace Certify.UI.ViewModel
                                 if (item.DomainOptions.Count == 0) option.IsPrimaryDomain = true;
 
                                 item.DomainOptions.Add(option);
+
+                                if (option.Domain.StartsWith("*."))
+                                {
+                                    wildcardAdded = true;
+                                }
                             }
                             else
                             {
@@ -533,6 +539,12 @@ namespace Certify.UI.ViewModel
                 {
                     MessageBox.Show("Invalid domains: " + invalidDomains);
                     return false;
+                }
+
+                if (wildcardAdded && !SelectedItem.RequestConfig.Challenges.Any(c=>c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS))
+                {
+                    // wildcard added but no DNS challenges exist yet
+                    MessageBox.Show("You have added a wildcard domain, you will also need to configure a corresponding DNS challenge under Authorization. ");
                 }
             }
 
