@@ -113,7 +113,9 @@ namespace Certify.Management
                         if (CoreAppSettings.Current.EnableHttpChallengeServer)
                         {
                             challengeInfo.AppendLine(
-                               $"The *Http Challenge Server* option is enabled. This will create a temporary web service on port 80 during validation. This process co-exists with your main web server can listens for http challenge requests to /.well-known/acme-challenge/. If you are using a web server on port 80 other than IIS (or other http.sys enabled server), that will be used instead (if possible)." +
+                               $"The *Http Challenge Server* option is enabled. This will create a temporary web service on port 80 during validation. " +
+                               $"This process co-exists with your main web server and listens for http challenge requests to /.well-known/acme-challenge/. " +
+                               $"If you are using a web server on port 80 other than IIS (or other http.sys enabled server), that will be used instead." +
                                newLine
                                );
                         }
