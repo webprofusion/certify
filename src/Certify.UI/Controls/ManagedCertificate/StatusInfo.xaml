@@ -154,7 +154,7 @@
                 </StackPanel>
             </StackPanel>
 
-        <StackPanel x:Name="RenewalPaused" Visibility="Collapsed">
+            <StackPanel x:Name="RenewalPaused" Visibility="Collapsed">
 
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
@@ -211,7 +211,7 @@
                         </StackPanel>
                     </Button>
                 </StackPanel>
-                <ScrollViewer VerticalScrollBarVisibility="Visible" Visibility="Hidden">
+                <ScrollViewer VerticalScrollBarVisibility="Visible" Visibility="Collapsed">
                     <DockPanel>
 
                         <DataGrid
