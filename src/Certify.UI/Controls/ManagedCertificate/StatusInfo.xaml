@@ -9,10 +9,10 @@
     xmlns:local="clr-namespace:Certify.UI.Controls.ManagedCertificate"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:utils="clr-namespace:Certify.UI.Utils"
-    Height="432"
     VerticalAlignment="Top"
     d:DataContext="{d:DesignInstance Type=certifyui:ManagedCertificateDesignViewModel,
                                      IsDesignTimeCreatable=True}"
+    d:DesignHeight="432"
     d:DesignWidth="631.2"
     mc:Ignorable="d">
     <UserControl.Resources>

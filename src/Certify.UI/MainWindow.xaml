@@ -142,7 +142,7 @@
             <TabItem
                 MinWidth="60"
                 HorizontalAlignment="Left"
-                HorizontalContentAlignment="Left"
+                HorizontalContentAlignment="Stretch"
                 VerticalContentAlignment="Stretch"
                 Controls:ControlsHelper.HeaderFontSize="12"
                 Header="{x:Static res:SR.Settings}">
@@ -150,7 +150,7 @@
             </TabItem>
             <TabItem
                 MinWidth="80"
-                HorizontalContentAlignment="Left"
+                HorizontalContentAlignment="Stretch"
                 VerticalContentAlignment="Stretch"
                 Controls:ControlsHelper.HeaderFontSize="12"
                 Header="{x:Static res:SR.About}">
@@ -168,9 +168,7 @@
                 Width="300"
                 Header="Flyout"
                 Position="Right"
-                Theme="Inverse">
-                <!--  Your custom content here  -->
-            </Controls:Flyout>
+                Theme="Inverse" />
         </Controls:FlyoutsControl>
     </Controls:MetroWindow.Flyouts>
 </Controls:MetroWindow>

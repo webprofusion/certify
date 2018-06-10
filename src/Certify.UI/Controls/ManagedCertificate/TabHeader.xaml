@@ -27,7 +27,7 @@
                 Width="16"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                Foreground="{DynamicResource AccentColorBrush3}"
+                Foreground="{DynamicResource ResourceKey=AccentColorBrush}"
                 Icon="{Binding IconName}" />
             <Label
                 x:Name="TabLabel"
@@ -35,14 +35,14 @@
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Content="{Binding HeaderText}"
-                FontSize="12">
+                FontSize="11">
                 <Label.Style>
                     <Style>
-                        <Setter Property="Label.Foreground" Value="{DynamicResource AccentColorBrush3}" />
-                        <Setter Property="Label.FontWeight" Value="Normal" />
+                        <Setter Property="Label.Foreground" Value="{DynamicResource AccentColorBrush}" />
+                        <Setter Property="Label.FontWeight" Value="SemiBold" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type TabItem}}, Path=(IsSelected)}" Value="true">
-                                <Setter Property="Label.Foreground" Value="{DynamicResource AccentColorBrush}" />
+                                <Setter Property="Label.Foreground" Value="Black" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
