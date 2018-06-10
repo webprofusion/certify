@@ -30,7 +30,8 @@ namespace Certify.UI.ViewModel
         };
 
         public bool UsesCredentials { get; set; }
-        public bool UsesZoneLookup { get; set; }
+        public bool ShowZoneLookup { get; set; }
+        public bool IsZoneLookupInProgress { get; set; }
 
         public ObservableCollection<ProviderDefinition> ChallengeProviders
         {
