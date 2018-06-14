@@ -10,7 +10,7 @@ namespace Certify.Core.Management.Challenges.DNS
 {
     public class DnsProviderScripting : IDnsProvider
     {
-        int IDnsProvider.PropagationDelaySeconds => Definition.PropagationDelaySeconds;
+        int IDnsProvider.PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
 
         string IDnsProvider.ProviderId => Definition.Id;
 
@@ -24,6 +24,7 @@ namespace Certify.Core.Management.Challenges.DNS
 
         private string _createScriptPath = "";
         private string _deleteScriptPath = "";
+        private int? _customPropagationDelay = null;
 
         public static ProviderDefinition Definition
         {
@@ -37,8 +38,9 @@ namespace Certify.Core.Management.Challenges.DNS
                     HelpUrl = "http://docs.certifytheweb.com/",
                     PropagationDelaySeconds = 60,
                     ProviderParameters = new List<ProviderParameter>{
-                        new ProviderParameter{Key="createscriptpath", Name="Create Script Path", IsRequired=true , IsCredential=false},
-                        new ProviderParameter{Key="deletescriptpath", Name="Delete Script Path", IsRequired=false, IsCredential=false },
+                        new ProviderParameter{ Key="createscriptpath", Name="Create Script Path", IsRequired=true , IsCredential=false},
+                        new ProviderParameter{ Key="deletescriptpath", Name="Delete Script Path", IsRequired=false, IsCredential=false },
+                        new ProviderParameter{ Key="propagationdelay",Name="Propagation Delay Seconds (optional)", IsRequired=false, IsPassword=false, Value="60", IsCredential=false },
                         new ProviderParameter{ Key="zoneid",Name="Dns Zone Id (optional)", IsRequired=false, IsPassword=false, IsCredential=false }
                     },
                     ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
@@ -52,6 +54,14 @@ namespace Certify.Core.Management.Challenges.DNS
         {
             if (parameters.ContainsKey("createscriptpath")) _createScriptPath = parameters["createscriptpath"];
             if (parameters.ContainsKey("deletescriptpath")) _deleteScriptPath = parameters["deletescriptpath"];
+
+            if (parameters.ContainsKey("propagationdelay"))
+            {
+                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                {
+                    _customPropagationDelay = customPropDelay;
+                }
+            }
         }
 
         public async Task<ActionResult> CreateRecord(DnsRecord request)
