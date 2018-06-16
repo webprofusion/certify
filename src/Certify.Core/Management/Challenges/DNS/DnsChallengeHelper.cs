@@ -246,5 +246,140 @@ namespace Certify.Core.Management.Challenges
                 };
             }
         }
+
+        public async Task<DnsChallengeHelperResult> DeleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, string domain, string txtRecordName)
+        {
+
+         
+            // for a given managed site configuration, attempt to delete the TXT record created for the challenge
+
+            var credentialsManager = new CredentialsManager();
+            var credentials = new Dictionary<string, string>();
+
+            IDnsProvider dnsAPIProvider = null;
+
+            var challengeConfig = managedcertificate.GetChallengeConfig(domain);
+
+            if (challengeConfig.ChallengeProvider.Contains(".Manual"))
+            {
+                return new DnsChallengeHelperResult
+                {
+                    Result = new ActionResult { IsSuccess = true, Message = $"The DNS record {txtRecordName} can now be removed." },
+                    PropagationSeconds = 0,
+                    IsAwaitingUser = true
+                };
+            }
+
+            if (!String.IsNullOrEmpty(challengeConfig.ChallengeCredentialKey))
+            {
+                // decode credentials string array
+                try
+                {
+                    credentials = await credentialsManager.GetUnlockedCredentialsDictionary(challengeConfig.ChallengeCredentialKey);
+                }
+                catch (Exception)
+                {
+                    return new DnsChallengeHelperResult
+                    {
+                        Result = new ActionResult { IsSuccess = false, Message = "DNS Challenge API Credentials could not be decrypted. The original user must be used for decryption." },
+                        PropagationSeconds = 0,
+                        IsAwaitingUser = false
+                    };
+                }
+            }
+
+            var parameters = new Dictionary<String, string>();
+            if (challengeConfig.Parameters != null)
+            {
+                foreach (var p in challengeConfig.Parameters)
+                {
+                    parameters.Add(p.Key, p.Value);
+                }
+            }
+
+            try
+            {
+                dnsAPIProvider = await ChallengeProviders.GetDnsProvider(challengeConfig.ChallengeProvider, credentials, parameters);
+            }
+            catch (ChallengeProviders.CredentialsRequiredException)
+            {
+                return new DnsChallengeHelperResult
+                {
+                    Result = new ActionResult { IsSuccess = false, Message = "This DNS Challenge API requires one or more credentials to be specified." },
+                    PropagationSeconds = 0,
+                    IsAwaitingUser = false
+                };
+            }
+            catch (Exception exp)
+            {
+                return new DnsChallengeHelperResult
+                {
+                    Result = new ActionResult { IsSuccess = false, Message = $"DNS Challenge API Provider could not be created. Check all required credentials are set. {exp.ToString()}" },
+                    PropagationSeconds = 0,
+                    IsAwaitingUser = false
+                };
+            }
+
+            if (dnsAPIProvider == null)
+            {
+                return new DnsChallengeHelperResult
+                {
+                    Result = new ActionResult { IsSuccess = false, Message = "DNS Challenge API Provider not set or not recognised. Select an API to proceed." },
+                    PropagationSeconds = 0,
+                    IsAwaitingUser = false
+                };
+            }
+
+            string zoneId = null;
+            if (parameters != null && parameters.ContainsKey("zoneid"))
+            {
+                zoneId = parameters["zoneid"]?.Trim();
+            }
+            else
+            {
+                zoneId = challengeConfig.ZoneId?.Trim();
+            }
+
+            if (dnsAPIProvider != null)
+            {
+                log.Information($"DNS: Deleting TXT Record '{txtRecordName}', in Zone Id '{zoneId}' using API provider '{dnsAPIProvider.ProviderTitle}'");
+                try
+                {
+                    var result = await dnsAPIProvider.DeleteRecord(new DnsRecord
+                    {
+                        RecordType = "TXT",
+                        TargetDomainName = domain,
+                        RecordName = txtRecordName,
+                        ZoneId = zoneId
+                    });
+
+                    return new DnsChallengeHelperResult
+                    {
+                        Result = result,
+                        PropagationSeconds = dnsAPIProvider.PropagationDelaySeconds,
+                        IsAwaitingUser = challengeConfig.ChallengeProvider.Contains(".Manual")
+                    };
+                }
+                catch (Exception exp)
+                {
+                    return new DnsChallengeHelperResult
+                    {
+                        Result = new ActionResult { IsSuccess = false, Message = $"Failed [{dnsAPIProvider.ProviderTitle}]: " + exp.Message },
+                        PropagationSeconds = 0,
+                        IsAwaitingUser = false
+                    };
+                }
+
+            }
+            else
+            {
+                return new DnsChallengeHelperResult
+                {
+                    Result = new ActionResult { IsSuccess = false, Message = "Error: Could not determine DNS API Provider." },
+                    PropagationSeconds = 0,
+                    IsAwaitingUser = false
+                };
+            }
+        }
     }
 }

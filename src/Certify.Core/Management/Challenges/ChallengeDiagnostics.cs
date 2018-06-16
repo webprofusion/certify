@@ -584,10 +584,13 @@ namespace Certify.Core.Management.Challenges
 
             var cleanupQueue = new List<Action> { };
 
-            // TODO: add cleanup actions to queue cleanupQueue.Add(() => remove temp txt record);
-
             // configure cleanup actions for use after challenge completes
-            pendingAuth.Cleanup = () => cleanupQueue.ForEach(a => a());
+            pendingAuth.Cleanup = async () =>
+           {
+
+               var result = await dnsHelper.DeleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key);
+           };
+           
 
             return dnsResult;
         }
