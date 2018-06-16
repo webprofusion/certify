@@ -28,6 +28,10 @@ namespace Certify.Core.Tests
         public override async Task TestCreateRecord()
         {
             await base.TestCreateRecord();
+
+            // also create a duplicate
+
+            await base.TestCreateRecord();
         }
 
         [TestMethod, TestCategory("DNS")]
