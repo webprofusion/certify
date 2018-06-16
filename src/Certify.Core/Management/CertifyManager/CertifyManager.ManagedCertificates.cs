@@ -116,17 +116,24 @@ namespace Certify.Management
             {
                 var testUrl = $"http://127.0.0.1:{_httpChallengePort}/.well-known/acme-challenge/{_httpChallengeCheckKey}";
 
-                var response = await _httpChallengeServerClient.GetAsync(testUrl);
-                if (response.IsSuccessStatusCode)
+                try
                 {
-                    var status = await _httpChallengeServerClient.GetStringAsync(testUrl);
-
-                    if (status == "OK")
+                    var response = await _httpChallengeServerClient.GetAsync(testUrl);
+                    if (response.IsSuccessStatusCode)
                     {
-                        return true;
+                        var status = await _httpChallengeServerClient.GetStringAsync(testUrl);
+
+                        if (status == "OK")
+                        {
+                            return true;
+                        }
                     }
+                    return false;
                 }
-                return false;
+                catch
+                {
+                    return false;
+                }
             }
             else
             {
@@ -179,18 +186,27 @@ namespace Certify.Management
         {
             if (_httpChallengeServerClient != null)
             {
-                var response = await _httpChallengeServerClient.GetAsync($"http://127.0.0.1:{_httpChallengePort}/.well-known/acme-challenge/{_httpChallengeControlKey}");
-                if (response.IsSuccessStatusCode)
+                try
+                {
+
+
+                    var response = await _httpChallengeServerClient.GetAsync($"http://127.0.0.1:{_httpChallengePort}/.well-known/acme-challenge/{_httpChallengeControlKey}");
+                    if (response.IsSuccessStatusCode)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        try
+                        {
+                            _httpChallengeProcess.CloseMainWindow();
+                        }
+                        catch { }
+                    }
+                }
+                catch
                 {
                     return true;
-                }
-                else
-                {
-                    try
-                    {
-                        _httpChallengeProcess.CloseMainWindow();
-                    }
-                    catch { }
                 }
             }
             return true;
