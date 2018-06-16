@@ -160,7 +160,8 @@ namespace Certify.Providers.DNS.AWSRoute53
 
                 try
                 {
-                    var result = await ApplyDnsChange(zone, recordSet, ChangeAction.UPSERT);
+                    // requests for *.domain.com + domain.com use the same TXT record name, so we need to allow multiple entires rather than doing Upsert
+                    var result = await ApplyDnsChange(zone, recordSet, ChangeAction.CREATE);
                 }
                 catch (Exception exp)
                 {

@@ -88,7 +88,7 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
 
         public DnsProviderSimpleDNSPlus(Dictionary<string, string> credentials)
         {
-            
+
             _authKey = credentials["authkey"];
             _authSecret = credentials["authsecret"];
             _authServer = credentials["authserver"];
@@ -101,7 +101,7 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
 
         }
 
-    public async Task<ActionResult> Test()
+        public async Task<ActionResult> Test()
         {
             // test connection and credentials
             try
@@ -122,7 +122,8 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
             }
         }
 
-        private static string Base64Encode(string Txt) {
+        private static string Base64Encode(string Txt)
+        {
             var txtBytes = System.Text.Encoding.UTF8.GetBytes(Txt);
             return System.Convert.ToBase64String(txtBytes);
         }
@@ -172,7 +173,7 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
         {
             var request = CreateRequest(new HttpMethod("PATCH"), string.Format(_createRecordUri, zoneName));
             var rec = new DnsRecordSimpleDNSPlus();
-            rec.Type = "TXT"; rec.Name = recordname+"."+zoneName; rec.Data = value; rec.TTL = 600; rec.Remove = false;
+            rec.Type = "TXT"; rec.Name = recordname + "." + zoneName; rec.Data = value; rec.TTL = 600; rec.Remove = false;
             var recarr = new object[] { rec };
             request.Content = new StringContent(
                 JsonConvert.SerializeObject(recarr)
@@ -255,14 +256,8 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
             var records = await GetDnsRecords(tldName);
             var record = records.FirstOrDefault(x => x.RecordName == sub);
 
-            if (record != null)
-            {
-                return await UpdateDnsRecord(tldName, record, request.RecordValue);
-            }
-            else
-            {
-                return await AddDnsRecord(tldName, sub, request.RecordValue);
-            }
+            return await AddDnsRecord(tldName, sub, request.RecordValue);
+
         }
 
         public async Task<ActionResult> DeleteRecord(DnsRecord requestreq)

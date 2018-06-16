@@ -172,14 +172,55 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             }
         }
 
-        public Task<ActionResult> DeleteRecord(DnsRecord request)
+        public async Task<ActionResult> DeleteRecord(DnsRecord request)
         {
             // https://api-docs.dnsmadeeasy.com/ determine record id, if it exists
 
             // delete based on zoneid, recordId
 
             //https://api.dnsmadeeasy.com/V2.0/dns/managed/1119443/records/66814826
-            throw new System.NotImplementedException();
+
+            DnsRecord domainInfo = null;
+
+            try
+            {
+                domainInfo = await DetermineZoneDomainRoot(request.RecordName, request.ZoneId);
+
+                if (string.IsNullOrEmpty(domainInfo.RootDomain))
+                {
+                    return new ActionResult { IsSuccess = false, Message = "Failed to determine root domain in zone." };
+                }
+            }
+            catch (Exception exp)
+            {
+                return new ActionResult { IsSuccess = false, Message = $"[{ProviderTitle}] Failed to create record: {exp.Message}" };
+            }
+
+            var recordName = NormaliseRecordName(domainInfo, request.RecordName);
+
+            var existingRecords = await GetDnsRecords(request.ZoneId);
+
+            foreach(var r in existingRecords)
+            {
+               if (r.RecordName == recordName && r.RecordType==request.RecordType)
+                {
+                    //delete existing record
+                    string url = $"{_apiUrl}dns/managed/{request.ZoneId}/records/{r.RecordId}";
+                    var apiRequest = CreateRequest(HttpMethod.Delete, url, DateTimeOffset.Now);
+                    var result = await _httpClient.SendAsync(apiRequest);
+
+                    if (!result.IsSuccessStatusCode)
+                    {
+                        return new ActionResult
+                        {
+                            IsSuccess = false,
+                            Message = $"Could not delete dns record {recordName} from zone {request.ZoneId}. Result: {result.StatusCode}"
+                        };
+                    }
+                }
+            }
+
+            return new ActionResult { IsSuccess = true, Message = $"Dns record deleted: {recordName}" };
         }
 
         public async Task<List<DnsRecord>> GetDnsRecords(string zoneId)

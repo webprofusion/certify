@@ -256,21 +256,12 @@ namespace Certify.Providers.DNS.Cloudflare
 
         public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
-            //check if record already exists
-
             try
             {
                 var records = await GetDnsRecords(request.ZoneId);
-                var record = records.FirstOrDefault(x => x.Name == request.RecordName);
-
-                if (record != null)
-                {
-                    return await UpdateDnsRecord(request.ZoneId, record, request.RecordValue);
-                }
-                else
-                {
-                    return await AddDnsRecord(request.ZoneId, request.RecordName, request.RecordValue);
-                }
+                
+                return await AddDnsRecord(request.ZoneId, request.RecordName, request.RecordValue);
+                
             }
             catch (Exception exp)
             {

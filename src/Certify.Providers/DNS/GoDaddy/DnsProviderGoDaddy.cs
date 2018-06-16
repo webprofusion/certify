@@ -229,17 +229,9 @@ namespace Certify.Providers.DNS.GoDaddy
                     sub += "." + domains[i];
                 }
             }
-            var records = await GetDnsRecords(tldName);
-            var record = records.FirstOrDefault(x => x.RecordName == sub);
-
-            if (record != null)
-            {
-                return await UpdateDnsRecord(tldName, record, request.RecordValue);
-            }
-            else
-            {
+            
                 return await AddDnsRecord(tldName, sub, request.RecordValue);
-            }
+
         }
 
         public async Task<ActionResult> DeleteRecord(DnsRecord request)

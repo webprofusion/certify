@@ -29,14 +29,35 @@ namespace Certify.Models.Providers
     {
         Task<bool> InitProvider();
 
+        /// <summary>
+        /// Perform a test of credentials, usually by listings DNS zones
+        /// </summary>
+        /// <returns></returns>
         Task<ActionResult> Test();
 
+        /// <summary>
+        /// Create a new record in the given DNS zone, even if the record already exists (i.e duplicates allowed/required)
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         Task<ActionResult> CreateRecord(DnsRecord request);
 
+        /// <summary>
+        /// Delete a given record in the given DNS zone (including duplicates) 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         Task<ActionResult> DeleteRecord(DnsRecord request);
 
+        /// <summary>
+        /// Return a list of the DNS zones managed by the current credentials
+        /// </summary>
+        /// <returns></returns>
         Task<List<DnsZone>> GetZones();
 
+        /// <summary>
+        /// Time to wait for DNS propagation between primary name and secondary name servers
+        /// </summary>
         int PropagationDelaySeconds { get; }
 
         string ProviderId { get; }
