@@ -147,21 +147,41 @@ namespace Certify.Providers.DNS.AWSRoute53
 
             if (zone != null)
             {
-                var recordSet = new ResourceRecordSet()
+                // get existing record set for current TXT records with this name
+                ListResourceRecordSetsResponse response = await _route53Client.ListResourceRecordSetsAsync(
+                    new ListResourceRecordSetsRequest {
+                        StartRecordName = request.RecordName,
+                        StartRecordType = "TXT",
+                        MaxItems = "1",
+                        HostedZoneId = zone.Id
+                    }
+                    );
+                var targetRecordSet = response.ResourceRecordSets.FirstOrDefault();
+
+                if (targetRecordSet != null)
                 {
-                    Name = request.RecordName,
-                    TTL = 5,
-                    Type = RRType.TXT,
-                    ResourceRecords = new List<ResourceRecord>
+                    targetRecordSet.ResourceRecords.Add(
+                          new ResourceRecord { Value = "\"" + request.RecordValue + "\"" }
+                        );
+                }
+                else
+                {
+                    targetRecordSet = new ResourceRecordSet()
+                    {
+                        Name = request.RecordName,
+                        TTL = 5,
+                        Type = RRType.TXT,
+                        ResourceRecords = new List<ResourceRecord>
                         {
                           new ResourceRecord { Value =  "\""+request.RecordValue+"\""}
                         }
-                };
+                    };
+                }
 
                 try
                 {
                     // requests for *.domain.com + domain.com use the same TXT record name, so we need to allow multiple entires rather than doing Upsert
-                    var result = await ApplyDnsChange(zone, recordSet, ChangeAction.CREATE);
+                    var result = await ApplyDnsChange(zone, targetRecordSet, ChangeAction.UPSERT);
                 }
                 catch (Exception exp)
                 {
@@ -182,18 +202,18 @@ namespace Certify.Providers.DNS.AWSRoute53
 
             if (zone != null)
             {
-                var recordSet = new ResourceRecordSet()
-                {
-                    Name = request.RecordName,
-                    TTL = 5,
-                    Type = RRType.TXT,
-                    ResourceRecords = new List<ResourceRecord>
-                        {
-                          new ResourceRecord { Value = "\""+request.RecordValue+"\""}
-                        }
-                };
+                var response = await _route53Client.ListResourceRecordSetsAsync(
+                    new ListResourceRecordSetsRequest
+                    {
+                        StartRecordName = request.RecordName,
+                        StartRecordType = "TXT",
+                        MaxItems = "1",
+                        HostedZoneId = zone.Id
+                    }
+                    );
+                var targetRecordSet = response.ResourceRecordSets.FirstOrDefault();
 
-                var result = ApplyDnsChange(zone, recordSet, ChangeAction.DELETE);
+                var result = await ApplyDnsChange(zone, targetRecordSet, ChangeAction.DELETE);
 
                 return new ActionResult { IsSuccess = true, Message = "Success" };
             }
