@@ -19,7 +19,7 @@ namespace Certify.Core.Tests
             {
                 RecordName = "dns-test." + PrimaryTestDomain,
                 RecordType = "TXT",
-                RecordValue = "A random test",
+                RecordValue = "A random test "+  System.Guid.NewGuid().ToString(),
                 TargetDomainName = PrimaryTestDomain,
                 ZoneId = _zoneId
             };
