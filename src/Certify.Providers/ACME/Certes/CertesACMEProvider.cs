@@ -42,6 +42,7 @@ namespace Certify.Providers.Certes
         private CertesSettings _settings = null;
         private Dictionary<string, IOrderContext> _currentOrders;
         private IdnMapping _idnMapping = new IdnMapping();
+        private DateTime lastInitDateTime = new DateTime();
 
         public CertesACMEProvider(string settingsPath)
         {
@@ -224,6 +225,13 @@ namespace Certify.Providers.Certes
         /// <returns></returns>
         public async Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config, string orderUri = null)
         {
+
+            if (DateTime.Now.Subtract(lastInitDateTime).TotalMinutes>30)
+            {
+                // our acme context nonce may have expired (which returns "JWS has an invalid anti-replay nonce") so start a new one
+                InitProvider();
+            }
+
             var pendingOrder = new PendingOrder { IsPendingAuthorizations = true };
 
             // prepare a list of all pending authorization we need to complete, or those we have
