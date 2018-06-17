@@ -60,14 +60,13 @@ namespace Certify.UI
             // save or discard site changes before creating a new site/certificate
             if (!await _itemViewModel.ConfirmDiscardUnsavedChanges()) return;
 
-            if (!_appViewModel.IsRegisteredVersion && _appViewModel.ManagedCertificates != null && _appViewModel.ManagedCertificates.Count >= 5)
+            if (!_appViewModel.IsRegisteredVersion && _appViewModel.ManagedCertificates != null && _appViewModel.ManagedCertificates.Count >= 3)
             {
                 MessageBox.Show(SR.MainWindow_TrialLimitationReached);
-                return;
             }
             else
             {
-                if (_appViewModel.IsRegisteredVersion && _appViewModel.ManagedCertificates?.Count >= 5)
+                if (_appViewModel.IsRegisteredVersion && _appViewModel.ManagedCertificates?.Count >= 3)
                 {
                     var licensingManager = ViewModel.AppViewModel.Current.PluginManager?.LicensingManager;
 
