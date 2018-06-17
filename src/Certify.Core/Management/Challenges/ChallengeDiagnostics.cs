@@ -427,8 +427,14 @@ namespace Certify.Core.Management.Challenges
                 }
             };
 
+            // if config checks are enabled but our last renewal was successful, skip auto config until we have failed twice
             if (requestConfig.PerformExtensionlessConfigChecks)
             {
+                if (managedCertificate.DateRenewed != null && managedCertificate.RenewalFailureCount < 2)
+                {
+                    return new ActionResult { IsSuccess = true, Message = $"Skipping URL access checks and auto config (if applicable): {httpChallenge.ResourceUri}. Will resume checks if renewal failure count exceeds 2 attempts." };
+                }
+
                 // first check if it already works with no changes
                 if (await _netUtil.CheckURL(log, httpChallenge.ResourceUri))
                 {
@@ -483,7 +489,7 @@ namespace Certify.Core.Management.Challenges
                 return new ActionResult
                 {
                     IsSuccess = false,
-                    Message = $"Config checks disabled. Could not verify URL: {httpChallenge.ResourceUri}"
+                    Message = $"Config checks disabled. Did not verify URL access: {httpChallenge.ResourceUri}"
                 };
             }
         }
@@ -592,6 +598,7 @@ namespace Certify.Core.Management.Challenges
             pendingAuth.Cleanup = async () =>
                {
                    var result = await dnsHelper.DeleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key);
+                   //log.Information(result.Result?.Message);
                };
 
             return dnsResult;

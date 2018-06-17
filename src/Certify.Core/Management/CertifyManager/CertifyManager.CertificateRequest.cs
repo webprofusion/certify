@@ -877,14 +877,18 @@ namespace Certify.Management
                         authorization = await _challengeDiagnostics.PerformAutomatedChallengeResponse(log,
                             _serverProvider, managedCertificate, authorization);
 
-                        // if we had automated checks configured and they failed, report error here
+                        // if we had automated checks configured and they failed more than twice in a row, fail and report error here
                         if (
-                            (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP &&
-                             config.PerformExtensionlessConfigChecks &&
-                             !authorization.AttemptedChallenge?.ConfigCheckedOK == true) ||
-                            (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI &&
-                             config.PerformTlsSniBindingConfigChecks &&
-                             !authorization.AttemptedChallenge?.ConfigCheckedOK == true)
+                            managedCertificate.RenewalFailureCount > 2
+                            &&
+                            (
+                                (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP &&
+                                 config.PerformExtensionlessConfigChecks &&
+                                 !authorization.AttemptedChallenge?.ConfigCheckedOK == true) ||
+                                (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI &&
+                                 config.PerformTlsSniBindingConfigChecks &&
+                                 !authorization.AttemptedChallenge?.ConfigCheckedOK == true)
+                             )
                         )
                         {
                             //if we failed the config checks, report any errors

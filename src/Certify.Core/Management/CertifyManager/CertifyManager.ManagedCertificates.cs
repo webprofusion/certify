@@ -308,7 +308,8 @@ namespace Certify.Management
             if (result.Provider != null)
             {
                 return await result.Provider.GetZones();
-            } else
+            }
+            else
             {
                 return new List<DnsZone>();
             }
