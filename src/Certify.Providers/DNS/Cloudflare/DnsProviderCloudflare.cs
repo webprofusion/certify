@@ -130,7 +130,7 @@ namespace Certify.Providers.DNS.Cloudflare
 
                 if (zones != null && zones.Any())
                 {
-                    return new ActionResult { IsSuccess = true, Message = "Test Completed OK." };
+                    return new ActionResult { IsSuccess = true, Message = "Dns API Test Completed OK." };
                 }
                 else
                 {
@@ -139,7 +139,7 @@ namespace Certify.Providers.DNS.Cloudflare
             }
             catch (Exception exp)
             {
-                return new ActionResult { IsSuccess = true, Message = $"Test Failed: {exp.Message}" };
+                return new ActionResult { IsSuccess = true, Message = $"Dns API Test Failed: {exp.Message}" };
             }
         }
 
@@ -218,7 +218,7 @@ namespace Certify.Providers.DNS.Cloudflare
                 return new ActionResult
                 {
                     IsSuccess = true,
-                    Message = "DNS record added."
+                    Message = $"DNS record added: {name}"
                 };
             }
         }
@@ -250,7 +250,7 @@ namespace Certify.Providers.DNS.Cloudflare
             }
             else
             {
-                return new ActionResult { IsSuccess = true, Message = "DNS record updated" };
+                return new ActionResult { IsSuccess = true, Message = $"DNS record updated: {record.Name}" };
             }
         }
 

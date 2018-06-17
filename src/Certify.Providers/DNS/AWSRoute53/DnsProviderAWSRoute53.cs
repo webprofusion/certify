@@ -149,7 +149,8 @@ namespace Certify.Providers.DNS.AWSRoute53
             {
                 // get existing record set for current TXT records with this name
                 ListResourceRecordSetsResponse response = await _route53Client.ListResourceRecordSetsAsync(
-                    new ListResourceRecordSetsRequest {
+                    new ListResourceRecordSetsRequest
+                    {
                         StartRecordName = request.RecordName,
                         StartRecordType = "TXT",
                         MaxItems = "1",
@@ -188,7 +189,7 @@ namespace Certify.Providers.DNS.AWSRoute53
                     new ActionResult { IsSuccess = false, Message = exp.InnerException.Message };
                 }
 
-                return new ActionResult { IsSuccess = true, Message = "Success" };
+                return new ActionResult { IsSuccess = true, Message = $"Dns Record Created: {request.RecordName}" };
             }
             else
             {
@@ -215,7 +216,7 @@ namespace Certify.Providers.DNS.AWSRoute53
 
                 var result = await ApplyDnsChange(zone, targetRecordSet, ChangeAction.DELETE);
 
-                return new ActionResult { IsSuccess = true, Message = "Success" };
+                return new ActionResult { IsSuccess = true, Message = "Dns Record Delete completed: {request.RecordName}" };
             }
             else
             {

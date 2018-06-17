@@ -18,7 +18,7 @@ namespace Certify.Core.Management.Challenges
 
     public class DnsChallengeHelper
     {
-        public async Task<DnsChallengeHelperResult> GetDnsProvider(string providerTypeId, string credentialsId, Dictionary<string,string> parameters)
+        public async Task<DnsChallengeHelperResult> GetDnsProvider(string providerTypeId, string credentialsId, Dictionary<string, string> parameters)
         {
             var credentialsManager = new CredentialsManager();
             var credentials = new Dictionary<string, string>();
@@ -44,7 +44,7 @@ namespace Certify.Core.Management.Challenges
             }
 
             try
-            { 
+            {
                 dnsAPIProvider = await ChallengeProviders.GetDnsProvider(providerTypeId, credentials, parameters);
             }
             catch (ChallengeProviders.CredentialsRequiredException)
@@ -117,10 +117,6 @@ namespace Certify.Core.Management.Challenges
                     };
                 }
             }
-            /* else
-             {
-                 return new ActionResult { IsSuccess = false, Message = "DNS Challenge API Credentials not set. Add or select API credentials to proceed." };
-             }*/
 
             var parameters = new Dictionary<String, string>();
             if (challengeConfig.Parameters != null)
@@ -187,6 +183,8 @@ namespace Certify.Core.Management.Challenges
                         ZoneId = zoneId
                     });
 
+                    result.Message = $"{dnsAPIProvider.ProviderTitle} :: {result.Message}";
+
                     return new DnsChallengeHelperResult
                     {
                         Result = result,
@@ -204,6 +202,7 @@ namespace Certify.Core.Management.Challenges
                     };
                 }
 
+                //TODO: DNS query to check for new record
                 /*
                 if (result.IsSuccess)
                 {
@@ -249,10 +248,7 @@ namespace Certify.Core.Management.Challenges
 
         public async Task<DnsChallengeHelperResult> DeleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, string domain, string txtRecordName)
         {
-
-         
             // for a given managed site configuration, attempt to delete the TXT record created for the challenge
-
             var credentialsManager = new CredentialsManager();
             var credentials = new Dictionary<string, string>();
 
@@ -352,6 +348,8 @@ namespace Certify.Core.Management.Challenges
                         RecordName = txtRecordName,
                         ZoneId = zoneId
                     });
+
+                    result.Message = $"{dnsAPIProvider.ProviderTitle} :: {result.Message}";
 
                     return new DnsChallengeHelperResult
                     {

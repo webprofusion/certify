@@ -226,7 +226,7 @@ namespace Certify.Providers.Certes
         public async Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config, string orderUri = null)
         {
 
-            if (DateTime.Now.Subtract(lastInitDateTime).TotalMinutes>30)
+            if (DateTime.Now.Subtract(lastInitDateTime).TotalMinutes > 30)
             {
                 // our acme context nonce may have expired (which returns "JWS has an invalid anti-replay nonce") so start a new one
                 InitProvider();
@@ -315,7 +315,7 @@ namespace Certify.Providers.Certes
                     {
                         var httpChallengeStatus = await httpChallenge.Resource();
 
-                        log.Information($"Got http-01 challenge {httpChallengeStatus}");
+                        log.Information($"Got http-01 challenge {httpChallengeStatus.Url}");
 
                         if (httpChallengeStatus.Status == ChallengeStatus.Invalid)
                         {
@@ -340,7 +340,7 @@ namespace Certify.Providers.Certes
                     {
                         var dnsChallengeStatus = await dnsChallenge.Resource();
 
-                        log.Information($"Got dns-01 challenge {dnsChallengeStatus}");
+                        log.Information($"Got dns-01 challenge {dnsChallengeStatus.Url}");
 
                         if (dnsChallengeStatus.Status == ChallengeStatus.Invalid)
                         {
@@ -415,7 +415,7 @@ namespace Certify.Providers.Certes
 
                 return pendingOrder;
             }
-           
+
         }
 
         private string GetExceptionMessage(Exception exp)
