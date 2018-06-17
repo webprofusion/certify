@@ -272,29 +272,34 @@ namespace Certify.Providers.DNS.Cloudflare
         public async Task<ActionResult> DeleteRecord(DnsRecord request)
         {
             var records = await GetDnsRecords(request.ZoneId);
-            var record = records.FirstOrDefault(x => x.Name == request.RecordName);
+            var recordsToDelete = records.Where(x => x.Name == request.RecordName);
 
-            if (record == null)
+            if (!recordsToDelete.Any())
             {
                 return new ActionResult { IsSuccess = true, Message = "DNS record does not exist, nothing to delete." };
             }
 
-            var req = CreateRequest(HttpMethod.Delete, string.Format(_deleteRecordUri, request.ZoneId, record.Id));
+            var itemDeleted = false;
+            var itemError = "";
 
-            var result = await _client.SendAsync(req);
+            // when deleting a TXT record with multiple values several records will be returned but only the first delete will succeed (removing all values)
+            // for this reason we return a success state even if the delete failed
+            foreach (var r in recordsToDelete)
+            {
+                var req = CreateRequest(HttpMethod.Delete, string.Format(_deleteRecordUri, request.ZoneId, r.Id));
 
-            if (result.IsSuccessStatusCode)
-            {
-                return new ActionResult { IsSuccess = true, Message = "DNS record deleted." };
-            }
-            else
-            {
-                return new ActionResult
+                var result = await _client.SendAsync(req);
+                if (result.IsSuccessStatusCode)
                 {
-                    IsSuccess = false,
-                    Message = $"Could not delete record {request.RecordName}. Result: {result.StatusCode} - {await result.Content.ReadAsStringAsync()}"
-                };
+                    itemDeleted = true;
+                } else
+                {
+                    itemError += " " + await result.Content.ReadAsStringAsync();
+                }
             }
+
+            return new ActionResult { IsSuccess = true, Message = $"DNS record deleted: {request.RecordName}" };
+          
         }
 
         public async Task<List<DnsZone>> GetZones()
