@@ -450,13 +450,6 @@ namespace Certify.UI.ViewModel
                         {
                             managedCertificate.Name = SelectedWebSite.SiteName;
                         }
-
-                        //set defaults first
-                        /*if (!String.IsNullOrEmpty(SelectedWebSite.PhysicalPath))
-                        {
-                            managedCertificate.RequestConfig.WebsiteRootPath = Environment.ExpandEnvironmentVariables(SelectedWebSite.PhysicalPath);
-
-                        }*/
                     }
 
                     // remove domain options not manually added
@@ -542,7 +535,7 @@ namespace Certify.UI.ViewModel
                     return false;
                 }
 
-                if (wildcardAdded && !SelectedItem.RequestConfig.Challenges.Any(c=>c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS))
+                if (wildcardAdded && !SelectedItem.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS))
                 {
                     // wildcard added but no DNS challenges exist yet
                     MessageBox.Show("You have added a wildcard domain, you will also need to configure a corresponding DNS challenge under Authorization. ");

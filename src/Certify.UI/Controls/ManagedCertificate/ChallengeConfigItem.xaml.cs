@@ -89,12 +89,6 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void ChallengeTypeList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            /* ItemViewModel.RefreshPrimaryChallengeConfig();
-
-             ItemViewModel.PrimaryChallengeConfig.ChallengeType = (sender as System.Windows.Controls.ComboBox)?.SelectedValue.ToString();
-
-             ItemViewModel.RaisePropertyChanged(nameof(ItemViewModel.PrimaryChallengeConfig));
-         */
         }
 
         private async Task RefreshCredentialOptions()
@@ -172,6 +166,15 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             RefreshParameters();
             await RefreshCredentialOptions();
+
+            // if we need to migrate WebsiteRootPath, apply it here
+            var config = EditModel.ParentManagedCertificate.RequestConfig;
+
+            if (config.WebsiteRootPath != null && EditModel.SelectedItem.ChallengeRootPath == null && EditModel.SelectedItem.ChallengeType == Models.SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
+            {
+                EditModel.SelectedItem.ChallengeRootPath = config.WebsiteRootPath;
+                config.WebsiteRootPath = null;
+            }
         }
 
         private async void ChallengeAPIProviderList_SelectionChanged(object sender, SelectionChangedEventArgs e)
