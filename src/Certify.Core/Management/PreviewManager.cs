@@ -120,11 +120,21 @@ namespace Certify.Management
                                );
                         }
 
-                        if (!string.IsNullOrEmpty(item.RequestConfig.WebsiteRootPath))
+                        if (!string.IsNullOrEmpty(item.RequestConfig.WebsiteRootPath) && string.IsNullOrEmpty(challengeConfig.ChallengeRootPath))
+                        {
                             challengeInfo.AppendLine(
                                 $"The file will be created at the path `{item.RequestConfig.WebsiteRootPath}\\.well-known\\acme-challenge\\` " +
-                                newLine 
+                                newLine
                                 );
+                        }
+
+                        if (!string.IsNullOrEmpty(challengeConfig.ChallengeRootPath))
+                        {
+                            challengeInfo.AppendLine(
+                                $"The file will be created at the path `{challengeConfig.ChallengeRootPath}\\.well-known\\acme-challenge\\` " +
+                                newLine
+                                );
+                        }
 
                         challengeInfo.AppendLine(
                             $"The text file will need to be accessible from the URL `http://<yourdomain>/.well-known/acme-challenge/<randomfilename>` " +
@@ -319,8 +329,7 @@ namespace Certify.Management
                     else
                     {
                         // no website selected, maybe validating http with a manually specified path
-                        if (!string.IsNullOrEmpty(item.RequestConfig.WebsiteRootPath))
-                            deploymentDescription.AppendLine($"Manual deployment to site: *{item.RequestConfig.WebsiteRootPath}*");
+                       deploymentDescription.AppendLine($"Manual deployment to site.");
                     }
                 }
                 else if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.DeploymentStoreOnly)

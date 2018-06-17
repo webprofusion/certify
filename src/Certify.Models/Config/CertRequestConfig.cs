@@ -32,6 +32,11 @@ namespace Certify.Models
         public string ChallengeCredentialKey { get; set; }
 
         /// <summary>
+        /// If applicable, path or root path relevant to the challenge (e.g. wwwroot path)
+        /// </summary>
+        public string ChallengeRootPath { get; set; }
+
+        /// <summary>
         /// Optional, DNS Zone ID if using a DNS challenge provider 
         /// </summary>
         public string ZoneId { get; set; }
@@ -59,6 +64,8 @@ namespace Certify.Models
         /// <summary>
         /// Root path for our website content, used when responding to file based challenges 
         /// </summary>
+        ///
+        [Obsolete]
         public string WebsiteRootPath { get; set; }
 
         /// <summary>

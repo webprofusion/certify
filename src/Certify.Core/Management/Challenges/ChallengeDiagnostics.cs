@@ -330,8 +330,13 @@ namespace Certify.Core.Management.Challenges
             log.Information("Preparing challenge response for Let's Encrypt server to check at: {uri}", httpChallenge.ResourceUri);
             log.Information("If the challenge response file is not accessible at this exact URL the validation will fail and a certificate will not be issued.");
 
-            // get website root path, expand environment variables if required
+            // get website root path (from challenge config or fallback to deprecated WebsiteRootPath), expand environment variables if required
             var websiteRootPath = requestConfig.WebsiteRootPath;
+            var challengeConfig = managedCertificate.GetChallengeConfig(domain);
+            if (!string.IsNullOrEmpty(challengeConfig.ChallengeRootPath))
+            {
+                websiteRootPath = challengeConfig.ChallengeRootPath;
+            }
 
             if (!string.IsNullOrEmpty(managedCertificate.ServerSiteId))
             {
@@ -546,7 +551,6 @@ namespace Certify.Core.Management.Challenges
 
         private async Task<DnsChallengeHelperResult> PerformChallengeResponse_Dns01(ILog log, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
         {
-            var requestConfig = managedCertificate.RequestConfig;
 
             var dnsChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
 
@@ -586,11 +590,9 @@ namespace Certify.Core.Management.Challenges
 
             // configure cleanup actions for use after challenge completes
             pendingAuth.Cleanup = async () =>
-           {
-
-               var result = await dnsHelper.DeleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key);
-           };
-           
+               {
+                   var result = await dnsHelper.DeleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key);
+               };
 
             return dnsResult;
         }

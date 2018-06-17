@@ -452,10 +452,11 @@ namespace Certify.UI.ViewModel
                         }
 
                         //set defaults first
-                        if (!String.IsNullOrEmpty(SelectedWebSite.PhysicalPath))
+                        /*if (!String.IsNullOrEmpty(SelectedWebSite.PhysicalPath))
                         {
                             managedCertificate.RequestConfig.WebsiteRootPath = Environment.ExpandEnvironmentVariables(SelectedWebSite.PhysicalPath);
-                        }
+
+                        }*/
                     }
 
                     // remove domain options not manually added

@@ -68,14 +68,22 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             var config = EditModel.ParentManagedCertificate.RequestConfig;
 
+            if (config.WebsiteRootPath != null && EditModel.SelectedItem.ChallengeRootPath == null)
+            {
+                EditModel.SelectedItem.ChallengeRootPath = config.WebsiteRootPath;
+            }
+
             var dialog = new WinForms.FolderBrowserDialog()
             {
-                SelectedPath = config.WebsiteRootPath
+                SelectedPath = EditModel.SelectedItem.ChallengeRootPath
             };
 
             if (dialog.ShowDialog() == WinForms.DialogResult.OK)
             {
-                config.WebsiteRootPath = dialog.SelectedPath;
+                EditModel.SelectedItem.ChallengeRootPath = dialog.SelectedPath;
+
+                // remove deprecated config setting
+                config.WebsiteRootPath = null;
             }
         }
 
