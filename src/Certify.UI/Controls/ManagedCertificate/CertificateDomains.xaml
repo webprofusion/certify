@@ -165,11 +165,27 @@
                             </DataGridTemplateColumn>
                             <DataGridCheckBoxColumn Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Header="{x:Static Resources:SR.ManagedCertificateSettings_Include}" />
                             <DataGridTextColumn
-                                Width="*"
                                 MinWidth="200"
                                 Binding="{Binding Domain, UpdateSourceTrigger=PropertyChanged}"
                                 Header="{x:Static Resources:SR.ManagedCertificateSettings_Domain}"
                                 IsReadOnly="True" />
+                            <DataGridTemplateColumn>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button
+                                            Width="32"
+                                            Margin="4,0,0,0"
+                                            AutomationProperties.Name="Remove Domain"
+                                            Click="RemoveDomainOption_Click">
+                                            <fa:ImageAwesome
+                                                Height="12"
+                                                Margin="0,0,0,0"
+                                                Icon="Trash" />
+
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                 </DockPanel>

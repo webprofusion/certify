@@ -1,4 +1,4 @@
-using Certify.Models;
+﻿using Certify.Models;
 using System;
 using System.Linq;
 using System.Windows;
@@ -121,6 +121,20 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void NextButton_Click(object sender, RoutedEventArgs e)
         {
+        }
+
+        private void RemoveDomainOption_Click(object sender, RoutedEventArgs e)
+        {
+            var dg = DomainOptionsList;
+            if (dg.SelectedItem != null)
+            {
+                var opt = (DomainOption)dg.SelectedItem;
+                if (MessageBox.Show($"Remove {opt.Domain}?","Confirm Domain Option Removal", MessageBoxButton.YesNo)== MessageBoxResult.Yes)
+                {
+                    ItemViewModel.SelectedItem.DomainOptions.Remove(opt);
+                }
+        
+            }
         }
     }
 }
