@@ -13,6 +13,7 @@ using Certify.Providers.DNS.GoDaddy;
 using Certify.Providers.DNS.SimpleDNSPlus;
 using Certify.Providers.DNS.OVH;
 using System;
+using Certify.Providers.DNS.Aliyun;
 
 namespace Certify.Core.Management.Challenges
 {
@@ -39,7 +40,7 @@ namespace Certify.Core.Management.Challenges
 
             if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.PYTHON_HELPER)
             {
-                if (credentials==null || !credentials.Any())
+                if (credentials == null || !credentials.Any())
                 {
                     throw new CredentialsRequiredException();
                 }
@@ -84,6 +85,10 @@ namespace Certify.Core.Management.Challenges
                 {
                     dnsAPIProvider = new DnsProviderOvh(credentials);
                 }
+                else if (providerDefinition.Id == DnsProviderAliyun.Definition.Id)
+                {
+                    dnsAPIProvider = new DnsProviderAliyun(credentials);
+                }
             }
             else if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.MANUAL)
             {
@@ -125,6 +130,7 @@ namespace Certify.Core.Management.Challenges
                 Providers.DNS.SimpleDNSPlus.DnsProviderSimpleDNSPlus.Definition,
                 Providers.DNS.DnsMadeEasy.DnsProviderDnsMadeEasy.Definition,
                 Providers.DNS.OVH.DnsProviderOvh.Definition,
+                Providers.DNS.Aliyun.DnsProviderAliyun.Definition
             };
 
             return await Task.FromResult(providers);
