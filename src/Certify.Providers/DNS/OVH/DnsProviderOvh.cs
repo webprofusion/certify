@@ -7,6 +7,9 @@ using Certify.Models.Providers;
 
 namespace Certify.Providers.DNS.OVH
 {
+    /// <summary>
+    /// OVH DNS API Provider contributed by contributed by https://github.com/laugel
+    /// </summary>
     public class DnsProviderOvh : DnsProviderBase, IDnsProvider
     {
         private readonly Dictionary<string, string> credentials;

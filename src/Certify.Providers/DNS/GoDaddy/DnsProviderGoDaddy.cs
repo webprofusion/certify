@@ -10,9 +10,7 @@ using Newtonsoft.Json;
 namespace Certify.Providers.DNS.GoDaddy
 {
     /// <summary>
-    /// Adapted from
-    /// https://github.com/ebekker/ACMESharp/tree/master/ACMESharp/ACMESharp.Providers.CloudFlare By
-    /// janpieterz and ebekker, used with permission under MIT license
+    /// GoDaddy DNS API Provider contributed by https://github.com/alphaz18 
     /// </summary>
     internal class Zone
     {

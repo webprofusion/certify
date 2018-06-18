@@ -10,6 +10,9 @@ using Newtonsoft.Json;
 
 namespace Certify.Providers.DNS.Aliyun
 {
+    /// <summary>
+    /// Alibaba Cloud DNS API Provider contributed by https://github.com/TkYu
+    /// </summary>
     public class DnsProviderAliyun : IDnsProvider
     {
         private readonly string _accessKeyId;
@@ -34,7 +37,7 @@ namespace Certify.Providers.DNS.Aliyun
                 return new ProviderDefinition
                 {
                     Id = "DNS01.API.Aliyun",
-                    Title = "Aliyun DNS API",
+                    Title = "Aliyun (Alibaba Cloud) DNS API",
                     Description = "Validates via Aliyun DNS APIs using api key and secret",
                     HelpUrl = "https://help.aliyun.com/document_detail/29739.html",
                     PropagationDelaySeconds = 120,
