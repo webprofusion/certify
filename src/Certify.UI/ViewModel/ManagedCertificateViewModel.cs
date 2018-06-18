@@ -540,6 +540,23 @@ namespace Certify.UI.ViewModel
                     // wildcard added but no DNS challenges exist yet
                     MessageBox.Show("You have added a wildcard domain, you will also need to configure a corresponding DNS challenge under Authorization. ");
                 }
+
+                if (wildcardAdded)
+                {
+                    //if a wildcard was added but the non-wildcard domain has not yet been added, offer to add it
+                    var wildcardOnlyDomains = domainList.Where(d => d.StartsWith("*.") && !item.DomainOptions.Any(o => o.Domain == d.Replace("*.", "")));
+                    if (wildcardOnlyDomains.Any())
+                    {
+                        var msg = $"You had added wildcard domains without the corresponding non-wildcard version: {string.Join(",", wildcardOnlyDomains)}. Would you like to add the non-wildcard versions as well?";
+                        if (MessageBox.Show(msg,"Add non-wildcard equivalent domains?", MessageBoxButtons.YesNo)== DialogResult.Yes)
+                        {
+
+                            var addedDomains = string.Join(";", wildcardOnlyDomains);
+                            addedDomains = addedDomains.Replace("*.", "");
+                            UpdateDomainOptions(addedDomains);
+                        }
+                    }
+                }
             }
 
             // all ok or nothing to do
