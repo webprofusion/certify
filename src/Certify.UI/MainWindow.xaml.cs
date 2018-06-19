@@ -10,7 +10,7 @@ using Microsoft.ApplicationInsights;
 namespace Certify.UI
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml 
+    /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow
     {
@@ -25,6 +25,8 @@ namespace Certify.UI
 
         protected Certify.UI.ViewModel.AppViewModel _appViewModel => UI.ViewModel.AppViewModel.Current;
         protected Certify.UI.ViewModel.ManagedCertificateViewModel _itemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
+        private const int NUM_ITEMS_FOR_REMINDER = 3;
+        private const int NUM_ITEMS_FOR_LIMIT = 10;
 
         public int NumManagedCertificates
         {
@@ -66,13 +68,18 @@ namespace Certify.UI
             }
             else
             {
-                if (_appViewModel.IsRegisteredVersion && _appViewModel.ManagedCertificates?.Count >= 3)
+                if (_appViewModel.IsRegisteredVersion && _appViewModel.ManagedCertificates?.Count >= NUM_ITEMS_FOR_REMINDER)
                 {
                     var licensingManager = ViewModel.AppViewModel.Current.PluginManager?.LicensingManager;
 
                     if (licensingManager != null && !await licensingManager.IsInstallActive(ViewModel.AppViewModel.ProductTypeId, Management.Util.GetAppDataFolder()))
                     {
                         _appViewModel.IsRegisteredVersion = false;
+                    }
+
+                    if (_appViewModel.ManagedCertificates?.Count >= NUM_ITEMS_FOR_LIMIT)
+                    {
+                        return;
                     }
                 }
             }
