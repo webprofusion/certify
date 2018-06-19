@@ -15,11 +15,11 @@ namespace Certify.Management
     public partial class CertifyManager
     {
         /// <summary>
-        /// Perform Renew All: identify all items to renew then initiate renewal process 
+        /// Perform Renew All: identify all items to renew then initiate renewal process
         /// </summary>
-        /// <param name="autoRenewalOnly"></param>
-        /// <param name="progressTrackers"></param>
-        /// <returns></returns>
+        /// <param name="autoRenewalOnly">  </param>
+        /// <param name="progressTrackers">  </param>
+        /// <returns>  </returns>
         public async Task<List<CertificateRequestResult>> PerformRenewalAllManagedCertificates(bool autoRenewalOnly = true, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null)
         {
             if (_isRenewAllInProgress)
@@ -172,15 +172,18 @@ namespace Certify.Management
         /// if we know the last renewal date, check whether we should renew again, otherwise assume
         /// it's more than 30 days ago by default and attempt renewal
         /// </summary>
-        /// <param name="s"></param>
-        /// <param name="renewalIntervalDays"></param>
-        /// <param name="checkFailureStatus"></param>
-        /// <returns></returns>
+        /// <param name="s">  </param>
+        /// <param name="renewalIntervalDays">  </param>
+        /// <param name="checkFailureStatus">  </param>
+        /// <returns>  </returns>
         public static bool IsRenewalRequired(ManagedCertificate s, int renewalIntervalDays, bool checkFailureStatus = false)
         {
             var timeSinceLastRenewal = (s.DateRenewed ?? DateTime.Now.AddDays(-30)) - DateTime.Now;
 
             var isRenewalRequired = Math.Abs(timeSinceLastRenewal.TotalDays) > renewalIntervalDays;
+
+            // if we have never attempted renewal, renew now
+            if (!isRenewalRequired && s.DateLastRenewalAttempt == null) isRenewalRequired = true;
 
             // if renewal is required but we have previously failed, scale the frequency of renewal
             // attempts to a minimum of once per 24hrs.
@@ -210,12 +213,12 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Test dummy method for async UI testing etc 
+        /// Test dummy method for async UI testing etc
         /// </summary>
-        /// <param name="vaultManager"></param>
-        /// <param name="managedCertificate"></param>
-        /// <param name="progress"></param>
-        /// <returns></returns>
+        /// <param name="vaultManager">  </param>
+        /// <param name="managedCertificate">  </param>
+        /// <param name="progress">  </param>
+        /// <returns>  </returns>
         public async Task<CertificateRequestResult> PerformDummyCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null)
         {
             return await Task.Run(async () =>
@@ -236,12 +239,12 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Initiate or resume the certificate request workflow for a given managed certificate 
+        /// Initiate or resume the certificate request workflow for a given managed certificate
         /// </summary>
-        /// <param name="log"></param>
-        /// <param name="managedCertificate"></param>
-        /// <param name="progress"></param>
-        /// <returns></returns>
+        /// <param name="log">  </param>
+        /// <param name="managedCertificate">  </param>
+        /// <param name="progress">  </param>
+        /// <returns>  </returns>
         public async Task<CertificateRequestResult> PerformCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool resumePaused = false)
         {
             // Perform pre-request checks and scripting hooks, invoke main request process, then
@@ -814,7 +817,6 @@ namespace Certify.Management
                         if (await IsHttpChallengeProcessStarted())
                         {
                             _httpChallengeServerAvailable = true;
-
                         }
                         else
                         {
@@ -824,11 +826,9 @@ namespace Certify.Management
                         if (_httpChallengeServerAvailable)
                         {
                             LogMessage(managedCertificate.Id, $"Http Challenge Server process available.", LogItemType.CertificateRequestStarted);
-
                         }
                         else
                         {
-
                             LogMessage(managedCertificate.Id, $"Http Challenge Server process unavailable.", LogItemType.CertificateRequestStarted);
                         }
                     }
@@ -870,14 +870,14 @@ namespace Certify.Management
                                 });
                         }
 
-
                         // ask LE to check our answer to their authorization challenge (http-01 or
                         // tls-sni-01), LE will then attempt to fetch our answer, if all accessible
                         // and correct (authorized) LE will then allow us to request a certificate
                         authorization = await _challengeDiagnostics.PerformAutomatedChallengeResponse(log,
                             _serverProvider, managedCertificate, authorization);
 
-                        // if we had automated checks configured and they failed more than twice in a row, fail and report error here
+                        // if we had automated checks configured and they failed more than twice in a
+                        // row, fail and report error here
                         if (
                             managedCertificate.RenewalFailureCount > 2
                             &&
