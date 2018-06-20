@@ -20,10 +20,10 @@ namespace Certify.Core.Management
         /// Creates or updates the https bindings associated with the dns names in the current
         /// request config, using the requested port/ips or autobinding
         /// </summary>
-        /// <param name="requestConfig"></param>
-        /// <param name="pfxPath"></param>
-        /// <param name="cleanupCertStore"></param>
-        /// <returns></returns>
+        /// <param name="requestConfig">  </param>
+        /// <param name="pfxPath">  </param>
+        /// <param name="cleanupCertStore">  </param>
+        /// <returns>  </returns>
         public async Task<List<ActionStep>> StoreAndDeployManagedCertificate(IBindingDeploymentTarget deploymentTarget, ManagedCertificate managedCertificate, string pfxPath, bool cleanupCertStore, bool isPreviewOnly)
         {
             List<ActionStep> actions = new List<ActionStep>();
@@ -89,8 +89,8 @@ namespace Certify.Core.Management
                 // the certificate, otherwise we keep the old one
 
                 // FIXME: need strategy to analyse if there are any users of cert we haven't
-                //        accounted for (manually added etc) otherwise we are disposing of a cert
-                //        which could still be in use
+                // accounted for (manually added etc) otherwise we are disposing of a cert which
+                // could still be in use
                 if (!isPreviewOnly)
                 {
                     if (cleanupCertStore
@@ -169,7 +169,7 @@ namespace Certify.Core.Management
                         // install the cert for this binding if the hostname matches, or we have a
                         // matching wildcard, or if there is no hostname specified in the binding
 
-                        if (requestConfig.DeploymentBindingReplacePrevious)
+                        if (requestConfig.DeploymentBindingReplacePrevious || requestConfig.DeploymentSiteOption == DeploymentOption.Auto)
                         {
                             // if replacing previous, check if current binding cert hash matches
                             // previous cert hash
@@ -272,12 +272,12 @@ namespace Certify.Core.Management
         /// creates or updates the https binding for the dns host name specified, assigning the given
         /// certificate selected from the certificate store
         /// </summary>
-        /// <param name="site"></param>
-        /// <param name="certificate"></param>
-        /// <param name="host"></param>
-        /// <param name="sslPort"></param>
-        /// <param name="useSNI"></param>
-        /// <param name="ipAddress"></param>
+        /// <param name="site">  </param>
+        /// <param name="certificate">  </param>
+        /// <param name="host">  </param>
+        /// <param name="sslPort">  </param>
+        /// <param name="useSNI">  </param>
+        /// <param name="ipAddress">  </param>
         public async Task<List<ActionStep>> UpdateBinding(
                                                                 IBindingDeploymentTarget deploymentTarget,
                                                                 IBindingDeploymentTargetItem site,
@@ -382,7 +382,6 @@ namespace Certify.Core.Management
             return steps;
         }
 
-       
         private string ByteToHex(byte[] ba)
         {
             var sb = new System.Text.StringBuilder(ba.Length * 2);
