@@ -15,7 +15,7 @@ namespace Certify.Core.Tests
 {
     [TestClass]
     /// <summary>
-    /// Integration tests for IIS Manager 
+    /// Integration tests for IIS Manager
     /// </summary>
     public class IISManagerTests : IntegrationTestBase, IDisposable
     {
@@ -39,7 +39,7 @@ namespace Certify.Core.Tests
         }
 
         /// <summary>
-        /// Perform teardown for IIS 
+        /// Perform teardown for IIS
         /// </summary>
         public void Dispose()
         {
@@ -135,7 +135,7 @@ namespace Certify.Core.Tests
             await iisManager.CreateSite("ManyBindings", "toomany.com", PrimaryIISRoot, null, protocol: "http");
             var site = await iisManager.GetSiteBindingByDomain("toomany.com");
             List<string> domains = new List<string>();
-            for (var i = 0; i < 10000; i++)
+            for (var i = 0; i < 10; i++)
             {
                 domains.Add(Guid.NewGuid().ToString() + ".toomany.com");
             }
@@ -163,7 +163,7 @@ namespace Certify.Core.Tests
                     CertificateStore = certStoreName,
                     Port = 443,
                     Protocol = "https",
-                    SiteId= site.Id.ToString()
+                    SiteId = site.Id.ToString()
                 }
                );
 

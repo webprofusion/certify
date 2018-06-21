@@ -1,22 +1,22 @@
-﻿using Certify.Management;
-using Certify.Management.Servers;
-using Certify.Models;
-using Certify.Models.Providers;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Serilog;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Configuration;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using Certify.Management;
+using Certify.Management.Servers;
+using Certify.Models;
+using Certify.Models.Providers;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Serilog;
 
 namespace Certify.Core.Tests
 {
     [TestClass]
     /// <summary>
-    /// Integration tests for CertifyManager 
+    /// Integration tests for CertifyManager
     /// </summary>
     public class CertRequestTests : IntegrationTestBase, IDisposable
     {
@@ -51,7 +51,7 @@ namespace Certify.Core.Tests
         }
 
         /// <summary>
-        /// Perform teardown for IIS 
+        /// Perform teardown for IIS
         /// </summary>
         public void Dispose()
         {
@@ -261,7 +261,7 @@ namespace Certify.Core.Tests
             }
             finally
             {
-                await iisManager.DeleteSite("TestBazillionDomains");
+                // await iisManager.DeleteSite("TestBazillionDomains");
             }
         }
 
