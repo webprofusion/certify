@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Certify.Models;
@@ -16,7 +15,7 @@ namespace Certify.CLI
             if (!IsRegistered())
             {
                 Console.WriteLine("Import is only available in the registered version of this application.");
-                //return;
+                return;
             }
 
             var filename = args[args.Length - 1];

@@ -65,6 +65,11 @@ namespace Certify.UI
             if (!_appViewModel.IsRegisteredVersion && _appViewModel.ManagedCertificates != null && _appViewModel.ManagedCertificates.Count >= 3)
             {
                 MessageBox.Show(SR.MainWindow_TrialLimitationReached);
+
+                if (_appViewModel.ManagedCertificates?.Count >= NUM_ITEMS_FOR_LIMIT)
+                {
+                    return;
+                }
             }
             else
             {
@@ -75,11 +80,6 @@ namespace Certify.UI
                     if (licensingManager != null && !await licensingManager.IsInstallActive(ViewModel.AppViewModel.ProductTypeId, Management.Util.GetAppDataFolder()))
                     {
                         _appViewModel.IsRegisteredVersion = false;
-                    }
-
-                    if (_appViewModel.ManagedCertificates?.Count >= NUM_ITEMS_FOR_LIMIT)
-                    {
-                        return;
                     }
                 }
             }
