@@ -21,13 +21,13 @@ namespace Certify.Core.Management.Challenges
 
         private Dictionary<string, string> _challengeResponses { get; set; }
 
-        private int _maxServiceLookups = 3;
+        private int _maxServiceLookups = 100;
         private string _baseUri = "";
 
 #if DEBUG
         private bool _debugMode = true;
 #else
-      
+
         private bool _debugMode = false;
 #endif
         private DateTime _lastRequestTime { get; set; }
@@ -38,7 +38,6 @@ namespace Certify.Core.Management.Challenges
 
             try
             {
-
                 if (clearLog)
                 {
                     System.IO.File.WriteAllText(Util.GetAppDataFolder() + "\\logs\\httpChallengeServer.log", msg);
@@ -55,12 +54,12 @@ namespace Certify.Core.Management.Challenges
         }
 
         /// <summary>
-        /// Start http challenge server. 
+        /// Start http challenge server.
         /// </summary>
         /// <param name="port"> Port to listen on, default 80 </param>
         /// <param name="controlKey"> Control key to command process to quit </param>
         /// <param name="checkKey"> Check key to test server response </param>
-        /// <returns></returns>
+        /// <returns>  </returns>
         public bool Start(int port = 80, string controlKey = null, string checkKey = null)
         {
 #if DEBUG
@@ -194,7 +193,6 @@ namespace Certify.Core.Management.Challenges
                         catch (Exception exp)
                         {
                             Log(exp.ToString());
-
                         }
                     }
 
