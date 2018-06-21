@@ -1,0 +1,663 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Send_Feedback_Tip" xml:space="preserve">
+    <value>あなたのフィードバックは、私たちに重要です。改善する点を報告してください。</value>
+  </data>
+  <data name="Send_Feedback_Email" xml:space="preserve">
+    <value>あなたのメール アドレス (回答が必要な場合):</value>
+  </data>
+  <data name="New_Contact_NeedAgree" xml:space="preserve">
+    <value>最新の LetsEncrypt.org 加入者契約に同意する必要があります。</value>
+  </data>
+  <data name="Yes_I_Agree" xml:space="preserve">
+    <value>はい、同意します</value>
+  </data>
+  <data name="ManagedCertificateSettings_HookTrigger" xml:space="preserve">
+    <value>Webhook トリガー:</value>
+  </data>
+  <data name="ManagedCertificateSettings_WebhookTest" xml:space="preserve">
+    <value>Webhook テスト</value>
+  </data>
+  <data name="ManagedCertificateSettings_WebsiteRoot" xml:space="preserve">
+    <value>Web サイト ルート ディレクトリ</value>
+  </data>
+  <data name="ManagedCertificateSettings_WebhookTestFailed" xml:space="preserve">
+    <value>Webhook テストに失敗しました</value>
+  </data>
+  <data name="ManagedCertificateSettings_WebhookRequestError" xml:space="preserve">
+    <value>Webhook リクエスト エラー: {0}</value>
+  </data>
+  <data name="ManagedCertificateSettings_WebhookRequestResult" xml:space="preserve">
+    <value>Webhook リクエスト {0}: HTTP {1} </value>
+  </data>
+  <data name="Alert" xml:space="preserve">
+    <value>通知:</value>
+  </data>
+  <data name="Advanced" xml:space="preserve">
+    <value>詳細設定...</value>
+  </data>
+  <data name="Dashboard_Register" xml:space="preserve">
+    <value>追加...</value>
+  </data>
+  <data name="ManagedCertificateSettings_BrowseFolder" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="Browser" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="GettingStarted_Dashboard" xml:space="preserve">
+    <value>ダッシュボード</value>
+  </data>
+  <data name="Dashboard_Password" xml:space="preserve">
+    <value>パスワード</value>
+  </data>
+  <data name="ExpiryDateConverter_NoCurrentCertificate" xml:space="preserve">
+    <value>現在の証明書がありません。</value>
+  </data>
+  <data name="General_Loading" xml:space="preserve">
+    <value>読み込み中...</value>
+  </data>
+  <data name="ManagedCertificateSettings_HookContentType" xml:space="preserve">
+    <value>ContentType:</value>
+  </data>
+  <data name="ManagedCertificateSettings_AddDomainsToCertificate" xml:space="preserve">
+    <value>証明書のドメインを追加:</value>
+  </data>
+  <data name="Managed_Certificates" xml:space="preserve">
+    <value>証明書の管理</value>
+  </data>
+  <data name="ManagedCertificateSettings_AddDomainsHelpText" xml:space="preserve">
+    <value>例えば test.com、www.test.com または *. test.com</value>
+  </data>
+  <data name="ManagedCertificateSettings_HookBody" xml:space="preserve">
+    <value>本文: </value>
+  </data>
+  <data name="ManagedCertificateSettings_HookMethod" xml:space="preserve">
+    <value>メソッド:</value>
+  </data>
+  <data name="ManagedCertificateSettings_HookUrl" xml:space="preserve">
+    <value>URL:</value>
+  </data>
+  <data name="ManagedCertificateSettings_RevokeCertificate" xml:space="preserve">
+    <value>証明書の失効</value>
+  </data>
+  <data name="Comments" xml:space="preserve">
+    <value>コメント:</value>
+  </data>
+  <data name="Info" xml:space="preserve">
+    <value>情報</value>
+  </data>
+  <data name="About_LanguageTranslator" xml:space="preserve">
+    <value>現在の言語の翻訳:</value>
+  </data>
+  <data name="MainWindow_TitleTrialPostfix" xml:space="preserve">
+    <value>[コミュニティ エディション]</value>
+  </data>
+  <data name="succeed" xml:space="preserve">
+    <value>成功</value>
+  </data>
+  <data name="failed" xml:space="preserve">
+    <value>失敗</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>エラー</value>
+  </data>
+  <data name="ManagedCertificateSettings_Certificate_Revoked" xml:space="preserve">
+    <value>証明書は取り消されました</value>
+  </data>
+  <data name="ManagedCertificateSettings_RevokeCertificateError" xml:space="preserve">
+    <value>証明書の失効エラー：{0}</value>
+  </data>
+  <data name="ManagedCertificateSettings_ConfigurationCheckFailed" xml:space="preserve">
+    <value>構成チェックに失敗しました: {0}</value>
+  </data>
+  <data name="Challenge" xml:space="preserve">
+    <value>チャレンジ（認証方法）</value>
+  </data>
+  <data name="ChallengeError" xml:space="preserve">
+    <value>チャレンジ エラー</value>
+  </data>
+  <data name="ConfirmDelete" xml:space="preserve">
+    <value>削除の確認</value>
+  </data>
+  <data name="ManagedCertificateSettings_NeedPrimaryDomain" xml:space="preserve">
+    <value>プライマリ ドメインを含める必要があります</value>
+  </data>
+  <data name="ManagedCertificateSettings_NameRequired" xml:space="preserve">
+    <value>このアイテムには名称が必要です。</value>
+  </data>
+  <data name="SaveError" xml:space="preserve">
+    <value>保存エラー</value>
+  </data>
+  <data name="ManagedCertificateSettings_ViewCertificate" xml:space="preserve">
+    <value>証明書の表示</value>
+  </data>
+  <data name="ManagedCertificateSettings_OpenLogFile" xml:space="preserve">
+    <value>ログ ファイルを開く</value>
+  </data>
+  <data name="Renew_All" xml:space="preserve">
+    <value>すべて更新</value>
+  </data>
+  <data name="Update_Available" xml:space="preserve">
+    <value>更新があります</value>
+  </data>
+  <data name="Managed_Sites" xml:space="preserve">
+    <value>証明書の管理</value>
+  </data>
+  <data name="ValidateKey" xml:space="preserve">
+    <value>キーを検証</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
+  <data name="LicenseKey" xml:space="preserve">
+    <value>ライセンス キー</value>
+  </data>
+  <data name="Registration" xml:space="preserve">
+    <value>登録</value>
+  </data>
+  <data name="RegistrationEmailAddress" xml:space="preserve">
+    <value>﻿登録したメールアドレス</value>
+  </data>
+  <data name="New_Certificate" xml:space="preserve">
+    <value>新しい証明書</value>
+  </data>
+  <data name="In_Progress" xml:space="preserve">
+    <value>進行中</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="About" xml:space="preserve">
+    <value>バージョン情報</value>
+  </data>
+  <data name="Email_Address" xml:space="preserve">
+    <value>電子メール アドレス</value>
+  </data>
+  <data name="Register_Contact" xml:space="preserve">
+    <value>登録連絡先</value>
+  </data>
+  <data name="NewContact_AgreeConfirm" xml:space="preserve">
+    <value>あなたはLetsEncrypt.org加入者契約に同意しますか？続行する前に、詳細についてはそれぞれのWebサイトを参照してください。 https://letsencrypt.org/repository/！</value>
+  </data>
+  <data name="ManagedCertificatesSettings_RefreshDomains" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="ScheduledTaskConfig_UseScheduledTask" xml:space="preserve">
+    <value>スケジュールされたタスクを利用 (指定されたユーザーとして実行)</value>
+  </data>
+  <data name="ScheduledTaskConfig_UseBackgroundService" xml:space="preserve">
+    <value>バック グラウンド サービスを利用 (ローカル システムとして実行) </value>
+  </data>
+  <data name="Dashboard_NewAccount" xml:space="preserve">
+    <value>新しいアカウントを作成します</value>
+  </data>
+  <data name="GettingStarted_ViewDashboard" xml:space="preserve">
+    <value>ダッシュボードの表示</value>
+  </data>
+  <data name="GettingStarted_AddToDashboard" xml:space="preserve">
+    <value>レポート ダッシュ ボードに追加</value>
+  </data>
+  <data name="ExpiryDateConverter_CertificateExpiresIn" xml:space="preserve">
+    <value>{0} 日後が有効期限</value>
+  </data>
+  <data name="ManagedCertificateSettings_ChallengeTestFailed" xml:space="preserve">
+    <value>チャレンジ テストに失敗しました</value>
+  </data>
+  <data name="ManagedCertificateSettings_ConfirmRevokeCertificate" xml:space="preserve">
+    <value>この証明書を取り消してもよろしいですか？</value>
+  </data>
+  <data name="Test" xml:space="preserve">
+    <value>テスト</value>
+  </data>
+  <data name="ManagedCertificateSettings_BindPort" xml:space="preserve">
+    <value>特定のポートにバインド:!</value>
+  </data>
+  <data name="ManagedCertificateSettings_BindIP" xml:space="preserve">
+    <value>特定の IP アドレスにバインド:</value>
+  </data>
+  <data name="ManagedCertificateSettings_ChallengeTypes" xml:space="preserve">
+    <value>チャレンジの種類:</value>
+  </data>
+  <data name="ManagedCertificateSettings_Domain" xml:space="preserve">
+    <value>ドメイン</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>削除</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="DiscardChanges" xml:space="preserve">
+    <value>変更の破棄</value>
+  </data>
+  <data name="ManagedCertificateSettings_RequestCertificate" xml:space="preserve">
+    <value>証明書の要求</value>
+  </data>
+  <data name="ManagedCertificateSettings_DisplayName" xml:space="preserve">
+    <value>表示名: </value>
+  </data>
+  <data name="ManagedCertificateSettings_SelectDomain" xml:space="preserve">
+    <value>ドメインおよびサブドメインを含める:</value>
+  </data>
+  <data name="SelectAll" xml:space="preserve">
+    <value>すべて選択</value>
+  </data>
+  <data name="ManagedCertificateSettings_SelectNone" xml:space="preserve">
+    <value>選択しない</value>
+  </data>
+  <data name="ManagedCertificateSettings_UseSNI" xml:space="preserve">
+    <value>SNI を利用 (IIS 8 +) :</value>
+  </data>
+  <data name="ManagedCertificateSettings_PerRequsetScript" xml:space="preserve">
+    <value>事前に PS スクリプトを要求:</value>
+  </data>
+  <data name="ManagedCertificateSettings_CertificateRevokeWarning" xml:space="preserve">
+    <value>警告: この証明書は失効しています。</value>
+  </data>
+  <data name="ManagedCertificateSettings_SelectWebsiteOrCert" xml:space="preserve">
+    <value>証明書を作成する web サイトを選択します。</value>
+  </data>
+  <data name="ManagedCertificateSettings_Tab_Options" xml:space="preserve">
+    <value>オプション</value>
+  </data>
+  <data name="SaveChanges" xml:space="preserve">
+    <value>変更内容の保存</value>
+  </data>
+  <data name="ManagedCertificateSettings_EnableAutoRenewal" xml:space="preserve">
+    <value>自動更新を有効にする</value>
+  </data>
+  <data name="Settings_PrimaryContact" xml:space="preserve">
+    <value>主な連絡先: </value>
+  </data>
+  <data name="Settings_CheckUpdates" xml:space="preserve">
+    <value>自動アップデートの確認</value>
+  </data>
+  <data name="ManagedCertificateSettings_Primary" xml:space="preserve">
+    <value>プライマリ</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>パスワード</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="AboutControl_RegistrationTypeLabel" xml:space="preserve">
+    <value>未登録</value>
+  </data>
+  <data name="AboutControl_Register" xml:space="preserve">
+    <value>登録</value>
+  </data>
+  <data name="AboutControl_EnterKey" xml:space="preserve">
+    <value>キーの入力</value>
+  </data>
+  <data name="AboutControl_Support" xml:space="preserve">
+    <value>サポート</value>
+  </data>
+  <data name="AboutControl_SendFeedback" xml:space="preserve">
+    <value>フィードバックの送信</value>
+  </data>
+  <data name="UpdateCheckLatestVersion" xml:space="preserve">
+    <value>最新のバージョンを使用している。</value>
+  </data>
+  <data name="Settings_AutoRenewalInterval" xml:space="preserve">
+    <value>自動更新の間隔 (日)</value>
+  </data>
+  <data name="ManagedCertificates_Filter" xml:space="preserve">
+    <value>フィルター...</value>
+  </data>
+  <data name="AboutControl_CheckForUpdateButton" xml:space="preserve">
+    <value>アップデートの確認..</value>
+  </data>
+  <data name="ScheduledTaskConfig_UserNameLabel" xml:space="preserve">
+    <value>ユーザー名 (ドメイン\ユーザー)</value>
+  </data>
+  <data name="ScheduledTaskConfig_WindowTitle" xml:space="preserve">
+    <value>自動更新を構成する</value>
+  </data>
+  <data name="ScheduledTaskConfig_TaskCreated" xml:space="preserve">
+    <value>スケジュールされたタスクを作成</value>
+  </data>
+  <data name="New_Contact_EmailError" xml:space="preserve">
+    <value>おっと、あなたは有効なメール アドレスを提供していません。</value>
+  </data>
+  <data name="Send_Feedback_Error" xml:space="preserve">
+    <value>申し訳ありませんが、あなたのフィードバックを送信するときに問題がありました。</value>
+  </data>
+  <data name="Send_Feedback_Success" xml:space="preserve">
+    <value>ありがとうございます、あなたのフィードバックが送信されました。</value>
+  </data>
+  <data name="Send_Feedback_Exception" xml:space="preserve">
+    <value>おっと、何か悪いことが起こりました。それについて教えてください!。</value>
+  </data>
+  <data name="Import" xml:space="preserve">
+    <value>インポート</value>
+  </data>
+  <data name="ImportDlg_Skip" xml:space="preserve">
+    <value>インポートのスキップ</value>
+  </data>
+  <data name="ImportDlg_Title" xml:space="preserve">
+    <value>証明 - インポート</value>
+  </data>
+  <data name="ImportDlg_OpTitle" xml:space="preserve">
+    <value>管理されている証明書のインポート</value>
+  </data>
+  <data name="Send" xml:space="preserve">
+    <value>送信</value>
+  </data>
+  <data name="Send_Feedback_Quest" xml:space="preserve">
+    <value>ご要望をお聞かせください。</value>
+  </data>
+  <data name="Send_Feedback" xml:space="preserve">
+    <value>フィードバックの送信</value>
+  </data>
+  <data name="New_Contact" xml:space="preserve">
+    <value>新しい連絡先</value>
+  </data>
+  <data name="Registration_NeedKey" xml:space="preserve">
+    <value>ライセンスキーを入力してください。</value>
+  </data>
+  <data name="MainWindow_VisitDownloadPage" xml:space="preserve">
+    <value>ダウンロードページに訪問しますか？</value>
+  </data>
+  <data name="ManagedCertificateSettings_PostRequestScript" xml:space="preserve">
+    <value>後で実行する PS スクリプト:</value>
+  </data>
+  <data name="Update_MandatoryUpdateQuit" xml:space="preserve">
+    <value>現在のアプリケーションのバージョンはサポートされなくなりました。更新をしてください。</value>
+  </data>
+  <data name="ManagedCertificateSettings_UseSpecificBinding" xml:space="preserve">
+    <value>特定の IP/ポート バインドを使用</value>
+  </data>
+  <data name="ManagedCertificates_NoItemSelectedTip" xml:space="preserve">
+    <value>管理する証明書を選択するか、新しい証明書の作成を選択します。</value>
+  </data>
+  <data name="ManagedCertificateSettings_SelectWebsite" xml:space="preserve">
+    <value>Web サイトを選択 (オプション):</value>
+  </data>
+  <data name="Update_ReadyToApply" xml:space="preserve">
+    <value>新しいアップデートを適用する準備ができています。今すぐインストールしますか？</value>
+  </data>
+  <data name="Credentials_EditCredential" xml:space="preserve">
+    <value>保存されている証明書の追加、更新</value>
+  </data>
+  <data name="ManagedCertificateSettings_AutoUpdateBinding" xml:space="preserve">
+    <value> IIS バインドの作成/更新を自動化 (SNI を使用)。</value>
+  </data>
+  <data name="ManagedCertificateSettings_CannotChallengeWithoutIIS" xml:space="preserve">
+    <value>IIS を使用できない場合は、設定をチェックできません。</value>
+  </data>
+  <data name="ManagedCertificateSettings_CertificatePathEmpty" xml:space="preserve">
+    <value>証明書のパス: [設定する]</value>
+  </data>
+  <data name="ManagedCertificateSettings_NoHostNameBindingWarning" xml:space="preserve">
+    <value>少なくとも 1 つの完全修飾ホスト名 (例: 'github.com') またはワイルドカード (例えば ' *. github.com) 証明書を作成する必要があります。</value>
+  </data>
+  <data name="Settings_EnableTelemetry" xml:space="preserve">
+    <value>App テレメトリーを有効にする（利用している機能をレポート）</value>
+  </data>
+  <data name="Settings_EnableHttpChallengeServer" xml:space="preserve">
+    <value>Http チャレンジサーバーを有効にする</value>
+  </data>
+  <data name="Settings_EnableDnsValidation" xml:space="preserve">
+    <value>DNS 検証チェックを有効にする（Resolution, CAA, DNSSEC)</value>
+  </data>
+  <data name="Settings_IgnoreStoppedSites" xml:space="preserve">
+    <value>新しい証明書と更新のために停止した IIS サイトを無視する</value>
+  </data>
+  <data name="Configure_Auto_Renew" xml:space="preserve">
+    <value>自動更新の設定</value>
+  </data>
+  <data name="ScheduledTaskConfig_Tip" xml:space="preserve">
+    <value>証明書の自動更新を実行するには、Windowsタスクスケジューラでタスクが作成されます。 このタスクは、証明書管理およびIIS管理タスクを実行するために管理者レベルのユーザーとして実行する必要があります。</value>
+  </data>
+  <data name="ManagedCertificateSettings_ConfirmDelete" xml:space="preserve">
+    <value>このアイテムを削除してもよろしいですか？ アイテムを削除しても、IIS設定などには影響しません。</value>
+  </data>
+  <data name="LanguageAuthor" xml:space="preserve">
+    <value>Certify SSL マネージャー コントリビューター（https://certifytheweb.com）</value>
+  </data>
+  <data name="ManagedCertificateSettings_ConfigurationCheckOk" xml:space="preserve">
+    <value>構成チェック完了</value>
+  </data>
+  <data name="Settings_EnableEFS" xml:space="preserve">
+    <value>機密ファイル用の暗号化ファイルシステム（EFS）を有効にする。 このオプションは、すべてのバージョンのWindowsでは動作しません。</value>
+  </data>
+  <data name="Settings_EnableProxyApiForDomainConfig" xml:space="preserve">
+    <value>ドメイン設定の確認にプロキシAPIを有効にする</value>
+  </data>
+  <data name="ScheduledTaskConfig_FailedToCreateTask" xml:space="preserve">
+    <value>指定された資格情報でスケジュールされたタスクを作成できませんでした</value>
+  </data>
+  <data name="ManagedCertificates_NoItemSelectedDesc" xml:space="preserve">
+    <value>Let's Encryptサービス（https://letsencrypt.org）で提供される無料のSSL証明書。</value>
+  </data>
+  <data name="MainWindow_GetStartGuideWithNewCert" xml:space="preserve">
+    <value>新しい連絡先を登録すると、証明書の要求を開始できます。</value>
+  </data>
+  <data name="MainWindow_IISNotAvailable" xml:space="preserve">
+    <value>このサーバーでIISが検出されなかったため、重要な機能は使用できなくなりました。 IISがインストールされ、このサーバーで動作していることが分かっている場合は、サーバーのオペレーティングシステムのバージョンとIISのバージョンの詳細を提供する apps@webprofusion にこのエラーを報告してください</value>
+  </data>
+  <data name="ManagedCertificateSettings_Include" xml:space="preserve">
+    <value>インクルード</value>
+  </data>
+  <data name="Settings_AutoRenewalRequestLimit" xml:space="preserve">
+    <value>セッションごとの自動更新リクエストの最大値（0 =無制限）</value>
+  </data>
+  <data name="ImportDlg_Merge" xml:space="preserve">
+    <value>サイトごとに複数のドメイン/証明書を1つの管理されている証明書に統合</value>
+  </data>
+  <data name="GettingStarted_DashboardIntro" xml:space="preserve">
+    <value>レポートダッシュボードを使用すると、1つまたは複数のサーバーで証明書の更新ステータスを簡単に表示したり、通知設定をコントロールすることができます。</value>
+  </data>
+  <data name="MainWindow_TrialLimitationReached" xml:space="preserve">
+    <value>このアプリの試用版を使用しています。 アップグレードするには登録キーを購入してください。バージョン番号タブの登録オプションを参照してください。</value>
+  </data>
+  <data name="ManagedCertificateSettings_InvalidSNI" xml:space="preserve">
+    <value>特定のバインドされたIPアドレスを持つSNIバインディングを作成しようとしています。 SNIバインディングでは、割り当てられていないすべてを使用することをお勧めします。 保存を続けますか？</value>
+  </data>
+  <data name="ImportDlg_OpComment" xml:space="preserve">
+    <value>古いバージョンの Certify からアップグレードしています。 これにより、新しい管理証明書が作成され、更新設定などを調整するために編集できます。</value>
+  </data>
+  <data name="Update_DownloadNow" xml:space="preserve">
+    <value>アップデートを自動的にダウンロードしますか？ 申請の準備が整うと通知します。</value>
+  </data>
+  <data name="ManagedCertificateSettings_DefaultTitle" xml:space="preserve">
+    <value>新しい管理証明書</value>
+  </data>
+  <data name="ManagedCertificateSettings_NoChanges" xml:space="preserve">
+    <value>変更がありません、保存をスキップします</value>
+  </data>
+  <data name="ManagedCertificateSettings_BindingNote" xml:space="preserve">
+    <value>注意：これらの設定は新しいhttpsバインディングにのみ適用され、既存のバインディングは新しい証明書でのみ更新されます。 複数の証明書に固定IPを使用すると、Windows上でバインド競合が発生しますので注意して使用してください。</value>
+  </data>
+  <data name="ManagedCertificateSettings_ExportTip" xml:space="preserve">
+    <value>注意：この証明書をエクスポートするには、Windowsの[コンピュータ証明書の管理]オプションを使用します。</value>
+  </data>
+  <data name="ManagedCertificateSettings_NotifyPrimaryContactOnRenewalFailure" xml:space="preserve">
+    <value>更新失敗時にプライマリ連絡先に通知する</value>
+  </data>
+  <data name="ManagedCertificateSettings_PerformChallengeResponseConfigCheck" xml:space="preserve">
+    <value>チャレンジレスポンスの設定チェックを実行する</value>
+  </data>
+  <data name="ManagedCertificateSettings_PerformWebAppAutoConfig" xml:space="preserve">
+    <value>Webアプリケーションの自動設定を実行する</value>
+  </data>
+  <data name="Registration_NeedEmail" xml:space="preserve">
+    <value>あなたのキーを登録する際に使用した電子メールアドレスを入力してください。</value>
+  </data>
+  <data name="ScheduledTaskConfig_PleaseProvideCredential" xml:space="preserve">
+    <value>管理者レベルのユーザーのユーザー名とパスワードを入力してください。</value>
+  </data>
+  <data name="ManagedCertificateSettings_ReapplyCertificate" xml:space="preserve">
+    <value>バインディングに証明書を再適用する</value>
+  </data>
+  <data name="Update_DownloadFailed" xml:space="preserve">
+    <value>申し訳ありませんが、アップデートをダウンロードできませんでした。 後でもう一度お試しください。</value>
+  </data>
+  <data name="ManagedCertificateSettings_ChallengeNotAvailable" xml:space="preserve">
+    <value>{0}チャレンジはIISバージョン8以上でのみ利用可能です。</value>
+  </data>
+  <data name="ScheduledTaskConfig_AlreadyConfiged" xml:space="preserve">
+    <value>自動更新タスクは既に設定されています。 必要に応じて、タスクの実行に使用する管理者ユーザーアカウントを変更できます。</value>
+  </data>
+  <data name="ManagedCertificateSettings_CertificateNotReady" xml:space="preserve">
+    <value>このアイテムの証明書ファイルはまだ作成されていません。</value>
+  </data>
+  <data name="New_Contact_Tip1" xml:space="preserve">
+    <value>Certify SSL マネージャーと無料の暗号化サービスを使用してSSL証明書を取得するには、最初に連絡先として登録する必要があります。</value>
+  </data>
+  <data name="Dashboard_AddIntro" xml:space="preserve">
+    <value>このサーバーをダッシュボードに追加するには、https://certifytheweb.com/profile にサインインして詳細を入力するか、新しいアカウントを登録します。</value>
+  </data>
+  <data name="MainWindow_RenewAllConfirm" xml:space="preserve">
+    <value>すべての自動更新アイテムの証明書が更新されます。 続行しますか？</value>
+  </data>
+  <data name="New_Contact_Tip2" xml:space="preserve">
+    <value>提供された電子メールアドレスは、必要に応じて今後の証明書の更新を通知するために使用することができます。 無効な電子メールアドレスはLet's Encrypt によって拒否されます。</value>
+  </data>
+  <data name="ManagedCertificateSettings_LogNotCreated" xml:space="preserve">
+    <value>このアイテムのログファイルはまだ作成されていません。</value>
+  </data>
+  <data name="ManagedCertificateSettings_HookMethodMustBeSet" xml:space="preserve">
+    <value>Webhookのメソッドを設定する必要があります。</value>
+  </data>
+  <data name="ManagedCertificateSettings_DomainIncluded" xml:space="preserve">
+    <value>以下の選択されたドメインは、単一の証明書要求として含まれます。 Lets Encryptサービスは、認証プロセスが機能するために、ポート80（HTTPチャレンジの場合）またはポート443（TLS-SNIチャレンジの場合）を介して、これらのすべてのドメインにアクセスできる必要があります。</value>
+  </data>
+  <data name="Registration_KeyValidationError" xml:space="preserve">
+    <value>ライセンスキーの検証中に問題が発生しました。もう一度お試しになるか、サポートにお問い合わせください。</value>
+  </data>
+  <data name="Registration_UnableToVerify" xml:space="preserve">
+    <value>ライセンスの認証プロセスを開始する際に問題が発生しました。</value>
+  </data>
+  <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
+    <value>このバージョンは評価用に無料で利用でき、最大5つのWebサイトを管理する制限があります。この制限を解除するには、登録キーを購入してください。以前に寄付したことがある場合は、無料のキーを取得するために、スポンサーシップPayPalトランザクションの詳細を apps@webprofusion.com にメールしてください。このオファーは、GitHub でこのアプリで受け入れられた PR を持っている開発者にも公開されています。</value>
+  </data>
+  <data name="ManagedCertificateSettings_HookMustBeValidUrl" xml:space="preserve">
+    <value>WebhookのURLは有効なURLに設定する必要があります。</value>
+  </data>
+  <data name="ProgressMonitor_NoProgress" xml:space="preserve">
+    <value>現在進行中のリクエストはありません。</value>
+  </data>
+  <data name="ManagedCertificates_UnsavedWarning" xml:space="preserve">
+    <value>選択したサイトに保存されていない変更があります。 変更を破棄しますか？</value>
+  </data>
+</root>
