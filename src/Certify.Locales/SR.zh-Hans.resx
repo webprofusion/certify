@@ -648,4 +648,16 @@
   <data name="ManagedCertificateSettings_AddDomainsToCertificate" xml:space="preserve">
     <value>添加域名:</value>
   </data>
+  <data name="ManagedCertificateSettings_NoHostNameBindingWarning" xml:space="preserve">
+    <value>至少一个完整的主机名(如 'github.com')</value>
+  </data>
+  <data name="ManagedCertificateSettings_BindingNote" xml:space="preserve">
+    <value>注意：这些设置仅能影响到新的HTTPS绑定，已有的绑定只会鞥心证书。Windows平台在一个固定IP上使用多个证书可能会导致绑定冲突，请谨慎使用。</value>
+  </data>
+  <data name="ManagedCertificateSettings_AddDomainsHelpText" xml:space="preserve">
+    <value>例如 test.com, www.test.com 或 *.test.com</value>
+  </data>
+  <data name="Settings_EnableHttpChallengeServer" xml:space="preserve">
+    <value>启用HTTP验证服务</value>
+  </data>
 </root>
