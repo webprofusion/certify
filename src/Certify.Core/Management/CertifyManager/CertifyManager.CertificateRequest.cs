@@ -519,7 +519,7 @@ namespace Certify.Management
                     // resume process, ask CA to check our challenge responses
                     foreach (var domain in distinctDomains)
                     {
-                        var asciiDomain = _idnMapping.GetAscii(domain);
+                        var asciiDomain = _idnMapping.GetAscii(domain).ToLower();
 
                         // TODO: get fresh copy of authz info before proceeding
                         var authorization = authorizations.FirstOrDefault(a => a.Identifier?.Dns == asciiDomain);
@@ -797,7 +797,7 @@ namespace Certify.Management
 
             foreach (var domain in distinctDomains)
             {
-                var asciiDomain = _idnMapping.GetAscii(domain);
+                var asciiDomain = _idnMapping.GetAscii(domain).ToLower();
 
                 var authorization = authorizations.FirstOrDefault(a => a.Identifier?.Dns == asciiDomain);
 
