@@ -50,7 +50,7 @@
                     <StackPanel
                         Width="Auto"
                         Margin="0,8,0,0"
-                        HorizontalAlignment="Left"
+                        HorizontalAlignment="Stretch"
                         MouseUp="ManagedCertificate_ViewLog"
                         Orientation="Vertical">
                         <DockPanel
@@ -66,24 +66,24 @@
                                 Text="{Binding ManagedCertificate.Name}" />
                         </DockPanel>
                         <DockPanel
-                            Margin="14,4,0,0"
+                            Margin="0,4,0,0"
                             HorizontalAlignment="Stretch"
                             DockPanel.Dock="Top">
                             <TextBlock
-                                Margin="8,0,4,0"
+                                Margin="8,0,8,0"
                                 FontWeight="DemiBold"
                                 Foreground="{Binding CurrentState, Converter={StaticResource StateToColorConverter}}"
                                 Text="{Binding CurrentState}" />
                             <ProgressBar
                                 Width="Auto"
                                 MinWidth="100"
-                                MaxWidth="200"
+                                MaxWidth="300"
                                 IsIndeterminate="True"
                                 Visibility="{Binding IsRunning, Converter={StaticResource BooleanToVisibilityConverter}}" />
                         </DockPanel>
 
                         <TextBlock
-                            Margin="22,8,8,8"
+                            Margin="8,8,8,8"
                             HorizontalAlignment="Stretch"
                             DockPanel.Dock="Top"
                             FontSize="10"
