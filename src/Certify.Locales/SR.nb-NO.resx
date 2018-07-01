@@ -216,9 +216,6 @@
   <data name="Send_Feedback_Error" xml:space="preserve">
     <value>Ops... Det oppsto en feil da vi skulle sende tilbakemeldingen</value>
   </data>
-  <data name="New_Contact_EmailError" xml:space="preserve">
-    <value>Der glemte du e-postadressen gitt...</value>
-  </data>
   <data name="New_Contact_NeedAgree" xml:space="preserve">
     <value>Du må godta den nyeste LetsEncrypt.org-abonnementsavtalen.</value>
   </data>

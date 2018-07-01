@@ -435,9 +435,6 @@
   <data name="ScheduledTaskConfig_TaskCreated" xml:space="preserve">
     <value>スケジュールされたタスクを作成</value>
   </data>
-  <data name="New_Contact_EmailError" xml:space="preserve">
-    <value>おっと、あなたは有効なメール アドレスを提供していません。</value>
-  </data>
   <data name="Send_Feedback_Error" xml:space="preserve">
     <value>申し訳ありませんが、あなたのフィードバックを送信するときに問題がありました。</value>
   </data>

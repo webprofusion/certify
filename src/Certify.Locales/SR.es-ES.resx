@@ -258,9 +258,6 @@
   <data name="Send_Feedback_Error" xml:space="preserve">
     <value>Lo sentimos, hubo un problema al enviar sus comentarios.</value>
   </data>
-  <data name="New_Contact_EmailError" xml:space="preserve">
-    <value>Ooops, olvidaste proporcionar una dirección de correo electrónico válida.</value>
-  </data>
   <data name="New_Contact_NeedAgree" xml:space="preserve">
     <value>Debe aceptar el último Acuerdo de Suscriptor de LetsEncrypt.org.</value>
   </data>

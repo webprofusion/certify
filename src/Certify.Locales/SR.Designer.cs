@@ -1170,7 +1170,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ooops, you forgot to provide a valid email address..
+        ///   Looks up a localized string similar to There was a problem registering with Let&apos;s Encrypt using this email address. Check the email address is valid and that this computer has an open connection to the internet (outgoing https is required for API calls)..
         /// </summary>
         public static string New_Contact_EmailError {
             get {

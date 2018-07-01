@@ -220,7 +220,7 @@
     <value>Sorry, there was a problem submitting your feedback.</value>
   </data>
   <data name="New_Contact_EmailError" xml:space="preserve">
-    <value>Ooops, you forgot to provide a valid email address.</value>
+    <value>There was a problem registering with Let's Encrypt using this email address. Check the email address is valid and that this computer has an open connection to the internet (outgoing https is required for API calls).</value>
   </data>
   <data name="New_Contact_NeedAgree" xml:space="preserve">
     <value>You need to agree to the latest LetsEncrypt.org Subscriber Agreement.</value>
