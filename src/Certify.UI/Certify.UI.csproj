@@ -387,7 +387,7 @@
       <Version>4.7.0.9</Version>
     </PackageReference>
     <PackageReference Include="MahApps.Metro">
-      <Version>1.6.4</Version>
+      <Version>1.6.5</Version>
     </PackageReference>
     <PackageReference Include="Markdig.Wpf">
       <Version>0.2.4</Version>
@@ -396,7 +396,7 @@
       <Version>2.6.4</Version>
     </PackageReference>
     <PackageReference Include="NETStandard.Library">
-      <Version>2.0.1</Version>
+      <Version>2.0.3</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>11.0.2</Version>
