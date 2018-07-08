@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models;
@@ -18,6 +19,8 @@ namespace Certify.Core.Management.Challenges
 
     public class DnsChallengeHelper
     {
+        private readonly IdnMapping _idnMapping = new IdnMapping();
+
         public async Task<DnsChallengeHelperResult> GetDnsProvider(string providerTypeId, string credentialsId, Dictionary<string, string> parameters)
         {
             var credentialsManager = new CredentialsManager();
@@ -169,8 +172,12 @@ namespace Certify.Core.Management.Challenges
             {
                 zoneId = challengeConfig.ZoneId?.Trim();
             }
+
             if (dnsAPIProvider != null)
             {
+                //most DNS providers require domains to by ASCII
+                txtRecordName = _idnMapping.GetAscii(txtRecordName).ToLower();
+
                 log.Information($"DNS: Creating TXT Record '{txtRecordName}' with value '{txtRecordValue}', in Zone Id '{zoneId}' using API provider '{dnsAPIProvider.ProviderTitle}'");
                 try
                 {
@@ -248,7 +255,8 @@ namespace Certify.Core.Management.Challenges
 
         public async Task<DnsChallengeHelperResult> DeleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, string domain, string txtRecordName)
         {
-            // for a given managed site configuration, attempt to delete the TXT record created for the challenge
+            // for a given managed site configuration, attempt to delete the TXT record created for
+            // the challenge
             var credentialsManager = new CredentialsManager();
             var credentials = new Dictionary<string, string>();
 
@@ -338,6 +346,9 @@ namespace Certify.Core.Management.Challenges
 
             if (dnsAPIProvider != null)
             {
+                //most DNS providers require domains to by ASCII
+                txtRecordName = _idnMapping.GetAscii(txtRecordName).ToLower();
+
                 log.Information($"DNS: Deleting TXT Record '{txtRecordName}', in Zone Id '{zoneId}' using API provider '{dnsAPIProvider.ProviderTitle}'");
                 try
                 {
@@ -367,7 +378,6 @@ namespace Certify.Core.Management.Challenges
                         IsAwaitingUser = false
                     };
                 }
-
             }
             else
             {

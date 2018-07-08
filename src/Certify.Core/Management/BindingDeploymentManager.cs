@@ -63,14 +63,14 @@ namespace Certify.Core.Management
             {
                 //get list of domains we need to create/update https bindings for
                 List<string> dnsHosts = new List<string> {
-                    ToUnicodeString(requestConfig.PrimaryDomain)
+                    requestConfig.PrimaryDomain
                 };
 
                 if (requestConfig.SubjectAlternativeNames != null)
                 {
                     foreach (var san in requestConfig.SubjectAlternativeNames)
                     {
-                        dnsHosts.Add(ToUnicodeString(san));
+                        dnsHosts.Add(san);
                     }
                 }
 
@@ -294,7 +294,7 @@ namespace Certify.Core.Management
         {
             var steps = new List<ActionStep>();
 
-            var internationalHost = host == "" ? "" : ToUnicodeString(host);
+            var internationalHost = host ?? "";
 
             var bindingSpecString = $"{(!string.IsNullOrEmpty(ipAddress) ? ipAddress : "*")}:{sslPort}:{internationalHost}";
 

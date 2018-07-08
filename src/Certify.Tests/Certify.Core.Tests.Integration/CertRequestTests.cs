@@ -143,6 +143,12 @@ namespace Certify.Core.Tests
         {
             var testIDNDomain = "å🤔." + PrimaryTestDomain;
 
+            var testSANList = new string[]
+            {
+                "xyå."+ PrimaryTestDomain,
+                "xyå.xyå" + PrimaryTestDomain
+            };
+
             if (await iisManager.SiteExists(testIDNDomain))
             {
                 await iisManager.DeleteSite(testIDNDomain);
