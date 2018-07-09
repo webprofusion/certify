@@ -116,7 +116,8 @@
                             Margin="0,4,0,0"
                             Checked="SettingsUpdated"
                             Content="{x:Static res:SR.Settings_EnableEFS}"
-                            Unchecked="SettingsUpdated" />
+                            Unchecked="SettingsUpdated"
+                            Visibility="Collapsed" />
                         <CheckBox
                             x:Name="IgnoreStoppedSites"
                             Margin="0,4,0,0"
