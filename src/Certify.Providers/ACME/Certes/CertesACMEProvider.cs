@@ -620,19 +620,24 @@ namespace Certify.Providers.Certes
         public async Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate)
         {
             // get current PFX, extract DER bytes
-            var pkcs = new Org.BouncyCastle.Pkcs.Pkcs12Store(File.Open(managedCertificate.CertificatePath, FileMode.Open), "".ToCharArray());
-            // pkcs.Aliases;
-            var certAliases = pkcs.Aliases.GetEnumerator();
-            certAliases.MoveNext();
+            try
+            {
+                var pkcs = new Org.BouncyCastle.Pkcs.Pkcs12Store(File.Open(managedCertificate.CertificatePath, FileMode.Open), "".ToCharArray());
 
-            var certEntry = pkcs.GetCertificate(certAliases.Current.ToString());
-            var certificate = certEntry.Certificate;
-            // revoke certificate
+                var certAliases = pkcs.Aliases.GetEnumerator();
+                certAliases.MoveNext();
 
-            var der = certificate.GetEncoded();
+                var certEntry = pkcs.GetCertificate(certAliases.Current.ToString());
+                var certificate = certEntry.Certificate;
 
-            var orderContext = _acme.Order(new Uri(managedCertificate.CurrentOrderUri));
-            await _acme.RevokeCertificate(der, RevocationReason.Unspecified, null);
+                // revoke certificat
+                var der = certificate.GetEncoded();
+                await _acme.RevokeCertificate(der, RevocationReason.Unspecified, null);
+            }
+            catch (Exception exp)
+            {
+                return new StatusMessage { IsOK = false, Message = $"Failed to revoke certificate: {exp.Message}" };
+            }
 
             return new StatusMessage { IsOK = true, Message = "Certificate revoked" };
         }
