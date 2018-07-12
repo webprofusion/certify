@@ -461,6 +461,25 @@ namespace Certify.Management
 
                     await UpdateManagedCertificateStatus(managedCertificate, RequestState.Paused, instructions);
 
+                    // if manual DNS and notification enabled, inform user (one or more)
+                    if (CoreAppSettings.Current.EnableStatusReporting)
+                    {
+                        if (_pluginManager.DashboardClient != null)
+                        {
+                            //TODO: should only fire if user not interactive?
+
+                            await _pluginManager.DashboardClient.ReportUserActionRequiredAsync(new Models.Shared.ItemActionRequired
+                            {
+                                InstanceId = managedCertificate.InstanceId,
+                                ManagedItemId = managedCertificate.Id,
+                                ItemTitle = managedCertificate.Name,
+                                ActionType = "manualdns",
+                                InstanceTitle = Environment.MachineName,
+                                Message = instructions,
+                                NotificationEmail = GetPrimaryContactEmail() // todo: how to get this from correct challenge config
+                            });
+                        }
+                    }
                     return;
                 }
 

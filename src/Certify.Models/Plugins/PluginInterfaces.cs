@@ -1,6 +1,6 @@
-﻿using Certify.Models.Shared;
+﻿using System.Threading.Tasks;
+using Certify.Models.Shared;
 using Registration.Core.Models.Shared;
-using System.Threading.Tasks;
 
 namespace Certify.Models.Plugins
 {
@@ -32,5 +32,7 @@ namespace Certify.Models.Plugins
         Task<bool> SignInAsync(string email, string pwd);
 
         Task<bool> RegisterInstance(RegisteredInstance instance, string email, string pwd, bool createAccount);
+
+        Task<bool> ReportUserActionRequiredAsync(ItemActionRequired actionRequired);
     }
 }
