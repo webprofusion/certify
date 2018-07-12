@@ -7,7 +7,7 @@ using System.Windows.Input;
 namespace Certify.UI.Controls
 {
     /// <summary>
-    /// Interaction logic for Settings.xaml 
+    /// Interaction logic for Settings.xaml
     /// </summary>
     public partial class Settings : UserControl
     {
@@ -46,6 +46,7 @@ namespace Certify.UI.Controls
 
             this.EnableDNSValidationChecks.IsChecked = _prefs.EnableDNSValidationChecks;
             this.EnableHttpChallengeServer.IsChecked = _prefs.EnableHttpChallengeServer;
+            this.EnableCertificateCleanup.IsChecked = _prefs.EnableCertificateCleanup;
 
             this.RenewalIntervalDays.Value = _prefs.RenewalIntervalDays;
             this.RenewalMaxRequests.Value = _prefs.MaxRenewalRequests;
@@ -87,6 +88,7 @@ namespace Certify.UI.Controls
                 _prefs.EnableValidationProxyAPI = (this.EnableProxyAPICheckbox.IsChecked == true);
                 _prefs.EnableDNSValidationChecks = (this.EnableDNSValidationChecks.IsChecked == true);
                 _prefs.EnableHttpChallengeServer = (this.EnableHttpChallengeServer.IsChecked == true);
+                _prefs.EnableCertificateCleanup = (this.EnableCertificateCleanup.IsChecked == true);
 
                 _prefs.EnableEFS = (this.EnableEFS.IsChecked == true);
                 _prefs.IgnoreStoppedSites = (this.IgnoreStoppedSites.IsChecked == true);

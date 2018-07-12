@@ -28,10 +28,10 @@ namespace Certify.Core.Management.Challenges
         /// Simulates responding to a challenge, performs a sample configuration and attempts to
         /// verify it.
         /// </summary>
-        /// <param name="serverManager"></param>
-        /// <param name="managedCertificate"></param>
+        /// <param name="serverManager">  </param>
+        /// <param name="managedCertificate">  </param>
         /// <returns> APIResult </returns>
-        /// <remarks>
+        /// <remarks> 
         /// The purpose of this method is to test the options (permissions, configuration) before
         /// submitting a request to the ACME server, to avoid creating failed requests and hitting
         /// usage limits.
@@ -60,7 +60,7 @@ namespace Certify.Core.Management.Challenges
 
             // if wildcard domain included, check first level labels not also specified, i.e.
             // *.example.com & www.example.com cannot be mixed, but example.com, *.example.com &
-            //  test.wwww.example.com can
+            // test.wwww.example.com can
             var invalidLabels = new List<string>();
             if (domains.Any(d => d.StartsWith("*.")))
             {
@@ -312,7 +312,7 @@ namespace Certify.Core.Management.Challenges
         }
 
         /// <summary>
-        /// Prepares IIS to respond to a http-01 challenge 
+        /// Prepares IIS to respond to a http-01 challenge
         /// </summary>
         /// <returns> Test the challenge response locally. </returns>
         private async Task<ActionResult> PerformChallengeResponse_Http01(ILog log, ICertifiedServer iisManager, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
@@ -330,7 +330,8 @@ namespace Certify.Core.Management.Challenges
             log.Information("Preparing challenge response for Let's Encrypt server to check at: {uri}", httpChallenge.ResourceUri);
             log.Information("If the challenge response file is not accessible at this exact URL the validation will fail and a certificate will not be issued.");
 
-            // get website root path (from challenge config or fallback to deprecated WebsiteRootPath), expand environment variables if required
+            // get website root path (from challenge config or fallback to deprecated
+            // WebsiteRootPath), expand environment variables if required
             var websiteRootPath = requestConfig.WebsiteRootPath;
             var challengeConfig = managedCertificate.GetChallengeConfig(domain);
             if (!string.IsNullOrEmpty(challengeConfig.ChallengeRootPath))
@@ -427,7 +428,8 @@ namespace Certify.Core.Management.Challenges
                 }
             };
 
-            // if config checks are enabled but our last renewal was successful, skip auto config until we have failed twice
+            // if config checks are enabled but our last renewal was successful, skip auto config
+            // until we have failed twice
             if (requestConfig.PerformExtensionlessConfigChecks)
             {
                 if (managedCertificate.DateRenewed != null && managedCertificate.RenewalFailureCount < 2)
@@ -445,8 +447,8 @@ namespace Certify.Core.Management.Challenges
                 if (requestConfig.PerformAutoConfig)
                 {
                     // FIXME: need to only overwrite config we have auto populated, not user
-                    //        specified config, compare to our preconfig and only overwrite if same
-                    //        as ours? Or include preset key in our config, or make behaviour configurable
+                    // specified config, compare to our preconfig and only overwrite if same as ours?
+                    // Or include preset key in our config, or make behaviour configurable
                     LogAction($"Pre-config check failed: Auto-config will overwrite existing config: {destPath}\\web.config");
 
                     var configOptions = Directory.EnumerateFiles(Environment.CurrentDirectory + "\\Scripts\\Web.config\\", "*.config");
@@ -530,7 +532,7 @@ namespace Certify.Core.Management.Challenges
 
                 log.Information($"Preparing binding at: https://{domain}, sni: {sni}");
 
-                var x509 = CertificateManager.GenerateTlsSni01Certificate(sni);
+                var x509 = CertificateManager.GenerateSelfSignedCertificate(sni);
 
                 CertificateManager.StoreCertificate(x509);
 
@@ -557,7 +559,6 @@ namespace Certify.Core.Management.Challenges
 
         private async Task<DnsChallengeHelperResult> PerformChallengeResponse_Dns01(ILog log, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
         {
-
             var dnsChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
 
             if (dnsChallenge == null)

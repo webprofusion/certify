@@ -25,5 +25,7 @@
         public bool UseBackgroundServiceAutoRenewal { get; set; } = true;
 
         public bool EnableHttpChallengeServer { get; set; } = true;
+
+        public bool EnableCertificateCleanup { get; set; } = true;
     }
 }

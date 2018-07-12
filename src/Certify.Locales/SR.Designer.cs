@@ -1539,6 +1539,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Enable Certificate Cleanup.
+        /// </summary>
+        public static string Settings_EnableCertificateCleanup {
+            get {
+                return ResourceManager.GetString("Settings_EnableCertificateCleanup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Enable DNS Validations checks (Resolution, CAA, DNSSEC).
         /// </summary>
         public static string Settings_EnableDnsValidation {

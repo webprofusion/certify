@@ -1,4 +1,12 @@
-﻿using Certify.Utils;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Security.AccessControl;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
+using Certify.Utils;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
@@ -10,20 +18,12 @@ using Org.BouncyCastle.Math;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.Utilities;
 using Org.BouncyCastle.X509;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Security.AccessControl;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks;
 
 namespace Certify.Management
 {
     public static class CertificateManager
     {
-        public static X509Certificate2 GenerateTlsSni01Certificate(string domain)
+        public static X509Certificate2 GenerateSelfSignedCertificate(string domain, DateTime? dateFrom = null, DateTime? dateTo = null)
         {
             // configure generators
             var random = new SecureRandom(new CryptoApiRandomGenerator());
@@ -37,8 +37,8 @@ namespace Certify.Management
             certificateGenerator.SetSubjectDN(new X509Name($"CN={domain}"));
             certificateGenerator.SetIssuerDN(new X509Name($"CN={domain}"));
             certificateGenerator.SetSerialNumber(serialNumber);
-            certificateGenerator.SetNotBefore(DateTime.UtcNow);
-            certificateGenerator.SetNotAfter(DateTime.UtcNow.AddMinutes(5));
+            certificateGenerator.SetNotBefore(dateFrom ?? DateTime.UtcNow);
+            certificateGenerator.SetNotAfter(dateTo ?? DateTime.UtcNow.AddMinutes(5));
             certificateGenerator.AddExtension(X509Extensions.SubjectAlternativeName.Id, false, new DerSequence(new Asn1Encodable[] { new GeneralName(GeneralName.DnsName, domain) }));
             certificateGenerator.AddExtension(X509Extensions.ExtendedKeyUsage, false, new ExtendedKeyUsage(new KeyPurposeID[] { KeyPurposeID.IdKPServerAuth, KeyPurposeID.IdKPClientAuth }));
             certificateGenerator.AddExtension(X509Extensions.KeyUsage, true, new KeyUsage(KeyUsage.KeyEncipherment | KeyUsage.DigitalSignature));
@@ -55,13 +55,14 @@ namespace Certify.Management
                     KeyNumber = 1,
                     Flags = CspProviderFlags.UseMachineKeyStore
                 });
+
             var rp = DotNetUtilities.ToRSAParameters((RsaPrivateCrtKeyParameters)keyPair.Private);
             csp.ImportParameters(rp);
 
             // convert from bouncy cert to X509Certificate2
             return new X509Certificate2(bouncy_cert.GetEncoded(), (string)null, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet)
             {
-                FriendlyName = domain,
+                FriendlyName = domain + " [Certify] Self Signed - " + bouncy_cert.NotBefore + " to " + bouncy_cert.NotAfter,
                 PrivateKey = csp
             };
         }
@@ -274,48 +275,67 @@ namespace Certify.Management
             return new X509Store(StoreName.My, StoreLocation.LocalMachine);
         }
 
-        /// <summary>
-        /// Remove old certificates we have created previously (based on a matching prefix string,
-        /// compared to our new certificate)
-        /// </summary>
-        /// <param name="certificate"> The new cert to keep </param>
-        /// <param name="hostPrefix"> The cert friendly name prefix to match certs to clean up </param>
-        public static void CleanupCertificateDuplicates(X509Certificate2 certificate, string hostPrefix)
+        public static bool IsCertificateInStore(X509Certificate2 cert)
         {
-            // TODO: remove distinction, this is legacy from the old version which didn't have a
-            //       clear app specific prefix
-
-            if (certificate.FriendlyName.Length < 10) return;
-
-            var store = GetDefaultStore();
-            store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
-
-            var certsToRemove = new List<X509Certificate2>();
-            foreach (var c in store.Certificates)
+            bool certExists = false;
+            using (var store = GetDefaultStore())
             {
-                // queue removal of any existing cert which has same hostname prefix and includes
-                // [Certify] text.
-                if (c.FriendlyName.StartsWith(hostPrefix, StringComparison.InvariantCulture) && c.FriendlyName.Contains("[Certify]") && c.GetCertHashString() != certificate.GetCertHashString())
+                store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
+
+                if (store.Certificates.Contains(cert))
                 {
-                    certsToRemove.Add(c);
+                    certExists = true;
                 }
+
+                store.Close();
             }
 
-            // attempt to remove certs
-            foreach (var oldCert in certsToRemove)
-            {
-                try
-                {
-                    store.Remove(oldCert);
-                }
-                catch (Exception exp)
-                {
-                    // Couldn't remove it
-                    System.Diagnostics.Debug.WriteLine("Could not remove cert:" + oldCert.FriendlyName + " " + exp.ToString());
-                }
-            }
+            return certExists;
+        }
 
-            store.Close();
+        /// <summary>
+        /// Remove all certificate expired a month or more before the given date, with [Certify] in
+        /// the friendly name, optionally where there are no existing bindings
+        /// </summary>
+        /// <param name="expiryBefore">  </param>
+        public static void PerformCertificateStoreCleanup(DateTime expiryBefore, bool checkBindings = false)
+        {
+            // get all existing cert bindings
+            var allCertBindings = Certify.Utils.Networking.GetCertificateBindings();
+
+            // get all certificates
+            using (var store = GetDefaultStore())
+            {
+                store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
+
+                var certsToRemove = new List<X509Certificate2>();
+                foreach (var c in store.Certificates)
+                {
+                    bool isBound = false;
+                    if (checkBindings) isBound = allCertBindings.Any(b => b.CertificateHash == c.Thumbprint);
+
+                    // queue removal of existing unbound expired cert with[Certify] text.
+                    if (c.FriendlyName.Contains("[Certify]") && c.NotAfter < expiryBefore.AddMonths(-1))
+                    {
+                        certsToRemove.Add(c);
+                    }
+                }
+
+                // attempt to remove certs
+                foreach (var oldCert in certsToRemove)
+                {
+                    try
+                    {
+                        store.Remove(oldCert);
+                    }
+                    catch (Exception exp)
+                    {
+                        // Couldn't remove it
+                        System.Diagnostics.Debug.WriteLine("Could not remove cert:" + oldCert.FriendlyName + " " + exp.ToString());
+                    }
+                }
+                store.Close();
+            }
         }
     }
 }

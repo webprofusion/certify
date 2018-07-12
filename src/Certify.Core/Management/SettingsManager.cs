@@ -17,10 +17,13 @@ namespace Certify.Management
             this.EnableValidationProxyAPI = true;
             this.EnableAppTelematics = true;
             this.EnableEFS = false;
+            this.EnableDNSValidationChecks = false;
             this.RenewalIntervalDays = 14;
             this.MaxRenewalRequests = 0;
             this.EnableHttpChallengeServer = true;
             this.LegacySettingsUpgraded = false;
+            this.UseBackgroundServiceAutoRenewal = true;
+            this.EnableCertificateCleanup = true;
             this.VaultPath = @"C:\ProgramData\ACMESharp";
             this.InstanceId = null;
         }
@@ -70,19 +73,19 @@ namespace Certify.Management
         public bool LegacySettingsUpgraded { get; set; }
 
         /// <summary>
-        /// If true, this instance has been added to server dashboard 
+        /// If true, this instance has been added to server dashboard
         /// </summary>
         public bool IsInstanceRegistered { get; set; }
 
         public string VaultPath { get; set; }
 
         /// <summary>
-        /// If user opts for renewal failure reporting, generated instance id is used to group results 
+        /// If user opts for renewal failure reporting, generated instance id is used to group results
         /// </summary>
         public string InstanceId { get; set; }
 
         /// <summary>
-        /// If set, specifies the UI language preference 
+        /// If set, specifies the UI language preference
         /// </summary>
         public string Language { get; set; }
 
@@ -90,7 +93,9 @@ namespace Certify.Management
         /// If true the background service will periodically perform auto renewals, otherwise auto
         /// renewal requires a scheduled task
         /// </summary>
-        public bool UseBackgroundServiceAutoRenewal { get; set; } = true;
+        public bool UseBackgroundServiceAutoRenewal { get; set; }
+
+        public bool EnableCertificateCleanup { get; set; }
     }
 
     public class SettingsManager
@@ -110,6 +115,7 @@ namespace Certify.Management
             CoreAppSettings.Current.Language = prefs.Language;
             CoreAppSettings.Current.UseBackgroundServiceAutoRenewal = prefs.UseBackgroundServiceAutoRenewal;
             CoreAppSettings.Current.EnableHttpChallengeServer = prefs.EnableHttpChallengeServer;
+            CoreAppSettings.Current.EnableCertificateCleanup = prefs.EnableCertificateCleanup;
             return true;
         }
 
@@ -130,6 +136,7 @@ namespace Certify.Management
             prefs.Language = CoreAppSettings.Current.Language;
             prefs.UseBackgroundServiceAutoRenewal = CoreAppSettings.Current.UseBackgroundServiceAutoRenewal;
             prefs.EnableHttpChallengeServer = CoreAppSettings.Current.EnableHttpChallengeServer;
+            prefs.EnableCertificateCleanup = CoreAppSettings.Current.EnableCertificateCleanup;
             return prefs;
         }
 
@@ -161,24 +168,11 @@ namespace Certify.Management
             }
             else
             {
-                // no core app settings yet, migrate from old settings
-                //Certify.Properties.Settings.Default.Reload();
-                //var oldProps = Certify.Properties.Settings.Default;
-                /* CoreAppSettings.Current.CheckForUpdatesAtStartup = oldProps.CheckForUpdatesAtStartup;
-                 CoreAppSettings.Current.EnableAppTelematics = oldProps.EnableAppTelematics;
-                 CoreAppSettings.Current.EnableDNSValidationChecks = oldProps.EnableDNSValidationChecks;
-                 CoreAppSettings.Current.EnableEFS = oldProps.EnableEFS;
-                 CoreAppSettings.Current.EnableValidationProxyAPI = oldProps.EnableValidationProxyAPI;
-                 CoreAppSettings.Current.IgnoreStoppedSites = oldProps.ShowOnlyStartedWebsites;
-                 CoreAppSettings.Current.RenewalIntervalDays = oldProps.RenewalIntervalDays;
-                 CoreAppSettings.Current.MaxRenewalRequests = oldProps.MaxRenewalRequests;
-                 CoreAppSettings.Current.VaultPath = oldProps.VaultPath;*/
+                // no core app settings yet
 
                 CoreAppSettings.Current.LegacySettingsUpgraded = true;
                 CoreAppSettings.Current.IsInstanceRegistered = false;
                 CoreAppSettings.Current.Language = null;
-                CoreAppSettings.Current.UseBackgroundServiceAutoRenewal = true;
-                CoreAppSettings.Current.EnableHttpChallengeServer = true;
 
                 CoreAppSettings.Current.InstanceId = Guid.NewGuid().ToString();
                 SaveAppSettings();

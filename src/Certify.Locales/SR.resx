@@ -662,4 +662,7 @@
   <data name="Settings_EnableHttpChallengeServer" xml:space="preserve">
     <value>Enable Http Challenge Server</value>
   </data>
+  <data name="Settings_EnableCertificateCleanup" xml:space="preserve">
+    <value>Enable Certificate Cleanup</value>
+  </data>
 </root>

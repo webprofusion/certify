@@ -305,7 +305,7 @@ namespace Certify.Core.Management
                 Port = sslPort,
                 IP = !string.IsNullOrEmpty(ipAddress) ? ipAddress : "*",
                 SiteId = site.Id,
-                CertificateStore = "MY",
+                CertificateStore = certStoreName,
                 CertificateHashBytes = certificateHash,
                 IsSNIEnabled = useSNI
             };

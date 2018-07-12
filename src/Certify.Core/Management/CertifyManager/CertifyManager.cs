@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
@@ -148,9 +147,9 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// When called, look for periodic tasks we can perform such as renewal 
+        /// When called, look for periodic tasks we can perform such as renewal
         /// </summary>
-        /// <returns></returns>
+        /// <returns>  </returns>
         public async Task<bool> PerformPeriodicTasks()
         {
             Debug.WriteLine("Checking for periodic tasks..");
@@ -176,6 +175,12 @@ namespace Certify.Management
             SettingsManager.LoadAppSettings();
 
             if (_tc != null) _tc.TrackEvent("ServiceDailyTaskCheck");
+
+            // perform expired cert cleanup (if enabled)
+            if (CoreAppSettings.Current.EnableCertificateCleanup)
+            {
+                CertificateManager.PerformCertificateStoreCleanup(DateTime.Now);
+            }
 
             return await Task.FromResult(true);
         }
