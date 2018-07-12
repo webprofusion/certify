@@ -1584,6 +1584,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Enable Status Reports to Dashboard.
+        /// </summary>
+        public static string Settings_EnableStatusReporting {
+            get {
+                return ResourceManager.GetString("Settings_EnableStatusReporting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Enable app telemetry (feature usage reporting).
         /// </summary>
         public static string Settings_EnableTelemetry {

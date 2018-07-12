@@ -95,7 +95,16 @@ namespace Certify.Management
         /// </summary>
         public bool UseBackgroundServiceAutoRenewal { get; set; }
 
+        /// <summary>
+        /// If true, daily task performs cleanup of expired certificates created by the app
+        /// </summary>
         public bool EnableCertificateCleanup { get; set; }
+
+        /// <summary>
+        /// If true, app sends renewal status reports and other user prompts (manual dns steps etc)
+        /// to the dashboard service
+        /// </summary>
+        public bool EnableStatusReporting { get; set; }
     }
 
     public class SettingsManager
@@ -116,13 +125,14 @@ namespace Certify.Management
             CoreAppSettings.Current.UseBackgroundServiceAutoRenewal = prefs.UseBackgroundServiceAutoRenewal;
             CoreAppSettings.Current.EnableHttpChallengeServer = prefs.EnableHttpChallengeServer;
             CoreAppSettings.Current.EnableCertificateCleanup = prefs.EnableCertificateCleanup;
+            CoreAppSettings.Current.EnableStatusReporting = prefs.EnableStatusReporting;
             return true;
         }
 
         public static Models.Preferences ToPreferences()
         {
             LoadAppSettings();
-            Models.Preferences prefs = new Models.Preferences();
+            var prefs = new Models.Preferences();
 
             prefs.EnableAppTelematics = CoreAppSettings.Current.EnableAppTelematics;
             prefs.EnableDNSValidationChecks = CoreAppSettings.Current.EnableDNSValidationChecks;
@@ -137,6 +147,8 @@ namespace Certify.Management
             prefs.UseBackgroundServiceAutoRenewal = CoreAppSettings.Current.UseBackgroundServiceAutoRenewal;
             prefs.EnableHttpChallengeServer = CoreAppSettings.Current.EnableHttpChallengeServer;
             prefs.EnableCertificateCleanup = CoreAppSettings.Current.EnableCertificateCleanup;
+            prefs.EnableStatusReporting = CoreAppSettings.Current.EnableStatusReporting;
+
             return prefs;
         }
 

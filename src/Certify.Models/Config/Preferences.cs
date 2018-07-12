@@ -27,5 +27,7 @@
         public bool EnableHttpChallengeServer { get; set; } = true;
 
         public bool EnableCertificateCleanup { get; set; } = true;
+
+        public bool EnableStatusReporting { get; set; } = true;
     }
 }

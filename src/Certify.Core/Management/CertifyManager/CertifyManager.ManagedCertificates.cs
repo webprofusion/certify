@@ -61,6 +61,7 @@ namespace Certify.Management
             OnManagedCertificateUpdated?.Invoke(managedCertificate);
 
             //if reporting enabled, send report
+
             if (managedCertificate.RequestConfig?.EnableFailureNotifications == true)
             {
                 await ReportManagedCertificateStatus(managedCertificate);
@@ -71,25 +72,28 @@ namespace Certify.Management
 
         private async Task ReportManagedCertificateStatus(ManagedCertificate managedCertificate)
         {
-            if (this._pluginManager != null && this._pluginManager.DashboardClient != null)
+            if (CoreAppSettings.Current.EnableStatusReporting)
             {
-                var report = new Models.Shared.RenewalStatusReport
+                if (this._pluginManager != null && this._pluginManager.DashboardClient != null)
                 {
-                    InstanceId = CoreAppSettings.Current.InstanceId,
-                    MachineName = Environment.MachineName,
-                    PrimaryContactEmail = GetPrimaryContactEmail(),
-                    ManagedSite = managedCertificate,
-                    AppVersion = new Management.Util().GetAppVersion().ToString()
-                };
-                try
-                {
-                    await this._pluginManager.DashboardClient.ReportRenewalStatusAsync(report);
-                }
-                catch (Exception)
-                {
-                    // failed to report status
-                    LogMessage(managedCertificate.Id, "Failed to send renewal status report.",
-                        LogItemType.GeneralWarning);
+                    var report = new Models.Shared.RenewalStatusReport
+                    {
+                        InstanceId = CoreAppSettings.Current.InstanceId,
+                        MachineName = Environment.MachineName,
+                        PrimaryContactEmail = GetPrimaryContactEmail(),
+                        ManagedSite = managedCertificate,
+                        AppVersion = new Management.Util().GetAppVersion().ToString()
+                    };
+                    try
+                    {
+                        await this._pluginManager.DashboardClient.ReportRenewalStatusAsync(report);
+                    }
+                    catch (Exception)
+                    {
+                        // failed to report status
+                        LogMessage(managedCertificate.Id, "Failed to send renewal status report.",
+                            LogItemType.GeneralWarning);
+                    }
                 }
             }
         }
@@ -179,7 +183,6 @@ namespace Certify.Management
                 await StopHttpChallengeServer();
                 return false;
             }
-
         }
 
         private async Task<bool> StopHttpChallengeServer()
@@ -188,8 +191,6 @@ namespace Certify.Management
             {
                 try
                 {
-
-
                     var response = await _httpChallengeServerClient.GetAsync($"http://127.0.0.1:{_httpChallengePort}/.well-known/acme-challenge/{_httpChallengeControlKey}");
                     if (response.IsSuccessStatusCode)
                     {
@@ -217,10 +218,10 @@ namespace Certify.Management
         /// valid for certificate requests
         /// </summary>
         /// <param name="managedCertificate"> managed site to check </param>
-        /// <param name="isPreviewMode">
+        /// <param name="isPreviewMode"> 
         /// If true, perform full set of checks (DNS etc), if false performs minimal/basic checks
         /// </param>
-        /// <returns></returns>
+        /// <returns>  </returns>
         public async Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate,
             bool isPreviewMode, IProgress<RequestProgressState> progress = null)
         {

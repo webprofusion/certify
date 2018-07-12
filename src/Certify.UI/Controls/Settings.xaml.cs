@@ -47,6 +47,7 @@ namespace Certify.UI.Controls
             this.EnableDNSValidationChecks.IsChecked = _prefs.EnableDNSValidationChecks;
             this.EnableHttpChallengeServer.IsChecked = _prefs.EnableHttpChallengeServer;
             this.EnableCertificateCleanup.IsChecked = _prefs.EnableCertificateCleanup;
+            this.EnableStatusReporting.IsChecked = _prefs.EnableStatusReporting;
 
             this.RenewalIntervalDays.Value = _prefs.RenewalIntervalDays;
             this.RenewalMaxRequests.Value = _prefs.MaxRenewalRequests;
@@ -89,6 +90,7 @@ namespace Certify.UI.Controls
                 _prefs.EnableDNSValidationChecks = (this.EnableDNSValidationChecks.IsChecked == true);
                 _prefs.EnableHttpChallengeServer = (this.EnableHttpChallengeServer.IsChecked == true);
                 _prefs.EnableCertificateCleanup = (this.EnableCertificateCleanup.IsChecked == true);
+                _prefs.EnableStatusReporting = (this.EnableStatusReporting.IsChecked == true);
 
                 _prefs.EnableEFS = (this.EnableEFS.IsChecked == true);
                 _prefs.IgnoreStoppedSites = (this.IgnoreStoppedSites.IsChecked == true);

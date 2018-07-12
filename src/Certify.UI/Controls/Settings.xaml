@@ -142,6 +142,12 @@
                             Checked="SettingsUpdated"
                             Content="{x:Static res:SR.Settings_EnableCertificateCleanup}"
                             Unchecked="SettingsUpdated" />
+                        <CheckBox
+                            x:Name="EnableStatusReporting"
+                            Margin="0,4,0,0"
+                            Checked="SettingsUpdated"
+                            Content="{x:Static res:SR.Settings_EnableStatusReporting}"
+                            Unchecked="SettingsUpdated" />
 
                         <Button
                             x:Name="Save"
