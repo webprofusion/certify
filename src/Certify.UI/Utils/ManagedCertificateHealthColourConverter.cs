@@ -1,7 +1,7 @@
-﻿using Certify.Models;
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Data;
+using Certify.Models;
 
 namespace Certify.UI.Utils
 {
@@ -32,6 +32,10 @@ namespace Certify.UI.Utils
             else if (health == ManagedCertificateHealth.Warning)
             {
                 return System.Windows.Media.Brushes.OrangeRed;
+            }
+            else if (health == ManagedCertificateHealth.AwaitingUser)
+            {
+                return System.Windows.Media.Brushes.HotPink;
             }
             else
             {

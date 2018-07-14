@@ -1,7 +1,7 @@
-using Certify.Locales;
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Data;
+using Certify.Locales;
 
 namespace Certify.UI.Utils
 {
@@ -9,8 +9,6 @@ namespace Certify.UI.Utils
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if (value == null) return DependencyProperty.UnsetValue;
-
             return GetDescription((DateTime?)value);
         }
 

@@ -111,11 +111,6 @@
                             <TextBlock
                                 Margin="16,0,0,0"
                                 FontSize="10"
-                                Foreground="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
-                                Text="{Binding Path=ItemType, Converter={StaticResource EnumConverter}}" />
-                            <TextBlock
-                                Margin="16,0,0,0"
-                                FontSize="10"
                                 Foreground="{Binding Path=DateExpiry, Converter={StaticResource ExpiryDateColourConverter}}"
                                 Text="{Binding Path=DateExpiry, Converter={StaticResource ExpiryDateConverter}}" />
                         </StackPanel>
