@@ -181,7 +181,8 @@ namespace Certify.Providers.DNS.AWSRoute53
 
                 try
                 {
-                    // requests for *.domain.com + domain.com use the same TXT record name, so we need to allow multiple entires rather than doing Upsert
+                    // requests for *.domain.com + domain.com use the same TXT record name, so we
+                    // need to allow multiple entires rather than doing Upsert
                     var result = await ApplyDnsChange(zone, targetRecordSet, ChangeAction.UPSERT);
                 }
                 catch (Exception exp)
@@ -211,12 +212,20 @@ namespace Certify.Providers.DNS.AWSRoute53
                         MaxItems = "1",
                         HostedZoneId = zone.Id
                     }
-                    );
+                );
+
                 var targetRecordSet = response.ResourceRecordSets.FirstOrDefault();
 
-                var result = await ApplyDnsChange(zone, targetRecordSet, ChangeAction.DELETE);
+                if (targetRecordSet != null)
+                {
+                    var result = await ApplyDnsChange(zone, targetRecordSet, ChangeAction.DELETE);
 
-                return new ActionResult { IsSuccess = true, Message = "Dns Record Delete completed: {request.RecordName}" };
+                    return new ActionResult { IsSuccess = true, Message = $"Dns Record Delete completed: {request.RecordName}" };
+                }
+                else
+                {
+                    return new ActionResult { IsSuccess = true, Message = $"Dns Record Delete skipped (record set does not exist): {request.RecordName}" };
+                }
             }
             else
             {

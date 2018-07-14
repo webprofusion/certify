@@ -32,6 +32,8 @@ namespace Certify.Core.Tests
             // also create a duplicate
 
             await base.TestCreateRecord();
+
+            await base.TestDeleteRecord();
         }
 
         [TestMethod, TestCategory("DNS")]
