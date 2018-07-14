@@ -96,7 +96,7 @@ namespace Certify.UI.Controls
                 _prefs.IgnoreStoppedSites = (this.IgnoreStoppedSites.IsChecked == true);
 
                 // force renewal interval days to be between 1 and 60 days
-                if (this.RenewalIntervalDays.Value == null) this.RenewalIntervalDays.Value = 14;
+                if (this.RenewalIntervalDays.Value == null) this.RenewalIntervalDays.Value = 30;
                 if (this.RenewalIntervalDays.Value > 60) this.RenewalIntervalDays.Value = 60;
                 _prefs.RenewalIntervalDays = (int)this.RenewalIntervalDays.Value;
 

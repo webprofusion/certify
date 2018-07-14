@@ -24,6 +24,7 @@ namespace Certify.Management
             this.LegacySettingsUpgraded = false;
             this.UseBackgroundServiceAutoRenewal = true;
             this.EnableCertificateCleanup = true;
+            this.EnableStatusReporting = true;
             this.VaultPath = @"C:\ProgramData\ACMESharp";
             this.InstanceId = null;
         }
