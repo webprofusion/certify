@@ -15,6 +15,7 @@ using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Org.BouncyCastle.Crypto.Digests;
+using Microsoft.Win32;
 
 namespace Certify.Providers.Certes
 {
@@ -68,6 +69,12 @@ namespace Certify.Providers.Certes
         private void InitProvider()
         {
             LoadSettings();
+
+            string serviceUri = (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\CertifyTheWeb", "serviceUri", null);
+            if (serviceUri != null)
+            {
+                _serviceUri = new Uri(serviceUri);
+            }
 
             if (!LoadAccountKey())
             {
@@ -552,6 +559,25 @@ namespace Certify.Providers.Certes
             return pendingAuthorization;
         }
 
+        private byte[] getCACertChainFromStore()
+        {            
+            X509Store store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
+
+            var chain = "";
+            X509Certificate2Collection certsW = store.Certificates;
+
+            foreach (X509Certificate2 certW in certsW)
+            {
+                StringBuilder builder = new StringBuilder();
+                builder.AppendLine("-----BEGIN CERTIFICATE-----");
+                builder.AppendLine(Convert.ToBase64String(certW.Export(X509ContentType.Cert), Base64FormattingOptions.InsertLineBreaks));
+                builder.AppendLine("-----END CERTIFICATE-----");
+                chain+=builder.ToString();
+            }
+            return Encoding.UTF8.GetBytes(chain);
+        }
+
+
         /// <summary>
         /// Once validation has completed for our requested domains we can complete the certificate
         /// request by submitting a Certificate Signing Request (CSR) to the CA
@@ -610,6 +636,7 @@ namespace Certify.Providers.Certes
             string pfxPath = certFolderPath + "\\" + certFile;
 
             var pfx = certificateChain.ToPfx(csrKey);
+            pfx.AddIssuers(getCACertChainFromStore());
             var pfxBytes = pfx.Build(certFriendlyName, "");
 
             System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
