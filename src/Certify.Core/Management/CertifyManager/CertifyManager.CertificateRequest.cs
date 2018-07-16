@@ -183,7 +183,7 @@ namespace Certify.Management
             var isRenewalRequired = Math.Abs(timeSinceLastRenewal.TotalDays) > renewalIntervalDays;
 
             // if we have never attempted renewal, renew now
-            if (!isRenewalRequired && s.DateLastRenewalAttempt == null) isRenewalRequired = true;
+            if (!isRenewalRequired && (s.DateLastRenewalAttempt == null && s.DateRenewed == null)) isRenewalRequired = true;
 
             // if renewal is required but we have previously failed, scale the frequency of renewal
             // attempts to a minimum of once per 24hrs.
