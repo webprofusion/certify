@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Configuration;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -27,6 +26,7 @@ namespace Certify.Core.Tests
         private string testSitePath = "c:\\inetpub\\wwwroot";
         private int testSiteHttpPort = 81;
         private string _awsCredStorageKey = "";
+
         private ILog _log;
         private string _siteId = "";
 
@@ -44,7 +44,7 @@ namespace Certify.Core.Tests
             testSiteDomain = "integration1." + PrimaryTestDomain;
             testSitePath = PrimaryIISRoot;
 
-            _awsCredStorageKey = ConfigurationManager.AppSettings["TestCredentialsKey_Route53"];
+            _awsCredStorageKey = ConfigSettings["TestCredentialsKey_Route53"];
 
             //perform setup for IIS
             SetupIIS().Wait();
@@ -271,7 +271,7 @@ namespace Certify.Core.Tests
             }
         }
 
-        [TestMethod, TestCategory("MegaTest")]
+        [TestMethod, TestCategory("MegaTest"), Ignore]
         public async Task TestChallengeRequestHttp01BazillionAndOneDomains()
         {
             // attempt to request a cert for too many domains
@@ -357,8 +357,9 @@ namespace Certify.Core.Tests
                         new CertRequestChallengeConfig{
                             ChallengeType="dns-01",
                             ChallengeProvider= "DNS01.API.Route53",
-                            ChallengeCredentialKey=_awsCredStorageKey
-                        }
+                            ChallengeCredentialKey=_awsCredStorageKey,
+                            ZoneId =  ConfigSettings["AWS_ZoneId"]
+        }
                     },
                     DeploymentSiteOption = DeploymentOption.SingleSite
                 },
