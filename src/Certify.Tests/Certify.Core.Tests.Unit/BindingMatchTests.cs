@@ -103,7 +103,7 @@ namespace Certify.Core.Tests.Unit
             managedCertificate.ServerSiteId = "1";
             managedCertificate.RequestConfig.PrimaryDomain = "*.test.com";
             preview = await bindingManager.StoreAndDeployManagedCertificate(deploymentTarget, managedCertificate, null, false, isPreviewOnly: true);
-            Assert.IsTrue(preview.Count == 2, "Should match 2 bindings");
+            Assert.IsTrue(preview.Count == 1, "Should match 1 binding (root level domain should be ignored using wildcard)");
 
             managedCertificate.ServerSiteId = "1";
             managedCertificate.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
@@ -115,7 +115,7 @@ namespace Certify.Core.Tests.Unit
             managedCertificate.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
             managedCertificate.RequestConfig.PrimaryDomain = "*.test.com";
             preview = await bindingManager.StoreAndDeployManagedCertificate(deploymentTarget, managedCertificate, null, false, isPreviewOnly: true);
-            Assert.IsTrue(preview.Count == 4, "Should match 4 bindings across all sites");
+            Assert.IsTrue(preview.Count == 3, "Should match 3 bindings across all sites");
 
             foreach (var a in preview)
             {
@@ -132,7 +132,13 @@ namespace Certify.Core.Tests.Unit
                 "*.test.co.uk"
             };
 
-            Assert.IsTrue(ManagedCertificate.IsDomainOrWildcardMatch(domains, "test.com"));
+            Assert.IsFalse(ManagedCertificate.IsDomainOrWildcardMatch(domains, "test.com"));
+
+            Assert.IsTrue(ManagedCertificate.IsDomainOrWildcardMatch(domains, "test.com", matchWildcardsToRootDomain: true));
+
+            Assert.IsTrue(ManagedCertificate.IsDomainOrWildcardMatch(domains, "www.test.com"));
+
+            Assert.IsFalse(ManagedCertificate.IsDomainOrWildcardMatch(domains, "www.subdomain.test.com"));
 
             Assert.IsFalse(ManagedCertificate.IsDomainOrWildcardMatch(domains, "fred.com"));
 

@@ -49,22 +49,22 @@ namespace Certify.Models
         public bool IncludeInAutoRenew { get; set; }
 
         /// <summary>
-        /// Host or server where this item is based, usually localhost if managing the local server 
+        /// Host or server where this item is based, usually localhost if managing the local server
         /// </summary>
         public string TargetHost { get; set; }
 
         /// <summary>
-        /// List of configured domains this managed site will include (primary subject or SAN) 
+        /// List of configured domains this managed site will include (primary subject or SAN)
         /// </summary>
         public ObservableCollection<DomainOption> DomainOptions { get; set; }
 
         /// <summary>
-        /// Configuration options for this request 
+        /// Configuration options for this request
         /// </summary>
         public CertRequestConfig RequestConfig { get; set; }
 
         /// <summary>
-        /// Unique ID for this managed item 
+        /// Unique ID for this managed item
         /// </summary>
         public string Id { get; set; }
 
@@ -76,13 +76,13 @@ namespace Certify.Models
         public string ParentId { get; set; }
 
         /// <summary>
-        /// Optional grouping ID, such as where mamaged sites share a common IIS site id 
+        /// Optional grouping ID, such as where mamaged sites share a common IIS site id
         /// </summary>
 
         public string GroupId { get; set; }
 
         /// <summary>
-        /// Id of specific matching site on server (replaces GroupId) 
+        /// Id of specific matching site on server (replaces GroupId)
         /// </summary>
         public string ServerSiteId { get => GroupId; set => GroupId = value; }
 
@@ -92,17 +92,17 @@ namespace Certify.Models
         public string InstanceId { get; set; }
 
         /// <summary>
-        /// Display name for this item, for easier reference 
+        /// Display name for this item, for easier reference
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// Optional user notes regarding this item 
+        /// Optional user notes regarding this item
         /// </summary>
         public string Comments { get; set; }
 
         /// <summary>
-        /// Specific type of item we are managing, affects the renewal/rewuest operations required 
+        /// Specific type of item we are managing, affects the renewal/rewuest operations required
         /// </summary>
         public ManagedCertificateType ItemType { get; set; }
 
@@ -111,22 +111,22 @@ namespace Certify.Models
         public DateTime? DateRenewed { get; set; }
 
         /// <summary>
-        /// Date we last attempted renewal 
+        /// Date we last attempted renewal
         /// </summary>
         public DateTime? DateLastRenewalAttempt { get; set; }
 
         /// <summary>
-        /// Status of most recent renewal attempt 
+        /// Status of most recent renewal attempt
         /// </summary>
         public RequestState? LastRenewalStatus { get; set; }
 
         /// <summary>
-        /// Count of renewal failures since last success 
+        /// Count of renewal failures since last success
         /// </summary>
         public int RenewalFailureCount { get; set; }
 
         /// <summary>
-        /// Message from last failed renewal attempt 
+        /// Message from last failed renewal attempt
         /// </summary>
         public string RenewalFailureMessage { get; set; }
 
@@ -183,11 +183,12 @@ namespace Certify.Models
         }
 
         /// <summary>
-        /// For the given challenge config and list of domains, return subset of domains which will be matched against the config (considering all other configs)
+        /// For the given challenge config and list of domains, return subset of domains which will
+        /// be matched against the config (considering all other configs)
         /// </summary>
-        /// <param name="config"></param>
-        /// <param name="domains"></param>
-        /// <returns></returns>
+        /// <param name="config">  </param>
+        /// <param name="domains">  </param>
+        /// <returns>  </returns>
         public List<string> GetChallengeConfigDomainMatches(CertRequestChallengeConfig config, IEnumerable<string> domains)
         {
             List<string> matches = new List<string>();
@@ -203,11 +204,11 @@ namespace Certify.Models
         }
 
         /// <summary>
-        /// For the given domain, get the matching challenge config (DNS provider variant etc) 
+        /// For the given domain, get the matching challenge config (DNS provider variant etc)
         /// </summary>
-        /// <param name="managedCertificate"></param>
-        /// <param name="domain"></param>
-        /// <returns></returns>
+        /// <param name="managedCertificate">  </param>
+        /// <param name="domain">  </param>
+        /// <returns>  </returns>
         public CertRequestChallengeConfig GetChallengeConfig(string domain)
         {
             if (domain != null)
@@ -233,7 +234,6 @@ namespace Certify.Models
                 }
                 else
                 {
-
                     // start by matching first config with no specific domain
                     CertRequestChallengeConfig matchedConfig = RequestConfig.Challenges.FirstOrDefault(c => String.IsNullOrEmpty(c.DomainMatch));
 
@@ -287,7 +287,8 @@ namespace Certify.Models
                         {
                             if (configDomain.EndsWith(domain))
                             {
-                                // use longest matching domain (so subdomain.test.com takes priority over test.com, )
+                                // use longest matching domain (so subdomain.test.com takes priority
+                                // over test.com, )
                                 return configsPerDomain[configDomain];
                             }
                         }
@@ -310,11 +311,21 @@ namespace Certify.Models
             }
         }
 
-        public static bool IsDomainOrWildcardMatch(List<string> dnsNames, string hostname)
+        /// <summary>
+        /// </summary>
+        /// <param name="dnsNames">  </param>
+        /// <param name="hostname">  </param>
+        /// <param name="matchWildcardsToRootDomain"> 
+        /// if true, *.test.com would match test.com (as well as www.test.com)
+        /// </param>
+        /// <returns>  </returns>
+        public static bool IsDomainOrWildcardMatch(List<string> dnsNames, string hostname, bool matchWildcardsToRootDomain = false)
         {
             var isMatch = false;
+
             if (!string.IsNullOrEmpty(hostname))
             {
+                // list of dns anmes has an exact match
                 if (dnsNames.Contains(hostname))
                 {
                     isMatch = true;
@@ -332,9 +343,14 @@ namespace Certify.Models
                         else
                         {
                             var domain = w.Replace("*.", "");
-                            if (string.Equals(domain, hostname, StringComparison.OrdinalIgnoreCase))
+
+                            // if match wildcards to root is enabled and is a root domain match
+                            if (string.Equals(domain, hostname, StringComparison.OrdinalIgnoreCase) && matchWildcardsToRootDomain)
                             {
-                                isMatch = true;
+                                if (matchWildcardsToRootDomain)
+                                {
+                                    isMatch = true;
+                                }
                             }
                             else
                             {
@@ -355,7 +371,6 @@ namespace Certify.Models
 
             return isMatch;
         }
-
     }
 
     //TODO: may deprecate, was mainly for preview of setup wizard
@@ -365,7 +380,7 @@ namespace Certify.Models
         public int? Port { get; set; }
 
         /// <summary>
-        /// IP is either * (all unassigned) or a specific IP 
+        /// IP is either * (all unassigned) or a specific IP
         /// </summary>
         public string IP { get; set; }
 
@@ -374,7 +389,7 @@ namespace Certify.Models
         public RequiredActionType PlannedAction { get; set; }
 
         /// <summary>
-        /// The primary domain is the main domain listed on the certificate 
+        /// The primary domain is the main domain listed on the certificate
         /// </summary>
         public bool IsPrimaryCertificateDomain { get; set; }
 
