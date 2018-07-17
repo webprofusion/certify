@@ -115,11 +115,25 @@
                         DockPanel.Dock="Top"
                         Foreground="{StaticResource AccentBaseColorBrush}"
                         Style="{StaticResource Subheading}">
-                        Auto Renewal Active
+                        Certificate Active
                     </TextBlock>
                 </StackPanel>
                 <!--  Renewal success messages  -->
                 <StackPanel MinHeight="80">
+                    <StackPanel Orientation="Horizontal">
+                        <Label
+                            Width="160"
+                            Content="Auto Renewal Enabled:"
+                            FontWeight="Bold" />
+                        <Label
+                            Content="Yes"
+                            FontWeight="Bold"
+                            Visibility="{Binding SelectedItem.IncludeInAutoRenew, Converter={StaticResource BoolToVisConverter}}" />
+                        <Label
+                            Content="No"
+                            FontWeight="Bold"
+                            Visibility="{Binding SelectedItem.IncludeInAutoRenew, Converter={StaticResource InvBoolVisConverter}}" />
+                    </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <Label
                             Width="160"
