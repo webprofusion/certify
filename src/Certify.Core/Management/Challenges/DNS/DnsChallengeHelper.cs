@@ -132,7 +132,7 @@ namespace Certify.Core.Management.Challenges
 
             try
             {
-                dnsAPIProvider = await ChallengeProviders.GetDnsProvider(challengeConfig.ChallengeProvider, credentials, parameters);
+                dnsAPIProvider = await ChallengeProviders.GetDnsProvider(challengeConfig.ChallengeProvider, credentials, parameters, log);
             }
             catch (ChallengeProviders.CredentialsRequiredException)
             {

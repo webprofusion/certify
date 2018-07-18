@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Models.Config;
 using Certify.Models.Providers;
@@ -48,6 +47,7 @@ namespace Certify.Core.Management.Challenges.DNS
         }
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+
         public async Task<ActionResult> CreateRecord(DnsRecord request)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
@@ -59,6 +59,7 @@ namespace Certify.Core.Management.Challenges.DNS
         }
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+
         public async Task<ActionResult> DeleteRecord(DnsRecord request)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
@@ -74,9 +75,11 @@ namespace Certify.Core.Management.Challenges.DNS
             return Task.FromResult(new List<DnsZone>());
         }
 
-        Task<bool> IDnsProvider.InitProvider()
+        Task<bool> IDnsProvider.InitProvider(ILog log)
         {
-            throw new NotImplementedException();
+            _log = log;
+
+            return Task.FromResult(true);
         }
 
         async Task<ActionResult> IDnsProvider.Test()

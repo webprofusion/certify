@@ -27,32 +27,33 @@ namespace Certify.Models.Providers
 
     public interface IDnsProvider
     {
-        Task<bool> InitProvider();
+        Task<bool> InitProvider(ILog log = null);
 
         /// <summary>
         /// Perform a test of credentials, usually by listings DNS zones
         /// </summary>
-        /// <returns></returns>
+        /// <returns>  </returns>
         Task<ActionResult> Test();
 
         /// <summary>
-        /// Create a new record in the given DNS zone, even if the record already exists (i.e duplicates allowed/required)
+        /// Create a new record in the given DNS zone, even if the record already exists (i.e
+        /// duplicates allowed/required)
         /// </summary>
-        /// <param name="request"></param>
-        /// <returns></returns>
+        /// <param name="request">  </param>
+        /// <returns>  </returns>
         Task<ActionResult> CreateRecord(DnsRecord request);
 
         /// <summary>
-        /// Delete a given record in the given DNS zone (including duplicates) 
+        /// Delete a given record in the given DNS zone (including duplicates)
         /// </summary>
-        /// <param name="request"></param>
-        /// <returns></returns>
+        /// <param name="request">  </param>
+        /// <returns>  </returns>
         Task<ActionResult> DeleteRecord(DnsRecord request);
 
         /// <summary>
         /// Return a list of the DNS zones managed by the current credentials
         /// </summary>
-        /// <returns></returns>
+        /// <returns>  </returns>
         Task<List<DnsZone>> GetZones();
 
         /// <summary>
@@ -77,8 +78,8 @@ namespace Certify.Models.Providers
         /// Where a record name is in the form _acme-challenge.www.subdomain.domain.com, determine
         /// the root domain (i.e domain.com or subdomain.domain.com) info
         /// </summary>
-        /// <param name="recordName"></param>
-        /// <returns></returns>
+        /// <param name="recordName">  </param>
+        /// <returns>  </returns>
         public async Task<DnsRecord> DetermineZoneDomainRoot(string recordName, string zoneId)
         {
             var zones = await GetZones();

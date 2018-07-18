@@ -11,6 +11,7 @@ namespace Certify.Core.Management.Challenges
 {
     public class LibcloudDNSProvider : IDnsProvider
     {
+        private ILog _log;
         private string _pythonPath = "";
         private Dictionary<string, string> _credentials;
 
@@ -111,8 +112,9 @@ namespace Certify.Core.Management.Challenges
             throw new NotImplementedException();
         }
 
-        public async Task<bool> InitProvider()
+        public async Task<bool> InitProvider(ILog log)
         {
+            _log = log;
             return await Task.FromResult(true);
         }
 

@@ -12,6 +12,7 @@ namespace Certify.Providers.DNS.Azure
 {
     public class DnsProviderAzure : DnsProviderBase, IDnsProvider
     {
+        private ILog _log;
         private DnsManagementClient _dnsClient;
 
         private Dictionary<string, string> _credentials;
@@ -81,8 +82,10 @@ namespace Certify.Providers.DNS.Azure
             }
         }
 
-        public async Task<bool> InitProvider()
+        public async Task<bool> InitProvider(ILog log = null)
         {
+            _log = log;
+
             // https://docs.microsoft.com/en-us/dotnet/api/overview/azure/dns?view=azure-dotnet
 
             var serviceCreds = await ApplicationTokenProvider.LoginSilentAsync(

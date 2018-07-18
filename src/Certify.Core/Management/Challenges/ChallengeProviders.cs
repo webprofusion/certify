@@ -1,19 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Core.Management.Challenges.DNS;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
+using Certify.Providers.DNS.Aliyun;
 using Certify.Providers.DNS.AWSRoute53;
 using Certify.Providers.DNS.Azure;
 using Certify.Providers.DNS.Cloudflare;
 using Certify.Providers.DNS.DnsMadeEasy;
 using Certify.Providers.DNS.GoDaddy;
-using Certify.Providers.DNS.SimpleDNSPlus;
 using Certify.Providers.DNS.OVH;
-using System;
-using Certify.Providers.DNS.Aliyun;
+using Certify.Providers.DNS.SimpleDNSPlus;
 
 namespace Certify.Core.Management.Challenges
 {
@@ -21,10 +21,9 @@ namespace Certify.Core.Management.Challenges
     {
         public class CredentialsRequiredException : Exception
         {
-
         }
 
-        public static async Task<IDnsProvider> GetDnsProvider(string providerType, Dictionary<string, string> credentials, Dictionary<string, string> parameters)
+        public static async Task<IDnsProvider> GetDnsProvider(string providerType, Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
         {
             ProviderDefinition providerDefinition;
             IDnsProvider dnsAPIProvider = null;
@@ -62,7 +61,7 @@ namespace Certify.Core.Management.Challenges
                 else if (providerDefinition.Id == DnsProviderAzure.Definition.Id)
                 {
                     var azureDns = new DnsProviderAzure(credentials);
-                    await azureDns.InitProvider();
+
                     dnsAPIProvider = azureDns;
                 }
                 else if (providerDefinition.Id == DnsProviderCloudflare.Definition.Id)
@@ -104,6 +103,9 @@ namespace Certify.Core.Management.Challenges
                     dnsAPIProvider = new DNS.DnsProviderScripting(parameters);
                 }
             }
+
+            await dnsAPIProvider.InitProvider(log);
+
             return dnsAPIProvider;
         }
 

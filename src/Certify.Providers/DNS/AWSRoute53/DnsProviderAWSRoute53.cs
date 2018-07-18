@@ -7,12 +7,14 @@ using Amazon.Route53.Model;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
+using Newtonsoft.Json;
 
 namespace Certify.Providers.DNS.AWSRoute53
 {
     public class DnsProviderAWSRoute53 : IDnsProvider
     {
         private AmazonRoute53Client _route53Client;
+        private ILog _log;
 
         private int? _customPropagationDelay = null;
         public int PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
@@ -122,7 +124,11 @@ namespace Certify.Providers.DNS.AWSRoute53
                 ChangeBatch = changeBatch
             };
 
+            _log?.Verbose($"Route53 :: ApplyDnsChange : ChangeResourceRecordSetsAsync: {JsonConvert.SerializeObject(recordsetRequest.ChangeBatch)} ");
+
             var recordsetResponse = await _route53Client.ChangeResourceRecordSetsAsync(recordsetRequest);
+
+            _log?.Verbose($"Route53 :: ApplyDnsChange : ChangeResourceRecordSetsAsync Response: {JsonConvert.SerializeObject(recordsetResponse)} ");
 
             // Monitor the change status
             var changeRequest = new GetChangeRequest()
@@ -159,7 +165,8 @@ namespace Certify.Providers.DNS.AWSRoute53
                         HostedZoneId = zone.Id
                     }
                     );
-                var targetRecordSet = response.ResourceRecordSets.FirstOrDefault();
+
+                var targetRecordSet = response.ResourceRecordSets.FirstOrDefault(r => (r.Name == request.RecordName || r.Name == request.RecordName + ".") && r.Type.Value == "TXT");
 
                 if (targetRecordSet != null)
                 {
@@ -186,13 +193,13 @@ namespace Certify.Providers.DNS.AWSRoute53
                     // requests for *.domain.com + domain.com use the same TXT record name, so we
                     // need to allow multiple entires rather than doing Upsert
                     var result = await ApplyDnsChange(zone, targetRecordSet, ChangeAction.UPSERT);
-                }
-                catch (Exception exp)
-                {
-                    new ActionResult { IsSuccess = false, Message = exp.InnerException.Message };
-                }
 
-                return new ActionResult { IsSuccess = true, Message = $"Dns Record Created: {request.RecordName}" };
+                    return new ActionResult { IsSuccess = true, Message = $"Dns Record Created/Updated: {request.RecordName}" };
+                }
+                catch (AmazonRoute53Exception exp)
+                {
+                    return new ActionResult { IsSuccess = false, Message = $"Dns Record Create/Update: {request.RecordName} - {exp.Message}" };
+                }
             }
             else
             {
@@ -206,6 +213,8 @@ namespace Certify.Providers.DNS.AWSRoute53
 
             if (zone != null)
             {
+                _log?.Verbose($"Route53 :: Delete Record : Zone matched {zone.Id} {zone.Id} : Fetching TXT record set {request.RecordName} ");
+
                 var response = await _route53Client.ListResourceRecordSetsAsync(
                     new ListResourceRecordSetsRequest
                     {
@@ -216,13 +225,22 @@ namespace Certify.Providers.DNS.AWSRoute53
                     }
                 );
 
-                var targetRecordSet = response.ResourceRecordSets.FirstOrDefault();
+                var targetRecordSet = response.ResourceRecordSets.FirstOrDefault(r => (r.Name == request.RecordName || r.Name == request.RecordName + ".") && r.Type.Value == "TXT");
 
                 if (targetRecordSet != null)
                 {
-                    var result = await ApplyDnsChange(zone, targetRecordSet, ChangeAction.DELETE);
+                    _log?.Verbose($"Route53 :: Delete Record : Fetched TXT record set OK {targetRecordSet.Name} ");
 
-                    return new ActionResult { IsSuccess = true, Message = $"Dns Record Delete completed: {request.RecordName}" };
+                    try
+                    {
+                        var result = await ApplyDnsChange(zone, targetRecordSet, ChangeAction.DELETE);
+
+                        return new ActionResult { IsSuccess = true, Message = $"Dns Record Delete completed: {request.RecordName}" };
+                    }
+                    catch (AmazonRoute53Exception exp)
+                    {
+                        return new ActionResult { IsSuccess = false, Message = $"Dns Record Delete failed: {request.RecordName} - {exp.Message}" };
+                    }
                 }
                 else
                 {
@@ -252,8 +270,9 @@ namespace Certify.Providers.DNS.AWSRoute53
             return results;
         }
 
-        public async Task<bool> InitProvider()
+        public async Task<bool> InitProvider(ILog log = null)
         {
+            _log = log;
             return await Task.FromResult(true);
         }
     }

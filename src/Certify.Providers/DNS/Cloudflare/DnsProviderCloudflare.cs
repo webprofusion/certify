@@ -61,13 +61,15 @@ namespace Certify.Providers.DNS.Cloudflare
     }
 
     /// <summary>
-    /// Helper class to interface with the CloudFlare API endpoint. 
+    /// Helper class to interface with the CloudFlare API endpoint.
     /// </summary>
-    /// <remarks>
+    /// <remarks> 
     /// See <see cref="https://api.cloudflare.com/#getting-started-endpoints" /> for more details.
     /// </remarks>
     public class DnsProviderCloudflare : IDnsProvider
     {
+        private ILog _log;
+
         private HttpClient _client = new HttpClient();
 
         private readonly string _authKey;
@@ -259,9 +261,8 @@ namespace Certify.Providers.DNS.Cloudflare
             try
             {
                 var records = await GetDnsRecords(request.ZoneId);
-                
+
                 return await AddDnsRecord(request.ZoneId, request.RecordName, request.RecordValue);
-                
             }
             catch (Exception exp)
             {
@@ -282,8 +283,9 @@ namespace Certify.Providers.DNS.Cloudflare
             var itemDeleted = false;
             var itemError = "";
 
-            // when deleting a TXT record with multiple values several records will be returned but only the first delete will succeed (removing all values)
-            // for this reason we return a success state even if the delete failed
+            // when deleting a TXT record with multiple values several records will be returned but
+            // only the first delete will succeed (removing all values) for this reason we return a
+            // success state even if the delete failed
             foreach (var r in recordsToDelete)
             {
                 var req = CreateRequest(HttpMethod.Delete, string.Format(_deleteRecordUri, request.ZoneId, r.Id));
@@ -292,14 +294,14 @@ namespace Certify.Providers.DNS.Cloudflare
                 if (result.IsSuccessStatusCode)
                 {
                     itemDeleted = true;
-                } else
+                }
+                else
                 {
                     itemError += " " + await result.Content.ReadAsStringAsync();
                 }
             }
 
             return new ActionResult { IsSuccess = true, Message = $"DNS record deleted: {request.RecordName}" };
-          
         }
 
         public async Task<List<DnsZone>> GetZones()
@@ -342,8 +344,9 @@ namespace Certify.Providers.DNS.Cloudflare
             return zones;
         }
 
-        public async Task<bool> InitProvider()
+        public async Task<bool> InitProvider(ILog log = null)
         {
+            _log = log;
             return await Task.FromResult(true);
         }
     }

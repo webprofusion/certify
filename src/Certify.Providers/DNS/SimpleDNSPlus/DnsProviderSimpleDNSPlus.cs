@@ -11,7 +11,7 @@ using Newtonsoft.Json;
 namespace Certify.Providers.DNS.SimpleDNSPlus
 {
     /// <summary>
-    /// SimpleDNSPlus DNS API Provider contributed by https://github.com/alphaz18 
+    /// SimpleDNSPlus DNS API Provider contributed by https://github.com/alphaz18
     /// </summary>
     internal class Zone
     {
@@ -35,6 +35,7 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
 
     public class DnsProviderSimpleDNSPlus : IDnsProvider
     {
+        private ILog _log;
         private HttpClient _client = new HttpClient();
         private readonly string _authKey;
         private readonly string _authSecret;
@@ -86,7 +87,6 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
 
         public DnsProviderSimpleDNSPlus(Dictionary<string, string> credentials)
         {
-
             _authKey = credentials["authkey"];
             _authSecret = credentials["authsecret"];
             _authServer = credentials["authserver"];
@@ -96,7 +96,6 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
             _listRecordsUri = _baseUri + "zones/{0}/records";
             _deleteRecordUri = _baseUri + "zones/{0}/records";
             _updateRecordUri = _baseUri + "zones/{0}/records";
-
         }
 
         public async Task<ActionResult> Test()
@@ -255,7 +254,6 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
             var record = records.FirstOrDefault(x => x.RecordName == sub);
 
             return await AddDnsRecord(tldName, sub, request.RecordValue);
-
         }
 
         public async Task<ActionResult> DeleteRecord(DnsRecord requestreq)
@@ -292,7 +290,6 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
                     Message = "DNS record deleted."
                 };
             }
-
         }
 
         public async Task<List<DnsZone>> GetZones()
@@ -321,8 +318,9 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
             return zones;
         }
 
-        public async Task<bool> InitProvider()
+        public async Task<bool> InitProvider(ILog log = null)
         {
+            _log = log;
             return await Task.FromResult(true);
         }
     }

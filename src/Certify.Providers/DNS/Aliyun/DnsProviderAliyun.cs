@@ -15,6 +15,8 @@ namespace Certify.Providers.DNS.Aliyun
     /// </summary>
     public class DnsProviderAliyun : IDnsProvider
     {
+        private ILog _log;
+
         private readonly string _accessKeyId;
         private readonly string _accessKeySecret;
 
@@ -125,7 +127,6 @@ namespace Certify.Providers.DNS.Aliyun
                     IsSuccess = true,
                     Message = "DNS record added."
                 };
-
             }
             catch (Exception exp)
             {
@@ -234,25 +235,25 @@ namespace Certify.Providers.DNS.Aliyun
             return zones;
         }
 
-        public async Task<bool> InitProvider()
+        public async Task<bool> InitProvider(ILog log = null)
         {
+            _log = log;
             return await Task.FromResult(true);
         }
-
 
         #region AliMethods
 
         /// <summary>
         /// Add Aliyun DNS Record
         /// </summary>
-        /// <param name="domainName">Domain name</param>
-        /// <param name="rr">@.exmaple.com => @</param>
-        /// <param name="type">A/NS/MX/TXT/CNAME/SRV/AAAA/CAA/REDIRECT_URL/FORWARD_URL</param>
-        /// <param name="value">Value</param>
-        /// <param name="ttl">Default 600 sec</param>
-        /// <param name="priority">Default 0(1-10 when type is MX)</param>
-        /// <param name="line">default</param>
-        /// <returns></returns>
+        /// <param name="domainName"> Domain name </param>
+        /// <param name="rr"> @.exmaple.com =&gt; @ </param>
+        /// <param name="type"> A/NS/MX/TXT/CNAME/SRV/AAAA/CAA/REDIRECT_URL/FORWARD_URL </param>
+        /// <param name="value"> Value </param>
+        /// <param name="ttl"> Default 600 sec </param>
+        /// <param name="priority"> Default 0(1-10 when type is MX) </param>
+        /// <param name="line"> default </param>
+        /// <returns>  </returns>
         private async Task<DomainRecord> AddDomainRecord(string domainName, string rr, RecordType type, string value, long ttl = 600, long priority = 0, string line = "default")
         {
             var parameters = new Dictionary<string, string>
@@ -280,7 +281,6 @@ namespace Certify.Providers.DNS.Aliyun
                 return JsonConvert.DeserializeObject<DomainRecord>(content);
             }
         }
-
 
         private async Task<DomainRecord> DeleteDomainRecord(string recordId)
         {
@@ -336,6 +336,6 @@ namespace Certify.Providers.DNS.Aliyun
             }
         }
 
-        #endregion
+        #endregion AliMethods
     }
 }

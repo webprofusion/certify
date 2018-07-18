@@ -12,10 +12,12 @@ using Newtonsoft.Json;
 namespace Certify.Providers.DNS.DnsMadeEasy
 {
     /// <summary>
-    /// API calls based on https://api-docs.dnsmadeeasy.com/ 
+    /// API calls based on https://api-docs.dnsmadeeasy.com/
     /// </summary>
     public class DnsProviderDnsMadeEasy : DnsProviderBase, IDnsProvider, IDisposable
     {
+        private ILog _log;
+
         private class DnsQueryResults
         {
             public int TotalRecords { get; set; }
@@ -200,9 +202,9 @@ namespace Certify.Providers.DNS.DnsMadeEasy
 
             var existingRecords = await GetDnsRecords(request.ZoneId);
 
-            foreach(var r in existingRecords)
+            foreach (var r in existingRecords)
             {
-               if (r.RecordName == recordName && r.RecordType==request.RecordType)
+                if (r.RecordName == recordName && r.RecordType == request.RecordType)
                 {
                     //delete existing record
                     string url = $"{_apiUrl}dns/managed/{request.ZoneId}/records/{r.RecordId}";
@@ -273,8 +275,9 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             }
         }
 
-        public async Task<bool> InitProvider()
+        public async Task<bool> InitProvider(ILog log = null)
         {
+            _log = log;
             return await Task.FromResult(true);
         }
 

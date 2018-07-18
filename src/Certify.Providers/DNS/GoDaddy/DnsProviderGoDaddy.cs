@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 namespace Certify.Providers.DNS.GoDaddy
 {
     /// <summary>
-    /// GoDaddy DNS API Provider contributed by https://github.com/alphaz18 
+    /// GoDaddy DNS API Provider contributed by https://github.com/alphaz18
     /// </summary>
     internal class Zone
     {
@@ -33,6 +33,7 @@ namespace Certify.Providers.DNS.GoDaddy
 
     public class DnsProviderGoDaddy : IDnsProvider
     {
+        private ILog _log;
         private HttpClient _client = new HttpClient();
         private readonly string _authKey;
         private readonly string _authSecret;
@@ -227,9 +228,8 @@ namespace Certify.Providers.DNS.GoDaddy
                     sub += "." + domains[i];
                 }
             }
-            
-                return await AddDnsRecord(tldName, sub, request.RecordValue);
 
+            return await AddDnsRecord(tldName, sub, request.RecordValue);
         }
 
         public async Task<ActionResult> DeleteRecord(DnsRecord request)
@@ -294,8 +294,9 @@ namespace Certify.Providers.DNS.GoDaddy
             return zones;
         }
 
-        public async Task<bool> InitProvider()
+        public async Task<bool> InitProvider(ILog log = null)
         {
+            _log = log;
             return await Task.FromResult(true);
         }
     }

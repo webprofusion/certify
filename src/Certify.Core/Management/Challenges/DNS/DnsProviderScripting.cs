@@ -10,6 +10,8 @@ namespace Certify.Core.Management.Challenges.DNS
 {
     public class DnsProviderScripting : IDnsProvider
     {
+        private ILog _log;
+
         int IDnsProvider.PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
 
         string IDnsProvider.ProviderId => Definition.Id;
@@ -89,9 +91,10 @@ namespace Certify.Core.Management.Challenges.DNS
             return Task.FromResult(new List<DnsZone>());
         }
 
-        Task<bool> IDnsProvider.InitProvider()
+        Task<bool> IDnsProvider.InitProvider(ILog log)
         {
-            throw new NotImplementedException();
+            _log = log;
+            return Task.FromResult(true);
         }
 
         Task<ActionResult> IDnsProvider.Test()

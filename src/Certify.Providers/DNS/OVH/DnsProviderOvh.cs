@@ -12,6 +12,7 @@ namespace Certify.Providers.DNS.OVH
     /// </summary>
     public class DnsProviderOvh : DnsProviderBase, IDnsProvider
     {
+        private ILog _log;
         private readonly Dictionary<string, string> credentials;
 
         public int PropagationDelaySeconds => Definition.PropagationDelaySeconds;
@@ -66,7 +67,6 @@ namespace Certify.Providers.DNS.OVH
         private const string ConsumerKeyParamKey = "consumerkey";
         public string OvhConsumerKey => credentials[ConsumerKeyParamKey];
 
-
         public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
             long? creationId = null;
@@ -75,9 +75,8 @@ namespace Certify.Providers.DNS.OVH
                 if (!request.RecordName.EndsWith(request.ZoneId, StringComparison.InvariantCultureIgnoreCase))
                     return new ActionResult { IsSuccess = false, Message = $"DNS record creation failed for RecordName={request.RecordName} , because RecordName was expected to end with ZoneId (which is {request.ZoneId})." };
 
-                // record name received as argument : www.qwerty.sampledomain.com
-                // received zone id :                            sampledomain.com
-                // required record name by OVH :      www.qwerty
+                // record name received as argument : www.qwerty.sampledomain.com received zone id :
+                // sampledomain.com required record name by OVH : www.qwerty
                 var recordName = request.RecordName.Substring(0, request.RecordName.Length - request.ZoneId.Length - 1);
 
                 var ovh = CreateOvhClient();
@@ -94,7 +93,6 @@ namespace Certify.Providers.DNS.OVH
                 var zoneRefreshResult = ovh.Post($"/domain/zone/{request.ZoneId}/refresh", string.Empty);
 
                 return new ActionResult { IsSuccess = true, Message = $"DNS record \"{request.RecordName}\" added. OVH id : {creationId} ." };
-
             }
             catch (Exception ex)
             {
@@ -112,7 +110,6 @@ namespace Certify.Providers.DNS.OVH
                 var zoneRefreshResult = ovh.Post($"/domain/zone/{request.ZoneId}/refresh", string.Empty);
 
                 return new ActionResult { IsSuccess = true, Message = $"DNS record {request.RecordName} successfully deleted and zone was refreshed." };
-
             }
             catch (Exception ex)
             {
@@ -141,8 +138,9 @@ namespace Certify.Providers.DNS.OVH
             this.credentials = credentials;
         }
 
-        public async Task<bool> InitProvider()
+        public async Task<bool> InitProvider(ILog log = null)
         {
+            _log = log;
             return await Task.FromResult(true);
         }
 
