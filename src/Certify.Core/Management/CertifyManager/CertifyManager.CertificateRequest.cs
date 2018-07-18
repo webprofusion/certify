@@ -971,10 +971,16 @@ namespace Certify.Management
         public async Task<CertificateRequestResult> DeployCertificate(ManagedCertificate managedCertificate,
             IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false)
         {
-            _tc?.TrackEvent("ReapplyCertBindings");
-
             var logPrefix = "";
-            if (isPreviewOnly) logPrefix = "[Preview Mode] ";
+
+            if (!isPreviewOnly)
+            {
+                _tc?.TrackEvent("DeployCertificate");
+            }
+            else
+            {
+                logPrefix = "[Preview Mode] ";
+            }
 
             var result = new CertificateRequestResult { ManagedItem = managedCertificate, IsSuccess = false, Message = "" };
             var config = managedCertificate.RequestConfig;
