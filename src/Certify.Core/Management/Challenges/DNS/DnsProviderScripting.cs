@@ -77,13 +77,23 @@ namespace Certify.Core.Management.Challenges.DNS
             }
             else
             {
-                return new ActionResult { IsSuccess = false, Message = "Dns Script: No Create Script Path provided." };
+                return new ActionResult { IsSuccess = false, Message = "Dns Scripting: No Create Script Path provided." };
             }
         }
 
-        Task<ActionResult> IDnsProvider.DeleteRecord(DnsRecord request)
+        public async Task<ActionResult> DeleteRecord(DnsRecord request)
         {
-            throw new NotImplementedException();
+            if (!string.IsNullOrEmpty(_deleteScriptPath))
+            {
+                // standard parameters are the subject domain/subdomain, full txt record name to
+                // create, txt record value, zone id
+                string parameters = $"{request.TargetDomainName} {request.RecordName} {request.RecordValue} {request.ZoneId}";
+                return await RunScript(_deleteScriptPath, parameters);
+            }
+            else
+            {
+                return new ActionResult { IsSuccess = true, Message = "Dns Scripting: No Delete Script Path provided (skipped delete)." };
+            }
         }
 
         Task<List<DnsZone>> IDnsProvider.GetZones()
@@ -99,12 +109,15 @@ namespace Certify.Core.Management.Challenges.DNS
 
         Task<ActionResult> IDnsProvider.Test()
         {
-            throw new NotImplementedException();
+            return Task.FromResult(new ActionResult {
+                IsSuccess = true,
+                Message="Test skipped for scripted DNS. No test available."
+            });
         }
 
         private async Task<ActionResult> RunScript(string script, string parameters)
         {
-            StringBuilder _log = new StringBuilder();
+            var _log = new StringBuilder();
             // https://stackoverflow.com/questions/5519328/executing-batch-file-in-c-sharp and
             // attempting to have some argument compat with https://github.com/PKISharp/win-acme/blob/master/letsencrypt-win-simple/Plugins/ValidationPlugins/Dns/Script.cs
 
