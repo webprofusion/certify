@@ -154,10 +154,6 @@ This software uses the following Open Source software (or significant portions o
     <value>63154103-66ba-4636-8c6b-7081084daa0e</value>
     <comment>Do not translate</comment>
   </data>
-  <data name="APIBaseURI" xml:space="preserve">
-    <value>https://api.certifytheweb.com/v1/</value>
-    <comment>Do not translate - Used to communication with proxy API</comment>
-  </data>
   <data name="LocalServiceBaseURI" xml:space="preserve">
     <value>http://localhost:9696</value>
     <comment>Do not translate - Used to communication to local service</comment>

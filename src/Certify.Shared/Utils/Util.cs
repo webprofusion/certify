@@ -21,9 +21,9 @@ namespace Certify.Management
         public const string APPDATASUBFOLDER = "Certify";
 
         /// <summary>
-        /// check for problems which could affect app use 
+        /// check for problems which could affect app use
         /// </summary>
-        /// <returns></returns>
+        /// <returns>  </returns>
         public static Task<List<ActionResult>> PerformAppDiagnostics()
         {
             var results = new List<ActionResult>();
@@ -76,11 +76,10 @@ namespace Certify.Management
             return path;
         }
 
-
         /// <summary>
         /// Get default or saved service config settings
         /// </summary>
-        /// <returns></returns>
+        /// <returns>  </returns>
         public static ServiceConfig GetAppServiceConfig()
         {
             var serviceConfig = new ServiceConfig();
@@ -93,7 +92,6 @@ namespace Certify.Management
             if (File.Exists(serviceConfigFile))
             {
                 serviceConfig = JsonConvert.DeserializeObject<ServiceConfig>(File.ReadAllText(serviceConfigFile));
-               
             }
             return serviceConfig;
         }
@@ -112,8 +110,8 @@ namespace Certify.Management
         /// <summary>
         /// Stored updated config for app service
         /// </summary>
-        /// <param name="port"></param>
-        /// <returns></returns>
+        /// <param name="port">  </param>
+        /// <returns>  </returns>
         public static bool SetAppServicePort(int port)
         {
             var appDataPath = GetAppDataFolder();
@@ -183,7 +181,7 @@ namespace Certify.Management
             try
             {
                 HttpClient client = new HttpClient();
-                var response = await client.GetAsync(ConfigResources.APIBaseURI + "update?version=" + appVersion);
+                var response = await client.GetAsync(Models.API.Config.APIBaseURI + "update?version=" + appVersion);
                 if (response.IsSuccessStatusCode)
                 {
                     string json = await response.Content.ReadAsStringAsync();
@@ -248,9 +246,9 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Gets the certificate the file is signed with. 
+        /// Gets the certificate the file is signed with.
         /// </summary>
-        /// <param name="filename">
+        /// <param name="filename"> 
         /// The path of the signed file from which to create the X.509 certificate.
         /// </param>
         /// <returns> The certificate the file is signed with </returns>
@@ -442,9 +440,9 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// From https://docs.microsoft.com/en-us/dotnet/framework/migration-guide/how-to-determine-which-versions-are-installed#net_d 
+        /// From https://docs.microsoft.com/en-us/dotnet/framework/migration-guide/how-to-determine-which-versions-are-installed#net_d
         /// </summary>
-        /// <returns></returns>
+        /// <returns>  </returns>
         public static string GetDotNetVersion()
         {
             const string subkey = @"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\";

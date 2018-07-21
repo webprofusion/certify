@@ -69,14 +69,6 @@ namespace Certify.Locales {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized string similar to https://api.certifytheweb.com/v1/.
-        /// </summary>
-        public static string APIBaseURI {
-            get {
-                return ResourceManager.GetString("APIBaseURI", resourceCulture);
-            }
-        }
         
         /// <summary>
         ///   Looks up a localized string similar to Certify SSL/TLS Certificate Manager.

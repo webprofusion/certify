@@ -54,8 +54,6 @@ namespace Certify.Service
                 //submit diagnostic info if connection available and status reporting enabled
                 if (Management.CoreAppSettings.Current.EnableStatusReporting)
                 {
-                    var API_BASE_URI = Locales.ConfigResources.APIBaseURI;
-
                     var client = new HttpClient();
 
                     var jsonRequest = Newtonsoft.Json.JsonConvert.SerializeObject(
@@ -79,7 +77,7 @@ namespace Certify.Service
                     {
                         Task.Run(async () =>
                         {
-                            await client.PostAsync(API_BASE_URI + "feedback/submit", data);
+                            await client.PostAsync(Models.API.Config.APIBaseURI + "feedback/submit", data);
                         });
                     }
                     catch (Exception exp)

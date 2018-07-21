@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Certify.Models.API
+﻿namespace Certify.Models.API
 {
+    public static class Config
+    {
+        public static string APIBaseURI { get; } = "https://api.certifytheweb.com/v1/";
+    }
+
     public class URLCheckResult
     {
         public bool IsAccessible { get; set; }

@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using ARSoft.Tools.Net;
 using ARSoft.Tools.Net.Dns;
-using Certify.Locales;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 
@@ -134,7 +133,7 @@ namespace Certify.Management
             try
             {
                 var request = WebRequest.Create(!useProxy ? url :
-                    ConfigResources.APIBaseURI + "configcheck/testurl?url=" + url);
+                    Models.API.Config.APIBaseURI + "configcheck/testurl?url=" + url);
 
                 request.Timeout = 5000;
 
