@@ -97,6 +97,9 @@ namespace Certify.UI
 
             _appViewModel.SelectedItem = null; // deselect site list item
             _appViewModel.SelectedItem = new Certify.Models.ManagedCertificate();
+
+            //default to auto deploy for new managed certs
+            _appViewModel.SelectedItem.RequestConfig.DeploymentSiteOption = Models.DeploymentOption.Auto; 
         }
 
         private async void Button_RenewAll(object sender, RoutedEventArgs e)

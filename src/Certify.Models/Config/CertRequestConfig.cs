@@ -49,6 +49,9 @@ namespace Certify.Models
         public CertRequestConfig()
         {
             Challenges = new ObservableCollection<CertRequestChallengeConfig>();
+
+            // by default set to Single Site deployment (the previous default) - this is to allow upgraded settings to behave normally
+            DeploymentSiteOption = DeploymentOption.SingleSite;
         }
 
         /// <summary>
@@ -172,7 +175,7 @@ namespace Certify.Models
         /// <summary>
         /// Deployment site options (single/all etc) 
         /// </summary>
-        public DeploymentOption DeploymentSiteOption { get; set; } = DeploymentOption.Auto;
+        public DeploymentOption DeploymentSiteOption { get; set; } = DeploymentOption.SingleSite;
 
         /// <summary>
         /// Binding options: Add/Update or Update 
