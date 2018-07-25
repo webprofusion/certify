@@ -24,6 +24,8 @@ namespace Certify.Providers.Certes
     public class CertesSettings
     {
         public string AccountEmail { get; set; }
+        public string AccountUri { get; set; }
+        public string AccountKey { get; set; }
     }
 
     /// <summary>
@@ -131,9 +133,29 @@ namespace Certify.Providers.Certes
         /// Save the current account key
         /// </summary>
         /// <returns>  </returns>
-        private bool SaveAccountKey()
+        private bool SaveAccountKey(IAccountContext accountContext = null)
         {
-            System.IO.File.WriteAllText(_settingsFolder + "\\c-acc.key", _acme.AccountKey.ToPem());
+            string pem = _acme.AccountKey.ToPem();
+
+            _settings.AccountKey = pem;
+
+            System.IO.File.WriteAllText(_settingsFolder + "\\c-acc.key", pem);
+
+            if (accountContext != null)
+            {
+                _settings.AccountUri = accountContext.Location.ToString();
+
+                // archive account id history
+                System.IO.File.AppendAllText(
+                    _settingsFolder + "\\c-acc-archive",
+                    _settings.AccountUri +
+                    "\r\n" +
+                    (_settings.AccountEmail ?? "") +
+                    "\r\n" +
+                    pem
+                    );
+            }
+
             return true;
         }
 
@@ -176,10 +198,10 @@ namespace Certify.Providers.Certes
             {
                 var account = await _acme.NewAccount(email, true);
 
-                //store account key
-                SaveAccountKey();
-
                 _settings.AccountEmail = email;
+
+                //store account key
+                SaveAccountKey(account);
 
                 SaveSettings();
 
