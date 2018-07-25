@@ -245,7 +245,14 @@ namespace Certify.Models
                         {
                             if (!string.IsNullOrEmpty(c.DomainMatch) && !c.DomainMatch.Contains(";"))
                             {
-                                configsPerDomain.Add(c.DomainMatch?.Trim(), c);
+                                var domainMatchKey = c.DomainMatch.Trim();
+
+                                // if domain key is test.com for example we only support one matching config
+                                if (!configsPerDomain.ContainsKey(domainMatchKey))
+                                {
+                                    configsPerDomain.Add(domainMatchKey, c);
+                                }
+                               
                             }
                             else
                             {
@@ -254,7 +261,8 @@ namespace Certify.Models
                                 {
                                     if (!string.IsNullOrWhiteSpace(d))
                                     {
-                                        configsPerDomain.Add(d.Trim().ToLower(), c);
+                                        var domainMatchKey = d.Trim().ToLower();
+                                        configsPerDomain.Add(domainMatchKey, c);
                                     }
                                 }
                             }
