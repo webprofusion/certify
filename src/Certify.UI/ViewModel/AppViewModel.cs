@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -253,7 +254,17 @@ namespace Certify.UI.ViewModel
         {
             try
             {
-                await CertifyClient.GetAppVersion();
+                var version = await CertifyClient.GetAppVersion();
+
+                var v = Version.Parse(version.Replace("\"", ""));
+
+                var assemblyVersion = typeof(AppViewModel).Assembly.GetName().Version;
+
+                if (v.Major != assemblyVersion.Major)
+                {
+                    throw new Exception("Invalid service version. Please ensure the old version of the app has been fully uninstalled, then re-install the latest version.");
+                }
+
                 IsServiceAvailable = true;
             }
             catch (Exception)
