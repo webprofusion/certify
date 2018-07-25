@@ -334,15 +334,11 @@ namespace Certify.Management
                 }
                 else if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.DeploymentStoreOnly)
                 {
-                    deploymentDescription.AppendLine(
-                        "* The certificate will be saved to the local machines Certificate Store only (Personal/My Store)" +
-                        newLine +
-                        "* Previous certificates will not be removed");
+                    deploymentDescription.AppendLine("* The certificate will be saved to the local machines Certificate Store only (Personal/My Store)");
                 }
                 else if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.NoDeployment)
                 {
-                    deploymentDescription.AppendLine("* The certificate will be saved to local disk only." + newLine +
-                                             "* Previous certificates will not be removed.");
+                    deploymentDescription.AppendLine("* The certificate will be saved to local disk only.");
                 }
 
                 deploymentStep.Description = deploymentDescription.ToString();
