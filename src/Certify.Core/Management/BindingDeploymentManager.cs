@@ -213,6 +213,12 @@ namespace Certify.Core.Management
 
                         if (updateBinding)
                         {
+
+                            //SSL port defaults to 443 or the config default, unless we already have an https binding, in which case re-use same port
+                            var sslPort = 443;
+                            if (!string.IsNullOrWhiteSpace(requestConfig.BindingPort)) sslPort = int.Parse(requestConfig.BindingPort);
+                            if (b.Protocol == "https" && b.Port > 0) sslPort = b.Port;
+
                             //create/update binding and associate new cert
                             //if any binding elements configured, use those, otherwise auto bind using defaults and SNI
                             var stepActions = await UpdateBinding(
@@ -222,7 +228,7 @@ namespace Certify.Core.Management
                                 certStoreName,
                                 certHash,
                                 hostname,
-                                sslPort: !string.IsNullOrWhiteSpace(requestConfig.BindingPort) ? int.Parse(requestConfig.BindingPort) : 443,
+                                sslPort: sslPort,
                                 useSNI: (requestConfig.BindingUseSNI != null ? (bool)requestConfig.BindingUseSNI : true),
                                 ipAddress: !string.IsNullOrWhiteSpace(requestConfig.BindingIPAddress) ? requestConfig.BindingIPAddress : null,
                                 alwaysRecreateBindings: requestConfig.AlwaysRecreateBindings,
