@@ -215,10 +215,6 @@ namespace Certify.UI.ViewModel
 
         public async Task InitServiceConnections()
         {
-            // wire up stream events
-            CertifyClient.OnMessageFromService += CertifyClient_SendMessage;
-            CertifyClient.OnRequestProgressStateUpdated += UpdateRequestTrackingProgress;
-            CertifyClient.OnManagedCertificateUpdated += CertifyClient_OnManagedCertificateUpdated;
 
             //check service connection
             IsServiceAvailable = await CheckServiceAvailable();
@@ -227,15 +223,26 @@ namespace Certify.UI.ViewModel
             {
                 Debug.WriteLine("Service not yet available. Waiting a few seconds..");
 
-                // the service could still be starting up
+                // the service could still be starting up or port may be reallocated
                 await Task.Delay(5000);
+
+
+                // restart client in case port has reallocated
+                CertifyClient = new CertifyServiceClient();
+
                 IsServiceAvailable = await CheckServiceAvailable();
+
                 if (!IsServiceAvailable)
                 {
                     // give up
                     return;
                 }
             }
+
+            // wire up stream events
+            CertifyClient.OnMessageFromService += CertifyClient_SendMessage;
+            CertifyClient.OnRequestProgressStateUpdated += UpdateRequestTrackingProgress;
+            CertifyClient.OnManagedCertificateUpdated += CertifyClient_OnManagedCertificateUpdated;
 
             // connect to status api stream & handle events
             await CertifyClient.ConnectStatusStreamAsync();
@@ -250,20 +257,16 @@ namespace Certify.UI.ViewModel
               });
         }
 
+        /// <summary>
+        /// Checks the service availability by fetching the version. If the service is available but the version is wrong an exception will be raised.
+        /// </summary>
+        /// <returns></returns>
         public async Task<bool> CheckServiceAvailable()
         {
+            string version = null;
             try
             {
-                var version = await CertifyClient.GetAppVersion();
-
-                var v = Version.Parse(version.Replace("\"", ""));
-
-                var assemblyVersion = typeof(AppViewModel).Assembly.GetName().Version;
-
-                if (v.Major != assemblyVersion.Major)
-                {
-                    throw new Exception("Invalid service version. Please ensure the old version of the app has been fully uninstalled, then re-install the latest version.");
-                }
+                version = await CertifyClient.GetAppVersion();
 
                 IsServiceAvailable = true;
             }
@@ -273,7 +276,27 @@ namespace Certify.UI.ViewModel
                 IsServiceAvailable = false;
             }
 
-            return IsServiceAvailable;
+            if (version != null)
+            {
+
+                // ensure service is correct version
+                var v = Version.Parse(version.Replace("\"", ""));
+
+                var assemblyVersion = typeof(AppViewModel).Assembly.GetName().Version;
+
+                if (v.Major != assemblyVersion.Major)
+                {
+                    throw new Exception($"Invalid service version ({v}). Please ensure the old version of the app has been fully uninstalled, then re-install the latest version.");
+                }
+                else
+                {
+                    return IsServiceAvailable;
+                }
+            }
+            else
+            {
+                return IsServiceAvailable;
+            }
         }
 
         /// <summary>
