@@ -35,7 +35,7 @@ Features:
 Quick Start (IIS users)
 ----------
 1. Download from [https://certifytheweb.com/](https://certifytheweb.com/) and install it.
-2. Click 'New Certificate', choose your IIS site (binding hostnames will be auto detected). Save your settings and click 'Request Certificate'
+2. Click 'New Certificate', optionally choose your IIS site (binding hostnames will be auto detected, or just enter them manually). Save your settings and click 'Request Certificate'
 3. All done! The certificate will renew automatically.
 
 Advanced users can explore the different validation modes, deployment modes and other advanced options.
@@ -63,12 +63,10 @@ Developer Build/Run Requirements:
 
 > - Visual Studio 2017 Community Edition (or higher) 
 > - A local instance of IIS installed (for http validation, not required for DNS validation).
-> - To build the current release version use the release branch: https://github.com/webprofusion/certify/tree/release, development is the current work in progress.
 > - Restoring NuGet packages using "Update-Package -reinstall" can be useful where nuget restore fails.
-> - The app needs to run as Administrator, otherwise it cannot access IIS, write to the IIS website root paths or manage the windows certificate store.
 > - The UI needs the background service to be running. You can configure Visual Studio to launch both the Certify.UI project and the Certify.Service project via Solution > Properties > Multiple Startup Projects
 
 > **Note:**  For development you will require a publicly accessible IP mapped to the domain/subdomain you want to test with. The Let's Encrypt service will need to be able to access your test site remotely via HTTP in order to complete authorisation challenges.
 > The app consists of a UI and background service. The background service must be running for the UI to operate. 
 
-apps {at} webprofusion.com
+support {at} certifytheweb.com
