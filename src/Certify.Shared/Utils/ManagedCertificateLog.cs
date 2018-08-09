@@ -84,6 +84,8 @@ namespace Certify.Models
 
         public static ILog GetLogger(string managedItemId)
         {
+            if (string.IsNullOrEmpty(managedItemId)) return null;
+
             if (_managedItemLoggers == null) _managedItemLoggers = new Dictionary<string, Serilog.Core.Logger>();
 
             Serilog.Core.Logger log = null;
@@ -120,21 +122,25 @@ namespace Certify.Models
         {
             var log = GetLogger(managedItemId);
 
-            if (logItem.LogItemType == LogItemType.CertficateRequestFailed)
+            if (log != null)
             {
-                log.Error(logItem.Message);
-            }
-            else if (logItem.LogItemType == LogItemType.GeneralError)
-            {
-                log.Error(logItem.Message);
-            }
-            if (logItem.LogItemType == LogItemType.GeneralWarning)
-            {
-                log.Warning(logItem.Message);
-            }
-            else
-            {
-                log.Information(logItem.Message);
+
+                if (logItem.LogItemType == LogItemType.CertficateRequestFailed)
+                {
+                    log.Error(logItem.Message);
+                }
+                else if (logItem.LogItemType == LogItemType.GeneralError)
+                {
+                    log.Error(logItem.Message);
+                }
+                if (logItem.LogItemType == LogItemType.GeneralWarning)
+                {
+                    log.Warning(logItem.Message);
+                }
+                else
+                {
+                    log.Information(logItem.Message);
+                }
             }
         }
 
