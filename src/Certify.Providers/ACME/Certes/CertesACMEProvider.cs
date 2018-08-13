@@ -197,7 +197,7 @@ namespace Certify.Providers.Certes
             try
             {
                 var account = await _acme.NewAccount(email, true);
-
+         
                 _settings.AccountEmail = email;
 
                 //store account key
@@ -206,6 +206,10 @@ namespace Certify.Providers.Certes
                 SaveSettings();
 
                 log.Information($"Registering account {email} with certificate authority");
+
+                // re-init provider based on new account key
+                InitProvider();
+
                 return true;
             }
             catch (Exception exp)
