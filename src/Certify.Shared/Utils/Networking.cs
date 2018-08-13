@@ -23,6 +23,11 @@ namespace Certify.Utils
                     CertificateHash = b.Thumbprint
                 }).ToList();
             }
+            catch (System.IO.FileNotFoundException)
+            {
+                // failed to load the SslCertbinding dll
+                return new List<BindingInfo>();
+            }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine("Failed to query ssl bindings: " + exp.ToString());
