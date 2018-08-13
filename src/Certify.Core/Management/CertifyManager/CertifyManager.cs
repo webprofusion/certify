@@ -75,6 +75,7 @@ namespace Certify.Management
             _httpChallengeServerClient.Timeout = new TimeSpan(0, 0, 5);
 
             if (_tc != null) _tc.TrackEvent("ServiceStarted");
+
         }
 
         public void PerformUpgrades()
@@ -179,7 +180,15 @@ namespace Certify.Management
             // perform expired cert cleanup (if enabled)
             if (CoreAppSettings.Current.EnableCertificateCleanup)
             {
-                CertificateManager.PerformCertificateStoreCleanup(DateTime.Now);
+                try
+                {
+                    CertificateManager.PerformCertificateStoreCleanup(DateTime.Now);
+                }
+                catch (Exception exp)
+                {
+                    // log exception
+                    _serviceLog.Error("Failed to perform certificate cleanup: " + exp.ToString());
+                }
             }
 
             return await Task.FromResult(true);
