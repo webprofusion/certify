@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Certify.Models.Providers;
 using Serilog;
@@ -75,7 +76,7 @@ namespace Certify.Models
 
     public static class ManagedCertificateLog
     {
-        private static Dictionary<string, Serilog.Core.Logger> _managedItemLoggers { get; set; }
+        private static ConcurrentDictionary<string, Serilog.Core.Logger> _managedItemLoggers { get; set; }
 
         public static string GetLogPath(string managedItemId)
         {
@@ -86,17 +87,11 @@ namespace Certify.Models
         {
             if (string.IsNullOrEmpty(managedItemId)) return null;
 
-            if (_managedItemLoggers == null) _managedItemLoggers = new Dictionary<string, Serilog.Core.Logger>();
+            if (_managedItemLoggers == null) _managedItemLoggers = new ConcurrentDictionary<string, Serilog.Core.Logger>();
 
-            Serilog.Core.Logger log = null;
-
-            if (_managedItemLoggers.ContainsKey(managedItemId))
+            Serilog.Core.Logger log = _managedItemLoggers.GetOrAdd(managedItemId, (key) =>
             {
-                log = _managedItemLoggers[managedItemId];
-            }
-            else
-            {
-                var logPath = GetLogPath(managedItemId);
+                var logPath = GetLogPath(key);
 
                 try
                 {
@@ -113,8 +108,9 @@ namespace Certify.Models
                     .WriteTo.File(logPath, shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
                     .CreateLogger();
 
-                _managedItemLoggers.Add(managedItemId, log);
-            }
+                return log;
+            });
+
             return new Loggy(log);
         }
 
