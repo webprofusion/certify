@@ -142,7 +142,6 @@ namespace Certify.Service
                 System.Diagnostics.Debug.WriteLine($"Service started on {serviceUri}.");
             }
 
-            throw new Exception("test");
         }
 
         public void Stop()
