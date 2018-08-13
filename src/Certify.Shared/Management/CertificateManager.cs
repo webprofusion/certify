@@ -301,7 +301,10 @@ namespace Certify.Management
         public static void PerformCertificateStoreCleanup(DateTime expiryBefore, bool checkBindings = false)
         {
             // get all existing cert bindings
-            var allCertBindings = Certify.Utils.Networking.GetCertificateBindings();
+            var allCertBindings = new List<Models.BindingInfo>();
+
+            // TODO: reinstate once we have reliable binding info (also some users get an FileNotFound dll loading exception accessing this functionality):
+            // if (checkBindings) allCertBindings =  Certify.Utils.Networking.GetCertificateBindings();
 
             // get all certificates
             using (var store = GetDefaultStore())
