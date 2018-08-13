@@ -2,6 +2,7 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using Certify.Locales;
+using Certify.Management;
 using Microsoft.Owin.Hosting;
 using Topshelf;
 
@@ -19,6 +20,12 @@ namespace Certify.Service
                 x.SetDisplayName("Certify SSL Manager Service");
                 x.SetDescription("Certify SSL/TLS Manager Service");
                 x.StartAutomaticallyDelayed();
+
+                x.OnException(ex =>
+                {
+                    // Do something with the exception
+                    LogException(ex);
+                });
 #if DEBUG
                 x.SetInstanceName("Debug");
 #else
@@ -36,6 +43,7 @@ namespace Certify.Service
                     r.OnCrashOnly();
                     r.SetResetPeriod(1);
                 });
+
                 x.Service<OwinService>(s =>
                 {
                     s.ConstructUsing(() => new OwinService());
@@ -45,46 +53,60 @@ namespace Certify.Service
             });
         }
 
+        private static void LogException(object exceptionObject)
+        {
+            // log exception
+            try
+            {
+                var logPath = Util.GetAppDataFolder("logs") + "\\service.exceptions.log";
+                System.IO.File.AppendAllText(logPath, "Service Exception :: [" + DateTime.Now + "] :: " + ((Exception)exceptionObject).ToString());
+            }
+            catch { }
+
+            //submit diagnostic info if connection available and status reporting enabled
+            if (Management.CoreAppSettings.Current.EnableStatusReporting)
+            {
+                var client = new HttpClient();
+
+                var appVersion = new Certify.Management.Util().GetAppVersion();
+
+                var jsonRequest = Newtonsoft.Json.JsonConvert.SerializeObject(
+                    new Models.Shared.FeedbackReport
+                    {
+                        EmailAddress = "(service exception)",
+                        Comment = "An unhandled service exception has occurred.: " + ((Exception)exceptionObject).ToString(),
+                        IsException = true,
+                        AppVersion = appVersion.ToString(),
+                        SupportingData = new
+                        {
+                            Framework = Certify.Management.Util.GetDotNetVersion(),
+                            OS = Environment.OSVersion.ToString(),
+                            AppVersion = new Certify.Management.Util().GetAppVersion(),
+                            IsException = true
+                        }
+                    });
+
+                var data = new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json");
+                try
+                {
+                    Task.Run(async () =>
+                    {
+                        await client.PostAsync(Models.API.Config.APIBaseURI + "feedback/submit", data);
+                    });
+                }
+                catch (Exception exp)
+                {
+                    System.Diagnostics.Debug.WriteLine(exp.ToString());
+                }
+            }
+        }
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             // an unhandled exception has caused the service to crash
 
             if (e.ExceptionObject != null)
             {
-                //submit diagnostic info if connection available and status reporting enabled
-                if (Management.CoreAppSettings.Current.EnableStatusReporting)
-                {
-                    var client = new HttpClient();
-
-                    var jsonRequest = Newtonsoft.Json.JsonConvert.SerializeObject(
-                        new Models.Shared.FeedbackReport
-                        {
-                            EmailAddress = "(service exception)",
-                            Comment = "An unhandled service exception has occurred.: " + ((Exception)e.ExceptionObject).ToString(),
-                            IsException = true,
-                            AppVersion = ConfigResources.AppName + " " + new Certify.Management.Util().GetAppVersion(),
-                            SupportingData = new
-                            {
-                                Framework = Certify.Management.Util.GetDotNetVersion(),
-                                OS = Environment.OSVersion.ToString(),
-                                AppVersion = ConfigResources.AppName + " " + new Certify.Management.Util().GetAppVersion(),
-                                IsException = true
-                            }
-                        });
-
-                    var data = new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json");
-                    try
-                    {
-                        Task.Run(async () =>
-                        {
-                            await client.PostAsync(Models.API.Config.APIBaseURI + "feedback/submit", data);
-                        });
-                    }
-                    catch (Exception exp)
-                    {
-                        System.Diagnostics.Debug.WriteLine(exp.ToString());
-                    }
-                }
+                LogException(e.ExceptionObject);
             }
         }
     }
@@ -119,6 +141,8 @@ namespace Certify.Service
 
                 System.Diagnostics.Debug.WriteLine($"Service started on {serviceUri}.");
             }
+
+            throw new Exception("test");
         }
 
         public void Stop()
