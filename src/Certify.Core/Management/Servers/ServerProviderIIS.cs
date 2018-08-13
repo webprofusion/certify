@@ -83,28 +83,40 @@ namespace Certify.Management.Servers
         public async Task<List<ActionStep>> RunConfigurationDiagnostics(string siteId)
         {
             List<ActionStep> configChecks = new List<ActionStep>();
-            using (var serverManager = await GetDefaultServerManager())
-            {
-                var config = serverManager.GetApplicationHostConfiguration();
 
-                if ((bool?)serverManager.ApplicationPoolDefaults["enableConfigurationOverride"] == false)
+            try
+            {
+                using (var serverManager = await GetDefaultServerManager())
                 {
-                    configChecks.Add(new ActionStep
+                    var config = serverManager.GetApplicationHostConfiguration();
+
+                    if ((bool?)serverManager.ApplicationPoolDefaults["enableConfigurationOverride"] == false)
                     {
-                        HasWarning = true,
-                        Title = "Application Pool: Configuration Override Disabled",
-                        Description = "Configuration warning: enableConfigurationOverride in system.applicationHost / applicationPools is set to false. This may prevent auto configuration from clearing or rearranging static file handler mappings."
-                    });
+                        configChecks.Add(new ActionStep
+                        {
+                            HasWarning = true,
+                            Title = "Application Pool: Configuration Override Disabled",
+                            Description = "Configuration warning: enableConfigurationOverride in system.applicationHost / applicationPools is set to false. This may prevent auto configuration from clearing or rearranging static file handler mappings."
+                        });
+                    }
+                    else
+                    {
+                        configChecks.Add(new ActionStep
+                        {
+                            HasError = false,
+                            Title = "Application Pool: Configuration Override Enabled",
+                            Description = "Application Pool: Configuration Override Enabled"
+                        });
+                    }
                 }
-                else
+            } catch(Exception exp)
+            {
+                configChecks.Add(new ActionStep
                 {
-                    configChecks.Add(new ActionStep
-                    {
-                        HasError = false,
-                        Title = "Application Pool: Configuration Override Enabled",
-                        Description = "Application Pool: Configuration Override Enabled"
-                    });
-                }
+                    HasWarning = true,
+                    Title = "IIS Administration API not available",
+                    Description = "Querying the state of IIS failed. This is usually because IIS is not installed or is not fully configured."
+                });
             }
             return configChecks;
         }
