@@ -196,6 +196,8 @@ namespace Certify.Providers.Certes
         {
             try
             {
+                // start new account context, create new account
+                _acme = new AcmeContext(_serviceUri);
                 var account = await _acme.NewAccount(email, true);
          
                 _settings.AccountEmail = email;
