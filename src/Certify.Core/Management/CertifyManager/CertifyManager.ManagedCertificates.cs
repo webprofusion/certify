@@ -287,7 +287,16 @@ namespace Certify.Management
             if (managedCertificate != null)
             {
                 if (iis == null) iis = _serverProvider;
-                return await iis.IsSiteRunning(managedCertificate.GroupId);
+                try
+                {
+                    return await iis.IsSiteRunning(managedCertificate.GroupId);
+                }
+                catch
+                {
+                    // by default we assume the site is running
+                    return true;
+                }
+                
             }
             else
             {

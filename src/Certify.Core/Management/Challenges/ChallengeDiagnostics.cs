@@ -343,6 +343,11 @@ namespace Certify.Core.Management.Challenges
             {
                 var siteInfo = await iisManager.GetSiteById(managedCertificate.ServerSiteId);
 
+                if (siteInfo == null)
+                {
+                    return new ActionResult { IsSuccess = false, Message = "IIS Website unavailable. Site may be removed or IIS is unavailable" };
+                }
+
                 // if website root path not specified, determine it now
                 if (string.IsNullOrEmpty(websiteRootPath))
                 {

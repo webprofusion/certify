@@ -127,16 +127,22 @@ namespace Certify.Management.Servers
             try
             {
                 srv = new ServerManager();
+
+                // checking sites collection will throw a com exception if IIS is not installed
+                if (srv.Sites.Count<0 ) throw new Exception("IIS is not installed");
             }
-            catch (System.Runtime.InteropServices.COMException)
+            catch (Exception)
             {
+                srv = null;
                 try
                 {
                     srv = new ServerManager(@"C:\Windows\System32\inetsrv\config\applicationHost.config");
+                    if (srv.Sites.Count < 0) throw new Exception("IIS is not installed");
                 }
                 catch (Exception)
                 {
                     // IIS is probably not installed
+                    srv = null;
                 }
             }
 
@@ -599,8 +605,14 @@ namespace Certify.Management.Servers
         {
             using (var iisManager = await GetDefaultServerManager())
             {
-                Site siteDetails = iisManager.Sites.FirstOrDefault(s => s.Id.ToString() == id);
-                return Map(siteDetails);
+                if (iisManager != null)
+                {
+                    Site siteDetails = iisManager.Sites.FirstOrDefault(s => s.Id.ToString() == id);
+                    return Map(siteDetails);
+                } else
+                {
+                    return null;
+                }
             }
         }
 
