@@ -300,16 +300,17 @@ namespace Certify.UI.Controls.ManagedCertificate
             // validate and save before test
             if (!await ValidateAndSave(ItemViewModel.SelectedItem)) return;
            
-            ItemViewModel.IsTestInProgress = true;
+           
 
             var challengeConfig = ItemViewModel.SelectedItem.GetChallengeConfig(null);
 
-            if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP && !AppViewModel.IsIISAvailable)
+            if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP && !String.IsNullOrEmpty(ItemViewModel.SelectedItem.ServerSiteId) && !AppViewModel.IsIISAvailable)
             {
                 MessageBox.Show(SR.ManagedCertificateSettings_CannotChallengeWithoutIIS, SR.ChallengeError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             else if (challengeConfig.ChallengeType != null)
             {
+                ItemViewModel.IsTestInProgress = true;
                 Button_TestChallenge.IsEnabled = false;
 
                 try

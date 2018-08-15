@@ -32,7 +32,7 @@
                         DockPanel.Dock="Top"
                         FontFamily="Segoe UI Light"
                         FontSize="16"
-                        Text="Choose the domains you want to include on your certificate by selecting from an existing IIS website or by manually entering domains."
+                        Text="Choose the domains you want to include on your certificate by selecting from an existing IIS website or by manually entering domains for websites hosted on this server."
                         TextWrapping="WrapWithOverflow" />
                     <Image
                         Height="300"
