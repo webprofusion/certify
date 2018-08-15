@@ -81,9 +81,9 @@ namespace Certify.Management
                     if (isRenewalOnHold) isRenewalRequired = false;
                 }
 
-                //if we care about stopped sites being stopped, check for that
+                //if we care about stopped sites being stopped, check for that if a specifc site is selected
                 var isSiteRunning = true;
-                if (!CoreAppSettings.Current.IgnoreStoppedSites)
+                if (!CoreAppSettings.Current.IgnoreStoppedSites && !String.IsNullOrEmpty(managedCertificate.ServerSiteId))
                 {
                     isSiteRunning = await IsManagedCertificateRunning(managedCertificate.Id);
                 }
