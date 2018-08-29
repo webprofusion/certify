@@ -657,4 +657,13 @@
   <data name="Settings_EnableHttpChallengeServer" xml:space="preserve">
     <value>启用HTTP验证服务</value>
   </data>
+  <data name="New_Contact_EmailError" xml:space="preserve">
+    <value>使用此Email注册Let's Encrypt的时候遇到了问题。请确认邮箱有效并且网络连接正常（API调用需要外发的HTTPS请求）。</value>
+  </data>
+  <data name="Settings_EnableCertificateCleanup" xml:space="preserve">
+    <value>启用证书清理</value>
+  </data>
+  <data name="Settings_EnableStatusReporting" xml:space="preserve">
+    <value>启用状态报告到看板</value>
+  </data>
 </root>
