@@ -24,7 +24,7 @@ $result.ManagedItem.GroupId   # ex: 1, 2, 3, ...
 $result.ManagedItem.RequestConfig.WebsiteRootPath   # ex: "C:\inetpub\wwwroot"
 
 # the path to the created/renewed certificate PFX file
-$result.MangagedItem.CertificatePath   # ex: "C:\ProgramData\ACMESharp\sysVault\99-ASSET\cert_ident8cf8bd9c-all.pfx"
+$result.ManagedItem.CertificatePath   # ex: "C:\ProgramData\ACMESharp\sysVault\99-ASSET\cert_ident8cf8bd9c-all.pfx"
 
 # the certificate thumbprint
 $result.ManagedItem.CertificateThumbprintHash # ex: "78b1080a1bf5e7fc0bbb0c0614fc4a18932db5f9"
@@ -129,7 +129,7 @@ ps64 -args $result -command {
 
 * In the Certify UI, you may test scripts by clicking the "Test" button after entering the script filename for the hook you would like to test. 
 * For a testing pre-request script, the `$result.IsSuccess` value will be `$false`, and for a post-request script the value will be `$true`. 
-* The `$result.MangagedItem.CertificatePath` value be set to the filename (including path) of the PFX file containing the requested certificate, unless the site is new and has not had a successful Certificate Request, in which case the value will not be set.
+* The `$result.ManagedItem.CertificatePath` value be set to the filename (including path) of the PFX file containing the requested certificate, unless the site is new and has not had a successful Certificate Request, in which case the value will not be set.
 
 ### Using 64-bit modules
 
