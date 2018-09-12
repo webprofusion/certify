@@ -147,9 +147,14 @@ namespace Certify.Core.Tests.Unit
                 "*.test.co.uk"
             };
 
+
             Assert.IsFalse(ManagedCertificate.IsDomainOrWildcardMatch(domains, "test.com"));
 
             Assert.IsTrue(ManagedCertificate.IsDomainOrWildcardMatch(domains, "test.com", matchWildcardsToRootDomain: true));
+
+            Assert.IsFalse(ManagedCertificate.IsDomainOrWildcardMatch(domains, "thisisatest.com"));
+
+            Assert.IsFalse(ManagedCertificate.IsDomainOrWildcardMatch(domains, "www.thisisatest.com"));
 
             Assert.IsTrue(ManagedCertificate.IsDomainOrWildcardMatch(domains, "www.test.com"));
 

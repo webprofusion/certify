@@ -252,7 +252,6 @@ namespace Certify.Models
                                 {
                                     configsPerDomain.Add(domainMatchKey, c);
                                 }
-                               
                             }
                             else
                             {
@@ -363,7 +362,7 @@ namespace Certify.Models
                             else
                             {
                                 //if hostname ends with our domain and is only 1 label longer then it's a match
-                                if (hostname.EndsWith(domain))
+                                if (hostname.EndsWith("." + domain))
                                 {
                                     if (hostname.Count(c => c == '.') == domain.Count(c => c == '.') + 1)
                                     {
