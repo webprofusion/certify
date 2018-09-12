@@ -264,6 +264,16 @@ namespace Certify.Core.Management.Challenges
 
             var challengeConfig = managedcertificate.GetChallengeConfig(domain);
 
+            if (challengeConfig == null || challengeConfig.ChallengeProvider == null)
+            {
+                return new DnsChallengeHelperResult
+                {
+                    Result = new ActionResult { IsSuccess = true, Message = $"The DNS record {txtRecordName} can now be removed." },
+                    PropagationSeconds = 0,
+                    IsAwaitingUser = false
+                };
+            }
+
             if (challengeConfig.ChallengeProvider.Contains(".Manual"))
             {
                 return new DnsChallengeHelperResult
