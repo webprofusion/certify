@@ -124,13 +124,30 @@ namespace Certify.Providers.DNS.Azure
 
             try
             {
+                var currentRecord = await _dnsClient.RecordSets.GetAsync(_credentials["resourcegroupname"], request.ZoneId, recordName, RecordType.TXT);
+
+                if (currentRecord != null && currentRecord.TxtRecords.Any())
+                {
+                    foreach (var record in currentRecord.TxtRecords)
+                    {
+                        recordSetParams.TxtRecords.Add(record);
+                    }
+                }
+
+            } catch {
+                // No record exist
+            }
+
+            try
+            {
                 var result = await _dnsClient.RecordSets.CreateOrUpdateAsync(
                        _credentials["resourcegroupname"],
                        request.ZoneId,
                        recordName,
                        RecordType.TXT,
                        recordSetParams
-               );
+                );
+                               
 
                 if (result != null)
                 {
