@@ -23,6 +23,7 @@ namespace Certify.Core.Tests.Unit
                 Secret = testSecret
             };
             var credentialsManager = new CredentialsManager();
+            credentialsManager.StorageSubfolder = "Tests\\credentials";
             var result = await credentialsManager.UpdateCredential(test);
 
             Assert.IsNotNull(result, "Credential stored OK");
@@ -41,7 +42,7 @@ namespace Certify.Core.Tests.Unit
         {
             Dictionary<string, string> secrets = new Dictionary<string, string>();
             secrets.Add("zoneid", "ABC123");
-            secrets.Add("secretid", "blackdogrunsatnight");
+            secrets.Add("secretid", "thereisnosecret");
 
             var test = new StoredCredential
             {
@@ -52,6 +53,7 @@ namespace Certify.Core.Tests.Unit
             };
 
             var credentialsManager = new CredentialsManager();
+            credentialsManager.StorageSubfolder = "Tests\\credentials";
             var result = await credentialsManager.UpdateCredential(test);
 
             Assert.IsNotNull(result, "Credential stored OK");
