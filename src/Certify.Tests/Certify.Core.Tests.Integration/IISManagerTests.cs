@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Certify.Core.Management;
 using Certify.Management;
@@ -120,6 +121,103 @@ namespace Certify.Core.Tests
             Assert.IsTrue(await iisManager.SiteExists(testSiteName));
 
             Assert.IsTrue(site.Bindings.Any(b => b.Host == testDomainName && b.BindingInformation.Contains(ipAddress)));
+        }
+
+        [TestMethod]
+        public async Task TestManySiteBindingUpdates()
+        {
+            int numSites = 100;
+            // create a large number of site bindings, to see if we encounter isses saving IIS changes
+
+            try
+            {
+                List<ActionStep> allResults = new List<ActionStep>();
+                for (var i = 0; i < numSites; i++)
+                {
+                    var domain = "site_" + i + "_toomany.com";
+                    var testSiteName = "ManySites_" + i;
+                    if (await iisManager.SiteExists(testSiteName))
+                    {
+                        await iisManager.DeleteSite(testSiteName);
+                    }
+
+                    await iisManager.CreateSite(testSiteName, "site_" + i + "_toomany.com", PrimaryIISRoot, null, protocol: "http");
+                    var site = await iisManager.GetSiteBindingByDomain(domain);
+                    for (var d = 0; d < 2; d++)
+                    {
+                        var testDomain = Guid.NewGuid().ToString() + domain;
+
+                        allResults.Add(await iisManager.AddOrUpdateSiteBinding(new BindingInfo
+                        {
+                            SiteId = site.SiteId,
+                            Host = testDomain,
+                            PhysicalPath = PrimaryIISRoot
+                        }, addNew: true));
+                    }
+                }
+
+                // now attempt async creation of bindings
+                List<Task<ActionStep>> allBindingTasksSet1 = new List<Task<ActionStep>>();
+                List<Task<ActionStep>> allBindingTasksSet2 = new List<Task<ActionStep>>();
+                for (var i = 0; i < 1000; i++)
+                {
+                    var domain = "site_" + i + "_toomany.com";
+                    var testSiteName = "ManySites_" + i;
+
+                    var site = await iisManager.GetSiteBindingByDomain(domain);
+
+                    for (var d = 0; d < 2; d++)
+                    {
+                        var testDomain = Guid.NewGuid().ToString() + domain;
+
+                        if (i < 500)
+                        {
+                            allBindingTasksSet1.Add(iisManager.AddOrUpdateSiteBinding(new BindingInfo
+                            {
+                                SiteId = site.SiteId,
+                                Host = testDomain,
+                                PhysicalPath = PrimaryIISRoot
+                            }, addNew: true));
+                        }
+                        else
+                        {
+                            allBindingTasksSet2.Add(iisManager.AddOrUpdateSiteBinding(new BindingInfo
+                            {
+                                SiteId = site.SiteId,
+                                Host = testDomain,
+                                PhysicalPath = PrimaryIISRoot
+                            }, addNew: true));
+                        }
+                    }
+                }
+
+                ThreadPool.QueueUserWorkItem(async x =>
+                {
+                    Thread.Sleep(500);
+                    ActionStep[] results = await Task.WhenAll<ActionStep>(allBindingTasksSet1);
+
+                    // verify all actions ok
+                    Assert.IsFalse(results.Any(r => r.HasError), "Thread1: One or more actions failed");
+                });
+
+                ThreadPool.QueueUserWorkItem(async x =>
+                {
+                    ActionStep[] results = await Task.WhenAll<ActionStep>(allBindingTasksSet2);
+
+                    // verify all actions ok
+                    Assert.IsFalse(results.Any(r => r.HasError), "Thread2: One or more actions failed");
+                });
+            }
+            finally
+            {
+                // now clean up
+                for (var i = 0; i < numSites; i++)
+                {
+                    var testSiteName = "ManySites_" + i;
+                    var domain = "site_" + i + "_toomany.com";
+                    await iisManager.DeleteSite(testSiteName);
+                }
+            }
         }
 
         [TestMethod]
