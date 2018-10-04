@@ -48,8 +48,21 @@ namespace Certify.Core.Management
             {
                 if (!isPreviewOnly)
                 {
-                    storedCert = await CertificateManager.StoreCertificate(requestConfig.PrimaryDomain, pfxPath, isRetry: false, enableRetryBehaviour: _enableCertDoubleImportBehaviour);
-                    if (storedCert != null) certHash = storedCert.GetCertHash();
+                    try
+                    {
+                        storedCert = await CertificateManager.StoreCertificate(requestConfig.PrimaryDomain, pfxPath, isRetry: false, enableRetryBehaviour: _enableCertDoubleImportBehaviour);
+                        if (storedCert != null)
+                        {
+                            certHash = storedCert.GetCertHash();
+
+                            actions.Add(new ActionStep { HasError = false, Title = "Certificate Stored", Category = "Certificate Storage", Description = "Certificate stored OK" });
+                        }
+                    }
+                    catch (Exception exp)
+                    {
+                        actions.Add(new ActionStep { HasError = true, Title = "Certificate Storage Failed", Category = "Certificate Storage", Description = "Error storing certificate." + exp.Message });
+                        return actions;
+                    }
                 }
                 else
                 {
@@ -62,7 +75,7 @@ namespace Certify.Core.Management
             if (storedCert != null)
             {
                 //get list of domains we need to create/update https bindings for
-                List<string> dnsHosts = new List<string> {
+                var dnsHosts = new List<string> {
                     requestConfig.PrimaryDomain
                 };
 
@@ -91,7 +104,8 @@ namespace Certify.Core.Management
                 // FIXME: need strategy to analyse if there are any users of cert we haven't
                 // accounted for (manually added etc) otherwise we are disposing of a cert which
                 // could still be in use
-                if (!isPreviewOnly)
+
+                /*if (!isPreviewOnly)
                 {
                     if (cleanupCertStore
                         && requestConfig.DeploymentSiteOption != DeploymentOption.DeploymentStoreOnly
@@ -100,9 +114,9 @@ namespace Certify.Core.Management
                     {
                         //remove old certs for this primary domain
                         //FIXME:
-                        //CertificateManager.CleanupCertificateDuplicates(storedCert, requestConfig.PrimaryDomain);
+                       CertificateManager.CleanupCertificateDuplicates(storedCert, requestConfig.PrimaryDomain);
                     }
-                }
+                }*/
             }
             else
             {
@@ -213,7 +227,6 @@ namespace Certify.Core.Management
 
                         if (updateBinding)
                         {
-
                             //SSL port defaults to 443 or the config default, unless we already have an https binding, in which case re-use same port
                             var sslPort = 443;
                             if (!string.IsNullOrWhiteSpace(requestConfig.BindingPort)) sslPort = int.Parse(requestConfig.BindingPort);
@@ -242,7 +255,7 @@ namespace Certify.Core.Management
                 }
                 catch (Exception exp)
                 {
-                    actions.Add(new ActionStep { Title = site.Name, HasError = true, Description = exp.ToString() });
+                    actions.Add(new ActionStep { Title = site.Name, Category = "Deploy.AddOrUpdateBindings", HasError = true, Description = exp.ToString() });
                 }
             }
 

@@ -768,7 +768,11 @@ namespace Certify.Management
                         else
                         {
                             // we failed to install this cert or create/update the https binding
-                            result.Message = string.Format(CoreSR.CertifyManager_CertificateInstallFailed, pfxPath);
+                            string msg = string.Join("\r\n", actions.Where(s => s.HasError)
+                               .Select(s => s.Description).ToArray());
+
+                            result.Message = msg;
+
                             await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
 
                             LogMessage(managedCertificate.Id, result.Message, LogItemType.GeneralError);
