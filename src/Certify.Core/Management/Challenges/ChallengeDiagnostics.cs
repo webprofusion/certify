@@ -102,13 +102,15 @@ namespace Certify.Core.Management.Challenges
 
                     var allResults = await Task.WhenAll(tasks);
 
+                    // add DNS check results. DNS check fails are considered a warning instead of an error.
                     foreach (var checkResults in allResults)
                     {
                         foreach (var c in checkResults)
                         {
                             results.Add(new StatusMessage
                             {
-                                IsOK = c.IsSuccess,
+                                IsOK = true,
+                                HasWarning = !c.IsSuccess,
                                 Message = c.Message
                             });
                         }
