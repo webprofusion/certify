@@ -321,6 +321,7 @@ namespace Certify.Core.Management
             {
                 Host = internationalHost,
                 Protocol = "https",
+                IsHTTPS = true,
                 Port = sslPort,
                 IP = !string.IsNullOrEmpty(ipAddress) ? ipAddress : "*",
                 SiteId = site.Id,
