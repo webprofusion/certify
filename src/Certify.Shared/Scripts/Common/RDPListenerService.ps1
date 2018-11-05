@@ -1,5 +1,5 @@
 ﻿# Enable certificate for RDP Listener Service
-# For more script info see https://github.com/webprofusion/certify/blob/master/docs/Request%20Script%20Hooks.md
+# For more script info see https://docs.certifytheweb.com/docs/script-hooks.html
 
 param($result)
 
