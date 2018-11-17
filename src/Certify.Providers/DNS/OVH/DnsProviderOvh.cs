@@ -87,7 +87,7 @@ namespace Certify.Providers.DNS.OVH
                     { "target",  request.RecordValue },
                     { "ttl", 1 }
                 };
-                var recordCreationResult = ovh.Post<OvhDnsRecord>($"/domain/zone/{request.ZoneId}/record", content);
+                var recordCreationResult = await ovh.Post<OvhDnsRecord>($"/domain/zone/{request.ZoneId}/record", content);
                 creationId = recordCreationResult.Id;
                 request.RecordId = creationId.ToString();
                 var zoneRefreshResult = ovh.Post($"/domain/zone/{request.ZoneId}/refresh", string.Empty);
@@ -106,8 +106,8 @@ namespace Certify.Providers.DNS.OVH
             try
             {
                 var ovh = CreateOvhClient();
-                var recordDeletionResult = ovh.Delete<object>($"/domain/zone/{request.ZoneId}/record/{request.RecordId}");
-                var zoneRefreshResult = ovh.Post($"/domain/zone/{request.ZoneId}/refresh", string.Empty);
+                var recordDeletionResult = await ovh.Delete<object>($"/domain/zone/{request.ZoneId}/record/{request.RecordId}");
+                var zoneRefreshResult = await ovh.Post($"/domain/zone/{request.ZoneId}/refresh", string.Empty);
 
                 return new ActionResult { IsSuccess = true, Message = $"DNS record {request.RecordName} successfully deleted and zone was refreshed." };
             }
@@ -120,7 +120,7 @@ namespace Certify.Providers.DNS.OVH
         public async override Task<List<DnsZone>> GetZones()
         {
             var ovh = CreateOvhClient();
-            var result = ovh.Get<List<string>>("/domain/zone");
+            var result = await ovh.Get<List<string>>("/domain/zone");
             return result.Select(x => new DnsZone()
             {
                 Name = x,

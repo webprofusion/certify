@@ -39,15 +39,16 @@ using System.Net;
 using System.Net.Cache;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Certify.Providers.DNS.OVH
 {
 
-
-    //This module provides a simple C# wrapper over the OVH REST API.
-    //It handles requesting credential, signing queries...
+    // See https://github.com/ovh/csharp-ovh
+    // This module provides a simple C# wrapper over the OVH REST API.
+    // It handles requesting credential, signing queries...
     // - To get your API keys: https://eu.api.ovh.com/createApp/
     // - To get started with API: https://api.ovh.com/g934.first_step_with_api
 
@@ -119,17 +120,16 @@ namespace Certify.Providers.DNS.OVH
         /// This method is *lazy*. It will only load it once even though it is used
         /// for each request.
         /// </summary>
-        public long TimeDelta
+        public async Task<long> GetTimeDelta()
         {
-            get
+
+            if (!_isTimeDeltaInitialized)
             {
-                if (!_isTimeDeltaInitialized)
-                {
-                    _timeDelta = ComputeTimeDelta();
-                    _isTimeDeltaInitialized = true;
-                }
-                return _timeDelta;
+                _timeDelta = await ComputeTimeDelta();
+                _isTimeDeltaInitialized = true;
             }
+            return _timeDelta;
+
         }
 
         private OvhClient()
@@ -222,10 +222,10 @@ namespace Certify.Providers.DNS.OVH
         /// <param name="kwargs">Arguments to append to URL</param>
         /// <param name="needAuth">If true, send authentication headers</param>
         /// <returns>Raw API response</returns>
-        public string Get(string target, NameValueCollection kwargs = null, bool needAuth = true)
+        public async Task<string> Get(string target, NameValueCollection kwargs = null, bool needAuth = true)
         {
             target = PrepareGetTarget(target, kwargs);
-            return Call("GET", target, null, needAuth);
+            return await Call("GET", target, null, needAuth);
         }
 
         /// <summary>
@@ -236,10 +236,10 @@ namespace Certify.Providers.DNS.OVH
         /// <param name="kwargs">Arguments to append to URL</param>
         /// <param name="needAuth">If true, send authentication headers</param>
         /// <returns>API response deserialized to T by JSON.Net</returns>
-        public T Get<T>(string target, NameValueCollection kwargs = null, bool needAuth = true)
+        public async Task<T> Get<T>(string target, NameValueCollection kwargs = null, bool needAuth = true)
         {
             target = PrepareGetTarget(target, kwargs);
-            return Call<T>("GET", target, null, needAuth);
+            return await Call<T>("GET", target, null, needAuth);
         }
 
         #endregion
@@ -253,9 +253,9 @@ namespace Certify.Providers.DNS.OVH
         /// <param name="data">Object to serialize and send as body</param>
         /// <param name="needAuth">If true, send authentication headers</param>
         /// <returns>Raw API response</returns>
-        public string Post(string target, object data, bool needAuth = true)
+        public async Task<string> Post(string target, object data, bool needAuth = true)
         {
-            return Call("POST", target, JsonConvert.SerializeObject(data), needAuth);
+            return await Call("POST", target, JsonConvert.SerializeObject(data), needAuth);
         }
 
         /// <summary>
@@ -265,9 +265,9 @@ namespace Certify.Providers.DNS.OVH
         /// <param name="data">Json data to send as body</param>
         /// <param name="needAuth">If true, send authentication headers</param>
         /// <returns>Raw API response</returns>
-        public string Post(string target, string data, bool needAuth = true)
+        public async Task<string> Post(string target, string data, bool needAuth = true)
         {
-            return Call("POST", target, data, needAuth);
+            return await Call("POST", target, data, needAuth);
         }
 
         /// <summary>
@@ -278,9 +278,9 @@ namespace Certify.Providers.DNS.OVH
         /// <param name="data">Object to serialize and send as body</param>
         /// <param name="needAuth">If true, send authentication headers</param>
         /// <returns>API response deserialized to T by JSON.Net</returns>
-        public T Post<T>(string target, object data, bool needAuth = true)
+        public async Task<T> Post<T>(string target, object data, bool needAuth = true)
         {
-            return Call<T>("POST", target, JsonConvert.SerializeObject(data), needAuth);
+            return await Call<T>("POST", target, JsonConvert.SerializeObject(data), needAuth);
         }
 
         /// <summary>
@@ -291,9 +291,9 @@ namespace Certify.Providers.DNS.OVH
         /// <param name="data">Json data to send as body</param>
         /// <param name="needAuth">If true, send authentication headers</param>
         /// <returns>API response deserialized to T by JSON.Net</returns>
-        public T Post<T>(string target, string data, bool needAuth = true)
+        public async Task<T> Post<T>(string target, string data, bool needAuth = true)
         {
-            return Call<T>("POST", target, data, needAuth);
+            return await Call<T>("POST", target, data, needAuth);
         }
 
         /// <summary>
@@ -305,10 +305,10 @@ namespace Certify.Providers.DNS.OVH
         /// <param name="data">Json data to send as body</param>
         /// <param name="needAuth">If true, send authentication headers</param>
         /// <returns>API response deserialized to T by JSON.Net with Strongly typed object as input</returns>
-        public T Post<T, Y>(string target, Y data, bool needAuth = true)
+        public async Task<T> Post<T, Y>(string target, Y data, bool needAuth = true)
             where Y : class
         {
-            return Call<T, Y>("POST", target, data, needAuth);
+            return await Call<T, Y>("POST", target, data, needAuth);
         }
         #endregion
 
@@ -320,9 +320,9 @@ namespace Certify.Providers.DNS.OVH
         /// <param name="data">Object to serialize and send as body</param>
         /// <param name="needAuth">If true, send authentication headers</param>
         /// <returns>Raw API response</returns>
-        public string Put(string target, object data, bool needAuth = true)
+        public async Task<string> Put(string target, object data, bool needAuth = true)
         {
-            return Call("PUT", target, JsonConvert.SerializeObject(data), needAuth);
+            return await Call("PUT", target, JsonConvert.SerializeObject(data), needAuth);
         }
 
         /// <summary>
@@ -332,9 +332,9 @@ namespace Certify.Providers.DNS.OVH
         /// <param name="data">Json data to send as body</param>
         /// <param name="needAuth">If true, send authentication headers</param>
         /// <returns>Raw API response</returns>
-        public string Put(string target, string data, bool needAuth = true)
+        public async Task<string> Put(string target, string data, bool needAuth = true)
         {
-            return Call("PUT", target, data, needAuth);
+            return await Call("PUT", target, data, needAuth);
         }
 
         /// <summary>
@@ -345,9 +345,9 @@ namespace Certify.Providers.DNS.OVH
         /// <param name="data">Object to serialize and send as body</param>
         /// <param name="needAuth">If true, send authentication headers</param>
         /// <returns>API response deserialized to T by JSON.Net</returns>
-        public T Put<T>(string target, object data, bool needAuth = true)
+        public async Task<T> Put<T>(string target, object data, bool needAuth = true)
         {
-            return Call<T>("PUT", target, JsonConvert.SerializeObject(data), needAuth);
+            return await Call<T>("PUT", target, JsonConvert.SerializeObject(data), needAuth);
         }
 
         /// <summary>
@@ -358,9 +358,9 @@ namespace Certify.Providers.DNS.OVH
         /// <param name="data">Json data to send as body</param>
         /// <param name="needAuth">If true, send authentication headers</param>
         /// <returns>API response deserialized to T by JSON.Net</returns>
-        public T Put<T>(string target, string data, bool needAuth = true)
+        public async Task<T> Put<T>(string target, string data, bool needAuth = true)
         {
-            return Call<T>("PUT", target, data, needAuth);
+            return await Call<T>("PUT", target, data, needAuth);
         }
 
         /// <summary>
@@ -372,10 +372,10 @@ namespace Certify.Providers.DNS.OVH
         /// <param name="data">Json data to send as body</param>
         /// <param name="needAuth">If true, send authentication headers</param>
         /// <returns>API response deserialized to T by JSON.Net with Strongly typed object as input</returns>
-        public T Put<T, Y>(string target, Y data, bool needAuth = true)
+        public async Task<T> Put<T, Y>(string target, Y data, bool needAuth = true)
             where Y : class
         {
-            return Call<T, Y>("PUT", target, data, needAuth);
+            return await Call<T, Y>("PUT", target, data, needAuth);
         }
         #endregion PUT
 
@@ -386,9 +386,9 @@ namespace Certify.Providers.DNS.OVH
         /// <param name="target">API method to call</param>
         /// <param name="needAuth">If true, send authentication headers</param>
         /// <returns>Raw API response</returns>
-        public string Delete(string target, bool needAuth = true)
+        public async Task<string> Delete(string target, bool needAuth = true)
         {
-            return Call("DELETE", target, null, needAuth);
+            return await Call("DELETE", target, null, needAuth);
         }
 
         /// <summary>
@@ -398,9 +398,9 @@ namespace Certify.Providers.DNS.OVH
         /// <param name="target">API method to call</param>
         /// <param name="needAuth">If true, send authentication headers</param>
         /// <returns>API response deserialized to T by JSON.Net</returns>
-        public T Delete<T>(string target, bool needAuth = true)
+        public async Task<T> Delete<T>(string target, bool needAuth = true)
         {
-            return Call<T>("DELETE", target, null, needAuth);
+            return await Call<T>("DELETE", target, null, needAuth);
         }
 
         #endregion
@@ -423,7 +423,7 @@ namespace Certify.Providers.DNS.OVH
         /// <param name="needAuth">if False, bypass signature</param>
         /// <exception cref="HttpException">When underlying request failed for network reason</exception>
         /// <exception cref="InvalidResponseException">when API response could not be decoded</exception>
-        private string Call(string method, string path, string data = null, bool needAuth = true)
+        private async Task<string> Call(string method, string path, string data = null, bool needAuth = true)
         {
             method = method.ToUpper();
             if (path.StartsWith("/"))
@@ -450,7 +450,7 @@ namespace Certify.Providers.DNS.OVH
                     throw new InvalidOperationException("ConsumerKey is missing.");
                 }
 
-                long currentServerTimestamp = GetCurrentUnixTimestamp() + TimeDelta;
+                long currentServerTimestamp = GetCurrentUnixTimestamp() + await GetTimeDelta();
 
                 SHA1Managed sha1Hasher = new SHA1Managed();
                 string toSign =
@@ -471,30 +471,30 @@ namespace Certify.Providers.DNS.OVH
             _webClient.Headers = headers;
             if (method != "GET")
             {
-                response = _webClient.UploadString(path, method, data ?? "");
+                response = await _webClient.UploadStringTaskAsync(path, method, data ?? "");
             }
             else
             {
-                response = _webClient.DownloadString(path);
+                response = await _webClient.DownloadStringTaskAsync(new Uri(path));
             }
             return response;
         }
 
-        private T Call<T>(string method, string path, string data = null, bool needAuth = true)
+        private async Task<T> Call<T>(string method, string path, string data = null, bool needAuth = true)
         {
-            return JsonConvert.DeserializeObject<T>(Call(method, path, data, needAuth));
+            return JsonConvert.DeserializeObject<T>(await Call(method, path, data, needAuth));
         }
 
-        private T Call<T, Y>(string method, string path, Y data = null, bool needAuth = true)
+        private async Task<T> Call<T, Y>(string method, string path, Y data = null, bool needAuth = true)
             where Y : class
         {
-            return JsonConvert.DeserializeObject<T>(Call(method, path, JsonConvert.SerializeObject(data), needAuth));
+            return JsonConvert.DeserializeObject<T>(await Call(method, path, JsonConvert.SerializeObject(data), needAuth));
         }
 
 
-        private long ComputeTimeDelta()
+        private async Task<long> ComputeTimeDelta()
         {
-            long serverUnixTimestamp = Get<long>("/auth/time", null, false);
+            long serverUnixTimestamp = await Get<long>("/auth/time", null, false);
             long currentUnixTimestamp = GetCurrentUnixTimestamp();
             return serverUnixTimestamp - currentUnixTimestamp;
         }
