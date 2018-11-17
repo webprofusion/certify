@@ -19,8 +19,6 @@ namespace Certify.Core.Management.Challenges.DNS
 
         List<ProviderParameter> IDnsProvider.ProviderParameters => Definition.ProviderParameters;
 
-        private string _createScriptPath = "";
-        private string _deleteScriptPath = "";
         private ILog _log;
 
         public static ProviderDefinition Definition
@@ -84,7 +82,7 @@ namespace Certify.Core.Management.Challenges.DNS
 
         async Task<ActionResult> IDnsProvider.Test()
         {
-            return new ActionResult { IsSuccess = true, Message = "The user will manually update DNS as required." };
+            return await Task.FromResult(new ActionResult { IsSuccess = true, Message = "The user will manually update DNS as required." });
         }
     }
 }

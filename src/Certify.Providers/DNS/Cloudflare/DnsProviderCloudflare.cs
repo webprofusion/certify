@@ -280,7 +280,6 @@ namespace Certify.Providers.DNS.Cloudflare
                 return new ActionResult { IsSuccess = true, Message = "DNS record does not exist, nothing to delete." };
             }
 
-            var itemDeleted = false;
             var itemError = "";
 
             // when deleting a TXT record with multiple values several records will be returned but
@@ -291,13 +290,10 @@ namespace Certify.Providers.DNS.Cloudflare
                 var req = CreateRequest(HttpMethod.Delete, string.Format(_deleteRecordUri, request.ZoneId, r.Id));
 
                 var result = await _client.SendAsync(req);
-                if (result.IsSuccessStatusCode)
-                {
-                    itemDeleted = true;
-                }
-                else
+                if (!result.IsSuccessStatusCode)
                 {
                     itemError += " " + await result.Content.ReadAsStringAsync();
+                    return new ActionResult { IsSuccess = false, Message = $"DNS record delete failed: {request.RecordName}" };
                 }
             }
 

@@ -22,7 +22,7 @@ namespace Certify.Core.Management
             var firstMatch = AllBindings.FirstOrDefault(f => f.SiteId == id);
             if (firstMatch != null)
             {
-                return new MockBindingDeploymentTargetItem { Id = firstMatch.SiteId, Name = firstMatch.SiteName };
+                return await Task.FromResult(new MockBindingDeploymentTargetItem { Id = firstMatch.SiteId, Name = firstMatch.SiteName });
             }
             else
             {
@@ -47,7 +47,7 @@ namespace Certify.Core.Management
 
         public async Task<List<BindingInfo>> GetBindings(string targetItemId)
         {
-            return AllBindings.Where(b => b.SiteId == targetItemId).ToList();
+            return await Task.FromResult(AllBindings.Where(b => b.SiteId == targetItemId).ToList());
         }
 
         public ICertifiedServer GetDeploymentManager()
@@ -66,12 +66,12 @@ namespace Certify.Core.Management
 
         public async Task<ActionStep> AddBinding(BindingInfo targetBinding)
         {
-            return new ActionStep { Description = "Added Binding" };
+            return await Task.FromResult(new ActionStep { Description = "Added Binding" });
         }
 
         public async Task<ActionStep> UpdateBinding(BindingInfo targetBinding)
         {
-            return new ActionStep { Description = "Updated Binding" };
+            return await Task.FromResult(new ActionStep { Description = "Updated Binding" });
         }
     }
 

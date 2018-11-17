@@ -125,7 +125,7 @@ namespace Certify.Service
             {
                 _webApp = WebApp.Start<APIHost>(serviceUri);
             }
-            catch (Exception exp)
+            catch (Exception)
             {
                 System.Diagnostics.Debug.WriteLine($"Service failed to listen on {serviceUri}. Attempting to reallocate port.");
                 // failed to listen on service uri, attempt reconfiguration of port.

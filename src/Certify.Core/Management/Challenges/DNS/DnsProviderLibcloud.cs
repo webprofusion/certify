@@ -103,7 +103,7 @@ namespace Certify.Core.Management.Challenges
         }
 
         public async Task<ActionResult> DeleteRecord(DnsRecord request)
-        {
+        { 
             throw new NotImplementedException();
         }
 

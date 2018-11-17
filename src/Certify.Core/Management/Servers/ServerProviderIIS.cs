@@ -110,7 +110,7 @@ namespace Certify.Management.Servers
                     }
                 }
             }
-            catch (Exception exp)
+            catch (Exception)
             {
                 configChecks.Add(new ActionStep
                 {

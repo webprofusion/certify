@@ -232,7 +232,7 @@ namespace Certify.Management
 
                 return JsonConvert.DeserializeObject<Dictionary<string, string>>(val);
             }
-            catch (Exception exp)
+            catch (Exception)
             {
                 // failed to decrypt or credential inaccessible
                 return null;

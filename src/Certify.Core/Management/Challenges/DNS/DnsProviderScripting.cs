@@ -187,12 +187,12 @@ namespace Certify.Core.Management.Challenges.DNS
                 {
                     _log.AppendLine("Warning: Script exited with the following ExitCode: " + process.ExitCode);
                 }
-                return new ActionResult { IsSuccess = true, Message = _log.ToString() };
+                return await Task.FromResult(new ActionResult { IsSuccess = true, Message = _log.ToString() });
             }
             catch (Exception exp)
             {
                 _log.AppendLine("Error: " + exp.ToString());
-                return new ActionResult { IsSuccess = false, Message = _log.ToString() };
+                return await Task.FromResult( new ActionResult { IsSuccess = false, Message = _log.ToString() });
             }
         }
     }
