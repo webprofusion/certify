@@ -69,7 +69,7 @@
     <NoWarn>1701;1702;1705;8357</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Portable.BouncyCastle" Version="1.8.2" />
+    <PackageReference Include="Portable.BouncyCastle" Version="1.8.4" />
     <PackageReference Include="ARSoft.Tools.Net" Version="2.2.9" />
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.6.4" />
     <PackageReference Include="Microsoft.Web.Administration" Version="11.1.0" />
@@ -79,8 +79,8 @@
     <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
     <PackageReference Include="SslCertBinding.Net" Version="1.0.2" />
     <PackageReference Include="ARSoft.Tools.Net" Version="2.2.9" />
-    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.7.2" />
-    <PackageReference Include="TaskScheduler" Version="2.8.1" />
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.8.1" />
+    <PackageReference Include="TaskScheduler" Version="2.8.6" />
     <PackageReference Include="System.Management.Automation" Version="6.1.7601.17515" /> 
   </ItemGroup>
   <ItemGroup>
