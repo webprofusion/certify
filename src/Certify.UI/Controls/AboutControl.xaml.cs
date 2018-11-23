@@ -1,4 +1,4 @@
-using Certify.Locales;
+﻿using Certify.Locales;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
@@ -31,7 +31,7 @@ namespace Certify.UI.Controls
                 this.ServiceConnected.Foreground = System.Windows.Media.Brushes.Red;
                 this.ServiceConnected.Icon = FontAwesome.WPF.FontAwesomeIcon.ChainBroken;
             }
-            this.lblAppVersion.Text = ConfigResources.AppName + " " + new Certify.Management.Util().GetAppVersion();
+            this.lblAppVersion.Text = ConfigResources.AppName + " " + Management.Util.GetAppVersion();
 
             if (this.MainViewModel.IsRegisteredVersion)
             {

@@ -82,7 +82,7 @@ namespace Certify.Management
                         MachineName = Environment.MachineName,
                         PrimaryContactEmail = GetPrimaryContactEmail(),
                         ManagedSite = managedCertificate,
-                        AppVersion = new Management.Util().GetAppVersion().ToString()
+                        AppVersion = Util.GetAppVersion().ToString()
                     };
                     try
                     {
@@ -174,7 +174,11 @@ namespace Certify.Management
                     return false;
                 }
 
-                if (_httpChallengeServerClient == null) _httpChallengeServerClient = new System.Net.Http.HttpClient();
+                if (_httpChallengeServerClient == null)
+                {
+                    _httpChallengeServerClient = new System.Net.Http.HttpClient();
+                    _httpChallengeServerClient.DefaultRequestHeaders.Add("User-Agent", Util.GetUserAgent()+" CertifyManager");
+                }
 
                 return await IsHttpChallengeProcessStarted();
             }

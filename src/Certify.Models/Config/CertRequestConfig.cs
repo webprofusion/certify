@@ -135,7 +135,7 @@ namespace Certify.Models
         /// <summary>
         /// The trigger for the webhook (None, Success, Error) 
         /// </summary>
-        public string WebhookTrigger { get; set; } = Webhook.ON_NONE;
+        public string WebhookTrigger { get; set; } = "None";
 
         /// <summary>
         /// The http method for the webhook request 

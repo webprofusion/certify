@@ -19,7 +19,7 @@ namespace Certify.CLI
             {
                 if (args.Contains("storeserverconfig", StringComparer.InvariantCultureIgnoreCase))
                 {
-                    Certify.Management.Util.StoreCurrentAppServiceConfig();
+                    SharedUtils.ServiceConfigManager.StoreCurrentAppServiceConfig();
                     return 0;
                 }
 
@@ -92,7 +92,7 @@ namespace Certify.CLI
             {
                 // start an http challenge server
                 var challengeServer = new Core.Management.Challenges.HttpChallengeServer();
-                var config = Certify.Management.Util.GetAppServiceConfig();
+                var config = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
                 if (!challengeServer.Start(config.HttpChallengeServerPort, controlKey: keys[0], checkKey: keys[1]))
                 {

@@ -68,7 +68,7 @@ namespace Certify.Service
             {
                 var client = new HttpClient();
 
-                var appVersion = new Certify.Management.Util().GetAppVersion();
+                var appVersion = Management.Util.GetAppVersion();
 
                 var jsonRequest = Newtonsoft.Json.JsonConvert.SerializeObject(
                     new Models.Shared.FeedbackReport
@@ -81,7 +81,7 @@ namespace Certify.Service
                         {
                             Framework = Certify.Management.Util.GetDotNetVersion(),
                             OS = Environment.OSVersion.ToString(),
-                            AppVersion = new Certify.Management.Util().GetAppVersion(),
+                            AppVersion = Management.Util.GetAppVersion(),
                             IsException = true
                         }
                     });
@@ -117,7 +117,7 @@ namespace Certify.Service
 
         public void Start()
         {
-            var serviceConfig = Certify.Management.Util.GetAppServiceConfig();
+            var serviceConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
             var serviceUri = $"http://{serviceConfig.Host}:{serviceConfig.Port}";
 
@@ -137,7 +137,7 @@ namespace Certify.Service
                 _webApp = WebApp.Start<APIHost>(serviceUri);
 
                 // if that worked, save the new port setting
-                Certify.Management.Util.SetAppServicePort(newPort);
+                SharedUtils.ServiceConfigManager.SetAppServicePort(newPort);
 
                 System.Diagnostics.Debug.WriteLine($"Service started on {serviceUri}.");
             }

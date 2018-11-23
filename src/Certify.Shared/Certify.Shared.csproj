@@ -10,7 +10,7 @@
     <GenerateAssemblyVersionAttribute>true</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <AssemblyVersion>4.0.10</AssemblyVersion>
+    <AssemblyVersion>4.0.11</AssemblyVersion>
     <FileVersion>4.0.0.0</FileVersion>
     <Version>4.0.0</Version>
   </PropertyGroup>
@@ -64,6 +64,7 @@
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp />
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <NoWarn>1701;1702;1705;8357</NoWarn>
@@ -86,6 +87,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />
     <ProjectReference Include="..\Certify.Models\Certify.Models.csproj" />
+    <ProjectReference Include="..\Certify.SharedUtils\Certify.SharedUtils.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Scripts\Common\index.json">

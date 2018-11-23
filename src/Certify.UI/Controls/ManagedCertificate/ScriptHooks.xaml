@@ -12,6 +12,7 @@
     xmlns:local="clr-namespace:Certify.UI.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Models"
+    xmlns:misc="clr-namespace:Certify.Shared.Utils;assembly=Certify.Shared"
     xmlns:utils="clr-namespace:Certify.UI.Utils"
     d:DataContext="{d:DesignInstance Type=certifyui:ManagedCertificateDesignViewModel,
                                      IsDesignTimeCreatable=True}"
@@ -106,7 +107,7 @@
                             <Style>
                                 <Setter Property="Border.Visibility" Value="Visible" />
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedItem.RequestConfig.WebhookTrigger}" Value="{x:Static model:Webhook.ON_NONE}">
+                                    <DataTrigger Binding="{Binding SelectedItem.RequestConfig.WebhookTrigger}" Value="{x:Static misc:Webhook.ON_NONE}">
                                         <Setter Property="Border.Visibility" Value="Collapsed" />
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -128,7 +129,7 @@
                         <Style>
                             <Setter Property="StackPanel.Visibility" Value="Visible" />
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedItem.RequestConfig.WebhookTrigger}" Value="{x:Static model:Webhook.ON_NONE}">
+                                <DataTrigger Binding="{Binding SelectedItem.RequestConfig.WebhookTrigger}" Value="{x:Static misc:Webhook.ON_NONE}">
                                     <Setter Property="StackPanel.Visibility" Value="Collapsed" />
                                 </DataTrigger>
                             </Style.Triggers>
@@ -169,7 +170,7 @@
                             Width="100"
                             Margin="0,0,0,4"
                             HorizontalAlignment="Left"
-                            ItemsSource="{x:Static model:Webhook.Methods}"
+                            ItemsSource="{x:Static misc:Webhook.Methods}"
                             SelectedItem="{Binding SelectedItem.RequestConfig.WebhookMethod}" />
 
                         <Grid
@@ -188,7 +189,7 @@
                                 <Style>
                                     <Setter Property="Grid.Visibility" Value="Collapsed" />
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SelectedItem.RequestConfig.WebhookMethod}" Value="{x:Static model:Webhook.METHOD_POST}">
+                                        <DataTrigger Binding="{Binding SelectedItem.RequestConfig.WebhookMethod}" Value="{x:Static misc:Webhook.METHOD_POST}">
                                             <Setter Property="StackPanel.Visibility" Value="Visible" />
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -220,7 +221,7 @@
                                 Height="150"
                                 Margin="0,0,0,4"
                                 HorizontalAlignment="Stretch"
-                                Controls:TextBoxHelper.Watermark="{x:Static model:Webhook.DEFAULT_BODY}"
+                                Controls:TextBoxHelper.Watermark="{x:Static misc:Webhook.DEFAULT_BODY}"
                                 AcceptsReturn="True"
                                 Text="{Binding SelectedItem.RequestConfig.WebhookContentBody}"
                                 TextWrapping="Wrap" />

@@ -73,10 +73,11 @@ namespace Certify.Core.Management.Challenges
 
                 _httpListener = new HttpListener();
 
-                var serverConfig = Certify.Management.Util.GetAppServiceConfig();
+                var serverConfig = Certify.SharedUtils.ServiceConfigManager.GetAppServiceConfig();
                 _baseUri = $"http://{serverConfig.Host}:{serverConfig.Port}/api/";
 
                 _apiClient = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true });
+                _apiClient.DefaultRequestHeaders.Add("User-Agent", "Certify/HttpChallengeServer");
                 _apiClient.Timeout = new TimeSpan(0, 0, 5);
 
                 var uriPrefix = $"http://+:{port}{_challengePrefix}";

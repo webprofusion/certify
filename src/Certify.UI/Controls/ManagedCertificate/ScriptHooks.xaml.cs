@@ -2,6 +2,7 @@
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Shared.Utils;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;

@@ -64,7 +64,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDNSPlus", "src\Certif
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aliyun", "src\Certify.Providers\DNS\Aliyun\Aliyun.csproj", "{4C8D92E9-19AF-4CD0-AE27-BB4336AF5776}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Providers.ACMESharpCore", "src\Certify.Providers\ACME\ACMESharpCore\Certify.Providers.ACMESharpCore.csproj", "{8E1E6901-ABB9-47DF-B715-BADB229E6909}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Providers.ACMESharpCore", "src\Certify.Providers\ACME\ACMESharpCore\Certify.Providers.ACMESharpCore.csproj", "{8E1E6901-ABB9-47DF-B715-BADB229E6909}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.SharedUtils", "src\Certify.SharedUtils\Certify.SharedUtils.csproj", "{BAADC03D-4580-4461-9822-D7AC083E6C7B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -250,6 +252,14 @@ Global
 		{8E1E6901-ABB9-47DF-B715-BADB229E6909}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8E1E6901-ABB9-47DF-B715-BADB229E6909}.Release|x64.ActiveCfg = Release|Any CPU
 		{8E1E6901-ABB9-47DF-B715-BADB229E6909}.Release|x64.Build.0 = Release|Any CPU
+		{BAADC03D-4580-4461-9822-D7AC083E6C7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BAADC03D-4580-4461-9822-D7AC083E6C7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BAADC03D-4580-4461-9822-D7AC083E6C7B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BAADC03D-4580-4461-9822-D7AC083E6C7B}.Debug|x64.Build.0 = Debug|Any CPU
+		{BAADC03D-4580-4461-9822-D7AC083E6C7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BAADC03D-4580-4461-9822-D7AC083E6C7B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BAADC03D-4580-4461-9822-D7AC083E6C7B}.Release|x64.ActiveCfg = Release|Any CPU
+		{BAADC03D-4580-4461-9822-D7AC083E6C7B}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

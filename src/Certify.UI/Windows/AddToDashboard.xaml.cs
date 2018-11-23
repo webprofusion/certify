@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Input;
 
@@ -43,7 +43,7 @@ namespace Certify.UI.Windows
                     var instance = new Models.Shared.RegisteredInstance
                     {
                         InstanceId = ViewModel.AppViewModel.Current.Preferences.InstanceId,
-                        AppVersion = new Management.Util().GetAppVersion().ToString(),
+                        AppVersion = Management.Util.GetAppVersion().ToString(),
                         OS = Environment.OSVersion.ToString(),
                         MachineName = Environment.MachineName
                     };

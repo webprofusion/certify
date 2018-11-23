@@ -81,6 +81,8 @@ namespace Certify.Management
                 {
                     using (var client = new HttpClient())
                     {
+                        client.DefaultRequestHeaders.Add("User-Agent", Management.Util.GetUserAgent());
+
                         var resp = await client.SendAsync(req);
                         // if the GET request succeeded, the Cert validation succeeded
                         Log($"Local TLS SNI binding check OK: {host}, {sni}"); ;

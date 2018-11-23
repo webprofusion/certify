@@ -5,22 +5,10 @@ using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Certify.Models;
 
-namespace Certify.Models
+namespace Certify.Shared.Utils
 {
-    public class WebhookResult
-    {
-        public WebhookResult(bool success, int statusCode)
-        {
-            Success = success;
-            StatusCode = statusCode;
-        }
-
-        public bool Success = false;
-
-        public int StatusCode = 0;
-    }
-
     public class Webhook
     {
         public const string ON_NONE = "None";
@@ -32,11 +20,11 @@ namespace Certify.Models
         public const string METHOD_POST = "POST";
 
         public const string DEFAULT_BODY = @"{
-  ""Success"": ""$Success"",
-  ""PrimaryDomain"": ""$PrimaryDomain"",
-  ""SANs"": ""$SubjectAlternativeNames"",
-  ""ChallengeType"": ""$ChallengeType""
-}";
+          ""Success"": ""$Success"",
+          ""PrimaryDomain"": ""$PrimaryDomain"",
+          ""SANs"": ""$SubjectAlternativeNames"",
+          ""ChallengeType"": ""$ChallengeType""
+        }";
 
         public static List<string> TriggerTypes = new List<string>() { ON_NONE, ON_SUCCESS, ON_ERROR, ON_SUCCESS_OR_ERROR };
         public static List<string> Methods = new List<string>() { METHOD_GET, METHOD_POST };
@@ -53,6 +41,8 @@ namespace Certify.Models
         {
             using (var client = new HttpClient())
             {
+                client.DefaultRequestHeaders.Add("User-Agent", Management.Util.GetUserAgent() + " CertifyManager");
+
                 HttpRequestMessage message;
                 string Url = ParseValues(config.WebhookUrl, config, forSuccess, true);
                 switch (config.WebhookMethod)
@@ -111,11 +101,11 @@ namespace Certify.Models
 
             // process the template and replace values
             return Regex.Replace(template, @"\$(\w+)(?=[\W$])", m =>
-                {
-                    // replace var if it can be found, otherwise don't
-                    string key = m.Groups[1].Value.ToLower();
-                    return vars.ContainsKey(key) ? vars[key] : "$" + key;
-                },
+            {
+                // replace var if it can be found, otherwise don't
+                string key = m.Groups[1].Value.ToLower();
+                return vars.ContainsKey(key) ? vars[key] : "$" + key;
+            },
                 RegexOptions.IgnoreCase);
         }
     }

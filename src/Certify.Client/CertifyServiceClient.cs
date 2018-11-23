@@ -54,13 +54,14 @@ namespace Certify.Client
 
         public CertifyServiceClient()
         {
-            var serviceConfig = Certify.Management.Util.GetAppServiceConfig();
+            var serviceConfig = Certify.SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
             _baseUri = $"http://{serviceConfig.Host}:{serviceConfig.Port}" + _baseUri;
             _statusHubUri = $"http://{serviceConfig.Host}:{serviceConfig.Port}" + _statusHubUri;
 
             // use windows authentication
             _client = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true });
+            _client.DefaultRequestHeaders.Add("User-Agent", "Certify/App");
             _client.Timeout = new TimeSpan(0, 20, 0); // 20 min timeout on service api calls
         }
 

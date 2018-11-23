@@ -20,7 +20,7 @@ namespace Certify.Service
         {
             DebugLog();
 
-            return new Management.Util().GetAppVersion().ToString();
+            return Management.Util.GetAppVersion().ToString();
         }
 
         [HttpGet, Route("updatecheck")]

@@ -18,8 +18,7 @@ namespace Certify.Management
 {
     public class Util
     {
-        public const string APPDATASUBFOLDER = "Certify";
-
+  
         /// <summary>
         /// check for problems which could affect app use
         /// </summary>
@@ -58,85 +57,7 @@ namespace Certify.Management
 
         public static string GetAppDataFolder(string subFolder = null)
         {
-            var parts = new List<string>()
-            {
-                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-                APPDATASUBFOLDER
-            };
-
-            if (subFolder != null) parts.Add(subFolder);
-
-            var path = Path.Combine(parts.ToArray());
-
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
-
-            return path;
-        }
-
-        /// <summary>
-        /// Get default or saved service config settings
-        /// </summary>
-        /// <returns>  </returns>
-        public static ServiceConfig GetAppServiceConfig()
-        {
-            var serviceConfig = new ServiceConfig();
-
-            var appDataPath = GetAppDataFolder();
-            var serviceConfigFile = appDataPath + "\\serviceconfig.json";
-#if DEBUG
-            serviceConfigFile = appDataPath + "\\serviceconfig.debug.json";
-#endif
-            if (File.Exists(serviceConfigFile))
-            {
-                serviceConfig = JsonConvert.DeserializeObject<ServiceConfig>(File.ReadAllText(serviceConfigFile));
-            }
-            return serviceConfig;
-        }
-
-        public static void StoreCurrentAppServiceConfig()
-        {
-            var appDataPath = GetAppDataFolder();
-            var config = GetAppServiceConfig();
-            var serviceConfigFile = appDataPath + "\\serviceconfig.json";
-#if DEBUG
-            serviceConfigFile = appDataPath + "\\serviceconfig.debug.json";
-#endif
-            File.WriteAllText(serviceConfigFile, JsonConvert.SerializeObject(config));
-        }
-
-        /// <summary>
-        /// Stored updated config for app service
-        /// </summary>
-        /// <param name="port">  </param>
-        /// <returns>  </returns>
-        public static bool SetAppServicePort(int port)
-        {
-            var appDataPath = GetAppDataFolder();
-            var serviceConfigFile = appDataPath + "\\serviceconfig.json";
-#if DEBUG
-            serviceConfigFile = appDataPath + "\\serviceconfig.debug.json";
-#endif
-            try
-            {
-                ServiceConfig settings = new ServiceConfig();
-
-                if (File.Exists(serviceConfigFile))
-                {
-                    settings = JsonConvert.DeserializeObject<ServiceConfig>(File.ReadAllText(serviceConfigFile));
-                }
-
-                settings.Port = port;
-
-                File.WriteAllText(serviceConfigFile, JsonConvert.SerializeObject(settings));
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+            return SharedUtils.ServiceConfigManager.GetAppDataFolder(subFolder);
         }
 
         public TelemetryClient InitTelemetry()
@@ -155,7 +76,13 @@ namespace Certify.Management
             return tc;
         }
 
-        public Version GetAppVersion()
+        public static string GetUserAgent()
+        {
+            string versionName = "Certify/"+ GetAppVersion().ToString();
+            return $"{versionName} (Windows; {Environment.OSVersion.ToString()}) ";
+        }
+
+        public static Version GetAppVersion()
         {
             // returns the version of Certify.Shared
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
@@ -181,6 +108,8 @@ namespace Certify.Management
             try
             {
                 HttpClient client = new HttpClient();
+                client.DefaultRequestHeaders.Add("User-Agent",Util.GetUserAgent());
+
                 var response = await client.GetAsync(Models.API.Config.APIBaseURI + "update?version=" + appVersion);
                 if (response.IsSuccessStatusCode)
                 {
@@ -360,6 +289,7 @@ namespace Certify.Management
             if (result.IsNewerVersion)
             {
                 HttpClient client = new HttpClient();
+                client.DefaultRequestHeaders.Add("User-Agent", Util.GetUserAgent());
 
                 //https://github.com/dotnet/corefx/issues/6849
                 var tempFile = Path.Combine(new string[] { pathname, "CertifySSL_" + result.Version.ToString() + "_Setup.tmp" });
@@ -447,7 +377,7 @@ namespace Certify.Management
         {
             const string subkey = @"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\";
 
-            using (RegistryKey ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey(subkey))
+            using (var ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey(subkey))
             {
                 if (ndpKey != null && ndpKey.GetValue("Release") != null)
                 {

@@ -1,4 +1,4 @@
-using Certify.Management;
+﻿using Certify.Management;
 using System;
 using System.Windows;
 using System.Windows.Input;
@@ -49,7 +49,7 @@ namespace Certify.UI.Windows
                         var instance = new Models.Shared.RegisteredInstance
                         {
                             InstanceId = ViewModel.AppViewModel.Current.Preferences.InstanceId,
-                            AppVersion = new Management.Util().GetAppVersion().ToString()
+                            AppVersion = Management.Util.GetAppVersion().ToString()
                         };
 
                         var installRegistration = await licensingManager.RegisterInstall(productTypeId, email, key, instance);

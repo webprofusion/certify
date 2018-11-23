@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using Certify.Locales;
 using Certify.Models;
+using Certify.Shared.Utils;
 using PropertyChanged;
 
 namespace Certify.UI.ViewModel

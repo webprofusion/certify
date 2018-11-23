@@ -54,8 +54,11 @@ namespace Certify.Management
             _pluginManager = new PluginManager();
             _pluginManager.LoadPlugins();
 
-            // TODO: convert providers to plugins
-            var certes = new Certify.Providers.Certes.CertesACMEProvider(Management.Util.GetAppDataFolder() + "\\certes");
+            // TODO: convert providers to plugins, allow for async init
+            string userAgent = Util.GetUserAgent();
+            var certes = new Certify.Providers.Certes.CertesACMEProvider(Management.Util.GetAppDataFolder() + "\\certes", userAgent);
+
+            certes.InitProvider().Wait();
 
             _acmeClientProvider = certes;
             _vaultProvider = certes;
@@ -68,13 +71,14 @@ namespace Certify.Management
                 _tc = new Util().InitTelemetry();
             }
 
-            PerformUpgrades();
 
-            var serverConfig = Util.GetAppServiceConfig();
+            var serverConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
             _httpChallengePort = serverConfig.HttpChallengeServerPort;
             _httpChallengeServerClient.Timeout = new TimeSpan(0, 0, 5);
 
             if (_tc != null) _tc.TrackEvent("ServiceStarted");
+
+            PerformUpgrades();
 
         }
 
