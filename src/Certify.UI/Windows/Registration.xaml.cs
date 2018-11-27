@@ -10,9 +10,13 @@ namespace Certify.UI.Windows
     /// </summary>
     public partial class Registration
     {
+        Models.Providers.ILog _log;
+
         public Registration()
         {
             InitializeComponent();
+
+            _log = ((Certify.UI.App)App.Current).Log;
         }
 
         private async void ValidateKey_Click(object sender, RoutedEventArgs e)
@@ -77,8 +81,11 @@ namespace Certify.UI.Windows
                         MessageBox.Show(validationResult.ValidationMessage);
                     }
                 }
-                catch (Exception)
+                catch (Exception exp)
                 {
+                    
+                    _log?.Information("ValidateKey:"+exp.ToString());
+
                     MessageBox.Show(Certify.Locales.SR.Registration_KeyValidationError);
                 }
             }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using Serilog;
 
 namespace Certify.UI
 {
@@ -8,6 +9,8 @@ namespace Certify.UI
     /// </summary>
     public partial class App : Application
     {
+        Models.Providers.ILog _uiLog = null;
+
         protected Certify.UI.ViewModel.AppViewModel MainViewModel
         {
             get
@@ -16,6 +19,10 @@ namespace Certify.UI
             }
         }
 
+        public Models.Providers.ILog Log
+        {
+            get { return _uiLog; }
+        }
         protected override void OnStartup(StartupEventArgs e)
         {
             /*
@@ -37,18 +44,32 @@ namespace Certify.UI
             //Certify.Properties.Settings.Default.UpgradeSettingsVersion(); // deprecated
             //Certify.Management.SettingsManager.LoadAppSettings();
 
-            AppDomain currentDomain = AppDomain.CurrentDomain;
+            _uiLog = new Models.Loggy(
+             new LoggerConfiguration()
+            .MinimumLevel.Verbose()
+            .WriteTo.Debug()
+            .WriteTo.File(Management.Util.GetAppDataFolder("logs") + "\\uilog.txt", shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
+            .CreateLogger()
+            );
+
+
+            var currentDomain = AppDomain.CurrentDomain;
             currentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             base.OnStartup(e);
+
+            Log?.Information("UI Startup");
         }
 
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
+          
             var feedbackMsg = "";
             if (e.ExceptionObject != null)
             {
                 feedbackMsg = "An error occurred: " + ((Exception)e.ExceptionObject).ToString();
+
+                Log?.Error(feedbackMsg);
             }
 
             var d = new Windows.Feedback(feedbackMsg, isException: true);
