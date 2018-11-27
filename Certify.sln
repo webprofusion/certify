@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{B92D2D90-C
 		CertificateProcess.md = CertificateProcess.md
 		README.md = README.md
 		docs\roadmap.md = docs\roadmap.md
+		docs\tests.md = docs\tests.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{3ABBE541-54AF-46CC-9BEA-EC7434DE59C6}"
@@ -66,7 +67,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aliyun", "src\Certify.Provi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Providers.ACMESharpCore", "src\Certify.Providers\ACME\ACMESharpCore\Certify.Providers.ACMESharpCore.csproj", "{8E1E6901-ABB9-47DF-B715-BADB229E6909}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.SharedUtils", "src\Certify.SharedUtils\Certify.SharedUtils.csproj", "{BAADC03D-4580-4461-9822-D7AC083E6C7B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.SharedUtils", "src\Certify.SharedUtils\Certify.SharedUtils.csproj", "{BAADC03D-4580-4461-9822-D7AC083E6C7B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

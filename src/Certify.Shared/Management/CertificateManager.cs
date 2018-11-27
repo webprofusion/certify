@@ -137,12 +137,16 @@ namespace Certify.Management
             }
         }
 
-        public static List<X509Certificate2> GetCertificatesFromStore()
+        public static List<X509Certificate2> GetCertificatesFromStore(string issuerName = null)
         {
             var store = GetDefaultStore();
             store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
-            List<X509Certificate2> list = new List<X509Certificate2>();
-            foreach (var c in store.Certificates.Find(X509FindType.FindByIssuerName, "Let's Encrypt", false))
+            var list = new List<X509Certificate2>();
+            var certCollection = !string.IsNullOrEmpty(issuerName)? 
+                store.Certificates.Find(X509FindType.FindByIssuerName, issuerName, false)
+                :store.Certificates;
+
+            foreach (var c in certCollection)
             {
                 list.Add(c);
             }

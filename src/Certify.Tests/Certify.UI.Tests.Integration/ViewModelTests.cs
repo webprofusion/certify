@@ -13,7 +13,7 @@ namespace Certify.UI.Tests.Integration
     [TestClass]
     public class ViewModelTest
     {
-        [TestMethod]
+        [TestMethod, Ignore]
         public async Task TestViewModelSetup()
         {
             var mockClient = new Mock<ICertifyClient>();
