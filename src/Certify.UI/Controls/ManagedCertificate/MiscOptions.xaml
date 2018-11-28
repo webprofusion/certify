@@ -92,6 +92,12 @@
                             Content="ECDSA using P-384 and SHA-384"
                             GroupName="CSRAlg"
                             IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=ECDSA384}" />
+                        <RadioButton
+                            x:Name="CSROption_ECDSA521"
+                            Margin="8,0,0,4"
+                            Content="ECDSA using P-521 and SHA-512"
+                            GroupName="CSRAlg"
+                            IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=ECDSA521}" />
                     </StackPanel>
                 </StackPanel>
             </StackPanel>
