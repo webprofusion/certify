@@ -48,7 +48,7 @@ namespace Certify.UI
              new LoggerConfiguration()
             .MinimumLevel.Verbose()
             .WriteTo.Debug()
-            .WriteTo.File(Management.Util.GetAppDataFolder("logs") + "\\uilog.txt", shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
+            .WriteTo.File(Management.Util.GetAppDataFolder("logs") + "\\ui.log", shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
             .CreateLogger()
             );
 

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
@@ -9,6 +10,11 @@ namespace ACMESharpCore
 {
     public class ACMESharpCoreProvider : IACMEClientProvider, IVaultProvider
     {
+        public Task<bool> InitProvider(ILog log = null)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public Task<bool> AddNewAccountAndAcceptTOS(ILog log, string email)
         {
             throw new System.NotImplementedException();
@@ -17,6 +23,11 @@ namespace ACMESharpCore
         public Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config, string orderUri = null)
         {
             throw new System.NotImplementedException();
+        }
+
+        public Task<bool> ChangeAccountKey(ILog log)
+        {
+            throw new NotImplementedException();
         }
 
         public Task<PendingAuthorization> CheckValidationCompleted(ILog log, string challengeType, PendingAuthorization pendingAuthorization)
@@ -39,9 +50,19 @@ namespace ACMESharpCore
             throw new System.NotImplementedException();
         }
 
+        public Task<string> GetAcmeAccountStatus()
+        {
+            throw new NotImplementedException();
+        }
+
         public string GetAcmeBaseURI()
         {
             throw new System.NotImplementedException();
+        }
+
+        public Task<Uri> GetAcmeTermsOfService()
+        {
+            throw new NotImplementedException();
         }
 
         public List<RegistrationItem> GetContactRegistrations()

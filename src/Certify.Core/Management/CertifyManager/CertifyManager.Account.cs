@@ -21,6 +21,8 @@ namespace Certify.Management
             // now attempt to register the new contact
             if (reg.AgreedToTermsAndConditions)
             {
+                _serviceLog?.Information($"Registering contact with ACME CA: {reg.EmailAddress}");
+
                 return await _acmeClientProvider.AddNewAccountAndAcceptTOS(_serviceLog, reg.EmailAddress);
             }
             else

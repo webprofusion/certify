@@ -18,7 +18,7 @@ namespace Certify.Service
             var config = new HttpConfiguration();
 
             // enable windows auth credentials
-            Microsoft.Owin.Host.HttpListener.OwinHttpListener listener = (Microsoft.Owin.Host.HttpListener.OwinHttpListener)appBuilder.Properties["Microsoft.Owin.Host.HttpListener.OwinHttpListener"];
+            var listener = (Microsoft.Owin.Host.HttpListener.OwinHttpListener)appBuilder.Properties["Microsoft.Owin.Host.HttpListener.OwinHttpListener"];
             listener.Listener.AuthenticationSchemes = AuthenticationSchemes.IntegratedWindowsAuthentication;
 
             // inject single CertifyManager for service to use
@@ -40,6 +40,9 @@ namespace Certify.Service
               .EnableSwagger(c => c.SingleApiVersion("v1", "Service API for local install of Certify SSL Manager"))
               .EnableSwaggerUi();
 #endif
+
+            // appBuilder.UseCors(Microsoft.Owin.Cors.CorsOptions.AllowAll);
+
             appBuilder.MapSignalR("/api/status", new HubConfiguration());
             appBuilder.UseWebApi(config);
 

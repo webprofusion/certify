@@ -94,7 +94,7 @@ namespace Certify.Core.Tests
         }
 
         [TestMethod]
-        public async Task TestCreateUnusalBindings()
+        public async Task TestCreateUnusualBindings()
         {
             var siteName = "MSMQTest";
             //delete test if it exists

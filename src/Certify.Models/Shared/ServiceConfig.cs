@@ -14,5 +14,7 @@ namespace Certify.Shared
         public string Host { get; set; } = "localhost";
 
         public int HttpChallengeServerPort { get; set; } = 80;
+
+        public string LogLevel { get; set; } = "information";
     }
 }

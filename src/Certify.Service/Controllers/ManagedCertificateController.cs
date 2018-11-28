@@ -117,7 +117,7 @@ namespace Certify.Service
 
             //begin request
             var result = await _certifyManager.PerformCertificateRequest(
-                                                                            ManagedCertificateLog.GetLogger(managedCertificate.Id),
+                                                                           null,
                                                                             managedCertificate,
                                                                             progressIndicator,
                                                                             resumePaused
@@ -141,7 +141,7 @@ namespace Certify.Service
 
             var managedCertificate = await _certifyManager.GetManagedCertificate(managedItemId);
             var result = await _certifyManager.RevokeCertificate(
-                  ManagedCertificateLog.GetLogger(managedCertificate.Id),
+                  null,
                   managedCertificate
                   );
             return result;

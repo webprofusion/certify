@@ -1,9 +1,10 @@
-﻿using Certify.Models.Plugins;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Certify.Models.Plugins;
+using Serilog;
 
 namespace Certify.Management
 {
@@ -11,6 +12,19 @@ namespace Certify.Management
     {
         public ILicensingManager LicensingManager { get; set; }
         public IDashboardClient DashboardClient { get; set; }
+
+        private Models.Providers.ILog _log = null;
+
+        public PluginManager()
+        {
+            _log = new Models.Loggy(
+                    new LoggerConfiguration()
+                        .MinimumLevel.Information()
+                        .WriteTo.File(Management.Util.GetAppDataFolder("logs") + "\\plugins.log", shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
+                        .CreateLogger()
+                );
+
+        }
 
         private string GetPluginFolderPath()
         {
@@ -31,30 +45,14 @@ namespace Certify.Management
                                      .FirstOrDefault();
 
                 var obj = (T)Activator.CreateInstance(loadedType);
-
+ 
                 return obj;
             }
             catch (Exception exp)
             {
-                PluginLog(exp.ToString());
+                _log?.Error(exp.ToString());
             }
             return default(T);
-        }
-
-        public void PluginLog(string msg)
-        {
-            var path = Certify.Management.Util.GetAppDataFolder() + "\\plugin_log.txt";
-
-            msg = "\r\n[" + DateTime.UtcNow.ToString() + "] " + msg;
-
-            if (System.IO.File.Exists(path))
-            {
-                System.IO.File.AppendAllText(path, msg);
-            }
-            else
-            {
-                System.IO.File.WriteAllText(path, msg);
-            }
         }
 
         public void LoadPlugins()
@@ -66,7 +64,7 @@ namespace Certify.Management
 
             s.Stop();
 
-            Debug.WriteLine($"Plugin load took {s.ElapsedMilliseconds}ms");
+            _log?.Debug($"Plugin load took {s.ElapsedMilliseconds}ms");
         }
     }
 }

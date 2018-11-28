@@ -426,7 +426,7 @@ namespace Certify.Core.Management.Challenges
             {
                 if (!destFile.EndsWith("configcheck") && File.Exists(destFile))
                 {
-                    log.Verbose("Challenge Cleanup: Removing {file}", destFile);
+                    log.Debug("Challenge Cleanup: Removing {file}", destFile);
                     try
                     {
                         File.Delete(destFile);

@@ -29,6 +29,8 @@ namespace Certify.Management
                 return await Task.FromResult(new List<CertificateRequestResult>());
             }
 
+            _serviceLog?.Information($"Performing Renew All for all applicable managed certificates.");
+
             _isRenewAllInProgress = true;
             //currently the vault won't let us run parallel requests due to file locks
             var performRequestsInParallel = false;
@@ -248,9 +250,11 @@ namespace Certify.Management
         /// <returns>  </returns>
         public async Task<CertificateRequestResult> PerformCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool resumePaused = false)
         {
+            _serviceLog?.Information($"Performing Certificate Request: {managedCertificate.Name}");
+
             // Perform pre-request checks and scripting hooks, invoke main request process, then
             // perform an post request scripting hooks
-            if (log == null) log = ManagedCertificateLog.GetLogger(managedCertificate.Id);
+            if (log == null) log = ManagedCertificateLog.GetLogger(managedCertificate.Id, _loggingLevelSwitch);
 
             //enable or disable EFS flag on private key certs based on preference
             if (CoreAppSettings.Current.EnableEFS)
@@ -389,6 +393,7 @@ namespace Certify.Management
         private async Task PerformCertificateRequestProcessing(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, CertificateRequestResult result, CertRequestConfig config)
         {
             //primary domain and each subject alternative name must now be registered as an identifier with LE and validated
+            LogMessage(managedCertificate.Id, $"{Util.GetUserAgent()}");
 
             LogMessage(managedCertificate.Id, $"Beginning Certificate Request Process: {managedCertificate.Name} using ACME Provider:{_acmeClientProvider.GetProviderName()}");
 
@@ -987,6 +992,8 @@ namespace Certify.Management
                 logPrefix = "[Preview Mode] ";
             }
 
+            _serviceLog?.Information($"{(isPreviewOnly?"Previewing":"Performing")} Certificate Deployment: {managedCertificate.Name}");
+
             var result = new CertificateRequestResult { ManagedItem = managedCertificate, IsSuccess = false, Message = "" };
             var config = managedCertificate.RequestConfig;
             var pfxPath = managedCertificate.CertificatePath;
@@ -1033,6 +1040,10 @@ namespace Certify.Management
 
         public async Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate)
         {
+            _serviceLog?.Information($"Performing Certificate Revoke: {managedCertificate.Name}");
+
+            if (log == null) log = ManagedCertificateLog.GetLogger(managedCertificate.Id, _loggingLevelSwitch);
+
             if (_tc != null) _tc.TrackEvent("RevokeCertificate");
 
             var result = await _acmeClientProvider.RevokeCertificate(log, managedCertificate);

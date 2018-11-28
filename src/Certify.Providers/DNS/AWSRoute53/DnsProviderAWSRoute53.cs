@@ -124,11 +124,11 @@ namespace Certify.Providers.DNS.AWSRoute53
                 ChangeBatch = changeBatch
             };
 
-            _log?.Verbose($"Route53 :: ApplyDnsChange : ChangeResourceRecordSetsAsync: {JsonConvert.SerializeObject(recordsetRequest.ChangeBatch)} ");
+            _log?.Debug($"Route53 :: ApplyDnsChange : ChangeResourceRecordSetsAsync: {JsonConvert.SerializeObject(recordsetRequest.ChangeBatch)} ");
 
             var recordsetResponse = await _route53Client.ChangeResourceRecordSetsAsync(recordsetRequest);
 
-            _log?.Verbose($"Route53 :: ApplyDnsChange : ChangeResourceRecordSetsAsync Response: {JsonConvert.SerializeObject(recordsetResponse)} ");
+            _log?.Debug($"Route53 :: ApplyDnsChange : ChangeResourceRecordSetsAsync Response: {JsonConvert.SerializeObject(recordsetResponse)} ");
 
             // Monitor the change status
             var changeRequest = new GetChangeRequest()
@@ -142,7 +142,7 @@ namespace Certify.Providers.DNS.AWSRoute53
                 await Task.Delay(1500);
             }
 
-            System.Diagnostics.Debug.WriteLine("DNS change completed.");
+            _log?.Information("DNS change completed.");
 
             return true;
         }
@@ -213,7 +213,7 @@ namespace Certify.Providers.DNS.AWSRoute53
 
             if (zone != null)
             {
-                _log?.Verbose($"Route53 :: Delete Record : Zone matched {zone.Id} {zone.Id} : Fetching TXT record set {request.RecordName} ");
+                _log?.Information($"Route53 :: Delete Record : Zone matched {zone.Id} {zone.Id} : Fetching TXT record set {request.RecordName} ");
 
                 var response = await _route53Client.ListResourceRecordSetsAsync(
                     new ListResourceRecordSetsRequest
@@ -229,7 +229,7 @@ namespace Certify.Providers.DNS.AWSRoute53
 
                 if (targetRecordSet != null)
                 {
-                    _log?.Verbose($"Route53 :: Delete Record : Fetched TXT record set OK {targetRecordSet.Name} ");
+                    _log?.Information($"Route53 :: Delete Record : Fetched TXT record set OK {targetRecordSet.Name} ");
 
                     try
                     {

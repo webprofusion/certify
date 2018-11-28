@@ -43,10 +43,15 @@ namespace Certify.SharedUtils
 #if DEBUG
             serviceConfigFile = appDataPath + "\\serviceconfig.debug.json";
 #endif
-            if (File.Exists(serviceConfigFile))
+            try
             {
-                serviceConfig = JsonConvert.DeserializeObject<ServiceConfig>(File.ReadAllText(serviceConfigFile));
+                if (File.Exists(serviceConfigFile))
+                {
+                    serviceConfig = JsonConvert.DeserializeObject<ServiceConfig>(File.ReadAllText(serviceConfigFile));
+                }
             }
+            catch { }
+
             return serviceConfig;
         }
 

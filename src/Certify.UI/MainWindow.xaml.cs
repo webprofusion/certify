@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Input;
 using Certify.Locales;
 using Microsoft.ApplicationInsights;
+using Serilog;
 
 namespace Certify.UI
 {
@@ -156,10 +157,11 @@ namespace Certify.UI
             {
                 MessageBox.Show(diagnostics.First(d => d.IsSuccess == false).Message);
             }
-            //init telemetry if enabled
+            // init telemetry if enabled
             InitTelemetry();
 
-            //check version capabilities
+            // setup plugins
+
             _appViewModel.PluginManager = new Management.PluginManager();
 
             _appViewModel.PluginManager.LoadPlugins();

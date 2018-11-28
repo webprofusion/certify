@@ -401,24 +401,5 @@ namespace Certify.Core.Management
 
             return steps;
         }
-
-        private string ByteToHex(byte[] ba)
-        {
-            var sb = new System.Text.StringBuilder(ba.Length * 2);
-            foreach (byte b in ba)
-            {
-                sb.AppendFormat("{0:x2}", b);
-            }
-            return sb.ToString();
-        }
-
-        private string ToUnicodeString(string input)
-        {
-            if (string.IsNullOrEmpty(input)) return input;
-            //if string already has (non-ascii range) unicode characters return original
-            if (input.Any(c => c > 255)) return input;
-
-            return _idnMapping.GetUnicode(input);
-        }
     }
 }

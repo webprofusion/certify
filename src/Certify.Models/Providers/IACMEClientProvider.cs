@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Models.Config;
 using Certify.Models.Providers;
@@ -11,6 +12,12 @@ namespace Certify.Models.Plugins
 
         string GetAcmeBaseURI();
 
+        Task<bool> InitProvider(ILog log = null);
+
+        Task<Uri> GetAcmeTermsOfService();
+
+        Task<string> GetAcmeAccountStatus();
+
         Task<bool> AddNewAccountAndAcceptTOS(ILog log, string email);
 
         Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config, string orderUri = null);
@@ -22,6 +29,8 @@ namespace Certify.Models.Plugins
         Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId);
 
         Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate);
+
+        Task<bool> ChangeAccountKey(ILog log);
     }
 
     public class PendingOrder
