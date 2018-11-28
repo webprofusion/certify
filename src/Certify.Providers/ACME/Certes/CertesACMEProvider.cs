@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Certes;
 using Certes.Acme;
@@ -28,6 +30,60 @@ namespace Certify.Providers.Certes
         public string AccountKey { get; set; }
     }
 
+    internal class DiagEcKey
+    {
+        public string kty { get; set; }
+        public string crv { get; set; }
+        public string x { get; set; }
+        public string y { get; set; }
+    }
+
+    // used to diagnose account key faults
+    internal class DiagAccountInfo
+    {
+        public int ID { get; set; }
+        public DiagEcKey Key { get; set; }
+    }
+
+    public class LoggingHandler : DelegatingHandler
+    {
+        internal DiagAccountInfo DiagAccountInfo { get; set; }
+        private ILog _log = null;
+
+        public LoggingHandler(HttpMessageHandler innerHandler, ILog log)
+            : base(innerHandler)
+        {
+            _log = log;
+        }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+
+            if (_log != null)
+            {
+                _log.Debug($"Http Request: {request.ToString()}");
+                if (request.Content != null)
+                {
+                    _log.Debug(await request.Content.ReadAsStringAsync());
+                }
+            }
+
+            var response = await base.SendAsync(request, cancellationToken);
+
+            if (_log != null)
+            {
+                _log.Debug($"Http Response: {response.ToString()}");
+
+                if (response.Content != null)
+                {
+                    _log.Debug(await response.Content.ReadAsStringAsync());
+                }
+            }
+
+            return response;
+        }
+    }
+
     /// <summary>
     /// ACME Provider using certes https://github.com/fszlin/certes
     /// </summary>
@@ -45,13 +101,21 @@ namespace Certify.Providers.Certes
         private CertesSettings _settings = null;
         private Dictionary<string, IOrderContext> _currentOrders;
         private IdnMapping _idnMapping = new IdnMapping();
-        private DateTime lastInitDateTime = new DateTime();
+        private DateTime _lastInitDateTime = new DateTime();
 
-        public CertesACMEProvider(string settingsPath)
+        private AcmeHttpClient _httpClient;
+        private LoggingHandler _loggingHandler;
+
+        private string _userAgentName = "Certify SSL Manager";
+        private ILog _log = null;
+
+        public CertesACMEProvider(string settingsPath, string userAgentName)
         {
             _settingsFolder = settingsPath;
 
-            InitProvider();
+            var certesAssembly = typeof(AcmeContext).Assembly.GetName();
+
+            _userAgentName = $"{userAgentName} {certesAssembly.Name}/{certesAssembly.Version.ToString()}";
         }
 
         public string GetProviderName()
@@ -64,21 +128,133 @@ namespace Certify.Providers.Certes
             return _acme.DirectoryUri.ToString();
         }
 
-        /// <summary>
-        /// Initialise provider settings, allocating account key if required
-        /// </summary>
-        private void InitProvider()
+        public async Task<Uri> GetAcmeTermsOfService()
         {
+            return await _acme.TermsOfService();
+        }
+
+        /// <summary>
+        /// Initialise provider settings, loading current account key if present
+        /// </summary>
+        public async Task<bool> InitProvider(ILog log =null)
+        {
+            if (log != null)
+            {
+                _log = log;
+            }
+
+            _lastInitDateTime = DateTime.Now;
+
+            _loggingHandler = new LoggingHandler(new HttpClientHandler(), _log);
+            var customHttpClient = new System.Net.Http.HttpClient(_loggingHandler);
+            customHttpClient.DefaultRequestHeaders.Add("User-Agent", _userAgentName);
+
+            _httpClient = new AcmeHttpClient(_serviceUri, customHttpClient);
+
             LoadSettings();
 
-            if (!LoadAccountKey())
+            if (!string.IsNullOrEmpty(_settings.AccountKey))
             {
-                // save new account key
-                _acme = new AcmeContext(_serviceUri);
-                SaveAccountKey();
+                if (System.IO.File.Exists(_settingsFolder + "\\c-acc.key"))
+                {
+                    //remove legacy key info
+                    System.IO.File.Delete(_settingsFolder + "\\c-acc.key");
+                }
+                SetAcmeContextAccountKey(_settings.AccountKey);
+            }
+            else
+            {
+                // no account key in settings, check .key (legacy key file)
+                if (System.IO.File.Exists(_settingsFolder + "\\c-acc.key"))
+                {
+                    string pem = System.IO.File.ReadAllText(_settingsFolder + "\\c-acc.key");
+                    SetAcmeContextAccountKey(pem);
+                }
             }
 
             _currentOrders = new Dictionary<string, IOrderContext>();
+
+            return await Task.FromResult(true);
+        }
+
+        private async Task<string> CheckAcmeAccount()
+        {
+            // check our current account ID and key match the values LE expects
+            if (_acme == null)
+            {
+                return "none";
+            }
+
+            try
+            {
+                var accountContext = await _acme.Account();
+                var account = await accountContext.Resource();
+
+                if (account.Status == AccountStatus.Valid)
+                {
+                    if (account.TermsOfServiceAgreed == false)
+                    {
+                        return "tos-required";
+                    }
+                    else
+                    {
+                        // all good
+                        return "ok";
+                    }
+                }
+                else
+                {
+                    if (account.Status == AccountStatus.Revoked)
+                    {
+                        return "account-revoked";
+                    }
+
+                    if (account.Status == AccountStatus.Deactivated)
+                    {
+                        return "account-deactivated";
+                    }
+                }
+
+                return "unknown";
+            }
+            catch (AcmeRequestException exp)
+            {
+                if (exp.Error.Type == "urn:ietf:params:acme:error:accountDoesNotExist")
+                {
+                    return "account-doesnotexist";
+                }
+                else
+                {
+                    return "account-error";
+                }
+            }
+            catch (Exception)
+            {
+                // we failed to check the account status, probably because of connectivity. Assume OK
+                return "ok";
+            }
+        }
+
+        public async Task<bool> ChangeAccountKey(ILog log)
+        {
+            if (_acme == null)
+            {
+                if (log != null) log.Error("No account context. Cannot update account key.");
+                return false;
+            }
+            else
+            {
+                // allocate new key and inform LE of key change
+                // same default key type as certes
+                var newKey = KeyFactory.NewKey(KeyAlgorithm.ES256);
+                var account = await _acme.ChangeKey(newKey);
+                _settings.AccountKey = newKey.ToPem();
+                var savedOK = await SaveSettings();
+
+                ArchiveAccountKey(await _acme.Account());
+
+                return savedOK;
+            }
         }
 
         /// <summary>
@@ -102,59 +278,50 @@ namespace Certify.Providers.Certes
             }
         }
 
-        /// <summary>
-        /// Save current provider settings
-        /// </summary>
-        private void SaveSettings()
+        private async Task<bool> WriteAllTextAsync(string path, string content)
         {
-            System.IO.File.WriteAllText(_settingsFolder + "\\c-settings.json", Newtonsoft.Json.JsonConvert.SerializeObject(_settings));
-        }
-
-        /// <summary>
-        /// Load the current account key
-        /// </summary>
-        /// <returns>  </returns>
-        private bool LoadAccountKey()
-        {
-            if (System.IO.File.Exists(_settingsFolder + "\\c-acc.key"))
+            try
             {
-                string pem = System.IO.File.ReadAllText(_settingsFolder + "\\c-acc.key");
-                var key = KeyFactory.FromPem(pem);
-                _acme = new AcmeContext(_serviceUri, key);
-                return true;
+                using (StreamWriter fs = File.CreateText(path))
+                {
+                    await fs.WriteAsync(content);
+                    await fs.FlushAsync();
+                }
+
+                // artificial delay for flush to really complete (just begin superstitious)
+                await Task.Delay(250);
             }
-            else
+            catch (Exception)
             {
                 return false;
             }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Save current provider settings
+        /// </summary>
+        private async Task<bool> SaveSettings()
+        {
+            return await WriteAllTextAsync(_settingsFolder + "\\c-settings.json", Newtonsoft.Json.JsonConvert.SerializeObject(_settings));
         }
 
         /// <summary>
         /// Save the current account key
         /// </summary>
         /// <returns>  </returns>
-        private bool SaveAccountKey(IAccountContext accountContext = null)
+        private bool ArchiveAccountKey(IAccountContext accountContext)
         {
             string pem = _acme.AccountKey.ToPem();
 
             _settings.AccountKey = pem;
+            _settings.AccountUri = accountContext.Location.ToString();
 
-            System.IO.File.WriteAllText(_settingsFolder + "\\c-acc.key", pem);
+            string entry = $"\r\n\r{DateTime.Now}\r\n{ _settings.AccountUri ?? "" }\r\n{_settings.AccountEmail ?? ""}\r\n{_settings.AccountKey}";
 
-            if (accountContext != null)
-            {
-                _settings.AccountUri = accountContext.Location.ToString();
-
-                // archive account id history
-                System.IO.File.AppendAllText(
-                    _settingsFolder + "\\c-acc-archive",
-                    _settings.AccountUri +
-                    "\r\n" +
-                    (_settings.AccountEmail ?? "") +
-                    "\r\n" +
-                    pem
-                    );
-            }
+            // archive account id history
+            System.IO.File.AppendAllText(_settingsFolder + "\\c-acc-archive", entry);
 
             return true;
         }
@@ -165,7 +332,7 @@ namespace Certify.Providers.Certes
         /// <returns>  </returns>
         public bool IsAccountRegistered()
         {
-            if (!String.IsNullOrEmpty(_settings.AccountEmail))
+            if (!string.IsNullOrEmpty(_settings.AccountEmail))
             {
                 return true;
             }
@@ -179,11 +346,13 @@ namespace Certify.Providers.Certes
         /// Set a new account key from PEM encoded text
         /// </summary>
         /// <param name="pem">  </param>
-        private void SetAccountKey(string pem)
+        private void SetAcmeContextAccountKey(string pem)
         {
             var accountkey = KeyFactory.FromPem(pem);
 
-            _acme = new AcmeContext(_serviceUri, accountkey);
+            _acme = new AcmeContext(_serviceUri, accountkey, _httpClient);
+
+            if (_settings.AccountKey != pem) _settings.AccountKey = pem;
         }
 
         /// <summary>
@@ -196,23 +365,29 @@ namespace Certify.Providers.Certes
         {
             try
             {
-                // start new account context, create new account
-                _acme = new AcmeContext(_serviceUri);
+                // start new account context, create new account (with new key)
+                _acme = new AcmeContext(_serviceUri, null, _httpClient);
                 var account = await _acme.NewAccount(email, true);
-         
+
                 _settings.AccountEmail = email;
+               
+                // archive account key and update current settings with new ACME account key and account URI
+                var keyUpdated = ArchiveAccountKey(account);
+                var settingsSaved = await SaveSettings();
 
-                //store account key
-                SaveAccountKey(account);
+                if (keyUpdated && settingsSaved)
+                {
+                    log.Information($"Registering account {email} with certificate authority");
 
-                SaveSettings();
+                    // re-init provider based on new account key
+                    await InitProvider(null);
 
-                log.Information($"Registering account {email} with certificate authority");
-
-                // re-init provider based on new account key
-                InitProvider();
-
-                return true;
+                    return true;
+                }
+                else
+                {
+                    throw new Exception($"Failed to save account settings: keyUpdate:{keyUpdated} settingsSaved:{settingsSaved}");
+                }
             }
             catch (Exception exp)
             {
@@ -254,11 +429,11 @@ namespace Certify.Providers.Certes
         /// <returns>  </returns>
         public async Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config, string orderUri = null)
         {
-            if (DateTime.Now.Subtract(lastInitDateTime).TotalMinutes > 30)
+            if (DateTime.Now.Subtract(_lastInitDateTime).TotalMinutes > 30)
             {
                 // our acme context nonce may have expired (which returns "JWS has an invalid
                 // anti-replay nonce") so start a new one
-                InitProvider();
+                await InitProvider(null);
             }
 
             var pendingOrder = new PendingOrder { IsPendingAuthorizations = true };
@@ -313,7 +488,7 @@ namespace Certify.Providers.Certes
 
                 _currentOrders.Add(orderUri, order);
 
-                // handle order status 'Ready' if all ahtorizations are already valid
+                // handle order status 'Ready' if all authorizations are already valid
                 var orderDetails = await order.Resource();
                 if (orderDetails.Status == OrderStatus.Ready)
                 {
@@ -322,14 +497,14 @@ namespace Certify.Providers.Certes
 
                 // get all required pending (or already valid) authorizations for this order
 
-                log.Verbose($"Fetching Authorizations.");
+                log.Information($"Fetching Authorizations.");
 
                 var orderAuthorizations = await order.Authorizations();
 
                 // get the challenges for each authorization
                 foreach (IAuthorizationContext authz in orderAuthorizations)
                 {
-                    log.Verbose($"Fetching Authz Challenges.");
+                    log.Debug($"Fetching Authz Challenges.");
 
                     var allChallenges = await authz.Challenges();
                     var res = await authz.Resource();
@@ -601,6 +776,7 @@ namespace Certify.Providers.Certes
                 if (config.CSRKeyAlg == "RS256") keyAlg = KeyAlgorithm.RS256;
                 if (config.CSRKeyAlg == "ECDSA256") keyAlg = KeyAlgorithm.ES256;
                 if (config.CSRKeyAlg == "ECDSA384") keyAlg = KeyAlgorithm.ES384;
+                if (config.CSRKeyAlg == "ECDSA521") keyAlg = KeyAlgorithm.ES512;
             }
 
             var csrKey = KeyFactory.NewKey(keyAlg);
@@ -616,7 +792,7 @@ namespace Certify.Providers.Certes
                     CommonName = _idnMapping.GetAscii(config.PrimaryDomain)
                 }, csrKey);
 
-                X509Certificate2 cert = new X509Certificate2(certificateChain.Certificate.ToDer());
+                var cert = new X509Certificate2(certificateChain.Certificate.ToDer());
                 certFriendlyName += $"{cert.GetEffectiveDateString()} to {cert.GetExpirationDateString()}";
             }
             catch (AcmeRequestException exp)
@@ -688,6 +864,11 @@ namespace Certify.Providers.Certes
         public void EnableSensitiveFileEncryption()
         {
             //FIXME: not implemented
+        }
+
+        public Task<string> GetAcmeAccountStatus()
+        {
+            throw new NotImplementedException();
         }
     }
 }
