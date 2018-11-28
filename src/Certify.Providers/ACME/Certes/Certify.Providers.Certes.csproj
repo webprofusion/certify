@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="Certes" Version="2.3.2" />
+    <PackageReference Include="Certes" Version="2.3.3" />
   </ItemGroup>
 
   <ItemGroup>

@@ -50,6 +50,7 @@
     <PackageReference Include="Microsoft.AspNet.WebApi.OwinSelfHost" Version="5.2.6" /> 
     <PackageReference Include="Microsoft.Bcl" Version="1.1.10" /> 
     <PackageReference Include="Microsoft.Owin" Version="4.0.0" /> 
+    <PackageReference Include="Microsoft.Owin.Cors" Version="4.0.0" /> 
     <PackageReference Include="Microsoft.Owin.Diagnostics" Version="4.0.0" /> 
     <PackageReference Include="Microsoft.Owin.Host.HttpListener" Version="4.0.0" /> 
     <PackageReference Include="Microsoft.Owin.Hosting" Version="4.0.0" /> 
