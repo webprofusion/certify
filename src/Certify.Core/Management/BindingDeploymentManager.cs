@@ -16,6 +16,16 @@ namespace Certify.Core.Management
 
         private bool _enableCertDoubleImportBehaviour { get; set; } = true;
 
+        private static string[] unassignedIPs = new string[] {
+                null,
+                "",
+                "0.0.0.0",
+                "::",
+                "*"
+            };
+
+
+
         /// <summary>
         /// Creates or updates the https bindings associated with the dns names in the current
         /// request config, using the requested port/ips or autobinding
@@ -142,6 +152,9 @@ namespace Certify.Core.Management
             List<ActionStep> actions = new List<ActionStep>();
             var targetSites = new List<IBindingDeploymentTargetItem>();
 
+            // ensure defaults applied for deployment mode
+            requestConfig.ApplyDeploymentOptionDefaults();
+
             // if single site, add that
             if (requestConfig.DeploymentSiteOption == DeploymentOption.SingleSite)
             {
@@ -187,9 +200,13 @@ namespace Certify.Core.Management
                         {
                             // if replacing previous, check if current binding cert hash matches
                             // previous cert hash
-                            if (b.CertificateHash != null && managedCertificate.CertificatePreviousThumbprintHash != null)
+                            if (b.CertificateHash != null && (managedCertificate.CertificatePreviousThumbprintHash != null || managedCertificate.CertificateThumbprintHash != null))
                             {
                                 if (string.Equals(b.CertificateHash, managedCertificate.CertificatePreviousThumbprintHash))
+                                {
+                                    updateBinding = true;
+                                }
+                                else if (string.Equals(b.CertificateHash, managedCertificate.CertificateThumbprintHash))
                                 {
                                     updateBinding = true;
                                 }
@@ -229,11 +246,31 @@ namespace Certify.Core.Management
                         {
                             //SSL port defaults to 443 or the config default, unless we already have an https binding, in which case re-use same port
                             var sslPort = 443;
+                            var targetIPAddress = "*";
+
                             if (!string.IsNullOrWhiteSpace(requestConfig.BindingPort)) sslPort = int.Parse(requestConfig.BindingPort);
-                            if (b.Protocol == "https" && b.Port > 0) sslPort = b.Port;
+
+                            if (b.Protocol == "https") {
+                                if (b.Port > 0)
+                                {
+                                    sslPort = b.Port;
+                                }
+                                if (!unassignedIPs.Contains(b.IP))
+                                {
+                                    targetIPAddress = b.IP;
+                                }
+                            } else
+                            {
+                                if (!unassignedIPs.Contains(requestConfig.BindingIPAddress))
+                                {
+                                    targetIPAddress = requestConfig.BindingIPAddress;
+                                }
+                            }
 
                             //create/update binding and associate new cert
+
                             //if any binding elements configured, use those, otherwise auto bind using defaults and SNI
+            
                             var stepActions = await UpdateBinding(
                                 deploymentTarget,
                                 site,
@@ -243,7 +280,7 @@ namespace Certify.Core.Management
                                 hostname,
                                 sslPort: sslPort,
                                 useSNI: (requestConfig.BindingUseSNI != null ? (bool)requestConfig.BindingUseSNI : true),
-                                ipAddress: !string.IsNullOrWhiteSpace(requestConfig.BindingIPAddress) ? requestConfig.BindingIPAddress : null,
+                                ipAddress: targetIPAddress,
                                 alwaysRecreateBindings: requestConfig.AlwaysRecreateBindings,
                                 isPreviewOnly: isPreviewOnly
                             );
@@ -264,23 +301,20 @@ namespace Certify.Core.Management
 
         public static bool HasExistingBinding(List<BindingInfo> bindings, BindingInfo spec)
         {
-            string[] unassignedIPs = new string[] {
-                "",
-                "0.0.0.0",
-                "*"
-            };
             foreach (var b in bindings)
             {
-                if (b.Protocol == spec.Protocol && (
-                    (b.Host == spec.Host) &&
-                    (
-                       (unassignedIPs.Contains(b.IP) && unassignedIPs.Contains(spec.IP))
-                       ||
-                       (spec.IP == b.IP)
-                    )
-                ) && b.Port == spec.Port)
+                // same protocol
+                if (b.Protocol == spec.Protocol && b.Port == spec.Port)
                 {
-                    return true;
+                    // same or blank host
+                    if (b.Host == spec.Host || (string.IsNullOrEmpty(b.Host) && string.IsNullOrEmpty(spec.Host)))
+                    {
+                        // same or unassigned IP
+                        if (spec.IP == b.IP || (unassignedIPs.Contains(spec.IP) && unassignedIPs.Contains(b.IP)))
+                        {
+                            return true;
+                        }
+                    }
                 }
             }
 
@@ -315,7 +349,23 @@ namespace Certify.Core.Management
 
             var internationalHost = host ?? "";
 
-            var bindingSpecString = $"{(!string.IsNullOrEmpty(ipAddress) ? ipAddress : "*")}:{sslPort}:{internationalHost}";
+            if (unassignedIPs.Contains(ipAddress))
+            {
+                ipAddress = "*";
+            }
+            else
+            {
+                // specific IP address, SNI is not applicable
+                useSNI = false;
+            }
+
+            // can't use SNI is hostname is blank
+            if (useSNI && string.IsNullOrEmpty(internationalHost))
+            {
+                useSNI = false;
+            }
+
+            var bindingSpecString = $"{ipAddress}:{sslPort}:{internationalHost}";
 
             var bindingSpec = new BindingInfo
             {
@@ -323,7 +373,7 @@ namespace Certify.Core.Management
                 Protocol = "https",
                 IsHTTPS = true,
                 Port = sslPort,
-                IP = !string.IsNullOrEmpty(ipAddress) ? ipAddress : "*",
+                IP = ipAddress,
                 SiteId = site.Id,
                 CertificateStore = certStoreName,
                 CertificateHashBytes = certificateHash,
@@ -339,7 +389,7 @@ namespace Certify.Core.Management
                 {
                     Title = "Install Certificate For Binding",
                     Category = "Deployment.AddBinding",
-                    Description = $"Add https binding | {site.Name} | **{bindingSpecString}**",
+                    Description = $"Add https binding | {site.Name} | **{bindingSpecString} {(useSNI ? "SNI" : "Non-SNI")}**",
                     Key = $"[{site.Id}]:{bindingSpecString}:{useSNI}"
                 };
 
@@ -371,7 +421,7 @@ namespace Certify.Core.Management
                 {
                     Title = "Install Certificate For Binding",
                     Category = "Deployment.UpdateBinding",
-                    Description = $"Update https binding | {site.Name} | **{bindingSpecString}**"
+                    Description = $"Update https binding | {site.Name} | **{bindingSpecString} {(useSNI ? "SNI" : "Non-SNI")}**"
                 };
 
                 if (!isPreviewOnly)

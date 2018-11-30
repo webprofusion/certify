@@ -496,6 +496,28 @@ namespace Certify.Management.Servers
             return result.OrderBy(r => r.SiteName).ToList();
         }
 
+        private string HashBytesToThumprint(byte[] bytes)
+        {
+            // inspired by:
+            // dotnet core System.Security.Cryptography.X509Certificates/src/Internal/Cryptography/Helpers.cs
+            // CertificateHash is stored as 2 nibbles (4-bits) per byte, so convert to bytes > hex
+            string output = "";
+            foreach (byte b in bytes)
+            {
+                output += ((byte)(b >> 4)).ToString("X");
+                output += ((byte)(b & 0xF)).ToString("X");
+            }
+            return output;
+        }
+
+        private static char NibbleToHex(byte b)
+        {           
+            return (char)(b >= 0 && b <= 9 ?
+                '0' + b :
+                'A' + (b - 10));
+        }
+
+
         private BindingInfo GetSiteBinding(Site site, Binding binding)
         {
             var siteInfo = Map(site);
@@ -510,7 +532,9 @@ namespace Certify.Management.Servers
                 Port = binding.EndPoint?.Port ?? 0,
                 IsHTTPS = binding.Protocol.ToLower() == "https",
                 Protocol = binding.Protocol.ToLower(),
-                HasCertificate = (binding.CertificateHash != null)
+                HasCertificate = (binding.CertificateHash != null),
+                CertificateHash = binding.CertificateHash != null ? HashBytesToThumprint(binding.CertificateHash): null,
+                CertificateHashBytes = binding.CertificateHash
             };
         }
 
