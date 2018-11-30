@@ -15,6 +15,8 @@ namespace Certify.UI.Controls.ManagedCertificate
     /// </summary>
     public partial class Deployment : UserControl
     {
+        protected Certify.UI.ViewModel.ManagedCertificateViewModel ItemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
+
         public Deployment()
         {
             InitializeComponent();
@@ -62,6 +64,13 @@ namespace Certify.UI.Controls.ManagedCertificate
                     Description="Existing https bindings will be updated with the new certificate as required."
                 }
             };
+        }
+
+        private void DeploymentSiteOptions_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // if deployment mode changes, apply defaults for the mode
+            ItemViewModel.SelectedItem.RequestConfig.ApplyDeploymentOptionDefaults();
+
         }
     }
 }

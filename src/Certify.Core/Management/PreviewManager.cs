@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Certify.Core.Management;
 using Certify.Models;
 using Certify.Models.Providers;
 
@@ -28,6 +29,9 @@ namespace Certify.Management
             var stepIndex = 1;
 
             bool hasDomains = true;
+
+            // ensure defaults are applied for the deployment mode, overwriting any previous selections
+            item.RequestConfig.ApplyDeploymentOptionDefaults();
 
             if (string.IsNullOrEmpty(item.RequestConfig.PrimaryDomain))
             {
@@ -207,6 +211,7 @@ namespace Certify.Management
                 steps.Add(new ActionStep
                 {
                     Title = $"{stepIndex}. Domain Validation",
+                    Category="Validation",
                     Description = challengeInfo.ToString()
                 });
                 stepIndex++;
@@ -217,6 +222,7 @@ namespace Certify.Management
                     steps.Add(new ActionStep
                     {
                         Title = $"{stepIndex}. Pre-Request Powershell",
+                        Category="PreRequestScripting",
                         Description = $"Execute PowerShell Script: *{item.RequestConfig.PreRequestPowerShellScript}*"
                     });
                     stepIndex++;
@@ -228,6 +234,7 @@ namespace Certify.Management
                 steps.Add(new ActionStep
                 {
                     Title = $"{stepIndex}. Certificate Request",
+                    Category="CertificateRequest",
                     Description = certRequest
                 });
                 stepIndex++;
@@ -238,6 +245,7 @@ namespace Certify.Management
                     steps.Add(new ActionStep
                     {
                         Title = $"{stepIndex}. Post-Request Powershell",
+                        Category="PostRequestScripting",
                         Description = $"Execute PowerShell Script: *{item.RequestConfig.PostRequestPowerShellScript}*"
                     });
                     stepIndex++;
@@ -261,6 +269,7 @@ namespace Certify.Management
                 var deploymentStep = new ActionStep
                 {
                     Title = $"{stepIndex}. Deployment",
+                    Category="Deployment",
                     Description = ""
                 };
 

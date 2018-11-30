@@ -41,7 +41,7 @@
                     x:Name="DeploymentSiteOptions"
                     DisplayMemberPath="Title"
                     SelectedValue="{Binding SelectedItem.RequestConfig.DeploymentSiteOption, Converter={StaticResource EnumConverter}}"
-                    SelectedValuePath="Value" />
+                    SelectedValuePath="Value" SelectionChanged="DeploymentSiteOptions_SelectionChanged" />
             </StackPanel>
             <DockPanel x:Name="AutoBinding" DockPanel.Dock="Top">
                 <DockPanel.Style>

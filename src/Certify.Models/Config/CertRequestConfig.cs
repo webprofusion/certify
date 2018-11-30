@@ -202,5 +202,26 @@ namespace Certify.Models
         /// varying per domain
         /// </summary>
         public ObservableCollection<CertRequestChallengeConfig> Challenges { get; set; }
+
+        public void ApplyDeploymentOptionDefaults()
+        {
+            // if the selected mode is auto, discard settings which do not apply
+            if (DeploymentSiteOption == DeploymentOption.Auto)
+            {
+                PerformAutomatedCertBinding = true;
+                DeploymentBindingBlankHostname = false;
+                DeploymentBindingMatchHostname = true;
+                DeploymentBindingReplacePrevious = true;
+                DeploymentBindingOption = DeploymentBindingOption.AddOrUpdate;
+            }
+
+            if (PerformAutomatedCertBinding)
+            {
+                // if using auto cert bindings discard prior selections for fixed IPs/non-default ports and use SNI
+                BindingUseSNI = true;
+                BindingIPAddress = null;
+                BindingPort = null;
+            }
+        }
     }
 }
