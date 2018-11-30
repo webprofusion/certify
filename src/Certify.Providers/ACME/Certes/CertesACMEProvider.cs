@@ -30,7 +30,7 @@ namespace Certify.Providers.Certes
         public string AccountKey { get; set; }
     }
 
-    internal class DiagEcKey
+    public class DiagEcKey
     {
         public string kty { get; set; }
         public string crv { get; set; }
@@ -39,7 +39,7 @@ namespace Certify.Providers.Certes
     }
 
     // used to diagnose account key faults
-    internal class DiagAccountInfo
+    public class DiagAccountInfo
     {
         public int ID { get; set; }
         public DiagEcKey Key { get; set; }
@@ -47,7 +47,7 @@ namespace Certify.Providers.Certes
 
     public class LoggingHandler : DelegatingHandler
     {
-        internal DiagAccountInfo DiagAccountInfo { get; set; }
+        public DiagAccountInfo DiagAccountInfo { get; set; }
         private ILog _log = null;
 
         public LoggingHandler(HttpMessageHandler innerHandler, ILog log)
@@ -102,6 +102,7 @@ namespace Certify.Providers.Certes
         private Dictionary<string, IOrderContext> _currentOrders;
         private IdnMapping _idnMapping = new IdnMapping();
         private DateTime _lastInitDateTime = new DateTime();
+        private bool _newContactUseCurrentAccountKey = false;
 
         private AcmeHttpClient _httpClient;
         private LoggingHandler _loggingHandler;
@@ -365,8 +366,15 @@ namespace Certify.Providers.Certes
         {
             try
             {
-                // start new account context, create new account (with new key)
-                _acme = new AcmeContext(_serviceUri, null, _httpClient);
+                IKey accKey = null;
+
+                if (_newContactUseCurrentAccountKey && !string.IsNullOrEmpty(_settings.AccountKey))
+                {
+                    accKey = KeyFactory.FromPem(_settings.AccountKey);
+                }
+                
+                // start new account context, create new account (with new key, if not enabled)
+                _acme = new AcmeContext(_serviceUri, accKey, _httpClient);
                 var account = await _acme.NewAccount(email, true);
 
                 _settings.AccountEmail = email;
