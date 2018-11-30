@@ -69,8 +69,7 @@ namespace Certify.UI.Controls.ManagedCertificate
         private void DeploymentSiteOptions_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // if deployment mode changes, apply defaults for the mode
-            ItemViewModel.SelectedItem.RequestConfig.ApplyDeploymentOptionDefaults();
-
+            ItemViewModel.SelectedItem?.RequestConfig?.ApplyDeploymentOptionDefaults();
         }
     }
 }
