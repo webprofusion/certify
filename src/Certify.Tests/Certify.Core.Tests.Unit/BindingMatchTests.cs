@@ -178,6 +178,9 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="test.com", IP="0.0.0.0", Port=443, Protocol="https" },
                 new BindingInfo{ Host="www.test.com", IP="*", Port=80, Protocol="http" },
                 new BindingInfo{ Host="dev.test.com", IP="192.168.1.1", Port=80, Protocol="http" },
+                new BindingInfo{ Host="ftp.test.com", IP="*", Port=20, Protocol="ftp" },
+                new BindingInfo{ Host="", IP="192.168.1.1", Port=443, Protocol="https" },
+                new BindingInfo{ Host="", IP="*", Port=443, Protocol="https" },
             };
 
             var spec = new BindingInfo
@@ -213,6 +216,24 @@ namespace Certify.Core.Tests.Unit
                 IP = "192.168.1.1",
                 Port = 80,
                 Protocol = "http"
+            };
+            Assert.IsTrue(BindingDeploymentManager.HasExistingBinding(bindings, spec));
+
+            spec = new BindingInfo
+            {
+                Host = "ftp.test.com",
+                IP = "*",
+                Port = 20,
+                Protocol = "ftp"
+            };
+            Assert.IsTrue(BindingDeploymentManager.HasExistingBinding(bindings, spec));
+
+            spec = new BindingInfo
+            {
+                Host = null,
+                IP = "0.0.0.0",
+                Port = 443,
+                Protocol = "https"
             };
             Assert.IsTrue(BindingDeploymentManager.HasExistingBinding(bindings, spec));
         }
