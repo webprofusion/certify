@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Certify.Locales;
 using Certify.Management;
 using Microsoft.Owin.Hosting;
 using Topshelf;
@@ -134,6 +133,8 @@ namespace Certify.Service
                 int newPort = currentPort += 2;
 
                 serviceUri = $"http://{serviceConfig.Host}:{newPort}";
+
+                // if the http listener cannot bind here then the entire service will fail to start
                 _webApp = WebApp.Start<APIHost>(serviceUri);
 
                 // if that worked, save the new port setting
