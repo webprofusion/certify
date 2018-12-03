@@ -404,29 +404,6 @@ namespace Certify.Providers.Certes
             }
         }
 
-        private string ComputeKeyAuthorization(IChallengeContext challenge, IKey key)
-        {
-            // From Certes/Acme/Challenge.cs
-            var jwkThumbprintEncoded = key.Thumbprint();
-            var token = challenge.Token;
-            return $"{token}.{jwkThumbprintEncoded}";
-        }
-
-        private string ComputeDnsValue(IChallengeContext challenge, IKey key)
-        {
-            // From Certes/Acme/Challenge.cs
-            var keyAuthString = ComputeKeyAuthorization(challenge, key);
-            var keyAuthBytes = Encoding.UTF8.GetBytes(keyAuthString);
-            var sha256 = new Sha256Digest();
-            var hashed = new byte[sha256.GetDigestSize()];
-
-            sha256.BlockUpdate(keyAuthBytes, 0, keyAuthBytes.Length);
-            sha256.DoFinal(hashed, 0);
-
-            var dnsValue = JwsConvert.ToBase64String(hashed);
-            return dnsValue;
-        }
-
         /// <summary>
         /// Begin order for new certificate for one or more domains, fetching the required challenges
         /// to complete
