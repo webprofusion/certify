@@ -17,6 +17,7 @@ namespace Certify.UI.Controls.ManagedCertificate
     public partial class ChallengeConfigItem : System.Windows.Controls.UserControl
     {
         protected Certify.UI.ViewModel.AppViewModel AppViewModel => UI.ViewModel.AppViewModel.Current;
+        protected Certify.UI.ViewModel.ManagedCertificateViewModel ManagedCertificateViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
 
         public ChallengeConfigItem()
         {
@@ -202,9 +203,13 @@ namespace Certify.UI.Controls.ManagedCertificate
                 if (sender is Button)
                 {
                     var config = (sender as Button).Tag;
-                    if (AppViewModel.SelectedItem.RequestConfig.Challenges.Count > 1)
+                    if (config != null && AppViewModel.SelectedItem.RequestConfig.Challenges.Count > 1)
                     {
-                        AppViewModel.SelectedItem.RequestConfig.Challenges.Remove((Models.CertRequestChallengeConfig)config);
+                        App.Current.Dispatcher.Invoke((Action)delegate
+                        {
+                            AppViewModel.SelectedItem.RequestConfig.Challenges.Remove((Models.CertRequestChallengeConfig)config);
+                            ManagedCertificateViewModel.RaisePropertyChangedEvent(nameof(ManagedCertificateViewModel.ChallengeConfigViewModels));
+                        });
                     }
                     else
                     {

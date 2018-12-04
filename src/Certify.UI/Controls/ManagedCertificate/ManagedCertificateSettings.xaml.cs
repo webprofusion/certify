@@ -107,24 +107,15 @@ namespace Certify.UI.Controls.ManagedCertificate
                 item.Name = ItemViewModel.PrimarySubjectDomain.Domain;
             }
 
-            // certificates cannot include requests for 'localhost'
-            if (ItemViewModel.SelectedItem.DomainOptions.Any(d => d.IsSelected && d.Domain.StartsWith("*."))
-               &&
-                item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
-               )
-            {
-                // if we still can't decide on the primary domain ask user to define it
-                MessageBox.Show("Wildcard domains cannot use http-01 validation for domain authorization. Use dns-01 instead.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
-            }
-
-            // certificates cannot request wildcards and use http validation (dns only)
-            if (ItemViewModel.SelectedItem.DomainOptions.Any(d => d.IsSelected && d.Domain.StartsWith("*."))
+        
+            // certificates cannot request wildcards unless they also use DNS validation
+            if (
+                item.DomainOptions.Any(d => d.IsSelected && d.Domain.StartsWith("*."))
                 &&
-                 item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
+                !item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                 )
             {
-                // if we still can't decide on the primary domain ask user to define it
+                
                 MessageBox.Show("Wildcard domains cannot use http-01 validation for domain authorization. Use dns-01 instead.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
