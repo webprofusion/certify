@@ -475,7 +475,7 @@ namespace Certify.Providers.DNS.OVH
             }
             else
             {
-                response = await _webClient.DownloadStringTaskAsync(new Uri(path));
+                response = await _webClient.DownloadStringTaskAsync(path);
             }
             return response;
         }
