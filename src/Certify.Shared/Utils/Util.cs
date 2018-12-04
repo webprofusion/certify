@@ -9,16 +9,14 @@ using System.Threading.Tasks;
 using Certify.Locales;
 using Certify.Models;
 using Certify.Models.Config;
-using Certify.Shared;
 using Microsoft.ApplicationInsights;
 using Microsoft.Win32;
-using Newtonsoft.Json;
 
 namespace Certify.Management
 {
     public class Util
     {
-  
+
         /// <summary>
         /// check for problems which could affect app use
         /// </summary>
@@ -46,6 +44,30 @@ namespace Certify.Management
             catch (Exception exp)
             {
                 results.Add(new ActionResult { IsSuccess = false, Message = $"Could not create a temp file ({tempPath}). Windows has a limit of 65535 files in the temp folder ({tempFolder}). Clear temp files  before proceeding. {exp.Message}" });
+            }
+
+            // check free disk space
+            try
+            {
+                var cDrive = new DriveInfo("c");
+                if (cDrive.IsReady)
+                {
+                    var freeSpaceBytes = cDrive.AvailableFreeSpace;
+
+                    // Check disk has at least 128MB free
+                    if (freeSpaceBytes < (1024L * 1024 * 128))
+                    {
+                        results.Add(new ActionResult { IsSuccess = false, Message = $"Drive C: has less than 128MB of disk space free. The application may not run correctly." });
+                    }
+                    else
+                    {
+                        results.Add(new ActionResult { IsSuccess = true, Message = $"Drive C: has more than 128MB of disk space free." });
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                results.Add(new ActionResult { IsSuccess = false, Message = $"Could not check how much disk space is left on drive C:" });
             }
             return Task.FromResult(results);
         }
@@ -78,7 +100,7 @@ namespace Certify.Management
 
         public static string GetUserAgent()
         {
-            string versionName = "Certify/"+ GetAppVersion().ToString();
+            string versionName = "Certify/" + GetAppVersion().ToString();
             return $"{versionName} (Windows; {Environment.OSVersion.ToString()}) ";
         }
 
@@ -108,7 +130,7 @@ namespace Certify.Management
             try
             {
                 HttpClient client = new HttpClient();
-                client.DefaultRequestHeaders.Add("User-Agent",Util.GetUserAgent());
+                client.DefaultRequestHeaders.Add("User-Agent", Util.GetUserAgent());
 
                 var response = await client.GetAsync(Models.API.Config.APIBaseURI + "update?version=" + appVersion);
                 if (response.IsSuccessStatusCode)

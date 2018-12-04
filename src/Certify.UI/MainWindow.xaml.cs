@@ -155,8 +155,9 @@ namespace Certify.UI
             var diagnostics = await Management.Util.PerformAppDiagnostics();
             if (diagnostics.Any(d => d.IsSuccess == false))
             {
-                MessageBox.Show(diagnostics.First(d => d.IsSuccess == false).Message);
+                MessageBox.Show(diagnostics.First(d => d.IsSuccess == false).Message, "Warning");
             }
+
             // init telemetry if enabled
             InitTelemetry();
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using Certify.Models.Providers;
 using Serilog;
 
@@ -110,9 +109,12 @@ namespace Certify.Models
                 log = new LoggerConfiguration()
                     .MinimumLevel.ControlledBy(logLevelSwitch)
                     .WriteTo.Debug()
-                    .WriteTo.File(logPath, shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
+                    .WriteTo.File(
+                        logPath, shared: true,
+                        flushToDiskInterval: new TimeSpan(0, 0, 10)
+                    )
                     .CreateLogger();
-               
+
                 return log;
             });
 
