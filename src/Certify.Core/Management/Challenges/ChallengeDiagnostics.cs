@@ -404,7 +404,7 @@ namespace Certify.Core.Management.Challenges
 
             // copy challenge response to web folder /.well-known/acme-challenge. Check if it already
             // exists (as in 'configcheck' file) as can cause conflicts.
-            if (!File.Exists(destFile))
+            if (!File.Exists(destFile) || !destFile.EndsWith("configcheck"))
             {
                 try
                 {
