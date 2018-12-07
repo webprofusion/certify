@@ -5,18 +5,15 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Certes;
 using Certes.Acme;
 using Certes.Acme.Resource;
-using Certes.Jws;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
-using Org.BouncyCastle.Crypto.Digests;
 
 namespace Certify.Providers.Certes
 {
@@ -137,7 +134,7 @@ namespace Certify.Providers.Certes
         /// <summary>
         /// Initialise provider settings, loading current account key if present
         /// </summary>
-        public async Task<bool> InitProvider(ILog log =null)
+        public async Task<bool> InitProvider(ILog log = null)
         {
             if (log != null)
             {
@@ -372,13 +369,13 @@ namespace Certify.Providers.Certes
                 {
                     accKey = KeyFactory.FromPem(_settings.AccountKey);
                 }
-                
+
                 // start new account context, create new account (with new key, if not enabled)
                 _acme = new AcmeContext(_serviceUri, accKey, _httpClient);
                 var account = await _acme.NewAccount(email, true);
 
                 _settings.AccountEmail = email;
-               
+
                 // archive account key and update current settings with new ACME account key and account URI
                 var keyUpdated = ArchiveAccountKey(account);
                 var settingsSaved = await SaveSettings();
@@ -448,16 +445,36 @@ namespace Certify.Providers.Certes
             {
                 IOrderContext order;
 
-                if (orderUri != null)
+                try
                 {
-                    order = _acme.Order(new Uri(orderUri));
+                    if (orderUri != null)
+                    {
+                        order = _acme.Order(new Uri(orderUri));
+                    }
+                    else
+                    {
+                        order = await _acme.NewOrder(domainOrders);
+                    }
                 }
-                else
+                catch (NullReferenceException exp)
                 {
-                    order = await _acme.NewOrder(domainOrders);
+                    var msg = $"Failed to begin certificate order (account problem or API is not currently available): {exp}";
+
+                    log.Error(msg);
+
+                    pendingOrder.Authorizations =
+                    new List<PendingAuthorization> {
+                    new PendingAuthorization
+                    {
+                        AuthorizationError = msg,
+                        IsFailure=true
+                    }
+                   };
+
+                    return pendingOrder;
                 }
 
-                if (order == null) throw new Exception("Could not create certificate order.");
+                if (order == null) throw new Exception("Failed to begin certificate order.");
 
                 orderUri = order.Location.ToString();
 
