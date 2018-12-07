@@ -18,7 +18,7 @@ namespace Certify.Management
             this.EnableAppTelematics = true;
             this.EnableEFS = false;
             this.EnableDNSValidationChecks = false;
-            this.RenewalIntervalDays = 14;
+            this.RenewalIntervalDays = 30;
             this.MaxRenewalRequests = 0;
             this.EnableHttpChallengeServer = true;
             this.LegacySettingsUpgraded = false;
