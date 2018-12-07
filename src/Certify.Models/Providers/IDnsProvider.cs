@@ -23,6 +23,11 @@ namespace Certify.Models.Providers
 
         public string RecordName { get; set; }
         public string RecordValue { get; set; }
+
+        /// <summary>
+        /// Used to stored the orignal representation of the DNS records from an API, for cases where we need to post it back
+        /// </summary>
+        public object Data { get; set; }
     }
 
     public interface IDnsProvider
