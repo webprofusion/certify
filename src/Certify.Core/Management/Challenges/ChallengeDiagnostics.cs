@@ -329,7 +329,7 @@ namespace Certify.Core.Management.Challenges
                 return new ActionResult { IsSuccess = false, Message = msg };
             }
 
-            log.Information("Preparing challenge response for Let's Encrypt server to check at: {uri}", httpChallenge.ResourceUri);
+            log.Information($"Preparing challenge response for Let's Encrypt server to check at: {httpChallenge.ResourceUri} with content {httpChallenge.Value}");
             log.Information("If the challenge response file is not accessible at this exact URL the validation will fail and a certificate will not be issued.");
 
             // get website root path (from challenge config or fallback to deprecated

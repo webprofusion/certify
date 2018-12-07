@@ -215,19 +215,26 @@ namespace Certify.Core.Management.Challenges
                                 stream.Close();
                             }
 
-                            if (_debugMode) Log("Challenge Reponse Served OK.");
+                            Log($"Responded with Key: {key} Value:{value}");
+                            
                         }
                         else
                         {
                             server.Response.StatusCode = (int)HttpStatusCode.NotFound;
+
+                            Log($"Requested key not found: {key}");
                         }
+
+                       
                     }
                     else
                     {
                         server.Response.StatusCode = 404;
                     }
                 }
+
                 server.Response.Close();
+
                 if (_debugMode) Log("End request.");
 
                 if (_maxServiceLookups == 0)
