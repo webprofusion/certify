@@ -99,56 +99,103 @@
                                 Margin="4,0,0,0"
                                 Content="{x:Static res:SR.Settings_AutoRenewalRequestLimit}" />
                         </StackPanel>
-                        <CheckBox
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
+                                
+                            <CheckBox
                             x:Name="EnableTelematicsCheckbox"
                             Margin="0,4,0,0"
                             Checked="SettingsUpdated"
                             Content="{x:Static res:SR.Settings_EnableTelemetry}"
                             Unchecked="SettingsUpdated" />
-                        <CheckBox
+
+                                <CheckBox 
                             x:Name="EnableProxyAPICheckbox"
                             Margin="0,4,0,0"
                             Checked="SettingsUpdated"
                             Content="{x:Static res:SR.Settings_EnableProxyApiForDomainConfig}"
-                            Unchecked="SettingsUpdated" />
-                        <CheckBox
+                            Unchecked="SettingsUpdated" ></CheckBox>
+                                      
+                            <CheckBox 
                             x:Name="EnableEFS"
                             Margin="0,4,0,0"
                             Checked="SettingsUpdated"
                             Content="{x:Static res:SR.Settings_EnableEFS}"
                             Unchecked="SettingsUpdated"
                             Visibility="Collapsed" />
-                        <CheckBox
+                                
+                            <CheckBox 
                             x:Name="IgnoreStoppedSites"
                             Margin="0,4,0,0"
                             Checked="SettingsUpdated"
                             Content="{x:Static res:SR.Settings_IgnoreStoppedSites}"
                             Unchecked="SettingsUpdated" />
-                        <CheckBox
+                                
+                            <CheckBox
                             x:Name="EnableDNSValidationChecks"
                             Margin="0,4,0,0"
                             Checked="SettingsUpdated"
                             Content="{x:Static res:SR.Settings_EnableDnsValidation}"
                             Unchecked="SettingsUpdated" />
-                        <CheckBox
+                                
+                            <CheckBox 
                             x:Name="EnableHttpChallengeServer"
                             Margin="0,4,0,0"
                             Checked="SettingsUpdated"
                             Content="{x:Static res:SR.Settings_EnableHttpChallengeServer}"
                             Unchecked="SettingsUpdated" />
-                        <CheckBox
-                            x:Name="EnableCertificateCleanup"
-                            Margin="0,4,0,0"
-                            Checked="SettingsUpdated"
-                            Content="{x:Static res:SR.Settings_EnableCertificateCleanup}"
-                            Unchecked="SettingsUpdated" />
-                        <CheckBox
+
+                            <CheckBox
                             x:Name="EnableStatusReporting"
                             Margin="0,4,0,0"
                             Checked="SettingsUpdated"
                             Content="{x:Static res:SR.Settings_EnableStatusReporting}"
                             Unchecked="SettingsUpdated" />
 
+                            </StackPanel>
+                            
+                            <!--  Cert Cleanup Options  -->
+                            <StackPanel DockPanel.Dock="Right" Orientation="Vertical"  Margin="32,0,0,0">
+                                <Label Content="Certificate Store Cleanup:" />
+                                <StackPanel Margin="16,0,0,0">
+                                    <RadioButton
+                            x:Name="CertCleanup_None"
+                            Margin="8,0,0,4"
+                            Content="None"
+                            GroupName="CertCleanupMode"
+                                        Checked="SettingsUpdated"
+                                        Unchecked="SettingsUpdated"
+                           ></RadioButton>
+                                    <RadioButton
+                            x:Name="CertCleanup_AfterExpiry"
+                            Margin="8,0,0,4"
+                            Content="After Expiry"
+                            GroupName="CertCleanupMode"
+                                          Checked="SettingsUpdated"
+                                        Unchecked="SettingsUpdated"
+                           ></RadioButton>
+                                    <RadioButton
+                            x:Name="CertCleanup_AfterRenewal"
+                            Margin="8,0,0,4"
+                            Content="After Renewal"
+                            GroupName="CertCleanupMode"
+                                          Checked="SettingsUpdated"
+                                        Unchecked="SettingsUpdated"
+                            />
+
+                                    <RadioButton
+                            x:Name="CertCleanup_FullCleanup"
+                            Margin="8,0,0,4"
+                            Content="Daily Full Cleanup"
+                            GroupName="CertCleanupMode"
+                                          Checked="SettingsUpdated"
+                                        Unchecked="SettingsUpdated"
+                            />
+
+                                </StackPanel>
+                            </StackPanel>
+                        </DockPanel>
+              
                         <Button
                             x:Name="Save"
                             Width="160"

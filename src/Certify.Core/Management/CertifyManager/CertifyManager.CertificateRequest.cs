@@ -711,10 +711,13 @@ namespace Certify.Management
 
                     var pfxPath = certRequestResult.Result.ToString();
 
+                    string certCleanupName = "";
                     // update managed site summary
                     try
                     {
                         var certInfo = CertificateManager.LoadCertificate(pfxPath);
+
+                        certCleanupName = certInfo.FriendlyName.Substring(0, certInfo.FriendlyName.IndexOf("]") + 1);
                         managedCertificate.DateStart = certInfo.NotBefore;
                         managedCertificate.DateExpiry = certInfo.NotAfter;
                         managedCertificate.DateRenewed = DateTime.Now;
@@ -751,10 +754,6 @@ namespace Certify.Management
                                 isPreviewOnly: false
                             );
 
-                        // var actions = await
-                        // _serverProvider.InstallCertForRequest(managedCertificate, pfxPath,
-                        // cleanupCertStore: true, isPreviewOnly: false);
-
                         if (!actions.Any(a => a.HasError))
                         {
                             //all done
@@ -770,6 +769,48 @@ namespace Certify.Management
                             result.Message = "Request completed";
                             ReportProgress(progress,
                                 new RequestProgressState(RequestState.Success, result.Message, managedCertificate));
+
+                            // perform cert cleanup (if enabled)
+                            if (CoreAppSettings.Current.EnableCertificateCleanup && !string.IsNullOrEmpty(managedCertificate.CertificateThumbprintHash))
+                            {
+                                try
+                                {
+                                    var mode = CoreAppSettings.Current.CertificateCleanupMode;
+
+                                    // default to After Expiry cleanup if no preference specified
+                                    if (mode == null)
+                                    {
+                                        mode = CertificateCleanupMode.AfterExpiry;
+                                    }
+                                    
+                                    // if pref is for full cleanup, use After Renewal just for this renewal cleanup
+                                    if (mode == CertificateCleanupMode.FullCleanup)
+                                    {
+                                        mode = CertificateCleanupMode.AfterRenewal;
+                                    }
+
+                                    // cleanup certs based on the given cleanup mode
+                                    var certsRemoved = CertificateManager.PerformCertificateStoreCleanup(
+                                        (CertificateCleanupMode)mode,
+                                        DateTime.Now,
+                                        matchingName: certCleanupName,
+                                        excludedThumbprints: new List<string> { managedCertificate.CertificateThumbprintHash });
+
+                                    if (certsRemoved.Any())
+                                    {
+                                        foreach (var c in certsRemoved)
+                                        {
+                                            _serviceLog.Information($"Cleanup removed cert: {c}");
+                                        }
+                                    }
+
+                                }
+                                catch (Exception exp)
+                                {
+                                    // log exception
+                                    _serviceLog.Error("Failed to perform certificate cleanup: " + exp.ToString());
+                                }
+                            }
                         }
                         else
                         {
@@ -992,7 +1033,7 @@ namespace Certify.Management
                 logPrefix = "[Preview Mode] ";
             }
 
-            _serviceLog?.Information($"{(isPreviewOnly?"Previewing":"Performing")} Certificate Deployment: {managedCertificate.Name}");
+            _serviceLog?.Information($"{(isPreviewOnly ? "Previewing" : "Performing")} Certificate Deployment: {managedCertificate.Name}");
 
             var result = new CertificateRequestResult { ManagedItem = managedCertificate, IsSuccess = false, Message = "" };
             var config = managedCertificate.RequestConfig;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
@@ -39,6 +40,8 @@ namespace Certify.Management
         public CertifyManager()
         {
             var serverConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
+
+            SettingsManager.LoadAppSettings();
 
             InitLogging(serverConfig);
 
@@ -99,7 +102,7 @@ namespace Certify.Management
 
         public void SetLoggingLevel(string logLevel)
         {
-            switch(logLevel?.ToLower())
+            switch (logLevel?.ToLower())
             {
                 case "debug":
                     _loggingLevelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Debug;
@@ -217,18 +220,61 @@ namespace Certify.Management
             // perform expired cert cleanup (if enabled)
             if (CoreAppSettings.Current.EnableCertificateCleanup)
             {
-                try
-                {
-                    CertificateManager.PerformCertificateStoreCleanup(DateTime.Now);
-                }
-                catch (Exception exp)
-                {
-                    // log exception
-                    _serviceLog.Error("Failed to perform certificate cleanup: " + exp.ToString());
-                }
+                await PerformCertificateCleanup();
+                
             }
 
             return await Task.FromResult(true);
+        }
+
+        public async Task PerformCertificateCleanup()
+        {
+            try
+            {
+                var mode = CoreAppSettings.Current.CertificateCleanupMode;
+                if (mode == null) mode = CertificateCleanupMode.AfterExpiry;
+
+                if (mode != CertificateCleanupMode.None)
+                {
+                    List<string> excludedCertThumprints = new List<string>();
+
+                    if (mode == CertificateCleanupMode.FullCleanup)
+                    {
+                        // excluded thumbprints are all certs currently tracked as managed certs
+                        var managedCerts = await GetManagedCertificates();
+
+                        foreach (var c in managedCerts)
+                        {
+                            if (!string.IsNullOrEmpty(c.CertificateThumbprintHash))
+                            {
+                                excludedCertThumprints.Add(c.CertificateThumbprintHash.ToLower());
+                            }
+                        }
+
+                    }
+
+                    // this will only perform expiry cleanup, as no specific thumbprint provided
+                    var certsRemoved = CertificateManager.PerformCertificateStoreCleanup(
+                            (CertificateCleanupMode)mode,
+                            DateTime.Now,
+                            matchingName: null,
+                            excludedThumbprints: excludedCertThumprints
+                        );
+
+                    if (certsRemoved.Any())
+                    {
+                        foreach (var c in certsRemoved)
+                        {
+                            _serviceLog.Information($"Cleanup removed cert: {c}");
+                        }
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                // log exception
+                _serviceLog.Error("Failed to perform certificate cleanup: " + exp.ToString());
+            }
         }
 
         public void Dispose()

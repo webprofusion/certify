@@ -142,9 +142,9 @@ namespace Certify.Management
             var store = GetDefaultStore();
             store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
             var list = new List<X509Certificate2>();
-            var certCollection = !string.IsNullOrEmpty(issuerName)? 
+            var certCollection = !string.IsNullOrEmpty(issuerName) ?
                 store.Certificates.Find(X509FindType.FindByIssuerName, issuerName, false)
-                :store.Certificates;
+                : store.Certificates;
 
             foreach (var c in certCollection)
             {
@@ -299,11 +299,18 @@ namespace Certify.Management
 
         /// <summary>
         /// Remove all certificate expired a month or more before the given date, with [Certify] in
-        /// the friendly name, optionally where there are no existing bindings
+        /// the friendly name, optionally where there are no existing bindings, vary by Cleanup Mode
         /// </summary>
         /// <param name="expiryBefore">  </param>
-        public static void PerformCertificateStoreCleanup(DateTime expiryBefore, bool checkBindings = false)
+        public static List<string> PerformCertificateStoreCleanup(
+            Models.CertificateCleanupMode cleanupMode,
+            DateTime expiryBefore,
+            string matchingName,
+            List<string> excludedThumbprints
+            )
         {
+            var removedCerts = new List<string>();
+
             // get all existing cert bindings
             var allCertBindings = new List<Models.BindingInfo>();
 
@@ -318,13 +325,56 @@ namespace Certify.Management
                 var certsToRemove = new List<X509Certificate2>();
                 foreach (var c in store.Certificates)
                 {
-                    bool isBound = false;
-                    if (checkBindings) isBound = allCertBindings.Any(b => b.CertificateHash == c.Thumbprint);
+                    // cleanup either has to be expired only or has to be given a list of certificate thumbprints to preserve
+                    // if cert is in the exclusion list then cleanup is skipped
 
-                    // queue removal of existing unbound expired cert with[Certify] text.
-                    if (c.FriendlyName.Contains("[Certify]") && c.NotAfter < expiryBefore.AddMonths(-1))
+                    if (
+                        (excludedThumbprints == null && cleanupMode == Models.CertificateCleanupMode.AfterExpiry)
+                        ||
+                        (excludedThumbprints.Any() && !excludedThumbprints.Any(e => e.ToLower() == c.Thumbprint.ToLower()))
+                        )
                     {
-                        certsToRemove.Add(c);
+                        //bool isBound = false;
+                        //if (checkBindings) isBound = allCertBindings.Any(b => b.CertificateHash == c.Thumbprint);
+
+                        if (cleanupMode == Models.CertificateCleanupMode.AfterExpiry)
+                        {
+                            // queue removal of existing expired cert with [Certify] text in friendly name.
+                            if (
+                                 (string.IsNullOrEmpty(matchingName) || (c.FriendlyName.StartsWith(matchingName)))
+                                 && c.FriendlyName.Contains("[Certify]")
+                                 && c.NotAfter < expiryBefore
+                                 )
+                            {
+                                certsToRemove.Add(c);
+                            }
+                        }
+                        else if (cleanupMode == Models.CertificateCleanupMode.AfterRenewal)
+                        {
+                            // queue removal of existing cert based on name match
+
+                            if (
+                                (!string.IsNullOrEmpty(matchingName) && c.FriendlyName.StartsWith(matchingName))
+                                && c.FriendlyName.Contains("[Certify]")
+                                )
+                            {
+                                certsToRemove.Add(c);
+                            }
+
+                        }
+                        else if (cleanupMode == Models.CertificateCleanupMode.FullCleanup)
+                        {
+                            // queue removal of any Certify cert not in excluded list
+
+                            if (
+                                 (string.IsNullOrEmpty(matchingName) || (c.FriendlyName.StartsWith(matchingName)))
+                                && c.FriendlyName.Contains("[Certify]")
+                                )
+                            {
+                                certsToRemove.Add(c);
+                            }
+
+                        }
                     }
                 }
 
@@ -334,6 +384,7 @@ namespace Certify.Management
                     try
                     {
                         store.Remove(oldCert);
+                        removedCerts.Add($"{oldCert.FriendlyName} : {oldCert.Thumbprint}");
                     }
                     catch (Exception exp)
                     {
@@ -343,6 +394,8 @@ namespace Certify.Management
                 }
                 store.Close();
             }
+
+            return removedCerts;
         }
     }
 }

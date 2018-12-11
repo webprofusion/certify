@@ -46,7 +46,24 @@ namespace Certify.UI.Controls
 
             this.EnableDNSValidationChecks.IsChecked = _prefs.EnableDNSValidationChecks;
             this.EnableHttpChallengeServer.IsChecked = _prefs.EnableHttpChallengeServer;
-            this.EnableCertificateCleanup.IsChecked = _prefs.EnableCertificateCleanup;
+
+            if (_prefs.CertificateCleanupMode == Models.CertificateCleanupMode.None)
+            {
+                this.CertCleanup_None.IsChecked = true;
+            }
+            else if (_prefs.CertificateCleanupMode == Models.CertificateCleanupMode.AfterExpiry)
+            {
+                this.CertCleanup_AfterExpiry.IsChecked = true;
+            }
+            else if (_prefs.CertificateCleanupMode == Models.CertificateCleanupMode.AfterRenewal)
+            {
+                this.CertCleanup_AfterRenewal.IsChecked = true;
+            }
+            else if (_prefs.CertificateCleanupMode == Models.CertificateCleanupMode.FullCleanup)
+            {
+                this.CertCleanup_FullCleanup.IsChecked = true;
+            }
+
             this.EnableStatusReporting.IsChecked = _prefs.EnableStatusReporting;
 
             this.RenewalIntervalDays.Value = _prefs.RenewalIntervalDays;
@@ -89,7 +106,7 @@ namespace Certify.UI.Controls
                 _prefs.EnableValidationProxyAPI = (this.EnableProxyAPICheckbox.IsChecked == true);
                 _prefs.EnableDNSValidationChecks = (this.EnableDNSValidationChecks.IsChecked == true);
                 _prefs.EnableHttpChallengeServer = (this.EnableHttpChallengeServer.IsChecked == true);
-                _prefs.EnableCertificateCleanup = (this.EnableCertificateCleanup.IsChecked == true);
+
                 _prefs.EnableStatusReporting = (this.EnableStatusReporting.IsChecked == true);
 
                 _prefs.EnableEFS = (this.EnableEFS.IsChecked == true);
@@ -104,6 +121,28 @@ namespace Certify.UI.Controls
                 if (this.RenewalMaxRequests.Value == null) this.RenewalMaxRequests.Value = 0;
                 if (this.RenewalMaxRequests.Value > 100) this.RenewalMaxRequests.Value = 100;
                 _prefs.MaxRenewalRequests = (int)this.RenewalMaxRequests.Value;
+
+                // cert cleanup mode
+                if (this.CertCleanup_None.IsChecked == true)
+                {
+                    _prefs.CertificateCleanupMode = Models.CertificateCleanupMode.None;
+                    _prefs.EnableCertificateCleanup = false;
+                }
+                else if (this.CertCleanup_AfterExpiry.IsChecked == true)
+                {
+                    _prefs.CertificateCleanupMode = Models.CertificateCleanupMode.AfterExpiry;
+                    _prefs.EnableCertificateCleanup = true;
+                }
+                else if (this.CertCleanup_AfterRenewal.IsChecked == true)
+                {
+                    _prefs.CertificateCleanupMode = Models.CertificateCleanupMode.AfterRenewal;
+                    _prefs.EnableCertificateCleanup = true;
+                } else if (this.CertCleanup_FullCleanup.IsChecked == true)
+                {
+                    _prefs.CertificateCleanupMode = Models.CertificateCleanupMode.FullCleanup;
+                    _prefs.EnableCertificateCleanup = true;
+                }
+
                 Save.IsEnabled = true;
             }
         }

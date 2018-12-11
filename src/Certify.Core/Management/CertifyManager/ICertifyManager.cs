@@ -60,6 +60,8 @@ namespace Certify.Management
 
         Task<bool> PerformDailyTasks();
 
+        Task PerformCertificateCleanup();
+
         Task<List<ActionStep>> GeneratePreview(ManagedCertificate item);
 
         event Action<RequestProgressState> OnRequestProgressStateUpdated;

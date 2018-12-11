@@ -30,5 +30,14 @@ namespace Certify.Service
 
             return await new Management.Util().CheckForUpdates();
         }
+
+        [HttpGet, Route("maintenance")]
+        public async Task<string> PerformMaintenanceTasks()
+        {
+            DebugLog();
+
+            await _certifyManager.PerformCertificateCleanup();
+            return "OK";
+        }
     }
 }

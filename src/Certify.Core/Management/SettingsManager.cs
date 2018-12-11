@@ -1,4 +1,5 @@
 ﻿using System;
+using Certify.Models;
 
 namespace Certify.Management
 {
@@ -106,6 +107,8 @@ namespace Certify.Management
         /// to the dashboard service
         /// </summary>
         public bool EnableStatusReporting { get; set; }
+
+        public CertificateCleanupMode? CertificateCleanupMode { get; set; }
     }
 
     public class SettingsManager
@@ -126,6 +129,16 @@ namespace Certify.Management
             CoreAppSettings.Current.UseBackgroundServiceAutoRenewal = prefs.UseBackgroundServiceAutoRenewal;
             CoreAppSettings.Current.EnableHttpChallengeServer = prefs.EnableHttpChallengeServer;
             CoreAppSettings.Current.EnableCertificateCleanup = prefs.EnableCertificateCleanup;
+
+            if (prefs.CertificateCleanupMode == null)
+            {
+                CoreAppSettings.Current.CertificateCleanupMode = CertificateCleanupMode.AfterExpiry;
+            }
+            else
+            {
+                CoreAppSettings.Current.CertificateCleanupMode = (CertificateCleanupMode)prefs.CertificateCleanupMode;
+            }
+
             CoreAppSettings.Current.EnableStatusReporting = prefs.EnableStatusReporting;
             return true;
         }
@@ -149,14 +162,15 @@ namespace Certify.Management
             prefs.EnableHttpChallengeServer = CoreAppSettings.Current.EnableHttpChallengeServer;
             prefs.EnableCertificateCleanup = CoreAppSettings.Current.EnableCertificateCleanup;
             prefs.EnableStatusReporting = CoreAppSettings.Current.EnableStatusReporting;
+            prefs.CertificateCleanupMode = CoreAppSettings.Current.CertificateCleanupMode;
 
             return prefs;
         }
 
         public static void SaveAppSettings()
         {
-            string appDataPath = Util.GetAppDataFolder();
-            string json = Newtonsoft.Json.JsonConvert.SerializeObject(CoreAppSettings.Current, Newtonsoft.Json.Formatting.Indented);
+            var appDataPath = Util.GetAppDataFolder();
+            var json = Newtonsoft.Json.JsonConvert.SerializeObject(CoreAppSettings.Current, Newtonsoft.Json.Formatting.Indented);
 
             lock (COREAPPSETTINGSFILE)
             {
@@ -166,8 +180,9 @@ namespace Certify.Management
 
         public static void LoadAppSettings()
         {
-            string appDataPath = Util.GetAppDataFolder();
+            var appDataPath = Util.GetAppDataFolder();
             var path = appDataPath + "\\" + COREAPPSETTINGSFILE;
+
             if (System.IO.File.Exists(path))
             {
                 //ensure permissions
@@ -175,8 +190,15 @@ namespace Certify.Management
                 //load content
                 lock (COREAPPSETTINGSFILE)
                 {
-                    string configData = System.IO.File.ReadAllText(path);
+                    var configData = System.IO.File.ReadAllText(path);
                     CoreAppSettings.Current = Newtonsoft.Json.JsonConvert.DeserializeObject<CoreAppSettings>(configData);
+
+                    // init new settings if not set
+                    if (CoreAppSettings.Current.CertificateCleanupMode == null)
+                    {
+                        CoreAppSettings.Current.CertificateCleanupMode = CertificateCleanupMode.AfterExpiry;
+                    }
+                    
                 }
             }
             else
@@ -186,13 +208,14 @@ namespace Certify.Management
                 CoreAppSettings.Current.LegacySettingsUpgraded = true;
                 CoreAppSettings.Current.IsInstanceRegistered = false;
                 CoreAppSettings.Current.Language = null;
+                CoreAppSettings.Current.CertificateCleanupMode = CertificateCleanupMode.AfterExpiry;
 
                 CoreAppSettings.Current.InstanceId = Guid.NewGuid().ToString();
                 SaveAppSettings();
             }
 
             // if instance id not yet set, create it now and save
-            if (String.IsNullOrEmpty(CoreAppSettings.Current.InstanceId))
+            if (string.IsNullOrEmpty(CoreAppSettings.Current.InstanceId))
             {
                 CoreAppSettings.Current.InstanceId = Guid.NewGuid().ToString();
                 SaveAppSettings();
