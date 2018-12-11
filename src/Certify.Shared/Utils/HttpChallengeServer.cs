@@ -17,7 +17,7 @@ namespace Certify.Core.Management.Challenges
 
         private string _controlKey = "QUIT123";
         private string _checkKey = "TESTING123";
-        private string _challengePrefix = "/.well-known/acme-challenge/";
+        private readonly string _challengePrefix = "/.well-known/acme-challenge/";
 
         private Dictionary<string, string> _challengeResponses { get; set; }
 
@@ -92,14 +92,14 @@ namespace Certify.Core.Management.Challenges
 
                 _serverTask = Task.Run(ServerTask);
 
-                var stateTimer = new Timer((Object stateInfo) =>
+                var stateTimer = new Timer((object stateInfo) =>
                 {
                     Log("Checking for auto close.");
                     var time = _lastRequestTime - DateTime.Now;
                     if (Math.Abs(time.TotalSeconds) > 30)
                     {
                         Log("No requests recently, stopping server.");
-                        this.Stop();
+                        Stop();
                     }
                 }, null, 1000 * 10, 1000 * 10);
 

@@ -25,15 +25,15 @@ namespace Certify.Management
         {
             var results = new List<ActionResult>();
 
-            string tempPath = "";
-            string tempFolder = Path.GetTempPath();
+            var tempPath = "";
+            var tempFolder = Path.GetTempPath();
 
             // attempt to create a 1MB temp file, detect if it fails
             try
             {
                 tempPath = Path.GetTempFileName();
 
-                FileStream fs = new FileStream(tempPath, FileMode.Open);
+                var fs = new FileStream(tempPath, FileMode.Open);
                 fs.Seek(1024 * 1024, SeekOrigin.Begin);
                 fs.WriteByte(0);
                 fs.Close();
@@ -100,14 +100,14 @@ namespace Certify.Management
 
         public static string GetUserAgent()
         {
-            string versionName = "Certify/" + GetAppVersion().ToString();
+            var versionName = "Certify/" + GetAppVersion().ToString();
             return $"{versionName} (Windows; {Environment.OSVersion.ToString()}) ";
         }
 
         public static Version GetAppVersion()
         {
             // returns the version of Certify.Shared
-            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
 
             var v = assembly.GetName().Version;
             return v;
@@ -129,7 +129,7 @@ namespace Certify.Management
             //get app version
             try
             {
-                HttpClient client = new HttpClient();
+                var client = new HttpClient();
                 client.DefaultRequestHeaders.Add("User-Agent", Util.GetUserAgent());
 
                 var response = await client.GetAsync(Models.API.Config.APIBaseURI + "update?version=" + appVersion);

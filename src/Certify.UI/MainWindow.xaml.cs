@@ -86,7 +86,7 @@ namespace Certify.UI
             }
 
             // check user has registered a contact with LE first
-            if (String.IsNullOrEmpty(_appViewModel.PrimaryContactEmail))
+            if (string.IsNullOrEmpty(_appViewModel.PrimaryContactEmail))
             {
                 EnsureContactRegistered();
                 return;
