@@ -443,17 +443,49 @@ namespace Certify.Providers.Certes
 
             try
             {
-                IOrderContext order;
-
+                IOrderContext order = null;
+                int remainingAttempts = 3;
+                bool orderCreated = false;
                 try
                 {
-                    if (orderUri != null)
+                    while (!orderCreated && remainingAttempts > 0)
                     {
-                        order = _acme.Order(new Uri(orderUri));
-                    }
-                    else
-                    {
-                        order = await _acme.NewOrder(domainOrders);
+                        try
+                        {
+                            remainingAttempts--;
+
+                            log.Error($"BeginCertificateOrder: creating/retrieving order. Retries remaining:{remainingAttempts} ");
+
+                            if (orderUri != null)
+                            {
+                                order = _acme.Order(new Uri(orderUri));
+                            }
+                            else
+                            {
+                                order = await _acme.NewOrder(domainOrders);
+                            }
+
+                            if (order != null)
+                            {
+                                orderCreated = true;
+                            }
+                        }
+                        catch (Exception exp)
+                        {
+                            remainingAttempts--;
+
+                            log.Error($"BeginCertificateOrder: error creating order. Retries remaining:{remainingAttempts} {exp.ToString()} ");
+
+                            if (remainingAttempts == 0)
+                            {
+                                // all attempts to create order failed
+                                throw;
+                            }
+                            else
+                            {
+                                await Task.Delay(1000);
+                            }
+                        }
                     }
                 }
                 catch (NullReferenceException exp)
