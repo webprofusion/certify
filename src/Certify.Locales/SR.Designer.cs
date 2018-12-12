@@ -133,7 +133,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This version is free for evaluation and is limited to managing up to 5 certificates. To remove this limit please purchase a registration key. If you have previously donated please email apps@webprofusion.com with details of your sponsorship PayPal transaction to obtain a free key. This offer is also open to developers who have PRs accepted for this app on GitHub..
+        ///   Looks up a localized string similar to This version is free for evaluation and will manage a limited number of certificates. To remove this limitation please purchase a registration key. If you have previously donated please email apps@webprofusion.com with details of your sponsorship PayPal transaction to obtain a free key. This offer is also open to developers who have PRs accepted for this app on GitHub..
         /// </summary>
         public static string AboutControl_TrialDetailLabel {
             get {

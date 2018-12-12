@@ -232,7 +232,7 @@
     <value>支持</value>
   </data>
   <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
-    <value>这是试用版，最高支持5个站点。要移除这个限制，请购买密钥。如果你之前曾经捐助过，请将你的捐助详细信息发送邮件至 apps@webprofusion.com 以获得免费的密钥。在Github上对本软件成功提交PR后也将获得免费密钥。</value>
+    <value>这是试用版。要移除这个限制，请购买密钥。</value>
   </data>
   <data name="New_Contact_NeedAgree" xml:space="preserve">
     <value>你需要同意最新的LesEncrypt.org订阅协议。</value>

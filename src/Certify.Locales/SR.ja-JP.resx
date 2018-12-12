@@ -646,7 +646,7 @@
     <value>ライセンスの認証プロセスを開始する際に問題が発生しました。</value>
   </data>
   <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
-    <value>このバージョンは評価用に無料で利用でき、最大5つのWebサイトを管理する制限があります。この制限を解除するには、登録キーを購入してください。以前に寄付したことがある場合は、無料のキーを取得するために、スポンサーシップPayPalトランザクションの詳細を apps@webprofusion.com にメールしてください。このオファーは、GitHub でこのアプリで受け入れられた PR を持っている開発者にも公開されています。</value>
+    <value>このバージョンは評価用に無料で利用できこの制限を解除するには、登録キーを購入してください。</value>
   </data>
   <data name="ManagedCertificateSettings_HookMustBeValidUrl" xml:space="preserve">
     <value>WebhookのURLは有効なURLに設定する必要があります。</value>

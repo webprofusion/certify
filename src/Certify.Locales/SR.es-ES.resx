@@ -295,7 +295,7 @@
     <value>Para realizar la renovación automática de certificados, Certify creará una tarea en el Programador de Tareas de Windows. Esta tarea debe ejecutarse como un usuario de nivel de Administrador para realizar tareas de administración de certificados y administración de IIS.</value>
   </data>
   <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
-    <value>Esta versión es gratuita para evaluación y está limitada a la administración de hasta 5 sitios web. Para eliminar este límite, compre una clave de registro. Si ha donado previamente, envíe un correo electrónico a apps@webprofusion.com con los detalles de su transacción de patrocinio de PayPal para obtener una clave gratuita. Esta oferta también está disponible para los desarrolladores que tengan un Pull Request aceptado para esta aplicación en GitHub.</value>
+    <value>Esta versión es gratuita para evaluación.  Para eliminar este límite, compre una clave de registro.</value>
   </data>
   <data name="AboutControl_RegistrationTypeLabel" xml:space="preserve">
     <value>No Registrado</value>
