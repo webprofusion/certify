@@ -901,6 +901,8 @@ namespace Certify.Management
                         else
                         {
                             _httpChallengeServerAvailable = await StartHttpChallengeServer();
+
+                            if (_tc != null) _tc.TrackEvent("ChallengeResponse_HttpChallengeServer_Start");
                         }
 
                         if (_httpChallengeServerAvailable)
@@ -910,6 +912,8 @@ namespace Certify.Management
                         else
                         {
                             LogMessage(managedCertificate.Id, $"Http Challenge Server process unavailable.", LogItemType.CertificateRequestStarted);
+
+                            if (_tc != null) _tc.TrackEvent("ChallengeResponse_HttpChallengeServer_Unavailable");
                         }
                     }
                 }
@@ -949,6 +953,10 @@ namespace Certify.Management
                                     Value = rc.Value
                                 });
                         }
+
+                        var providerDesc = challengeConfig.ChallengeProvider != null ? challengeConfig.ChallengeProvider : challengeConfig.ChallengeType;
+
+                        if (_tc != null) _tc.TrackEvent($"PerformChallengeResponse_{providerDesc}");
 
                         // ask LE to check our answer to their authorization challenge (http-01 or
                         // tls-sni-01), LE will then attempt to fetch our answer, if all accessible
