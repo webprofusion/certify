@@ -214,7 +214,6 @@ namespace Certify.Models
             if (domain != null)
             {
                 domain = domain.Trim().ToLower();
-                domain = domain.Replace("*.", "");
             }
 
             if (RequestConfig.Challenges == null || RequestConfig.Challenges.Count == 0)

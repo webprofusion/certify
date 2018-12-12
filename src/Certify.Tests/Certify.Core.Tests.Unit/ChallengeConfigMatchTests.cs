@@ -26,6 +26,7 @@ namespace Certify.Core.Tests.Unit
                 {
                     PrimaryDomain = "test.com",
                     SubjectAlternativeNames = new string[]{
+                        "*.fred.com",
                         "fred.com",
                         "www.fred.com",
                         "example.com",
@@ -39,6 +40,11 @@ namespace Certify.Core.Tests.Unit
                                 ChallengeType="http-01",
                                 DomainMatch= null,
                                 ChallengeCredentialKey="config-default"
+                            },
+                            new CertRequestChallengeConfig{
+                                ChallengeType="dns-01",
+                                DomainMatch= "*.fred.com",
+                                ChallengeCredentialKey="config-wildcard"
                             },
                              new CertRequestChallengeConfig{
                                 ChallengeType="dns-01",
@@ -66,6 +72,10 @@ namespace Certify.Core.Tests.Unit
             // Assert
             var configMatch = managedCertificate.GetChallengeConfig(null);
             Assert.AreEqual("config-default", configMatch.ChallengeCredentialKey, "Blank domain should match blank domain match config");
+
+
+            configMatch = managedCertificate.GetChallengeConfig("*.fred.com");
+            Assert.AreEqual("config-wildcard", configMatch.ChallengeCredentialKey, "Should match on wildcard");
 
             configMatch = managedCertificate.GetChallengeConfig("fred.com");
             Assert.AreEqual("config2", configMatch.ChallengeCredentialKey, "Should match on domain");

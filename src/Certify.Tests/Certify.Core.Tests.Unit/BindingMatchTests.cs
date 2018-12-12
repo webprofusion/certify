@@ -131,7 +131,6 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9000")) == 1, "Should have 1 port 9000 binding");
             Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9001")) == 1, "Should have 1 port 9001 binding");
 
-
             foreach (var a in preview)
             {
                 System.Diagnostics.Debug.WriteLine(a.Description);
@@ -146,7 +145,6 @@ namespace Certify.Core.Tests.Unit
                 "*.test.com",
                 "*.test.co.uk"
             };
-
 
             Assert.IsFalse(ManagedCertificate.IsDomainOrWildcardMatch(domains, "test.com"));
 
@@ -166,6 +164,8 @@ namespace Certify.Core.Tests.Unit
 
             Assert.IsTrue(ManagedCertificate.IsDomainOrWildcardMatch(domains, "*.test.com"));
 
+            Assert.IsTrue(ManagedCertificate.IsDomainOrWildcardMatch(domains, "*.TEST.COM"));
+
             Assert.IsTrue(ManagedCertificate.IsDomainOrWildcardMatch(domains, "www.test.co.uk"));
 
             Assert.IsFalse(ManagedCertificate.IsDomainOrWildcardMatch(domains, "www.dev.test.co.uk"));
@@ -177,6 +177,7 @@ namespace Certify.Core.Tests.Unit
             List<BindingInfo> bindings = new List<BindingInfo> {
                 new BindingInfo{ Host="test.com", IP="0.0.0.0", Port=443, Protocol="https" },
                 new BindingInfo{ Host="www.test.com", IP="*", Port=80, Protocol="http" },
+                new BindingInfo{ Host="UPPERCASE.TEST.COM", IP="*", Port=80, Protocol="http" },
                 new BindingInfo{ Host="dev.test.com", IP="192.168.1.1", Port=80, Protocol="http" },
                 new BindingInfo{ Host="ftp.test.com", IP="*", Port=20, Protocol="ftp" },
                 new BindingInfo{ Host="", IP="192.168.1.1", Port=443, Protocol="https" },
@@ -200,6 +201,24 @@ namespace Certify.Core.Tests.Unit
                 Protocol = "https"
             };
             Assert.IsFalse(BindingDeploymentManager.HasExistingBinding(bindings, spec));
+
+            spec = new BindingInfo
+            {
+                Host = "www.test.com",
+                IP = "*",
+                Port = 80,
+                Protocol = "http"
+            };
+            Assert.IsTrue(BindingDeploymentManager.HasExistingBinding(bindings, spec));
+
+            spec = new BindingInfo
+            {
+                Host = "UPPERCASE.TEST.COM",
+                IP = "*",
+                Port = 80,
+                Protocol = "http"
+            };
+            Assert.IsTrue(BindingDeploymentManager.HasExistingBinding(bindings, spec));
 
             spec = new BindingInfo
             {
