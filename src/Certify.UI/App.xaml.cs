@@ -9,7 +9,6 @@ namespace Certify.UI
     /// </summary>
     public partial class App : Application
     {
-        Models.Providers.ILog _uiLog = null;
 
         protected Certify.UI.ViewModel.AppViewModel MainViewModel
         {
@@ -19,10 +18,14 @@ namespace Certify.UI
             }
         }
 
-        public Models.Providers.ILog Log
+        protected Models.Providers.ILog Log
         {
-            get { return _uiLog; }
+            get
+            {
+                return MainViewModel.Log;
+            }
         }
+
         protected override void OnStartup(StartupEventArgs e)
         {
             /*
@@ -43,15 +46,6 @@ namespace Certify.UI
             // upgrade assembly version of saved settings (if required)
             //Certify.Properties.Settings.Default.UpgradeSettingsVersion(); // deprecated
             //Certify.Management.SettingsManager.LoadAppSettings();
-
-            _uiLog = new Models.Loggy(
-             new LoggerConfiguration()
-            .MinimumLevel.Verbose()
-            .WriteTo.Debug()
-            .WriteTo.File(Management.Util.GetAppDataFolder("logs") + "\\ui.log", shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
-            .CreateLogger()
-            );
-
 
             var currentDomain = AppDomain.CurrentDomain;
             currentDomain.UnhandledException += CurrentDomain_UnhandledException;

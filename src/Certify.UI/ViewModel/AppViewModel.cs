@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -13,6 +12,7 @@ using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
 using PropertyChanged;
+using Serilog;
 
 namespace Certify.UI.ViewModel
 {
@@ -23,6 +23,9 @@ namespace Certify.UI.ViewModel
         /// </summary>
         //public static AppModel AppViewModel = new DesignViewModel(); // for UI testing
         public static AppViewModel Current = AppViewModel.GetModel();
+
+
+        Models.Providers.ILog _uiLog = null;
 
         public AppViewModel()
         {
@@ -40,10 +43,24 @@ namespace Certify.UI.ViewModel
 
         private void Init()
         {
+            _uiLog = new Models.Loggy(
+                new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .WriteTo.Debug()
+                .WriteTo.File(Management.Util.GetAppDataFolder("logs") + "\\ui.log", shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
+                .CreateLogger()
+                );
+
             ProgressResults = new ObservableCollection<RequestProgressState>();
 
             this.ImportedManagedCertificates = new ObservableCollection<ManagedCertificate>();
             this.ManagedCertificates = new ObservableCollection<ManagedCertificate>();
+
+        }
+
+        public Models.Providers.ILog Log
+        {
+            get { return _uiLog; }
         }
 
         public const int ProductTypeId = 1;
@@ -355,7 +372,7 @@ namespace Certify.UI.ViewModel
             return false;
         }
 
-        public async Task BeginCertificateRequest(string managedItemId, bool resumePaused = true)
+        public async Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused = true)
         {
             //begin request process
             var managedCertificate = ManagedCertificates.FirstOrDefault(s => s.Id == managedItemId);
@@ -365,8 +382,13 @@ namespace Certify.UI.ViewModel
                 MainUITabIndex = (int)MainWindow.PrimaryUITabs.CurrentProgress;
 
                 TrackProgress(managedCertificate);
+
                 // start request
-                var result = await CertifyClient.BeginCertificateRequest(managedCertificate.Id, resumePaused);
+                return await CertifyClient.BeginCertificateRequest(managedCertificate.Id, resumePaused);
+            }
+            else
+            {
+                return null;
             }
         }
 

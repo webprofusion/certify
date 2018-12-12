@@ -136,7 +136,7 @@ namespace Certify.Models
                 {
                     log.Error(logItem.Message);
                 }
-                if (logItem.LogItemType == LogItemType.GeneralWarning)
+                else if (logItem.LogItemType == LogItemType.GeneralWarning)
                 {
                     log.Warning(logItem.Message);
                 }

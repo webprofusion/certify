@@ -268,6 +268,7 @@ namespace Certify.Management
             var config = managedCertificate.RequestConfig;
             try
             {
+
                 // run pre-request script, if set
                 if (!string.IsNullOrEmpty(config.PreRequestPowerShellScript))
                 {
@@ -317,15 +318,24 @@ namespace Certify.Management
                 // overall exception thrown during process
 
                 result.IsSuccess = false;
-                result.Message = string.Format(Certify.Locales.CoreSR.CertifyManager_RequestFailed, managedCertificate.Name, exp.Message, exp);
+                result.Abort = true;
 
-                LogMessage(managedCertificate.Id, result.Message, LogItemType.CertficateRequestFailed);
+                try
+                {
+                    // attempt to log error
 
-                ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate));
+                    log?.Error(exp, $"Certificate request process failed: {exp}");
 
-                await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
+                    result.Message = string.Format(Certify.Locales.CoreSR.CertifyManager_RequestFailed, managedCertificate.Name, exp.Message, exp);
 
-                log.Error(exp, $"Certificate request process failed: {exp}");
+                    LogMessage(managedCertificate.Id, result.Message, LogItemType.CertficateRequestFailed);
+
+                    ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate));
+
+                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
+
+                }
+                catch { }
             }
             finally
             {

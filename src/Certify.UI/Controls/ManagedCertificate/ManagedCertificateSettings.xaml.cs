@@ -19,6 +19,14 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         protected Certify.UI.ViewModel.ManagedCertificateViewModel ItemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
 
+        protected Models.Providers.ILog Log
+        {
+            get
+            {
+                return AppViewModel.Log;
+            }
+        }
+
         public ManagedCertificateSettings()
         {
             InitializeComponent();
@@ -107,7 +115,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 item.Name = ItemViewModel.PrimarySubjectDomain.Domain;
             }
 
-        
+
             // certificates cannot request wildcards unless they also use DNS validation
             if (
                 item.DomainOptions.Any(d => d.IsSelected && d.Domain.StartsWith("*."))
@@ -115,7 +123,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 !item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                 )
             {
-                
+
                 MessageBox.Show("Wildcard domains cannot use http-01 validation for domain authorization. Use dns-01 instead.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
@@ -133,7 +141,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return false;
             }
 
-            if (item.RequestConfig.Challenges.Count(c=>string.IsNullOrEmpty(c.DomainMatch))>1)
+            if (item.RequestConfig.Challenges.Count(c => string.IsNullOrEmpty(c.DomainMatch)) > 1)
             {
                 MessageBox.Show("Only one authorization configuration can be used match any domain (domain match blank). Specify domain(s) to match or remove additional configuration. ", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
@@ -256,7 +264,18 @@ namespace Certify.UI.Controls.ManagedCertificate
                 //begin request
                 AppViewModel.MainUITabIndex = (int)MainWindow.PrimaryUITabs.CurrentProgress;
 
-                await AppViewModel.BeginCertificateRequest(ItemViewModel.SelectedItem.Id);
+                var result = await AppViewModel.BeginCertificateRequest(ItemViewModel.SelectedItem.Id);
+                if (result != null)
+                {
+                    if (result.IsSuccess == false && result.Result is Exception)
+                    {
+                        var msg = ((Exception)result.Result)?.ToString();
+                        Log?.Error($"RequestCertificate: {msg}");
+
+                        // problem communicating or completing the request
+                        MessageBox.Show($"A problem occurred completing this request. Please refer to the log file for more details. \r\n {msg}");
+                    }
+                }
 
                 ItemViewModel.RaisePropertyChangedEvent(nameof(ItemViewModel.SelectedItemLogEntries));
             }
@@ -291,8 +310,8 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             // validate and save before test
             if (!await ValidateAndSave(ItemViewModel.SelectedItem)) return;
-           
-           
+
+
 
             var challengeConfig = ItemViewModel.SelectedItem.GetChallengeConfig(null);
 
