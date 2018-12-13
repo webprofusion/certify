@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -164,6 +165,22 @@ namespace Certify.UI.Controls.ManagedCertificate
                 }
             }
 
+            // check certificate will not exceed 100 name limit
+            var domains = new List<string> { item.RequestConfig.PrimaryDomain };
+
+            if (item.RequestConfig.SubjectAlternativeNames != null)
+            {
+                domains.AddRange(item.RequestConfig.SubjectAlternativeNames);
+            }
+
+            domains = domains.Distinct().ToList();
+
+            if (domains.Count > 100)
+            {
+                MessageBox.Show($"Certificates cannot include more than 100 names. You will need to remove names or split your certificate into 2 or more managed certificates.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
             if (item.RequestConfig.PerformAutomatedCertBinding)
             {
                 item.RequestConfig.BindingIPAddress = null;
@@ -255,11 +272,10 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             if (ItemViewModel.SelectedItem != null)
             {
-                if (ItemViewModel.SelectedItem.IsChanged)
-                {
+                
                     var savedOK = await ValidateAndSave(ItemViewModel.SelectedItem);
                     if (!savedOK) return;
-                }
+                
 
                 //begin request
                 AppViewModel.MainUITabIndex = (int)MainWindow.PrimaryUITabs.CurrentProgress;
