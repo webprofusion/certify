@@ -28,7 +28,7 @@ namespace Certify.Core.Management.Challenges
 
             IDnsProvider dnsAPIProvider = null;
 
-            if (!String.IsNullOrEmpty(credentialsId))
+            if (!string.IsNullOrEmpty(credentialsId))
             {
                 // decode credentials string array
                 try
@@ -92,7 +92,7 @@ namespace Certify.Core.Management.Challenges
             // creating the required TXT record
 
             var credentialsManager = new CredentialsManager();
-            Dictionary<string, string> credentials = new Dictionary<string, string>();
+            var credentials = new Dictionary<string, string>();
 
             IDnsProvider dnsAPIProvider = null;
 
@@ -103,7 +103,7 @@ namespace Certify.Core.Management.Challenges
                 return new ActionResult { IsSuccess = false, Message = "DNS Challenge Zone Id not set. Set the Zone Id to proceed." };
             }*/
 
-            if (!String.IsNullOrEmpty(challengeConfig.ChallengeCredentialKey))
+            if (!string.IsNullOrEmpty(challengeConfig.ChallengeCredentialKey))
             {
                 // decode credentials string array
                 try
@@ -121,7 +121,7 @@ namespace Certify.Core.Management.Challenges
                 }
             }
 
-            var parameters = new Dictionary<String, string>();
+            var parameters = new Dictionary<string, string>();
             if (challengeConfig.Parameters != null)
             {
                 foreach (var p in challengeConfig.Parameters)
@@ -253,7 +253,7 @@ namespace Certify.Core.Management.Challenges
             }
         }
 
-        public async Task<DnsChallengeHelperResult> DeleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, string domain, string txtRecordName)
+        public async Task<DnsChallengeHelperResult> DeleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, string domain, string txtRecordName, string txtRecordValue)
         {
             // for a given managed site configuration, attempt to delete the TXT record created for
             // the challenge
@@ -284,7 +284,7 @@ namespace Certify.Core.Management.Challenges
                 };
             }
 
-            if (!String.IsNullOrEmpty(challengeConfig.ChallengeCredentialKey))
+            if (!string.IsNullOrEmpty(challengeConfig.ChallengeCredentialKey))
             {
                 // decode credentials string array
                 try
@@ -302,7 +302,7 @@ namespace Certify.Core.Management.Challenges
                 }
             }
 
-            var parameters = new Dictionary<String, string>();
+            var parameters = new Dictionary<string, string>();
             if (challengeConfig.Parameters != null)
             {
                 foreach (var p in challengeConfig.Parameters)
@@ -367,6 +367,7 @@ namespace Certify.Core.Management.Challenges
                         RecordType = "TXT",
                         TargetDomainName = domain,
                         RecordName = txtRecordName,
+                        RecordValue = txtRecordValue,
                         ZoneId = zoneId
                     });
 
