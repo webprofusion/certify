@@ -166,16 +166,9 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
 
             // check certificate will not exceed 100 name limit
-            var domains = new List<string> { item.RequestConfig.PrimaryDomain };
+            var numSelectedDomains = item.DomainOptions.Count(d => d.IsSelected);
 
-            if (item.RequestConfig.SubjectAlternativeNames != null)
-            {
-                domains.AddRange(item.RequestConfig.SubjectAlternativeNames);
-            }
-
-            domains = domains.Distinct().ToList();
-
-            if (domains.Count > 100)
+            if (numSelectedDomains > 100)
             {
                 MessageBox.Show($"Certificates cannot include more than 100 names. You will need to remove names or split your certificate into 2 or more managed certificates.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
