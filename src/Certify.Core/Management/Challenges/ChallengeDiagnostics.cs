@@ -243,6 +243,16 @@ namespace Certify.Core.Management.Challenges
             return results;
         }
 
+    
+        public static string ToUrlSafeBase64String(byte[] data)
+        {
+            var s = Convert.ToBase64String(data); // Regular base64 encoder
+            s = s.Split('=')[0]; // Remove any trailing '='s
+            s = s.Replace('+', '-'); // 62nd char of encoding
+            s = s.Replace('/', '_'); // 63rd char of encoding
+            return s;
+        }
+
         private string GenerateSimulatedKeyAuth()
         {
             // create simulated challenge
@@ -253,7 +263,7 @@ namespace Certify.Core.Management.Challenges
 
             random.NextBytes(simulated_token_data);
 
-            var simulated_token = Convert.ToBase64String(simulated_token_data);
+            var simulated_token = ToUrlSafeBase64String(simulated_token_data);
 
             var sha256 = System.Security.Cryptography.SHA256.Create();
 
