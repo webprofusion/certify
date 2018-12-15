@@ -68,6 +68,7 @@
     <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />
     <ProjectReference Include="..\Certify.Models\Certify.Models.csproj" />
     <ProjectReference Include="..\Certify.Providers\ACME\Certes\Certify.Providers.Certes.csproj" />
+    <ProjectReference Include="..\Certify.Providers\DNS\AcmeDns\AcmeDns\AcmeDns.csproj" />
     <ProjectReference Include="..\Certify.Providers\DNS\Aliyun\Aliyun.csproj" />
     <ProjectReference Include="..\Certify.Providers\DNS\AWSRoute53\AWSRoute53.csproj" />
     <ProjectReference Include="..\Certify.Providers\DNS\Azure\Azure.csproj" />

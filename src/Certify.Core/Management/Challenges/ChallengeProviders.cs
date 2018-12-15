@@ -6,6 +6,7 @@ using Certify.Core.Management.Challenges.DNS;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
+using Certify.Providers.DNS.AcmeDns;
 using Certify.Providers.DNS.Aliyun;
 using Certify.Providers.DNS.AWSRoute53;
 using Certify.Providers.DNS.Azure;
@@ -88,6 +89,10 @@ namespace Certify.Core.Management.Challenges
                 {
                     dnsAPIProvider = new DnsProviderAliyun(credentials);
                 }
+                else if (providerDefinition.Id == DnsProviderAcmeDns.Definition.Id)
+                {
+                    dnsAPIProvider = new DnsProviderAcmeDns(credentials, Util.GetAppDataFolder());
+                }
             }
             else if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.MANUAL)
             {
@@ -132,7 +137,8 @@ namespace Certify.Core.Management.Challenges
                 Providers.DNS.SimpleDNSPlus.DnsProviderSimpleDNSPlus.Definition,
                 Providers.DNS.DnsMadeEasy.DnsProviderDnsMadeEasy.Definition,
                 Providers.DNS.OVH.DnsProviderOvh.Definition,
-                Providers.DNS.Aliyun.DnsProviderAliyun.Definition
+                Providers.DNS.Aliyun.DnsProviderAliyun.Definition,
+                Providers.DNS.AcmeDns.DnsProviderAcmeDns.Definition
             };
 
             return await Task.FromResult(providers);
