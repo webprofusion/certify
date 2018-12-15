@@ -12,6 +12,7 @@ using Certify.Providers.DNS.Azure;
 using Certify.Providers.DNS.Cloudflare;
 using Certify.Providers.DNS.DnsMadeEasy;
 using Certify.Providers.DNS.GoDaddy;
+using Certify.Providers.DNS.MSDNS;
 using Certify.Providers.DNS.OVH;
 using Certify.Providers.DNS.SimpleDNSPlus;
 
@@ -88,6 +89,10 @@ namespace Certify.Core.Management.Challenges
                 {
                     dnsAPIProvider = new DnsProviderAliyun(credentials);
                 }
+                else if (providerDefinition.Id == DnsProviderMSDNS.Definition.Id)
+                {
+                    dnsAPIProvider = new DnsProviderMSDNS(credentials, parameters);
+                }
             }
             else if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.MANUAL)
             {
@@ -132,7 +137,8 @@ namespace Certify.Core.Management.Challenges
                 Providers.DNS.SimpleDNSPlus.DnsProviderSimpleDNSPlus.Definition,
                 Providers.DNS.DnsMadeEasy.DnsProviderDnsMadeEasy.Definition,
                 Providers.DNS.OVH.DnsProviderOvh.Definition,
-                Providers.DNS.Aliyun.DnsProviderAliyun.Definition
+                Providers.DNS.Aliyun.DnsProviderAliyun.Definition,
+                Providers.DNS.MSDNS.DnsProviderMSDNS.Definition
             };
 
             return await Task.FromResult(providers);

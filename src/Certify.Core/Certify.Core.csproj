@@ -74,6 +74,7 @@
     <ProjectReference Include="..\Certify.Providers\DNS\Cloudflare\Cloudflare.csproj" />
     <ProjectReference Include="..\Certify.Providers\DNS\DnsMadeEasy\DnsMadeEasy.csproj" />
     <ProjectReference Include="..\Certify.Providers\DNS\GoDaddy\GoDaddy.csproj" />
+    <ProjectReference Include="..\Certify.Providers\DNS\MSDNS\MSDNS.csproj" />
     <ProjectReference Include="..\Certify.Providers\DNS\OVH\OVH.csproj" />
     <ProjectReference Include="..\Certify.Providers\DNS\SimpleDNSPlus\SimpleDNSPlus.csproj" />
     <ProjectReference Include="..\Certify.Shared\Certify.Shared.csproj" />
