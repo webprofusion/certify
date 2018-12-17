@@ -31,7 +31,6 @@ namespace Certify.Service
 #else
                 // x.SetInstanceName("CertifySSLManager.Service");
 #endif
-                x.DependsOn("HTTP Service");
 
                 // FIXME: we should offer option during setup to configure this as a service account
                 // account requires admin rights in IIS (and wwwroot etc) and permission to
@@ -128,14 +127,11 @@ namespace Certify.Service
 
         public string DiagnoseServices()
         {
-            // var devices = ServiceController.GetDevices();
-            // var services = ServiceController.GetServices();
-
-            string httpStatus = "Unknown";
+            var httpStatus = "Unknown";
 
             try
             {
-                var sc = new ServiceController("HTTP Service");
+                var sc = new ServiceController("HTTP");
                 switch (sc.Status)
                 {
                     case ServiceControllerStatus.Running:
@@ -160,13 +156,15 @@ namespace Certify.Service
             }
             catch { }
 
-            return $"System Http Service: {httpStatus}";
+            return $"System HTTP Service: {httpStatus}";
         }
 
         public void Start()
         {
 
             var serviceConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
+
+            serviceConfig.ServiceFaultMsg = "";
 
             var serviceUri = $"http://{serviceConfig.Host}:{serviceConfig.Port}";
 
@@ -188,17 +186,29 @@ namespace Certify.Service
 
                 int newPort = currentPort += 2;
 
-                serviceUri = $"http://{serviceConfig.Host}:{newPort}";
+                var reconfiguredServiceUri = $"http://{serviceConfig.Host}:{newPort}";
 
-                // if the http listener cannot bind here then the entire service will fail to start
-                _webApp = WebApp.Start<APIHost>(serviceUri);
+                try
+                {
+                    // if the http listener cannot bind here then the entire service will fail to start
+                    _webApp = WebApp.Start<APIHost>(reconfiguredServiceUri);
 
-                Program.LogEvent(null, $"Service API bound OK to {serviceUri}", false);
+                    Program.LogEvent(null, $"Service API bound OK to {reconfiguredServiceUri}", false);
 
-                // if that worked, save the new port setting
-                SharedUtils.ServiceConfigManager.SetAppServicePort(newPort);
+                    // if that worked, save the new port setting
+                    serviceConfig.Port = newPort;
 
-                System.Diagnostics.Debug.WriteLine($"Service started on {serviceUri}.");
+                    System.Diagnostics.Debug.WriteLine($"Service started on {reconfiguredServiceUri}.");
+                }
+                catch (Exception)
+                {
+                    serviceConfig.ServiceFaultMsg = $"Service failed to listen on {serviceUri}. \r\n\r\n{httpSysStatus} \r\n\r\nEnsure the windows HTTP service is available using 'sc config http start= demand' then 'net start http' commands.";
+                    throw;
+                }
+            }
+            finally
+            {
+                SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(serviceConfig);
             }
 
         }

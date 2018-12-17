@@ -32,8 +32,6 @@ namespace Certify.Client
     {
         private HttpClient _client;
 
-        #region Status (SignalR)
-
         public event Action<RequestProgressState> OnRequestProgressStateUpdated;
 
         public event Action<ManagedCertificate> OnManagedCertificateUpdated;
@@ -65,6 +63,11 @@ namespace Certify.Client
             _client.Timeout = new TimeSpan(0, 20, 0); // 20 min timeout on service api calls
         }
 
+        public Shared.ServiceConfig GetAppServiceConfig()
+        {
+            return Certify.SharedUtils.ServiceConfigManager.GetAppServiceConfig();
+        }
+
         public async Task ConnectStatusStreamAsync()
         {
             connection = new HubConnection(_statusHubUri);
@@ -81,8 +84,6 @@ namespace Certify.Client
 
             await connection.Start();
         }
-
-        #endregion Status (SignalR)
 
         private async Task<string> FetchAsync(string endpoint)
         {

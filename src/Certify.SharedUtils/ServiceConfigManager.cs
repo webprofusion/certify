@@ -57,13 +57,22 @@ namespace Certify.SharedUtils
 
         public static void StoreCurrentAppServiceConfig()
         {
-            var appDataPath = GetAppDataFolder();
             var config = GetAppServiceConfig();
+            StoreUpdatedAppServiceConfig(config);
+        }
+
+        public static void StoreUpdatedAppServiceConfig(ServiceConfig config)
+        {
+            var appDataPath = GetAppDataFolder();
             var serviceConfigFile = appDataPath + "\\serviceconfig.json";
 #if DEBUG
             serviceConfigFile = appDataPath + "\\serviceconfig.debug.json";
 #endif
-            File.WriteAllText(serviceConfigFile, JsonConvert.SerializeObject(config));
+            try
+            {
+                File.WriteAllText(serviceConfigFile, JsonConvert.SerializeObject(config, Formatting.Indented));
+            }
+            catch { }
         }
 
         /// <summary>
@@ -73,29 +82,11 @@ namespace Certify.SharedUtils
         /// <returns>  </returns>
         public static bool SetAppServicePort(int port)
         {
-            var appDataPath = GetAppDataFolder();
-            var serviceConfigFile = appDataPath + "\\serviceconfig.json";
-#if DEBUG
-            serviceConfigFile = appDataPath + "\\serviceconfig.debug.json";
-#endif
-            try
-            {
-                ServiceConfig settings = new ServiceConfig();
+            var config = GetAppServiceConfig();
+            config.Port = port;
+            StoreUpdatedAppServiceConfig(config);
 
-                if (File.Exists(serviceConfigFile))
-                {
-                    settings = JsonConvert.DeserializeObject<ServiceConfig>(File.ReadAllText(serviceConfigFile));
-                }
-
-                settings.Port = port;
-
-                File.WriteAllText(serviceConfigFile, JsonConvert.SerializeObject(settings));
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+            return true;
         }
 
     }

@@ -46,6 +46,8 @@ namespace Certify.Client
         CheckCertificateRequest(managedcertificate id) - poll until completed/failed or timeout
         */
 
+        Shared.ServiceConfig GetAppServiceConfig();
+
         #region Status
 
         event Action<string, string> OnMessageFromService;
