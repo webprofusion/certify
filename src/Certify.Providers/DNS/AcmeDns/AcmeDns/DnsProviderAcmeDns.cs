@@ -75,6 +75,7 @@ namespace Certify.Providers.DNS.AcmeDns
             _settingsPath = settingsPath;
 
             _client = new HttpClient();
+            _client.DefaultRequestHeaders.Add("User-Agent", "Certify/DnsProviderAcmeDns");
 
             _serializerSettings = new JsonSerializerSettings
             {
