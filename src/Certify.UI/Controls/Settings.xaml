@@ -195,14 +195,7 @@
                                 </StackPanel>
                             </StackPanel>
                         </DockPanel>
-              
-                        <Button
-                            x:Name="Save"
-                            Width="160"
-                            Margin="0,8,0,0"
-                            HorizontalAlignment="Right"
-                            Click="Save_Click"
-                            Content="{x:Static res:SR.SaveChanges}" />
+             
                     </StackPanel>
                 </StackPanel>
             </TabItem>

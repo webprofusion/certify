@@ -72,7 +72,6 @@ namespace Certify.UI.Controls
             this.DataContext = MainViewModel;
 
             settingsInitialised = true;
-            Save.IsEnabled = false;
 
             //load stored credentials list
             await MainViewModel.RefreshStoredCredentialsList();
@@ -97,7 +96,7 @@ namespace Certify.UI.Controls
             d.ShowDialog();
         }
 
-        private void SettingsUpdated(object sender, RoutedEventArgs e)
+        private async void SettingsUpdated(object sender, RoutedEventArgs e)
         {
             if (settingsInitialised)
             {
@@ -143,7 +142,10 @@ namespace Certify.UI.Controls
                     _prefs.EnableCertificateCleanup = true;
                 }
 
-                Save.IsEnabled = true;
+
+                // save settings
+                await MainViewModel.CertifyClient.SetPreferences(_prefs);
+                
             }
         }
 
@@ -161,12 +163,6 @@ namespace Certify.UI.Controls
         {
             // reload settings
             await LoadCurrentSettings();
-        }
-
-        private void Save_Click(object sender, RoutedEventArgs e)
-        {
-            MainViewModel.CertifyClient.SetPreferences(_prefs);
-            Save.IsEnabled = false;
         }
 
         private void AddStoredCredential_Click(object sender, RoutedEventArgs e)
