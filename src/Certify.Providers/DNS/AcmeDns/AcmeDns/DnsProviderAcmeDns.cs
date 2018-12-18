@@ -51,8 +51,8 @@ namespace Certify.Providers.DNS.AcmeDns
                     HelpUrl = "https://docs.certifytheweb.com/docs/dns-acmedns.html",
                     PropagationDelaySeconds = 5,
                     ProviderParameters = new List<ProviderParameter>{
-                        new ProviderParameter{ Key="api",Name="API Endpoint", IsRequired=true, IsPassword=false, Value="https://auth.acme-dns.io", Description="Self hosted API is recommended: https://github.com/joohoi/acme-dns" },
-                        new ProviderParameter{ Key="allowfrom",Name="Optional Allow From IPs (CIDR)", IsRequired=false, IsPassword=false,  Description="e.g.  192.168.100.1/24; 1.2.3.4/32; 2002:c0a8:2a00::0/40" }
+                        new ProviderParameter{ Key="api",Name="API Url", IsRequired=true, IsCredential=false, IsPassword=false, Value="https://auth.acme-dns.io", Description="Self hosted API is recommended: https://github.com/joohoi/acme-dns" },
+                        new ProviderParameter{ Key="allowfrom",Name="Optional Allow From IPs", IsCredential=false, IsRequired=false, IsPassword=false,  Description="e.g.  192.168.100.1/24; 1.2.3.4/32; 2002:c0a8:2a00::0/40" }
                     },
                     ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                     Config = "Provider=Certify.Providers.DNS.AcmeDns",
@@ -89,11 +89,17 @@ namespace Certify.Providers.DNS.AcmeDns
         private async Task<ValueTuple<AcmeDnsRegistration, bool>> Register(string settingsPath, string domainId)
         {
 
+            var apiPrefix = "";
+
             if (_settings["api"] != null)
             {
                 _client.BaseAddress = new System.Uri(_settings["api"]);
-            }
 
+                // we prefix the settings file with the encoded API url as these settings are 
+                // only useful on the target API, changing the api should change all settings
+                apiPrefix = ToUrlSafeBase64String(_client.BaseAddress.Host);
+            }
+            
             var registrationSettingsPath = settingsPath + "\\acmedns\\";
             if (!System.IO.Directory.Exists(registrationSettingsPath))
             {
@@ -106,9 +112,10 @@ namespace Certify.Providers.DNS.AcmeDns
                 $"[{Regex.Escape(new string(Path.GetInvalidFileNameChars()))}]",
                 RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant
                 );
+
             domainConfigFile = filenameRegex.Replace(domainConfigFile, "_");
 
-            registrationSettingsPath += domainConfigFile;
+            registrationSettingsPath += apiPrefix +"_"+ domainConfigFile;
 
             if (System.IO.File.Exists(registrationSettingsPath))
             {
@@ -148,7 +155,8 @@ namespace Certify.Providers.DNS.AcmeDns
 
                 // is a new registration
                 return (registration, true);
-            } else
+            }
+            else
             {
                 // failed to register
                 return (null, false);
@@ -186,14 +194,20 @@ namespace Certify.Providers.DNS.AcmeDns
 
             var result = await _client.SendAsync(req);
 
-            if (result.IsSuccessStatusCode)
+            try
             {
-
-                return new ActionResult { IsSuccess = true, Message = $"acme-dns updated: {request.RecordName} :: {registration.fulldomain}" };
+                if (result.IsSuccessStatusCode)
+                {
+                    return new ActionResult { IsSuccess = true, Message = $"acme-dns updated: {request.RecordName} :: {registration.fulldomain}" };
+                }
+                else
+                {
+                    return new ActionResult { IsSuccess = false, Message = $"acme-dns update failed: Ensure the {request.RecordName} CNAME points to {registration.fulldomain}" };
+                }
             }
-            else
+            catch (Exception exp)
             {
-                return new ActionResult { IsSuccess = false, Message = $"acme-dns update failed: Ensure the {request.RecordName} CNAME points to {registration.fulldomain}" };
+                return new ActionResult { IsSuccess = false, Message = $"acme-dns update failed: {exp.Message}" };
             }
         }
 
@@ -212,6 +226,21 @@ namespace Certify.Providers.DNS.AcmeDns
         {
             _log = log;
             return await Task.FromResult(true);
+        }
+
+        public static string ToUrlSafeBase64String(byte[] data)
+        {
+            var s = Convert.ToBase64String(data);
+            s = s.Split('=')[0]; // Remove any trailing '='s
+            s = s.Replace('+', '-'); // 62nd char of encoding
+            s = s.Replace('/', '_'); // 63rd char of encoding
+            return s;
+        }
+
+        public static string ToUrlSafeBase64String(string val)
+        {
+            var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(val);
+            return ToUrlSafeBase64String(bytes);
         }
     }
 }
