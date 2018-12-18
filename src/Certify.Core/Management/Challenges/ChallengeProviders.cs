@@ -50,7 +50,7 @@ namespace Certify.Core.Management.Challenges
             }
             else if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.INTERNAL)
             {
-                if (credentials == null || !credentials.Any())
+                if (credentials == null)
                 {
                     throw new CredentialsRequiredException();
                 }
@@ -96,7 +96,7 @@ namespace Certify.Core.Management.Challenges
                 }
                 else if (providerDefinition.Id == DnsProviderAcmeDns.Definition.Id)
                 {
-                    dnsAPIProvider = new DnsProviderAcmeDns(credentials, Util.GetAppDataFolder());
+                    dnsAPIProvider = new DnsProviderAcmeDns(credentials, parameters, Util.GetAppDataFolder());
                 }
             }
             else if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.MANUAL)

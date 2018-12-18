@@ -63,15 +63,15 @@ namespace Certify.Providers.DNS.AcmeDns
 
         private HttpClient _client;
 
-        private Dictionary<string, string> _settings = new Dictionary<string, string>();
+        private Dictionary<string, string> _parameters = new Dictionary<string, string>();
 
         private JsonSerializerSettings _serializerSettings;
 
         private string _settingsPath { get; set; }
 
-        public DnsProviderAcmeDns(Dictionary<string, string> settings, string settingsPath)
+        public DnsProviderAcmeDns(Dictionary<string, string> credentials, Dictionary<string, string> parameters, string settingsPath)
         {
-            _settings = settings;
+            _parameters = parameters;
             _settingsPath = settingsPath;
 
             _client = new HttpClient();
@@ -91,9 +91,9 @@ namespace Certify.Providers.DNS.AcmeDns
 
             var apiPrefix = "";
 
-            if (_settings["api"] != null)
+            if (_parameters["api"] != null)
             {
-                _client.BaseAddress = new System.Uri(_settings["api"]);
+                _client.BaseAddress = new System.Uri(_parameters["api"]);
 
                 // we prefix the settings file with the encoded API url as these settings are 
                 // only useful on the target API, changing the api should change all settings
@@ -101,6 +101,7 @@ namespace Certify.Providers.DNS.AcmeDns
             }
             
             var registrationSettingsPath = settingsPath + "\\acmedns\\";
+
             if (!System.IO.Directory.Exists(registrationSettingsPath))
             {
                 System.IO.Directory.CreateDirectory(registrationSettingsPath);
@@ -128,9 +129,9 @@ namespace Certify.Providers.DNS.AcmeDns
 
             var registration = new AcmeDns.AcmeDnsRegistration();
 
-            if (_settings.ContainsKey("allowfrom") && _settings["allowfrom"] != null)
+            if (_parameters.ContainsKey("allowfrom") && _parameters["allowfrom"] != null)
             {
-                var rules = _settings["allowfrom"].Split(';');
+                var rules = _parameters["allowfrom"].Split(';');
                 registration.allowfrom = new List<string>();
                 foreach (var r in rules)
                 {
