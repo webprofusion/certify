@@ -52,7 +52,7 @@
             </StackPanel.Style>
             <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
                 <Label Width="160" Content="{x:Static Resources:SR.ManagedCertificateSettings_WebsiteRoot}" />
-                <TextBox Width="225" Text="{Binding SelectedItem.ChallengeRootPath}" />
+                <TextBox Width="225" Text="{Binding SelectedItem.ChallengeRootPath}"  mah:TextBoxHelper.Watermark="(optional, leave blank to auto discover)"/>
                 <Button
                     x:Name="Button_WebRoot"
                     Margin="4,0,0,0"

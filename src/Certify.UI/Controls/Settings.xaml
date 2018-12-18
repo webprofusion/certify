@@ -31,7 +31,7 @@
                 Header="Settings"
                 IsSelected="True">
                 <StackPanel Margin="0,8,0,16" Orientation="Vertical">
-                    <Button
+                    <Button Name="ConfigureAutoRenew"
                         Width="160"
                         Height="32"
                         Margin="8,0,0,5"

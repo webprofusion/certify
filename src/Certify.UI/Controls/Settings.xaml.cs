@@ -35,6 +35,12 @@ namespace Certify.UI.Controls
             //TODO: we could now bind to Preferences
             _prefs = await MainViewModel.CertifyClient.GetPreferences();
 
+            if (_prefs.UseBackgroundServiceAutoRenewal)
+            {
+                // if scheduled task not in use, remove legacy option to modify
+                ConfigureAutoRenew.Visibility = Visibility.Collapsed;
+            }
+
             MainViewModel.PrimaryContactEmail = await MainViewModel.CertifyClient.GetPrimaryContact();
 
             this.EnableTelematicsCheckbox.IsChecked = _prefs.EnableAppTelematics;
