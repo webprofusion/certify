@@ -122,7 +122,8 @@
                             DisplayMemberPath="Title"
                             ItemsSource="{Binding FilteredCredentials}"
                             SelectedValue="{Binding SelectedItem.ChallengeCredentialKey, UpdateSourceTrigger=PropertyChanged}"
-                            SelectedValuePath="StorageKey" />
+                            SelectedValuePath="StorageKey"
+                            />
 
                         <Button
                             x:Name="AddStoredCredential"

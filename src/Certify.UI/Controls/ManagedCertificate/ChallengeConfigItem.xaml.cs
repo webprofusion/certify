@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -97,7 +97,16 @@ namespace Certify.UI.Controls.ManagedCertificate
             // filter list of matching credentials
             await AppViewModel.RefreshStoredCredentialsList();
             var credentials = AppViewModel.StoredCredentials.Where(s => s.ProviderType == EditModel.SelectedItem.ChallengeProvider);
+            var currentSelectedValue = EditModel.SelectedItem.ChallengeCredentialKey;
+
+            // updating item source also clears selected value, so this workaround sets it back
+            // this is only an issue when you have two or more credentials for one provider
             StoredCredentialList.ItemsSource = credentials;
+
+            if (currentSelectedValue != null)
+            {
+                EditModel.SelectedItem.ChallengeCredentialKey = currentSelectedValue;
+            }
 
             //select first credential by default
             if (credentials.Count() > 0)
