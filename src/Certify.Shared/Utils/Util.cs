@@ -426,5 +426,21 @@ namespace Certify.Management
             // is installed.
             return "No 4.5 or later version detected";
         }
+
+        
+        public static string ToUrlSafeBase64String(byte[] data)
+        {
+            var s = Convert.ToBase64String(data);
+            s = s.Split('=')[0]; // Remove any trailing '='s
+            s = s.Replace('+', '-'); // 62nd char of encoding
+            s = s.Replace('/', '_'); // 63rd char of encoding
+            return s;
+        }
+
+        public static string ToUrlSafeBase64String(string val)
+        {
+            var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(val);
+            return ToUrlSafeBase64String(bytes);
+        }
     }
 }

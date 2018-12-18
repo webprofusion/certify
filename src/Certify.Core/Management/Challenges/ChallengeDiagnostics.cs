@@ -202,14 +202,22 @@ namespace Certify.Core.Management.Challenges
                     }
                     else if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                     {
+                        var recordName = $"_acme-challenge-test.{domain}".Replace("*.", "");
+
+                        if (challengeConfig.ChallengeProvider == Certify.Providers.DNS.AcmeDns.DnsProviderAcmeDns.Definition.Id)
+                        {
+                            // use real cname to avoid having to setup different records
+                            recordName = $"_acme-challenge.{domain}".Replace("*.", "");
+                        }
+
                         var simulatedAuthorization = new PendingAuthorization
                         {
                             Challenges = new List<AuthorizationChallengeItem> {
                                      new AuthorizationChallengeItem
                                      {
                                           ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                                            Key=$"_acme-challenge-test.{domain}".Replace("*.", ""),
-                                            Value = GenerateSimulatedKeyAuth()
+                                            Key= recordName,
+                                            Value = GenerateSimulatedDnsAuthValue()
                                      }
                                  }
                         };
@@ -243,16 +251,6 @@ namespace Certify.Core.Management.Challenges
             return results;
         }
 
-    
-        public static string ToUrlSafeBase64String(byte[] data)
-        {
-            var s = Convert.ToBase64String(data); // Regular base64 encoder
-            s = s.Split('=')[0]; // Remove any trailing '='s
-            s = s.Replace('+', '-'); // 62nd char of encoding
-            s = s.Replace('/', '_'); // 63rd char of encoding
-            return s;
-        }
-
         private string GenerateSimulatedKeyAuth()
         {
             // create simulated challenge
@@ -263,15 +261,38 @@ namespace Certify.Core.Management.Challenges
 
             random.NextBytes(simulated_token_data);
 
-            var simulated_token = ToUrlSafeBase64String(simulated_token_data);
+            var simulated_token = Certify.Management.Util.ToUrlSafeBase64String(simulated_token_data);
 
             var sha256 = System.Security.Cryptography.SHA256.Create();
 
-            byte[] thumbprint_data = sha256.ComputeHash(Encoding.UTF8.GetBytes(simulated_token));
+            var thumbprint_data = sha256.ComputeHash(Encoding.UTF8.GetBytes(simulated_token));
 
-            var thumbprint = BitConverter.ToString(thumbprint_data).Replace("-", "").ToLower();
+            var thumbprint = Certify.Management.Util.ToUrlSafeBase64String(thumbprint_data);
 
             return $"{simulated_token}.{thumbprint}";
+        }
+
+        private string GenerateSimulatedDnsAuthValue()
+        {
+           
+            // create simulated challenge response
+
+            var random = new Random();
+
+            var simulated_token_data = new byte[24]; // generate 192 bits of data
+
+            random.NextBytes(simulated_token_data);
+
+            var simulated_token = Certify.Management.Util.ToUrlSafeBase64String(simulated_token_data);
+
+            var hash = "";
+            using (var sha = System.Security.Cryptography.SHA256.Create())
+            {
+                var keyAuthzDig = sha.ComputeHash(Encoding.UTF8.GetBytes(simulated_token));
+                hash = Certify.Management.Util.ToUrlSafeBase64String(keyAuthzDig);
+                
+            }
+            return $"{hash}";
         }
 
         public async Task<PendingAuthorization> PerformAutomatedChallengeResponse(ILog log, ICertifiedServer iisManager, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
