@@ -64,8 +64,9 @@
                             <TextBlock
                                 DockPanel.Dock="Left"
                                 Style="{StaticResource Instructions}"
-                                Text="{Binding Path=Message}"
-                                TextWrapping="WrapWithOverflow" />
+                                Text="{Binding Path=Message}" ToolTip="Click to copy to clipboard"
+                                
+                                TextWrapping="WrapWithOverflow" MouseUp="TextBlock_MouseUp" />
                         </DockPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
