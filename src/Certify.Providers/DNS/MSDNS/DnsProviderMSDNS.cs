@@ -13,14 +13,21 @@ namespace Certify.Providers.DNS.MSDNS
     public class DnsProviderMSDNS : IDnsProvider
     {
         private readonly string _serverip;
-        private int? _customPropagationDelay = null;
+        private readonly int? _customPropagationDelay = null;
         private readonly string _username;
         private readonly string _domain;
         private SecureString _password;
         private readonly string _server;
         private readonly string _serverConnectionName;
         private ILog _log;
-        private readonly PasswordAuthenticationMechanism _authMechanism = PasswordAuthenticationMechanism.NtlmDomain;
+        private readonly PasswordAuthenticationMechanism _authMechanism = PasswordAuthenticationMechanism.Default;
+        private readonly WindowsRemotingProtocol _protocol = WindowsRemotingProtocol.DCOM;
+
+        private enum WindowsRemotingProtocol
+        {
+            DCOM,
+            WinRM
+        }
 
         public DnsProviderMSDNS(Dictionary<string, string> credentials, Dictionary<string, string> parameters)
         {
@@ -39,7 +46,11 @@ namespace Certify.Providers.DNS.MSDNS
                 _password = null;
             }
             _domain = credentials.ContainsKey("domain") ? credentials["domain"] : null;
-            _customPropagationDelay = credentials.ContainsKey("propagationdelay") ? Convert.ToInt32(credentials["propagationdelay"]) : (int?)null;
+            _customPropagationDelay = parameters.ContainsKey("propagationdelay") ? Convert.ToInt32(parameters["propagationdelay"]) : (int?)null;
+            if (credentials.ContainsKey("protocol") && credentials["protocol"].ToLowerInvariant() == "winrm")
+            {
+                _protocol = WindowsRemotingProtocol.WinRM;
+            }
 
             if (credentials.ContainsKey("authentication"))
             {
@@ -87,7 +98,8 @@ namespace Certify.Providers.DNS.MSDNS
                         new ProviderParameter{ Key="username", Name="User Name", IsRequired=false, IsCredential = true, IsPassword = false },
                         new ProviderParameter{ Key="password", Name="Password", IsRequired = false, IsCredential = true, IsPassword = true},
                         new ProviderParameter{ Key="domain", Name="Domain", IsRequired = false, IsCredential = true, IsPassword = false},
-                        new ProviderParameter{ Key="authentication", Name="Authentication", IsRequired = false, IsCredential = true, IsPassword = false, Description="Must be one of the following: Basic, CredSsp, Default, Digest, Kerberos, Negotiate, NtlmDomain", Value="NtlmDomain" },
+                        new ProviderParameter{ Key="protocol", Name="Remote Management Protocol", IsRequired = true, IsCredential = false, IsPassword = false, Description="Must be one of the following: DCOM, WinRM", Value="DCOM" },
+                        new ProviderParameter{ Key="authentication", Name="Authentication", IsRequired = true, IsCredential = false, IsPassword = false, Description="Must be one of the following: Basic, CredSsp, Default, Digest, Kerberos, Negotiate, NtlmDomain", Value="NtlmDomain" },
                         new ProviderParameter{ Key="propagationdelay",Name="Propagation Delay Seconds (optional)", IsRequired=false, IsPassword=false, Value="60", IsCredential=false },
                     },
                     ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
@@ -109,22 +121,23 @@ namespace Certify.Providers.DNS.MSDNS
 
         public List<ProviderParameter> ProviderParameters => DnsProviderMSDNS.Definition.ProviderParameters;
 
-        public Task<ActionResult> CreateRecord(DnsRecord request)
+        public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
             var session = CreateCimSession();
+
             var parameters = new CimMethodParametersCollection
             {
                 CimMethodParameter.Create("DnsServerName", _server, CimType.String, CimFlags.None),
-                CimMethodParameter.Create("ContainerName", request.RecordName.Split('.')[request.RecordName.Split('.').Count() - 2] + "." + request.RecordName.Split('.')[request.RecordName.Split('.').Count() - 1], CimType.String, CimFlags.None),
+                CimMethodParameter.Create("ContainerName", SolveContainerName(session, request.RecordName), CimType.String, CimFlags.None),
                 CimMethodParameter.Create("OwnerName", request.RecordName, CimType.String, CimFlags.None),
                 CimMethodParameter.Create("DescriptiveText", request.RecordValue, CimType.String, CimFlags.None)
             };
             session.InvokeMethod(@"root\MicrosoftDNS", "MicrosoftDNS_TXTType", "CreateInstanceFromPropertyData", parameters);
 
-            return new Task<ActionResult>(() => new ActionResult { IsSuccess = true, Message = "DNS record updated" });
+            return new ActionResult() { IsSuccess = true, Message = "DNS record updated" };
         }
 
-        public Task<ActionResult> DeleteRecord(DnsRecord request)
+        public async Task<ActionResult> DeleteRecord(DnsRecord request)
         {
             var session = CreateCimSession();
             var strQuery = string.Format("SELECT * FROM MicrosoftDNS_TXTType WHERE OwnerName = '{0}' AND DescriptiveText = '{1}'", request.RecordName, request.RecordValue);
@@ -134,23 +147,15 @@ namespace Certify.Providers.DNS.MSDNS
                 session.DeleteInstance(txtRecord);
             }
 
-            return Task.FromResult(new ActionResult { IsSuccess = true, Message = "DNS record removed." });
+            return new ActionResult { IsSuccess = true, Message = "DNS record removed." };
         }
 
-        public Task<List<DnsZone>> GetZones()
+        public async Task<List<DnsZone>> GetZones()
         {
-            var zones = new List<DnsZone>();
-
             var session = CreateCimSession();
-            var strQuery = "SELECT * FROM MicrosoftDNS_Zone";
-            var dnsZones = session.QueryInstances(@"root\MicrosoftDNS", "WQL", strQuery);
-            foreach (var dnsZone in dnsZones)
-            {
-                var result = session.InvokeMethod(dnsZone, "GetDistinguishedName", null);
-                zones.Add(new DnsZone() { ZoneId = result.ReturnValue.Value as string, Name = result.ReturnValue.Value as string });
-            }
-
-            return Task.FromResult(zones);
+            var zones = new List<DnsZone>();
+            GetZones(session).ForEach(o => zones.Add(new DnsZone() { Name = o, ZoneId = o }));
+            return zones;
         }
 
         public async Task<bool> InitProvider(ILog log = null)
@@ -172,16 +177,62 @@ namespace Certify.Providers.DNS.MSDNS
             }
         }
 
+        private List<string> GetZones(CimSession session)
+        {
+            var zones = new List<string>();
+            var strQuery = "SELECT * FROM MicrosoftDNS_Zone";
+            var dnsZones = session.QueryInstances(@"root\MicrosoftDNS", "WQL", strQuery);
+            foreach (var dnsZone in dnsZones)
+            {
+                zones.Add(dnsZone.CimInstanceProperties["ContainerName"].Value as string);
+            }
+
+            return zones;
+        }
+
         private CimSession CreateCimSession()
         {
-
-            var options = new WSManSessionOptions();
-            if (!string.IsNullOrEmpty(_username))
+            CimSessionOptions options = null;
+            switch (_protocol)
             {
-                options.AddDestinationCredentials(new CimCredential(_authMechanism, _domain, _username, _password));
-                options.UseSsl = true;
+                case WindowsRemotingProtocol.DCOM:
+                    options = new DComSessionOptions();
+                    if (!string.IsNullOrEmpty(_username))
+                    {
+                        options.AddDestinationCredentials(new CimCredential(_authMechanism, _domain, _username, _password));
+                    }
+                    break;
+                case WindowsRemotingProtocol.WinRM:
+                    var wsmanOptions = new WSManSessionOptions();
+                    if (!string.IsNullOrEmpty(_username))
+                    {
+                        wsmanOptions.AddDestinationCredentials(new CimCredential(_authMechanism, _domain, _username, _password));
+                        wsmanOptions.UseSsl = true;
+                    }
+                    options = wsmanOptions;
+                    break;
             }
             return CimSession.Create(_serverConnectionName, options);
+        }
+
+        private string SolveContainerName(CimSession session, string recordName)
+        {
+            var zones = GetZones(session);
+            var partCount = recordName.Split('.').Count();
+            var partAssembly = 2;
+            var containerName = recordName.Split('.')[partCount - 1];
+            while (partAssembly <= partCount && !zones.Contains(containerName))
+            {
+                containerName = recordName.Split('.')[partCount - partAssembly] + "." + containerName;
+                partAssembly++;
+            }
+
+            if (!zones.Contains(containerName))
+            {
+                throw new InvalidOperationException("The zone for " + recordName + " does not appear to exist on this DNS server.");
+            }
+
+            return containerName;
         }
     }
 }
