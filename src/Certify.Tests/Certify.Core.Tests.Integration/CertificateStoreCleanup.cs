@@ -107,10 +107,11 @@ namespace Certify.Core.Tests
 
             // run cleanup process, removes certs by name, excluding the given thumbprints
             CertificateManager.PerformCertificateStoreCleanup(
-                Models.CertificateCleanupMode.AfterRenewal, 
-                new DateTime(1936, 06, 01), 
-                matchingName:"cert-test2.example.com", 
-                excludedThumbprints: new List<string> { cert3.Thumbprint });
+                Models.CertificateCleanupMode.AfterRenewal,
+                new DateTime(1936, 06, 01),
+                matchingName: "cert-test2.example.com",
+                excludedThumbprints: new List<string> { cert3.Thumbprint }
+                );
 
             // check the correct certificates have been removed
             try
@@ -174,7 +175,8 @@ namespace Certify.Core.Tests
                 Models.CertificateCleanupMode.FullCleanup,
                 new DateTime(1936, 06, 01),
                 matchingName: "cert-test2.example.com",
-                excludedThumbprints: new List<string> { cert3.Thumbprint });
+                excludedThumbprints: new List<string> { cert3.Thumbprint }
+                );
 
             // check the correct certificates have been removed
             try

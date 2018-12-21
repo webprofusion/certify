@@ -25,8 +25,8 @@ namespace Certify.Management
         public bool IsSingleInstanceMode { get; set; } = true; //if true, access to this resource is centralised so we can make assumptions about when reload of settings is required etc
 
         // TODO: make db path configurable on service start
-        private string _dbPath=$"C:\\programdata\\certify\\{ITEMMANAGERCONFIG}.db";
-        private string _connectionString = "";
+        private readonly string _dbPath=$"C:\\programdata\\certify\\{ITEMMANAGERCONFIG}.db";
+        private readonly string _connectionString;
 
         public ItemManager(string storageSubfolder = null)
         {
@@ -44,7 +44,7 @@ namespace Certify.Management
 
         private string GetDbPath()
         {
-            string appDataPath = Util.GetAppDataFolder(_storageSubFolder);
+            var appDataPath = Util.GetAppDataFolder(_storageSubFolder);
             return Path.Combine(appDataPath, $"{ITEMMANAGERCONFIG}.db");
         }
 
@@ -155,7 +155,7 @@ namespace Certify.Management
                     {
                         while (await reader.ReadAsync())
                         {
-                            string itemId = (string)reader["id"];
+                            var itemId = (string)reader["id"];
 
                             var managedCertificate = JsonConvert.DeserializeObject<ManagedCertificate>((string)reader["json"]);
 
@@ -192,7 +192,8 @@ namespace Certify.Management
 
         private async Task UpgradeSettings()
         {
-            string appDataPath = Util.GetAppDataFolder(_storageSubFolder);
+            var appDataPath = Util.GetAppDataFolder(_storageSubFolder);
+
             var json = Path.Combine(appDataPath, $"{ITEMMANAGERCONFIG}.json");
             var db = Path.Combine(appDataPath, $"{ITEMMANAGERCONFIG}.db");
 
@@ -202,8 +203,8 @@ namespace Certify.Management
 
                 // read managed sites using tokenize stream, this is useful for large files
                 var serializer = new JsonSerializer();
-                using (StreamReader sr = new StreamReader(json))
-                using (JsonTextReader reader = new JsonTextReader(sr))
+                using (var sr = new StreamReader(json))
+                using (var reader = new JsonTextReader(sr))
                 {
                     var managedCertificateList = serializer.Deserialize<List<ManagedCertificate>>(reader);
 
@@ -305,13 +306,13 @@ namespace Certify.Management
             var items = _managedCertificatesCache.Values.AsQueryable();
             if (filter != null)
             {
-                if (!String.IsNullOrEmpty(filter.Keyword)) items = items.Where(i => i.Name.ToLowerInvariant().Contains(filter.Keyword.ToLowerInvariant()));
+                if (!string.IsNullOrEmpty(filter.Keyword)) items = items.Where(i => i.Name.ToLowerInvariant().Contains(filter.Keyword.ToLowerInvariant()));
 
-                if (!String.IsNullOrEmpty(filter.ChallengeType)) items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeType == filter.ChallengeType));
+                if (!string.IsNullOrEmpty(filter.ChallengeType)) items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeType == filter.ChallengeType));
 
-                if (!String.IsNullOrEmpty(filter.ChallengeProvider)) items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeProvider == filter.ChallengeProvider));
+                if (!string.IsNullOrEmpty(filter.ChallengeProvider)) items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeProvider == filter.ChallengeProvider));
 
-                if (!String.IsNullOrEmpty(filter.StoredCredentialKey)) items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeCredentialKey == filter.StoredCredentialKey));
+                if (!string.IsNullOrEmpty(filter.StoredCredentialKey)) items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeCredentialKey == filter.StoredCredentialKey));
 
                 //TODO: IncludeOnlyNextAutoRenew
                 if (filter.MaxResults > 0) items = items.Take(filter.MaxResults);

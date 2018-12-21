@@ -12,8 +12,8 @@ namespace Certify.Core.Management.Challenges
     public class LibcloudDNSProvider : IDnsProvider
     {
         private ILog _log;
-        private string _pythonPath = "";
-        private Dictionary<string, string> _credentials;
+        private readonly string _pythonPath = "";
+        private readonly Dictionary<string, string> _credentials;
 
         public LibcloudDNSProvider(Dictionary<string, string> credentials)
         {
@@ -38,7 +38,7 @@ namespace Certify.Core.Management.Challenges
             // test connection and credentials
             try
             {
-                var zones = await this.GetZones();
+                var zones = await GetZones();
 
                 if (zones != null && zones.Any())
                 {
@@ -63,8 +63,8 @@ namespace Certify.Core.Management.Challenges
             // run script dns_helper_init.py -p <providername> -c <user,pwd> -d <domain> -n <record
             // name> -v <record value>
 
-            string providerSpecificConfig = "ROUTE53";
-            string credentialsString = String.Join(",", _credentials);
+            var providerSpecificConfig = "ROUTE53";
+            var credentialsString = string.Join(",", _credentials);
 
             // var config = providerDetails.Config.Split(';');
             //get our driver type
@@ -122,22 +122,23 @@ namespace Certify.Core.Management.Challenges
         {
             try
             {
-                var start = new ProcessStartInfo();
-
-                start.FileName = _pythonPath;
-
-                start.WorkingDirectory = Environment.CurrentDirectory + "\\Scripts\\Python\\";
-                start.Arguments = string.Format("{0}", args);
-                start.UseShellExecute = false;
-                start.RedirectStandardOutput = true;
-
-                bool failEncountered = false;
-                string msg = "";
-                using (Process process = Process.Start(start))
+                var start = new ProcessStartInfo
                 {
-                    using (StreamReader reader = process.StandardOutput)
+                    FileName = _pythonPath,
+                    WorkingDirectory = Environment.CurrentDirectory + "\\Scripts\\Python\\",
+                    Arguments = string.Format("{0}", args),
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true
+                };
+
+                var failEncountered = false;
+                var msg = "";
+
+                using (var process = Process.Start(start))
+                {
+                    using (var reader = process.StandardOutput)
                     {
-                        string result = reader.ReadToEnd();
+                        var result = reader.ReadToEnd();
                         if (result.ToLower().Contains("failed") || result.ToLower().Contains("error"))
                         {
                             failEncountered = true;

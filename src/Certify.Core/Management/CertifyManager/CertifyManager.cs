@@ -56,7 +56,8 @@ namespace Certify.Management
             _pluginManager.LoadPlugins();
 
             // TODO: convert providers to plugins, allow for async init
-            string userAgent = Util.GetUserAgent();
+            var userAgent = Util.GetUserAgent();
+
             var certes = new Certify.Providers.Certes.CertesACMEProvider(Management.Util.GetAppDataFolder() + "\\certes", userAgent);
 
             certes.InitProvider(_serviceLog).Wait();
@@ -122,10 +123,12 @@ namespace Certify.Management
             if (GetContactRegistrations().Count == 0)
             {
                 var acmeVaultMigration = new Models.Compat.ACMEVaultUpgrader();
+
                 if (acmeVaultMigration.HasACMEVault())
                 {
-                    string email = acmeVaultMigration.GetContact();
-                    if (!String.IsNullOrEmpty(email))
+                    var email = acmeVaultMigration.GetContact();
+
+                    if (!string.IsNullOrEmpty(email))
                     {
                         var addedOK = await _acmeClientProvider.AddNewAccountAndAcceptTOS(_serviceLog, email);
 
@@ -176,7 +179,7 @@ namespace Certify.Management
 
         public RequestProgressState GetRequestProgressState(string managedItemId)
         {
-            var progress = this._progressResults.FirstOrDefault(p => p.ManagedCertificate.Id == managedItemId);
+            var progress = _progressResults.FirstOrDefault(p => p.ManagedCertificate.Id == managedItemId);
             if (progress == null)
             {
                 return new RequestProgressState(RequestState.NotRunning, "No request in progress", null);
@@ -199,7 +202,7 @@ namespace Certify.Management
 
             if (CoreAppSettings.Current.UseBackgroundServiceAutoRenewal)
             {
-                await this.PerformRenewalAllManagedCertificates(true, null);
+                await PerformRenewalAllManagedCertificates(true, null);
             }
 
             return await Task.FromResult(true);
@@ -221,7 +224,7 @@ namespace Certify.Management
             if (CoreAppSettings.Current.EnableCertificateCleanup)
             {
                 await PerformCertificateCleanup();
-                
+
             }
 
             return await Task.FromResult(true);
@@ -236,7 +239,7 @@ namespace Certify.Management
 
                 if (mode != CertificateCleanupMode.None)
                 {
-                    List<string> excludedCertThumprints = new List<string>();
+                    var excludedCertThumprints = new List<string>();
 
                     if (mode == CertificateCleanupMode.FullCleanup)
                     {
@@ -258,22 +261,15 @@ namespace Certify.Management
                             (CertificateCleanupMode)mode,
                             DateTime.Now,
                             matchingName: null,
-                            excludedThumbprints: excludedCertThumprints
+                            excludedThumbprints: excludedCertThumprints,
+                            log: _serviceLog
                         );
-
-                    if (certsRemoved.Any())
-                    {
-                        foreach (var c in certsRemoved)
-                        {
-                            _serviceLog.Information($"Cleanup removed cert: {c}");
-                        }
-                    }
                 }
             }
             catch (Exception exp)
             {
                 // log exception
-                _serviceLog.Error("Failed to perform certificate cleanup: " + exp.ToString());
+                _serviceLog?.Error("Failed to perform certificate cleanup: " + exp.ToString());
             }
         }
 

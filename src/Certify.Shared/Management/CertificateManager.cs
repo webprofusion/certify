@@ -6,6 +6,7 @@ using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using Certify.Models.Providers;
 using Certify.Utils;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.X509;
@@ -32,7 +33,7 @@ namespace Certify.Management
             keyPairGenerator.Init(keyGenerationParameters);
 
             // create self-signed certificate
-            var serialNumber = BigIntegers.CreateRandomInRange(BigInteger.One, BigInteger.ValueOf(Int64.MaxValue), random);
+            var serialNumber = BigIntegers.CreateRandomInRange(BigInteger.One, BigInteger.ValueOf(long.MaxValue), random);
             var certificateGenerator = new X509V3CertificateGenerator();
             certificateGenerator.SetSubjectDN(new X509Name($"CN={domain}"));
             certificateGenerator.SetIssuerDN(new X509Name($"CN={domain}"));
@@ -158,38 +159,52 @@ namespace Certify.Management
         public static X509Certificate2 GetCertificateFromStore(string subjectName)
         {
             X509Certificate2 cert = null;
+
             var store = GetDefaultStore();
+
             store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
-            X509Certificate2Collection results = store.Certificates.Find(X509FindType.FindBySubjectName, subjectName, false);
+
+            var results = store.Certificates.Find(X509FindType.FindBySubjectName, subjectName, false);
+
             if (results.Count > 0)
             {
                 cert = results[0];
             }
+
             store.Close();
+
             return cert;
         }
 
         public static X509Certificate2 GetCertificateByThumbprint(string thumbprint)
         {
             X509Certificate2 cert = null;
+
             var store = GetDefaultStore();
             store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
-            X509Certificate2Collection results = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, false);
+
+            var results = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, false);
+
             if (results.Count > 0)
             {
                 cert = results[0];
             }
+
             store.Close();
+
             return cert;
         }
 
         public static X509Certificate2 StoreCertificate(X509Certificate2 certificate)
         {
             var store = GetDefaultStore();
+
             store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
-            //TODO: remove old cert?
+
             store.Add(certificate);
+
             store.Close();
+
             return certificate;
         }
 
@@ -210,13 +225,12 @@ namespace Certify.Management
         /// <param name="accountName"> user to grant read access for </param>
         public static void GrantUserAccessToCertificatePrivateKey(X509Certificate2 cert, string accountName)
         {
-            RSACryptoServiceProvider rsa = cert.PrivateKey as RSACryptoServiceProvider;
 
-            if (rsa != null)
+            if (cert.PrivateKey is RSACryptoServiceProvider rsa)
             {
-                string privateKeyPath = GetMachineKeyLocation(rsa.CspKeyContainerInfo.UniqueKeyContainerName);
+                var privateKeyPath = GetMachineKeyLocation(rsa.CspKeyContainerInfo.UniqueKeyContainerName);
 
-                FileInfo file = new FileInfo(privateKeyPath + "\\" + rsa.CspKeyContainerInfo.UniqueKeyContainerName);
+                var file = new FileInfo(privateKeyPath + "\\" + rsa.CspKeyContainerInfo.UniqueKeyContainerName);
 
                 var fs = file.GetAccessControl();
 
@@ -229,25 +243,27 @@ namespace Certify.Management
 
         public static FileSecurity GetUserAccessInfoForCertificatePrivateKey(X509Certificate2 cert)
         {
-            RSACryptoServiceProvider rsa = cert.PrivateKey as RSACryptoServiceProvider;
 
-            if (rsa != null)
+            if (cert.PrivateKey is RSACryptoServiceProvider rsa)
             {
-                string privateKeyPath = GetMachineKeyLocation(rsa.CspKeyContainerInfo.UniqueKeyContainerName);
+                var privateKeyPath = GetMachineKeyLocation(rsa.CspKeyContainerInfo.UniqueKeyContainerName);
 
-                FileInfo file = new FileInfo(privateKeyPath + "\\" + rsa.CspKeyContainerInfo.UniqueKeyContainerName);
+                var file = new FileInfo(privateKeyPath + "\\" + rsa.CspKeyContainerInfo.UniqueKeyContainerName);
 
                 return file.GetAccessControl();
             }
+
             return null;
         }
 
         private static string GetMachineKeyLocation(string keyFileName)
         {
-            string appDataPath =
+            var appDataPath =
             Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            string machineKeyPath = appDataPath + @"\Microsoft\Crypto\RSA\MachineKeys";
-            string[] fileList = Directory.GetFiles(machineKeyPath, keyFileName);
+
+            var machineKeyPath = appDataPath + @"\Microsoft\Crypto\RSA\MachineKeys";
+
+            var fileList = Directory.GetFiles(machineKeyPath, keyFileName);
 
             // if we have results, use this path
             if (fileList.Any())
@@ -259,9 +275,10 @@ namespace Certify.Management
             appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             machineKeyPath = appDataPath + @"\Microsoft\Crypto\RSA\";
             fileList = Directory.GetDirectories(machineKeyPath);
+
             if (fileList.Any())
             {
-                foreach (string filename in fileList)
+                foreach (var filename in fileList)
                 {
                     var dirList = Directory.GetFiles(filename, keyFileName);
                     if (dirList.Any())
@@ -270,6 +287,7 @@ namespace Certify.Management
                     }
                 }
             }
+
             //Could not access private key file.
             return null;
         }
@@ -281,7 +299,8 @@ namespace Certify.Management
 
         public static bool IsCertificateInStore(X509Certificate2 cert)
         {
-            bool certExists = false;
+            var certExists = false;
+
             using (var store = GetDefaultStore())
             {
                 store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
@@ -306,93 +325,103 @@ namespace Certify.Management
             Models.CertificateCleanupMode cleanupMode,
             DateTime expiryBefore,
             string matchingName,
-            List<string> excludedThumbprints
+            List<string> excludedThumbprints,
+            ILog log = null
             )
         {
             var removedCerts = new List<string>();
 
-            // get all existing cert bindings
-            var allCertBindings = new List<Models.BindingInfo>();
-
-            // TODO: reinstate once we have reliable binding info (also some users get an FileNotFound dll loading exception accessing this functionality):
-            // if (checkBindings) allCertBindings =  Certify.Utils.Networking.GetCertificateBindings();
-
-            // get all certificates
-            using (var store = GetDefaultStore())
+            try
             {
-                store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
+                // get all existing cert bindings
+                var allCertBindings = new List<Models.BindingInfo>();
 
-                var certsToRemove = new List<X509Certificate2>();
-                foreach (var c in store.Certificates)
+                // TODO: reinstate once we have reliable binding info (also some users get an FileNotFound dll loading exception accessing this functionality):
+                // if (checkBindings) allCertBindings =  Certify.Utils.Networking.GetCertificateBindings();
+
+                // get all certificates
+                using (var store = GetDefaultStore())
                 {
-                    // cleanup either has to be expired only or has to be given a list of certificate thumbprints to preserve
-                    // if cert is in the exclusion list then cleanup is skipped
+                    store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
 
-                    if (
-                        (excludedThumbprints == null && cleanupMode == Models.CertificateCleanupMode.AfterExpiry)
-                        ||
-                        (excludedThumbprints.Any() && !excludedThumbprints.Any(e => e.ToLower() == c.Thumbprint.ToLower()))
-                        )
+                    var certsToRemove = new List<X509Certificate2>();
+                    foreach (var c in store.Certificates)
                     {
-                        //bool isBound = false;
-                        //if (checkBindings) isBound = allCertBindings.Any(b => b.CertificateHash == c.Thumbprint);
+                        // cleanup either has to be expired only or has to be given a list of certificate thumbprints to preserve
+                        // if cert is in the exclusion list then cleanup is skipped
 
-                        if (cleanupMode == Models.CertificateCleanupMode.AfterExpiry)
+                        if (
+                            (excludedThumbprints == null && cleanupMode == Models.CertificateCleanupMode.AfterExpiry)
+                            ||
+                            (excludedThumbprints.Any() && !excludedThumbprints.Any(e => e.ToLower() == c.Thumbprint.ToLower()))
+                            )
                         {
-                            // queue removal of existing expired cert with [Certify] text in friendly name.
-                            if (
-                                 (string.IsNullOrEmpty(matchingName) || (c.FriendlyName.StartsWith(matchingName)))
-                                 && c.FriendlyName.Contains("[Certify]")
-                                 && c.NotAfter < expiryBefore
-                                 )
+                            //bool isBound = false;
+                            //if (checkBindings) isBound = allCertBindings.Any(b => b.CertificateHash == c.Thumbprint);
+
+                            if (cleanupMode == Models.CertificateCleanupMode.AfterExpiry)
                             {
-                                certsToRemove.Add(c);
+                                // queue removal of existing expired cert with [Certify] text in friendly name.
+                                if (
+                                     (string.IsNullOrEmpty(matchingName) || (c.FriendlyName.StartsWith(matchingName)))
+                                     && c.FriendlyName.Contains("[Certify]")
+                                     && c.NotAfter < expiryBefore
+                                     )
+                                {
+                                    certsToRemove.Add(c);
+                                }
                             }
-                        }
-                        else if (cleanupMode == Models.CertificateCleanupMode.AfterRenewal)
-                        {
-                            // queue removal of existing cert based on name match
-
-                            if (
-                                (!string.IsNullOrEmpty(matchingName) && c.FriendlyName.StartsWith(matchingName))
-                                && c.FriendlyName.Contains("[Certify]")
-                                )
+                            else if (cleanupMode == Models.CertificateCleanupMode.AfterRenewal)
                             {
-                                certsToRemove.Add(c);
+                                // queue removal of existing cert based on name match
+
+                                if (
+                                    (!string.IsNullOrEmpty(matchingName) && c.FriendlyName.StartsWith(matchingName))
+                                    && c.FriendlyName.Contains("[Certify]")
+                                    )
+                                {
+                                    certsToRemove.Add(c);
+                                }
+
                             }
-
-                        }
-                        else if (cleanupMode == Models.CertificateCleanupMode.FullCleanup)
-                        {
-                            // queue removal of any Certify cert not in excluded list
-
-                            if (
-                                 (string.IsNullOrEmpty(matchingName) || (c.FriendlyName.StartsWith(matchingName)))
-                                && c.FriendlyName.Contains("[Certify]")
-                                )
+                            else if (cleanupMode == Models.CertificateCleanupMode.FullCleanup)
                             {
-                                certsToRemove.Add(c);
-                            }
+                                // queue removal of any Certify cert not in excluded list
 
+                                if (
+                                     (string.IsNullOrEmpty(matchingName) || (c.FriendlyName.StartsWith(matchingName)))
+                                    && c.FriendlyName.Contains("[Certify]")
+                                    )
+                                {
+                                    certsToRemove.Add(c);
+                                }
+
+                            }
                         }
                     }
+
+                    // attempt to remove certs
+                    foreach (var oldCert in certsToRemove)
+                    {
+                        try
+                        {
+                            store.Remove(oldCert);
+
+                            removedCerts.Add($"{oldCert.FriendlyName} : {oldCert.Thumbprint}");
+
+                            log?.Information($"Removing old cert: { oldCert.FriendlyName} : { oldCert.Thumbprint}");
+                        }
+                        catch (Exception exp)
+                        {
+                            // Couldn't remove it
+                            log?.Error("Could not remove cert:" + oldCert.FriendlyName + " " + exp.ToString());
+                        }
+                    }
+                    store.Close();
                 }
-
-                // attempt to remove certs
-                foreach (var oldCert in certsToRemove)
-                {
-                    try
-                    {
-                        store.Remove(oldCert);
-                        removedCerts.Add($"{oldCert.FriendlyName} : {oldCert.Thumbprint}");
-                    }
-                    catch (Exception exp)
-                    {
-                        // Couldn't remove it
-                        System.Diagnostics.Debug.WriteLine("Could not remove cert:" + oldCert.FriendlyName + " " + exp.ToString());
-                    }
-                }
-                store.Close();
+            } catch (Exception exp)
+            {
+                log?.Error("Failed to perform certificate cleanup: " + exp.ToString());
             }
 
             return removedCerts;

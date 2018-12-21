@@ -86,7 +86,7 @@ namespace Certify.Management
 
                 //if we care about stopped sites being stopped, check for that if a specifc site is selected
                 var isSiteRunning = true;
-                if (!CoreAppSettings.Current.IgnoreStoppedSites && !String.IsNullOrEmpty(managedCertificate.ServerSiteId))
+                if (!CoreAppSettings.Current.IgnoreStoppedSites && !string.IsNullOrEmpty(managedCertificate.ServerSiteId))
                 {
                     isSiteRunning = await IsManagedCertificateRunning(managedCertificate.Id);
                 }
@@ -106,11 +106,11 @@ namespace Certify.Management
                         if (testModeOnly)
                         {
                             //simulated request for UI testing
-                            renewalTasks.Add(this.PerformDummyCertificateRequest(managedCertificate, tracker));
+                            renewalTasks.Add(PerformDummyCertificateRequest(managedCertificate, tracker));
                         }
                         else
                         {
-                            renewalTasks.Add(this.PerformCertificateRequest(null, managedCertificate, tracker));
+                            renewalTasks.Add(PerformCertificateRequest(null, managedCertificate, tracker));
                         }
                     }
                     numRenewalTasks++;
@@ -130,7 +130,7 @@ namespace Certify.Management
                     {
                         //TODO: show this as warning rather than success
 
-                        msg = String.Format(CoreSR.CertifyManager_RenewalOnHold, managedCertificate.RenewalFailureCount);
+                        msg = string.Format(CoreSR.CertifyManager_RenewalOnHold, managedCertificate.RenewalFailureCount);
                         logThisEvent = true;
                     }
 
@@ -721,7 +721,8 @@ namespace Certify.Management
 
                     var pfxPath = certRequestResult.Result.ToString();
 
-                    string certCleanupName = "";
+                    var certCleanupName = "";
+
                     // update managed site summary
                     try
                     {
@@ -792,7 +793,7 @@ namespace Certify.Management
                                     {
                                         mode = CertificateCleanupMode.AfterExpiry;
                                     }
-                                    
+
                                     // if pref is for full cleanup, use After Renewal just for this renewal cleanup
                                     if (mode == CertificateCleanupMode.FullCleanup)
                                     {
@@ -801,10 +802,12 @@ namespace Certify.Management
 
                                     // cleanup certs based on the given cleanup mode
                                     var certsRemoved = CertificateManager.PerformCertificateStoreCleanup(
-                                        (CertificateCleanupMode)mode,
+                                       (CertificateCleanupMode)mode,
                                         DateTime.Now,
                                         matchingName: certCleanupName,
-                                        excludedThumbprints: new List<string> { managedCertificate.CertificateThumbprintHash });
+                                        excludedThumbprints: new List<string> { managedCertificate.CertificateThumbprintHash },
+                                        log: _serviceLog
+                                    );
 
                                     if (certsRemoved.Any())
                                     {
@@ -825,8 +828,10 @@ namespace Certify.Management
                         else
                         {
                             // we failed to install this cert or create/update the https binding
-                            string msg = string.Join("\r\n", actions.Where(s => s.HasError)
-                               .Select(s => s.Description).ToArray());
+                            var msg = string.Join("\r\n",
+                                actions.Where(s => s.HasError)
+                               .Select(s => s.Description).ToArray()
+                               );
 
                             result.Message = msg;
 
@@ -954,7 +959,7 @@ namespace Certify.Management
                                 });
                         }
 
-                        var providerDesc = challengeConfig.ChallengeProvider != null ? challengeConfig.ChallengeProvider : challengeConfig.ChallengeType;
+                        var providerDesc = challengeConfig.ChallengeProvider ?? challengeConfig.ChallengeType;
 
                         if (_tc != null) _tc.TrackEvent($"PerformChallengeResponse_{providerDesc}");
 

@@ -14,11 +14,13 @@ namespace Certify.Providers.DNS.AcmeDns
 {
     internal class AcmeDnsRegistration
     {
+#pragma warning disable IDE1006 // Naming Styles
         public List<string> allowfrom { get; set; }
         public string fulldomain { get; set; }
         public string subdomain { get; set; }
         public string password { get; set; }
         public string username { get; set; }
+#pragma warning restore IDE1006 // Naming Styles
     }
 
     public class DnsProviderAcmeDns : IDnsProvider

@@ -45,7 +45,7 @@ namespace Certify.Core.Tests.Unit
         public async Task TestLoadManagedCertificates()
         {
             var managedCertificateSettings = new ItemManager("Tests");
-            ManagedCertificate testCert = BuildTestManagedCertificate();
+            var testCert = BuildTestManagedCertificate();
             try
             {
                 var managedCertificate = await managedCertificateSettings.UpdatedManagedCertificate(testCert);
@@ -136,7 +136,7 @@ namespace Certify.Core.Tests.Unit
 
             // create competing sets of tasks to create managed items
 
-            int numItems = 1000;
+            var numItems = 1000;
 
             // now attempt async creation of bindings
             var taskSet = new Task[numItems];

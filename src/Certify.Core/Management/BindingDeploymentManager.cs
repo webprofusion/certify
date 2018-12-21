@@ -36,7 +36,7 @@ namespace Certify.Core.Management
         /// <returns>  </returns>
         public async Task<List<ActionStep>> StoreAndDeployManagedCertificate(IBindingDeploymentTarget deploymentTarget, ManagedCertificate managedCertificate, string pfxPath, bool cleanupCertStore, bool isPreviewOnly)
         {
-            List<ActionStep> actions = new List<ActionStep>();
+            var actions = new List<ActionStep>();
 
             var requestConfig = managedCertificate.RequestConfig;
 
@@ -49,7 +49,7 @@ namespace Certify.Core.Management
             }
 
             //store cert against primary domain
-            string certStoreName = CertificateManager.GetDefaultStore().Name;
+           var certStoreName = CertificateManager.GetDefaultStore().Name;
             X509Certificate2 storedCert = null;
             byte[] certHash = null;
 
@@ -149,7 +149,7 @@ namespace Certify.Core.Management
                                                                     bool isPreviewOnly = false
                                                                 )
         {
-            List<ActionStep> actions = new List<ActionStep>();
+            var actions = new List<ActionStep>();
             var targetSites = new List<IBindingDeploymentTargetItem>();
 
             // ensure defaults applied for deployment mode
