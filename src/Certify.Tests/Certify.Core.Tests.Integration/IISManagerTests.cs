@@ -257,7 +257,7 @@ namespace Certify.Core.Tests
                 await iisManager.CreateSite("ManyBindings", "toomany.com", PrimaryIISRoot, null, protocol: "http");
                 var site = await iisManager.GetSiteBindingByDomain("toomany.com");
                 List<string> domains = new List<string>();
-                for (var i = 0; i < 10; i++)
+                for (var i = 0; i < 101; i++)
                 {
                     domains.Add(Guid.NewGuid().ToString() + ".toomany.com");
                 }

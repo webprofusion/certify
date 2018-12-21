@@ -21,15 +21,20 @@ namespace Certify.Management
         public const string ITEMMANAGERCONFIG = "manageditems";
 
         private ConcurrentDictionary<string, ManagedCertificate> _managedCertificatesCache { get; set; }
-        public string StorageSubfolder = ""; //if specified will be appended to AppData path as subfolder to load/save to
+        public string _storageSubFolder = ""; //if specified will be appended to AppData path as subfolder to load/save to
         public bool IsSingleInstanceMode { get; set; } = true; //if true, access to this resource is centralised so we can make assumptions about when reload of settings is required etc
 
         // TODO: make db path configurable on service start
         private string _dbPath=$"C:\\programdata\\certify\\{ITEMMANAGERCONFIG}.db";
         private string _connectionString = "";
 
-        public ItemManager()
+        public ItemManager(string storageSubfolder = null)
         {
+            if (!string.IsNullOrEmpty(storageSubfolder))
+            {
+                _storageSubFolder = storageSubfolder;
+            }
+
             _managedCertificatesCache = new ConcurrentDictionary<string, ManagedCertificate>();
 
             _dbPath = GetDbPath();
@@ -39,14 +44,14 @@ namespace Certify.Management
 
         private string GetDbPath()
         {
-            string appDataPath = Util.GetAppDataFolder(StorageSubfolder);
+            string appDataPath = Util.GetAppDataFolder(_storageSubFolder);
             return Path.Combine(appDataPath, $"{ITEMMANAGERCONFIG}.db");
         }
 
         /// <summary>
         /// Perform a full backup and save of the current set of managed sites
         /// </summary>
-        public async Task StoreSettings()
+        public async Task StoreAllManagedItems()
         {
             var watch = Stopwatch.StartNew();
 
@@ -134,7 +139,7 @@ namespace Certify.Management
         {
             if (skipIfLoaded && _managedCertificatesCache.Any()) return;
 
-            await UpgradeSettings();
+            if (!System.IO.File.Exists(_dbPath)) await UpgradeSettings();
 
             var watch = Stopwatch.StartNew();
             
@@ -187,13 +192,14 @@ namespace Certify.Management
 
         private async Task UpgradeSettings()
         {
-            var watch = Stopwatch.StartNew();
-            string appDataPath = Util.GetAppDataFolder(StorageSubfolder);
+            string appDataPath = Util.GetAppDataFolder(_storageSubFolder);
             var json = Path.Combine(appDataPath, $"{ITEMMANAGERCONFIG}.json");
             var db = Path.Combine(appDataPath, $"{ITEMMANAGERCONFIG}.db");
 
             if (File.Exists(json) && !File.Exists(db))
             {
+                var watch = Stopwatch.StartNew();
+
                 // read managed sites using tokenize stream, this is useful for large files
                 var serializer = new JsonSerializer();
                 using (StreamReader sr = new StreamReader(json))
@@ -223,7 +229,7 @@ namespace Certify.Management
                     }
                 }
 
-                await StoreSettings(); // upgrade to SQLite db storage
+                await StoreAllManagedItems(); // upgrade to SQLite db storage
                 File.Delete($"{json}.bak");
                 File.Move(json, $"{json}.bak");
                 Debug.WriteLine($"UpgradeSettings[Json->SQLite] took {watch.ElapsedMilliseconds}ms for {_managedCertificatesCache.Count} records");
@@ -233,7 +239,7 @@ namespace Certify.Management
                 if (!File.Exists(db))
                 {
                     // no setting to upgrade, create the empty database
-                    await StoreSettings();
+                    await StoreAllManagedItems();
                 }
                 else
                 {
@@ -361,7 +367,7 @@ namespace Certify.Management
                         await cmd.ExecuteNonQueryAsync();
                     }
                     tran.Commit();
-                    Debug.WriteLine($"DeleteManagedCertificate: Completed {site.Id}");
+                   
                     _managedCertificatesCache.TryRemove(site.Id, out var val);
                 }
             }
