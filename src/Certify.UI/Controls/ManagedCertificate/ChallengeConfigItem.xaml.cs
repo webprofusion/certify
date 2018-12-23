@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -127,7 +127,10 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void RefreshParameters()
         {
-            if (EditModel.SelectedItem.Parameters == null) EditModel.SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();
+            if (EditModel.SelectedItem.Parameters == null)
+            {
+                EditModel.SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();
+            }
 
             var definition = AppViewModel.ChallengeAPIProviders.FirstOrDefault(p => p.Id == EditModel.SelectedItem.ChallengeProvider);
 
@@ -149,7 +152,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                     // if zoneid previously stored, migrate to provider param
                     if (pa.Key == "zoneid")
                     {
-                        if (!String.IsNullOrEmpty(EditModel.SelectedItem.ZoneId))
+                        if (!string.IsNullOrEmpty(EditModel.SelectedItem.ZoneId))
                         {
                             pa.Value = EditModel.SelectedItem.ZoneId;
                             EditModel.SelectedItem.ZoneId = null;
@@ -189,7 +192,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private async void ChallengeAPIProviderList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            string challengeProviderType = (sender as ComboBox)?.SelectedValue?.ToString();
+            var challengeProviderType = (sender as ComboBox)?.SelectedValue?.ToString();
 
             if (challengeProviderType != null)
             {
@@ -214,7 +217,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                     var config = (sender as Button).Tag;
                     if (config != null && AppViewModel.SelectedItem.RequestConfig.Challenges.Count > 1)
                     {
-                        App.Current.Dispatcher.Invoke((Action)delegate
+                        App.Current.Dispatcher.Invoke(delegate
                         {
                             AppViewModel.SelectedItem.RequestConfig.Challenges.Remove((Models.CertRequestChallengeConfig)config);
                             ManagedCertificateViewModel.RaisePropertyChangedEvent(nameof(ManagedCertificateViewModel.ChallengeConfigViewModels));
@@ -233,7 +236,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             EditModel.IsZoneLookupInProgress = true;
             try
             {
-                this.EditModel.DnsZones = new ObservableCollection<Models.Providers.DnsZone>(new System.Collections.Generic.List<Models.Providers.DnsZone> {
+                EditModel.DnsZones = new ObservableCollection<Models.Providers.DnsZone>(new System.Collections.Generic.List<Models.Providers.DnsZone> {
                     new Models.Providers.DnsZone {
                         ZoneId="",
                         Name ="(Fetching..)"
@@ -245,8 +248,8 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 // populate dropdown, default to no selection
                 zones.Insert(0, new Models.Providers.DnsZone { ZoneId = "", Name = "(Select Zone)" });
-                this.EditModel.DnsZones = new ObservableCollection<Models.Providers.DnsZone>(zones);
-                this.DnsZoneList.SelectedValue = "";
+                EditModel.DnsZones = new ObservableCollection<Models.Providers.DnsZone>(zones);
+                DnsZoneList.SelectedValue = "";
             }
             catch (Exception)
             {
