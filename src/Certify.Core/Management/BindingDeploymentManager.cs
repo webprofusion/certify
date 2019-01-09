@@ -24,8 +24,6 @@ namespace Certify.Core.Management
                 "*"
             };
 
-
-
         /// <summary>
         /// Creates or updates the https bindings associated with the dns names in the current
         /// request config, using the requested port/ips or autobinding

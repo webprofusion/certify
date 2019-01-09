@@ -43,7 +43,7 @@ namespace Certify.Management
             }
             catch (Exception exp)
             {
-                results.Add(new ActionResult { IsSuccess = false, Message = $"Could not create a temp file ({tempPath}). Windows has a limit of 65535 files in the temp folder ({tempFolder}). Clear temp files  before proceeding. {exp.Message}" });
+                results.Add(new ActionResult { IsSuccess = false, Message = $"Could not create a temp file ({tempPath}). Windows has a limit of 65535 files in the temp folder ({tempFolder}). Clear temp files before proceeding. {exp.Message}" });
             }
 
             // check free disk space
