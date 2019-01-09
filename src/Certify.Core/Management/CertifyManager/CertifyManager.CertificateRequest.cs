@@ -163,6 +163,7 @@ namespace Certify.Management
                 var results = new List<CertificateRequestResult>();
                 foreach (var t in renewalTasks)
                 {
+                    t.RunSynchronously();
                     results.Add(await t);
                 }
 
@@ -599,6 +600,7 @@ namespace Certify.Management
                                     {
                                         authorization.AttemptedChallenge = authorization.Challenges.FirstOrDefault(c => c.ChallengeType == challengeConfig.ChallengeType);
                                     }
+
                                     var submissionStatus = await _acmeClientProvider.SubmitChallenge(log, challengeConfig.ChallengeType,
                                     authorization.AttemptedChallenge);
 
