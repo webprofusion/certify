@@ -752,9 +752,19 @@ namespace Certify.Providers.Certes
             IAuthorizationContext authz = (IAuthorizationContext)pendingAuthorization.AuthorizationContext;
 
             var res = await authz.Resource();
-            while (res.Status != AuthorizationStatus.Valid && res.Status != AuthorizationStatus.Invalid)
+
+            var attempts = 20;
+            while (attempts > 0 && (res.Status != AuthorizationStatus.Valid && res.Status != AuthorizationStatus.Invalid))
             {
                 res = await authz.Resource();
+
+                attempts--;
+
+                // if status is not yet valid or invalid, wait a sec and try again
+                if (res.Status != AuthorizationStatus.Valid && res.Status != AuthorizationStatus.Invalid)
+                {
+                    await Task.Delay(1000);
+                }
             }
 
             if (res.Status == AuthorizationStatus.Valid)
@@ -801,6 +811,22 @@ namespace Certify.Providers.Certes
         public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId)
         {
             var orderContext = _currentOrders[orderId];
+
+            // check order status, if it's not 'ready' then try a few more times before giving up
+            var order = await orderContext.Resource();
+
+            var attempts = 5;
+            while (attempts > 0 && order?.Status != OrderStatus.Ready)
+            {
+                await Task.Delay(2000);
+                order = await orderContext.Resource();
+                attempts--;
+            }
+
+            if (order?.Status!= OrderStatus.Ready)
+            {
+                return new ProcessStepResult { IsSuccess = false, ErrorMessage ="Certificate Request did not complete. Order did not reach Ready status in the time allowed.", Result = order };
+            }
 
             // generate temp keypair for signing CSR
             var keyAlg = KeyAlgorithm.RS256;
