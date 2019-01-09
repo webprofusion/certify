@@ -75,6 +75,17 @@ namespace Certify.Service
             //submit diagnostic info if connection available and status reporting enabled
             if (Management.CoreAppSettings.Current.EnableStatusReporting && includeReporting)
             {
+                try
+                {
+                    if (exceptionObject != null && exceptionObject is Exception)
+                    {
+                        var tc = new Certify.Management.Util().InitTelemetry();
+                        tc.TrackException((Exception)exceptionObject, null);
+                        tc.Flush();
+                    }
+                }
+                catch { }
+
                 var client = new HttpClient();
 
                 var appVersion = Management.Util.GetAppVersion();
