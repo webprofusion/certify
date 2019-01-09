@@ -431,7 +431,8 @@ namespace Certify.Management.Servers
                     }
                     else
                     {
-                        await Task.Delay(2500); // pause to give IIS config time to write to disk before attempting more writes
+                        var delayMS = 20000 / remainingAttempts; // gradually wait longer between attempts
+                        await Task.Delay(delayMS); // pause to give IIS config time to write to disk before attempting more writes
                     }
                 }
             }
