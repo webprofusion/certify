@@ -6,6 +6,8 @@ namespace Certify.CLI
 {
     internal class Program
     {
+        const int MAX_CHALLENGE_SERVER_RUNTIME = 1000 * 60 * 30;  // Allow up to 30 mins of run time for the challenge server (normall run time is
+
         private static int Main(string[] args)
         {
             var p = new CertifyCLI();
@@ -101,9 +103,17 @@ namespace Certify.CLI
                 }
 
                 // wait for server to stop
-                while (challengeServer.IsRunning())
+
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                while (challengeServer.IsRunning() && stopwatch.ElapsedMilliseconds < MAX_CHALLENGE_SERVER_RUNTIME )
                 {
                     await Task.Delay(500);
+                }
+
+                // if we exceeded the allowed time for challenge server to run, ensure it is closed and quit
+                if (challengeServer.IsRunning())
+                {
+                    challengeServer.Stop();
                 }
                 return 0;
             });

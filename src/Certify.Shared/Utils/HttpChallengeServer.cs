@@ -21,7 +21,7 @@ namespace Certify.Core.Management.Challenges
 
         private Dictionary<string, string> _challengeResponses { get; set; }
 
-        private int _maxServiceLookups = 100;
+        private int _maxServiceLookups = 1000;
         private string _baseUri = "";
 
 #if DEBUG
@@ -109,7 +109,13 @@ namespace Certify.Core.Management.Challenges
             {
                 //could not start listener, port may be in use
                 System.Diagnostics.Debug.WriteLine($"Http Challenge server error: {exp}");
-                _httpListener.Stop();
+                try
+                {
+                    // try to stop the listener, if a collision on port etc then listener will already be disposed
+                    _httpListener.Stop();
+                }
+                catch { }
+
                 _httpListener.Close();
                 _httpListener = null;
 
