@@ -131,6 +131,47 @@
                             Style="{StaticResource Instructions}"><Run Text="IIS Versions below 8.0 lack SNI support. This means that only one certificate can be used per IP address for standard https. If you require more than a single certificate you will need to ensure each certificate binding is associated with it's own IP address otherwise you may encounter binding conflicts." /></TextBlock>
                     </StackPanel>
 
+                    <StackPanel
+                        x:Name="DeprecatedChallengeTypeWarning"
+                        Margin="16,16,16,16"
+                        Background="DarkRed">
+                        <StackPanel.Style>
+                            <Style>
+                                <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasDeprecatedChallengeTypes}" Value="True">
+                                        <Setter Property="UIElement.Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                    <Trigger Property="UIElement.Visibility" Value="Visible">
+                                        <Trigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation
+                                                        Storyboard.TargetProperty="Opacity"
+                                                        From="0.0"
+                                                        To="1.0"
+                                                        Duration="0:0:0.5" />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </Trigger.EnterActions>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock
+                            Margin="16,8,0,16"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            FontFamily="Segoe UI Light"
+                            FontSize="20"
+                            Foreground="White"
+                            TextWrapping="Wrap"><Run Text="Warning: Unsupported challenge type in use." /></TextBlock>
+                        <TextBlock
+                            Margin="16,8,0,16"
+                            Foreground="White"
+                            Style="{StaticResource Instructions}"><Run Text="One or more managed certificates is still using the unsupported tls-sni-01 challenge type. You must change these to a different challenge under Authorization or they will fail to renew." /></TextBlock>
+                    </StackPanel>
+
                     <StackPanel x:Name="Dashboard">
 
                         <TextBlock

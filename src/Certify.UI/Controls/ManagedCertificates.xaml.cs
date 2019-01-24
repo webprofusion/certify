@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -27,8 +27,8 @@ namespace Certify.UI.Controls
 
             _appViewModel.PropertyChanged += (obj, args) =>
             {
-                if (args.PropertyName == "ManagedCertificates" || args.PropertyName == "SelectedItem" &&
-                    _appViewModel.ManagedCertificates != null)
+                if (args.PropertyName == "ManagedCertificates" || (args.PropertyName == "SelectedItem" &&
+                    _appViewModel.ManagedCertificates != null))
                 {
                     SetFilter(); // reset listeners when ManagedCertificates are reset
                     _itemViewModel.RaisePropertyChangedEvent("SelectedItem");

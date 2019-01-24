@@ -129,6 +129,8 @@ namespace Certify.UI.ViewModel
         /// </summary>
         public bool IsImportSANMergeMode { get; set; }
 
+        public bool HasDeprecatedChallengeTypes { get; set; } = false;
+
         public virtual bool HasRegisteredContacts
         {
             get
@@ -227,7 +229,28 @@ namespace Certify.UI.ViewModel
             }
 
             RaisePropertyChangedEvent(nameof(IISVersion));
+            RaisePropertyChangedEvent(nameof(ShowIISWarning));
+
             return IsIISAvailable;
+        }
+
+        /// <summary>
+        /// If an IIS Version is present and it is lower than v8.0 the SNI is not supported and
+        /// limitations apply
+        /// </summary>
+        public bool ShowIISWarning
+        {
+            get
+            {
+                if (IsIISAvailable && IISVersion?.Major < 8)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
         }
 
         public async Task InitServiceConnections()
@@ -326,7 +349,15 @@ namespace Certify.UI.ViewModel
 
             List<ManagedCertificate> list = await CertifyClient.GetManagedCertificates(new Models.ManagedCertificateFilter());
 
-            foreach (var i in list) i.IsChanged = false;
+            foreach (var i in list)
+            {
+                i.IsChanged = false;
+
+                if (HasDeprecatedChallengeTypes==false && i.RequestConfig.Challenges.Any(c=>c.ChallengeType== SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
+                {
+                    HasDeprecatedChallengeTypes = true;
+                }
+            }
 
             ManagedCertificates = new System.Collections.ObjectModel.ObservableCollection<Models.ManagedCertificate>(list);
 
@@ -335,6 +366,8 @@ namespace Certify.UI.ViewModel
             await RefreshChallengeAPIList();
 
             await RefreshStoredCredentialsList();
+
+       
         }
 
         private void CertifyClient_SendMessage(string arg1, string arg2)
