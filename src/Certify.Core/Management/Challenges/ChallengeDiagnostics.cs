@@ -121,7 +121,14 @@ namespace Certify.Core.Management.Challenges
                 {
                     var challengeConfig = managedCertificate.GetChallengeConfig(domain);
 
-                    if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
+                    var challengeType = challengeConfig.ChallengeType;
+                    if (challengeType== SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
+                    {
+                        log.Warning("tls-sni-01 challenge type is no longer supported by the Let's Encrypt service. Falling back to http-01");
+                        challengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP;
+                    }
+
+                    if (challengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
                     {
                         // if dns validation not selected but one or more domains is a wildcard, reject
                         if (domain.StartsWith("*."))
@@ -166,8 +173,16 @@ namespace Certify.Core.Management.Challenges
                             results.Add(new StatusMessage { IsOK = true, Message = httpChallengeResult.Message, Result = httpChallengeResult });
                         }
                     }
-                    else if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
+                    else if (challengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
                     {
+                       
+                            result.IsOK = false;
+                            result.FailedItemSummary.Add($"The {SupportedChallengeTypes.CHALLENGE_TYPE_SNI} challenge type is no longer available.");
+                            results.Add(result);
+
+                            return results;
+                        /*
+
                         var serverVersion = await serverManager.GetServerVersion();
 
                         if (serverVersion.Major < 8)
@@ -199,8 +214,9 @@ namespace Certify.Core.Management.Challenges
                             )();
 
                         results.Add(result);
+                        */
                     }
-                    else if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
+                    else if (challengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                     {
                         var recordName = $"_acme-challenge-test.{domain}".Replace("*.", "");
 
