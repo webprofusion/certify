@@ -86,6 +86,11 @@ namespace Certify.CLI
         {
             System.Console.WriteLine("Starting Certify Http Challenge Server");
 
+            if (args.Length < 2)
+            {
+                System.Console.WriteLine("Error: control key arguments required e.g.  certify httpchallenge keys=CONTROLKEY,CHECKKEY");
+                return -1;
+            }
             //syntax: certify httpchallenge keys=CONTROLKEY,CHECKKEY
 
             var keys = args[1].Replace("keys=", "").Split(',');
