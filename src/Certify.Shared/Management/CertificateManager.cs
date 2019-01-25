@@ -217,7 +217,7 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// For IIS to use a certificate it's process user must be able to encrypt outgoing traffic,
+        /// For IIS to use a certificate its process user must be able to encrypt outgoing traffic,
         /// so it needs the private key for our certificate. If a system user creates the certificate
         /// the default permission may not allow access to the private key.
         /// </summary>

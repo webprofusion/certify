@@ -128,7 +128,7 @@
                         <TextBlock
                             Margin="16,8,0,16"
                             Foreground="White"
-                            Style="{StaticResource Instructions}"><Run Text="IIS Versions below 8.0 lack SNI support. This means that only one certificate can be used per IP address for standard https. If you require more than a single certificate you will need to ensure each certificate binding is associated with it's own IP address otherwise you may encounter binding conflicts." /></TextBlock>
+                            Style="{StaticResource Instructions}"><Run Text="IIS Versions below 8.0 lack SNI support. This means that only one certificate can be used per IP address for standard https. If you require more than a single certificate you will need to ensure each certificate binding is associated with its own IP address otherwise you may encounter binding conflicts." /></TextBlock>
                     </StackPanel>
 
                     <StackPanel
