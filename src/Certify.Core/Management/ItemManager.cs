@@ -40,6 +40,16 @@ namespace Certify.Management
             _dbPath = GetDbPath();
 
             _connectionString = $"Data Source={_dbPath};PRAGMA temp_store=MEMORY;";
+
+            if (File.Exists(_dbPath))
+            {
+                // upgrade schema if db exists
+                var upgraded = UpgradeSchema().Result;
+            } else
+            {
+                // upgrade from JSON storage if db doesn't exist yet
+                var settingsUpgraded =  UpgradeSettings().Result;
+            }
         }
 
         private string GetDbPath()
@@ -69,7 +79,7 @@ namespace Certify.Management
             }
             else
             {
-                await UpgradeSchema();
+               
             }
 
             // save all new/modified items into settings database
@@ -106,24 +116,48 @@ namespace Certify.Management
             Debug.WriteLine($"StoreSettings[SQLite] took {watch.ElapsedMilliseconds}ms for {_managedCertificatesCache.Count} records");
         }
 
-        private async Task UpgradeSchema()
+        private async Task<bool> UpgradeSchema()
         {
             // attempt column upgrades
+            var cols = new List<string>();
+
             using (var db = new SQLiteConnection(_connectionString))
             {
                 await db.OpenAsync();
                 try
                 {
-                    using (var cmd = new SQLiteCommand("ALTER TABLE manageditem ADD COLUMN parentid TEXT", db))
+                    using (var cmd = new SQLiteCommand("PRAGMA table_info(manageditem);", db))
                     {
-                        await cmd.ExecuteNonQueryAsync();
+
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+
+                            while (await reader.ReadAsync())
+                            {
+                                string colname = (string)reader["name"];
+                                cols.Add(colname);
+                            }
+                        }
+                    }
+
+                    if (!cols.Contains("parentid"))
+                    {
+                        // upgrade schema
+                        using (var cmd = new SQLiteCommand("ALTER TABLE manageditem ADD COLUMN parentid TEXT", db))
+                        {
+                            await cmd.ExecuteNonQueryAsync();
+                        }
                     }
                 }
                 catch
                 {
-                    // column may already exist
+                    // error checking for upgrade
+
+                    return false;
                 }
             }
+
+            return true;
         }
 
         public async Task DeleteAllManagedCertificates()
@@ -138,8 +172,6 @@ namespace Certify.Management
         public async Task LoadAllManagedCertificates(bool skipIfLoaded = false)
         {
             if (skipIfLoaded && _managedCertificatesCache.Any()) return;
-
-            if (!System.IO.File.Exists(_dbPath)) await UpgradeSettings();
 
             var watch = Stopwatch.StartNew();
             
@@ -190,7 +222,7 @@ namespace Certify.Management
             Debug.WriteLine($"LoadSettings[SQLite] took {watch.ElapsedMilliseconds}ms for {_managedCertificatesCache.Count} records");
         }
 
-        private async Task UpgradeSettings()
+        private async Task<bool> UpgradeSettings()
         {
             var appDataPath = Util.GetAppDataFolder(_storageSubFolder);
 
@@ -242,12 +274,9 @@ namespace Certify.Management
                     // no setting to upgrade, create the empty database
                     await StoreAllManagedItems();
                 }
-                else
-                {
-                    // apply schema upgrades
-                    await UpgradeSchema();
-                }
             }
+
+            return true;
         }
 
         private async Task<ManagedCertificate> LoadManagedCertificate(string siteId)
@@ -332,8 +361,6 @@ namespace Certify.Management
 
             if (saveAfterUpdate)
             {
-                if (!System.IO.File.Exists(_dbPath)) await UpgradeSettings();
-
                 using (var db = new SQLiteConnection(_connectionString))
                 {
                     await db.OpenAsync();
