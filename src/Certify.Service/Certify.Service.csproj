@@ -61,7 +61,6 @@
     <PackageReference Include="Serilog" Version="2.7.1" /> 
     <PackageReference Include="Serilog.Sinks.ListOfString" Version="4.0.8" /> 
     <PackageReference Include="Swashbuckle.Core" Version="5.6.0" /> 
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.109.2" /> 
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.1" /> 
     <PackageReference Include="System.ValueTuple" Version="4.5.0" /> 
     <PackageReference Include="Topshelf" Version="4.1.0" /> 

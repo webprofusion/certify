@@ -10,7 +10,7 @@
     <GenerateAssemblyVersionAttribute>true</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <AssemblyVersion>4.1.0.3</AssemblyVersion>
+    <AssemblyVersion>4.1.0.4</AssemblyVersion>
     <FileVersion>4.0.0.0</FileVersion>
     <Version>4.0.0</Version>
   </PropertyGroup>
