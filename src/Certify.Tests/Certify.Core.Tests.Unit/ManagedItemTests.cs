@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -145,13 +145,15 @@ namespace Certify.Core.Tests.Unit
 
             for (var i = 0; i < numItems; i++)
             {
-                taskSet[i] = new Task(async () =>
+                taskSet[i] = new Task(() =>
                {
                    testItem.Name = "MultiTest_" + i;
                    testItem.Id = Guid.NewGuid().ToString();
-                   await itemManager.UpdatedManagedCertificate(testItem);
+                   var result = itemManager.UpdatedManagedCertificate(testItem).Result;
+
                });
 
+                taskSet[i].Start();
             }
 
             // create a large number of managed items, to see if we encounter isses saving/loading from DB async       
