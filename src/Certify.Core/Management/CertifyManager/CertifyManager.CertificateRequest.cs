@@ -16,6 +16,11 @@ namespace Certify.Management
     public partial class CertifyManager
     {
         /// <summary>
+        /// The maximum number of certificate requests which will be attempted in a batch (Renew All)
+        /// </summary>
+        const int MAX_CERTIFICATE_REQUEST_TASKS = 50;
+
+        /// <summary>
         /// Perform Renew All: identify all items to renew then initiate renewal process
         /// </summary>
         /// <param name="autoRenewalOnly">  </param>
@@ -32,9 +37,9 @@ namespace Certify.Management
             _serviceLog?.Information($"Performing Renew All for all applicable managed certificates.");
 
             _isRenewAllInProgress = true;
-            //currently the vault won't let us run parallel requests due to file locks
-            var performRequestsInParallel = false;
 
+            // we can perform request in parallel but if processing many requests this can cause issues committing IIS bindings etc
+            var performRequestsInParallel = false;
             var testModeOnly = false;
 
             IEnumerable<ManagedCertificate> managedCertificates = await _itemManager.GetManagedCertificates(
@@ -100,18 +105,34 @@ namespace Certify.Management
                         tracker = progressTrackers[managedCertificate.Id];
                     }
 
-                    // optionally limit the number of renewal tasks to attempt in this pass
-                    if (maxRenewalTasks == 0 || maxRenewalTasks > 0 && numRenewalTasks < maxRenewalTasks)
+                    // limit the number of renewal tasks to attempt in this pass either to custom setting or max allowed
+                    if (
+                        (maxRenewalTasks == 0 && numRenewalTasks < MAX_CERTIFICATE_REQUEST_TASKS)
+                        || (maxRenewalTasks > 0 && numRenewalTasks < maxRenewalTasks && numRenewalTasks < MAX_CERTIFICATE_REQUEST_TASKS))
                     {
                         if (testModeOnly)
                         {
                             //simulated request for UI testing
-                            renewalTasks.Add(PerformDummyCertificateRequest(managedCertificate, tracker));
+
+                            renewalTasks.Add(
+                                new Task<CertificateRequestResult>(
+                                () => PerformDummyCertificateRequest(managedCertificate, tracker).Result,
+                                TaskCreationOptions.LongRunning
+                            ));
                         }
                         else
                         {
-                            renewalTasks.Add(PerformCertificateRequest(null, managedCertificate, tracker));
+                            renewalTasks.Add(
+                               new Task<CertificateRequestResult>(
+                               () => PerformCertificateRequest(null, managedCertificate, tracker).Result,
+                               TaskCreationOptions.LongRunning
+                           ));
                         }
+                    } else
+                    {
+                        //send progress back to report skip
+                        var progress = (IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id];
+                        ReportProgress(progress, new RequestProgressState(RequestState.NotRunning, "Skipped renewal because the max requests per batch has been reached. This request will be attempted again later.", managedCertificate), true);
                     }
                     numRenewalTasks++;
                 }
@@ -152,15 +173,22 @@ namespace Certify.Management
 
             if (performRequestsInParallel)
             {
-                var results = await Task.WhenAll(renewalTasks);
+                //var results = await Task.WaitAll(renewalTasks);
+                var results = new List<CertificateRequestResult>();
+                foreach (var t in renewalTasks)
+                {
+                    t.Start();
+                    results.Add(await t);
+                }
 
-                //siteManager.StoreSettings();
                 _isRenewAllInProgress = false;
                 return results.ToList();
             }
             else
             {
                 var results = new List<CertificateRequestResult>();
+
+                // perform all renewal tasks one after the other
                 foreach (var t in renewalTasks)
                 {
                     t.RunSynchronously();
