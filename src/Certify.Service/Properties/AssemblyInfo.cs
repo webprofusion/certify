@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Webprofusion Pty Ltd")]
 [assembly: AssemblyProduct("SSL Management Service")]
-[assembly: AssemblyCopyright("Copyright © Webprofusion Pty Ltd 2018")]
+[assembly: AssemblyCopyright("Copyright © Webprofusion Pty Ltd 2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

@@ -5,7 +5,7 @@ Please refer to each project website for full license details:
 Let's Encrypt:
 	https://letsencrypt.org
 Certify SSL Manager:
-	MIT License, Copyright (c) 2015-2018 Webprofusion Pty Ltd 
+	MIT License, Copyright (c) 2015-2019 Webprofusion Pty Ltd 
 	https://github.com/webprofusion/certify
 ACMESharp:
 	MPL 2.0
