@@ -143,11 +143,27 @@ namespace Certify.Core.Management.Challenges
                 Providers.DNS.DnsMadeEasy.DnsProviderDnsMadeEasy.Definition,
                 Providers.DNS.OVH.DnsProviderOvh.Definition,
                 Providers.DNS.Aliyun.DnsProviderAliyun.Definition,
-                Providers.DNS.MSDNS.DnsProviderMSDNS.Definition,
                 Providers.DNS.AcmeDns.DnsProviderAcmeDns.Definition
             };
 
+            try
+            {
+                TryAddProviders(providers);
+            }
+            catch { }
+
             return await Task.FromResult(providers);
+        }
+
+        private static void TryAddProviders(List<ProviderDefinition> providers)
+        {
+            // some providers may fail to add due to platform dependencies/restrictions
+            try
+            {
+                providers.Add(Providers.DNS.MSDNS.DnsProviderMSDNS.Definition);
+            }
+            catch { }
+
         }
     }
 }
