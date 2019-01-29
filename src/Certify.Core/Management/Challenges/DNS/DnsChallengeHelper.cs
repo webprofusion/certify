@@ -63,7 +63,7 @@ namespace Certify.Core.Management.Challenges
             {
                 return new DnsChallengeHelperResult
                 {
-                    Result = new ActionResult { IsSuccess = false, Message = $"DNS Challenge API Provider could not be created. Check all required credentials are set. {exp.ToString()}" },
+                    Result = new ActionResult { IsSuccess = false, Message = $"DNS Challenge API Provider could not be created. Check all required credentials are set and software dependencies installed. {exp.ToString()}" },
                     PropagationSeconds = 0,
                     IsAwaitingUser = false
                 };
@@ -73,7 +73,7 @@ namespace Certify.Core.Management.Challenges
             {
                 return new DnsChallengeHelperResult
                 {
-                    Result = new ActionResult { IsSuccess = false, Message = "DNS Challenge API Provider not set or not recognised. Select an API to proceed." },
+                    Result = new ActionResult { IsSuccess = false, Message = "DNS Challenge API Provider not set or could not load." },
                     PropagationSeconds = 0,
                     IsAwaitingUser = false
                 };

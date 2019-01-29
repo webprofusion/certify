@@ -90,9 +90,9 @@ namespace Certify.Core.Management.Challenges
                 {
                     dnsAPIProvider = new DnsProviderAliyun(credentials);
                 }
-                else if (providerDefinition.Id == DnsProviderMSDNS.Definition.Id)
+                else if (providerDefinition.Id == "DNS01.API.MSDNS") // DnsProviderMSDNS.Definition.Id - avoid instantiating provider due to possible dll loading issues
                 {
-                    dnsAPIProvider = new DnsProviderMSDNS(credentials, parameters);
+                    dnsAPIProvider = TryGetMsDNSProvider(credentials, parameters, log);
                 }
                 else if (providerDefinition.Id == DnsProviderAcmeDns.Definition.Id)
                 {
@@ -114,9 +114,24 @@ namespace Certify.Core.Management.Challenges
                 }
             }
 
-            await dnsAPIProvider.InitProvider(log);
+            if (dnsAPIProvider != null)
+            {
+                await dnsAPIProvider.InitProvider(log);
+            }
 
             return dnsAPIProvider;
+        }
+
+        public static IDnsProvider TryGetMsDNSProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log)
+        {
+            try
+            {
+                return new DnsProviderMSDNS(credentials, parameters);
+            }
+            catch {
+                log?.Error("Failed to create MS DNS API Provider. Check Microsoft.Management.Infrastructure is available and install latest compatible Windows Management Framework: https://docs.microsoft.com/en-us/powershell/wmf/overview");
+                return null;
+            };
         }
 
         public static async Task<List<ProviderDefinition>> GetChallengeAPIProviders()
