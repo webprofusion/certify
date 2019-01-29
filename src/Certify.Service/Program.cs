@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.ServiceProcess;
 using System.Threading.Tasks;
@@ -80,7 +81,12 @@ namespace Certify.Service
                     if (exceptionObject != null && exceptionObject is Exception)
                     {
                         var tc = new Certify.Management.Util().InitTelemetry();
-                        tc.TrackException((Exception)exceptionObject, null);
+                        var properties = new Dictionary<string, string>
+                        {
+                            { "AppVersion", Management.Util.GetAppVersion().ToString() }
+                        };
+
+                        tc.TrackException((Exception)exceptionObject, properties);
                         tc.Flush();
                     }
                 }
