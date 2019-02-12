@@ -279,7 +279,7 @@ namespace Certify.Management
         /// <returns>  </returns>
         public async Task<CertificateRequestResult> PerformCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool resumePaused = false)
         {
-            _serviceLog?.Information($"Performing Certificate Request: {managedCertificate.Name}");
+            _serviceLog?.Information($"Performing Certificate Request: {managedCertificate.Name} [{managedCertificate.Id}]");
 
             // Perform pre-request checks and scripting hooks, invoke main request process, then
             // perform an post request scripting hooks
