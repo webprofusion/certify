@@ -177,7 +177,7 @@ namespace Certify.Management
                 if (_httpChallengeServerClient == null)
                 {
                     _httpChallengeServerClient = new System.Net.Http.HttpClient();
-                    _httpChallengeServerClient.DefaultRequestHeaders.Add("User-Agent", Util.GetUserAgent()+" CertifyManager");
+                    _httpChallengeServerClient.DefaultRequestHeaders.Add("User-Agent", Util.GetUserAgent() + " CertifyManager");
                 }
 
                 return await IsHttpChallengeProcessStarted();
@@ -249,7 +249,7 @@ namespace Certify.Management
                     }
                     else
                     {
-                        results.Add(new StatusMessage { HasWarning = true, Message = "Built-in Http Challenge Server process unavailable or could not start. Challenge responses will fall back to IIS." });
+                        results.Add(new StatusMessage { IsOK = true, HasWarning = true, Message = "Built-in Http Challenge Server process unavailable or could not start. Challenge responses will fall back to IIS." });
                     }
                 }
             }
@@ -300,7 +300,7 @@ namespace Certify.Management
                     // by default we assume the site is running
                     return true;
                 }
-                
+
             }
             else
             {
