@@ -59,21 +59,25 @@ namespace Certify.Management.Servers
             //http://stackoverflow.com/questions/446390/how-to-detect-iis-version-using-c
             Version result = null;
 
-            using (RegistryKey componentsKey = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\InetStp", false))
+            try
             {
-                if (componentsKey != null)
+                using (RegistryKey componentsKey = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\InetStp", false))
                 {
-                    _isIISAvailable = true;
-
-                    int majorVersion = (int)componentsKey.GetValue("MajorVersion", -1);
-                    int minorVersion = (int)componentsKey.GetValue("MinorVersion", -1);
-
-                    if (majorVersion != -1 && minorVersion != -1)
+                    if (componentsKey != null)
                     {
-                        result = new Version(majorVersion, minorVersion);
+                        _isIISAvailable = true;
+
+                        int majorVersion = Convert.ToInt32(componentsKey.GetValue("MajorVersion", -1));
+                        int minorVersion = Convert.ToInt32(componentsKey.GetValue("MinorVersion", -1));
+
+                        if (majorVersion != -1 && minorVersion != -1)
+                        {
+                            result = new Version(majorVersion, minorVersion);
+                        }
                     }
                 }
             }
+            catch { }
 
             if (result == null) result = new Version(0, 0);
 
