@@ -1,6 +1,4 @@
-﻿using System;
-using System.ComponentModel;
-using System.IO;
+﻿using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -8,7 +6,6 @@ using System.Windows.Input;
 using Certify.Locales;
 using Certify.UI.Settings;
 using Microsoft.ApplicationInsights;
-using Serilog;
 
 namespace Certify.UI
 {
@@ -102,7 +99,7 @@ namespace Certify.UI
             _appViewModel.SelectedItem = new Certify.Models.ManagedCertificate();
 
             //default to auto deploy for new managed certs
-            _appViewModel.SelectedItem.RequestConfig.DeploymentSiteOption = Models.DeploymentOption.Auto; 
+            _appViewModel.SelectedItem.RequestConfig.DeploymentSiteOption = Models.DeploymentOption.Auto;
         }
 
         private async void Button_RenewAll(object sender, RoutedEventArgs e)
@@ -128,15 +125,12 @@ namespace Certify.UI
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            var uiSettingsFilePath = Management.Util.GetAppDataFolder() + "\\ui.json";
-            if (File.Exists(uiSettingsFilePath))
-            {
-                var configData = File.ReadAllText(uiSettingsFilePath);
-                var uiSettings = Newtonsoft.Json.JsonConvert.DeserializeObject<UISettings>(configData);
+            var uiSettings = UISettings.Load();
 
+            if (uiSettings != null)
+            {
                 Width = uiSettings.Width;
                 Height = uiSettings.Height;
-
                 Left = uiSettings.Left;
                 Top = uiSettings.Top;
             }
@@ -166,13 +160,13 @@ namespace Certify.UI
                 var config = _appViewModel.CertifyClient.GetAppServiceConfig();
                 if (!string.IsNullOrEmpty(config.ServiceFaultMsg))
                 {
-                    MessageBox.Show("Certify SSL Manager service not started. "+ config.ServiceFaultMsg);
-                } else
+                    MessageBox.Show("Certify SSL Manager service not started. " + config.ServiceFaultMsg);
+                }
+                else
                 {
                     MessageBox.Show("Certify SSL Manager service not started. Please restart the service. If this problem persists please refer to https://docs.certifytheweb.com/docs/faq.html and if you cannot resolve the problem contact support@certifytheweb.com.");
                 }
 
-                
                 App.Current.Shutdown();
                 return;
             }
@@ -314,8 +308,7 @@ namespace Certify.UI
                 Top = Top
             };
 
-            var json = Newtonsoft.Json.JsonConvert.SerializeObject(uiSettings, Newtonsoft.Json.Formatting.Indented);
-            File.WriteAllText(Management.Util.GetAppDataFolder() + "\\ui.json", json);
+            UISettings.Save(uiSettings);
         }
     }
 }
