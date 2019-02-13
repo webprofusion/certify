@@ -1,10 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Certify.Locales;
+using Certify.UI.Settings;
 using Microsoft.ApplicationInsights;
 using Serilog;
 
@@ -126,6 +128,19 @@ namespace Certify.UI
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            var uiSettingsFilePath = Management.Util.GetAppDataFolder() + "\\ui.json";
+            if (File.Exists(uiSettingsFilePath))
+            {
+                var configData = File.ReadAllText(uiSettingsFilePath);
+                var uiSettings = Newtonsoft.Json.JsonConvert.DeserializeObject<UISettings>(configData);
+
+                Width = uiSettings.Width;
+                Height = uiSettings.Height;
+
+                Left = uiSettings.Left;
+                Top = uiSettings.Top;
+            }
+
             await PerformAppStartupChecks();
         }
 
@@ -290,6 +305,17 @@ namespace Certify.UI
         {
             // allow cancelling exit to save changes
             if (!await _itemViewModel.ConfirmDiscardUnsavedChanges()) e.Cancel = true;
+
+            var uiSettings = new UISettings
+            {
+                Width = Width,
+                Height = Height,
+                Left = Left,
+                Top = Top
+            };
+
+            var json = Newtonsoft.Json.JsonConvert.SerializeObject(uiSettings, Newtonsoft.Json.Formatting.Indented);
+            File.WriteAllText(Management.Util.GetAppDataFolder() + "\\ui.json", json);
         }
     }
 }
