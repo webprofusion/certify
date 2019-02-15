@@ -158,7 +158,8 @@ namespace Certify.Core.Management.Challenges
                 Providers.DNS.DnsMadeEasy.DnsProviderDnsMadeEasy.Definition,
                 Providers.DNS.OVH.DnsProviderOvh.Definition,
                 Providers.DNS.Aliyun.DnsProviderAliyun.Definition,
-                Providers.DNS.AcmeDns.DnsProviderAcmeDns.Definition
+                Providers.DNS.AcmeDns.DnsProviderAcmeDns.Definition,
+                Providers.DNS.NameCheap.DnsProviderNameCheap.Definition
             };
 
             try
