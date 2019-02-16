@@ -8,6 +8,7 @@ using System.Xml.Linq;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
+using NameCheap;
 
 // ReSharper disable once CheckNamespace
 namespace Certify.Providers.DNS.NameCheap
@@ -79,6 +80,8 @@ namespace Certify.Providers.DNS.NameCheap
 
         #endregion
 
+        #region IDnsProvider method implementation
+
         /// <summary>
         /// Initializes the provider.
         /// </summary>
@@ -112,7 +115,34 @@ namespace Certify.Providers.DNS.NameCheap
         /// </summary>
         public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var hosts = await GetHosts(request.ZoneId);
+
+                hosts.Add(new NameCheapHostRecord
+                {
+                    Name = request.RecordName,
+                    Address = request.RecordValue,
+                    Type = request.RecordType,
+                    Ttl = 120
+                });
+
+                await SetHosts(request.ZoneId, hosts);
+
+                return new ActionResult
+                {
+                    IsSuccess = true,
+                    Message = $"DNS record added: {request.RecordName}"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ActionResult
+                {
+                    IsSuccess = false,
+                    Message = $"Failed to create DNS record {request.RecordName}: {ex.Message}"
+                };
+            }
         }
 
         /// <summary>
@@ -120,7 +150,36 @@ namespace Certify.Providers.DNS.NameCheap
         /// </summary>
         public async Task<ActionResult> DeleteRecord(DnsRecord request)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var hosts = await GetHosts(request.ZoneId);
+                var toRemove = hosts.FirstOrDefault(x => x.Name == request.RecordName);
+                if (toRemove == null)
+                {
+                    return new ActionResult
+                    {
+                        IsSuccess = true,
+                        Message = $"DNS record {request.RecordName} does not exist, nothing to remove."
+                    };
+                }
+
+                hosts.Remove(toRemove);
+                await SetHosts(request.ZoneId, hosts);
+
+                return new ActionResult
+                {
+                    IsSuccess = true,
+                    Message = $"DNS record removed: {request.RecordName}"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ActionResult
+                {
+                    IsSuccess = false,
+                    Message = $"Failed to remove DNS record {request.RecordName}: {ex.Message}"
+                };
+            }
         }
 
         /// <summary>
@@ -144,6 +203,10 @@ namespace Certify.Providers.DNS.NameCheap
             return result;
         }
 
+        #endregion
+
+        #region Private helpers
+
         /// <summary>
         /// Returns a batch of zones
         /// </summary>
@@ -161,10 +224,10 @@ namespace Certify.Providers.DNS.NameCheap
                 return xmlResponse.Element(_ns + "CommandResponse")
                                   .Element(_ns + "DomainGetListResult")
                                   .Elements(_ns + "Domain")
-                                  .Where(x => x.Attribute("IsExpired")?.Value == "false"
-                                              && x.Attribute("IsLocked")?.Value == "false"
-                                              && x.Attribute("IsOurDNS")?.Value == "true")
-                                  .Select(x => x.Attribute("Name").Value)
+                                  .Where(x => x.Attr<bool>("IsExpired") == false
+                                              && x.Attr<bool>("IsLocked") == false
+                                              && x.Attr<bool>("IsOurDNS") == true)
+                                  .Select(x => x.Attr<string>("Name"))
                                   .Select(x => new DnsZone
                                   {
                                       Name = x,
@@ -180,7 +243,67 @@ namespace Certify.Providers.DNS.NameCheap
             }
         }
 
-        #region Private helpers
+        /// <summary>
+        /// Returns the list of hosts for a domain.
+        /// </summary>
+        private async Task<List<NameCheapHostRecord>> GetHosts(string domain)
+        {
+            var domainParts = domain.Split('.');
+            var xml = await InvokeGetApiAsync("domains.getHosts", new Dictionary<string, string>
+            {
+                ["SLD"] = domainParts[0],
+                ["TLD"] = domainParts[1]
+            });
+
+            return xml.Element(_ns + "CommandResponse")
+                      .Descendants(_ns + "Host")
+                      .Select(x => new NameCheapHostRecord
+                      {
+                          Address = x.Attr<string>("Address"),
+                          Name = x.Attr<string>("Name"),
+                          Type = x.Attr<string>("Type"),
+                          HostId = x.Attr<int>("HostId"),
+                          MxPref = x.Attr<int>("MXPref"),
+                          Ttl = x.Attr<int>("TTL"),
+                      })
+                      .ToList();
+        }
+
+        /// <summary>
+        /// Updates the list of hosts in the domain.
+        /// </summary>
+        private async Task SetHosts(string domain, IReadOnlyList<NameCheapHostRecord> hosts)
+        {
+            var domainParts = domain.Split('.');
+            var args = new Dictionary<string, string>
+            {
+                ["SLD"] = domainParts[0],
+                ["TLD"] = domainParts[1]
+            };
+
+            var idx = 1;
+            foreach (var host in hosts)
+            {
+                args["HostName" + idx] = host.Name;
+                args["RecordType" + idx] = host.Type;
+                args["Address" + idx] = host.Address;
+                args["MXPref" + idx] = host.MxPref.ToString();
+                args["TTL" + idx] = host.Ttl.ToString();
+            }
+
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Post,
+                RequestUri = new Uri(API_URL),
+                Content = new FormUrlEncodedContent(args)
+            };
+
+            await InvokeApiAsync(request);
+        }
+
+        #endregion
+
+        #region API invocation
 
         /// <summary>
         /// Invokes the API method via a GET request, returning the XML results.
