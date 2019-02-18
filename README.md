@@ -17,18 +17,17 @@ Requirements:
 - Windows Server 2008 R2 SP1 or higher (.Net 4.6.2 or higher), 64-bit
 
 Features:
-- Easy certificate requests & automated SSL bindings
-- Preview mode to see which actions the app will perform (which bindings will be added/updated)
-- Auto renewal using background service, with configurable renewal frequency
+- Easy certificate requests & automated SSL bindings (IIS)
+- Preview mode to see which actions the app will perform (including which bindings will be added/updated)
+- Automatic renewal using background service, with configurable renewal frequency
 - SAN support (multi-domain certificates)
 - Support for v2 of the Let's Encrypt API including Wildcard Certificate support (*.example.com)
-- Optional Pre/Post request powershell scripting for advanced deployment (Exchange, RDS, multi-server etc)
-- Web Hook support for custom reporting.
 - Http or DNS challenge validation.
 	- Built-in Http Challenge Server for easier configuration of challenge responses
 	- DNS Validation via supported APIs (including Azure DNS, Alibaba Cloud, AWS Route53, Cloudflare, DnsMadeEasy, GoDaddy), OVH, SimpleDNSPlus
 - Stored Credentials (API access keys etc. protected by the Windows Data Protection API)
-
+- Optional Pre/Post request powershell scripting for advanced deployment (Exchange, RDS, multi-server etc)
+- Web Hook support for custom reporting.
 
 ----------
 Quick Start (IIS users)
