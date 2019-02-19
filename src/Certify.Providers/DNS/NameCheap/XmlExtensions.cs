@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Xml.Linq;
 
-namespace NameCheap
+// ReSharper disable once CheckNamespace
+namespace Certify.Providers.DNS.NameCheap
 {
     public static class XmlExtensions
     {

@@ -1,4 +1,5 @@
-﻿namespace NameCheap
+﻿// ReSharper disable once CheckNamespace
+namespace Certify.Providers.DNS.NameCheap
 {
     /// <summary>
     /// Information about a single host.
