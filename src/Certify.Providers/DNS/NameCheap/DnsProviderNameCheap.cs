@@ -50,7 +50,7 @@ namespace Certify.Providers.DNS.NameCheap
                 Title = "NameCheap DNS API",
                 Description = "Validates via NameCheap APIs",
                 HelpUrl = "https://www.namecheap.com/",
-                PropagationDelaySeconds = 180,
+                PropagationDelaySeconds = 120,
                 ProviderParameters = new List<ProviderParameter>
                 {
                     new ProviderParameter { Key = PARAM_API_USER, Name = "API User", IsRequired = true, IsPassword = false },
@@ -116,9 +116,10 @@ namespace Certify.Providers.DNS.NameCheap
         {
             try
             {
-                var hosts = await GetHosts(request.TargetDomainName);
+                var domain = await ParseDomainAsync(request.TargetDomainName);
+                var hosts = await GetHosts(domain);
 
-                var recordName = request.RecordName.Replace(ParseDomain(request.TargetDomainName).Mask, "");
+                var recordName = request.RecordName.Replace(domain.Mask, "");
                 hosts.Add(new NameCheapHostRecord
                 {
                     Name = recordName,
@@ -127,7 +128,7 @@ namespace Certify.Providers.DNS.NameCheap
                     Ttl = 60
                 });
 
-                await SetHosts(request.TargetDomainName, hosts);
+                await SetHosts(domain, hosts);
 
                 return new ActionResult
                 {
@@ -152,9 +153,12 @@ namespace Certify.Providers.DNS.NameCheap
         {
             try
             {
-                var hosts = await GetHosts(request.TargetDomainName);
-                var recordName = request.RecordName.Replace(ParseDomain(request.TargetDomainName).Mask, "");
-                var toRemove = hosts.FirstOrDefault(x => x.Name == recordName && x.Address == request.RecordValue);
+                var domain = await ParseDomainAsync(request.TargetDomainName);
+                var hosts = await GetHosts(domain);
+                var recordName = request.RecordName.Replace(domain.Mask, "");
+                var toRemove = hosts.FirstOrDefault(x => x.Name == recordName
+                                                         && x.Type == request.RecordType
+                                                         && x.Address == request.RecordValue);
                 if (toRemove == null)
                 {
                     return new ActionResult
@@ -165,7 +169,7 @@ namespace Certify.Providers.DNS.NameCheap
                 }
 
                 hosts.Remove(toRemove);
-                await SetHosts(request.TargetDomainName, hosts);
+                await SetHosts(domain, hosts);
 
                 return new ActionResult
                 {
@@ -247,14 +251,12 @@ namespace Certify.Providers.DNS.NameCheap
         /// <summary>
         /// Returns the list of hosts for a domain.
         /// </summary>
-        private async Task<List<NameCheapHostRecord>> GetHosts(string domain)
+        private async Task<List<NameCheapHostRecord>> GetHosts(ParsedDomain domain)
         {
-            var domainInfo = ParseDomain(domain);
-
             var xml = await InvokeGetApiAsync("domains.dns.getHosts", new Dictionary<string, string>
             {
-                ["SLD"] = domainInfo.SLD,
-                ["TLD"] = domainInfo.TLD
+                ["SLD"] = domain.SLD,
+                ["TLD"] = domain.TLD
             });
 
             return xml.Element(_ns + "CommandResponse")
@@ -274,14 +276,12 @@ namespace Certify.Providers.DNS.NameCheap
         /// <summary>
         /// Updates the list of hosts in the domain.
         /// </summary>
-        private async Task SetHosts(string domain, IReadOnlyList<NameCheapHostRecord> hosts)
+        private async Task SetHosts(ParsedDomain domain, IReadOnlyList<NameCheapHostRecord> hosts)
         {
-            var domainInfo = ParseDomain(domain);
-
             var args = WithDefaultArgs("domains.dns.setHosts", new Dictionary<string, string>
             {
-                ["SLD"] = domainInfo.SLD,
-                ["TLD"] = domainInfo.TLD
+                ["SLD"] = domain.SLD,
+                ["TLD"] = domain.TLD
             });
 
             var idx = 1;
@@ -371,19 +371,24 @@ namespace Certify.Providers.DNS.NameCheap
         /// <summary>
         /// Returns the parsed domain name from forms like "blabla.com" and "*.blabla.com".
         /// </summary>
-        private ParsedDomain ParseDomain(string domain)
+        private async Task<ParsedDomain> ParseDomainAsync(string domain)
         {
             if (string.IsNullOrEmpty(domain))
                 throw new ArgumentException("Domain was not specified!");
 
-            var parts = domain.Split('.');
-            if (parts.Length < 2)
-                throw new ArgumentException($"The value '{domain}' is not a valid domain.");
+            var knownZones = await GetZones();
+            var matchingZone = knownZones.Select(x => x.ZoneId)
+                                         .FirstOrDefault(x => domain.EndsWith(x, StringComparison.InvariantCultureIgnoreCase));
 
+            if(matchingZone == null)
+                throw new ArgumentException($"Domain {domain} is not managed by this account!");
+
+            // for "example.co.uk": SLD = "example", TLD = "co.uk"
+            var dotPos = matchingZone.IndexOf('.');
             return new ParsedDomain
             {
-                TLD = parts[parts.Length - 1],
-                SLD = parts[parts.Length - 2]
+                SLD = matchingZone.Substring(0, dotPos),
+                TLD = matchingZone.Substring(dotPos + 1)
             };
         }
 
