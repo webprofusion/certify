@@ -14,6 +14,7 @@ using Certify.Providers.DNS.Cloudflare;
 using Certify.Providers.DNS.DnsMadeEasy;
 using Certify.Providers.DNS.GoDaddy;
 using Certify.Providers.DNS.MSDNS;
+using Certify.Providers.DNS.NameCheap;
 using Certify.Providers.DNS.OVH;
 using Certify.Providers.DNS.SimpleDNSPlus;
 
@@ -98,6 +99,10 @@ namespace Certify.Core.Management.Challenges
                 {
                     dnsAPIProvider = new DnsProviderAcmeDns(credentials, parameters, Util.GetAppDataFolder());
                 }
+                else if(providerDefinition.Id == DnsProviderNameCheap.Definition.Id)
+                {
+                    dnsAPIProvider = new DnsProviderNameCheap(credentials);
+                }
             }
             else if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.MANUAL)
             {
@@ -158,7 +163,8 @@ namespace Certify.Core.Management.Challenges
                 Providers.DNS.DnsMadeEasy.DnsProviderDnsMadeEasy.Definition,
                 Providers.DNS.OVH.DnsProviderOvh.Definition,
                 Providers.DNS.Aliyun.DnsProviderAliyun.Definition,
-                Providers.DNS.AcmeDns.DnsProviderAcmeDns.Definition
+                Providers.DNS.AcmeDns.DnsProviderAcmeDns.Definition,
+                Providers.DNS.NameCheap.DnsProviderNameCheap.Definition
             };
 
             try
