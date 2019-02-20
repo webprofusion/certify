@@ -42,6 +42,7 @@ This is a nuspec. It mostly adheres to https://docs.nuget.org/create/Nuspec-Refe
     <licenseUrl>https://raw.githubusercontent.com/webprofusion/certify/master/eula.txt</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <projectSourceUrl>https://github.com/webprofusion/certify</projectSourceUrl>
+    <packageSourceUrl>https://github.com/webprofusion/certify/blob/master/scripts/chocolatey/certifytheweb.nuspec</packageSourceUrl>
     <docsUrl>https://docs.certifytheweb.com</docsUrl>
     <!--<mailingListUrl></mailingListUrl>-->
     <bugTrackerUrl>https://github.com/webprofusion/certify/issues</bugTrackerUrl>
@@ -70,9 +71,6 @@ This is a nuspec. It mostly adheres to https://docs.nuget.org/create/Nuspec-Refe
          - You want to take advantage of other functions in the core community maintainer's team extension package
     -->
 
-    <!--<provides>NOT YET IMPLEMENTED</provides>-->
-    <!--<conflicts>NOT YET IMPLEMENTED</conflicts>-->
-    <!--<replaces>NOT YET IMPLEMENTED</replaces>-->
   </metadata>
   <files>
     <!-- this section controls what actually gets packaged into the Chocolatey package -->
