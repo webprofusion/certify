@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Certify.Shared
+﻿namespace Certify.Shared
 {
     public class ServiceConfig
     {
@@ -18,5 +14,7 @@ namespace Certify.Shared
         public string LogLevel { get; set; } = "information";
 
         public string ServiceFaultMsg { get; set; }
+
+        public string PowershellExecutionPolicy { get; set; } = "Unrestricted";
     }
 }
