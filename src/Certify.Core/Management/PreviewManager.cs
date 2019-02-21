@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Certify.Core.Management;
 using Certify.Models;
 using Certify.Models.Providers;
 
@@ -13,7 +12,7 @@ namespace Certify.Management
     public class PreviewManager
     {
         /// <summary>
-        /// Generate a list of actions which will be performed on the next renewal of this managed certificate, populating 
+        /// Generate a list of actions which will be performed on the next renewal of this managed certificate, populating
         /// the description of each action with a Markdown format description
         /// </summary>
         /// <param name="item"></param>
@@ -49,7 +48,6 @@ namespace Certify.Management
                     allDomains.AddRange(item.RequestConfig.SubjectAlternativeNames);
                 }
                 allDomains = allDomains.Distinct().OrderBy(d => d).ToList();
-
 
                 // certificate summary
                 var certDescription = new StringBuilder();
@@ -97,11 +95,15 @@ namespace Certify.Management
                         {
                             challengeInfo.AppendLine($"{newLine} * {d}");
                         }
+
+                        challengeInfo.AppendLine(
+                           $"{newLine}**Please review the Deployment section below to ensure this certificate will be applied to the expected website bindings (if any).**" + newLine
+                           );
                     }
                     else
                     {
                         challengeInfo.AppendLine(
-                        $"{newLine}**No domains will match this challenge type.** Either the challenge is not required or domain matches are not fully configured."
+                        $"{newLine}*No domains will match this challenge type.* Either the challenge is not required or domain matches are not fully configured."
                         );
                     }
 
@@ -143,12 +145,10 @@ namespace Certify.Management
                         challengeInfo.AppendLine(
                             $"The text file will need to be accessible from the URL `http://<yourdomain>/.well-known/acme-challenge/<randomfilename>` " +
                             newLine);
-                            
 
                         challengeInfo.AppendLine(
                             $"Let's Encrypt will follow any redirection in place (such as rewriting the URL to *https*) but the initial request will be made via *http* on port 80. " +
-                            newLine );
-
+                            newLine);
                     }
 
                     if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
@@ -163,23 +163,23 @@ namespace Certify.Management
                             if (creds != null)
                             {
                                 challengeInfo.AppendLine(
-                               $"The following DNS API Credentials will be used:  **{creds.Title}** " + newLine );
+                               $"The following DNS API Credentials will be used:  **{creds.Title}** " + newLine);
                             }
                             else
                             {
                                 challengeInfo.AppendLine(
-                                    $"**Invalid credential settngs.**  The currently selected credential does not exist." 
+                                    $"**Invalid credential settngs.**  The currently selected credential does not exist."
                                     );
                             }
                         }
                         else
                         {
-                            challengeInfo.AppendLine( 
-                                $"No DNS API Credentials have been set.  API Credentials are normally required to make automatic updates to DNS records." 
+                            challengeInfo.AppendLine(
+                                $"No DNS API Credentials have been set.  API Credentials are normally required to make automatic updates to DNS records."
                                 );
                         }
 
-                        challengeInfo.AppendLine( 
+                        challengeInfo.AppendLine(
                             newLine + $"Let's Encrypt will follow any redirection in place (such as a substitute CNAME pointing to another domain) but the initial request will be made against any of the domain's nameservers. "
                             );
                     }
@@ -195,8 +195,6 @@ namespace Certify.Management
                         {
                             challengeInfo.AppendLine(
                              $"{newLine}This challenge type will be selected for any domain not matched by another challenge. ");
-
-                            
                         }
                         else
                         {
@@ -211,7 +209,7 @@ namespace Certify.Management
                 steps.Add(new ActionStep
                 {
                     Title = $"{stepIndex}. Domain Validation",
-                    Category="Validation",
+                    Category = "Validation",
                     Description = challengeInfo.ToString()
                 });
                 stepIndex++;
@@ -222,7 +220,7 @@ namespace Certify.Management
                     steps.Add(new ActionStep
                     {
                         Title = $"{stepIndex}. Pre-Request Powershell",
-                        Category="PreRequestScripting",
+                        Category = "PreRequestScripting",
                         Description = $"Execute PowerShell Script: *{item.RequestConfig.PreRequestPowerShellScript}*"
                     });
                     stepIndex++;
@@ -234,7 +232,7 @@ namespace Certify.Management
                 steps.Add(new ActionStep
                 {
                     Title = $"{stepIndex}. Certificate Request",
-                    Category="CertificateRequest",
+                    Category = "CertificateRequest",
                     Description = certRequest
                 });
                 stepIndex++;
@@ -245,7 +243,7 @@ namespace Certify.Management
                     steps.Add(new ActionStep
                     {
                         Title = $"{stepIndex}. Post-Request Powershell",
-                        Category="PostRequestScripting",
+                        Category = "PostRequestScripting",
                         Description = $"Execute PowerShell Script: *{item.RequestConfig.PostRequestPowerShellScript}*"
                     });
                     stepIndex++;
@@ -269,7 +267,7 @@ namespace Certify.Management
                 var deploymentStep = new ActionStep
                 {
                     Title = $"{stepIndex}. Deployment",
-                    Category="Deployment",
+                    Category = "Deployment",
                     Description = ""
                 };
 
@@ -305,7 +303,7 @@ namespace Certify.Management
                                 {
                                     var siteInfo = await serverProvider.GetSiteById(item.ServerSiteId);
                                     deploymentDescription.AppendLine($"## Deploying to Site" + newLine + newLine +
-                                                             $"`{siteInfo.Name}`" + newLine );
+                                                             $"`{siteInfo.Name}`" + newLine);
                                 }
                                 catch (Exception exp)
                                 {
@@ -338,7 +336,7 @@ namespace Certify.Management
                     else
                     {
                         // no website selected, maybe validating http with a manually specified path
-                       deploymentDescription.AppendLine($"Manual deployment to site.");
+                        deploymentDescription.AppendLine($"Manual deployment to site.");
                     }
                 }
                 else if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.DeploymentStoreOnly)
