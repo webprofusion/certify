@@ -55,7 +55,6 @@ namespace Certify.Providers.Certes
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-
             if (_log != null)
             {
                 _log.Debug($"Http Request: {request.ToString()}");
@@ -165,7 +164,7 @@ namespace Certify.Providers.Certes
                 // no account key in settings, check .key (legacy key file)
                 if (System.IO.File.Exists(_settingsFolder + "\\c-acc.key"))
                 {
-                    string pem = System.IO.File.ReadAllText(_settingsFolder + "\\c-acc.key");
+                    var pem = System.IO.File.ReadAllText(_settingsFolder + "\\c-acc.key");
                     SetAcmeContextAccountKey(pem);
                 }
             }
@@ -267,7 +266,7 @@ namespace Certify.Providers.Certes
 
             if (System.IO.File.Exists(_settingsFolder + "\\c-settings.json"))
             {
-                string json = System.IO.File.ReadAllText(_settingsFolder + "\\c-settings.json");
+                var json = System.IO.File.ReadAllText(_settingsFolder + "\\c-settings.json");
                 _settings = Newtonsoft.Json.JsonConvert.DeserializeObject<CertesSettings>(json);
             }
             else
@@ -311,12 +310,12 @@ namespace Certify.Providers.Certes
         /// <returns>  </returns>
         private bool ArchiveAccountKey(IAccountContext accountContext)
         {
-            string pem = _acme.AccountKey.ToPem();
+            var pem = _acme.AccountKey.ToPem();
 
             _settings.AccountKey = pem;
             _settings.AccountUri = accountContext.Location.ToString();
 
-            string entry = $"\r\n\r{DateTime.Now}\r\n{ _settings.AccountUri ?? "" }\r\n{_settings.AccountEmail ?? ""}\r\n{_settings.AccountKey}";
+            var entry = $"\r\n\r{DateTime.Now}\r\n{ _settings.AccountUri ?? "" }\r\n{_settings.AccountEmail ?? ""}\r\n{_settings.AccountKey}";
 
             // archive account id history
             System.IO.File.AppendAllText(_settingsFolder + "\\c-acc-archive", entry);
@@ -598,22 +597,6 @@ namespace Certify.Providers.Certes
                         });
                     }
 
-                    // add tls-sni-01 challenge (if any)
-                    /* var tls01Challenge = await authz.Challenges(;
-                     if (dnsChallenge != null)
-                     {
-                         var dnsChallengeStatus = await dnsChallenge.Resource();
-
-                         challenges.Add(new AuthorizationChallengeItem
-                         {
-                             ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                             Key = dnsChallenge.Token,
-                             Value = dnsChallenge.KeyAuthz,
-                             ChallengeData = dnsChallenge,
-                             IsValidated = (dnsChallengeStatus.Status == ChallengeStatus.Valid)
-                         });
-                     }*/
-
                     // report back on the challenges we now may need to attempt
                     authzList.Add(
                      new PendingAuthorization
@@ -658,7 +641,7 @@ namespace Certify.Providers.Certes
 
         private string GetExceptionMessage(Exception exp)
         {
-            string msg = exp.Message;
+            var msg = exp.Message;
 
             if (exp.InnerException != null)
             {
@@ -689,9 +672,9 @@ namespace Certify.Providers.Certes
                 IChallengeContext challenge = (IChallengeContext)attemptedChallenge.ChallengeData;
                 try
                 {
-                    Challenge result = await challenge.Validate();
+                    var result = await challenge.Validate();
 
-                    int attempts = 10;
+                    var attempts = 10;
 
                     while (attempts > 0 && result.Status == ChallengeStatus.Pending || result.Status == ChallengeStatus.Processing)
                     {
@@ -749,7 +732,7 @@ namespace Certify.Providers.Certes
         /// <returns>  </returns>
         public async Task<PendingAuthorization> CheckValidationCompleted(ILog log, string challengeType, PendingAuthorization pendingAuthorization)
         {
-            IAuthorizationContext authz = (IAuthorizationContext)pendingAuthorization.AuthorizationContext;
+            var authz = (IAuthorizationContext)pendingAuthorization.AuthorizationContext;
 
             var res = await authz.Resource();
 
@@ -823,9 +806,9 @@ namespace Certify.Providers.Certes
                 attempts--;
             }
 
-            if (order?.Status!= OrderStatus.Ready)
+            if (order?.Status != OrderStatus.Ready)
             {
-                return new ProcessStepResult { IsSuccess = false, ErrorMessage ="Certificate Request did not complete. Order did not reach Ready status in the time allowed.", Result = order };
+                return new ProcessStepResult { IsSuccess = false, ErrorMessage = "Certificate Request did not complete. Order did not reach Ready status in the time allowed.", Result = order };
             }
 
             // generate temp keypair for signing CSR
@@ -863,22 +846,55 @@ namespace Certify.Providers.Certes
                 return new ProcessStepResult { ErrorMessage = msg, IsSuccess = false, Result = exp.Error };
             }
 
-            var certFolderPath = _settingsFolder + "\\assets\\pfx";
+            var certId = Guid.NewGuid().ToString();
 
-            if (!System.IO.Directory.Exists(certFolderPath))
+            var pfxFile = certId + ".pfx";
+
+            var pfxPath = ExportFullCertPFX(certFriendlyName, csrKey, certificateChain, pfxFile);
+
+            // ExportFullCertPEM(csrKey, certificateChain, certId);
+
+            return new ProcessStepResult { IsSuccess = true, Result = pfxPath };
+        }
+
+        private string ExportFullCertPFX(string certFriendlyName, IKey csrKey, CertificateChain certificateChain, string pfxFile)
+        {
+            var pxfFolderPath = _settingsFolder + "\\assets\\pfx";
+
+            if (!System.IO.Directory.Exists(pxfFolderPath))
             {
-                System.IO.Directory.CreateDirectory(certFolderPath);
+                System.IO.Directory.CreateDirectory(pxfFolderPath);
             }
 
-            string certFile = Guid.NewGuid().ToString() + ".pfx";
-            string pfxPath = certFolderPath + "\\" + certFile;
+            var pfxPath = pxfFolderPath + "\\" + pfxFile;
 
             var pfx = certificateChain.ToPfx(csrKey);
             var pfxBytes = pfx.Build(certFriendlyName, "");
 
             System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
+            return pfxPath;
+        }
 
-            return new ProcessStepResult { IsSuccess = true, Result = pfxPath };
+        private string ExportFullCertPEM(IKey csrKey, CertificateChain certificateChain, string certId)
+        {
+            var pemFolderPath = _settingsFolder + "\\assets\\pem";
+
+            if (!System.IO.Directory.Exists(pemFolderPath))
+            {
+                System.IO.Directory.CreateDirectory(pemFolderPath);
+            }
+
+            var pemPath = pemFolderPath + "\\" + certId + ".pem";
+
+            // write pem in order of Private .key, primary server .crt, intermediate .crt, issuer.crt
+            // note:
+            // nginx needs combined primary + intermediate.crt as pem (ssl_certificate), plus .key (ssl_certificate_key)
+            // apache needs combined primary.crt (SSLCertificateFile), intermediate.crt (SSLCertificateChainFile), plus private .key (SSLCertificateKeyFile)
+            var pem = certificateChain.ToPem(csrKey);
+
+            System.IO.File.WriteAllText(pemPath, pem);
+
+            return pemPath;
         }
 
         public async Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate)
@@ -894,7 +910,7 @@ namespace Certify.Providers.Certes
                 var certEntry = pkcs.GetCertificate(certAliases.Current.ToString());
                 var certificate = certEntry.Certificate;
 
-                // revoke certificat
+                // revoke certificate
                 var der = certificate.GetEncoded();
                 await _acme.RevokeCertificate(der, RevocationReason.Unspecified, null);
             }
@@ -908,7 +924,7 @@ namespace Certify.Providers.Certes
 
         public List<RegistrationItem> GetContactRegistrations()
         {
-            List<RegistrationItem> list = new List<RegistrationItem>();
+            var list = new List<RegistrationItem>();
             if (IsAccountRegistered())
             {
                 list.Add(new RegistrationItem { Name = _settings.AccountEmail });
