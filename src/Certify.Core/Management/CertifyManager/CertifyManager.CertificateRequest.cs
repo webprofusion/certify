@@ -18,7 +18,7 @@ namespace Certify.Management
         /// <summary>
         /// The maximum number of certificate requests which will be attempted in a batch (Renew All)
         /// </summary>
-        const int MAX_CERTIFICATE_REQUEST_TASKS = 50;
+        private const int MAX_CERTIFICATE_REQUEST_TASKS = 50;
 
         /// <summary>
         /// Perform Renew All: identify all items to renew then initiate renewal process
@@ -128,7 +128,8 @@ namespace Certify.Management
                                TaskCreationOptions.LongRunning
                            ));
                         }
-                    } else
+                    }
+                    else
                     {
                         //send progress back to report skip
                         var progress = (IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id];
@@ -297,7 +298,6 @@ namespace Certify.Management
             var config = managedCertificate.RequestConfig;
             try
             {
-
                 // run pre-request script, if set
                 if (!string.IsNullOrEmpty(config.PreRequestPowerShellScript))
                 {
@@ -362,7 +362,6 @@ namespace Certify.Management
                     ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate));
 
                     await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
-
                 }
                 catch { }
             }
@@ -417,18 +416,6 @@ namespace Certify.Management
             return Task.FromResult(challengeResponses);
         }
 
-        private List<string> GetAllRequestedDomains(CertRequestConfig config)
-        {
-            var allDomains = new List<string> { config.PrimaryDomain };
-
-            if (config.SubjectAlternativeNames != null)
-            {
-                allDomains.AddRange(config.SubjectAlternativeNames);
-            }
-
-            return allDomains.Distinct().ToList(); ;
-        }
-
         private async Task PerformCertificateRequestProcessing(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, CertificateRequestResult result, CertRequestConfig config)
         {
             //primary domain and each subject alternative name must now be registered as an identifier with LE and validated
@@ -450,7 +437,7 @@ namespace Certify.Management
                         });
             }
 
-            var distinctDomains = GetAllRequestedDomains((config));
+            var distinctDomains = managedCertificate.GetCertificateDomains();
 
             var identifierAuthorizations = new List<PendingAuthorization>();
 
@@ -576,7 +563,7 @@ namespace Certify.Management
             {
                 var authorizations = pendingOrder.Authorizations;
 
-                var distinctDomains = GetAllRequestedDomains(config);
+                var distinctDomains = managedCertificate.GetCertificateDomains();
 
                 if (!authorizations.All(a => a.IsValidated))
                 {
@@ -739,7 +726,7 @@ namespace Certify.Management
                     new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RequestCertificate,
                         managedCertificate));
 
-                // Perform CSR request
+                // Perform CSR request and generate certificate
 
                 var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, config, pendingOrder.OrderUri);
 
@@ -846,7 +833,6 @@ namespace Certify.Management
                                             _serviceLog.Information($"Cleanup removed cert: {c}");
                                         }
                                     }
-
                                 }
                                 catch (Exception exp)
                                 {

@@ -183,6 +183,22 @@ namespace Certify.Models
         }
 
         /// <summary>
+        /// Get distinct list of certificate domains/hostnames for this managed cert
+        /// </summary>
+        /// <returns></returns>
+        public List<string> GetCertificateDomains()
+        {
+            var allDomains = new List<string> { RequestConfig.PrimaryDomain };
+
+            if (RequestConfig.SubjectAlternativeNames != null)
+            {
+                allDomains.AddRange(RequestConfig.SubjectAlternativeNames);
+            }
+
+            return allDomains.Distinct().ToList(); ;
+        }
+
+        /// <summary>
         /// For the given challenge config and list of domains, return subset of domains which will
         /// be matched against the config (considering all other configs)
         /// </summary>
@@ -321,7 +337,7 @@ namespace Certify.Models
         /// </summary>
         /// <param name="dnsNames">  </param>
         /// <param name="hostname">  </param>
-        /// <param name="matchWildcardsToRootDomain"> 
+        /// <param name="matchWildcardsToRootDomain">
         /// if true, *.test.com would match test.com (as well as www.test.com)
         /// </param>
         /// <returns>  </returns>

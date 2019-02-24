@@ -828,6 +828,7 @@ namespace Certify.Providers.Certes
 
             // generate cert
             CertificateChain certificateChain = null;
+            DateTime? certExpiration = null;
             try
             {
                 certificateChain = await orderContext.Generate(new CsrInfo
@@ -836,6 +837,7 @@ namespace Certify.Providers.Certes
                 }, csrKey);
 
                 var cert = new X509Certificate2(certificateChain.Certificate.ToDer());
+                certExpiration = cert.NotAfter;
                 certFriendlyName += $"{cert.GetEffectiveDateString()} to {cert.GetExpirationDateString()}";
             }
             catch (AcmeRequestException exp)
@@ -846,27 +848,29 @@ namespace Certify.Providers.Certes
                 return new ProcessStepResult { ErrorMessage = msg, IsSuccess = false, Result = exp.Error };
             }
 
-            var certId = Guid.NewGuid().ToString();
+            // file will be named as {expiration yyyyMMdd}_{guid} e.g. 20290301_4fd1b2ea-7b6e-4dca-b5d9-e0e7254e568b
+            var certId = certExpiration.Value.ToString("yyyyMMdd") + "_" + Guid.NewGuid().ToString().Substring(0, 8);
 
-            var pfxFile = certId + ".pfx";
+            var domainAsPath = config.PrimaryDomain.Replace("*", "_");
 
-            var pfxPath = ExportFullCertPFX(certFriendlyName, csrKey, certificateChain, pfxFile);
+            var pfxPath = ExportFullCertPFX(certFriendlyName, csrKey, certificateChain, certId, domainAsPath);
 
-            // ExportFullCertPEM(csrKey, certificateChain, certId);
+            ExportFullCertPEM(csrKey, certificateChain, certId, domainAsPath);
 
             return new ProcessStepResult { IsSuccess = true, Result = pfxPath };
         }
 
-        private string ExportFullCertPFX(string certFriendlyName, IKey csrKey, CertificateChain certificateChain, string pfxFile)
+        private string ExportFullCertPFX(string certFriendlyName, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
         {
-            var pxfFolderPath = _settingsFolder + "\\assets\\pfx";
+            var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..\\assets", primaryDomainPath }));
 
-            if (!System.IO.Directory.Exists(pxfFolderPath))
+            if (!System.IO.Directory.Exists(storePath))
             {
-                System.IO.Directory.CreateDirectory(pxfFolderPath);
+                System.IO.Directory.CreateDirectory(storePath);
             }
 
-            var pfxPath = pxfFolderPath + "\\" + pfxFile;
+            var pfxFile = certId + ".pfx";
+            var pfxPath = Path.Combine(storePath, pfxFile);
 
             var pfx = certificateChain.ToPfx(csrKey);
             var pfxBytes = pfx.Build(certFriendlyName, "");
@@ -875,16 +879,21 @@ namespace Certify.Providers.Certes
             return pfxPath;
         }
 
-        private string ExportFullCertPEM(IKey csrKey, CertificateChain certificateChain, string certId)
+        private string ExportFullCertPEM(IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
         {
-            var pemFolderPath = _settingsFolder + "\\assets\\pem";
+            var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..\\assets", primaryDomainPath }));
 
-            if (!System.IO.Directory.Exists(pemFolderPath))
+            if (!System.IO.Directory.Exists(storePath))
             {
-                System.IO.Directory.CreateDirectory(pemFolderPath);
+                System.IO.Directory.CreateDirectory(storePath);
             }
 
-            var pemPath = pemFolderPath + "\\" + certId + ".pem";
+            if (!System.IO.Directory.Exists(storePath))
+            {
+                System.IO.Directory.CreateDirectory(storePath);
+            }
+
+            var pemPath = Path.Combine(storePath, certId + ".pem");
 
             // write pem in order of Private .key, primary server .crt, intermediate .crt, issuer.crt
             // note:

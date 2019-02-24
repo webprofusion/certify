@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Core.Management.Challenges;
@@ -81,7 +82,6 @@ namespace Certify.Management
             _serviceLog?.Information("Certify Manager Started");
 
             PerformUpgrades().Wait();
-
         }
 
         private void InitLogging(Shared.ServiceConfig serverConfig)
@@ -108,9 +108,11 @@ namespace Certify.Management
                 case "debug":
                     _loggingLevelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Debug;
                     break;
+
                 case "verbose":
                     _loggingLevelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Verbose;
                     break;
+
                 default:
                     _loggingLevelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Information;
                     break;
@@ -224,7 +226,6 @@ namespace Certify.Management
             if (CoreAppSettings.Current.EnableCertificateCleanup)
             {
                 await PerformCertificateCleanup();
-
             }
 
             return await Task.FromResult(true);
@@ -254,6 +255,20 @@ namespace Certify.Management
                             }
                         }
 
+                        // cleanup old pfx files in asset store(s), if any
+                        var assetPath = Path.Combine(Util.GetAppDataFolder(), "certes", "assets");
+                        if (Directory.Exists(assetPath))
+                        {
+                            var ext = new List<string> { ".pfx" };
+                            DeleteOldCertificateFiles(assetPath, ext);
+                        }
+
+                        assetPath = Path.Combine(Util.GetAppDataFolder(), "assets");
+                        if (Directory.Exists(assetPath))
+                        {
+                            var ext = new List<string> { ".pfx", ".key", ".crt", ".pem" };
+                            DeleteOldCertificateFiles(assetPath, ext);
+                        }
                     }
 
                     // this will only perform expiry cleanup, as no specific thumbprint provided
@@ -276,6 +291,26 @@ namespace Certify.Management
         public void Dispose()
         {
             ManagedCertificateLog.DisposeLoggers();
+        }
+
+        private static void DeleteOldCertificateFiles(string assetPath, List<string> ext)
+        {
+            var allFiles = Directory.GetFiles(assetPath, "*.*", SearchOption.AllDirectories)
+                 .Where(s => ext.Contains(Path.GetExtension(s)));
+
+            foreach (var f in allFiles)
+            {
+                try
+                {
+                    var createdAt = System.IO.File.GetCreationTime(f);
+                    if (createdAt < DateTime.Now.AddMonths(12))
+                    {
+                        //remove old file
+                        System.IO.File.Delete(f);
+                    }
+                }
+                catch { }
+            }
         }
     }
 }
