@@ -33,7 +33,7 @@ namespace Certify.Core.Tests
                 ZoneId = _zoneId
             };
 
-            Stopwatch stopwatch = Stopwatch.StartNew();
+            var stopwatch = Stopwatch.StartNew();
             var createResult = await _provider.CreateRecord(createRequest);
 
             Assert.IsNotNull(createResult);

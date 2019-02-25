@@ -1,14 +1,10 @@
-﻿using Org.BouncyCastle.Asn1;
+﻿using System;
+using System.Collections;
+using System.IO;
+using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Security.Certificates;
 using Org.BouncyCastle.X509;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Certify.Utils
 {
@@ -19,15 +15,12 @@ namespace Certify.Utils
     public class X509ExtensionUtilities
     {
         public static Asn1Object FromExtensionValue(
-            Asn1OctetString extensionValue)
-        {
-            return Asn1Object.FromByteArray(extensionValue.GetOctets());
-        }
+            Asn1OctetString extensionValue) => Asn1Object.FromByteArray(extensionValue.GetOctets());
 
         public static ICollection GetIssuerAlternativeNames(
             X509Certificate cert)
         {
-            Asn1OctetString extVal = cert.GetExtensionValue(X509Extensions.IssuerAlternativeName);
+            var extVal = cert.GetExtensionValue(X509Extensions.IssuerAlternativeName);
 
             return GetAlternativeName(extVal);
         }
@@ -35,7 +28,7 @@ namespace Certify.Utils
         public static ICollection GetSubjectAlternativeNames(
             X509Certificate cert)
         {
-            Asn1OctetString extVal = cert.GetExtensionValue(X509Extensions.SubjectAlternativeName);
+            var extVal = cert.GetExtensionValue(X509Extensions.SubjectAlternativeName);
 
             return GetAlternativeName(extVal);
         }
@@ -49,12 +42,12 @@ namespace Certify.Utils
             {
                 try
                 {
-                    Asn1Sequence seq = DerSequence.GetInstance(FromExtensionValue(extVal));
+                    var seq = DerSequence.GetInstance(FromExtensionValue(extVal));
 
                     foreach (Asn1Encodable primName in seq)
                     {
                         IList list = new ArrayList(); //Platform.CreateArrayList();
-                        GeneralName genName = GeneralName.GetInstance(primName);
+                        var genName = GeneralName.GetInstance(primName);
 
                         list.Add(genName.TagNo);
 

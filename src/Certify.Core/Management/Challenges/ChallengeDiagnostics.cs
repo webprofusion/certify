@@ -122,7 +122,7 @@ namespace Certify.Core.Management.Challenges
                     var challengeConfig = managedCertificate.GetChallengeConfig(domain);
 
                     var challengeType = challengeConfig.ChallengeType;
-                    if (challengeType== SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
+                    if (challengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
                     {
                         log.Warning("tls-sni-01 challenge type is no longer supported by the Let's Encrypt service. Falling back to http-01");
                         challengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP;
@@ -175,12 +175,12 @@ namespace Certify.Core.Management.Challenges
                     }
                     else if (challengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
                     {
-                       
-                            result.IsOK = false;
-                            result.FailedItemSummary.Add($"The {SupportedChallengeTypes.CHALLENGE_TYPE_SNI} challenge type is no longer available.");
-                            results.Add(result);
 
-                            return results;
+                        result.IsOK = false;
+                        result.FailedItemSummary.Add($"The {SupportedChallengeTypes.CHALLENGE_TYPE_SNI} challenge type is no longer available.");
+                        results.Add(result);
+
+                        return results;
                         /*
 
                         var serverVersion = await serverManager.GetServerVersion();
@@ -290,7 +290,7 @@ namespace Certify.Core.Management.Challenges
 
         private string GenerateSimulatedDnsAuthValue()
         {
-           
+
             // create simulated challenge response
 
             var random = new Random();
@@ -306,7 +306,7 @@ namespace Certify.Core.Management.Challenges
             {
                 var keyAuthzDig = sha.ComputeHash(Encoding.UTF8.GetBytes(simulated_token));
                 hash = Certify.Management.Util.ToUrlSafeBase64String(keyAuthzDig);
-                
+
             }
             return $"{hash}";
         }

@@ -26,7 +26,7 @@ namespace Certify.Core.Tests
                 ZoneId = _zoneId
             };
 
-            Stopwatch stopwatch = Stopwatch.StartNew();
+            var stopwatch = Stopwatch.StartNew();
             var createResult = await _provider.CreateRecord(createRequest);
 
             Assert.IsNotNull(createResult);
@@ -57,10 +57,10 @@ namespace Certify.Core.Tests
         [TestMethod, TestCategory("DNS")]
         public async Task TestCreateRecords()
         {
-            var record1 = await this.TestCreateRecord();
+            var record1 = await TestCreateRecord();
 
             // also create a duplicate
-            var record2 = await this.TestCreateRecord();
+            var record2 = await TestCreateRecord();
 
             System.Diagnostics.Debug.WriteLine($"Cloudflare DNS should now have record {record1.RecordName} with values {record1.RecordValue} and {record2.RecordValue}");
         }

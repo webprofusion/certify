@@ -138,7 +138,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
 
             var recordName = NormaliseRecordName(domainInfo, request.RecordName);
 
-            string url = $"{_apiUrl}dns/managed/{request.ZoneId}/records/";
+            var url = $"{_apiUrl}dns/managed/{request.ZoneId}/records/";
 
             var apiRequest = CreateRequest(HttpMethod.Post, url, DateTimeOffset.Now);
 
@@ -207,7 +207,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
                 if (r.RecordName == recordName && r.RecordType == request.RecordType)
                 {
                     //delete existing record
-                    string url = $"{_apiUrl}dns/managed/{request.ZoneId}/records/{r.RecordId}";
+                    var url = $"{_apiUrl}dns/managed/{request.ZoneId}/records/{r.RecordId}";
                     var apiRequest = CreateRequest(HttpMethod.Delete, url, DateTimeOffset.Now);
                     var result = await _httpClient.SendAsync(apiRequest);
 
@@ -227,7 +227,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
 
         public async Task<List<DnsRecord>> GetDnsRecords(string zoneId)
         {
-            string url = $"{_apiUrl}dns/managed/{zoneId}/records/";
+            var url = $"{_apiUrl}dns/managed/{zoneId}/records/";
 
             var request = CreateRequest(HttpMethod.Get, url, DateTimeOffset.Now);
             var response = await _httpClient.SendAsync(request);
@@ -270,7 +270,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             else
             {
                 // failed
-                string msg = await response.Content.ReadAsStringAsync();
+                var msg = await response.Content.ReadAsStringAsync();
                 throw new Exception($"DnsMadeEasy: Failed to query DNS Zones. :: {msg}");
             }
         }
@@ -286,7 +286,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             // test connection and credentials
             try
             {
-                var zones = await this.GetZones();
+                var zones = await GetZones();
 
                 if (zones != null && zones.Any())
                 {
@@ -305,7 +305,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
 
         public void Dispose()
         {
-            if (this._httpClient != null)
+            if (_httpClient != null)
             {
                 _httpClient.Dispose();
             }

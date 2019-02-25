@@ -430,8 +430,8 @@ namespace Certify.Providers.DNS.OVH
             {
                 path = path.Substring(1);
             }
-            string target = Endpoint + path;
-            WebHeaderCollection headers = new WebHeaderCollection();
+            var target = Endpoint + path;
+            var headers = new WebHeaderCollection();
             headers.Add("X-Ovh-Application", ApplicationKey);
 
             if (data != null)
@@ -450,14 +450,14 @@ namespace Certify.Providers.DNS.OVH
                     throw new InvalidOperationException("ConsumerKey is missing.");
                 }
 
-                long currentServerTimestamp = GetCurrentUnixTimestamp() + await GetTimeDelta();
+                var currentServerTimestamp = GetCurrentUnixTimestamp() + await GetTimeDelta();
 
-                SHA1Managed sha1Hasher = new SHA1Managed();
-                string toSign =
+                var sha1Hasher = new SHA1Managed();
+                var toSign =
                     string.Join("+", ApplicationSecret, ConsumerKey, method,
                         target, data, currentServerTimestamp);
-                byte[] binaryHash = sha1Hasher.ComputeHash(Encoding.UTF8.GetBytes(toSign));
-                string signature = string.Join("",
+                var binaryHash = sha1Hasher.ComputeHash(Encoding.UTF8.GetBytes(toSign));
+                var signature = string.Join("",
                     binaryHash.Select(x => x.ToString("X2"))).ToLower();
 
                 headers.Add("X-Ovh-Consumer", ConsumerKey);
@@ -465,7 +465,7 @@ namespace Certify.Providers.DNS.OVH
                 headers.Add("X-Ovh-Signature", "$1$" + signature);
             }
 
-            string response = "";
+            var response = "";
 
             //NOTE: would be better to reuse some headers
             _webClient.Headers = headers;
@@ -494,8 +494,8 @@ namespace Certify.Providers.DNS.OVH
 
         private async Task<long> ComputeTimeDelta()
         {
-            long serverUnixTimestamp = await Get<long>("/auth/time", null, false);
-            long currentUnixTimestamp = GetCurrentUnixTimestamp();
+            var serverUnixTimestamp = await Get<long>("/auth/time", null, false);
+            var currentUnixTimestamp = GetCurrentUnixTimestamp();
             return serverUnixTimestamp - currentUnixTimestamp;
         }
 

@@ -174,7 +174,7 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Detect if binding already exists")]
         public void ExistingBindingChecks()
         {
-            List<BindingInfo> bindings = new List<BindingInfo> {
+            var bindings = new List<BindingInfo> {
                 new BindingInfo{ Host="test.com", IP="0.0.0.0", Port=443, Protocol="https" },
                 new BindingInfo{ Host="www.test.com", IP="*", Port=80, Protocol="http" },
                 new BindingInfo{ Host="UPPERCASE.TEST.COM", IP="*", Port=80, Protocol="http" },

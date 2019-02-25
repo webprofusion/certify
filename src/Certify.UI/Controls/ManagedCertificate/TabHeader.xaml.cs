@@ -10,14 +10,8 @@ namespace Certify.UI.Controls.ManagedCertificate
     {
         public FontAwesome.WPF.FontAwesomeIcon IconName
         {
-            get
-            {
-                return (FontAwesome.WPF.FontAwesomeIcon)GetValue(IconNameProperty);
-            }
-            set
-            {
-                SetValue(IconNameProperty, value);
-            }
+            get => (FontAwesome.WPF.FontAwesomeIcon)GetValue(IconNameProperty);
+            set => SetValue(IconNameProperty, value);
         }
 
         public static readonly DependencyProperty IconNameProperty =
@@ -30,8 +24,8 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         public string HeaderText
         {
-            get { return (string)GetValue(HeaderTextProperty); }
-            set { SetValue(HeaderTextProperty, value); }
+            get => (string)GetValue(HeaderTextProperty);
+            set => SetValue(HeaderTextProperty, value);
         }
 
         // Using a DependencyProperty as the backing store for IconName. This enables animation,
@@ -47,7 +41,7 @@ namespace Certify.UI.Controls.ManagedCertificate
         public TabHeader()
         {
             InitializeComponent();
-            this.DataContext = this;
+            DataContext = this;
         }
     }
 }

@@ -17,12 +17,12 @@ namespace Certify.Core.Tests.Unit
         [TestInitialize]
         public void CreateProblemKey()
         {
-            string userAgent = Util.GetUserAgent();
+            var userAgent = Util.GetUserAgent();
             var certes = new Certify.Providers.Certes.CertesACMEProvider(Util.GetAppDataFolder() + "\\certes", userAgent);
 
-            bool keyFound = false;
+            var keyFound = false;
             newKey = null;
-            int attempts = 0;
+            var attempts = 0;
 
             while (!keyFound)
             {
@@ -47,7 +47,7 @@ namespace Certify.Core.Tests.Unit
 
                     keyFound = true;
 
-                    string pem = "";
+                    var pem = "";
                     using (var sr = new StringWriter())
                     {
                         var pemWriter = new PemWriter(sr);

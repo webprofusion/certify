@@ -254,6 +254,7 @@ namespace Certify.Management
         /// <returns>  </returns>
         public async Task<CertificateRequestResult> PerformDummyCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null)
         {
+#pragma warning disable IDE0022 // Use expression body for methods
             return await Task.Run(async () =>
             {
                 for (var i = 0; i < 6; i++)
@@ -269,6 +270,7 @@ namespace Certify.Management
 
                 return new CertificateRequestResult { };
             });
+#pragma warning restore IDE0022 // Use expression body for methods
         }
 
         /// <summary>

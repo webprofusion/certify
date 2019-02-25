@@ -28,7 +28,7 @@ namespace Certify.CLI
             var currentManagedCertificates = await _certifyClient.GetManagedCertificates(new ManagedCertificateFilter() { });
             var rows = System.IO.File.ReadAllLines(filename);
             var csvHasHeaders = false;
-            int rowID = 0;
+            var rowID = 0;
 
             // set default column index values
             int? siteIdIdx = 0,
@@ -63,8 +63,8 @@ namespace Certify.CLI
                     // first row contains headers, we need to figure out the position of each column
                     if ((rowID == 0) && csvHasHeaders)
                     {
-                        string[] columnTitles = row.Split(',');
-                        int colID = 0;
+                        var columnTitles = row.Split(',');
+                        var colID = 0;
 
                         foreach (var title in columnTitles)
                         {
@@ -154,10 +154,10 @@ namespace Certify.CLI
                     else
                     {
                         // required fields SiteId, Name, Domain;Domain2;Domain3
-                        string[] values = Regex.Split(row, @",(?![^\{]*\})"); // get all values separated by commas except those found between {}
-                        string siteId = values[(int)siteIdIdx].Trim();
-                        string siteName = values[(int)nameIdx].Trim();
-                        string[] domains = values[(int)domainsIdx].Trim().Split(';');
+                        var values = Regex.Split(row, @",(?![^\{]*\})"); // get all values separated by commas except those found between {}
+                        var siteId = values[(int)siteIdIdx].Trim();
+                        var siteName = values[(int)nameIdx].Trim();
+                        var domains = values[(int)domainsIdx].Trim().Split(';');
 
                         // optional fields
                         bool IncludeInAutoRenew = true,
@@ -262,7 +262,7 @@ namespace Certify.CLI
                         newManagedCertificate.RequestConfig.WebhookContentType = WebhookContentType;
                         newManagedCertificate.RequestConfig.WebhookContentBody = WebhookContentBody;
 
-                        bool isPrimaryDomain = true;
+                        var isPrimaryDomain = true;
 
                         // if we have passed in a primary domain into the csv file, use that instead
                         // of the first domain in the list
@@ -271,10 +271,10 @@ namespace Certify.CLI
                             isPrimaryDomain = false;
                         }
 
-                        List<string> sans = new List<string>();
+                        var sans = new List<string>();
                         foreach (var d in domains)
                         {
-                            if (!String.IsNullOrWhiteSpace(d))
+                            if (!string.IsNullOrWhiteSpace(d))
                             {
                                 var cleanDomainName = d.Trim();
 
@@ -284,7 +284,7 @@ namespace Certify.CLI
                                     isPrimaryDomain = true;
                                 }
 
-                                bool sanExists = false;
+                                var sanExists = false;
 
                                 // check for existing SAN entry
                                 foreach (var site in currentManagedCertificates)

@@ -86,7 +86,7 @@ namespace Certify.Providers.DNS.Aliyun
             // test connection and credentials
             try
             {
-                var zones = await this.GetZones();
+                var zones = await GetZones();
 
                 if (zones != null && zones.Any())
                 {
@@ -165,9 +165,9 @@ namespace Certify.Providers.DNS.Aliyun
 
         private async Task<List<Record>> GetDnsRecords(string domainName)
         {
-            List<Record> records = new List<Record>();
-            bool finishedPaginating = false;
-            int page = 1;
+            var records = new List<Record>();
+            var finishedPaginating = false;
+            var page = 1;
 
             while (!finishedPaginating)
             {
@@ -199,8 +199,8 @@ namespace Certify.Providers.DNS.Aliyun
         {
             //TODO does aliyun really have Zones?
             var zones = new List<DnsZone>();
-            bool finishedPaginating = false;
-            int page = 1;
+            var finishedPaginating = false;
+            var page = 1;
 
             while (!finishedPaginating)
             {

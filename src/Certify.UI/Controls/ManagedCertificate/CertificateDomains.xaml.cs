@@ -1,9 +1,9 @@
-﻿using Certify.Models;
-using System;
+﻿using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using Certify.Models;
 
 namespace Certify.UI.Controls.ManagedCertificate
 {
@@ -20,25 +20,25 @@ namespace Certify.UI.Controls.ManagedCertificate
         public CertificateDomains()
         {
             InitializeComponent();
-            this.AppViewModel.PropertyChanged += MainViewModel_PropertyChanged;
+            AppViewModel.PropertyChanged += MainViewModel_PropertyChanged;
         }
 
-        private void SetFilter()
-        {
-            CollectionViewSource.GetDefaultView(SelectedItem.DomainOptions).Filter = (item) =>
-            {
-                string filter = DomainFilter.Text.Trim();
-                return filter == "" || filter.Split(';').Where(f => f.Trim() != "").Any(f =>
-                    ((Models.DomainOption)item).Domain.IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1);
-            };
-        }
+        private void SetFilter() => CollectionViewSource.GetDefaultView(SelectedItem.DomainOptions).Filter = (item) =>
+                                  {
+                                      var filter = DomainFilter.Text.Trim();
+                                      return filter == "" || filter.Split(';').Where(f => f.Trim() != "").Any(f =>
+                                          ((Models.DomainOption)item).Domain.IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1);
+                                  };
 
         private async void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (e.PropertyName == "SelectedItem")
             {
                 //get list of sites from local server if we don't already have it
-                if (ItemViewModel.WebSiteList.Count == 0) await ItemViewModel.RefreshWebsiteList();
+                if (ItemViewModel.WebSiteList.Count == 0)
+                {
+                    await ItemViewModel.RefreshWebsiteList();
+                }
 
                 if (ItemViewModel.WebSiteList.Count > 0)
                 {
@@ -57,7 +57,10 @@ namespace Certify.UI.Controls.ManagedCertificate
                 if (SelectedItem != null)
                 {
                     // if website previously selected, preselect in dropdown
-                    if (SelectedItem.GroupId == null) SelectedItem.GroupId = "";
+                    if (SelectedItem.GroupId == null)
+                    {
+                        SelectedItem.GroupId = "";
+                    }
 
                     var selectedWebsite = ItemViewModel.WebSiteList.FirstOrDefault(w => w.SiteId == SelectedItem.GroupId);
                     if (selectedWebsite != null)
@@ -76,7 +79,7 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             if (ItemViewModel.SelectedWebSite != null)
             {
-                string siteId = ItemViewModel.SelectedWebSite.SiteId;
+                var siteId = ItemViewModel.SelectedWebSite.SiteId;
 
                 SiteQueryInProgress.Visibility = Visibility.Visible;
 
@@ -86,10 +89,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        private async void RefreshSanList_Click(object sender, RoutedEventArgs e)
-        {
-            await ItemViewModel.SANRefresh();
-        }
+        private async void RefreshSanList_Click(object sender, RoutedEventArgs e) => await ItemViewModel.SANRefresh();
 
         private void AddDomains_Click(object sender, RoutedEventArgs e)
         {
@@ -111,17 +111,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        private void DomainFilter_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            SetFilter();
-
-            //var defaultView = CollectionViewSource.GetDefaultView(DomainOptionsList.DataContext);
-            //defaultView.Refresh();
-        }
-
-        private void NextButton_Click(object sender, RoutedEventArgs e)
-        {
-        }
+        private void DomainFilter_TextChanged(object sender, TextChangedEventArgs e) => SetFilter();//var defaultView = CollectionViewSource.GetDefaultView(DomainOptionsList.DataContext);//defaultView.Refresh();
 
         private void RemoveDomainOption_Click(object sender, RoutedEventArgs e)
         {
@@ -129,11 +119,11 @@ namespace Certify.UI.Controls.ManagedCertificate
             if (dg.SelectedItem != null)
             {
                 var opt = (DomainOption)dg.SelectedItem;
-                if (MessageBox.Show($"Remove {opt.Domain}?","Confirm Domain Option Removal", MessageBoxButton.YesNo)== MessageBoxResult.Yes)
+                if (MessageBox.Show($"Remove {opt.Domain}?", "Confirm Domain Option Removal", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                 {
                     ItemViewModel.SelectedItem.DomainOptions.Remove(opt);
                 }
-        
+
             }
         }
     }

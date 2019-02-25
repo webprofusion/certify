@@ -17,7 +17,7 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             InitializeComponent();
 
-            this.AppViewModel.PropertyChanged += AppViewModel_PropertyChanged; ;
+            AppViewModel.PropertyChanged += AppViewModel_PropertyChanged;
         }
 
         private void AppViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -28,24 +28,24 @@ namespace Certify.UI.Controls.ManagedCertificate
                 {
                     if (ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.OK)
                     {
-                        this.RenewalSuccess.Visibility = Visibility.Visible;
-                        this.RenewalFailed.Visibility = Visibility.Collapsed;
-                        this.RenewalPaused.Visibility = Visibility.Collapsed;
+                        RenewalSuccess.Visibility = Visibility.Visible;
+                        RenewalFailed.Visibility = Visibility.Collapsed;
+                        RenewalPaused.Visibility = Visibility.Collapsed;
                     }
                     else if (ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.AwaitingUser)
                     {
-                        this.RenewalSuccess.Visibility = Visibility.Collapsed;
-                        this.RenewalFailed.Visibility = Visibility.Collapsed;
-                        this.RenewalPaused.Visibility = Visibility.Visible;
+                        RenewalSuccess.Visibility = Visibility.Collapsed;
+                        RenewalFailed.Visibility = Visibility.Collapsed;
+                        RenewalPaused.Visibility = Visibility.Visible;
                     }
                     else if (
                       ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.Error ||
                       ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.Warning
                       )
                     {
-                        this.RenewalSuccess.Visibility = Visibility.Collapsed;
-                        this.RenewalFailed.Visibility = Visibility.Visible;
-                        this.RenewalPaused.Visibility = Visibility.Collapsed;
+                        RenewalSuccess.Visibility = Visibility.Collapsed;
+                        RenewalFailed.Visibility = Visibility.Visible;
+                        RenewalPaused.Visibility = Visibility.Collapsed;
                     }
                 }
             }
@@ -53,10 +53,13 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void OpenLogFile_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (this.ItemViewModel?.SelectedItem?.Id == null) return;
+            if (ItemViewModel?.SelectedItem?.Id == null)
+            {
+                return;
+            }
 
             // get file path for log
-            var logPath = Models.ManagedCertificateLog.GetLogPath(this.ItemViewModel.SelectedItem.Id);
+            var logPath = Models.ManagedCertificateLog.GetLogPath(ItemViewModel.SelectedItem.Id);
 
             //check file exists, if not inform user
             if (System.IO.File.Exists(logPath))

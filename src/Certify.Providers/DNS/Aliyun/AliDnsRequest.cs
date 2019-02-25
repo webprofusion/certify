@@ -50,8 +50,8 @@ namespace Certify.Providers.DNS.Aliyun
         {
             var enc = System.Web.HttpUtility.UrlEncode(s);
             if (enc == null) return null;
-            char[] temp = enc.ToCharArray();
-            for (int i = 0; i < temp.Length - 2; i++)
+            var temp = enc.ToCharArray();
+            for (var i = 0; i < temp.Length - 2; i++)
             {
                 if (temp[i] == '%')
                 {

@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Certify.Models
 {
@@ -17,9 +13,6 @@ namespace Certify.Models
             get; set;
         }
 
-        public override string ToString()
-        {
-            return "[" + DateTime.ToShortTimeString() + "] " + this.Command + (this.Result != null ? " : " + this.Result : "");
-        }
+        public override string ToString() => "[" + DateTime.ToShortTimeString() + "] " + Command + (Result != null ? " : " + Result : "");
     }
 }

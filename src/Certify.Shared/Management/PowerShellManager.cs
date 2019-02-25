@@ -35,7 +35,7 @@ namespace Certify.Management
                     // set working directory to the script file's directory
                     runspace.SessionStateProxy.Path.SetLocation(scriptInfo.DirectoryName);
 
-                    using (PowerShell shell = PowerShell.Create())
+                    using (var shell = PowerShell.Create())
                     {
                         shell.Runspace = runspace;
 
@@ -63,7 +63,7 @@ namespace Certify.Management
                         shell.Streams.Error.DataAdded += (sender, args) =>
                         {
                             var error = shell.Streams.Error[args.Index];
-                            string src = error.InvocationInfo.MyCommand?.ToString() ?? error.InvocationInfo.InvocationName;
+                            var src = error.InvocationInfo.MyCommand?.ToString() ?? error.InvocationInfo.InvocationName;
                             output.AppendLine($"{src}: {error}\n{error.InvocationInfo.PositionMessage}");
                         };
                         // capture write-* methods (except write-host)
@@ -75,8 +75,11 @@ namespace Certify.Management
                         outputData.DataAdded += (sender, args) =>
                         {
                             // capture all main output
-                            object data = outputData[args.Index]?.BaseObject;
-                            if (data != null) output.AppendLine(data.ToString());
+                            var data = outputData[args.Index]?.BaseObject;
+                            if (data != null)
+                            {
+                                output.AppendLine(data.ToString());
+                            }
                         };
                         await Task.Run(() =>
                         {

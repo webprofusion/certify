@@ -90,7 +90,7 @@ namespace Certify.Providers.DNS.GoDaddy
             // test connection and credentials
             try
             {
-                var zones = await this.GetZones();
+                var zones = await GetZones();
                 if (zones != null && zones.Any())
                 {
                     return new ActionResult { IsSuccess = true, Message = "Test Completed OK." };

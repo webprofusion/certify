@@ -21,7 +21,7 @@ namespace Certify.Management
 
         private string GetDbPath()
         {
-            string appDataPath = Util.GetAppDataFolder(StorageSubfolder);
+            var appDataPath = Util.GetAppDataFolder(StorageSubfolder);
             return Path.Combine(appDataPath, $"{CREDENTIALSTORE}.db");
         }
 
@@ -71,17 +71,26 @@ namespace Certify.Management
             // create instance of provider type then test credentials
             var storedCredential = await GetStoredCredential(storageKey);
 
-            if (storedCredential == null) return new ActionResult { IsSuccess = false, Message = "No credentials found." };
+            if (storedCredential == null)
+            {
+                return new ActionResult { IsSuccess = false, Message = "No credentials found." };
+            }
 
             var credentials = await GetUnlockedCredentialsDictionary(storedCredential.StorageKey);
 
-            if (credentials == null) return new ActionResult { IsSuccess = false, Message = "Failed to retrieve decrypted credentials." };
+            if (credentials == null)
+            {
+                return new ActionResult { IsSuccess = false, Message = "Failed to retrieve decrypted credentials." };
+            }
 
             if (storedCredential.ProviderType.StartsWith("DNS"))
             {
                 var dnsProvider = await ChallengeProviders.GetDnsProvider(storedCredential.ProviderType, credentials, new Dictionary<string, string> { });
 
-                if (dnsProvider == null) return new ActionResult { IsSuccess = false, Message = "Could not create DNS provider API. Invalid or unrecognised." };
+                if (dnsProvider == null)
+                {
+                    return new ActionResult { IsSuccess = false, Message = "Could not create DNS provider API. Invalid or unrecognised." };
+                }
 
                 return await dnsProvider.Test();
             }
@@ -119,12 +128,16 @@ namespace Certify.Management
         {
             // https://www.thomaslevesque.com/2013/05/21/an-easy-and-secure-way-to-store-a-password-using-data-protection-api/
 
-            if (clearText == null) return null;
-            byte[] clearBytes = Encoding.UTF8.GetBytes(clearText);
-            byte[] entropyBytes = string.IsNullOrEmpty(optionalEntropy)
+            if (clearText == null)
+            {
+                return null;
+            }
+
+            var clearBytes = Encoding.UTF8.GetBytes(clearText);
+            var entropyBytes = string.IsNullOrEmpty(optionalEntropy)
                 ? null
                 : Encoding.UTF8.GetBytes(optionalEntropy);
-            byte[] encryptedBytes = ProtectedData.Protect(clearBytes, entropyBytes, scope);
+            var encryptedBytes = ProtectedData.Protect(clearBytes, entropyBytes, scope);
             return Convert.ToBase64String(encryptedBytes);
         }
 
@@ -143,12 +156,15 @@ namespace Certify.Management
             // https://www.thomaslevesque.com/2013/05/21/an-easy-and-secure-way-to-store-a-password-using-data-protection-api/
 
             if (encryptedText == null)
+            {
                 throw new ArgumentNullException("encryptedText");
-            byte[] encryptedBytes = Convert.FromBase64String(encryptedText);
-            byte[] entropyBytes = string.IsNullOrEmpty(optionalEntropy)
+            }
+
+            var encryptedBytes = Convert.FromBase64String(encryptedText);
+            var entropyBytes = string.IsNullOrEmpty(optionalEntropy)
                 ? null
                 : Encoding.UTF8.GetBytes(optionalEntropy);
-            byte[] clearBytes = ProtectedData.Unprotect(encryptedBytes, entropyBytes, scope);
+            var clearBytes = ProtectedData.Unprotect(encryptedBytes, entropyBytes, scope);
             return Encoding.UTF8.GetString(clearBytes);
         }
 
@@ -163,7 +179,7 @@ namespace Certify.Management
 
             if (File.Exists(path))
             {
-                List<StoredCredential> credentials = new List<StoredCredential>();
+                var credentials = new List<StoredCredential>();
 
                 using (var db = new SQLiteConnection($"Data Source={path}"))
                 {
@@ -228,7 +244,7 @@ namespace Certify.Management
         {
             try
             {
-                string val = await this.GetUnlockedCredential(storageKey);
+                var val = await GetUnlockedCredential(storageKey);
 
                 return JsonConvert.DeserializeObject<Dictionary<string, string>>(val);
             }
@@ -241,11 +257,14 @@ namespace Certify.Management
 
         public async Task<StoredCredential> UpdateCredential(StoredCredential credentialInfo)
         {
-            if (credentialInfo.Secret == null) return null;
+            if (credentialInfo.Secret == null)
+            {
+                return null;
+            }
 
             credentialInfo.DateCreated = DateTime.Now;
 
-            string protectedContent = Protect(credentialInfo.Secret, PROTECTIONENTROPY, DataProtectionScope.CurrentUser);
+            var protectedContent = Protect(credentialInfo.Secret, PROTECTIONENTROPY, DataProtectionScope.CurrentUser);
 
             credentialInfo.Secret = "protected";
 

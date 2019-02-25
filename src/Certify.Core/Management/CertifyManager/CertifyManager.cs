@@ -77,7 +77,10 @@ namespace Certify.Management
             _httpChallengePort = serverConfig.HttpChallengeServerPort;
             _httpChallengeServerClient.Timeout = new TimeSpan(0, 0, 5);
 
-            if (_tc != null) _tc.TrackEvent("ServiceStarted");
+            if (_tc != null)
+            {
+                _tc.TrackEvent("ServiceStarted");
+            }
 
             _serviceLog?.Information("Certify Manager Started");
 
@@ -158,7 +161,10 @@ namespace Certify.Management
 
         public void ReportProgress(IProgress<RequestProgressState> progress, RequestProgressState state, bool logThisEvent = true)
         {
-            if (progress != null) progress.Report(state);
+            if (progress != null)
+            {
+                progress.Report(state);
+            }
 
             // report request state to staus hub clients
             OnRequestProgressStateUpdated?.Invoke(state);
@@ -169,15 +175,12 @@ namespace Certify.Management
             }
         }
 
-        private void LogMessage(string managedItemId, string msg, LogItemType logType = LogItemType.GeneralInfo)
+        private void LogMessage(string managedItemId, string msg, LogItemType logType = LogItemType.GeneralInfo) => ManagedCertificateLog.AppendLog(managedItemId, new ManagedCertificateLogItem
         {
-            ManagedCertificateLog.AppendLog(managedItemId, new ManagedCertificateLogItem
-            {
-                EventDate = DateTime.UtcNow,
-                LogItemType = LogItemType.GeneralInfo,
-                Message = msg
-            }, _loggingLevelSwitch);
-        }
+            EventDate = DateTime.UtcNow,
+            LogItemType = LogItemType.GeneralInfo,
+            Message = msg
+        }, _loggingLevelSwitch);
 
         public RequestProgressState GetRequestProgressState(string managedItemId)
         {
@@ -220,7 +223,10 @@ namespace Certify.Management
             // use latest settings
             SettingsManager.LoadAppSettings();
 
-            if (_tc != null) _tc.TrackEvent("ServiceDailyTaskCheck");
+            if (_tc != null)
+            {
+                _tc.TrackEvent("ServiceDailyTaskCheck");
+            }
 
             // perform expired cert cleanup (if enabled)
             if (CoreAppSettings.Current.EnableCertificateCleanup)
@@ -236,7 +242,10 @@ namespace Certify.Management
             try
             {
                 var mode = CoreAppSettings.Current.CertificateCleanupMode;
-                if (mode == null) mode = CertificateCleanupMode.AfterExpiry;
+                if (mode == null)
+                {
+                    mode = CertificateCleanupMode.AfterExpiry;
+                }
 
                 if (mode != CertificateCleanupMode.None)
                 {
@@ -288,10 +297,7 @@ namespace Certify.Management
             }
         }
 
-        public void Dispose()
-        {
-            ManagedCertificateLog.DisposeLoggers();
-        }
+        public void Dispose() => ManagedCertificateLog.DisposeLoggers();
 
         private static void DeleteOldCertificateFiles(string assetPath, List<string> ext)
         {

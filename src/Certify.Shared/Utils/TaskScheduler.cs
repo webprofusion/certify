@@ -1,6 +1,6 @@
-﻿using Microsoft.Win32.TaskScheduler;
-using System;
+﻿using System;
 using System.Linq;
+using Microsoft.Win32.TaskScheduler;
 
 namespace Certify.Shared
 {
@@ -58,9 +58,6 @@ namespace Certify.Shared
             }
         }
 
-        public void DeleteWindowsScheduledTask()
-        {
-            Microsoft.Win32.TaskScheduler.TaskService.Instance.RootFolder.DeleteTask(SCHEDULED_TASK_NAME, exceptionOnNotExists: false);
-        }
+        public void DeleteWindowsScheduledTask() => Microsoft.Win32.TaskScheduler.TaskService.Instance.RootFolder.DeleteTask(SCHEDULED_TASK_NAME, exceptionOnNotExists: false);
     }
 }

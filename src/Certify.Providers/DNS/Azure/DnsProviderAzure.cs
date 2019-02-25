@@ -65,7 +65,7 @@ namespace Certify.Providers.DNS.Azure
             // test connection and credentials
             try
             {
-                var zones = await this.GetZones();
+                var zones = await GetZones();
 
                 if (zones != null && zones.Any())
                 {

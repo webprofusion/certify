@@ -73,7 +73,11 @@ namespace Certify.Management
             // check subject alternate name (must have exactly 1, equal to sni)
             var x509 = DotNetUtilities.FromX509Certificate(certificate);
             var sans = X509ExtensionUtilities.GetSubjectAlternativeNames(x509);
-            if (sans.Count != 1) return false;
+            if (sans.Count != 1)
+            {
+                return false;
+            }
+
             var san = (System.Collections.IList)((System.Collections.IList)sans)[0];
             var sniOK = san[0].Equals(GeneralName.DnsName) && san[1].Equals(sni);
 
@@ -292,10 +296,7 @@ namespace Certify.Management
             return null;
         }
 
-        public static X509Store GetDefaultStore()
-        {
-            return new X509Store(StoreName.My, StoreLocation.LocalMachine);
-        }
+        public static X509Store GetDefaultStore() => new X509Store(StoreName.My, StoreLocation.LocalMachine);
 
         public static bool IsCertificateInStore(X509Certificate2 cert)
         {
@@ -419,7 +420,8 @@ namespace Certify.Management
                     }
                     store.Close();
                 }
-            } catch (Exception exp)
+            }
+            catch (Exception exp)
             {
                 log?.Error("Failed to perform certificate cleanup: " + exp.ToString());
             }

@@ -27,7 +27,7 @@ namespace Certify.Management
 
             var stepIndex = 1;
 
-            bool hasDomains = true;
+            var hasDomains = true;
 
             // ensure defaults are applied for the deployment mode, overwriting any previous selections
             item.RequestConfig.ApplyDeploymentOptionDefaults();
@@ -281,24 +281,35 @@ namespace Certify.Management
                     if (item.ItemType == ManagedCertificateType.SSL_LetsEncrypt_LocalIIS)
                     {
                         if (item.RequestConfig.DeploymentBindingMatchHostname)
+                        {
                             deploymentDescription.AppendLine(
                                 "* Deploy to hostname bindings matching certificate domains.");
+                        }
 
                         if (item.RequestConfig.DeploymentBindingBlankHostname)
+                        {
                             deploymentDescription.AppendLine("* Deploy to bindings with blank hostname.");
+                        }
 
                         if (item.RequestConfig.DeploymentBindingReplacePrevious)
+                        {
                             deploymentDescription.AppendLine("* Deploy to bindings with previous certificate.");
+                        }
 
                         if (item.RequestConfig.DeploymentBindingOption == DeploymentBindingOption.AddOrUpdate)
+                        {
                             deploymentDescription.AppendLine("* Add or Update https bindings as required");
+                        }
 
                         if (item.RequestConfig.DeploymentBindingOption == DeploymentBindingOption.UpdateOnly)
+                        {
                             deploymentDescription.AppendLine("* Update https bindings as required (no auto-created https bindings)");
+                        }
 
                         if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.SingleSite)
                         {
                             if (!string.IsNullOrEmpty(item.ServerSiteId))
+                            {
                                 try
                                 {
                                     var siteInfo = await serverProvider.GetSiteById(item.ServerSiteId);
@@ -309,6 +320,7 @@ namespace Certify.Management
                                 {
                                     deploymentDescription.AppendLine($"Error: **cannot identify selected site.** {exp.Message} ");
                                 }
+                            }
                         }
                         else
                         {
@@ -318,7 +330,10 @@ namespace Certify.Management
                         // add deployment sub-steps (if any)
                         var bindingRequest = await certifyManager.DeployCertificate(item, null, true);
 
-                        if (bindingRequest.Actions != null) deploymentStep.Substeps = bindingRequest.Actions;
+                        if (bindingRequest.Actions != null)
+                        {
+                            deploymentStep.Substeps = bindingRequest.Actions;
+                        }
 
                         if (bindingRequest.Actions == null || !bindingRequest.Actions.Any())
                         {
@@ -378,6 +393,7 @@ namespace Certify.Management
             var sites = new List<ManagedCertificate>();
 
             if (serverType == StandardServerTypes.IIS)
+            {
                 try
                 {
                     var allSites = await serverProvider.GetSiteBindingList(CoreAppSettings.Current.IgnoreStoppedSites);
@@ -410,6 +426,7 @@ namespace Certify.Management
                     //can't read sites
                     Debug.WriteLine("Can't get IIS site list.");
                 }
+            }
 
             return sites;
         }

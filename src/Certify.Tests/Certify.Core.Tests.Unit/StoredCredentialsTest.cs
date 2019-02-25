@@ -14,7 +14,7 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestStoreCredential()
         {
-            string testSecret = "This is a secret";
+            var testSecret = "This is a secret";
             var test = new StoredCredential
             {
                 ProviderType = "DNS01.API.Route53",
@@ -28,7 +28,7 @@ namespace Certify.Core.Tests.Unit
 
             Assert.IsNotNull(result, "Credential stored OK");
 
-            List<StoredCredential> list = await credentialsManager.GetStoredCredentials();
+            var list = await credentialsManager.GetStoredCredentials();
 
             Assert.IsTrue(list.Any(l => l.StorageKey == test.StorageKey), "Credential retrieved");
 
@@ -40,7 +40,7 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestStoreCredentialDictionary()
         {
-            Dictionary<string, string> secrets = new Dictionary<string, string>();
+            var secrets = new Dictionary<string, string>();
             secrets.Add("zoneid", "ABC123");
             secrets.Add("secretid", "thereisnosecret");
 
@@ -58,7 +58,7 @@ namespace Certify.Core.Tests.Unit
 
             Assert.IsNotNull(result, "Credential stored OK");
 
-            List<StoredCredential> list = await credentialsManager.GetStoredCredentials();
+            var list = await credentialsManager.GetStoredCredentials();
 
             Assert.IsTrue(list.Any(l => l.StorageKey == test.StorageKey), "Credential retrieved");
 

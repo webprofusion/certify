@@ -1,8 +1,7 @@
+﻿using System.Windows;
+using System.Windows.Media;
 using Certify.Locales;
 using Certify.UI.ViewModel;
-using System;
-using System.Windows;
-using System.Windows.Media;
 
 namespace Certify.UI.Windows
 {
@@ -24,19 +23,19 @@ namespace Certify.UI.Windows
             InitializeComponent();
 
             //check if scheduled task already configured
-            this.TaskSettings.UseBackgroundService = AppViewModel.Current.Preferences.UseBackgroundServiceAutoRenewal;
+            TaskSettings.UseBackgroundService = AppViewModel.Current.Preferences.UseBackgroundServiceAutoRenewal;
 
             var taskScheduler = new Shared.TaskScheduler();
-            this.TaskSettings.TaskConfigured = taskScheduler.IsWindowsScheduledTaskPresent();
+            TaskSettings.TaskConfigured = taskScheduler.IsWindowsScheduledTaskPresent();
 
-            if (this.TaskSettings.TaskConfigured)
+            if (TaskSettings.TaskConfigured)
             {
                 AutoRenewPrompt.Text = SR.ScheduledTaskConfig_AlreadyConfiged;
                 AutoRenewPrompt.Foreground = Brushes.DarkGreen;
             }
-            this.DataContext = this.TaskSettings;
+            DataContext = TaskSettings;
 
-            if (this.TaskSettings.UseBackgroundService)
+            if (TaskSettings.UseBackgroundService)
             {
                 RadioUseBackgroundService.IsChecked = true;
                 RadioUseScheduledTask.IsChecked = false;
@@ -64,12 +63,12 @@ namespace Certify.UI.Windows
                 //remove any existing scheduled task
                 taskScheduler.DeleteWindowsScheduledTask();
 
-                this.Close();
+                Close();
             }
             else
             {
                 //create/update scheduled task
-                if (!String.IsNullOrEmpty(Username.Text) && (!String.IsNullOrEmpty(Password.Password)))
+                if (!string.IsNullOrEmpty(Username.Text) && (!string.IsNullOrEmpty(Password.Password)))
                 {
                     if (taskScheduler.CreateWindowsScheduledTask(Username.Text, Password.Password))
                     {
@@ -79,7 +78,7 @@ namespace Certify.UI.Windows
                         await AppViewModel.Current.SetPreferences(prefs);
 
                         MessageBox.Show(SR.ScheduledTaskConfig_TaskCreated);
-                        this.Close();
+                        Close();
                     }
                     else
                     {
@@ -93,19 +92,7 @@ namespace Certify.UI.Windows
             }
         }
 
-        private void Cancel_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
+        private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
 
-        private void UseBackgroundService_Checked(object sender, RoutedEventArgs e)
-        {
-            // UseBackgroundService = true;
-        }
-
-        private void UseScheduledTask_Checked(object sender, RoutedEventArgs e)
-        {
-            // UseBackgroundService = false;
-        }
     }
 }

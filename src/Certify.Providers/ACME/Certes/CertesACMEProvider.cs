@@ -27,6 +27,8 @@ namespace Certify.Providers.Certes
         public string AccountKey { get; set; }
     }
 
+
+#pragma warning disable IDE1006 // Naming Styles
     public class DiagEcKey
     {
         public string kty { get; set; }
@@ -34,6 +36,7 @@ namespace Certify.Providers.Certes
         public string x { get; set; }
         public string y { get; set; }
     }
+#pragma warning restore IDE1006 // Naming Styles
 
     // used to diagnose account key faults
     public class DiagAccountInfo
@@ -87,23 +90,23 @@ namespace Certify.Providers.Certes
     {
         private AcmeContext _acme;
 #if DEBUG
-        private Uri _serviceUri = WellKnownServers.LetsEncryptStagingV2;
+        private readonly Uri _serviceUri = WellKnownServers.LetsEncryptStagingV2;
 #else
-        private Uri _serviceUri = WellKnownServers.LetsEncryptV2;
+        private readonly Uri _serviceUri = WellKnownServers.LetsEncryptV2;
 #endif
 
-        private string _settingsFolder = null;
+        private readonly string _settingsFolder = null;
 
         private CertesSettings _settings = null;
         private Dictionary<string, IOrderContext> _currentOrders;
         private IdnMapping _idnMapping = new IdnMapping();
         private DateTime _lastInitDateTime = new DateTime();
-        private bool _newContactUseCurrentAccountKey = false;
+        private readonly bool _newContactUseCurrentAccountKey = false;
 
         private AcmeHttpClient _httpClient;
         private LoggingHandler _loggingHandler;
 
-        private string _userAgentName = "Certify SSL Manager";
+        private readonly string _userAgentName = "Certify SSL Manager";
         private ILog _log = null;
 
         public CertesACMEProvider(string settingsPath, string userAgentName)
@@ -115,20 +118,11 @@ namespace Certify.Providers.Certes
             _userAgentName = $"{userAgentName} {certesAssembly.Name}/{certesAssembly.Version.ToString()}";
         }
 
-        public string GetProviderName()
-        {
-            return "Certes";
-        }
+        public string GetProviderName() => "Certes";
 
-        public string GetAcmeBaseURI()
-        {
-            return _acme.DirectoryUri.ToString();
-        }
+        public string GetAcmeBaseURI() => _acme.DirectoryUri.ToString();
 
-        public async Task<Uri> GetAcmeTermsOfService()
-        {
-            return await _acme.TermsOfService();
-        }
+        public async Task<Uri> GetAcmeTermsOfService() => await _acme.TermsOfService();
 
         /// <summary>
         /// Initialise provider settings, loading current account key if present
@@ -279,7 +273,7 @@ namespace Certify.Providers.Certes
         {
             try
             {
-                using (StreamWriter fs = File.CreateText(path))
+                using (var fs = File.CreateText(path))
                 {
                     await fs.WriteAsync(content);
                     await fs.FlushAsync();
@@ -424,10 +418,11 @@ namespace Certify.Providers.Certes
             var authzList = new List<PendingAuthorization>();
 
             //if no alternative domain specified, use the primary domain as the subject
-            var domainOrders = new List<string>();
-
-            // order all of the distinct domains in the config (primary + SAN).
-            domainOrders.Add(_idnMapping.GetAscii(config.PrimaryDomain));
+            var domainOrders = new List<string>
+            {
+                // order all of the distinct domains in the config (primary + SAN).
+                _idnMapping.GetAscii(config.PrimaryDomain)
+            };
 
             if (config.SubjectAlternativeNames != null)
             {
@@ -443,8 +438,8 @@ namespace Certify.Providers.Certes
             try
             {
                 IOrderContext order = null;
-                int remainingAttempts = 3;
-                bool orderCreated = false;
+                var remainingAttempts = 3;
+                var orderCreated = false;
                 try
                 {
                     while (!orderCreated && remainingAttempts > 0)
@@ -535,13 +530,13 @@ namespace Certify.Providers.Certes
                 var orderAuthorizations = await order.Authorizations();
 
                 // get the challenges for each authorization
-                foreach (IAuthorizationContext authz in orderAuthorizations)
+                foreach (var authz in orderAuthorizations)
                 {
                     log.Debug($"Fetching Authz Challenges.");
 
                     var allChallenges = await authz.Challenges();
                     var res = await authz.Resource();
-                    string authzDomain = res.Identifier.Value;
+                    var authzDomain = res.Identifier.Value;
                     if (res.Wildcard == true) authzDomain = "*." + authzDomain;
 
                     var challenges = new List<AuthorizationChallengeItem>();
@@ -669,7 +664,7 @@ namespace Certify.Providers.Certes
         {
             if (!attemptedChallenge.IsValidated)
             {
-                IChallengeContext challenge = (IChallengeContext)attemptedChallenge.ChallengeData;
+                var challenge = (IChallengeContext)attemptedChallenge.ChallengeData;
                 try
                 {
                     var result = await challenge.Validate();
@@ -951,9 +946,6 @@ namespace Certify.Providers.Certes
             //FIXME: not implemented
         }
 
-        public Task<string> GetAcmeAccountStatus()
-        {
-            throw new NotImplementedException();
-        }
+        public Task<string> GetAcmeAccountStatus() => throw new NotImplementedException();
     }
 }

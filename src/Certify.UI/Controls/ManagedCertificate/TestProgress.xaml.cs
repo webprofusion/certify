@@ -11,7 +11,7 @@ namespace Certify.UI.Controls.ManagedCertificate
         public TestProgress()
         {
             InitializeComponent();
-            this.DataContext = ItemViewModel;
+            DataContext = ItemViewModel;
         }
 
         private void TextBlock_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)

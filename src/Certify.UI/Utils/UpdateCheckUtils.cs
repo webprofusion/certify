@@ -1,8 +1,8 @@
-﻿using Certify.Locales;
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using Certify.Locales;
 
 namespace Certify.UI.Utils
 {
@@ -30,7 +30,7 @@ namespace Certify.UI.Utils
                 if (MessageBox.Show(SR.Update_ReadyToApply, ConfigResources.AppName, MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
                 {
                     // file has been downloaded and verified
-                    System.Diagnostics.Process p = new System.Diagnostics.Process();
+                    var p = new System.Diagnostics.Process();
                     p.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
                     p.StartInfo.FileName = updateCheck.UpdateFilePath;
                     p.StartInfo.UseShellExecute = false;

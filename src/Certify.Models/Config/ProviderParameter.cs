@@ -16,7 +16,7 @@ namespace Certify.Models.Config
         {
             get
             {
-                List<string> options = new List<string>();
+                var options = new List<string>();
                 if (!string.IsNullOrEmpty(OptionsList))
                 {
                     options.AddRange(OptionsList.Split(';'));

@@ -22,8 +22,8 @@ namespace Certify.Core.Tests
     {
         private ServerProviderIIS iisManager;
         private string testSiteName = "Test2CertRequest";
-        private string testSiteDomain = "test.com";
-        private int testSiteHttpPort = 81;
+        private readonly string testSiteDomain = "test.com";
+        private readonly int testSiteHttpPort = 81;
 
         private string testSitePath = "c:\\inetpub\\wwwroot";
         private string _siteId = "";
@@ -42,10 +42,7 @@ namespace Certify.Core.Tests
         /// <summary>
         /// Perform teardown for IIS
         /// </summary>
-        public void Dispose()
-        {
-            TeardownIIS().Wait();
-        }
+        public void Dispose() => TeardownIIS().Wait();
 
         public async Task SetupIIS()
         {
@@ -75,7 +72,7 @@ namespace Certify.Core.Tests
         public async Task TestIISSiteRunning()
         {
             //this site should be running
-            bool isRunning = await iisManager.IsSiteRunning(_siteId);
+            var isRunning = await iisManager.IsSiteRunning(_siteId);
             Assert.IsTrue(isRunning);
 
             //this site should not be running
@@ -144,12 +141,12 @@ namespace Certify.Core.Tests
         [TestMethod]
         public async Task TestManySiteBindingUpdates()
         {
-            int numSites = 100;
+            var numSites = 100;
             // create a large number of site bindings, to see if we encounter isses saving IIS changes
 
             try
             {
-                List<ActionStep> allResults = new List<ActionStep>();
+                var allResults = new List<ActionStep>();
                 for (var i = 0; i < numSites; i++)
                 {
                     var domain = "site_" + i + "_toomany.com";
@@ -175,8 +172,8 @@ namespace Certify.Core.Tests
                 }
 
                 // now attempt async creation of bindings
-                List<Task<ActionStep>> allBindingTasksSet1 = new List<Task<ActionStep>>();
-                List<Task<ActionStep>> allBindingTasksSet2 = new List<Task<ActionStep>>();
+                var allBindingTasksSet1 = new List<Task<ActionStep>>();
+                var allBindingTasksSet2 = new List<Task<ActionStep>>();
                 for (var i = 0; i < numSites; i++)
                 {
                     var domain = "site_" + i + "_toomany.com";
@@ -212,7 +209,7 @@ namespace Certify.Core.Tests
                 ThreadPool.QueueUserWorkItem(async x =>
                 {
                     Thread.Sleep(500);
-                    ActionStep[] results = await Task.WhenAll<ActionStep>(allBindingTasksSet1);
+                    var results = await Task.WhenAll<ActionStep>(allBindingTasksSet1);
 
                     // verify all actions ok
                     Assert.IsFalse(results.Any(r => r.HasError), "Thread1: One or more actions failed");
@@ -220,7 +217,7 @@ namespace Certify.Core.Tests
 
                 ThreadPool.QueueUserWorkItem(async x =>
                 {
-                    ActionStep[] results = await Task.WhenAll<ActionStep>(allBindingTasksSet2);
+                    var results = await Task.WhenAll<ActionStep>(allBindingTasksSet2);
 
                     // verify all actions ok
                     Assert.IsFalse(results.Any(r => r.HasError), "Thread2: One or more actions failed");
@@ -256,7 +253,7 @@ namespace Certify.Core.Tests
                 // create net.msmq://localhost binding, no port or ip
                 await iisManager.CreateSite("ManyBindings", "toomany.com", PrimaryIISRoot, null, protocol: "http");
                 var site = await iisManager.GetSiteBindingByDomain("toomany.com");
-                List<string> domains = new List<string>();
+                var domains = new List<string>();
                 for (var i = 0; i < 101; i++)
                 {
                     domains.Add(Guid.NewGuid().ToString() + ".toomany.com");
@@ -317,10 +314,7 @@ namespace Certify.Core.Tests
             Assert.IsTrue(sites.Any());
         }
 
-        private bool IsCertHashEqual(byte[] a, byte[] b)
-        {
-            return StructuralComparisons.StructuralEqualityComparer.Equals(a, b);
-        }
+        private bool IsCertHashEqual(byte[] a, byte[] b) => StructuralComparisons.StructuralEqualityComparer.Equals(a, b);
 
         [TestMethod, TestCategory("MegaTest")]
         public async Task TestBindingMatch()
@@ -329,7 +323,7 @@ namespace Certify.Core.Tests
             var testStr = "abc123";
             PrimaryTestDomain = $"test-{testStr}." + PrimaryTestDomain;
 
-            string testBindingSiteName = "TestAllBinding_" + testStr;
+            var testBindingSiteName = "TestAllBinding_" + testStr;
 
             var testSiteDomain = "test" + testStr + "." + PrimaryTestDomain;
 
@@ -342,7 +336,7 @@ namespace Certify.Core.Tests
             var site = await iisManager.CreateSite(testBindingSiteName, "", PrimaryIISRoot, "DefaultAppPool", port: testSiteHttpPort);
 
             // add another hostname binding (matching cert and not matching cert)
-            List<string> testDomains = new List<string> { testSiteDomain, "label1." + testSiteDomain, "nested.label." + testSiteDomain };
+            var testDomains = new List<string> { testSiteDomain, "label1." + testSiteDomain, "nested.label." + testSiteDomain };
             await iisManager.AddSiteBindings(site.Id.ToString(), testDomains, testSiteHttpPort);
 
             // get fresh instance of site since updates

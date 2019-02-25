@@ -99,7 +99,7 @@ namespace Certify.Core.Management.Challenges
                 {
                     dnsAPIProvider = new DnsProviderAcmeDns(credentials, parameters, Util.GetAppDataFolder());
                 }
-                else if(providerDefinition.Id == DnsProviderNameCheap.Definition.Id)
+                else if (providerDefinition.Id == DnsProviderNameCheap.Definition.Id)
                 {
                     dnsAPIProvider = new DnsProviderNameCheap(credentials);
                 }
@@ -133,7 +133,8 @@ namespace Certify.Core.Management.Challenges
             {
                 return new DnsProviderMSDNS(credentials, parameters);
             }
-            catch {
+            catch
+            {
                 log?.Error("Failed to create MS DNS API Provider. Check Microsoft.Management.Infrastructure is available and install latest compatible Windows Management Framework: https://docs.microsoft.com/en-us/powershell/wmf/overview");
                 return null;
             };

@@ -32,7 +32,7 @@ namespace Certify.Core.Management.DeploymentTasks
                 }
             }
 
-            return new ActionResult { IsSuccess = true };
+            return await Task.FromResult(new ActionResult { IsSuccess = true });
         }
     }
 }

@@ -45,7 +45,7 @@ namespace Certify.Management
                                      .FirstOrDefault();
 
                 var obj = (T)Activator.CreateInstance(loadedType);
- 
+
                 return obj;
             }
             catch (Exception exp)

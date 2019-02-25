@@ -41,13 +41,7 @@
             IsPreviewMode = isPreviewMode;
         }
 
-        public bool IsRunning
-        {
-            get
-            {
-                return CurrentState == RequestState.Running ? true : false;
-            }
-        }
+        public bool IsRunning => CurrentState == RequestState.Running ? true : false;
 
         public RequestState CurrentState { get; set; }
 
@@ -59,16 +53,20 @@
         {
             get
             {
-                if (ManagedCertificate != null) return ManagedCertificate.Id;
+                if (ManagedCertificate != null)
+                {
+                    return ManagedCertificate.Id;
+                }
+
                 return null;
             }
         }
 
         public void ProgressReport(RequestProgressState state)
         {
-            this.CurrentState = state.CurrentState;
-            this.Message = state.Message;
-            this.Result = state.Result;
+            CurrentState = state.CurrentState;
+            Message = state.Message;
+            Result = state.Result;
 
 #if DEBUG
             System.Diagnostics.Debug.WriteLine(ManagedCertificate.Name + ": " + CurrentState.ToString() + (Message != null ? ", " + Message : ""));

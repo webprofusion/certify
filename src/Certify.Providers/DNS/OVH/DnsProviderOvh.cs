@@ -149,7 +149,7 @@ namespace Certify.Providers.DNS.OVH
             // test connection and credentials
             try
             {
-                var zones = await this.GetZones();
+                var zones = await GetZones();
 
                 if (zones != null && zones.Any())
                 {

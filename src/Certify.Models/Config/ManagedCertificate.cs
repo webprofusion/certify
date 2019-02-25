@@ -137,10 +137,7 @@ namespace Certify.Models
         public bool CertificateRevoked { get; set; }
         public string CurrentOrderUri { get; set; }
 
-        public override string ToString()
-        {
-            return $"[{Id ?? "null"}]: \"{Name}\"";
-        }
+        public override string ToString() => $"[{Id ?? "null"}]: \"{Name}\"";
 
         [JsonIgnore]
         public bool Deleted { get; set; } // do not serialize to settings
@@ -207,7 +204,7 @@ namespace Certify.Models
         /// <returns>  </returns>
         public List<string> GetChallengeConfigDomainMatches(CertRequestChallengeConfig config, IEnumerable<string> domains)
         {
-            List<string> matches = new List<string>();
+            var matches = new List<string>();
             foreach (var d in domains)
             {
                 var matchedConfig = GetChallengeConfig(d);
@@ -250,12 +247,12 @@ namespace Certify.Models
                 else
                 {
                     // start by matching first config with no specific domain
-                    CertRequestChallengeConfig matchedConfig = RequestConfig.Challenges.FirstOrDefault(c => String.IsNullOrEmpty(c.DomainMatch));
+                    var matchedConfig = RequestConfig.Challenges.FirstOrDefault(c => string.IsNullOrEmpty(c.DomainMatch));
 
                     if (!string.IsNullOrEmpty(domain))
                     {
                         // expand configs into per domain list
-                        Dictionary<string, CertRequestChallengeConfig> configsPerDomain = new Dictionary<string, CertRequestChallengeConfig>();
+                        var configsPerDomain = new Dictionary<string, CertRequestChallengeConfig>();
                         foreach (var c in RequestConfig.Challenges.Where(config => !string.IsNullOrEmpty(config.DomainMatch)))
                         {
                             if (!string.IsNullOrEmpty(c.DomainMatch) && !c.DomainMatch.Contains(";"))

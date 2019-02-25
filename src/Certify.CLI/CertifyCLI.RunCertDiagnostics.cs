@@ -45,7 +45,7 @@ namespace Certify.CLI
 
             foreach (var site in managedCertificates)
             {
-                if (!String.IsNullOrEmpty(site.CertificatePath))
+                if (!string.IsNullOrEmpty(site.CertificatePath))
                 {
                     if (System.IO.File.Exists(site.CertificatePath))
                     {

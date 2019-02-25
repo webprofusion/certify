@@ -1,15 +1,14 @@
-﻿using Certify.Locales;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Windows;
+using System.Windows.Controls;
+using Certify.Locales;
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Shared.Utils;
 using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Windows;
-using System.Windows.Controls;
-using WinForms = System.Windows.Forms;
 
 namespace Certify.UI.Controls.ManagedCertificate
 {
@@ -27,10 +26,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             LoadScriptPresets();
         }
 
-        private string GetPresetScriptPath()
-        {
-            return Environment.CurrentDirectory + "\\scripts\\common";
-        }
+        private string GetPresetScriptPath() => Environment.CurrentDirectory + "\\scripts\\common";
 
         private void LoadScriptPresets()
         {
@@ -41,7 +37,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 {
                     var json = File.ReadAllText(path);
                     var index = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Certify.Models.Config.ScriptPreset>>(json);
-                    this.PresetScripts.ItemsSource = index;
+                    PresetScripts.ItemsSource = index;
                 }
             }
             catch (Exception) { }
@@ -56,7 +52,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 Filter = "Powershell Scripts (*.ps1)| *.ps1;"
             };
             Action saveAction = null;
-            string filename = "";
+            var filename = "";
             if (button.Name == "Button_PreRequest")
             {
                 filename = config.PreRequestPowerShellScript;
@@ -100,10 +96,14 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 scriptFile = ItemViewModel.SelectedItem.RequestConfig.PostRequestPowerShellScript;
             }
-            if (string.IsNullOrEmpty(scriptFile)) return; // don't try to run empty script
+            if (string.IsNullOrEmpty(scriptFile))
+            {
+                return; // don't try to run empty script
+            }
+
             try
             {
-                string scriptOutput = await PowerShellManager.RunScript(result, scriptFile);
+                var scriptOutput = await PowerShellManager.RunScript(result, scriptFile);
                 MessageBox.Show(scriptOutput, "Powershell Output", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (ArgumentException ex)
@@ -129,9 +129,9 @@ namespace Certify.UI.Controls.ManagedCertificate
                     MessageBox.Show($"The webhook method must be selected.", SR.ManagedCertificateSettings_WebhookTestFailed, MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
-                bool forSuccess = config.WebhookTrigger == Webhook.ON_SUCCESS;
+                var forSuccess = config.WebhookTrigger == Webhook.ON_SUCCESS;
                 var webhookResult = await Webhook.SendRequest(config, forSuccess);
-                string completed = webhookResult.Success ? SR.succeed : SR.failed;
+                var completed = webhookResult.Success ? SR.succeed : SR.failed;
                 MessageBox.Show(string.Format(SR.ManagedCertificateSettings_WebhookRequestResult, completed, webhookResult.StatusCode), SR.ManagedCertificateSettings_WebhookTest, MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
@@ -152,8 +152,8 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             if (button.CommandParameter != null)
             {
-                ScriptPreset preset = button.CommandParameter as ScriptPreset;
-                string presetFilePath = GetPresetScriptPath() + "\\" + preset.File;
+                var preset = button.CommandParameter as ScriptPreset;
+                var presetFilePath = GetPresetScriptPath() + "\\" + preset.File;
                 if (preset.Language == "PowerShell")
                 {
                     if (preset.Usage == "PreRequest")

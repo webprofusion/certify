@@ -21,7 +21,7 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             InitializeComponent();
 
-            this.DeploymentSiteOptions.ItemsSource = new List<ListOption>
+            DeploymentSiteOptions.ItemsSource = new List<ListOption>
             {
                   new ListOption{
                     Title ="Auto",
@@ -50,7 +50,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 }
             };
 
-            this.DeploymentBindingUpdates.ItemsSource = new List<ListOption> {
+            DeploymentBindingUpdates.ItemsSource = new List<ListOption> {
                 new ListOption
                 {
                     Title="Add or Update https bindings as required",
@@ -66,10 +66,8 @@ namespace Certify.UI.Controls.ManagedCertificate
             };
         }
 
-        private void DeploymentSiteOptions_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
+        private void DeploymentSiteOptions_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
             // if deployment mode changes, apply defaults for the mode
             ItemViewModel.SelectedItem?.RequestConfig?.ApplyDeploymentOptionDefaults();
-        }
     }
 }

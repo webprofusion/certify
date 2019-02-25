@@ -112,7 +112,7 @@ namespace Certify.UI
             {
                 _appViewModel.MainUITabIndex = (int)PrimaryUITabs.CurrentProgress;
 
-                bool autoRenewalsOnly = true;
+                var autoRenewalsOnly = true;
                 // renewals is a long running process so we need to run renewals process in the
                 // background and present UI to show progress.
                 // TODO: We should prevent starting the renewals process if it is currently in progress.
@@ -205,7 +205,7 @@ namespace Certify.UI
 
             if (!_appViewModel.IsRegisteredVersion)
             {
-                this.Title += SR.MainWindow_TitleTrialPostfix;
+                Title += SR.MainWindow_TitleTrialPostfix;
             }
 
             //check for updates and report result to view model
@@ -226,7 +226,7 @@ namespace Certify.UI
                         var gotoDownload = MessageBox.Show(updateCheck.Message.Body + "\r\nVisit download page now?", ConfigResources.AppName, MessageBoxButton.YesNo);
                         if (gotoDownload == MessageBoxResult.Yes)
                         {
-                            System.Diagnostics.ProcessStartInfo sInfo = new System.Diagnostics.ProcessStartInfo(ConfigResources.AppWebsiteURL);
+                            var sInfo = new System.Diagnostics.ProcessStartInfo(ConfigResources.AppWebsiteURL);
                             System.Diagnostics.Process.Start(sInfo);
                         }
                         else
@@ -288,7 +288,7 @@ namespace Certify.UI
                     var gotoDownload = MessageBox.Show(_appViewModel.UpdateCheckResult.Message.Body + "\r\n" + SR.MainWindow_VisitDownloadPage, ConfigResources.AppName, MessageBoxButton.YesNo);
                     if (gotoDownload == MessageBoxResult.Yes)
                     {
-                        System.Diagnostics.ProcessStartInfo sInfo = new System.Diagnostics.ProcessStartInfo(_appViewModel.UpdateCheckResult.Message.DownloadPageURL);
+                        var sInfo = new System.Diagnostics.ProcessStartInfo(_appViewModel.UpdateCheckResult.Message.DownloadPageURL);
                         System.Diagnostics.Process.Start(sInfo);
                     }
                 }

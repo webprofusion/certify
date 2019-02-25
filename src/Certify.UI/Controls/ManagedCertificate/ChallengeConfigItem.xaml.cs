@@ -26,18 +26,9 @@ namespace Certify.UI.Controls.ManagedCertificate
             DataContextChanged += ChallengeConfigItem_DataContextChanged;
         }
 
-        private async void ChallengeConfigItem_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            await RefreshAllOptions();
-        }
+        private async void ChallengeConfigItem_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e) => await RefreshAllOptions();
 
-        private ChallengeConfigItemViewModel EditModel
-        {
-            get
-            {
-                return (ChallengeConfigItemViewModel)DataContext;
-            }
-        }
+        private ChallengeConfigItemViewModel EditModel => (ChallengeConfigItemViewModel)DataContext;
 
         private async void AddStoredCredential_Click(object sender, RoutedEventArgs e)
         {
@@ -202,10 +193,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        private void ParameterInput_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            EditModel.SelectedItem.IsChanged = true;
-        }
+        private void ParameterInput_KeyUp(object sender, System.Windows.Input.KeyEventArgs e) => EditModel.SelectedItem.IsChanged = true;
 
         private void DeleteAuth_Click(object sender, RoutedEventArgs e)
         {
@@ -259,11 +247,6 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 EditModel.IsZoneLookupInProgress = false;
             }
-        }
-
-        private async void PerformDnsZoneLookup_Click(object sender, RoutedEventArgs e)
-        {
-            await RefreshDnsZoneLookup();
         }
 
         private void DnsZoneList_SelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -87,7 +87,7 @@ namespace Certify.Core.Tests
             var testStr = "abc7363";
             var hostname = $"test-{testStr}.test." + PrimaryTestDomain;
             var wildcardDomain = "*.test." + PrimaryTestDomain;
-            string testPreviewSiteName = "TestPreview_" + testStr;
+            var testPreviewSiteName = "TestPreview_" + testStr;
 
             if (await iisManager.SiteExists(testPreviewSiteName))
             {
@@ -126,7 +126,7 @@ namespace Certify.Core.Tests
                 };
 
                 var preview = await certifyManager.GeneratePreview(dummyManagedCertificate);
-                string previewSummary = GetPreviewSummary(preview);
+                var previewSummary = GetPreviewSummary(preview);
                 System.Diagnostics.Debug.WriteLine(previewSummary);
 
                 var deployStep = preview.Find(a => a.Category == "Deployment");
@@ -159,7 +159,7 @@ namespace Certify.Core.Tests
             var testStr = "static1";
             var hostname = $"test-{testStr}.test." + PrimaryTestDomain;
             var wildcardDomain = "*.test." + PrimaryTestDomain;
-            string testPreviewSiteName = "StaticTestPreview_" + testStr;
+            var testPreviewSiteName = "StaticTestPreview_" + testStr;
 
             if (await iisManager.SiteExists(testPreviewSiteName))
             {
@@ -200,7 +200,7 @@ namespace Certify.Core.Tests
                 // Deployment Mode = Auto
 
                 var preview = await certifyManager.GeneratePreview(testManagedCert);
-                string previewSummary = GetPreviewSummary(preview);
+                var previewSummary = GetPreviewSummary(preview);
                 System.Diagnostics.Debug.WriteLine(previewSummary);
 
                 var deployStep = preview.Find(a => a.Category == "Deployment");
@@ -233,7 +233,7 @@ namespace Certify.Core.Tests
         }
         private string GetPreviewSummary(List<ActionStep> steps)
         {
-            string output = "";
+            var output = "";
             foreach (var s in steps)
             {
                 output += $"{s.Title} : {s.Description}\r\n";

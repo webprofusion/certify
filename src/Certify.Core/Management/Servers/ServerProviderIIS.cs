@@ -28,10 +28,7 @@ namespace Certify.Management.Servers
         {
         }
 
-        public IBindingDeploymentTarget GetDeploymentTarget()
-        {
-            return new IISBindingDeploymentTarget();
-        }
+        public IBindingDeploymentTarget GetDeploymentTarget() => new IISBindingDeploymentTarget();
 
         public Task<bool> IsAvailable()
         {
@@ -42,7 +39,10 @@ namespace Certify.Management.Servers
                     using (var srv = GetDefaultServerManager())
                     {
                         // _isIISAvaillable will be updated by query against server manager
-                        if (srv != null) return Task.FromResult(_isIISAvailable);
+                        if (srv != null)
+                        {
+                            return Task.FromResult(_isIISAvailable);
+                        }
                     }
                 }
                 catch
@@ -61,14 +61,14 @@ namespace Certify.Management.Servers
 
             try
             {
-                using (RegistryKey componentsKey = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\InetStp", false))
+                using (var componentsKey = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\InetStp", false))
                 {
                     if (componentsKey != null)
                     {
                         _isIISAvailable = true;
 
-                        int majorVersion = Convert.ToInt32(componentsKey.GetValue("MajorVersion", -1));
-                        int minorVersion = Convert.ToInt32(componentsKey.GetValue("MinorVersion", -1));
+                        var majorVersion = Convert.ToInt32(componentsKey.GetValue("MajorVersion", -1));
+                        var minorVersion = Convert.ToInt32(componentsKey.GetValue("MinorVersion", -1));
 
                         if (majorVersion != -1 && minorVersion != -1)
                         {
@@ -79,14 +79,17 @@ namespace Certify.Management.Servers
             }
             catch { }
 
-            if (result == null) result = new Version(0, 0);
+            if (result == null)
+            {
+                result = new Version(0, 0);
+            }
 
             return Task.FromResult(result);
         }
 
         public async Task<List<ActionStep>> RunConfigurationDiagnostics(string siteId)
         {
-            List<ActionStep> configChecks = new List<ActionStep>();
+            var configChecks = new List<ActionStep>();
 
             try
             {
@@ -134,7 +137,10 @@ namespace Certify.Management.Servers
                 srv = new ServerManager();
 
                 // checking sites collection will throw a com exception if IIS is not installed
-                if (srv.Sites.Count < 0) throw new Exception("IIS is not installed");
+                if (srv.Sites.Count < 0)
+                {
+                    throw new Exception("IIS is not installed");
+                }
             }
             catch (Exception)
             {
@@ -142,7 +148,10 @@ namespace Certify.Management.Servers
                 try
                 {
                     srv = new ServerManager(@"C:\Windows\System32\inetsrv\config\applicationHost.config");
-                    if (srv.Sites.Count < 0) throw new Exception("IIS is not installed");
+                    if (srv.Sites.Count < 0)
+                    {
+                        throw new Exception("IIS is not installed");
+                    }
                 }
                 catch (Exception)
                 {
@@ -172,7 +181,10 @@ namespace Certify.Management.Servers
             try
             {
                 var siteList = iisManager.Sites.AsQueryable();
-                if (siteId != null) siteList = siteList.Where(s => s.Id.ToString() == siteId);
+                if (siteId != null)
+                {
+                    siteList = siteList.Where(s => s.Id.ToString() == siteId);
+                }
 
                 if (includeOnlyStartedSites)
                 {
@@ -278,11 +290,14 @@ namespace Certify.Management.Servers
 
         public async Task<ActionStep> AddOrUpdateSiteBinding(BindingInfo bindingSpec, bool addNew)
         {
-            if (string.IsNullOrEmpty(bindingSpec.SiteId)) throw new Exception("IIS.AddOrUpdateSiteBinding: SiteId not specified");
+            if (string.IsNullOrEmpty(bindingSpec.SiteId))
+            {
+                throw new Exception("IIS.AddOrUpdateSiteBinding: SiteId not specified");
+            }
 
             var result = new ActionStep { };
-            int remainingAttempts = 3;
-            bool isCompleted = false;
+            var remainingAttempts = 3;
+            var isCompleted = false;
             while (!isCompleted && remainingAttempts > 0)
             {
                 try
@@ -506,8 +521,8 @@ namespace Certify.Management.Servers
             // inspired by:
             // dotnet core System.Security.Cryptography.X509Certificates/src/Internal/Cryptography/Helpers.cs
             // CertificateHash is stored as 2 nibbles (4-bits) per byte, so convert to bytes > hex
-            string output = "";
-            foreach (byte b in bytes)
+            var output = "";
+            foreach (var b in bytes)
             {
                 output += ((byte)(b >> 4)).ToString("X");
                 output += ((byte)(b & 0xF)).ToString("X");
@@ -515,13 +530,7 @@ namespace Certify.Management.Servers
             return output;
         }
 
-        private static char NibbleToHex(byte b)
-        {           
-            return (char)(b >= 0 && b <= 9 ?
-                '0' + b :
-                'A' + (b - 10));
-        }
-
+        private static char NibbleToHex(byte b) => (char)(b >= 0 && b <= 9 ? '0' + b : 'A' + (b - 10));
 
         private BindingInfo GetSiteBinding(Site site, Binding binding)
         {
@@ -538,14 +547,17 @@ namespace Certify.Management.Servers
                 IsHTTPS = binding.Protocol.ToLower() == "https",
                 Protocol = binding.Protocol.ToLower(),
                 HasCertificate = (binding.CertificateHash != null),
-                CertificateHash = binding.CertificateHash != null ? HashBytesToThumprint(binding.CertificateHash): null,
+                CertificateHash = binding.CertificateHash != null ? HashBytesToThumprint(binding.CertificateHash) : null,
                 CertificateHashBytes = binding.CertificateHash
             };
         }
 
         private async Task<Site> GetIISSiteByDomain(string domain)
         {
-            if (string.IsNullOrEmpty(domain)) return null;
+            if (string.IsNullOrEmpty(domain))
+            {
+                return null;
+            }
 
             domain = _idnMapping.GetUnicode(domain);
             using (var iisManager = await GetDefaultServerManager())
@@ -601,7 +613,7 @@ namespace Certify.Management.Servers
                 {
                     // usual binding format is ip:port:dnshostname but can also be *:port,
                     // *:port:hostname or just hostname
-                    string bindingInformation = (ipAddress != null ? (ipAddress + ":") : "")
+                    var bindingInformation = (ipAddress != null ? (ipAddress + ":") : "")
                         + (port != null ? (port + ":") : "")
                         + hostname;
 
@@ -642,7 +654,7 @@ namespace Certify.Management.Servers
             {
                 lock (_iisAPILock)
                 {
-                    Site siteToRemove = iisManager.Sites[siteName];
+                    var siteToRemove = iisManager.Sites[siteName];
                     if (siteToRemove != null)
                     {
                         iisManager.Sites.Remove(siteToRemove);
@@ -684,7 +696,7 @@ namespace Certify.Management.Servers
             {
                 if (iisManager != null)
                 {
-                    Site siteDetails = iisManager.Sites.FirstOrDefault(s => s.Id.ToString() == id);
+                    var siteDetails = iisManager.Sites.FirstOrDefault(s => s.Id.ToString() == id);
                     return Map(siteDetails);
                 }
                 else
@@ -698,7 +710,7 @@ namespace Certify.Management.Servers
         {
             using (var iisManager = await GetDefaultServerManager())
             {
-                Site siteDetails = iisManager.Sites.FirstOrDefault(s => s.Id.ToString() == id);
+                var siteDetails = iisManager.Sites.FirstOrDefault(s => s.Id.ToString() == id);
                 return siteDetails;
             }
         }
@@ -707,7 +719,7 @@ namespace Certify.Management.Servers
         {
             using (var iisManager = await GetDefaultServerManager())
             {
-                Site siteDetails = iisManager.Sites.FirstOrDefault(s => s.Id.ToString() == id);
+                var siteDetails = iisManager.Sites.FirstOrDefault(s => s.Id.ToString() == id);
 
                 if (siteDetails?.State == ObjectState.Started)
                 {
@@ -728,7 +740,9 @@ namespace Certify.Management.Servers
         private async Task<SiteInfo> FindManagedCertificate(ManagedCertificate managedCertificate)
         {
             if (managedCertificate == null)
+            {
                 throw new ArgumentNullException(nameof(managedCertificate));
+            }
 
             var site = await GetSiteById(managedCertificate.GroupId);
 
@@ -748,7 +762,10 @@ namespace Certify.Management.Servers
         private string ToUnicodeString(string input)
         {
             //if string already has (non-ascii range) unicode characters return original
-            if (input.Any(c => c > 255)) return input;
+            if (input.Any(c => c > 255))
+            {
+                return input;
+            }
 
             return _idnMapping.GetUnicode(input);
         }
@@ -760,7 +777,10 @@ namespace Certify.Management.Servers
         /// <param name="host">  </param>
         public async Task RemoveHttpsBinding(string siteId, string host)
         {
-            if (string.IsNullOrEmpty(siteId)) throw new Exception("RemoveHttpsBinding: No siteId for IIS Site");
+            if (string.IsNullOrEmpty(siteId))
+            {
+                throw new Exception("RemoveHttpsBinding: No siteId for IIS Site");
+            }
 
             using (var iisManager = await GetDefaultServerManager())
             {
@@ -770,7 +790,7 @@ namespace Certify.Management.Servers
 
                     if (site != null)
                     {
-                        string internationalHost = host == "" ? "" : _idnMapping.GetUnicode(host);
+                        var internationalHost = host == "" ? "" : _idnMapping.GetUnicode(host);
 
                         var binding = site.Bindings.Where(b =>
                             b.Host == internationalHost &&
@@ -808,15 +828,9 @@ namespace Certify.Management.Servers
             _iisManager = new ServerProviderIIS();
         }
 
-        public async Task<ActionStep> AddBinding(BindingInfo targetBinding)
-        {
-            return await _iisManager.AddOrUpdateSiteBinding(targetBinding, true);
-        }
+        public async Task<ActionStep> AddBinding(BindingInfo targetBinding) => await _iisManager.AddOrUpdateSiteBinding(targetBinding, true);
 
-        public async Task<ActionStep> UpdateBinding(BindingInfo targetBinding)
-        {
-            return await _iisManager.AddOrUpdateSiteBinding(targetBinding, false);
-        }
+        public async Task<ActionStep> UpdateBinding(BindingInfo targetBinding) => await _iisManager.AddOrUpdateSiteBinding(targetBinding, false);
 
         public async Task<List<IBindingDeploymentTargetItem>> GetAllTargetItems()
         {
@@ -830,10 +844,7 @@ namespace Certify.Management.Servers
                 }).ToList();
         }
 
-        public async Task<List<BindingInfo>> GetBindings(string targetItemId)
-        {
-            return await _iisManager.GetSiteBindingList(true, targetItemId);
-        }
+        public async Task<List<BindingInfo>> GetBindings(string targetItemId) => await _iisManager.GetSiteBindingList(true, targetItemId);
 
         public async Task<IBindingDeploymentTargetItem> GetTargetItem(string id)
         {
@@ -848,9 +859,6 @@ namespace Certify.Management.Servers
             }
         }
 
-        public string GetTargetName()
-        {
-            return "IIS";
-        }
+        public string GetTargetName() => "IIS";
     }
 }

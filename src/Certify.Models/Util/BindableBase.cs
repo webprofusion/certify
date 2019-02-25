@@ -1,9 +1,9 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace Certify.Models
 {
@@ -29,7 +29,10 @@ namespace Certify.Models
 #if DEBUG
                 // System.Diagnostics.Debug.WriteLine($"Model change: {prop} from {before} to {after}");
 #endif
-                if (before != after) IsChanged = true;
+                if (before != after)
+                {
+                    IsChanged = true;
+                }
             }
 
             // hook up to events
@@ -75,14 +78,14 @@ namespace Certify.Models
             {
                 if (ccArgs.Action == NotifyCollectionChangedAction.Remove)
                 {
-                    foreach (object obj in ccArgs.OldItems)
+                    foreach (var obj in ccArgs.OldItems)
                     {
                         DetachChangeEventHandlers(obj);
                     }
                 }
                 if (ccArgs.Action == NotifyCollectionChangedAction.Add)
                 {
-                    foreach (object obj in ccArgs.NewItems)
+                    foreach (var obj in ccArgs.NewItems)
                     {
                         AttachChangeEventHandlers(obj);
                     }
@@ -90,10 +93,7 @@ namespace Certify.Models
             }
         }
 
-        public void RaisePropertyChangedEvent(string prop)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
-        }
+        public void RaisePropertyChangedEvent(string prop) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
 
         /// <summary>
         /// True if a property has been changed on the model since IsChanged was last set to false 
@@ -101,7 +101,7 @@ namespace Certify.Models
         [JsonIgnore] // don't deserialize this property from legacy saved settings
         public bool IsChanged
         {
-            get { return isChanged; }
+            get => isChanged;
             set
             {
                 if (!value)
@@ -132,10 +132,10 @@ namespace Certify.Models
                     typeof(ICollection).IsAssignableFrom(p.PropertyType) ||
                     p.PropertyType.IsSubclassOf(typeof(BindableBase))))
                 {
-                    object val = prop.GetValue(obj);
+                    var val = prop.GetValue(obj);
                     if (val is ICollection propertyCollection)
                     {
-                        foreach (object subObj in propertyCollection)
+                        foreach (var subObj in propertyCollection)
                         {
                             UnsetChanged(subObj);
                         }
@@ -148,7 +148,7 @@ namespace Certify.Models
             }
             if (obj is ICollection collection)
             {
-                foreach (object subObj in collection)
+                foreach (var subObj in collection)
                 {
                     UnsetChanged(subObj);
                 }

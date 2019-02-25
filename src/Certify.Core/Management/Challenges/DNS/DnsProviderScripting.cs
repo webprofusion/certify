@@ -24,42 +24,43 @@ namespace Certify.Core.Management.Challenges.DNS
 
         List<ProviderParameter> IDnsProvider.ProviderParameters => Definition.ProviderParameters;
 
-        private string _createScriptPath = "";
-        private string _deleteScriptPath = "";
+        private readonly string _createScriptPath = "";
+        private readonly string _deleteScriptPath = "";
         private int? _customPropagationDelay = null;
 
-        public static ProviderDefinition Definition
+        public static ProviderDefinition Definition => new ProviderDefinition
         {
-            get
-            {
-                return new ProviderDefinition
-                {
-                    Id = "DNS01.Scripting",
-                    Title = "(Use Custom Script)",
-                    Description = "Validates DNS challenges via a user provided custom script",
-                    HelpUrl = "http://docs.certifytheweb.com/",
-                    PropagationDelaySeconds = 60,
-                    ProviderParameters = new List<ProviderParameter>{
+            Id = "DNS01.Scripting",
+            Title = "(Use Custom Script)",
+            Description = "Validates DNS challenges via a user provided custom script",
+            HelpUrl = "http://docs.certifytheweb.com/",
+            PropagationDelaySeconds = 60,
+            ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{ Key="createscriptpath", Name="Create Script Path", IsRequired=true , IsCredential=false},
                         new ProviderParameter{ Key="deletescriptpath", Name="Delete Script Path", IsRequired=false, IsCredential=false },
                         new ProviderParameter{ Key="propagationdelay",Name="Propagation Delay Seconds (optional)", IsRequired=false, IsPassword=false, Value="60", IsCredential=false },
                         new ProviderParameter{ Key="zoneid",Name="Dns Zone Id (optional)", IsRequired=false, IsPassword=false, IsCredential=false }
                     },
-                    ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                    Config = "Provider=Certify.Providers.DNS.Scripting",
-                    HandlerType = ChallengeHandlerType.CUSTOM_SCRIPT
-                };
-            }
-        }
+            ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+            Config = "Provider=Certify.Providers.DNS.Scripting",
+            HandlerType = ChallengeHandlerType.CUSTOM_SCRIPT
+        };
 
         public DnsProviderScripting(Dictionary<string, string> parameters)
         {
-            if (parameters.ContainsKey("createscriptpath")) _createScriptPath = parameters["createscriptpath"];
-            if (parameters.ContainsKey("deletescriptpath")) _deleteScriptPath = parameters["deletescriptpath"];
+            if (parameters.ContainsKey("createscriptpath"))
+            {
+                _createScriptPath = parameters["createscriptpath"];
+            }
+
+            if (parameters.ContainsKey("deletescriptpath"))
+            {
+                _deleteScriptPath = parameters["deletescriptpath"];
+            }
 
             if (parameters.ContainsKey("propagationdelay"))
             {
-                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                if (int.TryParse(parameters["propagationdelay"], out var customPropDelay))
                 {
                     _customPropagationDelay = customPropDelay;
                 }
@@ -72,7 +73,7 @@ namespace Certify.Core.Management.Challenges.DNS
             {
                 // standard parameters are the subject domain/subdomain, full txt record name to
                 // create, txt record value, zone id
-                string parameters = $"{request.TargetDomainName} {request.RecordName} {request.RecordValue} {request.ZoneId}";
+                var parameters = $"{request.TargetDomainName} {request.RecordName} {request.RecordValue} {request.ZoneId}";
                 return await RunScript(_createScriptPath, parameters);
             }
             else
@@ -87,7 +88,7 @@ namespace Certify.Core.Management.Challenges.DNS
             {
                 // standard parameters are the subject domain/subdomain, full txt record name to
                 // create, txt record value, zone id
-                string parameters = $"{request.TargetDomainName} {request.RecordName} {request.RecordValue} {request.ZoneId}";
+                var parameters = $"{request.TargetDomainName} {request.RecordName} {request.RecordValue} {request.ZoneId}";
                 return await RunScript(_deleteScriptPath, parameters);
             }
             else
@@ -96,10 +97,7 @@ namespace Certify.Core.Management.Challenges.DNS
             }
         }
 
-        Task<List<DnsZone>> IDnsProvider.GetZones()
-        {
-            return Task.FromResult(new List<DnsZone>());
-        }
+        Task<List<DnsZone>> IDnsProvider.GetZones() => Task.FromResult(new List<DnsZone>());
 
         Task<bool> IDnsProvider.InitProvider(ILog log)
         {
@@ -107,13 +105,11 @@ namespace Certify.Core.Management.Challenges.DNS
             return Task.FromResult(true);
         }
 
-        Task<ActionResult> IDnsProvider.Test()
+        Task<ActionResult> IDnsProvider.Test() => Task.FromResult(new ActionResult
         {
-            return Task.FromResult(new ActionResult {
-                IsSuccess = true,
-                Message="Test skipped for scripted DNS. No test available."
-            });
-        }
+            IsSuccess = true,
+            Message = "Test skipped for scripted DNS. No test available."
+        });
 
         private async Task<ActionResult> RunScript(string script, string parameters)
         {
@@ -148,7 +144,10 @@ namespace Certify.Core.Management.Challenges.DNS
                 // capture output streams and add to log
                 process.OutputDataReceived += (obj, args) =>
                 {
-                    if (args.Data != null) logMessages.AppendLine(args.Data);
+                    if (args.Data != null)
+                    {
+                        logMessages.AppendLine(args.Data);
+                    }
                 };
 
                 process.ErrorDataReceived += (obj, args) =>
@@ -192,7 +191,7 @@ namespace Certify.Core.Management.Challenges.DNS
             catch (Exception exp)
             {
                 _log.AppendLine("Error: " + exp.ToString());
-                return await Task.FromResult( new ActionResult { IsSuccess = false, Message = _log.ToString() });
+                return await Task.FromResult(new ActionResult { IsSuccess = false, Message = _log.ToString() });
             }
         }
     }

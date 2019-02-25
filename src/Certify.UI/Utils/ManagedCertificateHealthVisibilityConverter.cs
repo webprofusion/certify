@@ -1,7 +1,7 @@
-﻿using Certify.Models;
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Data;
+using Certify.Models;
 
 namespace Certify.UI.Utils
 {
@@ -9,7 +9,10 @@ namespace Certify.UI.Utils
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if (value == null) return DependencyProperty.UnsetValue;
+            if (value == null)
+            {
+                return DependencyProperty.UnsetValue;
+            }
 
             var health = (ManagedCertificateHealth)value;
 
@@ -31,9 +34,6 @@ namespace Certify.UI.Utils
             }
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            return null;
-        }
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) => null;
     }
 }

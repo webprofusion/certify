@@ -15,8 +15,8 @@ namespace Certify.UI.Controls
         public GettingStarted()
         {
             InitializeComponent();
-            this.DataContext = AppViewModel;
-          
+            DataContext = AppViewModel;
+
         }
 
         private void AddToDashboard_Click(object sender, RoutedEventArgs e)
@@ -25,10 +25,7 @@ namespace Certify.UI.Controls
             d.ShowDialog();
         }
 
-        private void ViewDashboard_Click(object sender, RoutedEventArgs e)
-        {
-            System.Diagnostics.Process.Start("https://certifytheweb.com/dashboard");
-        }
+        private void ViewDashboard_Click(object sender, RoutedEventArgs e) => System.Diagnostics.Process.Start("https://certifytheweb.com/dashboard");
 
         private void QuickStart_Click(object sender, RoutedEventArgs e)
         {

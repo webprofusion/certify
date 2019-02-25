@@ -94,7 +94,7 @@ namespace Certify.Client
             }
             else
             {
-                string error = await response.Content.ReadAsStringAsync();
+                var error = await response.Content.ReadAsStringAsync();
                 throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error} ");
             }
         }
@@ -112,7 +112,7 @@ namespace Certify.Client
                 }
                 else
                 {
-                    string error = await response.Content.ReadAsStringAsync();
+                    var error = await response.Content.ReadAsStringAsync();
                     throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
                 }
             }
@@ -125,7 +125,7 @@ namespace Certify.Client
                 }
                 else
                 {
-                    string error = await response.Content.ReadAsStringAsync();
+                    var error = await response.Content.ReadAsStringAsync();
                     throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
                 }
             }
@@ -140,7 +140,7 @@ namespace Certify.Client
             }
             else
             {
-                string error = await response.Content.ReadAsStringAsync();
+                var error = await response.Content.ReadAsStringAsync();
                 throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
             }
         }
@@ -228,8 +228,8 @@ namespace Certify.Client
             var response = await PostAsync("managedcertificates/search/", filter);
             var sites = await response.Content.ReadAsStringAsync();
             var serializer = new JsonSerializer();
-            using (StreamReader sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
-            using (JsonTextReader reader = new JsonTextReader(sr))
+            using (var sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
+            using (var reader = new JsonTextReader(sr))
             {
                 var managedCertificateList = serializer.Deserialize<List<ManagedCertificate>>(reader);
                 foreach (var s in managedCertificateList)
@@ -271,8 +271,8 @@ namespace Certify.Client
         {
             var response = await PostAsync("managedcertificates/autorenew", null);
             var serializer = new JsonSerializer();
-            using (StreamReader sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
-            using (JsonTextReader reader = new JsonTextReader(sr))
+            using (var sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
+            using (var reader = new JsonTextReader(sr))
             {
                 var results = serializer.Deserialize<List<CertificateRequestResult>>(reader);
                 return results;
@@ -298,7 +298,7 @@ namespace Certify.Client
 
         public async Task<RequestProgressState> CheckCertificateRequest(string managedItemId)
         {
-            string json = await FetchAsync($"managedcertificates/requeststatus/{managedItemId}");
+            var json = await FetchAsync($"managedcertificates/requeststatus/{managedItemId}");
             return JsonConvert.DeserializeObject<RequestProgressState>(json);
         }
 
@@ -310,7 +310,7 @@ namespace Certify.Client
 
         public async Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId)
         {
-            string json = await FetchAsync($"managedcertificates/dnszones/{providerTypeId}/{credentialsId}");
+            var json = await FetchAsync($"managedcertificates/dnszones/{providerTypeId}/{credentialsId}");
             return JsonConvert.DeserializeObject<List<Models.Providers.DnsZone>>(json);
         }
 

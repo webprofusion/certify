@@ -7,10 +7,7 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
-        public List<RegistrationItem> GetContactRegistrations()
-        {
-            return _vaultProvider.GetContactRegistrations();
-        }
+        public List<RegistrationItem> GetContactRegistrations() => _vaultProvider.GetContactRegistrations();
 
         public async Task<bool> AddRegisteredContact(ContactRegistration reg)
         {

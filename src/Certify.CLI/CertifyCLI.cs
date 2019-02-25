@@ -23,7 +23,7 @@ namespace Certify.CLI
 
         public async Task<bool> IsServiceAvailable()
         {
-            bool isAvailable = false;
+            var isAvailable = false;
 
             try
             {

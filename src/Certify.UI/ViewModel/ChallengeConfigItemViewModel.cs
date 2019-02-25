@@ -33,17 +33,11 @@ namespace Certify.UI.ViewModel
         public bool ShowZoneLookup { get; set; }
         public bool IsZoneLookupInProgress { get; set; }
 
-        public ObservableCollection<ProviderDefinition> ChallengeProviders
-        {
-            get
-            {
-                return new ObservableCollection<ProviderDefinition>(
+        public ObservableCollection<ProviderDefinition> ChallengeProviders => new ObservableCollection<ProviderDefinition>(
                     _appViewModel.ChallengeAPIProviders
                     .Where(p => p.ProviderParameters.Any())
                     .OrderBy(p => p.Title)
                     .ToList());
-            }
-        }
 
         public ObservableCollection<Models.Providers.DnsZone> DnsZones { get; set; } = new ObservableCollection<Models.Providers.DnsZone>();
 
@@ -69,12 +63,6 @@ namespace Certify.UI.ViewModel
             get; set;
         }
 
-        public ManagedCertificate ParentManagedCertificate
-        {
-            get
-            {
-                return _appViewModel.SelectedItem;
-            }
-        }
+        public ManagedCertificate ParentManagedCertificate => _appViewModel.SelectedItem;
     }
 }

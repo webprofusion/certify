@@ -13,7 +13,7 @@ namespace Certify.Service
     {
         public static int Main(string[] args)
         {
-            AppDomain currentDomain = AppDomain.CurrentDomain;
+            var currentDomain = AppDomain.CurrentDomain;
             currentDomain.UnhandledException += CurrentDomain_UnhandledException; ;
 
             return (int)HostFactory.Run(x =>
@@ -199,9 +199,9 @@ namespace Certify.Service
                 Program.LogEvent(exp, msg, false);
 
                 // failed to listen on service uri, attempt reconfiguration of port.
-                int currentPort = serviceConfig.Port;
+                var currentPort = serviceConfig.Port;
 
-                int newPort = currentPort += 2;
+                var newPort = currentPort += 2;
 
                 var reconfiguredServiceUri = $"http://{serviceConfig.Host}:{newPort}";
 

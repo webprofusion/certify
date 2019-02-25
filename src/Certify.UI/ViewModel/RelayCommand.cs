@@ -55,10 +55,7 @@ namespace Certify.UI.ViewModel
         ///<returns>
         ///true if this command can be executed; otherwise, false.
         ///</returns>
-        public bool CanExecute(object parameter)
-        {
-            return _canExecute == null ? true : _canExecute((T)parameter);
-        }
+        public bool CanExecute(object parameter) => _canExecute == null ? true : _canExecute((T)parameter);
 
         ///<summary>
         ///Occurs when changes occur that affect whether or not the command should execute.

@@ -1,10 +1,9 @@
-﻿using Certify.Locales;
-using Certify.Management;
-using System;
-using System.IO;
+﻿using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Controls;
+using Certify.Locales;
+using Certify.Management;
 
 namespace Certify.UI.Controls.ManagedCertificate
 {
@@ -23,10 +22,10 @@ namespace Certify.UI.Controls.ManagedCertificate
         private void OpenCertificateFile_Click(object sender, RoutedEventArgs e)
         {
             // get file path for log
-            var certPath = this.ItemViewModel.SelectedItem.CertificatePath;
+            var certPath = ItemViewModel.SelectedItem.CertificatePath;
 
             //check file exists, if not inform user
-            if (!String.IsNullOrEmpty(certPath) && System.IO.File.Exists(certPath))
+            if (!string.IsNullOrEmpty(certPath) && System.IO.File.Exists(certPath))
             {
                 //open file
                 var cert = CertificateManager.LoadCertificate(certPath);
@@ -50,8 +49,8 @@ namespace Certify.UI.Controls.ManagedCertificate
         private async void RevokeCertificateBtn_Click(object sender, RoutedEventArgs e)
         {
             // check cert exists, if not inform user
-            var certPath = this.ItemViewModel.SelectedItem.CertificatePath;
-            if (String.IsNullOrEmpty(certPath) || !File.Exists(certPath))
+            var certPath = ItemViewModel.SelectedItem.CertificatePath;
+            if (string.IsNullOrEmpty(certPath) || !File.Exists(certPath))
             {
                 MessageBox.Show(SR.ManagedCertificateSettings_CertificateNotReady, SR.Error, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
@@ -81,7 +80,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private async void ReapplyCertBindings_Click(object sender, RoutedEventArgs e)
         {
-            if (!String.IsNullOrEmpty(ItemViewModel.SelectedItem.CertificatePath))
+            if (!string.IsNullOrEmpty(ItemViewModel.SelectedItem.CertificatePath))
             {
                 if (MessageBox.Show("Re-apply certificate to website bindings?", "Confirm Re-Apply?", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
                 {

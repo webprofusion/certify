@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using Certify.Models.Config;
 
 namespace Certify.UI.Windows
@@ -55,9 +54,7 @@ namespace Certify.UI.Windows
             // when the BindPassword attached property is set on a PasswordBox,
             // start listening to its PasswordChanged event
 
-            var box = dp as PasswordBox;
-
-            if (box == null)
+            if (!(dp is PasswordBox box))
             {
                 return;
             }
@@ -87,35 +84,17 @@ namespace Certify.UI.Windows
             SetUpdatingPassword(box, false);
         }
 
-        public static void SetBindPassword(DependencyObject dp, bool value)
-        {
-            dp.SetValue(BindPassword, value);
-        }
+        public static void SetBindPassword(DependencyObject dp, bool value) => dp.SetValue(BindPassword, value);
 
-        public static bool GetBindPassword(DependencyObject dp)
-        {
-            return (bool)dp.GetValue(BindPassword);
-        }
+        public static bool GetBindPassword(DependencyObject dp) => (bool)dp.GetValue(BindPassword);
 
-        public static string GetBoundPassword(DependencyObject dp)
-        {
-            return (string)dp.GetValue(BoundPassword);
-        }
+        public static string GetBoundPassword(DependencyObject dp) => (string)dp.GetValue(BoundPassword);
 
-        public static void SetBoundPassword(DependencyObject dp, string value)
-        {
-            dp.SetValue(BoundPassword, value);
-        }
+        public static void SetBoundPassword(DependencyObject dp, string value) => dp.SetValue(BoundPassword, value);
 
-        private static bool GetUpdatingPassword(DependencyObject dp)
-        {
-            return (bool)dp.GetValue(UpdatingPassword);
-        }
+        private static bool GetUpdatingPassword(DependencyObject dp) => (bool)dp.GetValue(UpdatingPassword);
 
-        private static void SetUpdatingPassword(DependencyObject dp, bool value)
-        {
-            dp.SetValue(UpdatingPassword, value);
-        }
+        private static void SetUpdatingPassword(DependencyObject dp, bool value) => dp.SetValue(UpdatingPassword, value);
     }
 
     /// <summary>
@@ -170,18 +149,12 @@ namespace Certify.UI.Windows
     /// </summary>
     public partial class EditCredential
     {
-        protected Certify.UI.ViewModel.AppViewModel MainViewModel
-        {
-            get
-            {
-                return ViewModel.AppViewModel.Current;
-            }
-        }
+        protected Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
 
         public StoredCredential Item
         {
-            get { return EditViewModel.Item; }
-            set { EditViewModel.Item = Item; }
+            get => EditViewModel.Item;
+            set => EditViewModel.Item = value;
         }
 
         protected EditCredentialViewModel EditViewModel = new EditCredentialViewModel();
@@ -303,23 +276,6 @@ namespace Certify.UI.Windows
             }
         }
 
-        private void Cancel_Click(object sender, System.Windows.RoutedEventArgs e)
-        {
-            Close();
-        }
-
-        private async void Test_Click(object sender, RoutedEventArgs e)
-        {
-            if (Item.StorageKey != null)
-            {
-                Mouse.OverrideCursor = Cursors.Wait;
-
-                var result = await MainViewModel.TestCredentials(Item.StorageKey);
-
-                Mouse.OverrideCursor = Cursors.Arrow;
-
-                MessageBox.Show(result.Message);
-            }
-        }
+        private void Cancel_Click(object sender, System.Windows.RoutedEventArgs e) => Close();
     }
 }

@@ -73,7 +73,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSDNS", "src\Certify.Provid
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AcmeDns", "src\Certify.Providers\DNS\AcmeDns\AcmeDns\AcmeDns.csproj", "{4FE830FC-5B13-4A27-AF18-8E135C0314F2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NameCheap", "src\Certify.Providers\DNS\NameCheap\NameCheap.csproj", "{E537F4ED-E129-487A-BDAB-59BB430A603A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NameCheap", "src\Certify.Providers\DNS\NameCheap\NameCheap.csproj", "{E537F4ED-E129-487A-BDAB-59BB430A603A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

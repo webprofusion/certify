@@ -25,7 +25,7 @@ namespace Certify.Management
         public bool IsSingleInstanceMode { get; set; } = true; //if true, access to this resource is centralised so we can make assumptions about when reload of settings is required etc
 
         // TODO: make db path configurable on service start
-        private readonly string _dbPath=$"C:\\programdata\\certify\\{ITEMMANAGERCONFIG}.db";
+        private readonly string _dbPath = $"C:\\programdata\\certify\\{ITEMMANAGERCONFIG}.db";
         private readonly string _connectionString;
 
         public ItemManager(string storageSubfolder = null)
@@ -45,10 +45,11 @@ namespace Certify.Management
             {
                 // upgrade schema if db exists
                 var upgraded = UpgradeSchema().Result;
-            } else
+            }
+            else
             {
                 // upgrade from JSON storage if db doesn't exist yet
-                var settingsUpgraded =  UpgradeSettings().Result;
+                var settingsUpgraded = UpgradeSettings().Result;
             }
         }
 
@@ -79,7 +80,7 @@ namespace Certify.Management
             }
             else
             {
-               
+
             }
 
             // save all new/modified items into settings database
@@ -134,7 +135,7 @@ namespace Certify.Management
 
                             while (await reader.ReadAsync())
                             {
-                                string colname = (string)reader["name"];
+                                var colname = (string)reader["name"];
                                 cols.Add(colname);
                             }
                         }
@@ -171,10 +172,13 @@ namespace Certify.Management
 
         public async Task LoadAllManagedCertificates(bool skipIfLoaded = false)
         {
-            if (skipIfLoaded && _managedCertificatesCache.Any()) return;
+            if (skipIfLoaded && _managedCertificatesCache.Any())
+            {
+                return;
+            }
 
             var watch = Stopwatch.StartNew();
-            
+
             // FIXME: this query should called only when absolutely required as the result set may be very large
             if (File.Exists(_dbPath))
             {
@@ -208,7 +212,8 @@ namespace Certify.Management
 
                 _managedCertificatesCache.Clear();
 
-                foreach (var site in managedCertificates) {
+                foreach (var site in managedCertificates)
+                {
                     site.IsChanged = false;
                     _managedCertificatesCache.AddOrUpdate(site.Id, site, (key, oldValue) => site);
                 }
@@ -329,33 +334,60 @@ namespace Certify.Management
         public async Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter = null, bool reloadAll = true)
         {
             // Don't reload settings unless we need to or we are unsure if any items have changed
-            if (!_managedCertificatesCache.Any() || IsSingleInstanceMode == false || reloadAll) await LoadAllManagedCertificates();
+            if (!_managedCertificatesCache.Any() || IsSingleInstanceMode == false || reloadAll)
+            {
+                await LoadAllManagedCertificates();
+            }
 
             // filter and convert dictionary to list TODO: use db instead of in memory filter?
             var items = _managedCertificatesCache.Values.AsQueryable();
             if (filter != null)
             {
-                if (!string.IsNullOrEmpty(filter.Keyword)) items = items.Where(i => i.Name.ToLowerInvariant().Contains(filter.Keyword.ToLowerInvariant()));
+                if (!string.IsNullOrEmpty(filter.Keyword))
+                {
+                    items = items.Where(i => i.Name.ToLowerInvariant().Contains(filter.Keyword.ToLowerInvariant()));
+                }
 
-                if (!string.IsNullOrEmpty(filter.ChallengeType)) items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeType == filter.ChallengeType));
+                if (!string.IsNullOrEmpty(filter.ChallengeType))
+                {
+                    items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeType == filter.ChallengeType));
+                }
 
-                if (!string.IsNullOrEmpty(filter.ChallengeProvider)) items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeProvider == filter.ChallengeProvider));
+                if (!string.IsNullOrEmpty(filter.ChallengeProvider))
+                {
+                    items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeProvider == filter.ChallengeProvider));
+                }
 
-                if (!string.IsNullOrEmpty(filter.StoredCredentialKey)) items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeCredentialKey == filter.StoredCredentialKey));
+                if (!string.IsNullOrEmpty(filter.StoredCredentialKey))
+                {
+                    items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeCredentialKey == filter.StoredCredentialKey));
+                }
 
                 //TODO: IncludeOnlyNextAutoRenew
-                if (filter.MaxResults > 0) items = items.Take(filter.MaxResults);
+                if (filter.MaxResults > 0)
+                {
+                    items = items.Take(filter.MaxResults);
+                }
             }
             return new List<ManagedCertificate>(items);
         }
 
         public async Task<ManagedCertificate> UpdatedManagedCertificate(ManagedCertificate managedCertificate, bool saveAfterUpdate = true)
         {
-            if (managedCertificate == null) return null;
+            if (managedCertificate == null)
+            {
+                return null;
+            }
 
-            if (managedCertificate.Id == null) managedCertificate.Id = Guid.NewGuid().ToString();
+            if (managedCertificate.Id == null)
+            {
+                managedCertificate.Id = Guid.NewGuid().ToString();
+            }
 
-            if (_managedCertificatesCache == null) _managedCertificatesCache = new ConcurrentDictionary<string, ManagedCertificate>();
+            if (_managedCertificatesCache == null)
+            {
+                _managedCertificatesCache = new ConcurrentDictionary<string, ManagedCertificate>();
+            }
 
             _managedCertificatesCache.AddOrUpdate(managedCertificate.Id, managedCertificate, (key, oldValue) => managedCertificate);
 
@@ -395,7 +427,7 @@ namespace Certify.Management
                         await cmd.ExecuteNonQueryAsync();
                     }
                     tran.Commit();
-                   
+
                     _managedCertificatesCache.TryRemove(site.Id, out var val);
                 }
             }

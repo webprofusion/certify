@@ -72,15 +72,9 @@ namespace Certify.Management
             return Task.FromResult(results);
         }
 
-        public static void SetSupportedTLSVersions()
-        {
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
-        }
+        public static void SetSupportedTLSVersions() => ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
-        public static string GetAppDataFolder(string subFolder = null)
-        {
-            return SharedUtils.ServiceConfigManager.GetAppDataFolder(subFolder);
-        }
+        public static string GetAppDataFolder(string subFolder = null) => SharedUtils.ServiceConfigManager.GetAppDataFolder(subFolder);
 
         public TelemetryClient InitTelemetry()
         {
@@ -116,13 +110,10 @@ namespace Certify.Management
         public async Task<UpdateCheck> CheckForUpdates()
         {
             var v = GetAppVersion();
-            return await this.CheckForUpdates(v);
+            return await CheckForUpdates(v);
         }
 
-        public async Task<UpdateCheck> CheckForUpdates(Version appVersion)
-        {
-            return await this.CheckForUpdates(appVersion.ToString());
-        }
+        public async Task<UpdateCheck> CheckForUpdates(Version appVersion) => await CheckForUpdates(appVersion.ToString());
 
         public async Task<UpdateCheck> CheckForUpdates(string appVersion)
         {
@@ -135,7 +126,7 @@ namespace Certify.Management
                 var response = await client.GetAsync(Models.API.Config.APIBaseURI + "update?version=" + appVersion);
                 if (response.IsSuccessStatusCode)
                 {
-                    string json = await response.Content.ReadAsStringAsync();
+                    var json = await response.Content.ReadAsStringAsync();
                     /*json = @"{
                          'version': {
                              'major': 2,
@@ -150,7 +141,7 @@ namespace Certify.Management
                            }
                      }";*/
 
-                    UpdateCheck checkResult = Newtonsoft.Json.JsonConvert.DeserializeObject<UpdateCheck>(json);
+                    var checkResult = Newtonsoft.Json.JsonConvert.DeserializeObject<UpdateCheck>(json);
                     return CompareVersions(appVersion, checkResult);
                 }
 
@@ -191,8 +182,8 @@ namespace Certify.Management
                     sha = (SHA256)new System.Security.Cryptography.SHA256Cng();
                 }
 
-                byte[] checksum = sha.ComputeHash(bufferedStream);
-                return BitConverter.ToString(checksum).Replace("-", String.Empty).ToLower();
+                var checksum = sha.ComputeHash(bufferedStream);
+                return BitConverter.ToString(checksum).Replace("-", string.Empty).ToLower();
             }
         }
 
@@ -211,8 +202,8 @@ namespace Certify.Management
             {
                 cert = new X509Certificate2(X509Certificate.CreateFromSignedFile(filename));
 
-                X509Chain chain = new X509Chain();
-                X509ChainPolicy chainPolicy = new X509ChainPolicy()
+                var chain = new X509Chain();
+                var chainPolicy = new X509ChainPolicy()
                 {
                     RevocationMode = X509RevocationMode.Online,
                     RevocationFlag = X509RevocationFlag.EntireChain
@@ -221,9 +212,9 @@ namespace Certify.Management
 
                 if (chain.Build(cert))
                 {
-                    foreach (X509ChainElement chainElement in chain.ChainElements)
+                    foreach (var chainElement in chain.ChainElements)
                     {
-                        foreach (X509ChainStatus chainStatus in chainElement.ChainElementStatus)
+                        foreach (var chainStatus in chainElement.ChainElementStatus)
                         {
                             System.Diagnostics.Debug.WriteLine(chainStatus.StatusInformation);
                         }
@@ -246,8 +237,8 @@ namespace Certify.Management
 
         public bool VerifyUpdateFile(string tempFile, string expectedHash, bool throwOnDeviation = true)
         {
-            bool signatureVerified = false;
-            bool hashVerified = false;
+            var signatureVerified = false;
+            var hashVerified = false;
 
             //get verified signed file cert
             var cert = GetFileCertificate(tempFile);
@@ -304,20 +295,20 @@ namespace Certify.Management
 
         public async Task<UpdateCheck> DownloadUpdate()
         {
-            string pathname = Path.GetTempPath();
+            var pathname = Path.GetTempPath();
 
             var result = await CheckForUpdates();
 
             if (result.IsNewerVersion)
             {
-                HttpClient client = new HttpClient();
+                var client = new HttpClient();
                 client.DefaultRequestHeaders.Add("User-Agent", Util.GetUserAgent());
 
                 //https://github.com/dotnet/corefx/issues/6849
                 var tempFile = Path.Combine(new string[] { pathname, "CertifySSL_" + result.Version.ToString() + "_Setup.tmp" });
                 var setupFile = tempFile.Replace(".tmp", ".exe");
 
-                bool downloadVerified = false;
+                var downloadVerified = false;
                 if (File.Exists(setupFile))
                 {
                     // file already downloaded, see if it's already valid
@@ -332,7 +323,7 @@ namespace Certify.Management
                     // download and verify new setup
                     try
                     {
-                        using (HttpResponseMessage response = client.GetAsync(result.Message.DownloadFileURL, HttpCompletionOption.ResponseHeadersRead).Result)
+                        using (var response = client.GetAsync(result.Message.DownloadFileURL, HttpCompletionOption.ResponseHeadersRead).Result)
                         {
                             response.EnsureSuccessStatusCode();
 
@@ -377,7 +368,11 @@ namespace Certify.Management
                     if (!downloadVerified && VerifyUpdateFile(tempFile, result.Message.SHA256, throwOnDeviation: true))
                     {
                         downloadVerified = true;
-                        if (File.Exists(setupFile)) File.Delete(setupFile); //delete existing file
+                        if (File.Exists(setupFile))
+                        {
+                            File.Delete(setupFile); //delete existing file
+                        }
+
                         File.Move(tempFile, setupFile); // final setup file
                     }
                 }
@@ -414,20 +409,47 @@ namespace Certify.Management
 
         private static string GetDotNetVersion(int releaseKey)
         {
-            if (releaseKey >= 460798) return "4.7 or later";
-            if (releaseKey >= 394802) return "4.6.2";
-            if (releaseKey >= 394254) return "4.6.1";
-            if (releaseKey >= 393295) return "4.6";
-            if (releaseKey >= 379893) return "4.5.2";
-            if (releaseKey >= 378675) return "4.5.1";
-            if (releaseKey >= 378389) return "4.5";
+            if (releaseKey >= 460798)
+            {
+                return "4.7 or later";
+            }
+
+            if (releaseKey >= 394802)
+            {
+                return "4.6.2";
+            }
+
+            if (releaseKey >= 394254)
+            {
+                return "4.6.1";
+            }
+
+            if (releaseKey >= 393295)
+            {
+                return "4.6";
+            }
+
+            if (releaseKey >= 379893)
+            {
+                return "4.5.2";
+            }
+
+            if (releaseKey >= 378675)
+            {
+                return "4.5.1";
+            }
+
+            if (releaseKey >= 378389)
+            {
+                return "4.5";
+            }
 
             // This code should never execute. A non-null release key should mean that 4.5 or later
             // is installed.
             return "No 4.5 or later version detected";
         }
 
-        
+
         public static string ToUrlSafeBase64String(byte[] data)
         {
             var s = Convert.ToBase64String(data);

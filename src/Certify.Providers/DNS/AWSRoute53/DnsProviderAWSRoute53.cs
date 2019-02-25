@@ -63,7 +63,7 @@ namespace Certify.Providers.DNS.AWSRoute53
             // test connection and credentials
             try
             {
-                var zones = await this.GetZones();
+                var zones = await GetZones();
 
                 if (zones != null && zones.Any())
                 {
@@ -84,7 +84,7 @@ namespace Certify.Providers.DNS.AWSRoute53
         {
             try
             {
-                if (!String.IsNullOrEmpty(request.ZoneId))
+                if (!string.IsNullOrEmpty(request.ZoneId))
                 {
                     var zone = await _route53Client.GetHostedZoneAsync(new GetHostedZoneRequest { Id = request.ZoneId });
                     return zone.HostedZone;
@@ -156,7 +156,7 @@ namespace Certify.Providers.DNS.AWSRoute53
             if (zone != null)
             {
                 // get existing record set for current TXT records with this name
-                ListResourceRecordSetsResponse response = await _route53Client.ListResourceRecordSetsAsync(
+                var response = await _route53Client.ListResourceRecordSetsAsync(
                     new ListResourceRecordSetsRequest
                     {
                         StartRecordName = request.RecordName,
@@ -257,7 +257,7 @@ namespace Certify.Providers.DNS.AWSRoute53
         {
             var zones = await _route53Client.ListHostedZonesAsync();
 
-            List<DnsZone> results = new List<DnsZone>();
+            var results = new List<DnsZone>();
             foreach (var z in zones.HostedZones)
             {
                 results.Add(new DnsZone

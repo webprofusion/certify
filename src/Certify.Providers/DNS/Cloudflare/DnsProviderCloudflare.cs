@@ -128,7 +128,7 @@ namespace Certify.Providers.DNS.Cloudflare
             // test connection and credentials
             try
             {
-                var zones = await this.GetZones();
+                var zones = await GetZones();
 
                 if (zones != null && zones.Any())
                 {
@@ -155,9 +155,9 @@ namespace Certify.Providers.DNS.Cloudflare
 
         private async Task<List<DnsRecordCloudflare>> GetDnsRecords(string zoneId)
         {
-            List<DnsRecordCloudflare> records = new List<DnsRecordCloudflare>();
-            bool finishedPaginating = false;
-            int page = 1;
+            var records = new List<DnsRecordCloudflare>();
+            var finishedPaginating = false;
+            var page = 1;
 
             while (!finishedPaginating)
             {
@@ -303,8 +303,8 @@ namespace Certify.Providers.DNS.Cloudflare
         public async Task<List<DnsZone>> GetZones()
         {
             var zones = new List<DnsZone>();
-            bool finishedPaginating = false;
-            int page = 1;
+            var finishedPaginating = false;
+            var page = 1;
 
             while (!finishedPaginating)
             {

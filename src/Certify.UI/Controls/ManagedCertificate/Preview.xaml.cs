@@ -39,7 +39,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             if (ItemViewModel.SelectedItem != null)
             {
 
-                List<ActionStep> steps = new List<ActionStep>();
+                var steps = new List<ActionStep>();
                 try
                 {
                     ItemViewModel.UpdateManagedCertificateSettings(throwOnInvalidSettings: false);
@@ -54,7 +54,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 Steps = new ObservableCollection<ActionStep>(steps);
 
 
-                string markdown = GetStepsAsMarkdown(Steps);
+                var markdown = GetStepsAsMarkdown(Steps);
 
                 var result = Markdig.Markdown.ToHtml(markdown, _markdownPipeline);
                 result = "<html><head><meta http-equiv='Content-Type' content='text/html;charset=UTF-8'><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />" +
@@ -72,7 +72,7 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             var markdownText = "";
             var newLine = "\r\n";
-            foreach (var s in Steps)
+            foreach (var s in steps)
             {
                 markdownText += newLine + "# " + s.Title + newLine;
                 markdownText += s.Description;
@@ -90,10 +90,10 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private async void UserControl_IsVisibleChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)
         {
-            if (this.IsVisible)
+            if (IsVisible)
             {
                 LoadingProgess.Visibility = System.Windows.Visibility.Visible;
-                string result = await UpdatePreview();
+                var result = await UpdatePreview();
                 MarkdownView.NavigateToString(result);
                 LoadingProgess.Visibility = System.Windows.Visibility.Hidden;
             }
