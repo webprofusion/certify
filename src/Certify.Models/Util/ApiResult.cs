@@ -4,6 +4,8 @@ namespace Certify.Models
 {
     public class StatusMessage
     {
+        // TODO: merge this with ActionResult<T>
+
         public bool IsOK { get; set; }
         public bool HasWarning { get; set; }
         public string Message { get; set; }

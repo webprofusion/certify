@@ -28,7 +28,7 @@ namespace Certify.Core.Management.Challenges
 
         public static async Task<IDnsProvider> GetDnsProvider(string providerType, Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
         {
-            ProviderDefinition providerDefinition;
+            ChallengeProviderDefinition providerDefinition;
             IDnsProvider dnsAPIProvider = null;
 
             if (!string.IsNullOrEmpty(providerType))
@@ -140,12 +140,12 @@ namespace Certify.Core.Management.Challenges
             };
         }
 
-        public static async Task<List<ProviderDefinition>> GetChallengeAPIProviders()
+        public static async Task<List<ChallengeProviderDefinition>> GetChallengeAPIProviders()
         {
-            var providers = new List<ProviderDefinition>
+            var providers = new List<ChallengeProviderDefinition>
             {
                 // IIS
-                new ProviderDefinition
+                new ChallengeProviderDefinition
                 {
                     Id = "HTTP01.IIS.Local",
                     ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
@@ -177,7 +177,7 @@ namespace Certify.Core.Management.Challenges
             return await Task.FromResult(providers);
         }
 
-        private static void TryAddProviders(List<ProviderDefinition> providers)
+        private static void TryAddProviders(List<ChallengeProviderDefinition> providers)
         {
             // some providers may fail to add due to platform dependencies/restrictions
             try

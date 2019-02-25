@@ -28,7 +28,7 @@ namespace Certify.Core.Management.Challenges.DNS
         private readonly string _deleteScriptPath = "";
         private int? _customPropagationDelay = null;
 
-        public static ProviderDefinition Definition => new ProviderDefinition
+        public static ChallengeProviderDefinition Definition => new ChallengeProviderDefinition
         {
             Id = "DNS01.Scripting",
             Title = "(Use Custom Script)",

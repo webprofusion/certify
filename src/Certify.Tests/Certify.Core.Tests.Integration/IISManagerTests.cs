@@ -458,7 +458,10 @@ namespace Certify.Core.Tests
             {
                 // clean up IIS either way
                 await iisManager.DeleteSite(testBindingSiteName);
-                if (certInfo != null) CertificateManager.RemoveCertificate(certInfo);
+                if (certInfo != null)
+                {
+                    CertificateManager.RemoveCertificate(certInfo);
+                }
             }
         }
     }

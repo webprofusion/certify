@@ -63,15 +63,14 @@ namespace Certify.Client
             _client.Timeout = new TimeSpan(0, 20, 0); // 20 min timeout on service api calls
         }
 
-        public Shared.ServiceConfig GetAppServiceConfig()
-        {
-            return Certify.SharedUtils.ServiceConfigManager.GetAppServiceConfig();
-        }
+        public Shared.ServiceConfig GetAppServiceConfig() => Certify.SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
         public async Task ConnectStatusStreamAsync()
         {
-            connection = new HubConnection(_statusHubUri);
-            connection.Credentials = System.Net.CredentialCache.DefaultCredentials;
+            connection = new HubConnection(_statusHubUri)
+            {
+                Credentials = System.Net.CredentialCache.DefaultCredentials
+            };
             hubProxy = connection.CreateHubProxy("StatusHub");
 
             hubProxy.On<ManagedCertificate>("ManagedCertificateUpdated", (u) => OnManagedCertificateUpdated?.Invoke(u));
@@ -147,10 +146,7 @@ namespace Certify.Client
 
         #region System
 
-        public async Task<string> GetAppVersion()
-        {
-            return await FetchAsync("system/appversion");
-        }
+        public async Task<string> GetAppVersion() => await FetchAsync("system/appversion");
 
         public async Task<UpdateCheck> CheckForUpdates()
         {
@@ -244,7 +240,11 @@ namespace Certify.Client
         {
             var result = await FetchAsync($"managedcertificates/{managedItemId}");
             var site = JsonConvert.DeserializeObject<ManagedCertificate>(result);
-            if (site != null) site.IsChanged = false;
+            if (site != null)
+            {
+                site.IsChanged = false;
+            }
+
             return site;
         }
 
@@ -286,7 +286,8 @@ namespace Certify.Client
                 var response = await FetchAsync($"managedcertificates/renewcert/{managedItemId}/{resumePaused}");
                 return JsonConvert.DeserializeObject<CertificateRequestResult>(response);
             }
-            catch (Exception exp) {
+            catch (Exception exp)
+            {
                 return new CertificateRequestResult
                 {
                     IsSuccess = false,
@@ -326,10 +327,10 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<CertificateRequestResult>(response);
         }
 
-        public async Task<List<ProviderDefinition>> GetChallengeAPIList()
+        public async Task<List<ChallengeProviderDefinition>> GetChallengeAPIList()
         {
             var response = await FetchAsync($"managedcertificates/challengeapis/");
-            return JsonConvert.DeserializeObject<List<ProviderDefinition>>(response);
+            return JsonConvert.DeserializeObject<List<ChallengeProviderDefinition>>(response);
         }
 
         #endregion Managed Certificates

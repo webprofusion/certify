@@ -29,29 +29,23 @@ namespace Certify.Providers.DNS.AWSRoute53
 
         public List<ProviderParameter> ProviderParameters => Definition.ProviderParameters;
 
-        public static ProviderDefinition Definition
+        public static ChallengeProviderDefinition Definition => new ChallengeProviderDefinition
         {
-            get
-            {
-                return new ProviderDefinition
-                {
-                    Id = "DNS01.API.Route53",
-                    Title = "Amazon Route 53 DNS API",
-                    Description = "Validates via Route 53 APIs using IAM service credentials",
-                    HelpUrl = "https://docs.certifytheweb.com/docs/dns-awsroute53.html",
-                    PropagationDelaySeconds = 60,
-                    ProviderParameters = new List<ProviderParameter>{
+            Id = "DNS01.API.Route53",
+            Title = "Amazon Route 53 DNS API",
+            Description = "Validates via Route 53 APIs using IAM service credentials",
+            HelpUrl = "https://docs.certifytheweb.com/docs/dns-awsroute53.html",
+            PropagationDelaySeconds = 60,
+            ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{ Key="accesskey",Name="Access Key", IsRequired=true, IsPassword=false },
                         new ProviderParameter{ Key="secretaccesskey",Name="Secret Access Key", IsRequired=true, IsPassword=true },
                         new ProviderParameter{ Key="propagationdelay",Name="Propagation Delay Seconds (optional)", IsRequired=false, IsPassword=false, Value="60", IsCredential=false },
                         new ProviderParameter{ Key="zoneid",Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false },
                     },
-                    ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                    Config = "Provider=Certify.Providers.DNS.AWSRoute53",
-                    HandlerType = ChallengeHandlerType.INTERNAL
-                };
-            }
-        }
+            ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+            Config = "Provider=Certify.Providers.DNS.AWSRoute53",
+            HandlerType = ChallengeHandlerType.INTERNAL
+        };
 
         public DnsProviderAWSRoute53(Dictionary<string, string> credentials)
         {

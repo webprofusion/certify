@@ -159,7 +159,7 @@ namespace Certify.Service
         }
 
         [HttpGet, Route("challengeapis/")]
-        public async Task<List<ProviderDefinition>> GetChallengeAPIList()
+        public async Task<List<ChallengeProviderDefinition>> GetChallengeAPIList()
         {
             return await Core.Management.Challenges.ChallengeProviders.GetChallengeAPIProviders();
         }

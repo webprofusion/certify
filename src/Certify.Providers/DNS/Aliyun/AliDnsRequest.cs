@@ -10,10 +10,7 @@ namespace Certify.Providers.DNS.Aliyun
     {
         const string DNS_SERVICE_BASE_ADDRESS = "https://alidns.aliyuncs.com";
 
-        public static string CreateTimaStamp()
-        {
-            return DateTime.Now.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", System.Globalization.CultureInfo.CreateSpecificCulture("en-US"));
-        }
+        public static string CreateTimaStamp() => DateTime.Now.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", System.Globalization.CultureInfo.CreateSpecificCulture("en-US"));
 
         private HttpMethod _httpMethod;
 
@@ -38,18 +35,19 @@ namespace Certify.Providers.DNS.Aliyun
             _parameters.Add(nameof(Timestamp), Timestamp);
         }
 
-        private string PercentEncode(string value)
-        {
-            return UpperCaseUrlEncode(value)
+        private string PercentEncode(string value) => UpperCaseUrlEncode(value)
                 .Replace("+", "%20")
                 .Replace("*", "%2A")
                 .Replace("%7E", "~");
-        }
 
         private static string UpperCaseUrlEncode(string s)
         {
             var enc = System.Web.HttpUtility.UrlEncode(s);
-            if (enc == null) return null;
+            if (enc == null)
+            {
+                return null;
+            }
+
             var temp = enc.ToCharArray();
             for (var i = 0; i < temp.Length - 2; i++)
             {

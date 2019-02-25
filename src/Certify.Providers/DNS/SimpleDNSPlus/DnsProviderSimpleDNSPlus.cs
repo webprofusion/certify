@@ -59,11 +59,11 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
 
         public List<ProviderParameter> ProviderParameters => Definition.ProviderParameters;
 
-        public static ProviderDefinition Definition
+        public static ChallengeProviderDefinition Definition
         {
             get
             {
-                return new ProviderDefinition
+                return new ChallengeProviderDefinition
                 {
                     Id = "DNS01.API.SimpleDNSPlus",
                     Title = "SimpleDNSPlus DNS API",

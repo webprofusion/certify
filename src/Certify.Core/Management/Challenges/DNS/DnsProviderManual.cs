@@ -21,7 +21,7 @@ namespace Certify.Core.Management.Challenges.DNS
 
         private ILog _log;
 
-        public static ProviderDefinition Definition => new ProviderDefinition
+        public static ChallengeProviderDefinition Definition => new ChallengeProviderDefinition
         {
             Id = "DNS01.Manual",
             Title = "(Update DNS Manually)",

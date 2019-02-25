@@ -81,18 +81,14 @@ namespace Certify.Providers.DNS.MSDNS
             }
         }
 
-        public static ProviderDefinition Definition
+        public static ChallengeProviderDefinition Definition => new ChallengeProviderDefinition
         {
-            get
-            {
-                return new ProviderDefinition
-                {
-                    Id = "DNS01.API.MSDNS",
-                    Title = "Microsoft DNS API",
-                    Description = "Validates via local Microsoft DNS APIs using credentials",
-                    HelpUrl = "https://docs.microsoft.com/en-us/windows/desktop/dns/dns-wmi-classes",
-                    PropagationDelaySeconds = 5,
-                    ProviderParameters = new List<ProviderParameter>{
+            Id = "DNS01.API.MSDNS",
+            Title = "Microsoft DNS API",
+            Description = "Validates via local Microsoft DNS APIs using credentials",
+            HelpUrl = "https://docs.microsoft.com/en-us/windows/desktop/dns/dns-wmi-classes",
+            PropagationDelaySeconds = 5,
+            ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{ Key="dnsservername", Name="Server Name", IsRequired=true, IsCredential=false, Value=Environment.MachineName },
                         new ProviderParameter{ Key="ipaddress", Name="DNS Server IP Address", IsRequired=false, IsCredential=false},
                         new ProviderParameter{ Key="username", Name="User Name", IsRequired=false, IsCredential = true, IsPassword = false },
@@ -102,12 +98,10 @@ namespace Certify.Providers.DNS.MSDNS
                         new ProviderParameter{ Key="authentication", Name="Authentication", IsRequired = true, IsCredential = false, IsPassword = false, Description="Must be one of the following: Basic, CredSsp, Default, Digest, Kerberos, Negotiate, NtlmDomain", Value="Default", OptionsList="Basic;CredSsp;Default;Digest;Kerberos;Negotiate;NtlmDomain" },
                         new ProviderParameter{ Key="propagationdelay",Name="Propagation Delay Seconds (optional)", IsRequired=false, IsPassword=false, Value="60", IsCredential=false },
                     },
-                    ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                    Config = "Provider=Certify.Providers.DNS.MSDNS",
-                    HandlerType = ChallengeHandlerType.INTERNAL
-                };
-            }
-        }
+            ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+            Config = "Provider=Certify.Providers.DNS.MSDNS",
+            HandlerType = ChallengeHandlerType.INTERNAL
+        };
 
         public int PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
 

@@ -86,7 +86,10 @@ namespace Certify.Management
                     //check if we have renewal failures, if so wait a bit longer
                     isRenewalOnHold = !IsRenewalRequired(managedCertificate, renewalIntervalDays, checkFailureStatus: true);
 
-                    if (isRenewalOnHold) isRenewalRequired = false;
+                    if (isRenewalOnHold)
+                    {
+                        isRenewalRequired = false;
+                    }
                 }
 
                 //if we care about stopped sites being stopped, check for that if a specifc site is selected
@@ -216,7 +219,10 @@ namespace Certify.Management
             var isRenewalRequired = Math.Abs(timeSinceLastRenewal.TotalDays) > renewalIntervalDays;
 
             // if we have never attempted renewal, renew now
-            if (!isRenewalRequired && (s.DateLastRenewalAttempt == null && s.DateRenewed == null)) isRenewalRequired = true;
+            if (!isRenewalRequired && (s.DateLastRenewalAttempt == null && s.DateRenewed == null))
+            {
+                isRenewalRequired = true;
+            }
 
             // if renewal is required but we have previously failed, scale the frequency of renewal
             // attempts to a minimum of once per 24hrs.
@@ -286,7 +292,10 @@ namespace Certify.Management
 
             // Perform pre-request checks and scripting hooks, invoke main request process, then
             // perform an post request scripting hooks
-            if (log == null) log = ManagedCertificateLog.GetLogger(managedCertificate.Id, _loggingLevelSwitch);
+            if (log == null)
+            {
+                log = ManagedCertificateLog.GetLogger(managedCertificate.Id, _loggingLevelSwitch);
+            }
 
             //enable or disable EFS flag on private key certs based on preference
             if (CoreAppSettings.Current.EnableEFS)
@@ -555,7 +564,10 @@ namespace Certify.Management
             }
             else
             {
-                if (pendingOrder == null) throw new Exception("No pending certificate order.");
+                if (pendingOrder == null)
+                {
+                    throw new Exception("No pending certificate order.");
+                }
             }
 
             var validationFailed = false;
@@ -716,7 +728,10 @@ namespace Certify.Management
                         }
 
                         // abandon authorization attempts if one of our domains has failed verification
-                        if (validationFailed) break;
+                        if (validationFailed)
+                        {
+                            break;
+                        }
                     }
                 }
             }
@@ -925,7 +940,10 @@ namespace Certify.Management
                         {
                             _httpChallengeServerAvailable = await StartHttpChallengeServer();
 
-                            if (_tc != null) _tc.TrackEvent("ChallengeResponse_HttpChallengeServer_Start");
+                            if (_tc != null)
+                            {
+                                _tc.TrackEvent("ChallengeResponse_HttpChallengeServer_Start");
+                            }
                         }
 
                         if (_httpChallengeServerAvailable)
@@ -936,7 +954,10 @@ namespace Certify.Management
                         {
                             LogMessage(managedCertificate.Id, $"Http Challenge Server process unavailable.", LogItemType.CertificateRequestStarted);
 
-                            if (_tc != null) _tc.TrackEvent("ChallengeResponse_HttpChallengeServer_Unavailable");
+                            if (_tc != null)
+                            {
+                                _tc.TrackEvent("ChallengeResponse_HttpChallengeServer_Unavailable");
+                            }
                         }
                     }
                 }
@@ -979,7 +1000,10 @@ namespace Certify.Management
 
                         var providerDesc = challengeConfig.ChallengeProvider ?? challengeConfig.ChallengeType;
 
-                        if (_tc != null) _tc.TrackEvent($"PerformChallengeResponse_{providerDesc}");
+                        if (_tc != null)
+                        {
+                            _tc.TrackEvent($"PerformChallengeResponse_{providerDesc}");
+                        }
 
                         // ask LE to check our answer to their authorization challenge (http-01 or
                         // tls-sni-01), LE will then attempt to fetch our answer, if all accessible
@@ -1082,7 +1106,10 @@ namespace Certify.Management
 
             if (managedCertificate.ItemType == ManagedCertificateType.SSL_LetsEncrypt_LocalIIS)
             {
-                if (!isPreviewOnly) ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding, managedCertificate));
+                if (!isPreviewOnly)
+                {
+                    ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding, managedCertificate));
+                }
 
                 // Install certificate into certificate store and bind to IIS site
                 var deploymentManager = new BindingDeploymentManager();
@@ -1102,17 +1129,26 @@ namespace Certify.Management
                     //all done
                     LogMessage(managedCertificate.Id, logPrefix + CoreSR.CertifyManager_CompleteRequestAndUpdateBinding, LogItemType.CertificateRequestSuccessful);
 
-                    if (!isPreviewOnly) await UpdateManagedCertificateStatus(managedCertificate, RequestState.Success);
+                    if (!isPreviewOnly)
+                    {
+                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Success);
+                    }
 
                     result.IsSuccess = true;
                     result.Message = logPrefix + string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
-                    if (!isPreviewOnly) ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedCertificate));
+                    if (!isPreviewOnly)
+                    {
+                        ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedCertificate));
+                    }
                 }
                 else
                 {
                     // certificate install failed
                     result.Message = logPrefix + string.Format(CoreSR.CertifyManager_CertificateInstallFailed, pfxPath);
-                    if (!isPreviewOnly) await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
+                    if (!isPreviewOnly)
+                    {
+                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
+                    }
 
                     LogMessage(managedCertificate.Id, result.Message, LogItemType.GeneralError);
                 }
@@ -1124,9 +1160,15 @@ namespace Certify.Management
         {
             _serviceLog?.Information($"Performing Certificate Revoke: {managedCertificate.Name}");
 
-            if (log == null) log = ManagedCertificateLog.GetLogger(managedCertificate.Id, _loggingLevelSwitch);
+            if (log == null)
+            {
+                log = ManagedCertificateLog.GetLogger(managedCertificate.Id, _loggingLevelSwitch);
+            }
 
-            if (_tc != null) _tc.TrackEvent("RevokeCertificate");
+            if (_tc != null)
+            {
+                _tc.TrackEvent("RevokeCertificate");
+            }
 
             var result = await _acmeClientProvider.RevokeCertificate(log, managedCertificate);
             if (result.IsOK)

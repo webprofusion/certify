@@ -94,28 +94,22 @@ namespace Certify.Providers.DNS.Cloudflare
 
         public List<ProviderParameter> ProviderParameters => Definition.ProviderParameters;
 
-        public static ProviderDefinition Definition
+        public static ChallengeProviderDefinition Definition => new ChallengeProviderDefinition
         {
-            get
-            {
-                return new ProviderDefinition
-                {
-                    Id = "DNS01.API.Cloudflare",
-                    Title = "Cloudflare DNS API",
-                    Description = "Validates via Cloudflare DNS APIs using credentials",
-                    HelpUrl = "https://docs.certifytheweb.com/docs/dns-cloudflare.html",
-                    PropagationDelaySeconds = 60,
-                    ProviderParameters = new List<ProviderParameter>{
+            Id = "DNS01.API.Cloudflare",
+            Title = "Cloudflare DNS API",
+            Description = "Validates via Cloudflare DNS APIs using credentials",
+            HelpUrl = "https://docs.certifytheweb.com/docs/dns-cloudflare.html",
+            PropagationDelaySeconds = 60,
+            ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{Key="emailaddress", Name="Email Address", IsRequired=true },
                         new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true },
                         new ProviderParameter{ Key="zoneid",Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false }
                      },
-                    ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                    Config = "Provider=Certify.Providers.DNS.Cloudflare",
-                    HandlerType = ChallengeHandlerType.INTERNAL
-                };
-            }
-        }
+            ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+            Config = "Provider=Certify.Providers.DNS.Cloudflare",
+            HandlerType = ChallengeHandlerType.INTERNAL
+        };
 
         public DnsProviderCloudflare(Dictionary<string, string> credentials)
         {

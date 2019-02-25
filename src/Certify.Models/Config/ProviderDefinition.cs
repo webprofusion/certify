@@ -14,19 +14,31 @@ namespace Certify.Models.Config
     public class ProviderDefinition
     {
         public string Id { get; set; }
-        public string ChallengeType { get; set; }
-        public ChallengeHandlerType HandlerType { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
         public string HelpUrl { get; set; }
-        public string RequiredCredentials { get; set; }
         public List<ProviderParameter> ProviderParameters { get; set; }
         public string Config { get; set; }
-        public int PropagationDelaySeconds { get; set; }
 
         public ProviderDefinition()
         {
             ProviderParameters = new List<ProviderParameter>();
         }
+    }
+
+    public class ChallengeProviderDefinition: ProviderDefinition
+    {
+        public string ChallengeType { get; set; }
+        public ChallengeHandlerType HandlerType { get; set; }
+        public int PropagationDelaySeconds { get; set; }
+
+        public ChallengeProviderDefinition(): base()
+        {
+            
+        }
+    }
+
+    public class DeploymentProviderDefinition : ProviderDefinition
+    {
     }
 }

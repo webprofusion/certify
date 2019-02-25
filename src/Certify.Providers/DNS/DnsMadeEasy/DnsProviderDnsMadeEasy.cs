@@ -52,28 +52,22 @@ namespace Certify.Providers.DNS.DnsMadeEasy
 
         public List<ProviderParameter> ProviderParameters => Definition.ProviderParameters;
 
-        public static ProviderDefinition Definition
+        public static ChallengeProviderDefinition Definition => new ChallengeProviderDefinition
         {
-            get
-            {
-                return new ProviderDefinition
-                {
-                    Id = "DNS01.API.DnsMadeEasy",
-                    Title = "DnsMadeEasy DNS API",
-                    Description = "Validates via DnsMadeEasy APIs using credentials found in your DnsMadeEasy control panel under Config - Account Settings",
-                    HelpUrl = "http://docs.certifytheweb.com/docs/dns-dnsmadeeasy.html",
-                    PropagationDelaySeconds = 60,
-                    ProviderParameters = new List<ProviderParameter>{
+            Id = "DNS01.API.DnsMadeEasy",
+            Title = "DnsMadeEasy DNS API",
+            Description = "Validates via DnsMadeEasy APIs using credentials found in your DnsMadeEasy control panel under Config - Account Settings",
+            HelpUrl = "http://docs.certifytheweb.com/docs/dns-dnsmadeeasy.html",
+            PropagationDelaySeconds = 60,
+            ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{Key="apikey", Name="API Key", IsRequired=true },
                         new ProviderParameter{Key="apisecret", Name="API Secret", IsRequired=true },
                         new ProviderParameter{ Key="zoneid",Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false }
                     },
-                    ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                    Config = "Provider=Certify.Providers.DNS.DnsMadeEasy",
-                    HandlerType = ChallengeHandlerType.INTERNAL
-                };
-            }
-        }
+            ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+            Config = "Provider=Certify.Providers.DNS.DnsMadeEasy",
+            HandlerType = ChallengeHandlerType.INTERNAL
+        };
 
         public DnsProviderDnsMadeEasy(Dictionary<string, string> credentials)
         {

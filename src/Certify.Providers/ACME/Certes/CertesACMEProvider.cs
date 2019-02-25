@@ -230,7 +230,11 @@ namespace Certify.Providers.Certes
         {
             if (_acme == null)
             {
-                if (log != null) log.Error("No account context. Cannot update account key.");
+                if (log != null)
+                {
+                    log.Error("No account context. Cannot update account key.");
+                }
+
                 return false;
             }
             else
@@ -293,10 +297,7 @@ namespace Certify.Providers.Certes
         /// <summary>
         /// Save current provider settings
         /// </summary>
-        private async Task<bool> SaveSettings()
-        {
-            return await WriteAllTextAsync(_settingsFolder + "\\c-settings.json", Newtonsoft.Json.JsonConvert.SerializeObject(_settings));
-        }
+        private async Task<bool> SaveSettings() => await WriteAllTextAsync(_settingsFolder + "\\c-settings.json", Newtonsoft.Json.JsonConvert.SerializeObject(_settings));
 
         /// <summary>
         /// Save the current account key
@@ -343,7 +344,10 @@ namespace Certify.Providers.Certes
 
             _acme = new AcmeContext(_serviceUri, accountkey, _httpClient);
 
-            if (_settings.AccountKey != pem) _settings.AccountKey = pem;
+            if (_settings.AccountKey != pem)
+            {
+                _settings.AccountKey = pem;
+            }
         }
 
         /// <summary>
@@ -500,7 +504,10 @@ namespace Certify.Providers.Certes
                     return pendingOrder;
                 }
 
-                if (order == null) throw new Exception("Failed to begin certificate order.");
+                if (order == null)
+                {
+                    throw new Exception("Failed to begin certificate order.");
+                }
 
                 orderUri = order.Location.ToString();
 
@@ -537,7 +544,10 @@ namespace Certify.Providers.Certes
                     var allChallenges = await authz.Challenges();
                     var res = await authz.Resource();
                     var authzDomain = res.Identifier.Value;
-                    if (res.Wildcard == true) authzDomain = "*." + authzDomain;
+                    if (res.Wildcard == true)
+                    {
+                        authzDomain = "*." + authzDomain;
+                    }
 
                     var challenges = new List<AuthorizationChallengeItem>();
 
@@ -811,10 +821,25 @@ namespace Certify.Providers.Certes
 
             if (!string.IsNullOrEmpty(config.CSRKeyAlg))
             {
-                if (config.CSRKeyAlg == "RS256") keyAlg = KeyAlgorithm.RS256;
-                if (config.CSRKeyAlg == "ECDSA256") keyAlg = KeyAlgorithm.ES256;
-                if (config.CSRKeyAlg == "ECDSA384") keyAlg = KeyAlgorithm.ES384;
-                if (config.CSRKeyAlg == "ECDSA521") keyAlg = KeyAlgorithm.ES512;
+                if (config.CSRKeyAlg == "RS256")
+                {
+                    keyAlg = KeyAlgorithm.RS256;
+                }
+
+                if (config.CSRKeyAlg == "ECDSA256")
+                {
+                    keyAlg = KeyAlgorithm.ES256;
+                }
+
+                if (config.CSRKeyAlg == "ECDSA384")
+                {
+                    keyAlg = KeyAlgorithm.ES384;
+                }
+
+                if (config.CSRKeyAlg == "ECDSA521")
+                {
+                    keyAlg = KeyAlgorithm.ES512;
+                }
             }
 
             var csrKey = KeyFactory.NewKey(keyAlg);

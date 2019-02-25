@@ -32,18 +32,14 @@ namespace Certify.Providers.DNS.Aliyun
 
         public List<ProviderParameter> ProviderParameters => Definition.ProviderParameters;
 
-        public static ProviderDefinition Definition
+        public static ChallengeProviderDefinition Definition => new ChallengeProviderDefinition
         {
-            get
-            {
-                return new ProviderDefinition
-                {
-                    Id = "DNS01.API.Aliyun",
-                    Title = "Aliyun (Alibaba Cloud) DNS API",
-                    Description = "Validates via Aliyun DNS APIs using api key and secret",
-                    HelpUrl = "https://help.aliyun.com/document_detail/29739.html",
-                    PropagationDelaySeconds = 120,
-                    ProviderParameters = new List<ProviderParameter>
+            Id = "DNS01.API.Aliyun",
+            Title = "Aliyun (Alibaba Cloud) DNS API",
+            Description = "Validates via Aliyun DNS APIs using api key and secret",
+            HelpUrl = "https://help.aliyun.com/document_detail/29739.html",
+            PropagationDelaySeconds = 120,
+            ProviderParameters = new List<ProviderParameter>
                     {
                         new ProviderParameter
                         {
@@ -68,12 +64,10 @@ namespace Certify.Providers.DNS.Aliyun
                             IsCredential = false
                         }
                     },
-                    ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                    Config = "Provider=Certify.Providers.DNS.Aliyun",
-                    HandlerType = ChallengeHandlerType.INTERNAL
-                };
-            }
-        }
+            ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+            Config = "Provider=Certify.Providers.DNS.Aliyun",
+            HandlerType = ChallengeHandlerType.INTERNAL
+        };
 
         public DnsProviderAliyun(Dictionary<string, string> credentials)
         {
@@ -268,7 +262,11 @@ namespace Certify.Providers.DNS.Aliyun
             };
             if (type == RecordType.MX)
             {
-                if (priority < 1 || priority > 10) throw new Exception("priority must in 1 to 10 when type is MX");
+                if (priority < 1 || priority > 10)
+                {
+                    throw new Exception("priority must in 1 to 10 when type is MX");
+                }
+
                 parameters.Add("Priority", priority.ToString());
             }
 
