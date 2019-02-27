@@ -159,22 +159,13 @@ namespace Certify.Service
         }
 
         [HttpGet, Route("challengeapis/")]
-        public async Task<List<ChallengeProviderDefinition>> GetChallengeAPIList()
-        {
-            return await Core.Management.Challenges.ChallengeProviders.GetChallengeAPIProviders();
-        }
+        public async Task<List<ChallengeProviderDefinition>> GetChallengeAPIList() => await Core.Management.Challenges.ChallengeProviders.GetChallengeAPIProviders();
 
         [HttpGet, Route("currentchallenges/")]
-        public async Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallenges()
-        {
-            return await _certifyManager.GetCurrentChallengeResponses(SupportedChallengeTypes.CHALLENGE_TYPE_HTTP);
-        }
+        public async Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallenges() => await _certifyManager.GetCurrentChallengeResponses(SupportedChallengeTypes.CHALLENGE_TYPE_HTTP);
 
         [HttpGet, Route("dnszones/{providerTypeId}/{credentialId}")]
-        public async Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialId)
-        {
-            return await _certifyManager.GetDnsProviderZones(providerTypeId, credentialId);
-        }
+        public async Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialId) => await _certifyManager.GetDnsProviderZones(providerTypeId, credentialId);
 
         public class ProgressLogSink : Serilog.Core.ILogEventSink
         {

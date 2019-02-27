@@ -11,10 +11,17 @@ namespace Certify.Service.Controllers
         protected override bool IsAuthorized(HttpActionContext actionContext)
         {
             var user = actionContext.RequestContext.Principal as System.Security.Principal.WindowsPrincipal;
-            if (user.IsInRole(WindowsBuiltInRole.Administrator)) return true;
-            if (user.IsInRole(WindowsBuiltInRole.PowerUser)) return true;
+            if (user.IsInRole(WindowsBuiltInRole.Administrator))
+            {
+                return true;
+            }
 
-            return base.IsAuthorized(actionContext);
+            if (user.IsInRole(WindowsBuiltInRole.PowerUser))
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 
