@@ -141,7 +141,7 @@ namespace Certify.CLI
                                 if (redeployRequired)
                                 {
                                     Console.ForegroundColor = ConsoleColor.DarkYellow;
-                                    Console.WriteLine($"Warning: {site.Name} :: Stored cert not found, bindings cannot be redployed");
+                                    Console.WriteLine($"Warning: {site.Name} :: Stored cert not found, bindings cannot be redeployed");
                                     Console.ForegroundColor = ConsoleColor.White;
                                 }
                             }

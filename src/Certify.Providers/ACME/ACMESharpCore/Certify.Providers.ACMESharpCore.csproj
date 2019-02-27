@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ACMESharpCore" Version="2.0.0.49-beta1" />
+    <PackageReference Include="ACMESharpCore" Version="2.0.1.105" />
   </ItemGroup>
 
   <ItemGroup>
