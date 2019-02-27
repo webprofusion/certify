@@ -60,10 +60,7 @@ namespace Certify.Core.Tests
         /// <summary>
         /// Perform teardown for IIS
         /// </summary>
-        public void Dispose()
-        {
-            TeardownIIS().Wait();
-        }
+        public void Dispose() => TeardownIIS().Wait();
 
         public async Task SetupIIS()
         {
@@ -496,10 +493,16 @@ namespace Certify.Core.Tests
                 await iisManager.DeleteSite(testWildcardSiteName);
 
                 // remove managed site
-                if (managedCertificate != null) await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
+                if (managedCertificate != null)
+                {
+                    await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
+                }
 
                 // cleanup certificate
-                if (certInfo != null) CertificateManager.RemoveCertificate(certInfo);
+                if (certInfo != null)
+                {
+                    CertificateManager.RemoveCertificate(certInfo);
+                }
             }
         }
     }

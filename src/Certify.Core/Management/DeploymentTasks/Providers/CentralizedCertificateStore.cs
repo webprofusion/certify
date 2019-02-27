@@ -1,15 +1,31 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
+using Certify.Core.Management.DeploymentTasks;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 
-namespace Certify.Core.Management.DeploymentTasks
+namespace Certify.Providers.DeploymentTasks
 {
-    public class CentralizedCertificateStore
+    public class CentralizedCertificateStore : DeploymentTaskProviderBase, IDeploymentTaskProvider
     {
         public ProviderParameter StorePath = new ProviderParameter();
+        public static new DeploymentProviderDefinition Definition { get; }
 
-        public async Task<ActionResult> Deploy(ILog log, Models.ManagedCertificate managedCert)
+        static CentralizedCertificateStore()
+        {
+            Definition = new DeploymentProviderDefinition
+            {
+                Id = "Certify.Providers.DeploymentTasks.CCS",
+                Title= " Deploy to Centralized Certificate Store (CCS) (experimental)",
+                Description = "Deploy latest certificate to Windows Centralized Certificate Store",
+                ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
+                {
+
+                }
+            };
+        }
+
+        public override async Task<ActionResult> Execute(ILog log, Models.ManagedCertificate managedCert, bool isPreviewOnly)
         {
             var pfxData = File.ReadAllBytes(managedCert.CertificatePath);
 
@@ -34,5 +50,7 @@ namespace Certify.Core.Management.DeploymentTasks
 
             return await Task.FromResult(new ActionResult { IsSuccess = true });
         }
+
+
     }
 }

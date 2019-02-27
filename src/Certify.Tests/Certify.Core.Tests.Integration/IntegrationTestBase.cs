@@ -1,6 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿using Certify.Models;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Certify.Core.Tests
 {
@@ -24,6 +26,34 @@ namespace Certify.Core.Tests
              */
 
             ConfigSettings = JsonConvert.DeserializeObject<Dictionary<string, string>>(System.IO.File.ReadAllText("C:\\temp\\TestConfigSettings.json"));
+        }
+
+        public ManagedCertificate GetMockManagedCertificate(string siteName, string siteId, string testDomain, string testPath)
+        {
+            var dummyManagedCertificate = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = siteName,
+                GroupId = siteId,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = testDomain,
+                    PerformAutoConfig = true,
+                    PerformAutomatedCertBinding = true,
+                    PerformChallengeFileCopy = true,
+                    PerformExtensionlessConfigChecks = true,
+                    WebsiteRootPath = testPath,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                    {
+
+                    },
+                    DeploymentSiteOption = DeploymentOption.SingleSite
+                },
+                ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
+            };
+
+            return dummyManagedCertificate;
+
         }
     }
 }
