@@ -1,4 +1,4 @@
-﻿using Certify.Core.Management.DeploymentTasks;
+﻿
 using Certify.Models.Config;
 
 namespace Certify.Providers.DeploymentTasks

@@ -2,6 +2,17 @@
 
 namespace Certify.Models.Config
 {
+    public enum OptionType
+    {
+        String=1,
+        MultiLineText=2,
+        Boolean=3,
+        Select=4,
+        MultiSelect=5,
+        RadioButton=6,
+        Checkbox=7
+    }
+
     public class ProviderParameter
     {
         public string Key { get; set; }
@@ -12,6 +23,8 @@ namespace Certify.Models.Config
         public string Value { get; set; }
         public bool IsCredential { get; set; } = true;
         public string OptionsList { get; set; }
+        public OptionType? Type { get; set; }
+
         public List<string> Options
         {
             get

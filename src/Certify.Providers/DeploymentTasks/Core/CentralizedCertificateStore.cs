@@ -1,24 +1,22 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
-using Certify.Core.Management.DeploymentTasks;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 
 namespace Certify.Providers.DeploymentTasks
 {
-    public class CertificateExport : DeploymentTaskProviderBase, IDeploymentTaskProvider
+    public class CentralizedCertificateStore : DeploymentTaskProviderBase, IDeploymentTaskProvider
     {
         public ProviderParameter StorePath = new ProviderParameter();
-
         public static new DeploymentProviderDefinition Definition { get; }
 
-        static CertificateExport()
+        static CentralizedCertificateStore()
         {
             Definition = new DeploymentProviderDefinition
             {
-                Id = "Certify.Providers.DeploymentTasks.CertificateExport",
-                Title = "Export Certificate (experimental)",
-                Description = "Deploy latest certificate to a file (locally or remote)",
+                Id = "Certify.Providers.DeploymentTasks.CCS",
+                Title= " Deploy to Centralized Certificate Store (CCS) (experimental)",
+                Description = "Deploy latest certificate to Windows Centralized Certificate Store",
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
                 {
 
@@ -44,23 +42,14 @@ namespace Certify.Providers.DeploymentTasks
                 {
                     //TODO: check unicode domains
                     var filename = Path.Combine(storePath, domain + ".pfx");
-                    if (isPreviewOnly)
-                    {
-                        // preview copy
-                        log.Information($"CCS: (Preview) would store PFX as {filename}");
-                        File.WriteAllBytes(filename, pfxData);
-                    }
-                    else
-                    {
-                        // perform copy
-                        log.Information($"CCS: Storing PFX as {filename}");
-                        File.WriteAllBytes(filename, pfxData);
-                    }
-
+                    log.Information($"CCS: Storing PFX as {filename}");
+                    File.WriteAllBytes(filename, pfxData);
                 }
             }
 
             return await Task.FromResult(new ActionResult { IsSuccess = true });
         }
+
+
     }
 }

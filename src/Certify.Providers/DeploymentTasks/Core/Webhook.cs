@@ -1,19 +1,19 @@
-﻿using Certify.Core.Management.DeploymentTasks;
+﻿
 using Certify.Models.Config;
 
 namespace Certify.Providers.DeploymentTasks
 {
-    public class Apache : CertificateExport, IDeploymentTaskProvider
+    public class Webhook : DeploymentTaskProviderBase, IDeploymentTaskProvider
     {
         public static new DeploymentProviderDefinition Definition { get; }
 
-        static Apache()
+        static Webhook()
         {
             Definition = new DeploymentProviderDefinition
             {
-                Id = "Certify.Providers.DeploymentTasks.Apache",
-                Title = "Deploy to Apache (experimental)",
-                Description = "Deploy latest certificate to Local or Remote Apache Server",
+                Id = "Certify.Providers.DeploymentTasks.Webhook",
+                Title = "Call Webhook (experimental)",
+                Description = "Call a custom webhook on renewal sucess or failure",
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
                 {
 
@@ -21,5 +21,6 @@ namespace Certify.Providers.DeploymentTasks
             };
         }
 
+        
     }
 }

@@ -1,19 +1,19 @@
-﻿using Certify.Core.Management.DeploymentTasks;
+﻿
 using Certify.Models.Config;
 
 namespace Certify.Providers.DeploymentTasks
 {
-    public class Tomcat : CertificateExport, IDeploymentTaskProvider
+    public class Apache : CertificateExport, IDeploymentTaskProvider
     {
         public static new DeploymentProviderDefinition Definition { get; }
 
-        static Tomcat()
+        static Apache()
         {
             Definition = new DeploymentProviderDefinition
             {
-                Id = "Certify.Providers.DeploymentTasks.Tomcat",
-                Title= "Deploy to Tomcat (experimental)",
-                Description = "Deploy latest certificate to a local or remote Tomcat server",
+                Id = "Certify.Providers.DeploymentTasks.Apache",
+                Title = "Deploy to Apache (experimental)",
+                Description = "Deploy latest certificate to Local or Remote Apache Server",
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
                 {
 

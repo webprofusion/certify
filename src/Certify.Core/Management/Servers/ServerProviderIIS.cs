@@ -518,16 +518,29 @@ namespace Certify.Management.Servers
 
         private string HashBytesToThumprint(byte[] bytes)
         {
-            // inspired by:
-            // dotnet core System.Security.Cryptography.X509Certificates/src/Internal/Cryptography/Helpers.cs
-            // CertificateHash is stored as 2 nibbles (4-bits) per byte, so convert to bytes > hex
-            var output = "";
-            foreach (var b in bytes)
+            if (bytes == null || bytes.Length == 0)
             {
-                output += ((byte)(b >> 4)).ToString("X");
-                output += ((byte)(b & 0xF)).ToString("X");
+                return null;
             }
-            return output;
+
+            try
+            {
+                // inspired by:
+                // dotnet core System.Security.Cryptography.X509Certificates/src/Internal/Cryptography/Helpers.cs
+                // CertificateHash is stored as 2 nibbles (4-bits) per byte, so convert bytes > hex
+                var output = "";
+                foreach (var b in bytes)
+                {
+                    output += ((byte)(b >> 4)).ToString("X");
+                    output += ((byte)(b & 0xF)).ToString("X");
+                }
+                return output;
+            }
+            catch
+            {
+                // failed to convert bytes to hex. Cert hash is probably invalid.
+                return null;
+            }
         }
 
         private static char NibbleToHex(byte b) => (char)(b >= 0 && b <= 9 ? '0' + b : 'A' + (b - 10));

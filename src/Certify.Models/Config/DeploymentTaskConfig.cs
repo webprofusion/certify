@@ -31,5 +31,15 @@ namespace Certify.Config
         /// if false, error will be logged as a warning, next deployment step will continue and overall deployment will be marked as successful (depending on other deployment steps)
         /// </summary>
         public bool IsFatalOnError { get; set; }
+
+        /// <summary>
+        /// If greater than 0, attempt up to N retries before failing
+        /// </summary>
+        public int RetriesAllowed { get; set; }
+
+        /// <summary>
+        /// Time to wait between retry attempts
+        /// </summary>
+        public int RetryDelaySeconds { get; set; } = 10;
     }
 }
