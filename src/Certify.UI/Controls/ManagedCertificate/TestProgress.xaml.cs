@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace Certify.UI.Controls.ManagedCertificate
@@ -14,15 +15,43 @@ namespace Certify.UI.Controls.ManagedCertificate
             DataContext = ItemViewModel;
         }
 
-        private void TextBlock_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+
+        private async Task<bool> WaitForClipboard(string text)
+        {
+            // if running under terminal services etc the clipboard can take multiple attempts to set
+            // https://stackoverflow.com/questions/68666/clipbrd-e-cant-open-error-when-setting-the-clipboard-from-net
+            for (var i = 0; i < 10; i++)
+            {
+                try
+                {
+                    Clipboard.SetText(text);
+
+                    return true;
+                }
+                catch { }
+
+                await Task.Delay(50);
+            }
+
+            return false;
+        }
+
+        private async void TextBlock_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             // copy text to clipboard
             if (sender != null)
             {
                 var text = (sender as TextBlock).Text;
-                Clipboard.SetText(text);
+                var copiedOK = await WaitForClipboard(text);
 
-                MessageBox.Show("Copied to clipboard");
+                if (copiedOK)
+                {
+                    MessageBox.Show("Copied to clipboard");
+                }
+                else
+                {
+                    MessageBox.Show("Another process is preventing access to the clipboard. Please try again.");
+                }
             }
         }
     }
