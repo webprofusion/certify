@@ -12,7 +12,7 @@ namespace Certify.UI.Windows
     {
         public ObservableCollection<ProviderParameter> CredentialSet { get; set; }
         public StoredCredential Item { get; set; }
-        public List<ProviderDefinition> ChallengeProviders { get; set; }
+        public List<ChallengeProviderDefinition> ChallengeProviders { get; set; }
     }
     public static class PasswordBoxAssistant
     {

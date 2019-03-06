@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Controls;
+using Certify.UI.Windows;
 
 namespace Certify.UI.Controls.ManagedCertificate
 {
@@ -64,10 +66,42 @@ namespace Certify.UI.Controls.ManagedCertificate
                     Description="Existing https bindings will be updated with the new certificate as required."
                 }
             };
+
+
         }
 
-        private void DeploymentSiteOptions_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
+        private void DeploymentSiteOptions_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
             // if deployment mode changes, apply defaults for the mode
             ItemViewModel.SelectedItem?.RequestConfig?.ApplyDeploymentOptionDefaults();
+
+            if (ItemViewModel.SelectedItem != null)
+            {
+                ItemViewModel.SelectedItem.DeploymentTasks = new System.Collections.ObjectModel.ObservableCollection<Config.DeploymentTaskConfig>();
+                ItemViewModel.SelectedItem?.DeploymentTasks.Add(
+                    new Config.DeploymentTaskConfig { TaskType = "Certify.Providers.DeploymentTasks.CertificateExport", TaskName = "Example Task", Description="This is a example deployment task which does something magical.", IsDeferred = false, IsFatalOnError = false, RetriesAllowed = 0, RetryDelaySeconds = 0, ProviderParameters = new Dictionary<string, string>() }
+                );
+            }
+
+        }
+
+        private void AddDeploymentTask_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            var dialog = new EditDeploymentTask
+            {
+               Owner = Window.GetWindow(this)
+            };
+            dialog.Show();
+        }
+
+        private void EditDeploymentTask_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            var dialog = new EditDeploymentTask
+            {
+                Owner = Window.GetWindow(this)
+            };
+            dialog.Show();
+        }
     }
 }
+

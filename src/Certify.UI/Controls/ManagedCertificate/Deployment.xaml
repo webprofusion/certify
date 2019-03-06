@@ -7,6 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Certify.UI.Controls.ManagedCertificate"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+     xmlns:fa="http://schemas.fontawesome.io/icons/"
     xmlns:models="clr-namespace:Certify.Models;assembly=Certify.Models"
     xmlns:utils="clr-namespace:Certify.UI.Utils"
     d:DataContext="{d:DesignInstance Type=certifyui:ManagedCertificateDesignViewModel,
@@ -199,6 +200,47 @@
                         <TextBlock Style="{StaticResource Instructions}" Text="{x:Static Resources:SR.ManagedCertificateSettings_BindingNote}" />
                     </StackPanel>
                 </DockPanel>
+            </DockPanel>
+
+            <DockPanel DockPanel.Dock="Top">
+                
+            <StackPanel DockPanel.Dock="Top">
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}" Margin="0,16,0,0">Additional Deployment Tasks</TextBlock>
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}" Text="You can optionally add an unlimited number of additional deployment tasks:" />
+                    <Button Click="AddDeploymentTask_Click"
+                                            Width="80"
+                                          
+                                          
+                                            Content="Add"
+                                            DockPanel.Dock="Left" />
+                    <ItemsControl ItemsSource="{Binding SelectedItem.DeploymentTasks}" x:Name="DeploymentTasks" Margin="0,16,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,8,0,8">
+
+                                    <DockPanel>
+                                        <fa:FontAwesome Margin="0,8,0,0" Height="32" Width="32" HorizontalAlignment="Stretch" Icon="cogs" />
+                                        
+                                        <Button
+                                            Width="80"
+                                          Click="EditDeploymentTask_Click"
+                                            CommandParameter="{Binding}"
+                                            Content="Edit"
+                                            DockPanel.Dock="Right" />
+                                        <StackPanel Margin="0,0,0,0" DockPanel.Dock="Left">
+                                            <TextBlock FontWeight="SemiBold" Text="{Binding TaskName}" />
+                                            <TextBlock
+                                                DockPanel.Dock="Left"
+                                                Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                                                Text="{Binding Description}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                
+            </StackPanel>
             </DockPanel>
         </DockPanel>
     </ScrollViewer>

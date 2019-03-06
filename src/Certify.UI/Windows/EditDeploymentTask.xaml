@@ -1,0 +1,21 @@
+﻿<Controls:MetroWindow
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+        xmlns:local="clr-namespace:Certify.UI.Windows"
+        xmlns:ManagedCertificate="clr-namespace:Certify.UI.Controls.ManagedCertificate" x:Class="Certify.UI.Windows.EditDeploymentTask"
+        mc:Ignorable="d"
+     BorderThickness="1"
+    GlowBrush="{DynamicResource AccentColorBrush}"
+    ResizeMode="CanResizeWithGrip"
+    WindowStartupLocation="CenterOwner"
+    WindowTransitionsEnabled="False"
+        Title="Edit Deployment Task" Height="474.499" Width="475.073">
+    <DockPanel>
+
+        <ManagedCertificate:DeploymentTask DockPanel.Dock="Top" HorizontalAlignment="Left" Margin="8,8,8,8" VerticalAlignment="Top"/>
+
+    </DockPanel>
+</Controls:MetroWindow>

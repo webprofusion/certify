@@ -350,6 +350,7 @@ namespace Certify.UI.ViewModel
 
             await RefreshStoredCredentialsList();
 
+            await RefreshDeploymentTaskProviderList();
 
         }
 
@@ -539,17 +540,27 @@ namespace Certify.UI.ViewModel
             });
         }
 
-        public ObservableCollection<ProviderDefinition> ChallengeAPIProviders { get; set; } = new ObservableCollection<ProviderDefinition> { };
+        public ObservableCollection<ChallengeProviderDefinition> ChallengeAPIProviders { get; set; } = new ObservableCollection<ChallengeProviderDefinition> { };
 
         public async Task RefreshChallengeAPIList()
         {
             var list = await CertifyClient.GetChallengeAPIList();
             App.Current.Dispatcher.Invoke((Action)delegate
             {
-                ChallengeAPIProviders = new System.Collections.ObjectModel.ObservableCollection<Models.Config.ProviderDefinition>(list);
+                ChallengeAPIProviders = new System.Collections.ObjectModel.ObservableCollection<Models.Config.ChallengeProviderDefinition>(list);
             });
         }
 
+        public ObservableCollection<DeploymentProviderDefinition> DeploymentTaskProviders { get; set; } = new ObservableCollection<DeploymentProviderDefinition> { };
+
+        public async Task RefreshDeploymentTaskProviderList()
+        {
+            var list = await CertifyClient.GetDeploymentProviderList();
+            App.Current.Dispatcher.Invoke((Action)delegate
+            {
+                DeploymentTaskProviders = new System.Collections.ObjectModel.ObservableCollection<Models.Config.DeploymentProviderDefinition>(list.OrderBy(l=>l.Title));
+            });
+        }
         public ICommand RenewAllCommand => new RelayCommand<bool>(RenewAll);
     }
 }

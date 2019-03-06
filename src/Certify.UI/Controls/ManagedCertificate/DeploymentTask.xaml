@@ -1,0 +1,96 @@
+﻿<UserControl x:Class="Certify.UI.Controls.ManagedCertificate.DeploymentTask"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+              xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+              xmlns:models="clr-namespace:Certify.Models;assembly=Certify.Models"
+            
+            xmlns:local="clr-namespace:Certify.UI.Windows"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <DataTemplate x:Key="ProviderStringParameter">
+            <StackPanel
+                            Margin="0,8,0,0"
+                            DockPanel.Dock="Left"
+                            Orientation="Horizontal">
+                <Label Width="160" Content="{Binding Name}" />
+                <TextBox
+                                Width="250"
+                                mah:TextBoxHelper.Watermark="{Binding Description}"
+                                KeyUp="ParameterInput_KeyUp"
+                                Text="{Binding Value}" />
+                <Button
+                                x:Name="ShowParamLookup"
+                                Padding="4"
+                                Click="ShowParamLookup_Click">
+                    <Button.Style>
+                        <Style>
+                            <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Key}" Value="zoneid">
+                                    <Setter Property="UIElement.Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    ...
+                </Button>
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="ProviderDropDownParameter">
+            <StackPanel
+                            Margin="0,8,0,0"
+                            DockPanel.Dock="Left"
+                            Orientation="Horizontal">
+                <Label Width="160" Content="{Binding Name}" />
+                <ComboBox Width="250" SelectedValue="{Binding Value}" ItemsSource="{Binding Options}" />
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="ProviderPasswordParameter">
+            <StackPanel
+                            Margin="0,8,0,0"
+                            DockPanel.Dock="Left"
+                            Orientation="Horizontal">
+                <Label Width="160" Content="{Binding Name}" />
+                <PasswordBox
+                                Width="250"
+                                local:PasswordBoxAssistant.BindPassword="True" 
+								local:PasswordBoxAssistant.BoundPassword="{Binding Value, Mode=TwoWay}" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+    <DockPanel LastChildFill="False">
+        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}" Margin="0,0,0,0">Edit Deployment Task</TextBlock>
+        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}" Text="Deployment tasks are a useful way to deploy your updated certificate in a variety of ways. Tasks can be run immediately after the certificate has updated or they can be deferred and run manually or via a scheduled task etc. " />
+        <StackPanel DockPanel.Dock="Top" Margin="0,8,0,0" Orientation="Horizontal">
+            <Label Width="160" Content="Task Type" />
+
+            <ComboBox
+                            x:Name="TaskProviderList"
+                            Width="225"
+                            Margin="0,0,8,0"
+                            DisplayMemberPath="Title"
+                            SelectionChanged="TaskProviderList_SelectionChanged"
+                            SelectedValue="{Binding SelectedItem.ChallengeCredentialKey, UpdateSourceTrigger=PropertyChanged}"
+                            SelectedValuePath="Id"
+                            />
+
+
+        </StackPanel>
+        <StackPanel DockPanel.Dock="Top" Margin="0,8,0,0" Orientation="Horizontal">
+            <TextBlock  x:Name="ProviderDescription" Height="32" Text="" />
+
+        </StackPanel>
+
+        <ItemsControl
+                MinHeight="30"
+                DockPanel.Dock="Top" x:Name="DeploymentTaskParams"
+                >
+            <ItemsControl.ItemTemplateSelector>
+                <local:ControlTemplateSelector />
+            </ItemsControl.ItemTemplateSelector>
+        </ItemsControl>
+    </DockPanel>
+</UserControl>

@@ -115,6 +115,9 @@
     <Compile Include="Controls\ManagedCertificate\ChallengeConfigItem.xaml.cs">
       <DependentUpon>ChallengeConfigItem.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ManagedCertificate\DeploymentTask.xaml.cs">
+      <DependentUpon>DeploymentTask.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\ManagedCertificate\TestProgress.xaml.cs">
       <DependentUpon>TestProgress.xaml</DependentUpon>
     </Compile>
@@ -159,6 +162,9 @@
     <Compile Include="Windows\EditCredential.xaml.cs">
       <DependentUpon>EditCredential.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Windows\EditDeploymentTask.xaml.cs">
+      <DependentUpon>EditDeploymentTask.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Windows\GettingStartedGuide.xaml.cs">
       <DependentUpon>GettingStartedGuide.xaml</DependentUpon>
     </Compile>
@@ -184,6 +190,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\ManagedCertificate\ChallengeConfigItem.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ManagedCertificate\DeploymentTask.xaml">
+      <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\ManagedCertificate\TestProgress.xaml">
@@ -273,6 +283,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Windows\EditCredential.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Windows\EditDeploymentTask.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

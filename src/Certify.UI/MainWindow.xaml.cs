@@ -26,7 +26,7 @@ namespace Certify.UI
         protected Certify.UI.ViewModel.AppViewModel _appViewModel => UI.ViewModel.AppViewModel.Current;
         protected Certify.UI.ViewModel.ManagedCertificateViewModel _itemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
         private const int NUM_ITEMS_FOR_REMINDER = 3;
-        private const int NUM_ITEMS_FOR_LIMIT = 10;
+        private const int NUM_ITEMS_FOR_LIMIT = 50;
 
         public int NumManagedCertificates
         {
@@ -60,7 +60,10 @@ namespace Certify.UI
 #endif
 
             // save or discard site changes before creating a new site/certificate
-            if (!await _itemViewModel.ConfirmDiscardUnsavedChanges()) return;
+            if (!await _itemViewModel.ConfirmDiscardUnsavedChanges())
+            {
+                return;
+            }
 
             if (!_appViewModel.IsRegisteredVersion && _appViewModel.ManagedCertificates != null && _appViewModel.ManagedCertificates.Count >= 3)
             {
@@ -105,7 +108,10 @@ namespace Certify.UI
         private async void Button_RenewAll(object sender, RoutedEventArgs e)
         {
             // save or discard site changes before creating a new site/certificate
-            if (!await _itemViewModel.ConfirmDiscardUnsavedChanges()) return;
+            if (!await _itemViewModel.ConfirmDiscardUnsavedChanges())
+            {
+                return;
+            }
 
             //present new renew all confirmation
             if (MessageBox.Show(SR.MainWindow_RenewAllConfirm, SR.Renew_All, MessageBoxButton.YesNo) == MessageBoxResult.Yes)
@@ -267,7 +273,10 @@ namespace Certify.UI
 
         private async void ButtonUpdateAvailable_Click(object sender, RoutedEventArgs e)
         {
-            if (_appViewModel.IsUpdateInProgress) return;
+            if (_appViewModel.IsUpdateInProgress)
+            {
+                return;
+            }
 
             if (_appViewModel.UpdateCheckResult != null)
             {
@@ -298,7 +307,10 @@ namespace Certify.UI
         private async void MetroWindow_Closing(object sender, CancelEventArgs e)
         {
             // allow cancelling exit to save changes
-            if (!await _itemViewModel.ConfirmDiscardUnsavedChanges()) e.Cancel = true;
+            if (!await _itemViewModel.ConfirmDiscardUnsavedChanges())
+            {
+                e.Cancel = true;
+            }
 
             var uiSettings = new UISettings
             {
