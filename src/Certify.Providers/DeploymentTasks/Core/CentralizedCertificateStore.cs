@@ -20,7 +20,13 @@ namespace Certify.Providers.DeploymentTasks
                 Description = "Deploy latest certificate to Windows Centralized Certificate Store",
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
                 {
-                    new ProviderParameter{ Key="path", Name="Destination Path", IsRequired=true, IsCredential=false},
+                    new ProviderParameter{
+                        Key ="path",
+                        Name ="Destination Path",
+                        IsRequired =true,
+                        IsCredential =false,
+                        Description="UNC Path or Local Share"
+                    },
                 }
             };
         }
