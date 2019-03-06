@@ -130,6 +130,8 @@ namespace Certify.Client
 
         Task<List<ChallengeProviderDefinition>> GetChallengeAPIList();
 
+        Task<List<DeploymentProviderDefinition>> GetDeploymentProviderList();
+
         #endregion Managed Certificates
 
         #region Contacts

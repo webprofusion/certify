@@ -18,19 +18,19 @@ namespace Certify.Providers.DeploymentTasks
             Definition = new DeploymentProviderDefinition
             {
                 Id = "Certify.Providers.DeploymentTasks.CertificateExport",
-                Title = "Export Certificate (experimental)",
+                Title = "Export Certificate",
+                IsExperimental = true,
                 Description = "Deploy latest certificate to a file (locally or remote)",
                 ProviderParameters =
 
                     new List<ProviderParameter>{
+                        new ProviderParameter{ Key="destinationtype", Name="File Destination Type", IsRequired = true, IsCredential = false, IsPassword = false, Value="Local", OptionsList="Local;Windows;SSH;" },
                         new ProviderParameter{ Key="path", Name="Destination Path", IsRequired=true, IsCredential=false,  },
+                        new ProviderParameter{ Key="exportoptions", Name="Export Type", IsRequired=true, IsCredential=false, Value="pfx",OptionsList="pfx,crt,key" },
                         new ProviderParameter{ Key="remotehost", Name="Remote Hostname or IP", IsRequired=false, IsCredential=false},
                         new ProviderParameter{ Key="username", Name="User Name", IsRequired=false, IsCredential = true, IsPassword = false },
                         new ProviderParameter{ Key="password", Name="Password", IsRequired = false, IsCredential = true, IsPassword = true},
-                        new ProviderParameter{ Key="domain", Name="Domain", IsRequired = false, IsCredential = true, IsPassword = false},
-                        new ProviderParameter{ Key="protocol", Name="Remote Management Protocol", IsRequired = true, IsCredential = false, IsPassword = false, Description="Must be one of the following: DCOM, WinRM", Value="DCOM", OptionsList="DCOM;WinRM" },
-                        new ProviderParameter{ Key="authentication", Name="Authentication", IsRequired = true, IsCredential = false, IsPassword = false, Description="Must be one of the following: Basic, CredSsp, Default, Digest, Kerberos, Negotiate, NtlmDomain", Value="Default", OptionsList="Basic;CredSsp;Default;Digest;Kerberos;Negotiate;NtlmDomain" },
-                        new ProviderParameter{ Key="propagationdelay",Name="Propagation Delay Seconds (optional)", IsRequired=false, IsPassword=false, Value="60", IsCredential=false },
+                        new ProviderParameter{ Key="privatekey", Name="Private Key Path (if SSH)", IsRequired = false, IsCredential = true, IsPassword = false},
                     },
             };
         }

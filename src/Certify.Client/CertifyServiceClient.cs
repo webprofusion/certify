@@ -333,6 +333,12 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<List<ChallengeProviderDefinition>>(response);
         }
 
+        public async Task<List<DeploymentProviderDefinition>> GetDeploymentProviderList()
+        {
+            var response = await FetchAsync($"managedcertificates/deploymentproviders/");
+            return JsonConvert.DeserializeObject<List<DeploymentProviderDefinition>>(response);
+        }
+
         #endregion Managed Certificates
 
         #region Contacts

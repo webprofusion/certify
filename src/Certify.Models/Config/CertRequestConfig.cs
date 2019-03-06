@@ -4,10 +4,6 @@ using Certify.Models.Config;
 
 namespace Certify.Models
 {
-    public class CertificateAuthorities
-    {
-        public const string LETS_ENCRYPT = "letsencrypt";
-    }
 
     public class CertRequestChallengeConfig : BindableBase
     {

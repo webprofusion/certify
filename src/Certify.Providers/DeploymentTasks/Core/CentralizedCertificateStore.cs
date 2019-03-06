@@ -15,11 +15,12 @@ namespace Certify.Providers.DeploymentTasks
             Definition = new DeploymentProviderDefinition
             {
                 Id = "Certify.Providers.DeploymentTasks.CCS",
-                Title= " Deploy to Centralized Certificate Store (CCS) (experimental)",
+                Title= "Deploy to Centralized Certificate Store (CCS)",
+                IsExperimental = true,
                 Description = "Deploy latest certificate to Windows Centralized Certificate Store",
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
                 {
-
+                    new ProviderParameter{ Key="path", Name="Destination Path", IsRequired=true, IsCredential=false},
                 }
             };
         }

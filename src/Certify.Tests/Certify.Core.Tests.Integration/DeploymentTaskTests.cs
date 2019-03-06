@@ -145,7 +145,7 @@ namespace Certify.Core.Tests.Integration
         [TestMethod, TestCategory("Export")]
         public async Task TestGetAllDeploymentTaskProviders()
         {
-            var allProviders = DeploymentTaskProviderFactory.GetDeploymentTaskProviders();
+            var allProviders = await DeploymentTaskProviderFactory.GetDeploymentTaskProviders();
 
             Assert.IsTrue(allProviders.Select(p => p.Title).Distinct().Count() == allProviders.Count);
             Assert.IsTrue(allProviders.Select(p => p.Id).Distinct().Count() == allProviders.Count);

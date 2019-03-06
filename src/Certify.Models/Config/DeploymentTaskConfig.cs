@@ -16,10 +16,11 @@ namespace Certify.Config
         /// Unique task name (id) used in logs and to invoke this deployment task manually
         /// </summary>
         public string TaskName { get; set; }
+    
         /// <summary>
-        /// Optional list of stored credential ids required to complete deployment task
+        /// Optional description for this deployment tasks (i.e. what it does and why)
         /// </summary>
-        public Dictionary<string, string> Credentials { get; set; }
+        public string Description { get; set; }
 
         /// <summary>
         /// If true, deployment task execution is deferred until invoked by command line/scheduled task or manually run
@@ -41,5 +42,8 @@ namespace Certify.Config
         /// Time to wait between retry attempts
         /// </summary>
         public int RetryDelaySeconds { get; set; } = 10;
+
+        // Dictionary of provider parameter values
+        public Dictionary<string,string> ProviderParameters { get; set; }
     }
 }

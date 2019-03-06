@@ -19,6 +19,7 @@ namespace Certify.Models.Config
         public string HelpUrl { get; set; }
         public List<ProviderParameter> ProviderParameters { get; set; }
         public string Config { get; set; }
+        public bool IsExperimental { get; set; }
 
         public ProviderDefinition()
         {
@@ -40,5 +41,8 @@ namespace Certify.Models.Config
 
     public class DeploymentProviderDefinition : ProviderDefinition
     {
+        bool RunsAsWindowsUser { get; set; }
+        bool RunsAsSSHUser { get; set; }
+        bool RequiresCredentials { get; set; }
     }
 }

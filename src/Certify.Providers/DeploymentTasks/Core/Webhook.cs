@@ -12,11 +12,12 @@ namespace Certify.Providers.DeploymentTasks
             Definition = new DeploymentProviderDefinition
             {
                 Id = "Certify.Providers.DeploymentTasks.Webhook",
-                Title = "Call Webhook (experimental)",
+                Title = "Webhook",
+                IsExperimental = true,
                 Description = "Call a custom webhook on renewal sucess or failure",
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
                 {
-
+                     new ProviderParameter{ Key="url", Name="Webhook URL", IsRequired=true, IsCredential=false  },
                 }
             };
         }

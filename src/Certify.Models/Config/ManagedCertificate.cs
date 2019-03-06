@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Certify.Config;
 using Newtonsoft.Json;
 
 namespace Certify.Models
@@ -40,7 +41,14 @@ namespace Certify.Models
             RequestConfig = new CertRequestConfig();
 
             IncludeInAutoRenew = true;
+
+            CertificateAuthorityId = "letsencrypt.org";
         }
+
+        /// <summary>
+        /// Default CA to use for this request
+        /// </summary>
+        public string CertificateAuthorityId { get; set; }
 
         /// <summary>
         /// If true, the auto renewal process will include this item in attempted renewal operations
@@ -62,6 +70,11 @@ namespace Certify.Models
         /// Configuration options for this request
         /// </summary>
         public CertRequestConfig RequestConfig { get; set; }
+
+        /// <summary>
+        /// Optional list of deployment tasks to perform after reuqest/renewal or on demand
+        /// </summary>
+        public ObservableCollection<DeploymentTaskConfig> DeploymentTasks { get; set; }
 
         /// <summary>
         /// Unique ID for this managed item
@@ -192,7 +205,8 @@ namespace Certify.Models
                 allDomains.AddRange(RequestConfig.SubjectAlternativeNames);
             }
 
-            return allDomains.Distinct().ToList(); ;
+            return allDomains.Distinct().ToList();
+            ;
         }
 
         /// <summary>
@@ -383,7 +397,11 @@ namespace Certify.Models
                                 }
                             }
                         }
-                        if (isMatch) return isMatch;
+
+                        if (isMatch)
+                        {
+                            return isMatch;
+                        }
                     }
                 }
             }
