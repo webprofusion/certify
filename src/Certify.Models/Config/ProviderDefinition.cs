@@ -41,20 +41,7 @@ namespace Certify.Models.Config
 
     public class DeploymentProviderDefinition : ProviderDefinition
     {
-        /// If true, task may execute against local windows server
-        /// </summary>
-        public bool SupportsLocalWindows { get; set; }
-
-        /// <summary>
-        /// If true, task may execute against a remote windows server
-        /// </summary>
-        public bool SupportsRemoteWindows { get; set; }
-
-        /// <summary>
-        /// If true, tasks may execute against a remote SSH server
-        /// </summary>
-        public bool SupportsRemoteSSH { get; set; }
-
+       
         /// <summary>
         /// If true, task requires either windows or SSH credentials depending on whether deployment target is local, remote windows or ssh
         /// </summary>

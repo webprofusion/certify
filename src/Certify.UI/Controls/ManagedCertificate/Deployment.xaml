@@ -86,7 +86,7 @@
                 <TextBlock Style="{StaticResource Instructions}" Text="Certificate will be saved to disk but will not be imported automatically into the Certificate Store." />
             </DockPanel>
 
-            <DockPanel x:Name="AdvancedBindingOptions">
+            <DockPanel x:Name="AdvancedBindingOptions" DockPanel.Dock="Top">
                 <DockPanel.Style>
                     <Style>
                         <Setter Property="UIElement.Visibility" Value="Collapsed" />
@@ -205,14 +205,11 @@
             <DockPanel DockPanel.Dock="Top">
                 
             <StackPanel DockPanel.Dock="Top">
-                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}" Margin="0,16,0,0">Additional Deployment Tasks</TextBlock>
-                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}" Text="You can optionally add an unlimited number of additional deployment tasks:" />
-                    <Button Click="AddDeploymentTask_Click"
-                                            Width="80"
-                                          
-                                          
-                                            Content="Add"
-                                            DockPanel.Dock="Left" />
+                    <TextBlock  Style="{StaticResource Subheading}" Margin="0,16,0,0">Additional Deployment Tasks</TextBlock>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{StaticResource Instructions}" Text="You can optionally add any number of additional deployment tasks:" />
+                    <Button HorizontalAlignment="Right" Click="AddDeploymentTask_Click" Width="80" Content="Add" Margin="8,0,0,0" DockPanel.Dock="Left" />
+                    </StackPanel>
                     <ItemsControl ItemsSource="{Binding SelectedItem.DeploymentTasks}" x:Name="DeploymentTasks" Margin="0,16,0,0">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -225,7 +222,7 @@
                                             Width="80"
                                           Click="EditDeploymentTask_Click"
                                             CommandParameter="{Binding}"
-                                            Content="Edit"
+                                            Content="Edit" VerticalAlignment="Top"
                                             DockPanel.Dock="Right" />
                                         <StackPanel Margin="0,0,0,0" DockPanel.Dock="Left">
                                             <TextBlock FontWeight="SemiBold" Text="{Binding TaskName}" />

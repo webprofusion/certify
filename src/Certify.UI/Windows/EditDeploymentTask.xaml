@@ -13,9 +13,28 @@
     WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False"
         Title="Edit Deployment Task" Height="474.499" Width="475.073">
-    <DockPanel>
+    <DockPanel LastChildFill="False">
 
-        <ManagedCertificate:DeploymentTask DockPanel.Dock="Top" HorizontalAlignment="Left" Margin="8,8,8,8" VerticalAlignment="Top"/>
-
+        <ManagedCertificate:DeploymentTask x:Name="DeploymentTaskEditor" DockPanel.Dock="Top" HorizontalAlignment="Left" Margin="8,8,8,8" VerticalAlignment="Top"/>
+        <DockPanel DockPanel.Dock="Bottom" Margin="0,0,8,8">
+            <Button
+                x:Name="Cancel"
+                Width="75"
+                Margin="16,0,0,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+               
+                Content="Cancel"
+                DockPanel.Dock="Right" Click="Cancel_Click" />
+            <Button
+                x:Name="Save"
+                Width="77"
+                Margin="16,0,0,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+              
+                Content="OK"
+                DockPanel.Dock="Right" Click="Save_Click" />
+        </DockPanel>
     </DockPanel>
 </Controls:MetroWindow>

@@ -7,6 +7,8 @@ namespace Certify.Config
 {
     public class DeploymentTaskConfig
     {
+
+        public string Id { get; set; }
         /// <summary>
         /// id of task provider to instantiate
         /// </summary>
@@ -45,6 +47,16 @@ namespace Certify.Config
 
         public string ChallengeProvider { get; set; }
         public string ChallengeCredentialKey { get; set; }
+
+        /// <summary>
+        /// hostname or IP of target (if required)
+        /// </summary>
+        public string TargetHost { get; set; }
+
+        /// <summary>
+        /// Local, Windows (Network), SSH etc
+        /// </summary>
+        public string TargetType { get; set; }
 
         // Dictionary of provider parameter values
         public Dictionary<string,string> Parameters { get; set; }

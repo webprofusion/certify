@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using Certify.Config;
 using Certify.UI.Windows;
 
 namespace Certify.UI.Controls.ManagedCertificate
@@ -75,19 +76,11 @@ namespace Certify.UI.Controls.ManagedCertificate
             // if deployment mode changes, apply defaults for the mode
             ItemViewModel.SelectedItem?.RequestConfig?.ApplyDeploymentOptionDefaults();
 
-            if (ItemViewModel.SelectedItem != null)
-            {
-                ItemViewModel.SelectedItem.DeploymentTasks = new System.Collections.ObjectModel.ObservableCollection<Config.DeploymentTaskConfig>();
-                ItemViewModel.SelectedItem?.DeploymentTasks.Add(
-                    new Config.DeploymentTaskConfig { TaskTypeId = "Certify.Providers.DeploymentTasks.CertificateExport", TaskName = "Example Task", Description="This is a example deployment task which does something magical.", IsDeferred = false, IsFatalOnError = false, RetriesAllowed = 0, RetryDelaySeconds = 0, Parameters = new Dictionary<string, string>() }
-                );
-            }
-
         }
 
         private void AddDeploymentTask_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            var dialog = new EditDeploymentTask
+            var dialog = new EditDeploymentTask(null)
             {
                Owner = Window.GetWindow(this)
             };
@@ -96,7 +89,8 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void EditDeploymentTask_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            var dialog = new EditDeploymentTask
+            var config = (sender as Button).DataContext as DeploymentTaskConfig;
+            var dialog = new EditDeploymentTask(config)
             {
                 Owner = Window.GetWindow(this)
             };
