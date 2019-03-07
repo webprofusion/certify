@@ -10,7 +10,7 @@ namespace Certify.Config
         /// <summary>
         /// id of task provider to instantiate
         /// </summary>
-        public string TaskType { get; set; }
+        public string TaskTypeId { get; set; }
 
         /// <summary>
         /// Unique task name (id) used in logs and to invoke this deployment task manually
@@ -43,7 +43,10 @@ namespace Certify.Config
         /// </summary>
         public int RetryDelaySeconds { get; set; } = 10;
 
+        public string ChallengeProvider { get; set; }
+        public string ChallengeCredentialKey { get; set; }
+
         // Dictionary of provider parameter values
-        public Dictionary<string,string> ProviderParameters { get; set; }
+        public Dictionary<string,string> Parameters { get; set; }
     }
 }

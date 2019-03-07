@@ -153,6 +153,47 @@ namespace Certify.Core.Management.Challenges
                     Description = "Validates via standard http website bindings on port 80",
                     HandlerType = ChallengeHandlerType.INTERNAL
                 },
+                 new ChallengeProviderDefinition
+                {
+                    Id = "Certify.StandardChallenges.Generic",
+                    ChallengeType = "",
+                    Title = "Username and Password",
+                    Description = "Standard username and password credentials",
+                    HandlerType = ChallengeHandlerType.INTERNAL,
+                    ProviderParameters= new List<ProviderParameter>
+                    {
+                       new ProviderParameter{ Key="username",Name="Username", IsRequired=true, IsPassword=false, IsCredential=true },
+                       new ProviderParameter{ Key="password",Name="Password", IsRequired=true, IsPassword=true, IsCredential=true },
+                    }
+                },
+                 new ChallengeProviderDefinition
+                {
+                    Id = "Certify.StandardChallenges.Windows",
+                    ChallengeType = "",
+                    Title = "Windows Credentials",
+                    Description = "Windows username and password credentials",
+                    HandlerType = ChallengeHandlerType.INTERNAL,
+                    ProviderParameters= new List<ProviderParameter>
+                    {
+                       new ProviderParameter{ Key="domain",Name="Domain", IsRequired=false, IsPassword=false, IsCredential=true },
+                       new ProviderParameter{ Key="username",Name="Username", IsRequired=true, IsPassword=false, IsCredential=true },
+                       new ProviderParameter{ Key="password",Name="Password", IsRequired=true, IsPassword=true, IsCredential=true },
+                    }
+                },
+                  new ChallengeProviderDefinition
+                {
+                    Id = "Certify.StandardChallenges.SSH",
+                    ChallengeType = "",
+                    Title = "SSH Credentials",
+                    Description = "SSH username, password and private key credentials",
+                    HandlerType = ChallengeHandlerType.INTERNAL,
+                    ProviderParameters= new List<ProviderParameter>
+                    {
+                       new ProviderParameter{ Key="username",Name="Username", IsRequired=true, IsPassword=false, IsCredential=true },
+                       new ProviderParameter{ Key="password",Name="password", IsRequired=true, IsPassword=true, IsCredential=true },
+                       new ProviderParameter{ Key="privatekey",Name="Private Key File Path", IsRequired=false, IsPassword=false, IsCredential=true, Description="Optional path private key file" },
+                    }
+                },
                 // DNS
                 DnsProviderManual.Definition,
                 DnsProviderScripting.Definition,

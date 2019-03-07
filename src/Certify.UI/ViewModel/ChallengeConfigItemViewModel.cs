@@ -13,7 +13,14 @@ namespace Certify.UI.ViewModel
         /// </summary>
         //public static ChallengeConfigItemViewModel Current = ChallengeConfigItemViewModel.GetModel();
 
-        private Certify.UI.ViewModel.AppViewModel _appViewModel => ViewModel.AppViewModel.Current;
+        private AppViewModel _appViewModel => AppViewModel.Current;
+
+        public CertRequestChallengeConfig SelectedItem
+        {
+            get; set;
+        }
+
+        public ManagedCertificate ParentManagedCertificate => _appViewModel.SelectedItem;
 
         public ChallengeConfigItemViewModel(CertRequestChallengeConfig item)
         {
@@ -25,15 +32,14 @@ namespace Certify.UI.ViewModel
         /// </summary>
         public IEnumerable<string> ChallengeTypes { get; set; } = new string[] {
             SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
-            SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-            //SupportedChallengeTypes.CHALLENGE_TYPE_SNI
+            SupportedChallengeTypes.CHALLENGE_TYPE_DNS
         };
 
         public bool UsesCredentials { get; set; }
         public bool ShowZoneLookup { get; set; }
         public bool IsZoneLookupInProgress { get; set; }
 
-        public ObservableCollection<ProviderDefinition> ChallengeProviders => new ObservableCollection<ProviderDefinition>(
+        public ObservableCollection<ChallengeProviderDefinition> ChallengeProviders => new ObservableCollection<ChallengeProviderDefinition>(
                     _appViewModel.ChallengeAPIProviders
                     .Where(p => p.ProviderParameters.Any())
                     .OrderBy(p => p.Title)
@@ -57,12 +63,5 @@ namespace Certify.UI.ViewModel
                 }
             }
         }
-
-        public CertRequestChallengeConfig SelectedItem
-        {
-            get; set;
-        }
-
-        public ManagedCertificate ParentManagedCertificate => _appViewModel.SelectedItem;
     }
 }

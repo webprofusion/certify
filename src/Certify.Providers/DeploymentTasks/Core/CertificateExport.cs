@@ -24,13 +24,13 @@ namespace Certify.Providers.DeploymentTasks
                 ProviderParameters =
 
                     new List<ProviderParameter>{
-                        new ProviderParameter{ Key="destinationtype", Name="File Destination Type", IsRequired = true, IsCredential = false, IsPassword = false, Value="Local", OptionsList="Local;Windows;SSH;" },
-                        new ProviderParameter{ Key="path", Name="Destination Path", IsRequired=true, IsCredential=false,  },
+                         new ProviderParameter{ Key="path", Name="Destination Path", IsRequired=true, IsCredential=false,  },
                         new ProviderParameter{ Key="exportoptions", Name="Export Type", IsRequired=true, IsCredential=false, Value="pfx",OptionsList="pfx,crt,key" },
                         new ProviderParameter{ Key="remotehost", Name="Remote Hostname or IP", IsRequired=false, IsCredential=false},
+                        /*
                         new ProviderParameter{ Key="username", Name="User Name", IsRequired=false, IsCredential = true, IsPassword = false },
                         new ProviderParameter{ Key="password", Name="Password", IsRequired = false, IsCredential = true, IsPassword = true},
-                        new ProviderParameter{ Key="privatekey", Name="Private Key Path (if SSH)", IsRequired = false, IsCredential = true, IsPassword = false},
+                        new ProviderParameter{ Key="privatekey", Name="Private Key Path (if SSH)", IsRequired = false, IsCredential = true, IsPassword = false},*/
                     },
             };
         }

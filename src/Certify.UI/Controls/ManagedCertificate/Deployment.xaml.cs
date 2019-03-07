@@ -79,7 +79,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 ItemViewModel.SelectedItem.DeploymentTasks = new System.Collections.ObjectModel.ObservableCollection<Config.DeploymentTaskConfig>();
                 ItemViewModel.SelectedItem?.DeploymentTasks.Add(
-                    new Config.DeploymentTaskConfig { TaskType = "Certify.Providers.DeploymentTasks.CertificateExport", TaskName = "Example Task", Description="This is a example deployment task which does something magical.", IsDeferred = false, IsFatalOnError = false, RetriesAllowed = 0, RetryDelaySeconds = 0, ProviderParameters = new Dictionary<string, string>() }
+                    new Config.DeploymentTaskConfig { TaskTypeId = "Certify.Providers.DeploymentTasks.CertificateExport", TaskName = "Example Task", Description="This is a example deployment task which does something magical.", IsDeferred = false, IsFatalOnError = false, RetriesAllowed = 0, RetryDelaySeconds = 0, Parameters = new Dictionary<string, string>() }
                 );
             }
 

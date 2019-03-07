@@ -155,6 +155,7 @@
     <Compile Include="Utils\ManagedCertificateHealthVisibilityConverter.cs" />
     <Compile Include="Utils\ManagedCertificateHealthColourConverter.cs" />
     <Compile Include="Utils\UpdateCheckUtils.cs" />
+    <Compile Include="ViewModel\DeploymentTaskConfigViewModel.cs" />
     <Compile Include="ViewModel\Design\ManagedCertificateDesignViewModel.cs" />
     <Compile Include="ViewModel\ChallengeConfigItemViewModel.cs" />
     <Compile Include="ViewModel\ManagedCertificateViewModel.cs" />

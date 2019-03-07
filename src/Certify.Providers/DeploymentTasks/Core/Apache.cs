@@ -21,6 +21,7 @@ namespace Certify.Providers.DeploymentTasks
                 Title = "Deploy to Apache",
                 Description = "Deploy latest certificate to Local or Remote Apache Server",
                 IsExperimental=true,
+                SupportsLocalWindows = true, SupportsRemoteWindows = true, SupportsRemoteSSH = true,
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
                 {
                      new ProviderParameter{ Key="path_cert", Name="Destination for .crt", IsRequired=true, IsCredential=false  },

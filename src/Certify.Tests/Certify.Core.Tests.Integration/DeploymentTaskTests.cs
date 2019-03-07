@@ -166,7 +166,7 @@ namespace Certify.Core.Tests.Integration
 
             var config = new DeploymentTaskConfig
             {
-                TaskType = Providers.DeploymentTasks.CertificateExport.Definition.Id.ToLower(),
+                TaskTypeId = Providers.DeploymentTasks.CertificateExport.Definition.Id.ToLower(),
                 IsDeferred = false,
                 TaskName = "A test task"
             };
