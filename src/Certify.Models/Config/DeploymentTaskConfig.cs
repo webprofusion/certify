@@ -56,9 +56,9 @@ namespace Certify.Config
         /// <summary>
         /// Local, Windows (Network), SSH etc
         /// </summary>
-        public string TargetType { get; set; }
+        //public string TargetType { get; set; }
 
         // Dictionary of provider parameter values
-        public Dictionary<string,string> Parameters { get; set; }
+        public List<ProviderParameterSetting> Parameters { get; set; }
     }
 }

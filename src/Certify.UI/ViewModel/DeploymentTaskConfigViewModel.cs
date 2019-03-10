@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Data;
 using Certify.Config;
 using Certify.Models;
 using Certify.Models.Config;
@@ -37,7 +40,7 @@ namespace Certify.UI.ViewModel
                 item = new DeploymentTaskConfig
                 {
                     Description = "A description for this task",
-                    Parameters = new Dictionary<string, string>()
+                    Parameters = new List<ProviderParameterSetting>()
                 };
             }
             SelectedItem = item;
@@ -48,21 +51,20 @@ namespace Certify.UI.ViewModel
         public ObservableCollection<DeploymentProviderDefinition> DeploymentProviders =>
                     _appViewModel.DeploymentTaskProviders;
 
-        public ObservableCollection<StoredCredential> FilteredCredentials
+        private ICollectionView _filteredCredentials;
+        public ICollectionView FilteredCredentials
         {
             get
             {
+                if (_filteredCredentials == null)
+                {
+                    var source = CollectionViewSource.GetDefaultView(_appViewModel.StoredCredentials);
+                    source.Filter = c =>
+                         (c as StoredCredential).ProviderType == SelectedItem?.ChallengeProvider;
+                    _filteredCredentials = source;
+                }
 
-                if (SelectedItem != null)
-                {
-                    return new ObservableCollection<StoredCredential>(
-                  _appViewModel.StoredCredentials.Where(s => s.ProviderType == SelectedItem.ChallengeProvider)
-                  );
-                }
-                else
-                {
-                    return _appViewModel.StoredCredentials;
-                }
+                return _filteredCredentials;
             }
         }
 
@@ -74,36 +76,28 @@ namespace Certify.UI.ViewModel
             await RefreshCredentialOptions();
 
             RaisePropertyChangedEvent(nameof(EditableParameters));
-            RaisePropertyChangedEvent(nameof(FilteredCredentials));
+            
         }
 
         private async Task RefreshCredentialOptions()
         {
             // filter list of matching credentials
-            await _appViewModel.RefreshStoredCredentialsList();
-            var credentials = _appViewModel.StoredCredentials.Where(s => s.ProviderType == SelectedItem.ChallengeProvider);
-            var currentSelectedValue = SelectedItem.ChallengeCredentialKey;
+        //    await _appViewModel.RefreshStoredCredentialsList();
+        
+//RaisePropertyChangedEvent(nameof(FilteredCredentials));
+        }
 
-            // updating item source also clears selected value, so this workaround sets it back
-            // this is only an issue when you have two or more credentials for one provider
-            //StoredCredentialList.ItemsSource = credentials;
-
-            if (currentSelectedValue != null)
+        /// <summary>
+        /// capture the edited values of parameters and store them in the item config
+        /// </summary>
+        internal void CaptureEditedParameters()
+        {
+           if (EditableParameters!=null)
             {
-                SelectedItem.ChallengeCredentialKey = currentSelectedValue;
-            }
-
-            //select first credential by default
-            if (credentials.Count() > 0)
-            {
-                var selectedCredential = credentials.FirstOrDefault(c => c.StorageKey == SelectedItem.ChallengeCredentialKey);
-                if (selectedCredential != null)
+                SelectedItem.Parameters = new List<ProviderParameterSetting>();
+                foreach(var p in EditableParameters)
                 {
-                    // ItemViewModel.PrimaryChallengeConfig.ChallengeCredentialKey = credentials.First().StorageKey;
-                }
-                else
-                {
-                    SelectedItem.ChallengeCredentialKey = credentials.First().StorageKey;
+                    SelectedItem.Parameters.Add(new ProviderParameterSetting(p.Key, p.Value));
                 }
             }
         }
@@ -133,9 +127,9 @@ namespace Certify.UI.ViewModel
 
                 foreach (var pa in providerParams)
                 {
-                    if (SelectedItem?.Parameters?.ContainsKey(pa.Key) == true)
+                    if (SelectedItem?.Parameters.Exists(p=>p.Key==pa.Key)==true)
                     {
-                        pa.Value = SelectedItem.Parameters[pa.Key];
+                        pa.Value = SelectedItem.Parameters.FirstOrDefault(p=>p.Key==pa.Key)?.Value;
                         EditableParameters.Add(pa);
                     }
                     else
@@ -148,7 +142,7 @@ namespace Certify.UI.ViewModel
 
                 foreach (var r in toRemove)
                 {
-                    SelectedItem.Parameters.Remove(r.Key);
+                    SelectedItem.Parameters.Remove(r);
                 }
             }
         }

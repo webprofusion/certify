@@ -149,7 +149,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 if (c.Parameters != null && c.Parameters.Any())
                 {
-                    //validate parmeters
+                    //validate parameters
                     foreach (var p in c.Parameters)
                     {
                         if (p.IsRequired && string.IsNullOrEmpty(p.Value))

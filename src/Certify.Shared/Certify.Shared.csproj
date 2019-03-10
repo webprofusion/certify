@@ -81,7 +81,7 @@
     <PackageReference Include="SslCertBinding.Net" Version="1.0.2" />
     <PackageReference Include="ARSoft.Tools.Net" Version="2.2.9" />
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.9.1" />
-    <PackageReference Include="TaskScheduler" Version="2.8.7" />
+    <PackageReference Include="TaskScheduler" Version="2.8.8" />
     <PackageReference Include="System.Management.Automation" Version="6.1.7601.17515" /> 
   </ItemGroup>
   <ItemGroup>

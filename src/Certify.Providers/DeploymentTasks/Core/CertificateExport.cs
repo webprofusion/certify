@@ -25,8 +25,8 @@ namespace Certify.Providers.DeploymentTasks
 
                     new List<ProviderParameter>{
                          new ProviderParameter{ Key="path", Name="Destination Path", IsRequired=true, IsCredential=false,  },
-                        new ProviderParameter{ Key="exportoptions", Name="Export Type", IsRequired=true, IsCredential=false, Value="pfx",OptionsList="pfx,crt,key" },
-                        new ProviderParameter{ Key="remotehost", Name="Remote Hostname or IP", IsRequired=false, IsCredential=false},
+                        new ProviderParameter{ Key="exportoptions", Name="Export As", IsRequired=true, IsCredential=false, Value="pfx", OptionsList="pfx=PFX (PKCX#12);pem=PEM, Primary + Intermediates + Private Key; crtpem=PEM, Primary + Intermediates" },
+                     
                         /*
                         new ProviderParameter{ Key="username", Name="User Name", IsRequired=false, IsCredential = true, IsPassword = false },
                         new ProviderParameter{ Key="password", Name="Password", IsRequired = false, IsCredential = true, IsPassword = true},

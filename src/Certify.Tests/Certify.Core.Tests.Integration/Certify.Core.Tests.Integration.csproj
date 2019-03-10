@@ -77,7 +77,7 @@
     <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
     <PackageReference Include="Microsoft.Web.Administration" Version="11.1.0" />
     <PackageReference Include="Microsoft.Win32.Primitives" Version="4.3.0" />
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.5.0" />

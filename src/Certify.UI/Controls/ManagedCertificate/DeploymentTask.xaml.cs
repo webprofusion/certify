@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -8,6 +10,23 @@ using Certify.Models.Config;
 
 namespace Certify.UI.Controls.ManagedCertificate
 {
+    public class DebugDataBindingConverter : System.Windows.Data.IValueConverter
+    {
+        public object Convert(object value, Type targetType,
+            object parameter, CultureInfo culture)
+        {
+            Debugger.Break();
+            return value;
+        }
+
+        public object ConvertBack(object value, Type targetType,
+            object parameter, CultureInfo culture)
+        {
+            Debugger.Break();
+            return value;
+        }
+    }
+
     /// <summary>
     /// Interaction logic for DeploymentTask.xaml
     /// </summary>
@@ -20,7 +39,8 @@ namespace Certify.UI.Controls.ManagedCertificate
         public DeploymentTask()
         {
             InitializeComponent();
-            
+            DataContext = EditModel;
+            EditModel.RefreshOptions();
         }
 
         public void SetEditItem(DeploymentTaskConfig config)
@@ -28,7 +48,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             EditModel = new ViewModel.DeploymentTaskConfigViewModel(config);
             DataContext = EditModel;
 
-            RefreshAllOptions();
+            EditModel.RefreshOptions();
             
         }
 
@@ -74,24 +94,19 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                  /*ProviderDescription.Text = this.EditModel.DeploymentProvider.Description;
                 DeploymentTaskParams.ItemsSource = DeploymentProvider.ProviderParameters;*/
-                await RefreshAllOptions();
+                await EditModel.RefreshOptions();
             }
-        }
-
-       
-        private async Task RefreshAllOptions()
-        {
-            await EditModel.RefreshOptions();
-           
         }
 
         private async void TargetType_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            await RefreshAllOptions();
+            await EditModel.RefreshOptions();
         }
 
         public bool Save()
         {
+            EditModel.CaptureEditedParameters();
+
             if (AppViewModel.SelectedItem.DeploymentTasks==null)
             {
                 AppViewModel.SelectedItem.DeploymentTasks = new System.Collections.ObjectModel.ObservableCollection<DeploymentTaskConfig>();

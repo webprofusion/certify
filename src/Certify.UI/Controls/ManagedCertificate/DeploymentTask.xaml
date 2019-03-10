@@ -5,11 +5,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
               xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
               xmlns:models="clr-namespace:Certify.Models;assembly=Certify.Models"
-            
+              xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
             xmlns:local="clr-namespace:Certify.UI.Windows"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
+
+       
         <DataTemplate x:Key="ProviderStringParameter">
             <StackPanel
                             Margin="0,8,0,0"
@@ -124,6 +126,20 @@
             </ComboBox>
         </StackPanel>
 
+        <StackPanel DockPanel.Dock="Top" Margin="0,8,0,0" Orientation="Horizontal">
+            <Label Width="160" Content="Target Host or IP" />
+
+            <TextBox
+                            x:Name="TargetHost"
+                            Width="225"
+                            Margin="0,0,8,0"
+                           
+                            Text="{Binding SelectedItem.TargetHost, UpdateSourceTrigger=PropertyChanged}"
+        
+                           >
+            </TextBox>
+        </StackPanel>
+
         <StackPanel DockPanel.Dock="Top" x:Name="ProviderCredentials" Orientation="Vertical">
             <StackPanel.Style>
                 <Style>
@@ -140,15 +156,16 @@
                 <Label Width="160" Content="Credentials" />
 
                 <ComboBox
-                            
+                            x:Name="StoredCredentials"
                             Width="225"
                             Margin="0,0,8,0"
                             DisplayMemberPath="Title"
-                            ItemsSource="{Binding FilteredCredentials}"
-                            SelectedValue="{Binding SelectedItem.ChallengeCredentialKey, UpdateSourceTrigger=PropertyChanged}"
-                            SelectedValuePath="StorageKey"
+                            ItemsSource="{Binding Path=FilteredCredentials}"
+                    SelectedValuePath="StorageKey"
+                            SelectedValue="{Binding SelectedItem.ChallengeCredentialKey , 
+            diag:PresentationTraceSources.TraceLevel=High}"   
+                 
                             />
-
                 <Button
                             
                             Click="AddStoredCredential_Click"

@@ -61,7 +61,7 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.109.2" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.110" />
   </ItemGroup>
   
   <ItemGroup>

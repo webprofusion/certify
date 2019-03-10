@@ -534,10 +534,19 @@ namespace Certify.UI.ViewModel
         public async Task RefreshStoredCredentialsList()
         {
             var list = await CertifyClient.GetCredentials();
-            App.Current.Dispatcher.Invoke((Action)delegate
-            {
-                StoredCredentials = new System.Collections.ObjectModel.ObservableCollection<Models.Config.StoredCredential>(list);
-            });
+            
+                if (StoredCredentials == null)
+                {
+                    StoredCredentials = new ObservableCollection<StoredCredential>();
+                }
+
+                StoredCredentials.Clear();
+                foreach(var c in list)
+                {
+                    StoredCredentials.Add(c);
+                }
+
+            RaisePropertyChangedEvent(nameof(StoredCredentials));
         }
 
         public ObservableCollection<ChallengeProviderDefinition> ChallengeAPIProviders { get; set; } = new ObservableCollection<ChallengeProviderDefinition> { };
