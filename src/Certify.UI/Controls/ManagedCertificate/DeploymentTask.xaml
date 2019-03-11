@@ -11,7 +11,7 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
 
-       
+
         <DataTemplate x:Key="ProviderStringParameter">
             <StackPanel
                             Margin="0,8,0,0"
@@ -110,6 +110,7 @@
                            >
             </TextBox>
         </StackPanel>
+        
         <StackPanel DockPanel.Dock="Top" Margin="0,8,0,0" Orientation="Horizontal">
             <Label Width="160" Content="Target Type" />
 
@@ -120,7 +121,7 @@
                             DisplayMemberPath="Value"
                             ItemsSource="{Binding TargetTypes}"
                             SelectedValuePath="Key"
-                            SelectedValue="{Binding SelectedItem.ChallengeProvider, UpdateSourceTrigger=PropertyChanged}"
+                            SelectedValue="{Binding SelectedItem.ChallengeProvider}"
                 SelectionChanged="TargetType_SelectionChanged"
                            >
             </ComboBox>
@@ -138,6 +139,11 @@
         
                            >
             </TextBox>
+        </StackPanel>
+        <StackPanel DockPanel.Dock="Top" Margin="0,8,0,0" Orientation="Horizontal">
+            <Label Width="160" Content="Is Deferred" />
+
+            
         </StackPanel>
 
         <StackPanel DockPanel.Dock="Top" x:Name="ProviderCredentials" Orientation="Vertical">
@@ -160,10 +166,9 @@
                             Width="225"
                             Margin="0,0,8,0"
                             DisplayMemberPath="Title"
-                            ItemsSource="{Binding Path=FilteredCredentials}"
-                    SelectedValuePath="StorageKey"
-                            SelectedValue="{Binding SelectedItem.ChallengeCredentialKey , 
-            diag:PresentationTraceSources.TraceLevel=High}"   
+                            ItemsSource="{Binding FilteredCredentials}"
+                   SelectedItem="{Binding SelectedCredentialItem, Mode=TwoWay}"
+                            
                  
                             />
                 <Button

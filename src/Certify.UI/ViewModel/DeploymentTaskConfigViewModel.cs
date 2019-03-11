@@ -16,10 +16,24 @@ namespace Certify.UI.ViewModel
 
         private AppViewModel _appViewModel => AppViewModel.Current;
 
-        public DeploymentTaskConfig SelectedItem
+        public DeploymentTaskConfig SelectedItem { get; set; }
+
+        public StoredCredential SelectedCredentialItem
         {
-            get; set;
+            get
+            {
+                return _appViewModel.StoredCredentials.FirstOrDefault(c => c.StorageKey == SelectedItem?.ChallengeCredentialKey);
+
+            }
+            set
+            {
+                if (SelectedItem != null && value!=null)
+                {
+                    SelectedItem.ChallengeCredentialKey = value.StorageKey;
+                }
+            }
         }
+
 
         public DeploymentProviderDefinition DeploymentProvider { get; set; }
         public ObservableCollection<ProviderParameter> EditableParameters { get; set; }
@@ -70,21 +84,29 @@ namespace Certify.UI.ViewModel
 
         internal async Task RefreshOptions()
         {
-            DeploymentProvider = _appViewModel.DeploymentTaskProviders.First(d => d.Id == SelectedItem.TaskTypeId);
+            if (SelectedItem.TaskTypeId != null)
+            {
+                DeploymentProvider = _appViewModel.DeploymentTaskProviders.First(d => d.Id == SelectedItem.TaskTypeId);
 
-            RefreshParameters();
-            await RefreshCredentialOptions();
+                RefreshParameters();
+                await RefreshCredentialOptions();
 
-            RaisePropertyChangedEvent(nameof(EditableParameters));
-            
+                RaisePropertyChangedEvent(nameof(EditableParameters));
+                RaisePropertyChangedEvent(nameof(SelectedCredentialItem));
+            }
+
         }
 
         private async Task RefreshCredentialOptions()
         {
             // filter list of matching credentials
-        //    await _appViewModel.RefreshStoredCredentialsList();
-        
-//RaisePropertyChangedEvent(nameof(FilteredCredentials));
+            await _appViewModel.RefreshStoredCredentialsList();
+            _filteredCredentials.Refresh();
+
+
+            RaisePropertyChangedEvent(nameof(FilteredCredentials));
+
+
         }
 
         /// <summary>
@@ -92,10 +114,13 @@ namespace Certify.UI.ViewModel
         /// </summary>
         internal void CaptureEditedParameters()
         {
-           if (EditableParameters!=null)
+
+            this.SelectedItem.ChallengeCredentialKey = SelectedCredentialItem?.StorageKey;
+
+            if (EditableParameters != null)
             {
                 SelectedItem.Parameters = new List<ProviderParameterSetting>();
-                foreach(var p in EditableParameters)
+                foreach (var p in EditableParameters)
                 {
                     SelectedItem.Parameters.Add(new ProviderParameterSetting(p.Key, p.Value));
                 }
@@ -127,9 +152,9 @@ namespace Certify.UI.ViewModel
 
                 foreach (var pa in providerParams)
                 {
-                    if (SelectedItem?.Parameters.Exists(p=>p.Key==pa.Key)==true)
+                    if (SelectedItem?.Parameters.Exists(p => p.Key == pa.Key) == true)
                     {
-                        pa.Value = SelectedItem.Parameters.FirstOrDefault(p=>p.Key==pa.Key)?.Value;
+                        pa.Value = SelectedItem.Parameters.FirstOrDefault(p => p.Key == pa.Key)?.Value;
                         EditableParameters.Add(pa);
                     }
                     else
