@@ -5,22 +5,28 @@ using Renci.SshNet;
 
 namespace Certify.Providers.Deployment.Core.Shared
 {
-    public class SftpConnectionConfig
-    {
-        public string Host { get; set; }
-        public string Username { get; set; }
-        public string Passphrase { get; set; }
-        public int Port { get; set; } = 22;
-        public string PrivateKeyPath { get; set; }
-    }
 
     public class SftpClient
     {
-        SftpConnectionConfig _config;
+        SshConnectionConfig _config;
 
-        public SftpClient(SftpConnectionConfig config)
+        public SftpClient(SshConnectionConfig config)
         {
             _config = config;
+        }
+
+        private PrivateKeyFile GetPrivateKeyFile()
+        {
+            PrivateKeyFile pk = null;
+            if (!string.IsNullOrEmpty(_config.KeyPassphrase))
+            {
+                pk = new PrivateKeyFile(_config.PrivateKeyPath, _config.KeyPassphrase);
+            }
+            else
+            {
+                pk = new PrivateKeyFile(_config.PrivateKeyPath);
+            }
+            return pk;
         }
 
         public bool CopyLocalToRemote(Dictionary<string, string> filesSrcDest)
@@ -36,13 +42,13 @@ namespace Certify.Providers.Deployment.Core.Shared
             var isSuccess = true;
 
             // upload new files as destination user
-            var pk = new PrivateKeyFile(_config.PrivateKeyPath, _config.Passphrase);
+            var pk = GetPrivateKeyFile();
+            
             using (var sftp = new Renci.SshNet.SftpClient(_config.Host, _config.Username, pk))
             {
                 try
                 {
                     sftp.Connect();
-
 
                     foreach (var dest in destFiles)
                     {
@@ -80,7 +86,7 @@ namespace Certify.Providers.Deployment.Core.Shared
         /// </summary>
         public List<string> ListFiles(string remoteDirectory)
         {
-            var pk = new PrivateKeyFile(_config.PrivateKeyPath, _config.Passphrase);
+            var pk = GetPrivateKeyFile();
 
             var fileList = new List<string>();
 
@@ -106,5 +112,6 @@ namespace Certify.Providers.Deployment.Core.Shared
             }
             return fileList;
         }
+
     }
 }

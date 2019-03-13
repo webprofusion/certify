@@ -13,9 +13,9 @@ namespace Certify.Providers.Deployment.Core.Shared
         {
             _credentials = credentials;
         }
+
         public List<string> ListFiles(string remoteDirectory)
         {
-
             var fileList = new List<string>();
 
             Impersonation.RunAsUser(_credentials, LogonType.Interactive, () =>
@@ -25,8 +25,8 @@ namespace Certify.Providers.Deployment.Core.Shared
             });
 
             return fileList;
-
         }
+
         public bool CopyLocalToRemote(Dictionary<string, string> filesSrcDest)
         {
             // read source files as original user
@@ -38,25 +38,42 @@ namespace Certify.Providers.Deployment.Core.Shared
             }
 
             var isSuccess = true;
-            // write new files as destination user
-            Impersonation.RunAsUser(_credentials, LogonType.Interactive, () =>
-            {
-                foreach (var dest in destFiles)
-                {
-                    try
-                    {
-                        // For this test to pass the test user must have write permissions to the share and the underlying folder
-                        File.WriteAllBytes(dest.Key, dest.Value);
-                    }
-                    catch (Exception)
-                    {
-                        // failed to copy the file. TODO: retries
-                        isSuccess = false;
-                        break;
-                    }
-                }
 
-            });
+            if (_credentials == null)
+            {
+                // cannot impersonate without credentials, attempt as current user
+                isSuccess = PerformFileCopying(destFiles);
+            }
+            else
+            {
+                // write new files as destination user
+                Impersonation.RunAsUser(_credentials, LogonType.Interactive, () =>
+                {
+                    isSuccess = PerformFileCopying(destFiles);
+
+                });
+            }
+
+            return isSuccess;
+        }
+
+        private static bool PerformFileCopying(Dictionary<string, byte[]> destFiles)
+        {
+            var isSuccess = true;
+            foreach (var dest in destFiles)
+            {
+                try
+                {
+                    // For this test to pass the test user must have write permissions to the share and the underlying folder
+                    File.WriteAllBytes(dest.Key, dest.Value);
+                }
+                catch (Exception)
+                {
+                    // failed to copy the file. TODO: retries
+                    isSuccess = false;
+                    break;
+                }
+            }
 
             return isSuccess;
         }

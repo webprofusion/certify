@@ -358,7 +358,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You can use the reporting dashboard to easily view certificate renewal status across one or more servers and to control your notification preferences..
+        ///   Looks up a localized string similar to You can use the reporting dashboard to easily view certificate renewal status across one or more servers..
         /// </summary>
         public static string GettingStarted_DashboardIntro {
             get {

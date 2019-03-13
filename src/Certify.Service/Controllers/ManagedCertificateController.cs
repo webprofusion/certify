@@ -89,6 +89,21 @@ namespace Certify.Service
             return await _certifyManager.GeneratePreview(site);
         }
 
+        [HttpGet, Route("performdeployment/{isPreviewOnly}/{managedCertificateId}/{taskId?}")]
+        public async Task<List<ActionStep>> PerformDeploymentTask(string managedCertificateId, bool isPreviewOnly, string taskId)
+        {
+            DebugLog();
+
+            var skipDeferred = true;
+            // if a taskid has been provided, run it even if it's a deferred task
+            if (!string.IsNullOrEmpty(taskId))
+            {
+                skipDeferred = false;
+            }
+
+            return await _certifyManager.PerformDeploymentTask(null, managedCertificateId, taskId, isPreviewOnly, skipDeferred);
+        }
+
         /// <summary>
         /// Begin auto renew process and return list of included sites 
         /// </summary>

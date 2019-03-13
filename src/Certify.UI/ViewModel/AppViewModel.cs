@@ -24,7 +24,6 @@ namespace Certify.UI.ViewModel
         //public static AppModel AppViewModel = new DesignViewModel(); // for UI testing
         public static AppViewModel Current = AppViewModel.GetModel();
 
-
         Models.Providers.ILog _uiLog = null;
 
         public AppViewModel()
@@ -131,6 +130,12 @@ namespace Certify.UI.ViewModel
         public virtual bool HasRegisteredContacts =>
                 // FIXME: this property is async, either cache or reduce reliance
                 Task.Run(() => CertifyClient.GetPrimaryContact()).Result != null;
+
+        public async Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly)
+        {
+            var results = await CertifyClient.PerformDeployment(managedCertificateId, taskId, isPreviewOnly);
+            return results;
+        }
 
         public ManagedCertificate SelectedItem
         {
@@ -251,7 +256,6 @@ namespace Certify.UI.ViewModel
 
                 // the service could still be starting up or port may be reallocated
                 await Task.Delay(5000);
-
 
                 // restart client in case port has reallocated
                 CertifyClient = new CertifyServiceClient();

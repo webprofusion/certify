@@ -69,5 +69,7 @@ namespace Certify.Management
         event Action<ManagedCertificate> OnManagedCertificateUpdated;
 
         void ReportProgress(IProgress<RequestProgressState> progress, RequestProgressState state, bool logThisEvent = true);
+
+        Task<List<ActionStep>> PerformDeploymentTask(ILog log, string managedCertificateId, string taskId, bool isPreviewOnly, bool skipDeferredTasks);
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Certify.Config;
 using Certify.Models;
@@ -11,49 +10,67 @@ namespace Certify.Providers.DeploymentTasks
 {
     public interface IDeploymentTaskProvider
     {
-        // DeploymentProviderDefinition Definition { get; } // if static properties in interfaces were a thing
-        Task<ActionResult> Execute(ILog log, Models.ManagedCertificate managedCert, bool isPreviewOnly);
+        Task<ActionResult> Execute(
+            ILog log,
+            ManagedCertificate managedCert,
+            DeploymentTaskConfig settings, 
+            Dictionary<string, string> credentials, 
+            bool isPreviewOnly
+            );
+
         DeploymentProviderDefinition GetDefinition();
     }
 
     public class DeploymentTaskProviderBase : IDeploymentTaskProvider
     {
-        public static DeploymentProviderDefinition Definition { get; }
-
-        public virtual Task<ActionResult> Execute(ILog log, ManagedCertificate managedCert, bool isPreviewOnly)
+        public static DeploymentProviderDefinition Definition
         {
-            throw new NotImplementedException();
+            get
+            {
+                return new DeploymentProviderDefinition { Title = "Deployment Task Definition Not Implemented in Provider" };
+            }
         }
 
-        public virtual DeploymentProviderDefinition GetDefinition()
-        {
-            return Definition;
-        }
+        public virtual Task<ActionResult> Execute(
+            ILog log, ManagedCertificate managedCert,
+            DeploymentTaskConfig settings, 
+            Dictionary<string, string> credentials, 
+            bool isPreviewOnly) => throw new NotImplementedException();
+
+        public virtual DeploymentProviderDefinition GetDefinition() => Definition;
     }
 
     public class DeploymentTask
     {
-        public DeploymentTask(IDeploymentTaskProvider provider, DeploymentTaskConfig config)
+        public DeploymentTask(IDeploymentTaskProvider provider, DeploymentTaskConfig config, Dictionary<string, string> credentials)
         {
             TaskConfig = config;
             TaskProvider = provider;
+
+            _credentials = credentials;
         }
 
         public IDeploymentTaskProvider TaskProvider { get; set; }
 
         public DeploymentTaskConfig TaskConfig { get; set; }
 
-        public async Task<ActionResult> Execute(ILog log, ManagedCertificate managedCert, bool isPreviewOnly = true)
+        private Dictionary<string, string> _credentials;
+
+        public async Task<ActionResult> Execute(
+            ILog log,
+            ManagedCertificate managedCert,
+            bool isPreviewOnly = true
+            )
         {
             if (TaskProvider != null && TaskConfig != null)
             {
                 try
                 {
-                    return await TaskProvider.Execute(log, managedCert, isPreviewOnly);
+                    return await TaskProvider.Execute(log, managedCert, TaskConfig, _credentials, isPreviewOnly);
                 }
                 catch (Exception exp)
                 {
-                    return new ActionResult { IsSuccess = false, Message = "Task Failed: " + TaskProvider.GetDefinition().Title + " :: " + exp.ToString() };
+                    return new ActionResult { IsSuccess = false, Message = $"Task Failed: {TaskProvider.GetDefinition()?.Title } :: {exp?.ToString()}"};
                 }
 
             }

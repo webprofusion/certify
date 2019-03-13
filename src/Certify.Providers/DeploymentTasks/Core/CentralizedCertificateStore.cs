@@ -1,13 +1,17 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using Certify.Config;
 using Certify.Models.Config;
 using Certify.Models.Providers;
+using Certify.Providers.Deployment.Core.Shared;
+using SimpleImpersonation;
 
 namespace Certify.Providers.DeploymentTasks
 {
     public class CentralizedCertificateStore : DeploymentTaskProviderBase, IDeploymentTaskProvider
     {
-        public ProviderParameter StorePath = new ProviderParameter();
         public static new DeploymentProviderDefinition Definition { get; }
 
         static CentralizedCertificateStore()
@@ -15,7 +19,7 @@ namespace Certify.Providers.DeploymentTasks
             Definition = new DeploymentProviderDefinition
             {
                 Id = "Certify.Providers.DeploymentTasks.CCS",
-                Title= "Deploy to Centralized Certificate Store (CCS)",
+                Title = "Deploy to Centralized Certificate Store (CCS)",
                 IsExperimental = true,
                 Description = "Deploy latest certificate to Windows Centralized Certificate Store",
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
@@ -31,32 +35,81 @@ namespace Certify.Providers.DeploymentTasks
             };
         }
 
-        public override async Task<ActionResult> Execute(ILog log, Models.ManagedCertificate managedCert, bool isPreviewOnly)
+        public override async Task<ActionResult> Execute(
+            ILog log, 
+            Models.ManagedCertificate managedCert, 
+            DeploymentTaskConfig settings, 
+            Dictionary<string, string> credentials, 
+            bool isPreviewOnly
+            )
         {
-            var pfxData = File.ReadAllBytes(managedCert.CertificatePath);
 
-            var domains = managedCert.GetCertificateDomains();
+            UserCredentials windowsCredentials = null;
 
-            foreach (var domain in domains)
+            if (credentials != null && credentials.Count > 0)
             {
-                // normalise wildcard domains to _.domain.com for file store
-                var targetDomain = domain.Replace('*', '_');
-
-                // attempt save to store
-                var storePath = StorePath.Value;
-
-                if (!string.IsNullOrWhiteSpace(StorePath.Value))
+                try
                 {
-                    //TODO: check unicode domains
-                    var filename = Path.Combine(storePath, domain + ".pfx");
-                    log.Information($"CCS: Storing PFX as {filename}");
-                    File.WriteAllBytes(filename, pfxData);
+                    var username = credentials["username"];
+                    var pwd = credentials["password"];
+                    credentials.TryGetValue("domain", out var domain);
+
+                    if (domain != null)
+                    {
+                        windowsCredentials = new UserCredentials(domain, username, pwd);
+                    }
+                    else
+                    {
+                        windowsCredentials = new UserCredentials(username, pwd);
+                    }
+                }
+                catch
+                {
+                    return new ActionResult { IsSuccess = false, Message = "CCS Export task with Windows Credentials requires username and password." };
                 }
             }
 
-            return await Task.FromResult(new ActionResult { IsSuccess = true });
+            var windowsFileClient = new WindowsNetworkFileClient(windowsCredentials);
+
+            var domains = managedCert.GetCertificateDomains();
+
+            var fileList = new Dictionary<string, string>();
+
+            var destinationPath = settings.Parameters?.FirstOrDefault(d=>d.Key=="path")?.Value;
+
+            foreach (var domain in domains)
+            {
+
+                // normalise wildcard domains to _.domain.com for file store
+                var targetDomain = domain.Replace('*', '_');
+
+                // attempt save to store, which may be a network UNC path or otherwise authenticated resource
+
+                if (!string.IsNullOrWhiteSpace(destinationPath))
+                {
+                    var filename = Path.Combine(destinationPath.Trim(), domain + ".pfx");
+
+                    fileList.Add(managedCert.CertificatePath, filename);
+
+                    log.Information($"{Definition.Title}: Storing PFX as {filename}");
+                }
+            }
+
+            if (fileList.Count == 0)
+            {
+                return new ActionResult { IsSuccess = true, Message = $"{Definition.Title}: Nothing to copy." };
+            }
+            else
+            {
+                if (!isPreviewOnly)
+                {
+                    windowsFileClient.CopyLocalToRemote(fileList);
+                }
+
+            }
+
+            return await Task.FromResult(new ActionResult { IsSuccess = true, Message = "File copying completed" });
         }
-
-
     }
 }
+

@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Certify.Core.Management.DeploymentTasks;
 using Certify.Models;
 using Certify.Models.Providers;
+using Certify.Providers.DeploymentTasks;
 
 namespace Certify.Management
 {
@@ -328,6 +330,67 @@ namespace Certify.Management
             {
                 return new List<DnsZone>();
             }
+        }
+
+        public async Task<List<ActionStep>> PerformDeploymentTask(ILog log, string managedCertificateId, string taskId, bool isPreviewOnly, bool skipDeferredTasks)
+        {
+            var steps = new List<ActionStep>();
+
+            var managedCert = await GetManagedCertificate(managedCertificateId);
+
+            if (managedCert==null)
+            {
+                steps.Add(new ActionStep { HasError = true, Title = "Deployment", Description = "Managed certificate not found. Could not deploy." });
+            }
+
+            if (log == null)
+            {
+                log = ManagedCertificateLog.GetLogger(managedCert.Id, _loggingLevelSwitch);
+            }
+
+            // perform or preview each task
+            var credentialsManager = new CredentialsManager();
+
+            var deploymentTasks = new List<DeploymentTask>();
+
+            var taskList = managedCert.DeploymentTasks?.Where(t => string.IsNullOrEmpty(taskId) || taskId == t.Id);
+
+            foreach (var taskConfig in taskList)
+            {
+                // add task to execution list unless the task is deferred and we are currently skipping deferred tasks
+
+                if (!taskConfig.IsDeferred || (taskConfig.IsDeferred && !skipDeferredTasks))
+                {
+                    try
+                    {
+                        var provider = DeploymentTaskProviderFactory.Create(taskConfig.TaskTypeId.ToLower());
+
+                        Dictionary<string, string> credentials = null;
+
+                        if (!string.IsNullOrEmpty(taskConfig.ChallengeCredentialKey))
+                        {
+                            credentials = await credentialsManager.GetUnlockedCredentialsDictionary(taskConfig.ChallengeCredentialKey);
+                        }
+
+                        var deploymentTask = new DeploymentTask(provider, taskConfig, credentials);
+
+                        deploymentTasks.Add(deploymentTask);
+                    }
+                    catch (Exception exp)
+                    {
+                        steps.Add(new ActionStep { HasError = true, Title = "Deployment Task: " + taskConfig.TaskName, Description = "Cannot create task provider for deployment task: " + exp.ToString() });
+                    }
+                }
+            }
+
+            foreach (var task in deploymentTasks)
+            {
+                var result = await task.Execute(log, managedCert, isPreviewOnly: isPreviewOnly);
+
+                steps.Add(new ActionStep { HasError = !result.IsSuccess, Description = result.Message });
+            }
+
+            return steps;
         }
     }
 }

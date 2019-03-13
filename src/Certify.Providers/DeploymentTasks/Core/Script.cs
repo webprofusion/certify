@@ -1,5 +1,10 @@
 ﻿
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Certify.Config;
 using Certify.Models.Config;
+using Certify.Models.Providers;
+using Certify.Providers.Deployment.Core.Shared;
 
 namespace Certify.Providers.DeploymentTasks
 {
@@ -23,6 +28,25 @@ namespace Certify.Providers.DeploymentTasks
             };
         }
 
-        
+        /// <summary>
+        /// Execute a script or program either locally or remotely, windows or ssh
+        /// </summary>
+        /// <param name="log"></param>
+        /// <param name="managedCert"></param>
+        /// <param name="settings"></param>
+        /// <param name="credentials"></param>
+        /// <param name="isPreviewOnly"></param>
+        /// <returns></returns>
+        public override async Task<ActionResult> Execute(
+          ILog log,
+          Models.ManagedCertificate managedCert,
+          DeploymentTaskConfig settings,
+          Dictionary<string, string> credentials,
+          bool isPreviewOnly
+          )
+        {
+            return new ActionResult { IsSuccess = true, Message = "Nothing to do" };
+        }
+
     }
 }

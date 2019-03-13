@@ -91,6 +91,16 @@ namespace Certify.UI.ViewModel
                 RefreshParameters();
                 await RefreshCredentialOptions();
 
+                if (string.IsNullOrEmpty(SelectedItem.TaskName))
+                {
+                    SelectedItem.Description = DeploymentProvider.Title;
+                }
+
+                if (string.IsNullOrEmpty(SelectedItem.Description))
+                {
+                    SelectedItem.Description = DeploymentProvider.Description;
+                }
+
                 RaisePropertyChangedEvent(nameof(EditableParameters));
                 RaisePropertyChangedEvent(nameof(SelectedCredentialItem));
             }
@@ -124,6 +134,15 @@ namespace Certify.UI.ViewModel
                 {
                     SelectedItem.Parameters.Add(new ProviderParameterSetting(p.Key, p.Value));
                 }
+            }
+        }
+
+        public string CLICommand
+        {
+            get
+            {
+                var cmd ="Command: certify deploy \""+_appViewModel.SelectedItem.Name+"\" \""+SelectedItem?.TaskName+"\"";
+                return cmd;
             }
         }
 

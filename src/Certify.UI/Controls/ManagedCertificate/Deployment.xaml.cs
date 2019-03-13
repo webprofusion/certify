@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Certify.Config;
 using Certify.UI.Windows;
 
@@ -68,7 +71,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                 }
             };
 
-
         }
 
         private void DeploymentSiteOptions_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -95,6 +97,27 @@ namespace Certify.UI.Controls.ManagedCertificate
                 Owner = Window.GetWindow(this)
             };
             dialog.Show();
+        }
+
+        private async void RunDeploymentTask_Click(object sender, RoutedEventArgs e)
+        {
+            var task = (sender as Button).DataContext as DeploymentTaskConfig;
+            if (MessageBox.Show("Run task '"+task.TaskName+"' now? The most recent certificate details will be used.", "Run Task?", MessageBoxButton.YesNo)== MessageBoxResult.Yes)
+            {
+                // execute task now
+                Mouse.OverrideCursor = Cursors.Wait;
+                var results = await UI.ViewModel.AppViewModel.Current.PerformDeployment(ItemViewModel.SelectedItem.Id, task.Id, isPreviewOnly:false);
+                Mouse.OverrideCursor = Cursors.Arrow;
+
+                if (results.Any(r => r.HasError))
+                {
+                    var result = results.First(r => r.HasError == true);
+                    MessageBox.Show($"The deployment task failed to complete. {result.Title} :: {result.Description}");
+                } else
+                {
+                    MessageBox.Show($"The deployment task completed with no reported errors.");
+                }
+            }
         }
     }
 }

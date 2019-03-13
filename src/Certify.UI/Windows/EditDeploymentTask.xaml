@@ -9,14 +9,14 @@
         mc:Ignorable="d"
      BorderThickness="1"
     GlowBrush="{DynamicResource AccentColorBrush}"
-    ResizeMode="CanResizeWithGrip"
+    ResizeMode="CanResize"
     WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False"
-        Title="Edit Deployment Task" Height="474.499" Width="475.073">
-    <DockPanel LastChildFill="False">
+        Title="Edit Deployment Task" Height="420" Width="808">
+    <DockPanel LastChildFill="True">
 
-        <ManagedCertificate:DeploymentTask x:Name="DeploymentTaskEditor" DockPanel.Dock="Top" HorizontalAlignment="Left" Margin="8,8,8,8" VerticalAlignment="Top"/>
-        <DockPanel DockPanel.Dock="Bottom" Margin="0,0,8,8">
+        
+        <DockPanel DockPanel.Dock="Bottom" Margin="0,0,24,16">
             <Button
                 x:Name="Cancel"
                 Width="75"
@@ -36,5 +36,6 @@
                 Content="OK"
                 DockPanel.Dock="Right" Click="Save_Click" />
         </DockPanel>
+        <ManagedCertificate:DeploymentTask x:Name="DeploymentTaskEditor" DockPanel.Dock="Top" VerticalAlignment="Top" Margin="8,0,0,0"/>
     </DockPanel>
 </Controls:MetroWindow>

@@ -120,10 +120,10 @@ namespace Certify.Core.Tests.Integration
                 { tmpPath, destPath+"/testfilecopy.txt" }
             };
 
-            var client = new SftpClient(new SftpConnectionConfig
+            var client = new SftpClient(new SshConnectionConfig
             {
                 Host = "34.215.2.160",
-                Passphrase = storedCred["password"],
+                KeyPassphrase = storedCred["password"],
                 Port = 22,
                 Username = storedCred["username"],
                 PrivateKeyPath = @"C:\Temp\Certify\ssh\private.key"
@@ -172,7 +172,7 @@ namespace Certify.Core.Tests.Integration
             };
 
             var provider = DeploymentTaskProviderFactory.Create(Providers.DeploymentTasks.CertificateExport.Definition.Id.ToLower());
-            var t = new DeploymentTask(provider, config);
+            var t = new DeploymentTask(provider, config, null);
 
             deploymentTasks.Add(t);
 
@@ -180,7 +180,7 @@ namespace Certify.Core.Tests.Integration
             var managedCert = GetMockManagedCertificate("DeploymentTest", "123", PrimaryTestDomain, PrimaryIISRoot);
             foreach (var task in deploymentTasks)
             {
-                var result = await task.Execute(log, managedCert, true);
+                var result = await task.Execute(log, managedCert, isPreviewOnly: true);
 
             }
 

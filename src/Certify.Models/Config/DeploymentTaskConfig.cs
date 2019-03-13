@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Certify.Models;
 using Certify.Models.Config;
 
 namespace Certify.Config
@@ -18,7 +19,7 @@ namespace Certify.Config
         /// Unique task name (id) used in logs and to invoke this deployment task manually
         /// </summary>
         public string TaskName { get; set; }
-    
+
         /// <summary>
         /// Optional description for this deployment tasks (i.e. what it does and why)
         /// </summary>
@@ -60,5 +61,10 @@ namespace Certify.Config
 
         // Dictionary of provider parameter values
         public List<ProviderParameterSetting> Parameters { get; set; }
+
+
+        public DateTime? DateLastExecuted { get; set; }
+        public string LastResult { get; set; }
+        public RequestState? LastRunStatus { get; set; }
     }
 }

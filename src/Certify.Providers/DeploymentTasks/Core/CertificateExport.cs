@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using Certify.Config;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Providers.Deployment.Core.Shared;
@@ -26,67 +28,79 @@ namespace Certify.Providers.DeploymentTasks
                     new List<ProviderParameter>{
                          new ProviderParameter{ Key="path", Name="Destination Path", IsRequired=true, IsCredential=false,  },
                         new ProviderParameter{ Key="exportoptions", Name="Export As", IsRequired=true, IsCredential=false, Value="pfx", OptionsList="pfx=PFX (PKCX#12);pem=PEM, Primary + Intermediates + Private Key; crtpem=PEM, Primary + Intermediates" },
-                     
-                        /*
-                        new ProviderParameter{ Key="username", Name="User Name", IsRequired=false, IsCredential = true, IsPassword = false },
-                        new ProviderParameter{ Key="password", Name="Password", IsRequired = false, IsCredential = true, IsPassword = true},
-                        new ProviderParameter{ Key="privatekey", Name="Private Key Path (if SSH)", IsRequired = false, IsCredential = true, IsPassword = false},*/
+
                     },
             };
         }
 
-        public override async Task<ActionResult> Execute(ILog log, Models.ManagedCertificate managedCert, bool isPreviewOnly)
+        public override async Task<ActionResult> Execute(
+                ILog log,
+                Models.ManagedCertificate managedCert,
+                DeploymentTaskConfig settings,
+                Dictionary<string, string> credentials,
+                bool isPreviewOnly
+            )
         {
-            // prepare colelction of files in the required formats
+            var definition = GetDefinition();
+            // prepare collection of files in the required formats
 
             // copy files to the required destination (local, UNC or SFTP)
 
-            // execute remote command?
-
-            var config = new SftpConnectionConfig { };
-
             //var sftp = new Deployment.Core.Shared.SftpClient(config);
-            
 
             var pfxData = File.ReadAllBytes(managedCert.CertificatePath);
 
-            var domains = managedCert.GetCertificateDomains();
-
-            foreach (var domain in domains)
+            // sftp
+            var sshConfig = new SshConnectionConfig
             {
-                // normalise wildcard domains to _.domain.com for file store
-                var targetDomain = domain.Replace('*', '_');
+                Host = settings.TargetHost,
+            };
 
-                // attempt save to store
-                var storePath = StorePath.Value;
-
-                if (!string.IsNullOrWhiteSpace(StorePath.Value))
-                {
-                    //TODO: check unicode domains
-                    var filename = Path.Combine(storePath, domain + ".pfx");
-                    if (isPreviewOnly)
-                    {
-                        // preview copy
-                        log.Information($"CCS: (Preview) would store PFX as {filename}");
-                        File.WriteAllBytes(filename, pfxData);
-                    }
-                    else
-                    {
-                        // perform copy
-                        log.Information($"CCS: Storing PFX as {filename}");
-                        File.WriteAllBytes(filename, pfxData);
-                    }
-
-                }
+            credentials.TryGetValue("username", out var username);
+            if (username != null)
+            {
+                sshConfig.Username = username;
             }
 
-            // copy via sftp
+            credentials.TryGetValue("password", out var password);
+            if (password != null)
+            {
+                sshConfig.Password = password;
+            }
+
+            credentials.TryGetValue("privatekey", out var privatekey);
+            if (privatekey != null)
+            {
+                sshConfig.PrivateKeyPath = privatekey;
+            }
+
+            credentials.TryGetValue("key_passphrase", out var passphrase);
+            if (passphrase != null)
+            {
+                sshConfig.KeyPassphrase = passphrase;
+            }
+
+            var sftp = new SftpClient(sshConfig);
+
+            var remotePath = settings.Parameters.FirstOrDefault(c => c.Key == "path")?.Value.Trim();
+
+            if (isPreviewOnly)
+            {
+                log.Information($"{definition.Title}: (Preview) would copy file via sftp to {remotePath}");
+            }
+            else
+            {
+                // copy via sftp
+                var copiedOK = sftp.CopyLocalToRemote(new Dictionary<string, string>
+                {
+                    {managedCert.CertificatePath, remotePath }
+                });
+
+                log.Information($"{definition.Title}: copied file via sftp to {remotePath}");
+            }
 
             return await Task.FromResult(new ActionResult { IsSuccess = true });
         }
-
-
-
 
     }
 }

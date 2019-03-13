@@ -203,12 +203,12 @@
             </DockPanel>
 
             <DockPanel DockPanel.Dock="Top">
-                
-            <StackPanel DockPanel.Dock="Top">
+
+                <StackPanel DockPanel.Dock="Top">
                     <TextBlock  Style="{StaticResource Subheading}" Margin="0,16,0,0">Additional Deployment Tasks</TextBlock>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Style="{StaticResource Instructions}" Text="You can optionally add any number of additional deployment tasks:" />
-                    <Button HorizontalAlignment="Right" Click="AddDeploymentTask_Click" Width="80" Content="Add" Margin="8,0,0,0" DockPanel.Dock="Left" />
+                        <Button HorizontalAlignment="Right" Click="AddDeploymentTask_Click" Width="80" Content="Add" Margin="8,0,0,0" DockPanel.Dock="Left" />
                     </StackPanel>
                     <ItemsControl ItemsSource="{Binding SelectedItem.DeploymentTasks}" x:Name="DeploymentTasks" Margin="0,16,0,0">
                         <ItemsControl.ItemTemplate>
@@ -216,14 +216,46 @@
                                 <StackPanel Margin="0,8,0,8">
 
                                     <DockPanel>
-                                        <fa:FontAwesome Margin="0,8,0,0" Height="32" Width="32" HorizontalAlignment="Stretch" Icon="cogs" />
-                                        
+                                        <fa:FontAwesome DockPanel.Dock="Left" Margin="0,8,0,0" Height="32" Width="32" HorizontalAlignment="Stretch" Icon="cogs" />
+
                                         <Button
                                             Width="80"
+                                           Height="20"
+                                            
+                                           Margin="8,0,0,0" 
                                           Click="EditDeploymentTask_Click"
                                             CommandParameter="{Binding}"
-                                            Content="Edit" VerticalAlignment="Top"
-                                            DockPanel.Dock="Right" />
+                                            VerticalAlignment="Top"
+                                            DockPanel.Dock="Right">
+                                            <StackPanel Orientation="Horizontal">
+                                                <fa:ImageAwesome
+                            
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource AccentColorBrush3}"
+                            Icon="Edit" />
+                                                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center">Edit</TextBlock>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button
+                                            x:Name="RunDeploymentTask"
+                                            Margin="8,0,0,0"
+                                            Width="80"
+                                             Height="20"
+                                          Click="RunDeploymentTask_Click"
+                                            CommandParameter="{Binding}"
+                                            VerticalAlignment="Top"
+                                            DockPanel.Dock="Right">
+                                            <StackPanel Orientation="Horizontal">
+                                                <fa:ImageAwesome
+                            
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{DynamicResource AccentColorBrush3}"
+                                                    Icon="Play" />          
+                                                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center">Run</TextBlock>
+                                            </StackPanel>
+                                        </Button>
                                         <StackPanel Margin="0,0,0,0" DockPanel.Dock="Left">
                                             <TextBlock FontWeight="SemiBold" Text="{Binding TaskName}" />
                                             <TextBlock
@@ -236,8 +268,8 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                
-            </StackPanel>
+
+                </StackPanel>
             </DockPanel>
         </DockPanel>
     </ScrollViewer>

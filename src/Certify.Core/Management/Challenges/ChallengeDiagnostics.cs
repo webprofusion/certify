@@ -590,7 +590,7 @@ namespace Certify.Core.Management.Challenges
 
                 CertificateManager.StoreCertificate(x509);
 
-                var certStoreName = CertificateManager.GetDefaultStore().Name;
+                var certStoreName = CertificateManager.GetStore().Name;
 
                 // iisManager.InstallCertificateforBinding(certStoreName, x509.GetCertHash(),
                 // managedCertificate.ServerSiteId, sni);

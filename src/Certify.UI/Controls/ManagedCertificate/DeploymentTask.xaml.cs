@@ -107,6 +107,8 @@ namespace Certify.UI.Controls.ManagedCertificate
             await EditModel.RefreshOptions();
         }
 
+        
+
         public bool Save()
         {
             EditModel.CaptureEditedParameters();
@@ -129,6 +131,11 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
 
             return true;
+        }
+
+        private void TaskName_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            EditModel.RaisePropertyChangedEvent("CLICommand");
         }
     }
 }
