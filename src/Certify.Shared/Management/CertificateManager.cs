@@ -24,7 +24,9 @@ namespace Certify.Management
 {
     public static class CertificateManager
     {
-        public static X509Certificate2 GenerateSelfSignedCertificate(string domain, DateTime? dateFrom = null, DateTime? dateTo = null)
+        const StoreName DEFAULT_STORE_NAME = StoreName.My;
+
+        public static X509Certificate2 GenerateSelfSignedCertificate(string domain, DateTime? dateFrom = null, DateTime? dateTo = null, string suffix = "[Certify]", string subject = null)
         {
             // configure generators
             var random = new SecureRandom(new CryptoApiRandomGenerator());
@@ -35,8 +37,8 @@ namespace Certify.Management
             // create self-signed certificate
             var serialNumber = BigIntegers.CreateRandomInRange(BigInteger.One, BigInteger.ValueOf(long.MaxValue), random);
             var certificateGenerator = new X509V3CertificateGenerator();
-            certificateGenerator.SetSubjectDN(new X509Name($"CN={domain}"));
-            certificateGenerator.SetIssuerDN(new X509Name($"CN={domain}"));
+            certificateGenerator.SetSubjectDN(new X509Name($"CN={(subject != null ? subject : domain)}"));
+            certificateGenerator.SetIssuerDN(new X509Name($"CN={(subject != null ? subject : domain)}"));
             certificateGenerator.SetSerialNumber(serialNumber);
             certificateGenerator.SetNotBefore(dateFrom ?? DateTime.UtcNow);
             certificateGenerator.SetNotAfter(dateTo ?? DateTime.UtcNow.AddMinutes(5));
@@ -63,7 +65,7 @@ namespace Certify.Management
             // convert from bouncy cert to X509Certificate2
             return new X509Certificate2(bouncy_cert.GetEncoded(), (string)null, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet)
             {
-                FriendlyName = domain + " [Certify] Self Signed - " + bouncy_cert.NotBefore + " to " + bouncy_cert.NotAfter,
+                FriendlyName = domain + " " + suffix + " Self Signed - " + bouncy_cert.NotBefore + " to " + bouncy_cert.NotAfter,
                 PrivateKey = csp
             };
         }
@@ -92,20 +94,25 @@ namespace Certify.Management
             return cert;
         }
 
-        public static async Task<X509Certificate2> StoreCertificate(string host, string pfxFile, bool isRetry = false, bool enableRetryBehaviour = true)
+        public static async Task<X509Certificate2> StoreCertificate(
+            string host, 
+            string pfxFile, 
+            bool isRetry = false, 
+            bool enableRetryBehaviour = true, 
+            StoreName storeName = DEFAULT_STORE_NAME)
         {
             // https://support.microsoft.com/en-gb/help/950090/installing-a-pfx-file-using-x509certificate-from-a-standard--net-appli
             var certificate = new X509Certificate2(pfxFile, "", X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
             certificate.GetExpirationDateString();
             certificate.FriendlyName = host + " [Certify] - " + certificate.GetEffectiveDateString() + " to " + certificate.GetExpirationDateString();
 
-            var cert = StoreCertificate(certificate);
+            var cert = StoreCertificate(certificate, storeName);
 
             await Task.Delay(500);
 
             // now check if cert is accessible and private key is OK (in some cases cert is not
             // storing private key properly)
-            var storedCert = GetCertificateByThumbprint(cert.Thumbprint);
+            var storedCert = GetCertificateByThumbprint(cert.Thumbprint, storeName);
 
             if (enableRetryBehaviour)
             {
@@ -114,7 +121,7 @@ namespace Certify.Management
                     // hack/workaround - importing cert from system account causes private key to be
                     // transient. Re-import the same cert fixes it. re -try apply .net dev on why
                     // re-import helps with private key: https://stackoverflow.com/questions/40892512/add-a-generated-certificate-to-the-store-and-update-an-iis-site-binding
-                    return await StoreCertificate(host, pfxFile, isRetry: true);
+                    return await StoreCertificate(host, pfxFile, isRetry: true, storeName:storeName);
                 }
             }
 
@@ -142,10 +149,11 @@ namespace Certify.Management
             }
         }
 
-        public static List<X509Certificate2> GetCertificatesFromStore(string issuerName = null)
+        public static List<X509Certificate2> GetCertificatesFromStore(string issuerName = null, StoreName storeName = DEFAULT_STORE_NAME)
         {
-            var store = GetDefaultStore();
+            var store = GetStore(storeName);
             store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
+
             var list = new List<X509Certificate2>();
             var certCollection = !string.IsNullOrEmpty(issuerName) ?
                 store.Certificates.Find(X509FindType.FindByIssuerName, issuerName, false)
@@ -160,11 +168,11 @@ namespace Certify.Management
             return list;
         }
 
-        public static X509Certificate2 GetCertificateFromStore(string subjectName)
+        public static X509Certificate2 GetCertificateFromStore(string subjectName, StoreName storeName = DEFAULT_STORE_NAME)
         {
             X509Certificate2 cert = null;
 
-            var store = GetDefaultStore();
+            var store = GetStore(storeName);
 
             store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
 
@@ -180,11 +188,11 @@ namespace Certify.Management
             return cert;
         }
 
-        public static X509Certificate2 GetCertificateByThumbprint(string thumbprint)
+        public static X509Certificate2 GetCertificateByThumbprint(string thumbprint, StoreName storeName = DEFAULT_STORE_NAME)
         {
             X509Certificate2 cert = null;
 
-            var store = GetDefaultStore();
+            var store = GetStore(storeName);
             store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
 
             var results = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, false);
@@ -199,9 +207,9 @@ namespace Certify.Management
             return cert;
         }
 
-        public static X509Certificate2 StoreCertificate(X509Certificate2 certificate)
+        public static X509Certificate2 StoreCertificate(X509Certificate2 certificate, StoreName storeName = DEFAULT_STORE_NAME)
         {
-            var store = GetDefaultStore();
+            var store = GetStore(storeName);
 
             store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
 
@@ -212,9 +220,9 @@ namespace Certify.Management
             return certificate;
         }
 
-        public static void RemoveCertificate(X509Certificate2 certificate)
+        public static void RemoveCertificate(X509Certificate2 certificate, StoreName storeName = DEFAULT_STORE_NAME)
         {
-            var store = GetDefaultStore();
+            var store = GetStore(storeName);
             store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
             store.Remove(certificate);
             store.Close();
@@ -296,13 +304,13 @@ namespace Certify.Management
             return null;
         }
 
-        public static X509Store GetDefaultStore() => new X509Store(StoreName.My, StoreLocation.LocalMachine);
+        public static X509Store GetStore(StoreName storeName= DEFAULT_STORE_NAME) => new X509Store(storeName, StoreLocation.LocalMachine);
 
-        public static bool IsCertificateInStore(X509Certificate2 cert)
+        public static bool IsCertificateInStore(X509Certificate2 cert, StoreName storeName=StoreName.My)
         {
             var certExists = false;
 
-            using (var store = GetDefaultStore())
+            using (var store = GetStore(storeName))
             {
                 store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
 
@@ -341,7 +349,7 @@ namespace Certify.Management
                 // if (checkBindings) allCertBindings =  Certify.Utils.Networking.GetCertificateBindings();
 
                 // get all certificates
-                using (var store = GetDefaultStore())
+                using (var store = GetStore(StoreName.My))
                 {
                     store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
 

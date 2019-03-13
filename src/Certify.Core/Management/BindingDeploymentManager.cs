@@ -47,7 +47,7 @@ namespace Certify.Core.Management
             }
 
             //store cert against primary domain
-            var certStoreName = CertificateManager.GetDefaultStore().Name;
+            var certStoreName = CertificateManager.GetStore().Name;
             X509Certificate2 storedCert = null;
             byte[] certHash = null;
 
