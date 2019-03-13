@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Certify.Models;
@@ -54,8 +55,14 @@ namespace Certify.Client
         {
             var serviceConfig = Certify.SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
-            _baseUri = $"http://{serviceConfig.Host}:{serviceConfig.Port}" + _baseUri;
-            _statusHubUri = $"http://{serviceConfig.Host}:{serviceConfig.Port}" + _statusHubUri;
+            _baseUri = $"{(serviceConfig.UseHTTPS ? "https" : "http")}://{serviceConfig.Host}:{serviceConfig.Port}" + _baseUri;
+            _statusHubUri = $"{(serviceConfig.UseHTTPS ? "https" : "http")}://{serviceConfig.Host}:{serviceConfig.Port}" + _statusHubUri;
+
+            ServicePointManager.ServerCertificateValidationCallback += (obj, cert, chain, errors) =>
+            {
+                // ignore all cert errors when validating URL response
+                return true;
+            };
 
             // use windows authentication
             _client = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true });
@@ -337,6 +344,12 @@ namespace Certify.Client
         {
             var response = await FetchAsync($"managedcertificates/deploymentproviders/");
             return JsonConvert.DeserializeObject<List<DeploymentProviderDefinition>>(response);
+        }
+
+        public async Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly)
+        {
+            var response = await FetchAsync($"managedcertificates/performdeployment/{isPreviewOnly}/{managedCertificateId}/{taskId}");
+            return JsonConvert.DeserializeObject<List<ActionStep>>(response);
         }
 
         #endregion Managed Certificates
