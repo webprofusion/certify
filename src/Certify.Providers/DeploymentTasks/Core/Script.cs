@@ -1,5 +1,6 @@
 ﻿
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Certify.Config;
 using Certify.Models.Config;
@@ -22,7 +23,7 @@ namespace Certify.Providers.DeploymentTasks
                 Description = "Run a program, batch file or custom script",
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
                 {
-                    new ProviderParameter{ Key="path", Name="Path to Program/Script", IsRequired=true, IsCredential=false  },
+                    new ProviderParameter{ Key="path", Name="Program/Script", IsRequired=true, IsCredential=false, Description="Command to run, may require a full path"  },
                     new ProviderParameter{ Key="args", Name="Arguments (optional)", IsRequired=false, IsCredential=false  },
                 }
             };
@@ -45,7 +46,32 @@ namespace Certify.Providers.DeploymentTasks
           bool isPreviewOnly
           )
         {
-            return new ActionResult { IsSuccess = true, Message = "Nothing to do" };
+
+            var sshConfig = SshClient.GetConnectionConfig(settings, credentials);
+
+            var ssh = new SshClient(sshConfig);
+
+            var command = settings.Parameters.FirstOrDefault(c => c.Key == "path")?.Value;
+            var args = settings.Parameters.FirstOrDefault(c => c.Key == "args")?.Value;
+
+            var commandList = new List<string>
+            {
+                $"{command} {args}"
+            };
+
+            log?.Information("Executing command via SSH");
+
+            var results = ssh.ExecuteCommands(commandList);
+            if (results.Any(r => r.IsError))
+            {
+                var firstError = results.First(c => c.IsError == true);
+                return new ActionResult { IsSuccess = false, Message = $"One or more commands failed: {firstError.Command} :: {firstError.Result}" };
+            }
+            else
+            {
+                return new ActionResult { IsSuccess = true, Message = "Nothing to do" };
+            }
+
         }
 
     }

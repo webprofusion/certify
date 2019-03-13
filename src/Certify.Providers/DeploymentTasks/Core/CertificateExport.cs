@@ -51,34 +51,7 @@ namespace Certify.Providers.DeploymentTasks
             var pfxData = File.ReadAllBytes(managedCert.CertificatePath);
 
             // sftp
-            var sshConfig = new SshConnectionConfig
-            {
-                Host = settings.TargetHost,
-            };
-
-            credentials.TryGetValue("username", out var username);
-            if (username != null)
-            {
-                sshConfig.Username = username;
-            }
-
-            credentials.TryGetValue("password", out var password);
-            if (password != null)
-            {
-                sshConfig.Password = password;
-            }
-
-            credentials.TryGetValue("privatekey", out var privatekey);
-            if (privatekey != null)
-            {
-                sshConfig.PrivateKeyPath = privatekey;
-            }
-
-            credentials.TryGetValue("key_passphrase", out var passphrase);
-            if (passphrase != null)
-            {
-                sshConfig.KeyPassphrase = passphrase;
-            }
+            var sshConfig = SshClient.GetConnectionConfig(settings, credentials);
 
             var sftp = new SftpClient(sshConfig);
 
