@@ -473,7 +473,14 @@ namespace Certify.Providers.ACME.Certes
                         {
                             remainingAttempts--;
 
-                            log.Error($"BeginCertificateOrder: error creating order. Retries remaining:{remainingAttempts} {exp.ToString()} ");
+                            var msg = exp.ToString();
+
+                            if (exp.InnerException != null && exp.InnerException is AcmeRequestException)
+                            {
+                                msg = (exp.InnerException as AcmeRequestException).Error?.Detail;
+                            }
+
+                            log.Error($"BeginCertificateOrder: error creating order. Retries remaining:{remainingAttempts} :: {msg} ");
 
                             lastException = exp;
 
@@ -512,7 +519,7 @@ namespace Certify.Providers.ACME.Certes
 
                     var msg = "Failed to begin certificate order.";
 
-                    if (lastException!=null && (lastException as Exception).InnerException is AcmeRequestException)
+                    if (lastException != null && (lastException as Exception).InnerException is AcmeRequestException)
                     {
                         msg = ((lastException as Exception).InnerException as AcmeRequestException).Error?.Detail;
 
@@ -695,7 +702,7 @@ namespace Certify.Providers.ACME.Certes
                 return new StatusMessage
                 {
                     IsOK = false,
-                    Message ="Challenge could not be submitted. No matching attempted challenge."
+                    Message = "Challenge could not be submitted. No matching attempted challenge."
                 };
             }
 
