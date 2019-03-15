@@ -61,13 +61,14 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.109.2" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.110" />
   </ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />
     <ProjectReference Include="..\Certify.Models\Certify.Models.csproj" />
-    <ProjectReference Include="..\Certify.Providers\ACME\Certes\Certify.Providers.Certes.csproj" />
+    <ProjectReference Include="..\Certify.Providers\DeploymentTasks\Core\Certify.Providers.Deployment.Core.csproj" />
+    <ProjectReference Include="..\Certify.Providers\ACME\Certes\Certify.Providers.ACME.Certes.csproj" />
     <ProjectReference Include="..\Certify.Providers\DNS\AcmeDns\AcmeDns\AcmeDns.csproj" />
     <ProjectReference Include="..\Certify.Providers\DNS\Aliyun\Aliyun.csproj" />
     <ProjectReference Include="..\Certify.Providers\DNS\AWSRoute53\AWSRoute53.csproj" />

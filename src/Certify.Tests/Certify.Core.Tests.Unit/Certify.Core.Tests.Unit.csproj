@@ -76,14 +76,16 @@
     <ProjectReference Include="..\..\Certify.Core\Certify.Core.csproj" />
     <ProjectReference Include="..\..\Certify.Locales\Certify.Locales.csproj" />
     <ProjectReference Include="..\..\Certify.Models\Certify.Models.csproj" />
+    <ProjectReference Include="..\..\Certify.Providers\ACME\ACMESharpCore\Certify.Providers.ACME.ACMESharpCore.csproj" />
+    <ProjectReference Include="..\..\Certify.Providers\ACME\Certes\Certify.Providers.ACME.Certes.csproj" />
     <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Moq" Version="4.10.0" />
+    <PackageReference Include="Moq" Version="4.10.1" />
     <PackageReference Include="MSTest.TestAdapter" Version="1.2.1" />
     <PackageReference Include="MSTest.TestFramework" Version="1.2.1" />
     <PackageReference Include="NETStandard.Library" Version="2.0.3" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
     <PackageReference Include="MSTest.TestAdapter" Version="1.4.0" />
     <PackageReference Include="MSTest.TestFramework" Version="1.4.0" />
   </ItemGroup>

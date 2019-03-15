@@ -20,6 +20,11 @@ namespace Certify.CLI
                 return;
             }
 
+            bool isNumeric(string input)
+            {
+                return int.TryParse(input, out _);
+            }
+
             var filename = args[args.Length - 1];
 
             Console.ForegroundColor = ConsoleColor.White;
@@ -28,7 +33,7 @@ namespace Certify.CLI
             var currentManagedCertificates = await _certifyClient.GetManagedCertificates(new ManagedCertificateFilter() { });
             var rows = System.IO.File.ReadAllLines(filename);
             var csvHasHeaders = false;
-            int rowID = 0;
+            var rowID = 0;
 
             // set default column index values
             int? siteIdIdx = 0,
@@ -63,8 +68,8 @@ namespace Certify.CLI
                     // first row contains headers, we need to figure out the position of each column
                     if ((rowID == 0) && csvHasHeaders)
                     {
-                        string[] columnTitles = row.Split(',');
-                        int colID = 0;
+                        var columnTitles = row.Split(',');
+                        var colID = 0;
 
                         foreach (var title in columnTitles)
                         {
@@ -154,10 +159,10 @@ namespace Certify.CLI
                     else
                     {
                         // required fields SiteId, Name, Domain;Domain2;Domain3
-                        string[] values = Regex.Split(row, @",(?![^\{]*\})"); // get all values separated by commas except those found between {}
-                        string siteId = values[(int)siteIdIdx].Trim();
-                        string siteName = values[(int)nameIdx].Trim();
-                        string[] domains = values[(int)domainsIdx].Trim().Split(';');
+                        var values = Regex.Split(row, @",(?![^\{]*\})"); // get all values separated by commas except those found between {}
+                        var siteId = values[(int)siteIdIdx].Trim();
+                        var siteName = values[(int)nameIdx].Trim();
+                        var domains = values[(int)domainsIdx].Trim().Split(';');
 
                         // optional fields
                         bool IncludeInAutoRenew = true,
@@ -176,16 +181,56 @@ namespace Certify.CLI
                                WebhookContentType = "",
                                WebhookContentBody = "";
 
-                        if (primaryDomainIdx != null) primaryDomain = values[(int)primaryDomainIdx].Trim();
-                        if (includeInAutoRenewIdx != null) IncludeInAutoRenew = Convert.ToBoolean(values[(int)includeInAutoRenewIdx].Trim());
-                        if (performAutoConfigIdx != null) PerformAutoConfig = Convert.ToBoolean(values[(int)performAutoConfigIdx].Trim());
-                        if (performChallengeFileCopyIdx != null) PerformChallengeFileCopy = Convert.ToBoolean(values[(int)performChallengeFileCopyIdx].Trim());
-                        if (performExtensionlessConfigChecksIdx != null) PerformExtensionlessConfigChecks = Convert.ToBoolean(values[(int)performExtensionlessConfigChecksIdx].Trim());
-                        if (performTlsSniBindingConfigChecksIdx != null) PerformTlsSniBindingConfigChecks = Convert.ToBoolean(values[(int)performTlsSniBindingConfigChecksIdx].Trim());
-                        if (performAutomatedCertBindingIdx != null) PerformAutomatedCertBinding = Convert.ToBoolean(values[(int)performAutomatedCertBindingIdx].Trim());
-                        if (enableFailureNotificationsIdx != null) EnableFailureNotifications = Convert.ToBoolean(values[(int)enableFailureNotificationsIdx].Trim());
-                        if (preRequestPowerShellScriptIdx != null) PreRequestPowerShellScript = values[(int)preRequestPowerShellScriptIdx].Trim();
-                        if (postRequestPowerShellScriptIdx != null) PostRequestPowerShellScript = values[(int)postRequestPowerShellScriptIdx].Trim();
+                        if (primaryDomainIdx != null)
+                        {
+                            primaryDomain = values[(int)primaryDomainIdx].Trim();
+                        }
+
+                        if (includeInAutoRenewIdx != null)
+                        {
+                            IncludeInAutoRenew = Convert.ToBoolean(values[(int)includeInAutoRenewIdx].Trim());
+                        }
+
+                        if (performAutoConfigIdx != null)
+                        {
+                            PerformAutoConfig = Convert.ToBoolean(values[(int)performAutoConfigIdx].Trim());
+                        }
+
+                        if (performChallengeFileCopyIdx != null)
+                        {
+                            PerformChallengeFileCopy = Convert.ToBoolean(values[(int)performChallengeFileCopyIdx].Trim());
+                        }
+
+                        if (performExtensionlessConfigChecksIdx != null)
+                        {
+                            PerformExtensionlessConfigChecks = Convert.ToBoolean(values[(int)performExtensionlessConfigChecksIdx].Trim());
+                        }
+
+                        if (performTlsSniBindingConfigChecksIdx != null)
+                        {
+                            PerformTlsSniBindingConfigChecks = Convert.ToBoolean(values[(int)performTlsSniBindingConfigChecksIdx].Trim());
+                        }
+
+                        if (performAutomatedCertBindingIdx != null)
+                        {
+                            PerformAutomatedCertBinding = Convert.ToBoolean(values[(int)performAutomatedCertBindingIdx].Trim());
+                        }
+
+                        if (enableFailureNotificationsIdx != null)
+                        {
+                            EnableFailureNotifications = Convert.ToBoolean(values[(int)enableFailureNotificationsIdx].Trim());
+                        }
+
+                        if (preRequestPowerShellScriptIdx != null)
+                        {
+                            PreRequestPowerShellScript = values[(int)preRequestPowerShellScriptIdx].Trim();
+                        }
+
+                        if (postRequestPowerShellScriptIdx != null)
+                        {
+                            PostRequestPowerShellScript = values[(int)postRequestPowerShellScriptIdx].Trim();
+                        }
+
                         if (webhookTriggerIdx != null)
                         {
                             WebhookTrigger = values[(int)webhookTriggerIdx].Trim();
@@ -233,21 +278,34 @@ namespace Certify.CLI
                                 }
                             }
 
-                            if (webhookUrlIdx != null) WebhookUrl = values[(int)webhookUrlIdx].Trim();
+                            if (webhookUrlIdx != null)
+                            {
+                                WebhookUrl = values[(int)webhookUrlIdx].Trim();
+                            }
                         }
 
-                        var newManagedCertificate = new ManagedCertificate();
-                        newManagedCertificate.Id = Guid.NewGuid().ToString();
-                        newManagedCertificate.GroupId = siteId;
-                        newManagedCertificate.Name = siteName;
-                        newManagedCertificate.IncludeInAutoRenew = IncludeInAutoRenew;
-                        newManagedCertificate.ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS;
+                        if (string.IsNullOrEmpty(siteId) || !isNumeric(siteId))
+                        {
+                            throw new Exception("Error: SiteID column is blank or contains non-numeric characters.");
+                        }
+
+                        var newManagedCertificate = new ManagedCertificate
+                        {
+                            Id = Guid.NewGuid().ToString(),
+                            GroupId = siteId,
+                            ServerSiteId = siteId,
+                            Name = siteName,
+                            IncludeInAutoRenew = IncludeInAutoRenew,
+                            ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
+                        };
+
                         newManagedCertificate.RequestConfig.Challenges = new System.Collections.ObjectModel.ObservableCollection<CertRequestChallengeConfig>(
                             new List<CertRequestChallengeConfig> {
                                 new CertRequestChallengeConfig {
                                     ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP
                             }
                         });
+
                         newManagedCertificate.RequestConfig.PerformAutoConfig = PerformAutoConfig;
                         newManagedCertificate.RequestConfig.PerformChallengeFileCopy = PerformChallengeFileCopy;
                         newManagedCertificate.RequestConfig.PerformExtensionlessConfigChecks = PerformExtensionlessConfigChecks;
@@ -262,7 +320,7 @@ namespace Certify.CLI
                         newManagedCertificate.RequestConfig.WebhookContentType = WebhookContentType;
                         newManagedCertificate.RequestConfig.WebhookContentBody = WebhookContentBody;
 
-                        bool isPrimaryDomain = true;
+                        var isPrimaryDomain = true;
 
                         // if we have passed in a primary domain into the csv file, use that instead
                         // of the first domain in the list
@@ -271,10 +329,10 @@ namespace Certify.CLI
                             isPrimaryDomain = false;
                         }
 
-                        List<string> sans = new List<string>();
+                        var sans = new List<string>();
                         foreach (var d in domains)
                         {
-                            if (!String.IsNullOrWhiteSpace(d))
+                            if (!string.IsNullOrWhiteSpace(d))
                             {
                                 var cleanDomainName = d.Trim();
 
@@ -284,7 +342,7 @@ namespace Certify.CLI
                                     isPrimaryDomain = true;
                                 }
 
-                                bool sanExists = false;
+                                var sanExists = false;
 
                                 // check for existing SAN entry
                                 foreach (var site in currentManagedCertificates)

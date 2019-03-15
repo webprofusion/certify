@@ -68,11 +68,18 @@ namespace Certify.Core.Management.Challenges
             _lastRequestTime = DateTime.Now;
             try
             {
-                if (controlKey != null) _controlKey = controlKey;
-                if (checkKey != null) _checkKey = checkKey;
+                if (controlKey != null)
+                {
+                    _controlKey = controlKey;
+                }
+
+                if (checkKey != null)
+                {
+                    _checkKey = checkKey;
+                }
 
                 _httpListener = new HttpListener();
-                
+
                 var serverConfig = Certify.SharedUtils.ServiceConfigManager.GetAppServiceConfig();
                 _baseUri = $"http://{serverConfig.Host}:{serverConfig.Port}/api/";
 
@@ -130,7 +137,7 @@ namespace Certify.Core.Management.Challenges
 
         private async Task ServerTask()
         {
-            string serverHeader = "Http-Challenge-Server-Certify/";
+            var serverHeader = "Http-Challenge-Server-Certify/";
 
             while (_httpListener != null && _httpListener.IsListening)
             {
@@ -140,7 +147,10 @@ namespace Certify.Core.Management.Challenges
 
                 var path = server.Request.Url.LocalPath;
 
-                if (_debugMode) Log(path);
+                if (_debugMode)
+                {
+                    Log(path);
+                }
 
                 server.Response.Headers.Add("Server", serverHeader);
 
@@ -163,7 +173,11 @@ namespace Certify.Core.Management.Challenges
 
                 if (key == _checkKey.ToLower())
                 {
-                    if (_debugMode) Log("Check key sent. OK.");
+                    if (_debugMode)
+                    {
+                        Log("Check key sent. OK.");
+                    }
+
                     server.Response.StatusCode = (int)HttpStatusCode.OK;
                     server.Response.ContentType = "text/plain";
 
@@ -185,13 +199,21 @@ namespace Certify.Core.Management.Challenges
 
                             var apiUrl = $"{_baseUri}managedcertificates/currentchallenges/";
 
-                            if (_debugMode) Log($"Key {key} not found: Refreshing challenges.. {apiUrl}");
+                            if (_debugMode)
+                            {
+                                Log($"Key {key} not found: Refreshing challenges.. {apiUrl}");
+                            }
+
                             var response = await _apiClient.GetAsync(apiUrl);
                             if (response.IsSuccessStatusCode)
                             {
                                 var json = await response.Content.ReadAsStringAsync();
 
-                                if (_debugMode) Log(json);
+                                if (_debugMode)
+                                {
+                                    Log(json);
+                                }
+
                                 var list = Newtonsoft.Json.JsonConvert.DeserializeObject<List<SimpleAuthorizationChallengeItem>>(json);
                                 _challengeResponses = new Dictionary<string, string>();
                                 list.ForEach(i => _challengeResponses.Add(i.Key.ToLower(), i.Value));
@@ -226,7 +248,7 @@ namespace Certify.Core.Management.Challenges
                             }
 
                             Log($"Responded with Key: {key} Value:{value}");
-                            
+
                         }
                         else
                         {
@@ -235,7 +257,7 @@ namespace Certify.Core.Management.Challenges
                             Log($"Requested key not found: {key}");
                         }
 
-                       
+
                     }
                     else
                     {
@@ -245,7 +267,10 @@ namespace Certify.Core.Management.Challenges
 
                 server.Response.Close();
 
-                if (_debugMode) Log("End request.");
+                if (_debugMode)
+                {
+                    Log("End request.");
+                }
 
                 if (_maxServiceLookups == 0)
                 {
@@ -253,15 +278,15 @@ namespace Certify.Core.Management.Challenges
                     // challenge responses we don't know about
                     Stop();
 
-                    if (_debugMode) Log("Max lookups failed.");
+                    if (_debugMode)
+                    {
+                        Log("Max lookups failed.");
+                    }
                 }
             }
         }
 
-        public bool IsRunning()
-        {
-            return _httpListener != null;
-        }
+        public bool IsRunning() => _httpListener != null;
 
         public void Stop()
         {

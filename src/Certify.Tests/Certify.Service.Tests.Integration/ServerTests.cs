@@ -18,7 +18,7 @@ namespace Certify.Service.Tests.Integration
         [TestMethod]
         public async Task TestServerAvailable()
         {
-            bool result = await _client.IsServerAvailable(Models.StandardServerTypes.IIS);
+            var result = await _client.IsServerAvailable(Models.StandardServerTypes.IIS);
 
             Assert.IsTrue(result, "IIS is available");
         }

@@ -77,11 +77,11 @@
     <ProjectReference Include="..\..\Certify.UI\Certify.UI.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Moq" Version="4.10.0" />
+    <PackageReference Include="Moq" Version="4.10.1" />
     <PackageReference Include="MSTest.TestAdapter" Version="1.2.1" />
     <PackageReference Include="MSTest.TestFramework" Version="1.2.1" />
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.2" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
     <PackageReference Include="MSTest.TestAdapter" Version="1.4.0" />
     <PackageReference Include="MSTest.TestFramework" Version="1.4.0" />
   </ItemGroup>

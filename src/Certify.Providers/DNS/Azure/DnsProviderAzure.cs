@@ -29,18 +29,14 @@ namespace Certify.Providers.DNS.Azure
 
         public List<ProviderParameter> ProviderParameters => Definition.ProviderParameters;
 
-        public static ProviderDefinition Definition
+        public static ChallengeProviderDefinition Definition => new ChallengeProviderDefinition
         {
-            get
-            {
-                return new ProviderDefinition
-                {
-                    Id = "DNS01.API.Azure",
-                    Title = "Azure DNS API",
-                    Description = "Validates via Azure DNS APIs using credentials",
-                    HelpUrl = "http://docs.certifytheweb.com/docs/dns-azuredns.html",
-                    PropagationDelaySeconds = 60,
-                    ProviderParameters = new List<ProviderParameter>{
+            Id = "DNS01.API.Azure",
+            Title = "Azure DNS API",
+            Description = "Validates via Azure DNS APIs using credentials",
+            HelpUrl = "http://docs.certifytheweb.com/docs/dns-azuredns.html",
+            PropagationDelaySeconds = 60,
+            ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{Key="tenantid", Name="Tenant Id", IsRequired=false },
                         new ProviderParameter{Key="clientid", Name="Application Id", IsRequired=false },
                         new ProviderParameter{Key="secret",Name="Svc Principal Secret", IsRequired=true , IsPassword=true},
@@ -48,12 +44,10 @@ namespace Certify.Providers.DNS.Azure
                         new ProviderParameter{Key="resourcegroupname",Name="Resource Group Name", IsRequired=true , IsPassword=false},
                         new ProviderParameter{ Key="zoneid",Name="DNS Zone Name", IsRequired=true, IsPassword=false, IsCredential=false }
                     },
-                    ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                    Config = "Provider=Certify.Providers.DNS.Azure",
-                    HandlerType = ChallengeHandlerType.INTERNAL
-                };
-            }
-        }
+            ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+            Config = "Provider=Certify.Providers.DNS.Azure",
+            HandlerType = ChallengeHandlerType.INTERNAL
+        };
 
         public DnsProviderAzure(Dictionary<string, string> credentials)
         {
@@ -65,7 +59,7 @@ namespace Certify.Providers.DNS.Azure
             // test connection and credentials
             try
             {
-                var zones = await this.GetZones();
+                var zones = await GetZones();
 
                 if (zones != null && zones.Any())
                 {
@@ -94,9 +88,10 @@ namespace Certify.Providers.DNS.Azure
                 _credentials["secret"]
                 );
 
-            _dnsClient = new DnsManagementClient(serviceCreds);
-
-            _dnsClient.SubscriptionId = _credentials["subscriptionid"];
+            _dnsClient = new DnsManagementClient(serviceCreds)
+            {
+                SubscriptionId = _credentials["subscriptionid"]
+            };
             return true;
         }
 
@@ -134,7 +129,9 @@ namespace Certify.Providers.DNS.Azure
                     }
                 }
 
-            } catch {
+            }
+            catch
+            {
                 // No record exist
             }
 
@@ -147,7 +144,7 @@ namespace Certify.Providers.DNS.Azure
                        RecordType.TXT,
                        recordSetParams
                 );
-                               
+
 
                 if (result != null)
                 {

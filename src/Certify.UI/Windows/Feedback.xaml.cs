@@ -1,7 +1,7 @@
-﻿using Certify.Locales;
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Input;
+using Certify.Locales;
 
 namespace Certify.UI.Windows
 {
@@ -21,25 +21,22 @@ namespace Certify.UI.Windows
 
             if (feedbackMsg != null)
             {
-                this.FeedbackMessage = feedbackMsg;
-                this.Comment.Text = this.FeedbackMessage;
+                FeedbackMessage = feedbackMsg;
+                Comment.Text = FeedbackMessage;
             }
-            this.IsException = isException;
+            IsException = isException;
 
-            if (this.IsException)
+            if (IsException)
             {
-                this.Prompt.Text = SR.Send_Feedback_Exception;
+                Prompt.Text = SR.Send_Feedback_Exception;
             }
         }
 
-        private void Cancel_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
+        private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
 
         private async void Submit_Click(object sender, RoutedEventArgs e)
         {
-            if (String.IsNullOrEmpty(Comment.Text))
+            if (string.IsNullOrEmpty(Comment.Text))
             {
                 return;
             }
@@ -58,7 +55,7 @@ namespace Certify.UI.Windows
                 {
                     OS = Environment.OSVersion.ToString(),
                     AppVersion = ConfigResources.AppName + " " + appVersion,
-                    IsException = this.IsException
+                    IsException = IsException
                 },
                 AppVersion = ConfigResources.AppName + " " + appVersion,
                 IsException = IsException
@@ -74,7 +71,7 @@ namespace Certify.UI.Windows
                 if (submittedOK)
                 {
                     MessageBox.Show(SR.Send_Feedback_Success);
-                    this.Close();
+                    Close();
                     return;
                 }
                 else

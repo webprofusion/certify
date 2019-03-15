@@ -89,6 +89,21 @@ namespace Certify.Service
             return await _certifyManager.GeneratePreview(site);
         }
 
+        [HttpGet, Route("performdeployment/{isPreviewOnly}/{managedCertificateId}/{taskId?}")]
+        public async Task<List<ActionStep>> PerformDeploymentTask(string managedCertificateId, bool isPreviewOnly, string taskId)
+        {
+            DebugLog();
+
+            var skipDeferred = true;
+            // if a taskid has been provided, run it even if it's a deferred task
+            if (!string.IsNullOrEmpty(taskId))
+            {
+                skipDeferred = false;
+            }
+
+            return await _certifyManager.PerformDeploymentTask(null, managedCertificateId, taskId, isPreviewOnly, skipDeferred);
+        }
+
         /// <summary>
         /// Begin auto renew process and return list of included sites 
         /// </summary>
@@ -158,23 +173,17 @@ namespace Certify.Service
             return result;
         }
 
+        [HttpGet, Route("deploymentproviders/")]
+        public async Task<List<DeploymentProviderDefinition>> GetDeploymentProviderList() => await Core.Management.DeploymentTasks.DeploymentTaskProviderFactory.GetDeploymentTaskProviders();
+
         [HttpGet, Route("challengeapis/")]
-        public async Task<List<ProviderDefinition>> GetChallengeAPIList()
-        {
-            return await Core.Management.Challenges.ChallengeProviders.GetChallengeAPIProviders();
-        }
+        public async Task<List<ChallengeProviderDefinition>> GetChallengeAPIList() => await Core.Management.Challenges.ChallengeProviders.GetChallengeAPIProviders();
 
         [HttpGet, Route("currentchallenges/")]
-        public async Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallenges()
-        {
-            return await _certifyManager.GetCurrentChallengeResponses(SupportedChallengeTypes.CHALLENGE_TYPE_HTTP);
-        }
+        public async Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallenges() => await _certifyManager.GetCurrentChallengeResponses(SupportedChallengeTypes.CHALLENGE_TYPE_HTTP);
 
         [HttpGet, Route("dnszones/{providerTypeId}/{credentialId}")]
-        public async Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialId)
-        {
-            return await _certifyManager.GetDnsProviderZones(providerTypeId, credentialId);
-        }
+        public async Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialId) => await _certifyManager.GetDnsProviderZones(providerTypeId, credentialId);
 
         public class ProgressLogSink : Serilog.Core.ILogEventSink
         {

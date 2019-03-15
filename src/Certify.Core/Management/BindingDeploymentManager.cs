@@ -47,7 +47,7 @@ namespace Certify.Core.Management
             }
 
             //store cert against primary domain
-           var certStoreName = CertificateManager.GetDefaultStore().Name;
+            var certStoreName = CertificateManager.GetStore().Name;
             X509Certificate2 storedCert = null;
             byte[] certHash = null;
 
@@ -159,7 +159,10 @@ namespace Certify.Core.Management
                 if (!string.IsNullOrEmpty(managedCertificate.ServerSiteId))
                 {
                     var site = await deploymentTarget.GetTargetItem(managedCertificate.ServerSiteId);
-                    if (site != null) targetSites.Add(site);
+                    if (site != null)
+                    {
+                        targetSites.Add(site);
+                    }
                 }
             }
 
@@ -231,7 +234,10 @@ namespace Certify.Core.Management
                         {
                             // update existing bindings only, so only update if this is already an
                             // https binding
-                            if (b.Protocol != "https") updateBinding = false;
+                            if (b.Protocol != "https")
+                            {
+                                updateBinding = false;
+                            }
                         }
 
                         if (b.Protocol != "http" && b.Protocol != "https")
@@ -246,9 +252,13 @@ namespace Certify.Core.Management
                             var sslPort = 443;
                             var targetIPAddress = "*";
 
-                            if (!string.IsNullOrWhiteSpace(requestConfig.BindingPort)) sslPort = int.Parse(requestConfig.BindingPort);
+                            if (!string.IsNullOrWhiteSpace(requestConfig.BindingPort))
+                            {
+                                sslPort = int.Parse(requestConfig.BindingPort);
+                            }
 
-                            if (b.Protocol == "https") {
+                            if (b.Protocol == "https")
+                            {
                                 if (b.Port > 0)
                                 {
                                     sslPort = b.Port;
@@ -257,7 +267,8 @@ namespace Certify.Core.Management
                                 {
                                     targetIPAddress = b.IP;
                                 }
-                            } else
+                            }
+                            else
                             {
                                 if (!unassignedIPs.Contains(requestConfig.BindingIPAddress))
                                 {
@@ -268,7 +279,7 @@ namespace Certify.Core.Management
                             //create/update binding and associate new cert
 
                             //if any binding elements configured, use those, otherwise auto bind using defaults and SNI
-            
+
                             var stepActions = await UpdateBinding(
                                 deploymentTarget,
                                 site,

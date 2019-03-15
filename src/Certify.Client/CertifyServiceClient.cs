@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Certify.Models;
@@ -54,8 +55,14 @@ namespace Certify.Client
         {
             var serviceConfig = Certify.SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
-            _baseUri = $"http://{serviceConfig.Host}:{serviceConfig.Port}" + _baseUri;
-            _statusHubUri = $"http://{serviceConfig.Host}:{serviceConfig.Port}" + _statusHubUri;
+            _baseUri = $"{(serviceConfig.UseHTTPS ? "https" : "http")}://{serviceConfig.Host}:{serviceConfig.Port}" + _baseUri;
+            _statusHubUri = $"{(serviceConfig.UseHTTPS ? "https" : "http")}://{serviceConfig.Host}:{serviceConfig.Port}" + _statusHubUri;
+
+            ServicePointManager.ServerCertificateValidationCallback += (obj, cert, chain, errors) =>
+            {
+                // ignore all cert errors when validating URL response
+                return true;
+            };
 
             // use windows authentication
             _client = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true });
@@ -63,15 +70,14 @@ namespace Certify.Client
             _client.Timeout = new TimeSpan(0, 20, 0); // 20 min timeout on service api calls
         }
 
-        public Shared.ServiceConfig GetAppServiceConfig()
-        {
-            return Certify.SharedUtils.ServiceConfigManager.GetAppServiceConfig();
-        }
+        public Shared.ServiceConfig GetAppServiceConfig() => Certify.SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
         public async Task ConnectStatusStreamAsync()
         {
-            connection = new HubConnection(_statusHubUri);
-            connection.Credentials = System.Net.CredentialCache.DefaultCredentials;
+            connection = new HubConnection(_statusHubUri)
+            {
+                Credentials = System.Net.CredentialCache.DefaultCredentials
+            };
             hubProxy = connection.CreateHubProxy("StatusHub");
 
             hubProxy.On<ManagedCertificate>("ManagedCertificateUpdated", (u) => OnManagedCertificateUpdated?.Invoke(u));
@@ -94,7 +100,7 @@ namespace Certify.Client
             }
             else
             {
-                string error = await response.Content.ReadAsStringAsync();
+                var error = await response.Content.ReadAsStringAsync();
                 throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error} ");
             }
         }
@@ -112,7 +118,7 @@ namespace Certify.Client
                 }
                 else
                 {
-                    string error = await response.Content.ReadAsStringAsync();
+                    var error = await response.Content.ReadAsStringAsync();
                     throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
                 }
             }
@@ -125,7 +131,7 @@ namespace Certify.Client
                 }
                 else
                 {
-                    string error = await response.Content.ReadAsStringAsync();
+                    var error = await response.Content.ReadAsStringAsync();
                     throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
                 }
             }
@@ -140,17 +146,14 @@ namespace Certify.Client
             }
             else
             {
-                string error = await response.Content.ReadAsStringAsync();
+                var error = await response.Content.ReadAsStringAsync();
                 throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
             }
         }
 
         #region System
 
-        public async Task<string> GetAppVersion()
-        {
-            return await FetchAsync("system/appversion");
-        }
+        public async Task<string> GetAppVersion() => await FetchAsync("system/appversion");
 
         public async Task<UpdateCheck> CheckForUpdates()
         {
@@ -228,8 +231,8 @@ namespace Certify.Client
             var response = await PostAsync("managedcertificates/search/", filter);
             var sites = await response.Content.ReadAsStringAsync();
             var serializer = new JsonSerializer();
-            using (StreamReader sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
-            using (JsonTextReader reader = new JsonTextReader(sr))
+            using (var sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
+            using (var reader = new JsonTextReader(sr))
             {
                 var managedCertificateList = serializer.Deserialize<List<ManagedCertificate>>(reader);
                 foreach (var s in managedCertificateList)
@@ -244,7 +247,11 @@ namespace Certify.Client
         {
             var result = await FetchAsync($"managedcertificates/{managedItemId}");
             var site = JsonConvert.DeserializeObject<ManagedCertificate>(result);
-            if (site != null) site.IsChanged = false;
+            if (site != null)
+            {
+                site.IsChanged = false;
+            }
+
             return site;
         }
 
@@ -271,8 +278,8 @@ namespace Certify.Client
         {
             var response = await PostAsync("managedcertificates/autorenew", null);
             var serializer = new JsonSerializer();
-            using (StreamReader sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
-            using (JsonTextReader reader = new JsonTextReader(sr))
+            using (var sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
+            using (var reader = new JsonTextReader(sr))
             {
                 var results = serializer.Deserialize<List<CertificateRequestResult>>(reader);
                 return results;
@@ -286,7 +293,8 @@ namespace Certify.Client
                 var response = await FetchAsync($"managedcertificates/renewcert/{managedItemId}/{resumePaused}");
                 return JsonConvert.DeserializeObject<CertificateRequestResult>(response);
             }
-            catch (Exception exp) {
+            catch (Exception exp)
+            {
                 return new CertificateRequestResult
                 {
                     IsSuccess = false,
@@ -298,7 +306,7 @@ namespace Certify.Client
 
         public async Task<RequestProgressState> CheckCertificateRequest(string managedItemId)
         {
-            string json = await FetchAsync($"managedcertificates/requeststatus/{managedItemId}");
+            var json = await FetchAsync($"managedcertificates/requeststatus/{managedItemId}");
             return JsonConvert.DeserializeObject<RequestProgressState>(json);
         }
 
@@ -310,7 +318,7 @@ namespace Certify.Client
 
         public async Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId)
         {
-            string json = await FetchAsync($"managedcertificates/dnszones/{providerTypeId}/{credentialsId}");
+            var json = await FetchAsync($"managedcertificates/dnszones/{providerTypeId}/{credentialsId}");
             return JsonConvert.DeserializeObject<List<Models.Providers.DnsZone>>(json);
         }
 
@@ -326,10 +334,22 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<CertificateRequestResult>(response);
         }
 
-        public async Task<List<ProviderDefinition>> GetChallengeAPIList()
+        public async Task<List<ChallengeProviderDefinition>> GetChallengeAPIList()
         {
             var response = await FetchAsync($"managedcertificates/challengeapis/");
-            return JsonConvert.DeserializeObject<List<ProviderDefinition>>(response);
+            return JsonConvert.DeserializeObject<List<ChallengeProviderDefinition>>(response);
+        }
+
+        public async Task<List<DeploymentProviderDefinition>> GetDeploymentProviderList()
+        {
+            var response = await FetchAsync($"managedcertificates/deploymentproviders/");
+            return JsonConvert.DeserializeObject<List<DeploymentProviderDefinition>>(response);
+        }
+
+        public async Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly)
+        {
+            var response = await FetchAsync($"managedcertificates/performdeployment/{isPreviewOnly}/{managedCertificateId}/{taskId}");
+            return JsonConvert.DeserializeObject<List<ActionStep>>(response);
         }
 
         #endregion Managed Certificates

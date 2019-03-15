@@ -25,35 +25,17 @@ namespace Certify.Models
             _log = log;
         }
 
-        public void Error(string template, params object[] propertyValues)
-        {
-            _log.Error(template, propertyValues);
-        }
+        public void Error(string template, params object[] propertyValues) => _log.Error(template, propertyValues);
 
-        public void Error(Exception exp, string template, params object[] propertyValues)
-        {
-            _log.Error(exp, template, propertyValues);
-        }
+        public void Error(Exception exp, string template, params object[] propertyValues) => _log.Error(exp, template, propertyValues);
 
-        public void Information(string template, params object[] propertyValues)
-        {
-            _log.Information(template, propertyValues);
-        }
+        public void Information(string template, params object[] propertyValues) => _log.Information(template, propertyValues);
 
-        public void Debug(string template, params object[] propertyValues)
-        {
-            _log.Debug(template, propertyValues);
-        }
+        public void Debug(string template, params object[] propertyValues) => _log.Debug(template, propertyValues);
 
-        public void Verbose(string template, params object[] propertyValues)
-        {
-            _log.Verbose(template, propertyValues);
-        }
+        public void Verbose(string template, params object[] propertyValues) => _log.Verbose(template, propertyValues);
 
-        public void Warning(string template, params object[] propertyValues)
-        {
-            _log.Warning(template, propertyValues);
-        }
+        public void Warning(string template, params object[] propertyValues) => _log.Warning(template, propertyValues);
     }
 
     public class ManagedCertificateLogItem
@@ -82,16 +64,19 @@ namespace Certify.Models
     {
         private static ConcurrentDictionary<string, Serilog.Core.Logger> _managedItemLoggers { get; set; }
 
-        public static string GetLogPath(string managedItemId)
-        {
-            return Util.GetAppDataFolder() + "\\logs\\log_" + managedItemId.Replace(':', '_') + ".txt";
-        }
+        public static string GetLogPath(string managedItemId) => Util.GetAppDataFolder() + "\\logs\\log_" + managedItemId.Replace(':', '_') + ".txt";
 
         public static ILog GetLogger(string managedItemId, Serilog.Core.LoggingLevelSwitch logLevelSwitch)
         {
-            if (string.IsNullOrEmpty(managedItemId)) return null;
+            if (string.IsNullOrEmpty(managedItemId))
+            {
+                return null;
+            }
 
-            if (_managedItemLoggers == null) _managedItemLoggers = new ConcurrentDictionary<string, Serilog.Core.Logger>();
+            if (_managedItemLoggers == null)
+            {
+                _managedItemLoggers = new ConcurrentDictionary<string, Serilog.Core.Logger>();
+            }
 
             Serilog.Core.Logger log = _managedItemLoggers.GetOrAdd(managedItemId, (key) =>
             {

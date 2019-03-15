@@ -1,10 +1,10 @@
-﻿using Certify.Models;
-using System;
+﻿using System;
 using System.Globalization;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using Certify.Models;
 
 namespace Certify.UI.Controls
 {
@@ -13,18 +13,12 @@ namespace Certify.UI.Controls
     /// </summary>
     public partial class ProgressMonitor : UserControl
     {
-        protected Certify.UI.ViewModel.AppViewModel MainViewModel
-        {
-            get
-            {
-                return UI.ViewModel.AppViewModel.Current;
-            }
-        }
+        protected Certify.UI.ViewModel.AppViewModel MainViewModel => UI.ViewModel.AppViewModel.Current;
 
         public ProgressMonitor()
         {
             InitializeComponent();
-            this.DataContext = MainViewModel;
+            DataContext = MainViewModel;
         }
 
         private void ManagedCertificate_ViewLog(object sender, MouseButtonEventArgs e)
@@ -60,9 +54,6 @@ namespace Certify.UI.Controls
             return new SolidColorBrush(System.Windows.Media.Colors.DarkGray);
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return null;
-        }
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => null;
     }
 }

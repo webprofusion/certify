@@ -41,7 +41,7 @@ namespace Certify.UI.Controls
         {
             CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).Filter = (item) =>
             {
-                string filter = txtFilter.Text.Trim();
+                var filter = txtFilter.Text.Trim();
 
                 return filter == "" || filter.Split(';').Where(f => f.Trim() != "").Any(f =>
                     ((Models.ManagedCertificate)item).Name.IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1 ||
@@ -108,14 +108,17 @@ namespace Certify.UI.Controls
 
         private async void TxtFilter_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Escape) ResetFilter();
+            if (e.Key == Key.Escape)
+            {
+                ResetFilter();
+            }
 
             if (e.Key == Key.Enter || e.Key == Key.Down)
             {
                 if (lvManagedCertificates.Items.Count > 0)
                 {
                     // get selected index of filtered list or 0
-                    int index = lvManagedCertificates.Items.IndexOf(_appViewModel.SelectedItem);
+                    var index = lvManagedCertificates.Items.IndexOf(_appViewModel.SelectedItem);
                     var item = lvManagedCertificates.Items[index == -1 ? 0 : index];
 
                     // if navigating away, confirm discard
@@ -183,11 +186,11 @@ namespace Certify.UI.Controls
 
             var item = ((ListViewItem)sender);
 
-            int index = lvManagedCertificates.Items.IndexOf(item.DataContext);
+            var index = lvManagedCertificates.Items.IndexOf(item.DataContext);
 
             var ctrl = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
 
-            int pagesize = (int)(lvManagedCertificates.ActualHeight / item.ActualHeight);
+            var pagesize = (int)(lvManagedCertificates.ActualHeight / item.ActualHeight);
 
             switch (e.Key)
             {
@@ -250,7 +253,7 @@ namespace Certify.UI.Controls
                 else
                 {
                     // selected item was deleted
-                    int newIndex = lastSelectedIndex;
+                    var newIndex = lastSelectedIndex;
 
                     while (newIndex >= lvManagedCertificates.Items.Count && newIndex >= -1)
                     {

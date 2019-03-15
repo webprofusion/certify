@@ -1,28 +1,141 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
+using ACMESharp.Protocol;
+using ACMESharp.Protocol.Resources;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
 
-namespace ACMESharpCore
+namespace Certfy.Providers.ACME.ACMESharpCore
 {
+
+    public class LoggingHandler : DelegatingHandler
+    {
+        private ILog _log = null;
+
+        public LoggingHandler(HttpMessageHandler innerHandler, ILog log)
+            : base(innerHandler)
+        {
+            _log = log;
+        }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            if (_log != null)
+            {
+                _log.Debug($"Http Request: {request.ToString()}");
+                if (request.Content != null)
+                {
+                    _log.Debug(await request.Content.ReadAsStringAsync());
+                }
+            }
+
+            var response = await base.SendAsync(request, cancellationToken);
+
+            if (_log != null)
+            {
+                _log.Debug($"Http Response: {response.ToString()}");
+
+                if (response.Content != null)
+                {
+                    _log.Debug(await response.Content.ReadAsStringAsync());
+                }
+            }
+
+            return response;
+        }
+    }
+
     public class ACMESharpCoreProvider : IACMEClientProvider, IVaultProvider
     {
-        public Task<bool> InitProvider(ILog log = null)
+        private ILog _log;
+        private string _acmeBaseUri;
+        private AcmeProtocolClient _client;
+        private LoggingHandler _loggingHandler;
+        private string _userAgentName = "Certify SSL Manager";
+        private string _settingsFolder;
+        private HttpClient _httpClient;
+
+        public ACMESharpCoreProvider(string acmeBaseUri, string settingsPath, string userAgentName)
         {
-            throw new System.NotImplementedException();
+            _settingsFolder = settingsPath;
+
+            var assembly = typeof(AcmeProtocolClient).Assembly.GetName();
+
+            _userAgentName = $"{userAgentName} {assembly.Name}/{assembly.Version.ToString()}";
+
+            _acmeBaseUri = acmeBaseUri;
+
         }
 
-        public Task<bool> AddNewAccountAndAcceptTOS(ILog log, string email)
+        public async Task<bool> InitProvider(ILog log = null )
         {
-            throw new System.NotImplementedException();
+            if (log != null)
+            {
+                _log = log;
+            }
+
+            _loggingHandler = new LoggingHandler(new HttpClientHandler(), _log);
+            var customHttpClient = new System.Net.Http.HttpClient(_loggingHandler);
+            customHttpClient.DefaultRequestHeaders.Add("User-Agent", _userAgentName);
+
+            _httpClient = new HttpClient();
+
+            await LoadSettings();
+
+            _client = new AcmeProtocolClient(_httpClient);
+            _client.Directory = await _client.GetDirectoryAsync();
+
+            if (_client.Account == null)
+            {
+                throw new Exception("AcmeClient was unable to find or create an account");
+            }
+
+            return true;
         }
 
-        public Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config, string orderUri = null)
+        private async Task LoadSettings()
         {
-            throw new System.NotImplementedException();
+            // load settings related to this provider
+            await _client.GetNonceAsync();
+        }
+
+        public async Task<bool> AddNewAccountAndAcceptTOS(ILog log, string email)
+        {
+            _log.Debug("Adding new account");
+
+            var account = await _client.CreateAccountAsync(new string[] { email.Trim() }, termsOfServiceAgreed: true);
+
+            return true;
+
+        }
+
+        public async Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config, string orderUri = null)
+        {
+            var domains = new List<string>{
+                config.PrimaryDomain
+                    };
+
+            domains.AddRange(config.SubjectAlternativeNames);
+
+            var order = await _client.CreateOrderAsync(domains.Distinct());
+            var authorizations = new List<PendingAuthorization>();
+
+            foreach (var authz in order.Payload.Authorizations)
+            {
+                var pendingAuthz = new PendingAuthorization
+                {
+                    //TODO
+                };
+                authorizations.Add(pendingAuthz);
+            }
+            return new PendingOrder { OrderUri = order.OrderUrl, Authorizations = authorizations };
         }
 
         public Task<bool> ChangeAccountKey(ILog log)
@@ -30,19 +143,22 @@ namespace ACMESharpCore
             throw new NotImplementedException();
         }
 
-        public Task<PendingAuthorization> CheckValidationCompleted(ILog log, string challengeType, PendingAuthorization pendingAuthorization)
+        public async Task<PendingAuthorization> CheckValidationCompleted(ILog log, string challengeType, PendingAuthorization pendingAuthorization)
         {
             throw new System.NotImplementedException();
         }
 
-        public Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId)
+        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId)
         {
-            throw new System.NotImplementedException();
+            var order = await _client.GetOrderDetailsAsync("");
+            var certData = await _client.GetOrderCertificateAsync(order);
+
+            return new ProcessStepResult { IsSuccess = true };
         }
 
-        public void DeleteContactRegistration(string id)
+        public async void DeleteContactRegistration(string id)
         {
-            throw new System.NotImplementedException();
+            await _client.DeactivateAccountAsync();
         }
 
         public void EnableSensitiveFileEncryption()
@@ -50,19 +166,21 @@ namespace ACMESharpCore
             throw new System.NotImplementedException();
         }
 
-        public Task<string> GetAcmeAccountStatus()
+        public async Task<string> GetAcmeAccountStatus()
         {
-            throw new NotImplementedException();
+            var account = await _client.CheckAccountAsync();
+            return account.Kid;
         }
 
         public string GetAcmeBaseURI()
         {
-            throw new System.NotImplementedException();
+            return _acmeBaseUri;
         }
 
-        public Task<Uri> GetAcmeTermsOfService()
+        public async Task<Uri> GetAcmeTermsOfService()
         {
-            throw new NotImplementedException();
+            var tos = await _client.GetDirectoryAsync();
+            return new Uri(tos.Meta.TermsOfService);
         }
 
         public List<RegistrationItem> GetContactRegistrations()
@@ -72,17 +190,99 @@ namespace ACMESharpCore
 
         public string GetProviderName()
         {
-            throw new System.NotImplementedException();
+            return "ACMESharpCore";
         }
 
-        public Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate)
+        public async Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate)
         {
-            throw new System.NotImplementedException();
+            try
+            {
+                var pkcs = new Org.BouncyCastle.Pkcs.Pkcs12Store(File.Open(managedCertificate.CertificatePath, FileMode.Open), "".ToCharArray());
+
+                var certAliases = pkcs.Aliases.GetEnumerator();
+                certAliases.MoveNext();
+
+                var certEntry = pkcs.GetCertificate(certAliases.Current.ToString());
+                var certificate = certEntry.Certificate;
+
+                // revoke certificate
+                var der = certificate.GetEncoded();
+                await _client.RevokeCertificateAsync(der, RevokeReason.Unspecified);
+
+                return new StatusMessage { IsOK = true, Message = $"Certificate revoke completed." };
+            }
+            catch (Exception exp)
+            {
+                return new StatusMessage { IsOK = false, Message = $"Failed to revoke certificate: {exp.Message}" };
+            }
+
         }
 
-        public Task<StatusMessage> SubmitChallenge(ILog log, string challengeType, AuthorizationChallengeItem attemptedChallenge)
+        public async Task<StatusMessage> SubmitChallenge(ILog log, string challengeType, AuthorizationChallengeItem attemptedChallenge)
         {
-            throw new System.NotImplementedException();
+       
+            if (attemptedChallenge == null)
+            {
+                return new StatusMessage
+                {
+                    IsOK = false,
+                    Message = "Challenge could not be submitted. No matching attempted challenge."
+                };
+            }
+
+            if (!attemptedChallenge.IsValidated)
+            {
+              //  IChallengeContext challenge = (IChallengeContext)attemptedChallenge.ChallengeData;
+                try
+                {
+                    var result = await _client.AnswerChallengeAsync(attemptedChallenge.ResourceUri);
+
+                    var attempts = 10;
+
+                    while (attempts > 0 && result.Status == "pending" || result.Status == "processing")
+                    {
+                        result = await _client.GetChallengeDetailsAsync(attemptedChallenge.ResourceUri);
+                    }
+
+                    if (result.Status == "valid")
+                    {
+                        return new StatusMessage
+                        {
+                            IsOK = true,
+                            Message = "Submitted"
+                        };
+                    }
+                    else
+                    {
+                        
+                        return new StatusMessage
+                        {
+                            IsOK = false,
+                            Message =result.Error.ToString()
+                        };
+                    }
+                }
+                catch (ACMESharp.Protocol.AcmeProtocolException exp)
+                {
+                    var msg = $"Submit Challenge failed: {exp.ProblemDetail}";
+
+                    log.Error(msg);
+
+                    return new StatusMessage
+                    {
+                        IsOK = false,
+                        Message = msg
+                    };
+                }
+            }
+            else
+            {
+                return new StatusMessage
+                {
+                    IsOK = true,
+                    Message = "Validated"
+                };
+            }
         }
     }
 }

@@ -28,7 +28,7 @@ namespace Certify.Core.Management.Challenges
 
         public static async Task<IDnsProvider> GetDnsProvider(string providerType, Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
         {
-            ProviderDefinition providerDefinition;
+            ChallengeProviderDefinition providerDefinition;
             IDnsProvider dnsAPIProvider = null;
 
             if (!string.IsNullOrEmpty(providerType))
@@ -99,7 +99,7 @@ namespace Certify.Core.Management.Challenges
                 {
                     dnsAPIProvider = new DnsProviderAcmeDns(credentials, parameters, Util.GetAppDataFolder());
                 }
-                else if(providerDefinition.Id == DnsProviderNameCheap.Definition.Id)
+                else if (providerDefinition.Id == DnsProviderNameCheap.Definition.Id)
                 {
                     dnsAPIProvider = new DnsProviderNameCheap(credentials);
                 }
@@ -133,24 +133,67 @@ namespace Certify.Core.Management.Challenges
             {
                 return new DnsProviderMSDNS(credentials, parameters);
             }
-            catch {
+            catch
+            {
                 log?.Error("Failed to create MS DNS API Provider. Check Microsoft.Management.Infrastructure is available and install latest compatible Windows Management Framework: https://docs.microsoft.com/en-us/powershell/wmf/overview");
                 return null;
             };
         }
 
-        public static async Task<List<ProviderDefinition>> GetChallengeAPIProviders()
+        public static async Task<List<ChallengeProviderDefinition>> GetChallengeAPIProviders()
         {
-            var providers = new List<ProviderDefinition>
+            var providers = new List<ChallengeProviderDefinition>
             {
                 // IIS
-                new ProviderDefinition
+                new ChallengeProviderDefinition
                 {
                     Id = "HTTP01.IIS.Local",
                     ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
                     Title = "Local IIS Server",
                     Description = "Validates via standard http website bindings on port 80",
                     HandlerType = ChallengeHandlerType.INTERNAL
+                },
+                 new ChallengeProviderDefinition
+                {
+                    Id = "Certify.StandardChallenges.Generic",
+                    ChallengeType = "",
+                    Title = "Username and Password",
+                    Description = "Standard username and password credentials",
+                    HandlerType = ChallengeHandlerType.INTERNAL,
+                    ProviderParameters= new List<ProviderParameter>
+                    {
+                       new ProviderParameter{ Key="username",Name="Username", IsRequired=true, IsPassword=false, IsCredential=true },
+                       new ProviderParameter{ Key="password",Name="Password", IsRequired=true, IsPassword=true, IsCredential=true },
+                    }
+                },
+                 new ChallengeProviderDefinition
+                {
+                    Id = "Certify.StandardChallenges.Windows",
+                    ChallengeType = "",
+                    Title = "Windows Credentials",
+                    Description = "Windows username and password credentials",
+                    HandlerType = ChallengeHandlerType.INTERNAL,
+                    ProviderParameters= new List<ProviderParameter>
+                    {
+                       new ProviderParameter{ Key="domain",Name="Domain", IsRequired=false, IsPassword=false, IsCredential=true },
+                       new ProviderParameter{ Key="username",Name="Username", IsRequired=true, IsPassword=false, IsCredential=true },
+                       new ProviderParameter{ Key="password",Name="Password", IsRequired=true, IsPassword=true, IsCredential=true },
+                    }
+                },
+                  new ChallengeProviderDefinition
+                {
+                    Id = "Certify.StandardChallenges.SSH",
+                    ChallengeType = "",
+                    Title = "SSH Credentials",
+                    Description = "SSH username, password and private key credentials",
+                    HandlerType = ChallengeHandlerType.INTERNAL,
+                    ProviderParameters= new List<ProviderParameter>
+                    {
+                       new ProviderParameter{ Key="username",Name="Username", IsRequired=true, IsPassword=false, IsCredential=true },
+                       new ProviderParameter{ Key="password",Name="password", IsRequired=false, IsPassword=true, IsCredential=true, Description="Optional password" },
+                       new ProviderParameter{ Key="privatekey",Name="Private Key File Path", IsRequired=false, IsPassword=false, IsCredential=true, Description="Optional path private key file" },
+                       new ProviderParameter{ Key="key_passphrase",Name="Private Key Passphrase", IsRequired=false, IsPassword=true, IsCredential=true , Description="Optional key passphrase"},
+                    }
                 },
                 // DNS
                 DnsProviderManual.Definition,
@@ -176,7 +219,7 @@ namespace Certify.Core.Management.Challenges
             return await Task.FromResult(providers);
         }
 
-        private static void TryAddProviders(List<ProviderDefinition> providers)
+        private static void TryAddProviders(List<ChallengeProviderDefinition> providers)
         {
             // some providers may fail to add due to platform dependencies/restrictions
             try

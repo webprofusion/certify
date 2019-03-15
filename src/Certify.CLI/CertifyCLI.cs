@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Client;
@@ -23,15 +22,16 @@ namespace Certify.CLI
 
         public async Task<bool> IsServiceAvailable()
         {
-            bool isAvailable = false;
+            var isAvailable = false;
 
             try
             {
                 await _certifyClient.GetAppVersion();
                 isAvailable = true;
             }
-            catch (Exception)
+            catch (Exception exp)
             {
+                System.Diagnostics.Debug.WriteLine(exp.ToString());
                 isAvailable = false;
             }
             return isAvailable;
@@ -57,20 +57,11 @@ namespace Certify.CLI
             return false;
         }
 
-        public async Task LoadPreferences()
-        {
-            _prefs = await _certifyClient.GetPreferences();
-        }
+        public async Task LoadPreferences() => _prefs = await _certifyClient.GetPreferences();
 
-        private bool IsTelematicsEnabled()
-        {
-            return _prefs.EnableAppTelematics;
-        }
+        private bool IsTelematicsEnabled() => _prefs.EnableAppTelematics;
 
-        private string GetInstrumentationKey()
-        {
-            return Certify.Locales.ConfigResources.AIInstrumentationKey;
-        }
+        private string GetInstrumentationKey() => Certify.Locales.ConfigResources.AIInstrumentationKey;
 
         private async Task<string> GetAppVersion()
         {
@@ -84,10 +75,7 @@ namespace Certify.CLI
             }
         }
 
-        private string GetAppWebsiteURL()
-        {
-            return Certify.Locales.ConfigResources.AppWebsiteURL;
-        }
+        private string GetAppWebsiteURL() => Certify.Locales.ConfigResources.AppWebsiteURL;
 
         private void InitTelematics()
         {
@@ -109,7 +97,7 @@ namespace Certify.CLI
         internal void ShowVersion()
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
-            System.Console.WriteLine("Certify SSL Manager - CLI v4.0.0. Certify.Core v" + GetAppVersion().Result);
+            System.Console.WriteLine("Certify SSL Manager - CLI v4.0.0. Certify.Core v" + GetAppVersion().Result.Replace("\"",""));
             Console.ForegroundColor = ConsoleColor.White;
             System.Console.WriteLine("For more information see " + GetAppWebsiteURL());
             System.Console.WriteLine("");
@@ -147,7 +135,11 @@ namespace Certify.CLI
 
         internal async Task PerformAutoRenew()
         {
-            if (_tc == null) InitTelematics();
+            if (_tc == null)
+            {
+                InitTelematics();
+            }
+
             if (_tc != null)
             {
                 _tc.TrackEvent("CLI_BeginAutoRenew");

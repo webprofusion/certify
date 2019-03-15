@@ -58,10 +58,7 @@ namespace Certify.Core.Tests
         /// <summary>
         /// Perform teardown for IIS
         /// </summary>
-        public void Dispose()
-        {
-            TeardownIIS().Wait();
-        }
+        public void Dispose() => TeardownIIS().Wait();
 
         public async Task SetupIIS()
         {
@@ -87,7 +84,7 @@ namespace Certify.Core.Tests
             var testStr = "abc7363";
             var hostname = $"test-{testStr}.test." + PrimaryTestDomain;
             var wildcardDomain = "*.test." + PrimaryTestDomain;
-            string testPreviewSiteName = "TestPreview_" + testStr;
+            var testPreviewSiteName = "TestPreview_" + testStr;
 
             if (await iisManager.SiteExists(testPreviewSiteName))
             {
@@ -126,7 +123,7 @@ namespace Certify.Core.Tests
                 };
 
                 var preview = await certifyManager.GeneratePreview(dummyManagedCertificate);
-                string previewSummary = GetPreviewSummary(preview);
+                var previewSummary = GetPreviewSummary(preview);
                 System.Diagnostics.Debug.WriteLine(previewSummary);
 
                 var deployStep = preview.Find(a => a.Category == "Deployment");
@@ -139,10 +136,16 @@ namespace Certify.Core.Tests
                 await iisManager.DeleteSite(testPreviewSiteName);
 
                 // remove managed site
-                if (managedCertificate != null) await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
+                if (managedCertificate != null)
+                {
+                    await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
+                }
 
                 // cleanup certificate
-                if (certInfo != null) CertificateManager.RemoveCertificate(certInfo);
+                if (certInfo != null)
+                {
+                    CertificateManager.RemoveCertificate(certInfo);
+                }
             }
         }
 
@@ -159,7 +162,7 @@ namespace Certify.Core.Tests
             var testStr = "static1";
             var hostname = $"test-{testStr}.test." + PrimaryTestDomain;
             var wildcardDomain = "*.test." + PrimaryTestDomain;
-            string testPreviewSiteName = "StaticTestPreview_" + testStr;
+            var testPreviewSiteName = "StaticTestPreview_" + testStr;
 
             if (await iisManager.SiteExists(testPreviewSiteName))
             {
@@ -182,7 +185,7 @@ namespace Certify.Core.Tests
                     GroupId = site.Id.ToString(),
                     RequestConfig = new CertRequestConfig
                     {
-                        PrimaryDomain = wildcardDomain,            
+                        PrimaryDomain = wildcardDomain,
                         PerformAutomatedCertBinding = true,
                         DeploymentSiteOption = DeploymentOption.Auto,
                         Challenges = new ObservableCollection<CertRequestChallengeConfig>
@@ -200,7 +203,7 @@ namespace Certify.Core.Tests
                 // Deployment Mode = Auto
 
                 var preview = await certifyManager.GeneratePreview(testManagedCert);
-                string previewSummary = GetPreviewSummary(preview);
+                var previewSummary = GetPreviewSummary(preview);
                 System.Diagnostics.Debug.WriteLine(previewSummary);
 
                 var deployStep = preview.Find(a => a.Category == "Deployment");
@@ -225,15 +228,21 @@ namespace Certify.Core.Tests
                 await iisManager.DeleteSite(testPreviewSiteName);
 
                 // remove managed site
-                if (managedCertificate != null) await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
+                if (managedCertificate != null)
+                {
+                    await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
+                }
 
                 // cleanup certificate
-                if (certInfo != null) CertificateManager.RemoveCertificate(certInfo);
+                if (certInfo != null)
+                {
+                    CertificateManager.RemoveCertificate(certInfo);
+                }
             }
         }
         private string GetPreviewSummary(List<ActionStep> steps)
         {
-            string output = "";
+            var output = "";
             foreach (var s in steps)
             {
                 output += $"{s.Title} : {s.Description}\r\n";

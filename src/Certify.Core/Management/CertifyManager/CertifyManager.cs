@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Core.Management.Challenges;
@@ -11,6 +12,7 @@ using Certify.Management.Servers;
 using Certify.Models;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
+using Certify.Providers.ACME.Certes;
 using Microsoft.ApplicationInsights;
 using Serilog;
 
@@ -58,7 +60,7 @@ namespace Certify.Management
             // TODO: convert providers to plugins, allow for async init
             var userAgent = Util.GetUserAgent();
 
-            var certes = new Certify.Providers.Certes.CertesACMEProvider(Management.Util.GetAppDataFolder() + "\\certes", userAgent);
+            var certes = new CertesACMEProvider(Management.Util.GetAppDataFolder() + "\\certes", userAgent);
 
             certes.InitProvider(_serviceLog).Wait();
 
@@ -76,12 +78,14 @@ namespace Certify.Management
             _httpChallengePort = serverConfig.HttpChallengeServerPort;
             _httpChallengeServerClient.Timeout = new TimeSpan(0, 0, 5);
 
-            if (_tc != null) _tc.TrackEvent("ServiceStarted");
+            if (_tc != null)
+            {
+                _tc.TrackEvent("ServiceStarted");
+            }
 
             _serviceLog?.Information("Certify Manager Started");
 
             PerformUpgrades().Wait();
-
         }
 
         private void InitLogging(Shared.ServiceConfig serverConfig)
@@ -108,9 +112,11 @@ namespace Certify.Management
                 case "debug":
                     _loggingLevelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Debug;
                     break;
+
                 case "verbose":
                     _loggingLevelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Verbose;
                     break;
+
                 default:
                     _loggingLevelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Information;
                     break;
@@ -156,7 +162,10 @@ namespace Certify.Management
 
         public void ReportProgress(IProgress<RequestProgressState> progress, RequestProgressState state, bool logThisEvent = true)
         {
-            if (progress != null) progress.Report(state);
+            if (progress != null)
+            {
+                progress.Report(state);
+            }
 
             // report request state to staus hub clients
             OnRequestProgressStateUpdated?.Invoke(state);
@@ -167,15 +176,12 @@ namespace Certify.Management
             }
         }
 
-        private void LogMessage(string managedItemId, string msg, LogItemType logType = LogItemType.GeneralInfo)
+        private void LogMessage(string managedItemId, string msg, LogItemType logType = LogItemType.GeneralInfo) => ManagedCertificateLog.AppendLog(managedItemId, new ManagedCertificateLogItem
         {
-            ManagedCertificateLog.AppendLog(managedItemId, new ManagedCertificateLogItem
-            {
-                EventDate = DateTime.UtcNow,
-                LogItemType = LogItemType.GeneralInfo,
-                Message = msg
-            }, _loggingLevelSwitch);
-        }
+            EventDate = DateTime.UtcNow,
+            LogItemType = LogItemType.GeneralInfo,
+            Message = msg
+        }, _loggingLevelSwitch);
 
         public RequestProgressState GetRequestProgressState(string managedItemId)
         {
@@ -218,13 +224,15 @@ namespace Certify.Management
             // use latest settings
             SettingsManager.LoadAppSettings();
 
-            if (_tc != null) _tc.TrackEvent("ServiceDailyTaskCheck");
+            if (_tc != null)
+            {
+                _tc.TrackEvent("ServiceDailyTaskCheck");
+            }
 
             // perform expired cert cleanup (if enabled)
             if (CoreAppSettings.Current.EnableCertificateCleanup)
             {
                 await PerformCertificateCleanup();
-
             }
 
             return await Task.FromResult(true);
@@ -235,7 +243,10 @@ namespace Certify.Management
             try
             {
                 var mode = CoreAppSettings.Current.CertificateCleanupMode;
-                if (mode == null) mode = CertificateCleanupMode.AfterExpiry;
+                if (mode == null)
+                {
+                    mode = CertificateCleanupMode.AfterExpiry;
+                }
 
                 if (mode != CertificateCleanupMode.None)
                 {
@@ -254,6 +265,20 @@ namespace Certify.Management
                             }
                         }
 
+                        // cleanup old pfx files in asset store(s), if any
+                        var assetPath = Path.Combine(Util.GetAppDataFolder(), "certes", "assets");
+                        if (Directory.Exists(assetPath))
+                        {
+                            var ext = new List<string> { ".pfx" };
+                            DeleteOldCertificateFiles(assetPath, ext);
+                        }
+
+                        assetPath = Path.Combine(Util.GetAppDataFolder(), "assets");
+                        if (Directory.Exists(assetPath))
+                        {
+                            var ext = new List<string> { ".pfx", ".key", ".crt", ".pem" };
+                            DeleteOldCertificateFiles(assetPath, ext);
+                        }
                     }
 
                     // this will only perform expiry cleanup, as no specific thumbprint provided
@@ -273,9 +298,27 @@ namespace Certify.Management
             }
         }
 
-        public void Dispose()
+        public void Dispose() => ManagedCertificateLog.DisposeLoggers();
+
+        private static void DeleteOldCertificateFiles(string assetPath, List<string> ext)
         {
-            ManagedCertificateLog.DisposeLoggers();
+            var allFiles = Directory.GetFiles(assetPath, "*.*", SearchOption.AllDirectories)
+                 .Where(s => ext.Contains(Path.GetExtension(s)));
+
+            foreach (var f in allFiles)
+            {
+                try
+                {
+                    var createdAt = System.IO.File.GetCreationTime(f);
+                    if (createdAt < DateTime.Now.AddMonths(12))
+                    {
+                        //remove old file
+                        System.IO.File.Delete(f);
+                    }
+                }
+                catch { }
+            }
         }
+
     }
 }

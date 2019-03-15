@@ -10,13 +10,7 @@ namespace Certify.UI.Windows
     /// </summary>
     public partial class Registration
     {
-        protected Models.Providers.ILog Log
-        {
-            get
-            {
-                return ViewModel.AppViewModel.Current.Log;
-            }
-        }
+        protected Models.Providers.ILog Log => ViewModel.AppViewModel.Current.Log;
 
         public Registration()
         {
@@ -30,13 +24,13 @@ namespace Certify.UI.Windows
             var email = EmailAddress.Text?.Trim().ToLower();
             var key = LicenseKey.Text?.Trim().ToLower();
 
-            if (String.IsNullOrEmpty(email))
+            if (string.IsNullOrEmpty(email))
             {
                 MessageBox.Show(Certify.Locales.SR.Registration_NeedEmail);
                 return;
             }
 
-            if (String.IsNullOrEmpty(key))
+            if (string.IsNullOrEmpty(key))
             {
                 MessageBox.Show(Certify.Locales.SR.Registration_NeedKey);
                 return;
@@ -71,7 +65,7 @@ namespace Certify.UI.Windows
                                 ViewModel.AppViewModel.Current.IsRegisteredVersion = true;
                                 MessageBox.Show(installRegistration.Message);
 
-                                this.Close();
+                                Close();
                             }
                         }
                         else
@@ -103,14 +97,8 @@ namespace Certify.UI.Windows
             Mouse.OverrideCursor = Cursors.Arrow;
         }
 
-        private void Cancel_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
+        private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
 
-        private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
-        {
-            System.Diagnostics.Process.Start(e.Uri.ToString());
-        }
+        private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e) => System.Diagnostics.Process.Start(e.Uri.ToString());
     }
 }

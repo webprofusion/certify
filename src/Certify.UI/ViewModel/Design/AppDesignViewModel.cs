@@ -1,11 +1,11 @@
-﻿using Certify.Models;
-using Certify.Shared.Utils;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
+using Certify.Models;
+using Certify.Shared.Utils;
+using Newtonsoft.Json;
 
 namespace Certify.UI
 {
@@ -23,7 +23,7 @@ namespace Certify.UI
             GenerateMockData();
 
             // auto-load data if in WPF designer
-            bool inDesignMode = !(Application.Current is App);
+            var inDesignMode = !(Application.Current is App);
             if (inDesignMode)
             {
                 SelectedItem = ManagedCertificates.First();
@@ -34,7 +34,7 @@ namespace Certify.UI
         {
             // generate 20 mock sites
             ManagedCertificates = new ObservableCollection<ManagedCertificate>();
-            for (int i = 1; i <= 20; i++)
+            for (var i = 1; i <= 20; i++)
             {
                 var site = new ManagedCertificate()
                 {
@@ -69,7 +69,7 @@ namespace Certify.UI
                     IsSelected = true
                 });
                 // add lots of mock domains
-                for (int j = 1; j <= 20; j++)
+                for (var j = 1; j <= 20; j++)
                 {
                     site.DomainOptions.Add(new DomainOption()
                     {
@@ -81,10 +81,14 @@ namespace Certify.UI
             }
 
             MockDataStore = JsonConvert.SerializeObject(ManagedCertificates);
-            foreach (var site in ManagedCertificates) site.IsChanged = false;
+            foreach (var site in ManagedCertificates)
+            {
+                site.IsChanged = false;
+            }
+
             ManagedCertificates = new ObservableCollection<ManagedCertificate>(ManagedCertificates);
 
-            this.ProgressResults = new ObservableCollection<RequestProgressState>
+            ProgressResults = new ObservableCollection<RequestProgressState>
             {
                 new RequestProgressState( RequestState.Running, "This is a long message to test text overflow and wrapping", ManagedCertificates[0], false),
                 new RequestProgressState( RequestState.Error, "This is another long message to test text overflow and wrapping", ManagedCertificates[1], false),
@@ -96,7 +100,11 @@ namespace Certify.UI
         public void LoadSettings()
         {
             var mockSites = JsonConvert.DeserializeObject<List<ManagedCertificate>>(MockDataStore);
-            foreach (var site in mockSites) site.IsChanged = false;
+            foreach (var site in mockSites)
+            {
+                site.IsChanged = false;
+            }
+
             ManagedCertificates = new ObservableCollection<ManagedCertificate>(mockSites);
             ImportedManagedCertificates = new ObservableCollection<ManagedCertificate>();
         }

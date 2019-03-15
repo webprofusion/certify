@@ -57,7 +57,7 @@ namespace Certify.UI.ViewModel
         {
             var list = await _appViewModel.CertifyClient.GetServerSiteList(StandardServerTypes.IIS);
             list.Insert(0, new BindingInfo { SiteName = "(No IIS Website Selected)", SiteId = "" });
-            this.WebSiteList = new ObservableCollection<BindingInfo>(list);
+            WebSiteList = new ObservableCollection<BindingInfo>(list);
         }
 
         /// <summary>
@@ -100,11 +100,8 @@ namespace Certify.UI.ViewModel
 
         public ManagedCertificate SelectedItem
         {
-            get
-            {
-                return _appViewModel.SelectedItem;
-            }
-            set { _appViewModel.SelectedItem = value; }
+            get => _appViewModel.SelectedItem;
+            set => _appViewModel.SelectedItem = value;
         }
 
         public ObservableCollection<ChallengeConfigItemViewModel> ChallengeConfigViewModels
@@ -144,7 +141,10 @@ namespace Certify.UI.ViewModel
 
             var updatedOK = await _appViewModel.AddOrUpdateManagedCertificate(SelectedItem);
 
-            if (updatedOK) SelectedItem.IsChanged = false;
+            if (updatedOK)
+            {
+                SelectedItem.IsChanged = false;
+            }
 
             RaiseSelectedItemChanges();
 
@@ -180,7 +180,7 @@ namespace Certify.UI.ViewModel
 
         public DomainOption PrimarySubjectDomain
         {
-            get { return SelectedItem?.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain); }
+            get => SelectedItem?.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain);
             set
             {
                 foreach (var d in SelectedItem.DomainOptions)
@@ -257,10 +257,7 @@ namespace Certify.UI.ViewModel
 
         public bool IsAdvancedView { get; set; } = false;
 
-        public bool IsSelectedItemValid
-        {
-            get => SelectedItem?.Id != null && !SelectedItem.IsChanged;
-        }
+        public bool IsSelectedItemValid => SelectedItem?.Id != null && !SelectedItem.IsChanged;
 
         public Preferences Preferences => _appViewModel.Preferences;
 
@@ -312,15 +309,9 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public void SANSelectAll(object o)
-        {
-            SelectedItem?.DomainOptions.ToList().ForEach(opt => opt.IsSelected = true);
-        }
+        public void SANSelectAll(object o) => SelectedItem?.DomainOptions.ToList().ForEach(opt => opt.IsSelected = true);
 
-        public void SANSelectNone(object o)
-        {
-            SelectedItem?.DomainOptions.ToList().ForEach(opt => opt.IsSelected = false);
-        }
+        public void SANSelectNone(object o) => SelectedItem?.DomainOptions.ToList().ForEach(opt => opt.IsSelected = false);
 
         public async Task<bool> SANRefresh()
         {
@@ -365,11 +356,17 @@ namespace Certify.UI.ViewModel
 
             if (primaryDomain == null)
             {
-                if (item.DomainOptions.Any()) item.DomainOptions[0].IsPrimaryDomain = true;
+                if (item.DomainOptions.Any())
+                {
+                    item.DomainOptions[0].IsPrimaryDomain = true;
+                }
             }
 
             //if no primary domain need to go back and select one
-            if (primaryDomain == null && throwOnInvalidSettings) throw new ArgumentException("Primary subject domain must be set.");
+            if (primaryDomain == null && throwOnInvalidSettings)
+            {
+                throw new ArgumentException("Primary subject domain must be set.");
+            }
 
             if (primaryDomain != null)
             {
@@ -423,9 +420,9 @@ namespace Certify.UI.ViewModel
                     managedCertificate.GroupId = SelectedWebSite.SiteId;
 
                     // if not already set, use website name as default name
-                    if (managedCertificate.Id == null || String.IsNullOrEmpty(managedCertificate.Name))
+                    if (managedCertificate.Id == null || string.IsNullOrEmpty(managedCertificate.Name))
                     {
-                        if (!String.IsNullOrEmpty(SelectedWebSite.SiteName))
+                        if (!string.IsNullOrEmpty(SelectedWebSite.SiteName))
                         {
                             managedCertificate.Name = SelectedWebSite.SiteName;
                         }
@@ -471,7 +468,7 @@ namespace Certify.UI.ViewModel
             if (!string.IsNullOrEmpty(domains))
             {
                 var domainList = domains.Split(",; ".ToCharArray());
-                string invalidDomains = "";
+                var invalidDomains = "";
                 foreach (var d in domainList)
                 {
                     if (!string.IsNullOrEmpty(d.Trim()))
@@ -489,7 +486,10 @@ namespace Certify.UI.ViewModel
                             if (Uri.CheckHostName(domain) == UriHostNameType.Dns || (domain.StartsWith("*.") && Uri.CheckHostName(domain.Replace("*.", "")) == UriHostNameType.Dns))
                             {
                                 // preselect first item as primary domain
-                                if (item.DomainOptions.Count == 0) option.IsPrimaryDomain = true;
+                                if (item.DomainOptions.Count == 0)
+                                {
+                                    option.IsPrimaryDomain = true;
+                                }
 
                                 item.DomainOptions.Add(option);
 
@@ -508,7 +508,7 @@ namespace Certify.UI.ViewModel
 
                 RaiseSelectedItemChanges();
 
-                if (!String.IsNullOrEmpty(invalidDomains))
+                if (!string.IsNullOrEmpty(invalidDomains))
                 {
                     MessageBox.Show("Invalid domains: " + invalidDomains);
                     return false;
@@ -527,7 +527,7 @@ namespace Certify.UI.ViewModel
                     if (wildcardOnlyDomains.Any())
                     {
                         var msg = $"You had added wildcard domains without the corresponding non-wildcard version: {string.Join(",", wildcardOnlyDomains)}. Would you like to add the non-wildcard versions as well?";
-                        if (MessageBox.Show(msg,"Add non-wildcard equivalent domains?", MessageBoxButtons.YesNo)== DialogResult.Yes)
+                        if (MessageBox.Show(msg, "Add non-wildcard equivalent domains?", MessageBoxButtons.YesNo) == DialogResult.Yes)
                         {
 
                             var addedDomains = string.Join(";", wildcardOnlyDomains);
@@ -542,9 +542,9 @@ namespace Certify.UI.ViewModel
             return true;
         }
 
-        protected async virtual Task<IEnumerable<DomainOption>> GetDomainOptionsFromSite(string siteId)
+        protected virtual async Task<IEnumerable<DomainOption>> GetDomainOptionsFromSite(string siteId)
         {
-            if (String.IsNullOrEmpty(siteId))
+            if (string.IsNullOrEmpty(siteId))
             {
                 return new List<DomainOption>();
             }
@@ -552,15 +552,9 @@ namespace Certify.UI.ViewModel
             return await _appViewModel.CertifyClient.GetServerSiteDomains(StandardServerTypes.IIS, siteId);
         }
 
-        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly)
-        {
-            return await _appViewModel.CertifyClient.ReapplyCertificateBindings(managedItemId, isPreviewOnly);
-        }
+        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly) => await _appViewModel.CertifyClient.ReapplyCertificateBindings(managedItemId, isPreviewOnly);
 
-        public async Task<List<StatusMessage>> TestChallengeResponse(ManagedCertificate managedCertificate)
-        {
-            return await _appViewModel.CertifyClient.TestChallengeConfiguration(managedCertificate);
-        }
+        public async Task<List<StatusMessage>> TestChallengeResponse(ManagedCertificate managedCertificate) => await _appViewModel.CertifyClient.TestChallengeConfiguration(managedCertificate);
 
         public async Task<StatusMessage> RevokeSelectedItem()
         {

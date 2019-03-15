@@ -18,7 +18,7 @@ namespace Certify.Service.Tests.Integration
         [TestMethod]
         public async Task TestGetPrimaryContact()
         {
-            string result = await _client.GetPrimaryContact();
+            var result = await _client.GetPrimaryContact();
 
             Assert.IsNotNull(result);
         }

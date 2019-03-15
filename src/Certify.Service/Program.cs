@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.ServiceProcess;
 using System.Threading.Tasks;
 using Certify.Management;
-using Microsoft.Owin.Hosting;
 using Topshelf;
 
 namespace Certify.Service
@@ -13,7 +11,7 @@ namespace Certify.Service
     {
         public static int Main(string[] args)
         {
-            AppDomain currentDomain = AppDomain.CurrentDomain;
+            var currentDomain = AppDomain.CurrentDomain;
             currentDomain.UnhandledException += CurrentDomain_UnhandledException; ;
 
             return (int)HostFactory.Run(x =>
@@ -135,104 +133,6 @@ namespace Certify.Service
             {
                 LogEvent(e.ExceptionObject, includeReporting: true);
             }
-        }
-    }
-
-    public class OwinService
-    {
-        private IDisposable _webApp;
-
-        public string DiagnoseServices()
-        {
-            var httpStatus = "Unknown";
-
-            try
-            {
-                var sc = new ServiceController("HTTP");
-                switch (sc.Status)
-                {
-                    case ServiceControllerStatus.Running:
-                        httpStatus = "Running";
-                        break;
-                    case ServiceControllerStatus.Stopped:
-                        httpStatus = "Stopped";
-                        break;
-                    case ServiceControllerStatus.Paused:
-                        httpStatus = "Paused";
-                        break;
-                    case ServiceControllerStatus.StopPending:
-                        httpStatus = "Stopping";
-                        break;
-                    case ServiceControllerStatus.StartPending:
-                        httpStatus = "Starting";
-                        break;
-                    default:
-                        httpStatus = "Status Changing";
-                        break;
-                }
-            }
-            catch { }
-
-            return $"System HTTP Service: {httpStatus}";
-        }
-
-        public void Start()
-        {
-
-            var serviceConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
-
-            serviceConfig.ServiceFaultMsg = "";
-
-            var serviceUri = $"http://{serviceConfig.Host}:{serviceConfig.Port}";
-
-            try
-            {
-                _webApp = WebApp.Start<APIHost>(serviceUri);
-                Program.LogEvent(null, $"Service API bound OK to {serviceUri}", false);
-            }
-            catch (Exception exp)
-            {
-                var httpSysStatus = DiagnoseServices();
-
-                var msg = $"Service failed to listen on {serviceUri}. :: {httpSysStatus} :: Attempting to reallocate port. {exp.ToString()}";
-
-                Program.LogEvent(exp, msg, false);
-
-                // failed to listen on service uri, attempt reconfiguration of port.
-                int currentPort = serviceConfig.Port;
-
-                int newPort = currentPort += 2;
-
-                var reconfiguredServiceUri = $"http://{serviceConfig.Host}:{newPort}";
-
-                try
-                {
-                    // if the http listener cannot bind here then the entire service will fail to start
-                    _webApp = WebApp.Start<APIHost>(reconfiguredServiceUri);
-
-                    Program.LogEvent(null, $"Service API bound OK to {reconfiguredServiceUri}", false);
-
-                    // if that worked, save the new port setting
-                    serviceConfig.Port = newPort;
-
-                    System.Diagnostics.Debug.WriteLine($"Service started on {reconfiguredServiceUri}.");
-                }
-                catch (Exception)
-                {
-                    serviceConfig.ServiceFaultMsg = $"Service failed to listen on {serviceUri}. \r\n\r\n{httpSysStatus} \r\n\r\nEnsure the windows HTTP service is available using 'sc config http start= demand' then 'net start http' commands.";
-                    throw;
-                }
-            }
-            finally
-            {
-                SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(serviceConfig);
-            }
-
-        }
-
-        public void Stop()
-        {
-            if (_webApp != null) _webApp.Dispose();
         }
     }
 }

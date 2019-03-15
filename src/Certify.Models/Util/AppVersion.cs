@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Certify.Models
+﻿namespace Certify.Models
 {
     public class AppVersion
     {
@@ -12,16 +6,13 @@ namespace Certify.Models
         public int Minor { get; set; }
         public int Patch { get; set; }
 
-        public override string ToString()
-        {
-            return $"{Major}.{Minor}.{Patch}";
-        }
+        public override string ToString() => $"{Major}.{Minor}.{Patch}";
 
         public static AppVersion FromString(string version)
         {
-            string[] versionComponents = version.Split('.');
+            var versionComponents = version.Split('.');
 
-            AppVersion current = new AppVersion
+            var current = new AppVersion
             {
                 Major = int.Parse(versionComponents[0]),
                 Minor = int.Parse(versionComponents[1]),

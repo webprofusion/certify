@@ -8,10 +8,7 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
-        public async Task<List<BindingInfo>> GetPrimaryWebSites(bool ignoreStoppedSites)
-        {
-            return await _serverProvider.GetPrimarySites(ignoreStoppedSites);
-        }
+        public async Task<List<BindingInfo>> GetPrimaryWebSites(bool ignoreStoppedSites) => await _serverProvider.GetPrimarySites(ignoreStoppedSites);
 
         public async Task<List<DomainOption>> GetDomainOptionsFromSite(string siteId)
         {
@@ -22,14 +19,14 @@ namespace Certify.Management
                 await _serverProvider.GetSiteBindingList(CoreAppSettings.Current.IgnoreStoppedSites, siteId);
             var siteBindingList = matchingSites.Where(s => s.SiteId == siteId);
 
-            bool includeEmptyHostnameBindings = false;
+            var includeEmptyHostnameBindings = false;
 
             foreach (var siteDetails in siteBindingList)
             {
                 //if domain not currently in the list of options, add it
                 if (!domainOptions.Any(item => item.Domain == siteDetails.Host))
                 {
-                    DomainOption opt = new DomainOption
+                    var opt = new DomainOption
                     {
                         Domain = siteDetails.Host,
                         IsPrimaryDomain = false,
@@ -37,7 +34,7 @@ namespace Certify.Management
                         Title = ""
                     };
 
-                    if (String.IsNullOrWhiteSpace(opt.Domain))
+                    if (string.IsNullOrWhiteSpace(opt.Domain))
                     {
                         //binding has no hostname/domain set - user will need to specify
                         opt.Title = defaultNoDomainHost;
@@ -69,7 +66,7 @@ namespace Certify.Management
                 if (!domainOptions.Any(d => d.IsPrimaryDomain == true))
                 {
                     var electableDomains = domainOptions.Where(d =>
-                        !String.IsNullOrEmpty(d.Domain) && d.Domain != defaultNoDomainHost);
+                        !string.IsNullOrEmpty(d.Domain) && d.Domain != defaultNoDomainHost);
                     if (electableDomains.Any())
                     {
                         // promote first domain in list to primary by default
@@ -85,20 +82,14 @@ namespace Certify.Management
         {
             if (serverType == StandardServerTypes.IIS)
             {
-                return await this._serverProvider.IsAvailable();
+                return await _serverProvider.IsAvailable();
             }
 
             return false;
         }
 
-        public async Task<Version> GetServerTypeVersion(StandardServerTypes serverType)
-        {
-            return await this._serverProvider.GetServerVersion();
-        }
+        public async Task<Version> GetServerTypeVersion(StandardServerTypes serverType) => await _serverProvider.GetServerVersion();
 
-        public async Task<List<ActionStep>> RunServerDiagnostics(StandardServerTypes serverType, string siteId)
-        {
-            return await this._serverProvider.RunConfigurationDiagnostics(siteId);
-        }
+        public async Task<List<ActionStep>> RunServerDiagnostics(StandardServerTypes serverType, string siteId) => await _serverProvider.RunConfigurationDiagnostics(siteId);
     }
 }

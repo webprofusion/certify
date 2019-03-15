@@ -1,5 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using Certify.Config;
+using Certify.UI.Windows;
 
 namespace Certify.UI.Controls.ManagedCertificate
 {
@@ -21,7 +27,7 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             InitializeComponent();
 
-            this.DeploymentSiteOptions.ItemsSource = new List<ListOption>
+            DeploymentSiteOptions.ItemsSource = new List<ListOption>
             {
                   new ListOption{
                     Title ="Auto",
@@ -50,7 +56,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 }
             };
 
-            this.DeploymentBindingUpdates.ItemsSource = new List<ListOption> {
+            DeploymentBindingUpdates.ItemsSource = new List<ListOption> {
                 new ListOption
                 {
                     Title="Add or Update https bindings as required",
@@ -64,12 +70,55 @@ namespace Certify.UI.Controls.ManagedCertificate
                     Description="Existing https bindings will be updated with the new certificate as required."
                 }
             };
+
         }
 
         private void DeploymentSiteOptions_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // if deployment mode changes, apply defaults for the mode
             ItemViewModel.SelectedItem?.RequestConfig?.ApplyDeploymentOptionDefaults();
+
+        }
+
+        private void AddDeploymentTask_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            var dialog = new EditDeploymentTask(null)
+            {
+               Owner = Window.GetWindow(this)
+            };
+            dialog.Show();
+        }
+
+        private void EditDeploymentTask_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            var config = (sender as Button).DataContext as DeploymentTaskConfig;
+            var dialog = new EditDeploymentTask(config)
+            {
+                Owner = Window.GetWindow(this)
+            };
+            dialog.Show();
+        }
+
+        private async void RunDeploymentTask_Click(object sender, RoutedEventArgs e)
+        {
+            var task = (sender as Button).DataContext as DeploymentTaskConfig;
+            if (MessageBox.Show("Run task '"+task.TaskName+"' now? The most recent certificate details will be used.", "Run Task?", MessageBoxButton.YesNo)== MessageBoxResult.Yes)
+            {
+                // execute task now
+                Mouse.OverrideCursor = Cursors.Wait;
+                var results = await UI.ViewModel.AppViewModel.Current.PerformDeployment(ItemViewModel.SelectedItem.Id, task.Id, isPreviewOnly:false);
+                Mouse.OverrideCursor = Cursors.Arrow;
+
+                if (results.Any(r => r.HasError))
+                {
+                    var result = results.First(r => r.HasError == true);
+                    MessageBox.Show($"The deployment task failed to complete. {result.Title} :: {result.Description}");
+                } else
+                {
+                    MessageBox.Show($"The deployment task completed with no reported errors.");
+                }
+            }
         }
     }
 }
+

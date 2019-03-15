@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
+    <RootNamespace>Certify.Providers.Acme.Certes</RootNamespace>
+    <AssemblyName>Certify.Providers.Acme.Certes</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -15,7 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="Certes" Version="2.3.3" />
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
   </ItemGroup>
 
   <ItemGroup>

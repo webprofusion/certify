@@ -41,11 +41,11 @@ namespace Certify.Providers.DNS.AcmeDns
 
         public List<ProviderParameter> ProviderParameters => Definition.ProviderParameters;
 
-        public static ProviderDefinition Definition
+        public static ChallengeProviderDefinition Definition
         {
             get
             {
-                return new ProviderDefinition
+                return new ChallengeProviderDefinition
                 {
                     Id = "DNS01.API.AcmeDns",
                     Title = "acme-dns DNS API",

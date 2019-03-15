@@ -22,7 +22,7 @@ namespace Certify.UI.Utils
             if (expiry == null) return SR.ExpiryDateConverter_NoCurrentCertificate;
 
             var days = (int)Math.Abs((DateTime.Now - expiry).Value.TotalDays);
-            return String.Format(SR.ExpiryDateConverter_CertificateExpiresIn, days);
+            return string.Format(SR.ExpiryDateConverter_CertificateExpiresIn, days);
         }
     }
 

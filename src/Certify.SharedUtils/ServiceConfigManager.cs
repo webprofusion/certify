@@ -18,7 +18,10 @@ namespace Certify.SharedUtils
                 APPDATASUBFOLDER
             };
 
-            if (subFolder != null) parts.Add(subFolder);
+            if (subFolder != null)
+            {
+                parts.Add(subFolder);
+            }
 
             var path = Path.Combine(parts.ToArray());
 

@@ -1,8 +1,8 @@
-using Certify.Models;
-using System;
+﻿using System;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
+using Certify.Models;
 
 namespace Certify.UI.Windows
 {
@@ -13,13 +13,7 @@ namespace Certify.UI.Windows
     {
         public ContactRegistration Item { get; set; }
 
-        protected Certify.UI.ViewModel.AppViewModel MainViewModel
-        {
-            get
-            {
-                return ViewModel.AppViewModel.Current;
-            }
-        }
+        protected Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
 
         public EditContactDialog()
         {
@@ -27,20 +21,20 @@ namespace Certify.UI.Windows
 
             Item = new ContactRegistration();
 
-            this.DataContext = Item;
+            DataContext = Item;
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
             Mouse.OverrideCursor = Cursors.Arrow;
-            this.Close();
+            Close();
         }
 
         private async void Save_Click(object sender, RoutedEventArgs e)
         {
             //add/update contact
-            bool isValidEmail = true;
-            if (String.IsNullOrEmpty(Item.EmailAddress))
+            var isValidEmail = true;
+            if (string.IsNullOrEmpty(Item.EmailAddress))
             {
                 isValidEmail = false;
             }
@@ -66,14 +60,14 @@ namespace Certify.UI.Windows
             {
                 Mouse.OverrideCursor = Cursors.Wait;
 
-                bool addedOK = await MainViewModel.AddContactRegistration(Item);
+                var addedOK = await MainViewModel.AddContactRegistration(Item);
 
                 Mouse.OverrideCursor = Cursors.Arrow;
 
                 if (addedOK)
                 {
                     MainViewModel.PrimaryContactEmail = await MainViewModel.CertifyClient.GetPrimaryContact();
-                    this.Close();
+                    Close();
                 }
                 else
                 {

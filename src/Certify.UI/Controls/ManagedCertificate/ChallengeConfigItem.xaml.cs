@@ -14,10 +14,10 @@ namespace Certify.UI.Controls.ManagedCertificate
     /// <summary>
     /// Handles UI interaction for defining Challenge Configuration 
     /// </summary>
-    public partial class ChallengeConfigItem : System.Windows.Controls.UserControl
+    public partial class ChallengeConfigItem : UserControl
     {
-        protected Certify.UI.ViewModel.AppViewModel AppViewModel => UI.ViewModel.AppViewModel.Current;
-        protected Certify.UI.ViewModel.ManagedCertificateViewModel ManagedCertificateViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
+        protected AppViewModel AppViewModel => AppViewModel.Current;
+        protected ManagedCertificateViewModel ManagedCertificateViewModel => ManagedCertificateViewModel.Current;
 
         public ChallengeConfigItem()
         {
@@ -26,18 +26,9 @@ namespace Certify.UI.Controls.ManagedCertificate
             DataContextChanged += ChallengeConfigItem_DataContextChanged;
         }
 
-        private async void ChallengeConfigItem_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            await RefreshAllOptions();
-        }
+        private async void ChallengeConfigItem_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e) => await RefreshAllOptions();
 
-        private ChallengeConfigItemViewModel EditModel
-        {
-            get
-            {
-                return (ChallengeConfigItemViewModel)DataContext;
-            }
-        }
+        private ChallengeConfigItemViewModel EditModel => (ChallengeConfigItemViewModel)DataContext;
 
         private async void AddStoredCredential_Click(object sender, RoutedEventArgs e)
         {
@@ -202,10 +193,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        private void ParameterInput_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            EditModel.SelectedItem.IsChanged = true;
-        }
+        private void ParameterInput_KeyUp(object sender, System.Windows.Input.KeyEventArgs e) => EditModel.SelectedItem.IsChanged = true;
 
         private void DeleteAuth_Click(object sender, RoutedEventArgs e)
         {
@@ -217,7 +205,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                     var config = (sender as Button).Tag;
                     if (config != null && AppViewModel.SelectedItem.RequestConfig.Challenges.Count > 1)
                     {
-                        App.Current.Dispatcher.Invoke(delegate
+                        Application.Current.Dispatcher.Invoke(delegate
                         {
                             AppViewModel.SelectedItem.RequestConfig.Challenges.Remove((Models.CertRequestChallengeConfig)config);
                             ManagedCertificateViewModel.RaisePropertyChangedEvent(nameof(ManagedCertificateViewModel.ChallengeConfigViewModels));
@@ -236,7 +224,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             EditModel.IsZoneLookupInProgress = true;
             try
             {
-                EditModel.DnsZones = new ObservableCollection<Models.Providers.DnsZone>(new System.Collections.Generic.List<Models.Providers.DnsZone> {
+                EditModel.DnsZones = new ObservableCollection<Models.Providers.DnsZone>(new List<Models.Providers.DnsZone> {
                     new Models.Providers.DnsZone {
                         ZoneId="",
                         Name ="(Fetching..)"
@@ -259,11 +247,6 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 EditModel.IsZoneLookupInProgress = false;
             }
-        }
-
-        private async void PerformDnsZoneLookup_Click(object sender, RoutedEventArgs e)
-        {
-            await RefreshDnsZoneLookup();
         }
 
         private void DnsZoneList_SelectionChanged(object sender, SelectionChangedEventArgs e)

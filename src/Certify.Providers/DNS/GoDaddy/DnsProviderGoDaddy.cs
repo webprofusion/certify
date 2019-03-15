@@ -56,28 +56,22 @@ namespace Certify.Providers.DNS.GoDaddy
 
         public List<ProviderParameter> ProviderParameters => Definition.ProviderParameters;
 
-        public static ProviderDefinition Definition
+        public static ChallengeProviderDefinition Definition => new ChallengeProviderDefinition
         {
-            get
-            {
-                return new ProviderDefinition
-                {
-                    Id = "DNS01.API.GoDaddy",
-                    Title = "GoDaddy DNS API",
-                    Description = "Validates via GoDaddy DNS APIs using credentials",
-                    HelpUrl = "http://docs.certifytheweb.com/docs/dns-godaddy.html",
-                    PropagationDelaySeconds = 60,
-                    ProviderParameters = new List<ProviderParameter>{
+            Id = "DNS01.API.GoDaddy",
+            Title = "GoDaddy DNS API",
+            Description = "Validates via GoDaddy DNS APIs using credentials",
+            HelpUrl = "http://docs.certifytheweb.com/docs/dns-godaddy.html",
+            PropagationDelaySeconds = 60,
+            ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{ Key="authkey", Name="Auth Key", IsRequired=true },
                         new ProviderParameter{ Key="authsecret", Name="Auth Secret", IsRequired=true },
                         new ProviderParameter{ Key="zoneid", Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false }
                     },
-                    ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                    Config = "Provider=Certify.Providers.DNS.GoDaddy",
-                    HandlerType = ChallengeHandlerType.INTERNAL
-                };
-            }
-        }
+            ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+            Config = "Provider=Certify.Providers.DNS.GoDaddy",
+            HandlerType = ChallengeHandlerType.INTERNAL
+        };
 
         public DnsProviderGoDaddy(Dictionary<string, string> credentials)
         {
@@ -90,7 +84,7 @@ namespace Certify.Providers.DNS.GoDaddy
             // test connection and credentials
             try
             {
-                var zones = await this.GetZones();
+                var zones = await GetZones();
                 if (zones != null && zones.Any())
                 {
                     return new ActionResult { IsSuccess = true, Message = "Test Completed OK." };

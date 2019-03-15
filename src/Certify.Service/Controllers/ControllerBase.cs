@@ -10,11 +10,18 @@ namespace Certify.Service.Controllers
     {
         protected override bool IsAuthorized(HttpActionContext actionContext)
         {
-            System.Security.Principal.WindowsPrincipal user = actionContext.RequestContext.Principal as System.Security.Principal.WindowsPrincipal;
-            if (user.IsInRole(WindowsBuiltInRole.Administrator)) return true;
-            if (user.IsInRole(WindowsBuiltInRole.PowerUser)) return true;
+            var user = actionContext.RequestContext.Principal as System.Security.Principal.WindowsPrincipal;
+            if (user.IsInRole(WindowsBuiltInRole.Administrator))
+            {
+                return true;
+            }
 
-            return base.IsAuthorized(actionContext);
+            if (user.IsInRole(WindowsBuiltInRole.PowerUser))
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 
@@ -26,7 +33,7 @@ namespace Certify.Service.Controllers
               [System.Runtime.CompilerServices.CallerFilePath] string sourceFilePath = "")
         {
 #if DEBUG
-            if (!String.IsNullOrEmpty(sourceFilePath))
+            if (!string.IsNullOrEmpty(sourceFilePath))
             {
                 sourceFilePath = System.IO.Path.GetFileName(sourceFilePath);
             }

@@ -59,11 +59,11 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
 
         public List<ProviderParameter> ProviderParameters => Definition.ProviderParameters;
 
-        public static ProviderDefinition Definition
+        public static ChallengeProviderDefinition Definition
         {
             get
             {
-                return new ProviderDefinition
+                return new ChallengeProviderDefinition
                 {
                     Id = "DNS01.API.SimpleDNSPlus",
                     Title = "SimpleDNSPlus DNS API",
@@ -103,7 +103,7 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
             // test connection and credentials
             try
             {
-                var zones = await this.GetZones();
+                var zones = await GetZones();
                 if (zones != null && zones.Any())
                 {
                     return new ActionResult { IsSuccess = true, Message = "Test Completed OK." };
@@ -142,7 +142,7 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
             var tldName = domains[domains.Length - 2] + "." + domains[domains.Length - 1];
             var sub = "";
 
-            for (int i = 0; i < domains.Length - 1; i++)
+            for (var i = 0; i < domains.Length - 1; i++)
             {
                 sub += domains[i];
             }
@@ -236,10 +236,10 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
         public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
             //check if record already exists
-            string[] domains = request.RecordName.Split(new char[] { '.' });
-            string tldName = domains[domains.Length - 2] + "." + domains[domains.Length - 1];
-            string sub = "";
-            for (int i = 0; i < domains.Length - 2; i++)
+            var domains = request.RecordName.Split(new char[] { '.' });
+            var tldName = domains[domains.Length - 2] + "." + domains[domains.Length - 1];
+            var sub = "";
+            for (var i = 0; i < domains.Length - 2; i++)
             {
                 if (i == 0)
                 {

@@ -36,7 +36,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Service.Tests.Integ
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Core", "src\Certify.Core\Certify.Core.csproj", "{58881E46-4A76-47B9-9725-FA7C5F0090D0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Providers.Certes", "src\Certify.Providers\ACME\Certes\Certify.Providers.Certes.csproj", "{D7D2D121-B796-49ED-9CF9-158C624857A1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Providers.ACME.Certes", "src\Certify.Providers\ACME\Certes\Certify.Providers.ACME.Certes.csproj", "{D7D2D121-B796-49ED-9CF9-158C624857A1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Locales", "src\Certify.Locales\Certify.Locales.csproj", "{1EFDEBE9-468B-4AA0-AFD4-1C6D0A321BE5}"
 EndProject
@@ -65,7 +65,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDNSPlus", "src\Certif
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aliyun", "src\Certify.Providers\DNS\Aliyun\Aliyun.csproj", "{4C8D92E9-19AF-4CD0-AE27-BB4336AF5776}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Providers.ACMESharpCore", "src\Certify.Providers\ACME\ACMESharpCore\Certify.Providers.ACMESharpCore.csproj", "{8E1E6901-ABB9-47DF-B715-BADB229E6909}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Providers.ACME.ACMESharpCore", "src\Certify.Providers\ACME\ACMESharpCore\Certify.Providers.ACME.ACMESharpCore.csproj", "{8E1E6901-ABB9-47DF-B715-BADB229E6909}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.SharedUtils", "src\Certify.SharedUtils\Certify.SharedUtils.csproj", "{BAADC03D-4580-4461-9822-D7AC083E6C7B}"
 EndProject
@@ -73,7 +73,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSDNS", "src\Certify.Provid
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AcmeDns", "src\Certify.Providers\DNS\AcmeDns\AcmeDns\AcmeDns.csproj", "{4FE830FC-5B13-4A27-AF18-8E135C0314F2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NameCheap", "src\Certify.Providers\DNS\NameCheap\NameCheap.csproj", "{E537F4ED-E129-487A-BDAB-59BB430A603A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NameCheap", "src\Certify.Providers\DNS\NameCheap\NameCheap.csproj", "{E537F4ED-E129-487A-BDAB-59BB430A603A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Providers", "Providers", "{CD13E130-E7D5-46F7-85C4-03ED3CA59CC3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DeploymentTasks", "DeploymentTasks", "{CBCD6F99-567A-413A-8629-69C7CABE0E22}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Providers.Deployment.Core", "src\Certify.Providers\DeploymentTasks\Core\Certify.Providers.Deployment.Core.csproj", "{45F10A46-83F9-4768-B26B-26EDA00CDD28}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -291,11 +297,21 @@ Global
 		{E537F4ED-E129-487A-BDAB-59BB430A603A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E537F4ED-E129-487A-BDAB-59BB430A603A}.Release|x64.ActiveCfg = Release|Any CPU
 		{E537F4ED-E129-487A-BDAB-59BB430A603A}.Release|x64.Build.0 = Release|Any CPU
+		{45F10A46-83F9-4768-B26B-26EDA00CDD28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45F10A46-83F9-4768-B26B-26EDA00CDD28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45F10A46-83F9-4768-B26B-26EDA00CDD28}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{45F10A46-83F9-4768-B26B-26EDA00CDD28}.Debug|x64.Build.0 = Debug|Any CPU
+		{45F10A46-83F9-4768-B26B-26EDA00CDD28}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45F10A46-83F9-4768-B26B-26EDA00CDD28}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45F10A46-83F9-4768-B26B-26EDA00CDD28}.Release|x64.ActiveCfg = Release|Any CPU
+		{45F10A46-83F9-4768-B26B-26EDA00CDD28}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{D2D146B6-E84E-4901-AAA9-DE3E199FD4EF} = {CD13E130-E7D5-46F7-85C4-03ED3CA59CC3}
+		{3BE55972-6A8A-454E-9C79-DBDBC9ADAB18} = {CD13E130-E7D5-46F7-85C4-03ED3CA59CC3}
 		{18771CE7-CCC9-4178-917D-1CDA037899D6} = {3ABBE541-54AF-46CC-9BEA-EC7434DE59C6}
 		{C0534CD8-10E9-438D-B9A1-A8C09A6BB964} = {3ABBE541-54AF-46CC-9BEA-EC7434DE59C6}
 		{564BC244-6C8E-43F8-BC8B-3BA8DA93F04F} = {A627D955-AD92-4A4C-BC85-78B45073CB74}
@@ -315,6 +331,8 @@ Global
 		{9C095EB3-3B0A-44C9-9728-6118E7C5B934} = {3BE55972-6A8A-454E-9C79-DBDBC9ADAB18}
 		{4FE830FC-5B13-4A27-AF18-8E135C0314F2} = {3BE55972-6A8A-454E-9C79-DBDBC9ADAB18}
 		{E537F4ED-E129-487A-BDAB-59BB430A603A} = {3BE55972-6A8A-454E-9C79-DBDBC9ADAB18}
+		{CBCD6F99-567A-413A-8629-69C7CABE0E22} = {CD13E130-E7D5-46F7-85C4-03ED3CA59CC3}
+		{45F10A46-83F9-4768-B26B-26EDA00CDD28} = {CBCD6F99-567A-413A-8629-69C7CABE0E22}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D27296BB-12D3-44A5-B5A2-B79EB1AB223D}

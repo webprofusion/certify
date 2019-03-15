@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Certify.Config;
 using Newtonsoft.Json;
 
 namespace Certify.Models
@@ -40,7 +41,14 @@ namespace Certify.Models
             RequestConfig = new CertRequestConfig();
 
             IncludeInAutoRenew = true;
+
+            CertificateAuthorityId = "letsencrypt.org";
         }
+
+        /// <summary>
+        /// Default CA to use for this request
+        /// </summary>
+        public string CertificateAuthorityId { get; set; }
 
         /// <summary>
         /// If true, the auto renewal process will include this item in attempted renewal operations
@@ -62,6 +70,11 @@ namespace Certify.Models
         /// Configuration options for this request
         /// </summary>
         public CertRequestConfig RequestConfig { get; set; }
+
+        /// <summary>
+        /// Optional list of deployment tasks to perform after reuqest/renewal or on demand
+        /// </summary>
+        public ObservableCollection<DeploymentTaskConfig> DeploymentTasks { get; set; }
 
         /// <summary>
         /// Unique ID for this managed item
@@ -137,10 +150,7 @@ namespace Certify.Models
         public bool CertificateRevoked { get; set; }
         public string CurrentOrderUri { get; set; }
 
-        public override string ToString()
-        {
-            return $"[{Id ?? "null"}]: \"{Name}\"";
-        }
+        public override string ToString() => $"[{Id ?? "null"}]: \"{Name}\"";
 
         [JsonIgnore]
         public bool Deleted { get; set; } // do not serialize to settings
@@ -183,6 +193,23 @@ namespace Certify.Models
         }
 
         /// <summary>
+        /// Get distinct list of certificate domains/hostnames for this managed cert
+        /// </summary>
+        /// <returns></returns>
+        public List<string> GetCertificateDomains()
+        {
+            var allDomains = new List<string> { RequestConfig.PrimaryDomain };
+
+            if (RequestConfig.SubjectAlternativeNames != null)
+            {
+                allDomains.AddRange(RequestConfig.SubjectAlternativeNames);
+            }
+
+            return allDomains.Distinct().ToList();
+            ;
+        }
+
+        /// <summary>
         /// For the given challenge config and list of domains, return subset of domains which will
         /// be matched against the config (considering all other configs)
         /// </summary>
@@ -191,7 +218,7 @@ namespace Certify.Models
         /// <returns>  </returns>
         public List<string> GetChallengeConfigDomainMatches(CertRequestChallengeConfig config, IEnumerable<string> domains)
         {
-            List<string> matches = new List<string>();
+            var matches = new List<string>();
             foreach (var d in domains)
             {
                 var matchedConfig = GetChallengeConfig(d);
@@ -234,12 +261,12 @@ namespace Certify.Models
                 else
                 {
                     // start by matching first config with no specific domain
-                    CertRequestChallengeConfig matchedConfig = RequestConfig.Challenges.FirstOrDefault(c => String.IsNullOrEmpty(c.DomainMatch));
+                    var matchedConfig = RequestConfig.Challenges.FirstOrDefault(c => string.IsNullOrEmpty(c.DomainMatch));
 
                     if (!string.IsNullOrEmpty(domain))
                     {
                         // expand configs into per domain list
-                        Dictionary<string, CertRequestChallengeConfig> configsPerDomain = new Dictionary<string, CertRequestChallengeConfig>();
+                        var configsPerDomain = new Dictionary<string, CertRequestChallengeConfig>();
                         foreach (var c in RequestConfig.Challenges.Where(config => !string.IsNullOrEmpty(config.DomainMatch)))
                         {
                             if (!string.IsNullOrEmpty(c.DomainMatch) && !c.DomainMatch.Contains(";"))
@@ -321,7 +348,7 @@ namespace Certify.Models
         /// </summary>
         /// <param name="dnsNames">  </param>
         /// <param name="hostname">  </param>
-        /// <param name="matchWildcardsToRootDomain"> 
+        /// <param name="matchWildcardsToRootDomain">
         /// if true, *.test.com would match test.com (as well as www.test.com)
         /// </param>
         /// <returns>  </returns>
@@ -370,7 +397,11 @@ namespace Certify.Models
                                 }
                             }
                         }
-                        if (isMatch) return isMatch;
+
+                        if (isMatch)
+                        {
+                            return isMatch;
+                        }
                     }
                 }
             }

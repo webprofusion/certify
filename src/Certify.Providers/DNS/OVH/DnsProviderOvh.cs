@@ -29,11 +29,11 @@ namespace Certify.Providers.DNS.OVH
 
         public const string DefaultOvhEndpoint = "https://eu.api.ovh.com/1.0/";
 
-        public static ProviderDefinition Definition
+        public static ChallengeProviderDefinition Definition
         {
             get
             {
-                return new ProviderDefinition
+                return new ChallengeProviderDefinition
                 {
                     Id = "DNS01.API.Ovh",
                     Title = "OVH DNS API",
@@ -73,7 +73,9 @@ namespace Certify.Providers.DNS.OVH
             try
             {
                 if (!request.RecordName.EndsWith(request.ZoneId, StringComparison.InvariantCultureIgnoreCase))
+                {
                     return new ActionResult { IsSuccess = false, Message = $"DNS record creation failed for RecordName={request.RecordName} , because RecordName was expected to end with ZoneId (which is {request.ZoneId})." };
+                }
 
                 // record name received as argument : www.qwerty.sampledomain.com received zone id :
                 // sampledomain.com required record name by OVH : www.qwerty
@@ -149,7 +151,7 @@ namespace Certify.Providers.DNS.OVH
             // test connection and credentials
             try
             {
-                var zones = await this.GetZones();
+                var zones = await GetZones();
 
                 if (zones != null && zones.Any())
                 {

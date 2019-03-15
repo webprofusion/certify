@@ -30,7 +30,7 @@ namespace Certify.Management
         {
             // if validation proxy enabled, access to the domain being validated is checked via our
             // remote API rather than directly on the servers
-            bool useProxy = useProxyAPI ?? _enableValidationProxyAPI;
+            var useProxy = useProxyAPI ?? _enableValidationProxyAPI;
 
             if (useProxy)
             {
@@ -56,7 +56,7 @@ namespace Certify.Management
                 // the primary IP address and also for 127.0.0.1 (where primary IP will not resolve
                 // internally i.e. the default resolution is an external IP)
 
-                List<string> testHostEntries = new List<string> {
+                var testHostEntries = new List<string> {
                     $"\n127.0.0.1\t{sni}",
                 };
 
@@ -67,7 +67,7 @@ namespace Certify.Management
                     testHostEntries.Add($"\n{ip}\t{sni}");
                 }
 
-                using (StreamWriter writer = File.AppendText(hosts))
+                using (var writer = File.AppendText(hosts))
                 {
                     foreach (var hostEntry in testHostEntries)
                     {
@@ -85,7 +85,8 @@ namespace Certify.Management
 
                         var resp = await client.SendAsync(req);
                         // if the GET request succeeded, the Cert validation succeeded
-                        Log($"Local TLS SNI binding check OK: {host}, {sni}"); ;
+                        Log($"Local TLS SNI binding check OK: {host}, {sni}");
+                        ;
                     }
                 }
                 finally
@@ -129,7 +130,7 @@ namespace Certify.Management
         {
             // if validation proxy enabled, access to the domain being validated is checked via our
             // remote API rather than directly on the servers
-            bool useProxy = useProxyAPI ?? _enableValidationProxyAPI;
+            var useProxy = useProxyAPI ?? _enableValidationProxyAPI;
 
             //check http request to test path works
             try
@@ -157,7 +158,7 @@ namespace Certify.Management
                         var encoding = ASCIIEncoding.UTF8;
                         using (var reader = new System.IO.StreamReader(response.GetResponseStream(), encoding))
                         {
-                            string jsonText = reader.ReadToEnd();
+                            var jsonText = reader.ReadToEnd();
 
                             var result = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.API.URLCheckResult>(jsonText);
 
@@ -283,7 +284,7 @@ namespace Certify.Management
 
             // if validation proxy enabled, DNS for the domain being validated is checked via our
             // remote API rather than directly on the servers
-            bool useProxy = useProxyAPI ?? _enableValidationProxyAPI;
+            var useProxy = useProxyAPI ?? _enableValidationProxyAPI;
 
             if (useProxy)
             {

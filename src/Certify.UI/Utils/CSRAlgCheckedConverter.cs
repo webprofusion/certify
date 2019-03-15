@@ -19,9 +19,6 @@ namespace Certify.UI.Utils
         }
 
         public object ConvertBack(object value, Type targetType, object parameter,
-            System.Globalization.CultureInfo culture)
-        {
-            return parameter;
-        }
+            System.Globalization.CultureInfo culture) => parameter;
     }
 }

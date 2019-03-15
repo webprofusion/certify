@@ -10,13 +10,15 @@ namespace Certify.Models.Shared
 
         public ActionLogCollector()
         {
-            _actionLogs = new List<ActionLogItem>();
-            _actionLogs.Capacity = 1000;
+            _actionLogs = new List<ActionLogItem>
+            {
+                Capacity = 1000
+            };
         }
 
         protected void LogAction(string command, string result = null, string managedItemId = null)
         {
-            if (this._actionLogs != null)
+            if (_actionLogs != null)
             {
                 _actionLogs.Add(new ActionLogItem
                 {
@@ -30,7 +32,7 @@ namespace Certify.Models.Shared
 
         public List<string> GetActionLogSummary()
         {
-            List<string> output = new List<string>();
+            var output = new List<string>();
             if (_actionLogs != null)
             {
                 _actionLogs.ToList().ForEach((a) =>
@@ -42,9 +44,6 @@ namespace Certify.Models.Shared
             return output;
         }
 
-        public ActionLogItem GetLastActionLogItem()
-        {
-            return _actionLogs.LastOrDefault();
-        }
+        public ActionLogItem GetLastActionLogItem() => _actionLogs.LastOrDefault();
     }
 }

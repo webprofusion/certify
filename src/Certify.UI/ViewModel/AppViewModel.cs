@@ -24,7 +24,6 @@ namespace Certify.UI.ViewModel
         //public static AppModel AppViewModel = new DesignViewModel(); // for UI testing
         public static AppViewModel Current = AppViewModel.GetModel();
 
-
         Models.Providers.ILog _uiLog = null;
 
         public AppViewModel()
@@ -53,15 +52,12 @@ namespace Certify.UI.ViewModel
 
             ProgressResults = new ObservableCollection<RequestProgressState>();
 
-            this.ImportedManagedCertificates = new ObservableCollection<ManagedCertificate>();
-            this.ManagedCertificates = new ObservableCollection<ManagedCertificate>();
+            ImportedManagedCertificates = new ObservableCollection<ManagedCertificate>();
+            ManagedCertificates = new ObservableCollection<ManagedCertificate>();
 
         }
 
-        public Models.Providers.ILog Log
-        {
-            get { return _uiLog; }
-        }
+        public Models.Providers.ILog Log => _uiLog;
 
         public const int ProductTypeId = 1;
 
@@ -78,8 +74,8 @@ namespace Certify.UI.ViewModel
 
         public void RaiseError(Exception exp)
         {
-            this.IsError = true;
-            this.CurrentError = exp.Message;
+            IsError = true;
+            CurrentError = exp.Message;
 
             System.Windows.MessageBox.Show(exp.Message);
         }
@@ -97,7 +93,7 @@ namespace Certify.UI.ViewModel
             var prefs = await CertifyClient.GetPreferences();
             prefs.IsInstanceRegistered = true;
             await CertifyClient.SetPreferences(prefs);
-            this.Preferences = prefs;
+            Preferences = prefs;
         }
 
         /// <summary>
@@ -105,7 +101,7 @@ namespace Certify.UI.ViewModel
         /// </summary>
         public ObservableCollection<ManagedCertificate> ManagedCertificates
         {
-            get { return managedCertificates; }
+            get => managedCertificates;
             set
             {
                 managedCertificates = value;
@@ -131,18 +127,19 @@ namespace Certify.UI.ViewModel
 
         public bool HasDeprecatedChallengeTypes { get; set; } = false;
 
-        public virtual bool HasRegisteredContacts
-        {
-            get
-            {
+        public virtual bool HasRegisteredContacts =>
                 // FIXME: this property is async, either cache or reduce reliance
-                return Task.Run(() => CertifyClient.GetPrimaryContact()).Result != null;
-            }
+                Task.Run(() => CertifyClient.GetPrimaryContact()).Result != null;
+
+        public async Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly)
+        {
+            var results = await CertifyClient.PerformDeployment(managedCertificateId, taskId, isPreviewOnly);
+            return results;
         }
 
         public ManagedCertificate SelectedItem
         {
-            get { return selectedItem; }
+            get => selectedItem;
             set
             {
                 if (value?.Id != null && !ManagedCertificates.Contains(value))
@@ -169,13 +166,7 @@ namespace Certify.UI.ViewModel
         public int MainUITabIndex { get; set; }
 
         [DependsOn(nameof(ProgressResults))]
-        public bool HasRequestsInProgress
-        {
-            get
-            {
-                return (ProgressResults != null && ProgressResults.Any());
-            }
-        }
+        public bool HasRequestsInProgress => (ProgressResults != null && ProgressResults.Any());
 
         public ObservableCollection<RequestProgressState> ProgressResults { get; set; }
 
@@ -266,7 +257,6 @@ namespace Certify.UI.ViewModel
                 // the service could still be starting up or port may be reallocated
                 await Task.Delay(5000);
 
-
                 // restart client in case port has reallocated
                 CertifyClient = new CertifyServiceClient();
 
@@ -288,14 +278,11 @@ namespace Certify.UI.ViewModel
             await CertifyClient.ConnectStatusStreamAsync();
         }
 
-        private async void CertifyClient_OnManagedCertificateUpdated(ManagedCertificate obj)
-        {
-            await App.Current.Dispatcher.InvokeAsync(async () =>
-              {
-                  // a managed site has been updated, update it in our view
-                  await UpdatedCachedManagedCertificate(obj);
-              });
-        }
+        private async void CertifyClient_OnManagedCertificateUpdated(ManagedCertificate obj) => await App.Current.Dispatcher.InvokeAsync(async () =>
+                                                                                                {
+                                                                                                    // a managed site has been updated, update it in our view
+                                                                                                    await UpdatedCachedManagedCertificate(obj);
+                                                                                                });
 
         /// <summary>
         /// Checks the service availability by fetching the version. If the service is available but the version is wrong an exception will be raised.
@@ -343,17 +330,17 @@ namespace Certify.UI.ViewModel
         /// Load initial settings including preferences, list of managed sites, primary contact 
         /// </summary>
         /// <returns></returns>
-        public async virtual Task LoadSettingsAsync()
+        public virtual async Task LoadSettingsAsync()
         {
-            this.Preferences = await CertifyClient.GetPreferences();
+            Preferences = await CertifyClient.GetPreferences();
 
-            List<ManagedCertificate> list = await CertifyClient.GetManagedCertificates(new Models.ManagedCertificateFilter());
+            var list = await CertifyClient.GetManagedCertificates(new Models.ManagedCertificateFilter());
 
             foreach (var i in list)
             {
                 i.IsChanged = false;
 
-                if (HasDeprecatedChallengeTypes==false && i.RequestConfig.Challenges.Any(c=>c.ChallengeType== SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
+                if (HasDeprecatedChallengeTypes == false && i.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
                 {
                     HasDeprecatedChallengeTypes = true;
                 }
@@ -367,13 +354,11 @@ namespace Certify.UI.ViewModel
 
             await RefreshStoredCredentialsList();
 
-       
+            await RefreshDeploymentTaskProviderList();
+
         }
 
-        private void CertifyClient_SendMessage(string arg1, string arg2)
-        {
-            MessageBox.Show($"Received: {arg1} {arg2}");
-        }
+        private void CertifyClient_SendMessage(string arg1, string arg2) => MessageBox.Show($"Received: {arg1} {arg2}");
 
         public async Task<bool> AddOrUpdateManagedCertificate(ManagedCertificate item)
         {
@@ -428,7 +413,7 @@ namespace Certify.UI.ViewModel
         public void TrackProgress(ManagedCertificate managedCertificate)
         {
             //add request to observable list of progress state
-            RequestProgressState progressState = new RequestProgressState(RequestState.Running, "Starting..", managedCertificate);
+            var progressState = new RequestProgressState(RequestState.Running, "Starting..", managedCertificate);
 
             //begin monitoring progress
             UpdateRequestTrackingProgress(progressState);
@@ -440,7 +425,7 @@ namespace Certify.UI.ViewModel
         {
             //FIXME: currently user can run renew all again while renewals are still in progress
 
-            Dictionary<string, Progress<RequestProgressState>> itemTrackers = new Dictionary<string, Progress<RequestProgressState>>();
+            var itemTrackers = new Dictionary<string, Progress<RequestProgressState>>();
             foreach (var s in ManagedCertificates)
             {
                 if ((autoRenewalsOnly && s.IncludeInAutoRenew) || !autoRenewalsOnly)
@@ -468,7 +453,10 @@ namespace Certify.UI.ViewModel
             var newItem = managedCertificate;
 
             // optional reload managed site details (for refresh)
-            if (reload) newItem = await CertifyClient.GetManagedCertificate(managedCertificate.Id);
+            if (reload)
+            {
+                newItem = await CertifyClient.GetManagedCertificate(managedCertificate.Id);
+            }
 
             if (newItem != null)
             {
@@ -487,32 +475,26 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public async Task<List<ActionStep>> GetPreviewActions(ManagedCertificate item)
-        {
-            return await CertifyClient.PreviewActions(item);
-        }
+        public async Task<List<ActionStep>> GetPreviewActions(ManagedCertificate item) => await CertifyClient.PreviewActions(item);
 
-        private void UpdateRequestTrackingProgress(RequestProgressState state)
-        {
-            App.Current.Dispatcher.Invoke((Action)delegate
-            {
-                var existing = ProgressResults.FirstOrDefault(p => p.ManagedCertificate.Id == state.ManagedCertificate.Id);
+        private void UpdateRequestTrackingProgress(RequestProgressState state) => App.Current.Dispatcher.Invoke((Action)delegate
+                                                                                {
+                                                                                    var existing = ProgressResults.FirstOrDefault(p => p.ManagedCertificate.Id == state.ManagedCertificate.Id);
 
-                if (existing != null)
-                {
-                    //replace state of progress request
-                    var index = ProgressResults.IndexOf(existing);
-                    ProgressResults[index] = state;
-                }
-                else
-                {
-                    ProgressResults.Add(state);
-                }
+                                                                                    if (existing != null)
+                                                                                    {
+                                                                                        //replace state of progress request
+                                                                                        var index = ProgressResults.IndexOf(existing);
+                                                                                        ProgressResults[index] = state;
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        ProgressResults.Add(state);
+                                                                                    }
 
-                RaisePropertyChangedEvent(nameof(HasRequestsInProgress));
-                RaisePropertyChangedEvent(nameof(ProgressResults));
-            });
-        }
+                                                                                    RaisePropertyChangedEvent(nameof(HasRequestsInProgress));
+                                                                                    RaisePropertyChangedEvent(nameof(ProgressResults));
+                                                                                });
 
         public void ClearRequestProgressResults()
         {
@@ -535,7 +517,10 @@ namespace Certify.UI.ViewModel
 
         public async Task<bool> DeleteCredential(string credentialKey)
         {
-            if (credentialKey == null) return false;
+            if (credentialKey == null)
+            {
+                return false;
+            }
 
             var result = await CertifyClient.DeleteCredential(credentialKey);
             await RefreshStoredCredentialsList();
@@ -553,23 +538,42 @@ namespace Certify.UI.ViewModel
         public async Task RefreshStoredCredentialsList()
         {
             var list = await CertifyClient.GetCredentials();
-            App.Current.Dispatcher.Invoke((Action)delegate
-            {
-                StoredCredentials = new System.Collections.ObjectModel.ObservableCollection<Models.Config.StoredCredential>(list);
-            });
+            
+                if (StoredCredentials == null)
+                {
+                    StoredCredentials = new ObservableCollection<StoredCredential>();
+                }
+
+                StoredCredentials.Clear();
+                foreach(var c in list)
+                {
+                    StoredCredentials.Add(c);
+                }
+
+            RaisePropertyChangedEvent(nameof(StoredCredentials));
         }
 
-        public ObservableCollection<ProviderDefinition> ChallengeAPIProviders { get; set; } = new ObservableCollection<ProviderDefinition> { };
+        public ObservableCollection<ChallengeProviderDefinition> ChallengeAPIProviders { get; set; } = new ObservableCollection<ChallengeProviderDefinition> { };
 
         public async Task RefreshChallengeAPIList()
         {
             var list = await CertifyClient.GetChallengeAPIList();
             App.Current.Dispatcher.Invoke((Action)delegate
             {
-                ChallengeAPIProviders = new System.Collections.ObjectModel.ObservableCollection<Models.Config.ProviderDefinition>(list);
+                ChallengeAPIProviders = new System.Collections.ObjectModel.ObservableCollection<Models.Config.ChallengeProviderDefinition>(list);
             });
         }
 
+        public ObservableCollection<DeploymentProviderDefinition> DeploymentTaskProviders { get; set; } = new ObservableCollection<DeploymentProviderDefinition> { };
+
+        public async Task RefreshDeploymentTaskProviderList()
+        {
+            var list = await CertifyClient.GetDeploymentProviderList();
+            App.Current.Dispatcher.Invoke((Action)delegate
+            {
+                DeploymentTaskProviders = new System.Collections.ObjectModel.ObservableCollection<Models.Config.DeploymentProviderDefinition>(list.OrderBy(l=>l.Title));
+            });
+        }
         public ICommand RenewAllCommand => new RelayCommand<bool>(RenewAll);
     }
 }

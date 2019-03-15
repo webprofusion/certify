@@ -128,7 +128,11 @@ namespace Certify.Client
 
         Task<List<ActionStep>> PreviewActions(ManagedCertificate site);
 
-        Task<List<ProviderDefinition>> GetChallengeAPIList();
+        Task<List<ChallengeProviderDefinition>> GetChallengeAPIList();
+
+        Task<List<DeploymentProviderDefinition>> GetDeploymentProviderList();
+
+        Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly);
 
         #endregion Managed Certificates
 
@@ -138,6 +142,7 @@ namespace Certify.Client
 
         Task<bool> SetPrimaryContact(ContactRegistration contact);
 
+      
         #endregion Contacts
     }
 }

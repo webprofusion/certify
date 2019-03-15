@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models.Config;
@@ -102,15 +101,9 @@ namespace Certify.Core.Management.Challenges
             }
         }
 
-        public async Task<ActionResult> DeleteRecord(DnsRecord request)
-        { 
-            throw new NotImplementedException();
-        }
+        public async Task<ActionResult> DeleteRecord(DnsRecord request) => throw new NotImplementedException();
 
-        public Task<List<DnsZone>> GetZones()
-        {
-            throw new NotImplementedException();
-        }
+        public Task<List<DnsZone>> GetZones() => throw new NotImplementedException();
 
         public async Task<bool> InitProvider(ILog log)
         {

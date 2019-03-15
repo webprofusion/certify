@@ -94,28 +94,22 @@ namespace Certify.Providers.DNS.Cloudflare
 
         public List<ProviderParameter> ProviderParameters => Definition.ProviderParameters;
 
-        public static ProviderDefinition Definition
+        public static ChallengeProviderDefinition Definition => new ChallengeProviderDefinition
         {
-            get
-            {
-                return new ProviderDefinition
-                {
-                    Id = "DNS01.API.Cloudflare",
-                    Title = "Cloudflare DNS API",
-                    Description = "Validates via Cloudflare DNS APIs using credentials",
-                    HelpUrl = "https://docs.certifytheweb.com/docs/dns-cloudflare.html",
-                    PropagationDelaySeconds = 60,
-                    ProviderParameters = new List<ProviderParameter>{
+            Id = "DNS01.API.Cloudflare",
+            Title = "Cloudflare DNS API",
+            Description = "Validates via Cloudflare DNS APIs using credentials",
+            HelpUrl = "https://docs.certifytheweb.com/docs/dns-cloudflare.html",
+            PropagationDelaySeconds = 60,
+            ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{Key="emailaddress", Name="Email Address", IsRequired=true },
                         new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true },
                         new ProviderParameter{ Key="zoneid",Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false }
                      },
-                    ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                    Config = "Provider=Certify.Providers.DNS.Cloudflare",
-                    HandlerType = ChallengeHandlerType.INTERNAL
-                };
-            }
-        }
+            ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+            Config = "Provider=Certify.Providers.DNS.Cloudflare",
+            HandlerType = ChallengeHandlerType.INTERNAL
+        };
 
         public DnsProviderCloudflare(Dictionary<string, string> credentials)
         {
@@ -128,7 +122,7 @@ namespace Certify.Providers.DNS.Cloudflare
             // test connection and credentials
             try
             {
-                var zones = await this.GetZones();
+                var zones = await GetZones();
 
                 if (zones != null && zones.Any())
                 {
@@ -155,9 +149,9 @@ namespace Certify.Providers.DNS.Cloudflare
 
         private async Task<List<DnsRecordCloudflare>> GetDnsRecords(string zoneId)
         {
-            List<DnsRecordCloudflare> records = new List<DnsRecordCloudflare>();
-            bool finishedPaginating = false;
-            int page = 1;
+            var records = new List<DnsRecordCloudflare>();
+            var finishedPaginating = false;
+            var page = 1;
 
             while (!finishedPaginating)
             {
@@ -303,8 +297,8 @@ namespace Certify.Providers.DNS.Cloudflare
         public async Task<List<DnsZone>> GetZones()
         {
             var zones = new List<DnsZone>();
-            bool finishedPaginating = false;
-            int page = 1;
+            var finishedPaginating = false;
+            var page = 1;
 
             while (!finishedPaginating)
             {

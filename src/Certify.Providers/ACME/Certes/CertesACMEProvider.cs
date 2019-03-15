@@ -15,7 +15,7 @@ using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
 
-namespace Certify.Providers.Certes
+namespace Certify.Providers.ACME.Certes
 {
     /// <summary>
     /// Certes Provider settings for serialization
@@ -27,6 +27,7 @@ namespace Certify.Providers.Certes
         public string AccountKey { get; set; }
     }
 
+#pragma warning disable IDE1006 // Naming Styles
     public class DiagEcKey
     {
         public string kty { get; set; }
@@ -34,6 +35,7 @@ namespace Certify.Providers.Certes
         public string x { get; set; }
         public string y { get; set; }
     }
+#pragma warning restore IDE1006 // Naming Styles
 
     // used to diagnose account key faults
     public class DiagAccountInfo
@@ -87,23 +89,23 @@ namespace Certify.Providers.Certes
     {
         private AcmeContext _acme;
 #if DEBUG
-        private Uri _serviceUri = WellKnownServers.LetsEncryptStagingV2;
+        private readonly Uri _serviceUri = WellKnownServers.LetsEncryptStagingV2;
 #else
-        private Uri _serviceUri = WellKnownServers.LetsEncryptV2;
+        private readonly Uri _serviceUri = WellKnownServers.LetsEncryptV2;
 #endif
 
-        private string _settingsFolder = null;
+        private readonly string _settingsFolder = null;
 
         private CertesSettings _settings = null;
         private Dictionary<string, IOrderContext> _currentOrders;
         private IdnMapping _idnMapping = new IdnMapping();
         private DateTime _lastInitDateTime = new DateTime();
-        private bool _newContactUseCurrentAccountKey = false;
+        private readonly bool _newContactUseCurrentAccountKey = false;
 
         private AcmeHttpClient _httpClient;
         private LoggingHandler _loggingHandler;
 
-        private string _userAgentName = "Certify SSL Manager";
+        private readonly string _userAgentName = "Certify SSL Manager";
         private ILog _log = null;
 
         public CertesACMEProvider(string settingsPath, string userAgentName)
@@ -115,20 +117,11 @@ namespace Certify.Providers.Certes
             _userAgentName = $"{userAgentName} {certesAssembly.Name}/{certesAssembly.Version.ToString()}";
         }
 
-        public string GetProviderName()
-        {
-            return "Certes";
-        }
+        public string GetProviderName() => "Certes";
 
-        public string GetAcmeBaseURI()
-        {
-            return _acme.DirectoryUri.ToString();
-        }
+        public string GetAcmeBaseURI() => _acme.DirectoryUri.ToString();
 
-        public async Task<Uri> GetAcmeTermsOfService()
-        {
-            return await _acme.TermsOfService();
-        }
+        public async Task<Uri> GetAcmeTermsOfService() => await _acme.TermsOfService();
 
         /// <summary>
         /// Initialise provider settings, loading current account key if present
@@ -236,7 +229,11 @@ namespace Certify.Providers.Certes
         {
             if (_acme == null)
             {
-                if (log != null) log.Error("No account context. Cannot update account key.");
+                if (log != null)
+                {
+                    log.Error("No account context. Cannot update account key.");
+                }
+
                 return false;
             }
             else
@@ -279,7 +276,7 @@ namespace Certify.Providers.Certes
         {
             try
             {
-                using (StreamWriter fs = File.CreateText(path))
+                using (var fs = File.CreateText(path))
                 {
                     await fs.WriteAsync(content);
                     await fs.FlushAsync();
@@ -299,10 +296,7 @@ namespace Certify.Providers.Certes
         /// <summary>
         /// Save current provider settings
         /// </summary>
-        private async Task<bool> SaveSettings()
-        {
-            return await WriteAllTextAsync(_settingsFolder + "\\c-settings.json", Newtonsoft.Json.JsonConvert.SerializeObject(_settings));
-        }
+        private async Task<bool> SaveSettings() => await WriteAllTextAsync(_settingsFolder + "\\c-settings.json", Newtonsoft.Json.JsonConvert.SerializeObject(_settings));
 
         /// <summary>
         /// Save the current account key
@@ -349,7 +343,10 @@ namespace Certify.Providers.Certes
 
             _acme = new AcmeContext(_serviceUri, accountkey, _httpClient);
 
-            if (_settings.AccountKey != pem) _settings.AccountKey = pem;
+            if (_settings.AccountKey != pem)
+            {
+                _settings.AccountKey = pem;
+            }
         }
 
         /// <summary>
@@ -424,10 +421,11 @@ namespace Certify.Providers.Certes
             var authzList = new List<PendingAuthorization>();
 
             //if no alternative domain specified, use the primary domain as the subject
-            var domainOrders = new List<string>();
-
-            // order all of the distinct domains in the config (primary + SAN).
-            domainOrders.Add(_idnMapping.GetAscii(config.PrimaryDomain));
+            var domainOrders = new List<string>
+            {
+                // order all of the distinct domains in the config (primary + SAN).
+                _idnMapping.GetAscii(config.PrimaryDomain)
+            };
 
             if (config.SubjectAlternativeNames != null)
             {
@@ -443,8 +441,10 @@ namespace Certify.Providers.Certes
             try
             {
                 IOrderContext order = null;
-                int remainingAttempts = 3;
-                bool orderCreated = false;
+                var remainingAttempts = 3;
+                var orderCreated = false;
+                object lastException = null;
+
                 try
                 {
                     while (!orderCreated && remainingAttempts > 0)
@@ -473,7 +473,16 @@ namespace Certify.Providers.Certes
                         {
                             remainingAttempts--;
 
-                            log.Error($"BeginCertificateOrder: error creating order. Retries remaining:{remainingAttempts} {exp.ToString()} ");
+                            var msg = exp.ToString();
+
+                            if (exp.InnerException != null && exp.InnerException is AcmeRequestException)
+                            {
+                                msg = (exp.InnerException as AcmeRequestException).Error?.Detail;
+                            }
+
+                            log.Error($"BeginCertificateOrder: error creating order. Retries remaining:{remainingAttempts} :: {msg} ");
+
+                            lastException = exp;
 
                             if (remainingAttempts == 0)
                             {
@@ -505,7 +514,25 @@ namespace Certify.Providers.Certes
                     return pendingOrder;
                 }
 
-                if (order == null) throw new Exception("Failed to begin certificate order.");
+                if (order == null)
+                {
+
+                    var msg = "Failed to begin certificate order.";
+
+                    if (lastException != null && (lastException as Exception).InnerException is AcmeRequestException)
+                    {
+                        msg = ((lastException as Exception).InnerException as AcmeRequestException).Error?.Detail;
+
+                    }
+
+                    return new PendingOrder
+                    {
+                        Authorizations = new List<PendingAuthorization> {
+                          new PendingAuthorization{ IsFailure = true, AuthorizationError=msg}
+                        }
+                    };
+
+                }
 
                 orderUri = order.Location.ToString();
 
@@ -535,14 +562,17 @@ namespace Certify.Providers.Certes
                 var orderAuthorizations = await order.Authorizations();
 
                 // get the challenges for each authorization
-                foreach (IAuthorizationContext authz in orderAuthorizations)
+                foreach (var authz in orderAuthorizations)
                 {
                     log.Debug($"Fetching Authz Challenges.");
 
                     var allChallenges = await authz.Challenges();
                     var res = await authz.Resource();
-                    string authzDomain = res.Identifier.Value;
-                    if (res.Wildcard == true) authzDomain = "*." + authzDomain;
+                    var authzDomain = res.Identifier.Value;
+                    if (res.Wildcard == true)
+                    {
+                        authzDomain = "*." + authzDomain;
+                    }
 
                     var challenges = new List<AuthorizationChallengeItem>();
 
@@ -667,9 +697,18 @@ namespace Certify.Providers.Certes
         /// <returns>  </returns>
         public async Task<StatusMessage> SubmitChallenge(ILog log, string challengeType, AuthorizationChallengeItem attemptedChallenge)
         {
+            if (attemptedChallenge == null)
+            {
+                return new StatusMessage
+                {
+                    IsOK = false,
+                    Message = "Challenge could not be submitted. No matching attempted challenge."
+                };
+            }
+
             if (!attemptedChallenge.IsValidated)
             {
-                IChallengeContext challenge = (IChallengeContext)attemptedChallenge.ChallengeData;
+                var challenge = (IChallengeContext)attemptedChallenge.ChallengeData;
                 try
                 {
                     var result = await challenge.Validate();
@@ -816,10 +855,25 @@ namespace Certify.Providers.Certes
 
             if (!string.IsNullOrEmpty(config.CSRKeyAlg))
             {
-                if (config.CSRKeyAlg == "RS256") keyAlg = KeyAlgorithm.RS256;
-                if (config.CSRKeyAlg == "ECDSA256") keyAlg = KeyAlgorithm.ES256;
-                if (config.CSRKeyAlg == "ECDSA384") keyAlg = KeyAlgorithm.ES384;
-                if (config.CSRKeyAlg == "ECDSA521") keyAlg = KeyAlgorithm.ES512;
+                if (config.CSRKeyAlg == "RS256")
+                {
+                    keyAlg = KeyAlgorithm.RS256;
+                }
+
+                if (config.CSRKeyAlg == "ECDSA256")
+                {
+                    keyAlg = KeyAlgorithm.ES256;
+                }
+
+                if (config.CSRKeyAlg == "ECDSA384")
+                {
+                    keyAlg = KeyAlgorithm.ES384;
+                }
+
+                if (config.CSRKeyAlg == "ECDSA521")
+                {
+                    keyAlg = KeyAlgorithm.ES512;
+                }
             }
 
             var csrKey = KeyFactory.NewKey(keyAlg);
@@ -828,6 +882,7 @@ namespace Certify.Providers.Certes
 
             // generate cert
             CertificateChain certificateChain = null;
+            DateTime? certExpiration = null;
             try
             {
                 certificateChain = await orderContext.Generate(new CsrInfo
@@ -836,6 +891,7 @@ namespace Certify.Providers.Certes
                 }, csrKey);
 
                 var cert = new X509Certificate2(certificateChain.Certificate.ToDer());
+                certExpiration = cert.NotAfter;
                 certFriendlyName += $"{cert.GetEffectiveDateString()} to {cert.GetExpirationDateString()}";
             }
             catch (AcmeRequestException exp)
@@ -846,27 +902,29 @@ namespace Certify.Providers.Certes
                 return new ProcessStepResult { ErrorMessage = msg, IsSuccess = false, Result = exp.Error };
             }
 
-            var certId = Guid.NewGuid().ToString();
+            // file will be named as {expiration yyyyMMdd}_{guid} e.g. 20290301_4fd1b2ea-7b6e-4dca-b5d9-e0e7254e568b
+            var certId = certExpiration.Value.ToString("yyyyMMdd") + "_" + Guid.NewGuid().ToString().Substring(0, 8);
 
-            var pfxFile = certId + ".pfx";
+            var domainAsPath = config.PrimaryDomain.Replace("*", "_");
 
-            var pfxPath = ExportFullCertPFX(certFriendlyName, csrKey, certificateChain, pfxFile);
+            var pfxPath = ExportFullCertPFX(certFriendlyName, csrKey, certificateChain, certId, domainAsPath);
 
-            // ExportFullCertPEM(csrKey, certificateChain, certId);
+            ExportFullCertPEM(csrKey, certificateChain, certId, domainAsPath);
 
             return new ProcessStepResult { IsSuccess = true, Result = pfxPath };
         }
 
-        private string ExportFullCertPFX(string certFriendlyName, IKey csrKey, CertificateChain certificateChain, string pfxFile)
+        private string ExportFullCertPFX(string certFriendlyName, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
         {
-            var pxfFolderPath = _settingsFolder + "\\assets\\pfx";
+            var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..\\assets", primaryDomainPath }));
 
-            if (!System.IO.Directory.Exists(pxfFolderPath))
+            if (!System.IO.Directory.Exists(storePath))
             {
-                System.IO.Directory.CreateDirectory(pxfFolderPath);
+                System.IO.Directory.CreateDirectory(storePath);
             }
 
-            var pfxPath = pxfFolderPath + "\\" + pfxFile;
+            var pfxFile = certId + ".pfx";
+            var pfxPath = Path.Combine(storePath, pfxFile);
 
             var pfx = certificateChain.ToPfx(csrKey);
             var pfxBytes = pfx.Build(certFriendlyName, "");
@@ -875,16 +933,21 @@ namespace Certify.Providers.Certes
             return pfxPath;
         }
 
-        private string ExportFullCertPEM(IKey csrKey, CertificateChain certificateChain, string certId)
+        private string ExportFullCertPEM(IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
         {
-            var pemFolderPath = _settingsFolder + "\\assets\\pem";
+            var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..\\assets", primaryDomainPath }));
 
-            if (!System.IO.Directory.Exists(pemFolderPath))
+            if (!System.IO.Directory.Exists(storePath))
             {
-                System.IO.Directory.CreateDirectory(pemFolderPath);
+                System.IO.Directory.CreateDirectory(storePath);
             }
 
-            var pemPath = pemFolderPath + "\\" + certId + ".pem";
+            if (!System.IO.Directory.Exists(storePath))
+            {
+                System.IO.Directory.CreateDirectory(storePath);
+            }
+
+            var pemPath = Path.Combine(storePath, certId + ".pem");
 
             // write pem in order of Private .key, primary server .crt, intermediate .crt, issuer.crt
             // note:
@@ -942,9 +1005,6 @@ namespace Certify.Providers.Certes
             //FIXME: not implemented
         }
 
-        public Task<string> GetAcmeAccountStatus()
-        {
-            throw new NotImplementedException();
-        }
+        public Task<string> GetAcmeAccountStatus() => throw new NotImplementedException();
     }
 }

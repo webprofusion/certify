@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -20,18 +19,12 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         protected Certify.UI.ViewModel.ManagedCertificateViewModel ItemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
 
-        protected Models.Providers.ILog Log
-        {
-            get
-            {
-                return AppViewModel.Log;
-            }
-        }
+        protected Models.Providers.ILog Log => AppViewModel.Log;
 
         public ManagedCertificateSettings()
         {
             InitializeComponent();
-            this.AppViewModel.PropertyChanged += MainViewModel_PropertyChanged;
+            AppViewModel.PropertyChanged += MainViewModel_PropertyChanged;
 
             ToggleAdvancedView();
         }
@@ -40,20 +33,20 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             if (e.PropertyName == "SelectedItem")
             {
-                this.SettingsTab.SelectedIndex = 0;
+                SettingsTab.SelectedIndex = 0;
 
                 // show status tab for existing managed certs
-                bool showStatus = ItemViewModel.SelectedItem?.Id != null && ItemViewModel.SelectedItem.DateLastRenewalAttempt != null;
+                var showStatus = ItemViewModel.SelectedItem?.Id != null && ItemViewModel.SelectedItem.DateLastRenewalAttempt != null;
 
                 if (showStatus)
                 {
-                    this.TabStatusInfo.Visibility = Visibility.Visible;
-                    this.SettingsTab.SelectedItem = this.TabStatusInfo;
+                    TabStatusInfo.Visibility = Visibility.Visible;
+                    SettingsTab.SelectedItem = TabStatusInfo;
                 }
                 else
                 {
-                    this.TabStatusInfo.Visibility = Visibility.Collapsed;
-                    this.SettingsTab.SelectedItem = this.TabDomains;
+                    TabStatusInfo.Visibility = Visibility.Collapsed;
+                    SettingsTab.SelectedItem = TabDomains;
                 }
 
                 // TODO: fix property changed dependencies
@@ -71,7 +64,10 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return false;
             }*/
 
-            if (item.RequestConfig.Challenges == null) item.RequestConfig.Challenges = new System.Collections.ObjectModel.ObservableCollection<CertRequestChallengeConfig>();
+            if (item.RequestConfig.Challenges == null)
+            {
+                item.RequestConfig.Challenges = new System.Collections.ObjectModel.ObservableCollection<CertRequestChallengeConfig>();
+            }
 
             if (item.Id == null && item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
             {
@@ -79,7 +75,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return false;
             }
 
-            if (String.IsNullOrEmpty(item.Name))
+            if (string.IsNullOrEmpty(item.Name))
             {
                 MessageBox.Show(SR.ManagedCertificateSettings_NameRequired, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
@@ -110,12 +106,18 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return false;
             }
 
+            if (ItemViewModel.SelectedItem.DomainOptions.Any(d => d.IsSelected && (!d.Domain.Contains(".") || d.Domain.ToLower().EndsWith(".local"))))
+            {
+                // one or more selected domains does not include a label seperator (is an internal host name) or end in .local
+                MessageBox.Show("One or more domains specified are internal hostnames. Certificates for internal host names are not supported by the Certificate Authority.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
             // if title set to the default, use the primary domain
             if (item.Name == SR.ManagedCertificateSettings_DefaultTitle)
             {
                 item.Name = ItemViewModel.PrimarySubjectDomain.Domain;
             }
-
 
             // certificates cannot request wildcards unless they also use DNS validation
             if (
@@ -153,10 +155,10 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 if (c.Parameters != null && c.Parameters.Any())
                 {
-                    //validate parmeters
+                    //validate parameters
                     foreach (var p in c.Parameters)
                     {
-                        if (p.IsRequired && String.IsNullOrEmpty(p.Value))
+                        if (p.IsRequired && string.IsNullOrEmpty(p.Value))
                         {
                             MessageBox.Show($"Challenge configuration parameter required: {p.Name}", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
                             return false;
@@ -189,7 +191,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 }
 
                 // if user has chosen to bind SNI with a specific IP, warn and confirm save
-                if (item.RequestConfig.BindingUseSNI == true && !String.IsNullOrEmpty(item.RequestConfig.BindingIPAddress) && item.RequestConfig.BindingIPAddress != "*")
+                if (item.RequestConfig.BindingUseSNI == true && !string.IsNullOrEmpty(item.RequestConfig.BindingIPAddress) && item.RequestConfig.BindingIPAddress != "*")
                 {
                     if (MessageBox.Show(SR.ManagedCertificateSettings_InvalidSNI, SR.SaveError, MessageBoxButton.YesNoCancel, MessageBoxImage.Warning) != MessageBoxResult.Yes)
                     {
@@ -256,19 +258,18 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        private void ReturnToDefaultManagedCertificateView()
-        {
-            ItemViewModel.SelectedItem = null;
-        }
+        private void ReturnToDefaultManagedCertificateView() => ItemViewModel.SelectedItem = null;
 
         private async void Button_RequestCertificate(object sender, RoutedEventArgs e)
         {
             if (ItemViewModel.SelectedItem != null)
             {
-                
-                    var savedOK = await ValidateAndSave(ItemViewModel.SelectedItem);
-                    if (!savedOK) return;
-                
+
+                var savedOK = await ValidateAndSave(ItemViewModel.SelectedItem);
+                if (!savedOK)
+                {
+                    return;
+                }
 
                 //begin request
                 AppViewModel.MainUITabIndex = (int)MainWindow.PrimaryUITabs.CurrentProgress;
@@ -301,9 +302,9 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void ShowTestResultsUI()
         {
-            Window parentWindow = Window.GetWindow(this);
-            object obj = parentWindow.FindName("MainFlyout");
-            Flyout flyout = (Flyout)obj;
+            var parentWindow = Window.GetWindow(this);
+            var obj = parentWindow.FindName("MainFlyout");
+            var flyout = (Flyout)obj;
             flyout.Header = "Test Progress";
             flyout.Content = new TestProgress();
             flyout.IsOpen = !flyout.IsOpen;
@@ -318,13 +319,14 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
 
             // validate and save before test
-            if (!await ValidateAndSave(ItemViewModel.SelectedItem)) return;
-
-
+            if (!await ValidateAndSave(ItemViewModel.SelectedItem))
+            {
+                return;
+            }
 
             var challengeConfig = ItemViewModel.SelectedItem.GetChallengeConfig(null);
 
-            if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP && !String.IsNullOrEmpty(ItemViewModel.SelectedItem.ServerSiteId) && !AppViewModel.IsIISAvailable)
+            if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP && !string.IsNullOrEmpty(ItemViewModel.SelectedItem.ServerSiteId) && !AppViewModel.IsIISAvailable)
             {
                 MessageBox.Show(SR.ManagedCertificateSettings_CannotChallengeWithoutIIS, SR.ChallengeError, MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -370,27 +372,21 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        private void Dismiss_Click(object sender, RoutedEventArgs e)
-        {
-            AppViewModel.SelectedItem = null;
-        }
+        private void Dismiss_Click(object sender, RoutedEventArgs e) => AppViewModel.SelectedItem = null;
 
-        private void CheckAdvancedView_Checked(object sender, RoutedEventArgs e)
-        {
-            ToggleAdvancedView();
-        }
+        private void CheckAdvancedView_Checked(object sender, RoutedEventArgs e) => ToggleAdvancedView();
 
         private void ToggleAdvancedView()
         {
             if (CheckAdvancedView.IsChecked == false)
             {
-                this.TabScripting.Visibility = Visibility.Collapsed;
-                this.TabOptions.Visibility = Visibility.Collapsed;
+                TabScripting.Visibility = Visibility.Collapsed;
+                TabOptions.Visibility = Visibility.Collapsed;
             }
             else
             {
-                this.TabScripting.Visibility = Visibility.Visible;
-                this.TabOptions.Visibility = Visibility.Visible;
+                TabScripting.Visibility = Visibility.Visible;
+                TabOptions.Visibility = Visibility.Visible;
             }
         }
     }

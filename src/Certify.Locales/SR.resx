@@ -612,7 +612,7 @@
     <value>Dashboard</value>
   </data>
   <data name="GettingStarted_DashboardIntro" xml:space="preserve">
-    <value>You can use the reporting dashboard to easily view certificate renewal status across one or more servers and to control your notification preferences.</value>
+    <value>You can use the reporting dashboard to easily view certificate renewal status across one or more servers.</value>
   </data>
   <data name="GettingStarted_ViewDashboard" xml:space="preserve">
     <value>View Dashboard</value>

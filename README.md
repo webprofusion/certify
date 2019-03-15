@@ -17,8 +17,8 @@ Requirements:
 
 Features:
 - Easy certificate requests & automated SSL bindings (IIS)
-- Preview mode to see which actions the app will perform (including which bindings will be added/updated)
 - Automatic renewal using background service, with configurable renewal frequency
+- Preview mode to see which actions the app will perform (including which bindings will be added/updated)
 - SAN support (multi-domain certificates)
 - Support for v2 of the Let's Encrypt API including Wildcard Certificate support (*.example.com)
 - Http or DNS challenge validation.
@@ -31,7 +31,7 @@ Features:
 ----------
 Quick Start (IIS users)
 ----------
-1. Download from [https://certifytheweb.com/](https://certifytheweb.com/) and install it.
+1. Download from [https://certifytheweb.com/](https://certifytheweb.com/) and install it. Chocolatey users can alternatively `choco install certifytheweb`.
 2. Click 'New Certificate', optionally choose your IIS site (binding hostnames will be auto detected, or just enter them manually). Save your settings and click 'Request Certificate'
 3. All done! The certificate will renew automatically.
 

@@ -1,9 +1,9 @@
-﻿using Certify.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using Certify.Models;
 
 namespace Certify.UI
 {
@@ -17,7 +17,7 @@ namespace Certify.UI
         public ManagedCertificateDesignViewModel()
         {
             // auto-load data if in WPF designer
-            bool inDesignMode = !(Application.Current is App);
+            var inDesignMode = !(Application.Current is App);
             if (inDesignMode)
             {
                 SelectedItem = _appViewModel.ManagedCertificates.First();
@@ -47,21 +47,18 @@ namespace Certify.UI
         {
             if (e.PropertyName == nameof(_appViewModel.SelectedItem))
             {
-                RaisePropertyChangedEvent(nameof(this.SelectedItem));
+                RaisePropertyChangedEvent(nameof(SelectedItem));
             }
         }
 
-        protected async override Task<IEnumerable<DomainOption>> GetDomainOptionsFromSite(string siteId)
-        {
-            return await Task.Run(() =>
-            {
-                return Enumerable.Range(1, 50).Select(i => new DomainOption()
-                {
-                    Domain = $"www{i}.domain.example.org",
-                    IsPrimaryDomain = i == 1,
-                    IsSelected = true
-                });
-            });
-        }
+        protected override async Task<IEnumerable<DomainOption>> GetDomainOptionsFromSite(string siteId) => await Task.Run(() =>
+                                                                                                                      {
+                                                                                                                          return Enumerable.Range(1, 50).Select(i => new DomainOption()
+                                                                                                                          {
+                                                                                                                              Domain = $"www{i}.domain.example.org",
+                                                                                                                              IsPrimaryDomain = i == 1,
+                                                                                                                              IsSelected = true
+                                                                                                                          });
+                                                                                                                      });
     }
 }

@@ -18,7 +18,7 @@ namespace Certify.Service.Tests.Integration
         [TestMethod]
         public async Task TestVersionCheck()
         {
-            string result = await _client.GetAppVersion();
+            var result = await _client.GetAppVersion();
 
             Assert.IsNotNull(result);
         }

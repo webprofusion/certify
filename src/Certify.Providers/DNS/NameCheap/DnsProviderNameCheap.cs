@@ -12,7 +12,7 @@ using Certify.Models.Providers;
 // ReSharper disable once CheckNamespace
 namespace Certify.Providers.DNS.NameCheap
 {
-    public class DnsProviderNameCheap: IDnsProvider
+    public class DnsProviderNameCheap : IDnsProvider
     {
         public DnsProviderNameCheap(Dictionary<string, string> credentials)
         {
@@ -44,7 +44,7 @@ namespace Certify.Providers.DNS.NameCheap
 
         static DnsProviderNameCheap()
         {
-            Definition = new ProviderDefinition
+            Definition = new ChallengeProviderDefinition
             {
                 Id = "DNS01.API.NameCheap",
                 Title = "NameCheap DNS API",
@@ -68,7 +68,7 @@ namespace Certify.Providers.DNS.NameCheap
         /// <summary>
         /// The definition properties for NameCheap.
         /// </summary>
-        public static ProviderDefinition Definition { get; }
+        public static ChallengeProviderDefinition Definition { get; }
 
         public int PropagationDelaySeconds => Definition.PropagationDelaySeconds;
         public string ProviderId => Definition.Id;
@@ -99,13 +99,15 @@ namespace Certify.Providers.DNS.NameCheap
             {
                 var zones = await GetZonesBatchAsync(1);
                 if (zones?.Any() == true)
-                    return new ActionResult {IsSuccess = true, Message = "Test completed."};
+                {
+                    return new ActionResult { IsSuccess = true, Message = "Test completed." };
+                }
 
-                return new ActionResult {IsSuccess = true, Message = "Test completed, but no zones returned."};
+                return new ActionResult { IsSuccess = true, Message = "Test completed, but no zones returned." };
             }
             catch (Exception ex)
             {
-                return new ActionResult {IsSuccess = false, Message = "Test failed: " + ex.Message };
+                return new ActionResult { IsSuccess = false, Message = "Test failed: " + ex.Message };
             }
         }
 
@@ -202,7 +204,9 @@ namespace Certify.Providers.DNS.NameCheap
                 page++;
 
                 if (zoneBatch.Count < BATCH_SIZE)
+                {
                     break;
+                }
             }
 
             return result;
@@ -333,7 +337,9 @@ namespace Certify.Providers.DNS.NameCheap
             var content = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
+            {
                 throw new Exception($"NameCheap API method {request.RequestUri} returned HTTP Code {response.StatusCode}");
+            }
 
             XElement xml;
             try
@@ -345,8 +351,10 @@ namespace Certify.Providers.DNS.NameCheap
                 throw new Exception($"NameCheap API method {request.RequestUri} returned invalid XML response:\n{content}", ex);
             }
 
-            if(xml.Attribute("Status")?.Value.ToLower() != "ok")
+            if (xml.Attribute("Status")?.Value.ToLower() != "ok")
+            {
                 throw new Exception($"NameCheap API method {request.RequestUri} returned an error status '{xml.Attribute("Status")?.Value}':\n{content}");
+            }
 
             return xml;
         }
@@ -356,8 +364,10 @@ namespace Certify.Providers.DNS.NameCheap
         /// </summary>
         private Dictionary<string, string> WithDefaultArgs(string command, Dictionary<string, string> args = null)
         {
-            if(args == null)
+            if (args == null)
+            {
                 args = new Dictionary<string, string>();
+            }
 
             args.Add("ApiUser", _apiUser);
             args.Add("ApiKey", _apiKey);
@@ -374,14 +384,18 @@ namespace Certify.Providers.DNS.NameCheap
         private async Task<ParsedDomain> ParseDomainAsync(string domain)
         {
             if (string.IsNullOrEmpty(domain))
+            {
                 throw new ArgumentException("Domain was not specified!");
+            }
 
             var knownZones = await GetZones();
             var matchingZone = knownZones.Select(x => x.ZoneId)
                                          .FirstOrDefault(x => domain.EndsWith(x, StringComparison.InvariantCultureIgnoreCase));
 
-            if(matchingZone == null)
+            if (matchingZone == null)
+            {
                 throw new ArgumentException($"Domain {domain} is not managed by this account!");
+            }
 
             // for "example.co.uk": SLD = "example", TLD = "co.uk"
             var dotPos = matchingZone.IndexOf('.');

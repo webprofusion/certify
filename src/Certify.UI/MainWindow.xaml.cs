@@ -26,7 +26,7 @@ namespace Certify.UI
         protected Certify.UI.ViewModel.AppViewModel _appViewModel => UI.ViewModel.AppViewModel.Current;
         protected Certify.UI.ViewModel.ManagedCertificateViewModel _itemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
         private const int NUM_ITEMS_FOR_REMINDER = 3;
-        private const int NUM_ITEMS_FOR_LIMIT = 10;
+        private const int NUM_ITEMS_FOR_LIMIT = 50;
 
         public int NumManagedCertificates
         {
@@ -60,7 +60,10 @@ namespace Certify.UI
 #endif
 
             // save or discard site changes before creating a new site/certificate
-            if (!await _itemViewModel.ConfirmDiscardUnsavedChanges()) return;
+            if (!await _itemViewModel.ConfirmDiscardUnsavedChanges())
+            {
+                return;
+            }
 
             if (!_appViewModel.IsRegisteredVersion && _appViewModel.ManagedCertificates != null && _appViewModel.ManagedCertificates.Count >= 3)
             {
@@ -105,14 +108,17 @@ namespace Certify.UI
         private async void Button_RenewAll(object sender, RoutedEventArgs e)
         {
             // save or discard site changes before creating a new site/certificate
-            if (!await _itemViewModel.ConfirmDiscardUnsavedChanges()) return;
+            if (!await _itemViewModel.ConfirmDiscardUnsavedChanges())
+            {
+                return;
+            }
 
             //present new renew all confirmation
             if (MessageBox.Show(SR.MainWindow_RenewAllConfirm, SR.Renew_All, MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 _appViewModel.MainUITabIndex = (int)PrimaryUITabs.CurrentProgress;
 
-                bool autoRenewalsOnly = true;
+                var autoRenewalsOnly = true;
                 // renewals is a long running process so we need to run renewals process in the
                 // background and present UI to show progress.
                 // TODO: We should prevent starting the renewals process if it is currently in progress.
@@ -205,7 +211,7 @@ namespace Certify.UI
 
             if (!_appViewModel.IsRegisteredVersion)
             {
-                this.Title += SR.MainWindow_TitleTrialPostfix;
+                Title += SR.MainWindow_TitleTrialPostfix;
             }
 
             //check for updates and report result to view model
@@ -226,7 +232,7 @@ namespace Certify.UI
                         var gotoDownload = MessageBox.Show(updateCheck.Message.Body + "\r\nVisit download page now?", ConfigResources.AppName, MessageBoxButton.YesNo);
                         if (gotoDownload == MessageBoxResult.Yes)
                         {
-                            System.Diagnostics.ProcessStartInfo sInfo = new System.Diagnostics.ProcessStartInfo(ConfigResources.AppWebsiteURL);
+                            var sInfo = new System.Diagnostics.ProcessStartInfo(ConfigResources.AppWebsiteURL);
                             System.Diagnostics.Process.Start(sInfo);
                         }
                         else
@@ -267,7 +273,10 @@ namespace Certify.UI
 
         private async void ButtonUpdateAvailable_Click(object sender, RoutedEventArgs e)
         {
-            if (_appViewModel.IsUpdateInProgress) return;
+            if (_appViewModel.IsUpdateInProgress)
+            {
+                return;
+            }
 
             if (_appViewModel.UpdateCheckResult != null)
             {
@@ -288,7 +297,7 @@ namespace Certify.UI
                     var gotoDownload = MessageBox.Show(_appViewModel.UpdateCheckResult.Message.Body + "\r\n" + SR.MainWindow_VisitDownloadPage, ConfigResources.AppName, MessageBoxButton.YesNo);
                     if (gotoDownload == MessageBoxResult.Yes)
                     {
-                        System.Diagnostics.ProcessStartInfo sInfo = new System.Diagnostics.ProcessStartInfo(_appViewModel.UpdateCheckResult.Message.DownloadPageURL);
+                        var sInfo = new System.Diagnostics.ProcessStartInfo(_appViewModel.UpdateCheckResult.Message.DownloadPageURL);
                         System.Diagnostics.Process.Start(sInfo);
                     }
                 }
@@ -298,7 +307,10 @@ namespace Certify.UI
         private async void MetroWindow_Closing(object sender, CancelEventArgs e)
         {
             // allow cancelling exit to save changes
-            if (!await _itemViewModel.ConfirmDiscardUnsavedChanges()) e.Cancel = true;
+            if (!await _itemViewModel.ConfirmDiscardUnsavedChanges())
+            {
+                e.Cancel = true;
+            }
 
             var uiSettings = new UISettings
             {

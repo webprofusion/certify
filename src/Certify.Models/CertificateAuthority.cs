@@ -29,6 +29,7 @@ namespace Certify.Models
                 ProductionAPIEndpoint = "https://acme-v02.api.letsencrypt.org/directory",
                 StagingAPIEndpoint = "https://acme-staging-v02.api.letsencrypt.org/directory",
                 IsEnabled = true,
+                SANLimit=100,
                 SupportedRequests = new List<CertAuthoritySupportedRequests>{
                     CertAuthoritySupportedRequests.DOMAIN_SINGLE,
                     CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN,
@@ -37,15 +38,18 @@ namespace Certify.Models
             },
              new CertificateAuthority{
                 Id="buypass.com",
-                Title ="Let's Encrypt",
-                APIType = CertAuthorityAPIType.ACME_V1,
+                Title ="BuyPass",
+                APIType = CertAuthorityAPIType.ACME_V2,
                 WebsiteUrl ="https://www.buypass.com/",
                 PrivacyPolicyUrl ="https://www.buypass.com/about-buypass/privacy-policy",
-                ProductionAPIEndpoint = "https://api.buypass.com/acme/directory",
-                StagingAPIEndpoint = null,
+                ProductionAPIEndpoint = null,
+                StagingAPIEndpoint = "https://api.test4.buypass.no/acme-v02/directory",
                 IsEnabled=false,
-                 SupportedRequests = new List<CertAuthoritySupportedRequests>{
-                    CertAuthoritySupportedRequests.DOMAIN_SINGLE
+                SANLimit=15,
+                SupportedRequests = new List<CertAuthoritySupportedRequests>{
+                    CertAuthoritySupportedRequests.DOMAIN_SINGLE,
+                    CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN,
+                    CertAuthoritySupportedRequests.DOMAIN_WILDCARD
                 }
             }
         };
@@ -61,5 +65,6 @@ namespace Certify.Models
         public string ProductionAPIEndpoint { get; set; }
         public string StagingAPIEndpoint { get; set; }
         public bool IsEnabled { get; set; }
+        public int SANLimit { get; set; }
     }
 }

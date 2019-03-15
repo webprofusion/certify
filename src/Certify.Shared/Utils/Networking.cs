@@ -54,9 +54,9 @@ namespace Certify.Utils
             var list = new List<IPAddressOption>();
             try
             {
-                foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
+                foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
                 {
-                    foreach (UnicastIPAddressInformation ip in ni.GetIPProperties().UnicastAddresses)
+                    foreach (var ip in ni.GetIPProperties().UnicastAddresses)
                     {
                         var opt = new IPAddressOption
                         {
@@ -70,7 +70,8 @@ namespace Certify.Utils
             }
             catch (Exception)
             {
-                ; ; // could not retrieve networking information
+                ;
+                ; // could not retrieve networking information
             }
             return list;
         }

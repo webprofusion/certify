@@ -42,7 +42,7 @@ namespace Certify.UI.Tests.Integration
               Task.FromResult(new List<StoredCredential> { })
               );
 
-            AppViewModel appModel = new AppViewModel(mockClient.Object);
+            var appModel = new AppViewModel(mockClient.Object);
 
             await appModel.LoadSettingsAsync();
 

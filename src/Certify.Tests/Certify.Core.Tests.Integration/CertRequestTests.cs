@@ -60,10 +60,7 @@ namespace Certify.Core.Tests
         /// <summary>
         /// Perform teardown for IIS
         /// </summary>
-        public void Dispose()
-        {
-            TeardownIIS().Wait();
-        }
+        public void Dispose() => TeardownIIS().Wait();
 
         public async Task SetupIIS()
         {
@@ -135,10 +132,10 @@ namespace Certify.Core.Tests
             var certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
             Assert.IsNotNull(certInfo);
 
-            bool isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
+            var isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
             Assert.IsTrue(isRecentlyCreated);
 
-            bool expiresInFuture = (certInfo.NotAfter - DateTime.UtcNow).TotalDays >= 89;
+            var expiresInFuture = (certInfo.NotAfter - DateTime.UtcNow).TotalDays >= 89;
             Assert.IsTrue(expiresInFuture);
 
             // remove managed site
@@ -209,10 +206,10 @@ namespace Certify.Core.Tests
                 var certInfo = CertificateManager.LoadCertificate(dummyManagedCertificate.CertificatePath);
                 Assert.IsNotNull(certInfo);
 
-                bool isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
+                var isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
                 Assert.IsTrue(isRecentlyCreated);
 
-                bool expiresInFuture = (certInfo.NotAfter - DateTime.UtcNow).TotalDays >= 89;
+                var expiresInFuture = (certInfo.NotAfter - DateTime.UtcNow).TotalDays >= 89;
                 Assert.IsTrue(expiresInFuture);
             }
             finally
@@ -226,9 +223,9 @@ namespace Certify.Core.Tests
         {
             // attempt to request a cert for many domains
             var siteName = "TestBazillionDomains";
-            int numDomains = 100;
+            var numDomains = 100;
 
-            List<string> domainList = new List<string>();
+            var domainList = new List<string>();
             for (var i = 0; i < numDomains; i++)
             {
                 var testStr = Guid.NewGuid().ToString().Substring(0, 6);
@@ -291,9 +288,9 @@ namespace Certify.Core.Tests
         {
             // attempt to request a cert for too many domains
 
-            int numDomains = 101;
+            var numDomains = 101;
 
-            List<string> domainList = new List<string>();
+            var domainList = new List<string>();
             for (var i = 0; i < numDomains; i++)
             {
                 var testStr = Guid.NewGuid().ToString().Substring(0, 6);
@@ -403,10 +400,10 @@ namespace Certify.Core.Tests
             var certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
             Assert.IsNotNull(certInfo);
 
-            bool isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
+            var isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
             Assert.IsTrue(isRecentlyCreated);
 
-            bool expiresInFuture = (certInfo.NotAfter - DateTime.UtcNow).TotalDays >= 89;
+            var expiresInFuture = (certInfo.NotAfter - DateTime.UtcNow).TotalDays >= 89;
             Assert.IsTrue(expiresInFuture);
 
             // remove managed site
@@ -422,7 +419,7 @@ namespace Certify.Core.Tests
             var testStr = Guid.NewGuid().ToString().Substring(0, 6);
             PrimaryTestDomain = $"test-{testStr}." + PrimaryTestDomain;
             var wildcardDomain = "*.test." + PrimaryTestDomain;
-            string testWildcardSiteName = "TestWildcard_" + testStr;
+            var testWildcardSiteName = "TestWildcard_" + testStr;
 
             if (await iisManager.SiteExists(testWildcardSiteName))
             {
@@ -484,10 +481,10 @@ namespace Certify.Core.Tests
                 certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
                 Assert.IsNotNull(certInfo);
 
-                bool isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
+                var isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
                 Assert.IsTrue(isRecentlyCreated);
 
-                bool expiresInFuture = (certInfo.NotAfter - DateTime.UtcNow).TotalDays >= 89;
+                var expiresInFuture = (certInfo.NotAfter - DateTime.UtcNow).TotalDays >= 89;
                 Assert.IsTrue(expiresInFuture);
             }
             finally
@@ -496,10 +493,16 @@ namespace Certify.Core.Tests
                 await iisManager.DeleteSite(testWildcardSiteName);
 
                 // remove managed site
-                if (managedCertificate != null) await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
+                if (managedCertificate != null)
+                {
+                    await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
+                }
 
                 // cleanup certificate
-                if (certInfo != null) CertificateManager.RemoveCertificate(certInfo);
+                if (certInfo != null)
+                {
+                    CertificateManager.RemoveCertificate(certInfo);
+                }
             }
         }
     }

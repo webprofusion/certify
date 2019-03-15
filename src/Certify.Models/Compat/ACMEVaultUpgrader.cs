@@ -16,7 +16,7 @@ namespace Certify.Models.Compat
         {
             try
             {
-                string vault = System.IO.File.ReadAllText(_vaultPath);
+                var vault = System.IO.File.ReadAllText(_vaultPath);
                 var contactString = vault.Substring(vault.IndexOf("\"Contacts\""), vault.IndexOf("PublicKey") - vault.IndexOf("\"Contacts\""));
                 contactString = contactString.Substring(contactString.IndexOf("["), contactString.IndexOf("]") - contactString.IndexOf("["));
                 contactString = contactString.Substring(contactString.IndexOf(":") + 1, (contactString.LastIndexOf("\"") - contactString.IndexOf(":")) - 1).Trim();

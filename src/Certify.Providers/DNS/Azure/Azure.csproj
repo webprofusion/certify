@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.Management.Dns" Version="3.0.1" />
-    <PackageReference Include="Microsoft.Rest.ClientRuntime.Azure.Authentication" Version="2.3.6" />
+    <PackageReference Include="Microsoft.Rest.ClientRuntime.Azure.Authentication" Version="2.3.7" />
   </ItemGroup>
 
   <ItemGroup>

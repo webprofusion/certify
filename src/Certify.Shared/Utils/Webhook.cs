@@ -37,14 +37,14 @@ namespace Certify.Shared.Utils
         /// <param name="contentType"></param>
         /// <param name="body"></param>
         /// <returns> A named Tuple with Success boolean and int StatusCode of the HTTP Request </returns>
-        public async static Task<WebhookResult> SendRequest(CertRequestConfig config, bool forSuccess)
+        public static async Task<WebhookResult> SendRequest(CertRequestConfig config, bool forSuccess)
         {
             using (var client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Add("User-Agent", Management.Util.GetUserAgent() + " CertifyManager");
 
                 HttpRequestMessage message;
-                string Url = ParseValues(config.WebhookUrl, config, forSuccess, true);
+                var Url = ParseValues(config.WebhookUrl, config, forSuccess, true);
                 switch (config.WebhookMethod)
                 {
                     case METHOD_GET:
@@ -83,7 +83,7 @@ namespace Certify.Shared.Utils
             var vars = new Dictionary<string, string>();
             foreach (var prop in config.GetType().GetProperties())
             {
-                string value = prop.GetValue(config)?.ToString() ?? "";
+                var value = prop.GetValue(config)?.ToString() ?? "";
                 if (url_encode)
                 {
                     value = WebUtility.UrlEncode(value);
@@ -103,7 +103,7 @@ namespace Certify.Shared.Utils
             return Regex.Replace(template, @"\$(\w+)(?=[\W$])", m =>
             {
                 // replace var if it can be found, otherwise don't
-                string key = m.Groups[1].Value.ToLower();
+                var key = m.Groups[1].Value.ToLower();
                 return vars.ContainsKey(key) ? vars[key] : "$" + key;
             },
                 RegexOptions.IgnoreCase);
