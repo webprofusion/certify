@@ -12,6 +12,7 @@ using Certify.Management.Servers;
 using Certify.Models;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
+using Certify.Providers.ACME.Certes;
 using Microsoft.ApplicationInsights;
 using Serilog;
 
@@ -59,7 +60,7 @@ namespace Certify.Management
             // TODO: convert providers to plugins, allow for async init
             var userAgent = Util.GetUserAgent();
 
-            var certes = new Certify.Providers.Certes.CertesACMEProvider(Management.Util.GetAppDataFolder() + "\\certes", userAgent);
+            var certes = new CertesACMEProvider(Management.Util.GetAppDataFolder() + "\\certes", userAgent);
 
             certes.InitProvider(_serviceLog).Wait();
 

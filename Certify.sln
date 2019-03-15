@@ -36,7 +36,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Service.Tests.Integ
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Core", "src\Certify.Core\Certify.Core.csproj", "{58881E46-4A76-47B9-9725-FA7C5F0090D0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Providers.Certes", "src\Certify.Providers\ACME\Certes\Certify.Providers.Certes.csproj", "{D7D2D121-B796-49ED-9CF9-158C624857A1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Providers.ACME.Certes", "src\Certify.Providers\ACME\Certes\Certify.Providers.ACME.Certes.csproj", "{D7D2D121-B796-49ED-9CF9-158C624857A1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Locales", "src\Certify.Locales\Certify.Locales.csproj", "{1EFDEBE9-468B-4AA0-AFD4-1C6D0A321BE5}"
 EndProject
@@ -65,7 +65,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDNSPlus", "src\Certif
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aliyun", "src\Certify.Providers\DNS\Aliyun\Aliyun.csproj", "{4C8D92E9-19AF-4CD0-AE27-BB4336AF5776}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Providers.ACMESharpCore", "src\Certify.Providers\ACME\ACMESharpCore\Certify.Providers.ACMESharpCore.csproj", "{8E1E6901-ABB9-47DF-B715-BADB229E6909}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Providers.ACME.ACMESharpCore", "src\Certify.Providers\ACME\ACMESharpCore\Certify.Providers.ACME.ACMESharpCore.csproj", "{8E1E6901-ABB9-47DF-B715-BADB229E6909}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.SharedUtils", "src\Certify.SharedUtils\Certify.SharedUtils.csproj", "{BAADC03D-4580-4461-9822-D7AC083E6C7B}"
 EndProject

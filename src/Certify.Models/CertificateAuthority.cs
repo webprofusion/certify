@@ -42,8 +42,8 @@ namespace Certify.Models
                 APIType = CertAuthorityAPIType.ACME_V2,
                 WebsiteUrl ="https://www.buypass.com/",
                 PrivacyPolicyUrl ="https://www.buypass.com/about-buypass/privacy-policy",
-                ProductionAPIEndpoint = "https://api.buypass.com/acme/directory",
-                StagingAPIEndpoint = null,
+                ProductionAPIEndpoint = null,
+                StagingAPIEndpoint = "https://api.test4.buypass.no/acme-v02/directory",
                 IsEnabled=false,
                 SANLimit=15,
                 SupportedRequests = new List<CertAuthoritySupportedRequests>{

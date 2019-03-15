@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using Certes;
 using Certify.Management;
+using Certify.Providers.ACME.Certes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Org.BouncyCastle.Crypto.EC;
 using Org.BouncyCastle.Crypto.Parameters;
@@ -18,7 +19,7 @@ namespace Certify.Core.Tests.Unit
         public void CreateProblemKey()
         {
             var userAgent = Util.GetUserAgent();
-            var certes = new Certify.Providers.Certes.CertesACMEProvider(Util.GetAppDataFolder() + "\\certes", userAgent);
+            var certes = new CertesACMEProvider(Util.GetAppDataFolder() + "\\certes", userAgent);
 
             var keyFound = false;
             newKey = null;

@@ -15,7 +15,7 @@ using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
 
-namespace Certify.Providers.Certes
+namespace Certify.Providers.ACME.Certes
 {
     /// <summary>
     /// Certes Provider settings for serialization
@@ -26,7 +26,6 @@ namespace Certify.Providers.Certes
         public string AccountUri { get; set; }
         public string AccountKey { get; set; }
     }
-
 
 #pragma warning disable IDE1006 // Naming Styles
     public class DiagEcKey
@@ -444,6 +443,8 @@ namespace Certify.Providers.Certes
                 IOrderContext order = null;
                 var remainingAttempts = 3;
                 var orderCreated = false;
+                object lastException = null;
+
                 try
                 {
                     while (!orderCreated && remainingAttempts > 0)
@@ -473,6 +474,8 @@ namespace Certify.Providers.Certes
                             remainingAttempts--;
 
                             log.Error($"BeginCertificateOrder: error creating order. Retries remaining:{remainingAttempts} {exp.ToString()} ");
+
+                            lastException = exp;
 
                             if (remainingAttempts == 0)
                             {
@@ -506,7 +509,22 @@ namespace Certify.Providers.Certes
 
                 if (order == null)
                 {
-                    throw new Exception("Failed to begin certificate order.");
+
+                    var msg = "Failed to begin certificate order.";
+
+                    if (lastException!=null && (lastException as Exception).InnerException is AcmeRequestException)
+                    {
+                        msg = ((lastException as Exception).InnerException as AcmeRequestException).Error?.Detail;
+
+                    }
+
+                    return new PendingOrder
+                    {
+                        Authorizations = new List<PendingAuthorization> {
+                          new PendingAuthorization{ IsFailure = true, AuthorizationError=msg}
+                        }
+                    };
+
                 }
 
                 orderUri = order.Location.ToString();
@@ -672,6 +690,15 @@ namespace Certify.Providers.Certes
         /// <returns>  </returns>
         public async Task<StatusMessage> SubmitChallenge(ILog log, string challengeType, AuthorizationChallengeItem attemptedChallenge)
         {
+            if (attemptedChallenge == null)
+            {
+                return new StatusMessage
+                {
+                    IsOK = false,
+                    Message ="Challenge could not be submitted. No matching attempted challenge."
+                };
+            }
+
             if (!attemptedChallenge.IsValidated)
             {
                 var challenge = (IChallengeContext)attemptedChallenge.ChallengeData;
