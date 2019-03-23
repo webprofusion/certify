@@ -443,8 +443,10 @@ namespace Certify.Providers.Certes
             try
             {
                 IOrderContext order = null;
-                int remainingAttempts = 3;
-                bool orderCreated = false;
+                var remainingAttempts = 3;
+                var orderCreated = false;
+                object lastException = null;
+
                 try
                 {
                     while (!orderCreated && remainingAttempts > 0)
@@ -514,7 +516,8 @@ namespace Certify.Providers.Certes
                     return pendingOrder;
                 }
 
-                if (order == null) throw new Exception("Failed to begin certificate order.");
+                if (order == null)
+                {
 
                     var msg = "Failed to begin certificate order.";
 
