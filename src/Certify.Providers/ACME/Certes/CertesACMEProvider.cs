@@ -473,7 +473,16 @@ namespace Certify.Providers.Certes
                         {
                             remainingAttempts--;
 
-                            log.Error($"BeginCertificateOrder: error creating order. Retries remaining:{remainingAttempts} {exp.ToString()} ");
+                            var msg = exp.ToString();
+
+                            if (exp.InnerException != null && exp.InnerException is AcmeRequestException)
+                            {
+                                msg = (exp.InnerException as AcmeRequestException).Error?.Detail;
+                            }
+
+                            log.Error($"BeginCertificateOrder: error creating order. Retries remaining:{remainingAttempts} :: {msg} ");
+
+                            lastException = exp;
 
                             if (remainingAttempts == 0)
                             {
@@ -506,6 +515,23 @@ namespace Certify.Providers.Certes
                 }
 
                 if (order == null) throw new Exception("Failed to begin certificate order.");
+
+                    var msg = "Failed to begin certificate order.";
+
+                    if (lastException != null && (lastException as Exception).InnerException is AcmeRequestException)
+                    {
+                        msg = ((lastException as Exception).InnerException as AcmeRequestException).Error?.Detail;
+
+                    }
+
+                    return new PendingOrder
+                    {
+                        Authorizations = new List<PendingAuthorization> {
+                          new PendingAuthorization{ IsFailure = true, AuthorizationError=msg}
+                        }
+                    };
+
+                }
 
                 orderUri = order.Location.ToString();
 
@@ -667,6 +693,15 @@ namespace Certify.Providers.Certes
         /// <returns>  </returns>
         public async Task<StatusMessage> SubmitChallenge(ILog log, string challengeType, AuthorizationChallengeItem attemptedChallenge)
         {
+            if (attemptedChallenge == null)
+            {
+                return new StatusMessage
+                {
+                    IsOK = false,
+                    Message = "Challenge could not be submitted. No matching attempted challenge."
+                };
+            }
+
             if (!attemptedChallenge.IsValidated)
             {
                 IChallengeContext challenge = (IChallengeContext)attemptedChallenge.ChallengeData;
