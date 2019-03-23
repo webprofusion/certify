@@ -63,10 +63,15 @@ namespace Certify.CLI
 
                 if (args.Contains("diag", StringComparer.InvariantCultureIgnoreCase))
                 {
-                    p.RunCertDiagnostics();
-                }
+                    var autoFix = false;
 
-         
+                    if (args.Contains("autofix"))
+                    {
+                        autoFix = true;
+                    }
+
+                    p.RunCertDiagnostics(autoFix);
+                }
 
                 if (args.Contains("importcsv", StringComparer.InvariantCultureIgnoreCase))
                 {
@@ -75,8 +80,8 @@ namespace Certify.CLI
                     importTask.Wait();
                 }
             }
-
 #if DEBUG
+            System.Console.WriteLine("CLI: Completed (DEBUG)");
             Console.ReadKey();
 #endif
             return 0;

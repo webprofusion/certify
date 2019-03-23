@@ -20,6 +20,11 @@ namespace Certify.CLI
                 return;
             }
 
+            bool isNumeric(string input)
+            {
+                return int.TryParse(input, out _);
+            }
+
             var filename = args[args.Length - 1];
 
             Console.ForegroundColor = ConsoleColor.White;
@@ -176,16 +181,56 @@ namespace Certify.CLI
                                WebhookContentType = "",
                                WebhookContentBody = "";
 
-                        if (primaryDomainIdx != null) primaryDomain = values[(int)primaryDomainIdx].Trim();
-                        if (includeInAutoRenewIdx != null) IncludeInAutoRenew = Convert.ToBoolean(values[(int)includeInAutoRenewIdx].Trim());
-                        if (performAutoConfigIdx != null) PerformAutoConfig = Convert.ToBoolean(values[(int)performAutoConfigIdx].Trim());
-                        if (performChallengeFileCopyIdx != null) PerformChallengeFileCopy = Convert.ToBoolean(values[(int)performChallengeFileCopyIdx].Trim());
-                        if (performExtensionlessConfigChecksIdx != null) PerformExtensionlessConfigChecks = Convert.ToBoolean(values[(int)performExtensionlessConfigChecksIdx].Trim());
-                        if (performTlsSniBindingConfigChecksIdx != null) PerformTlsSniBindingConfigChecks = Convert.ToBoolean(values[(int)performTlsSniBindingConfigChecksIdx].Trim());
-                        if (performAutomatedCertBindingIdx != null) PerformAutomatedCertBinding = Convert.ToBoolean(values[(int)performAutomatedCertBindingIdx].Trim());
-                        if (enableFailureNotificationsIdx != null) EnableFailureNotifications = Convert.ToBoolean(values[(int)enableFailureNotificationsIdx].Trim());
-                        if (preRequestPowerShellScriptIdx != null) PreRequestPowerShellScript = values[(int)preRequestPowerShellScriptIdx].Trim();
-                        if (postRequestPowerShellScriptIdx != null) PostRequestPowerShellScript = values[(int)postRequestPowerShellScriptIdx].Trim();
+                        if (primaryDomainIdx != null)
+                        {
+                            primaryDomain = values[(int)primaryDomainIdx].Trim();
+                        }
+
+                        if (includeInAutoRenewIdx != null)
+                        {
+                            IncludeInAutoRenew = Convert.ToBoolean(values[(int)includeInAutoRenewIdx].Trim());
+                        }
+
+                        if (performAutoConfigIdx != null)
+                        {
+                            PerformAutoConfig = Convert.ToBoolean(values[(int)performAutoConfigIdx].Trim());
+                        }
+
+                        if (performChallengeFileCopyIdx != null)
+                        {
+                            PerformChallengeFileCopy = Convert.ToBoolean(values[(int)performChallengeFileCopyIdx].Trim());
+                        }
+
+                        if (performExtensionlessConfigChecksIdx != null)
+                        {
+                            PerformExtensionlessConfigChecks = Convert.ToBoolean(values[(int)performExtensionlessConfigChecksIdx].Trim());
+                        }
+
+                        if (performTlsSniBindingConfigChecksIdx != null)
+                        {
+                            PerformTlsSniBindingConfigChecks = Convert.ToBoolean(values[(int)performTlsSniBindingConfigChecksIdx].Trim());
+                        }
+
+                        if (performAutomatedCertBindingIdx != null)
+                        {
+                            PerformAutomatedCertBinding = Convert.ToBoolean(values[(int)performAutomatedCertBindingIdx].Trim());
+                        }
+
+                        if (enableFailureNotificationsIdx != null)
+                        {
+                            EnableFailureNotifications = Convert.ToBoolean(values[(int)enableFailureNotificationsIdx].Trim());
+                        }
+
+                        if (preRequestPowerShellScriptIdx != null)
+                        {
+                            PreRequestPowerShellScript = values[(int)preRequestPowerShellScriptIdx].Trim();
+                        }
+
+                        if (postRequestPowerShellScriptIdx != null)
+                        {
+                            PostRequestPowerShellScript = values[(int)postRequestPowerShellScriptIdx].Trim();
+                        }
+
                         if (webhookTriggerIdx != null)
                         {
                             WebhookTrigger = values[(int)webhookTriggerIdx].Trim();
@@ -233,21 +278,34 @@ namespace Certify.CLI
                                 }
                             }
 
-                            if (webhookUrlIdx != null) WebhookUrl = values[(int)webhookUrlIdx].Trim();
+                            if (webhookUrlIdx != null)
+                            {
+                                WebhookUrl = values[(int)webhookUrlIdx].Trim();
+                            }
                         }
 
-                        var newManagedCertificate = new ManagedCertificate();
-                        newManagedCertificate.Id = Guid.NewGuid().ToString();
-                        newManagedCertificate.GroupId = siteId;
-                        newManagedCertificate.Name = siteName;
-                        newManagedCertificate.IncludeInAutoRenew = IncludeInAutoRenew;
-                        newManagedCertificate.ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS;
+                        if (string.IsNullOrEmpty(siteId) || !isNumeric(siteId))
+                        {
+                            throw new Exception("Error: SiteID column is blank or contains non-numeric characters.");
+                        }
+
+                        var newManagedCertificate = new ManagedCertificate
+                        {
+                            Id = Guid.NewGuid().ToString(),
+                            GroupId = siteId,
+                            ServerSiteId = siteId,
+                            Name = siteName,
+                            IncludeInAutoRenew = IncludeInAutoRenew,
+                            ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
+                        };
+
                         newManagedCertificate.RequestConfig.Challenges = new System.Collections.ObjectModel.ObservableCollection<CertRequestChallengeConfig>(
                             new List<CertRequestChallengeConfig> {
                                 new CertRequestChallengeConfig {
                                     ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP
                             }
                         });
+
                         newManagedCertificate.RequestConfig.PerformAutoConfig = PerformAutoConfig;
                         newManagedCertificate.RequestConfig.PerformChallengeFileCopy = PerformChallengeFileCopy;
                         newManagedCertificate.RequestConfig.PerformExtensionlessConfigChecks = PerformExtensionlessConfigChecks;
