@@ -4,11 +4,12 @@
 - Docs covering v4 onwards can be found at: [https://docs.certifytheweb.com](https://docs.certifytheweb.com)
 - Community Discussions: [https://community.certifytheweb.com](https://community.certifytheweb.com)
 
-The SSL/TLS Certificate Management GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/), allowing you to generate and install free SSL certificates for Windows/IIS (with automated renewal).
+The SSL/TLS Certificate Management GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/). This app makes it easy to automatically request, install and continuously renew free SSL certificates for Windows/IIS. You can also use these certificates for any other services which requires a domain certificate.  
+
+**Certify The Web is used by many thousands of organisations to manage millions of certificates each month** and is the perfect solution for administrators who want visibility of certificate management for their domains. Centralised dashboard status reporting is also available.
 
 ![Stars](
 https://img.shields.io/github/stars/webprofusion/certify.svg)
-
 
 ![Certify App Screenshot](docs/images/app-screenshot.png)
 
@@ -17,7 +18,7 @@ Requirements:
 
 Features:
 - Easy certificate requests & automated SSL bindings (IIS)
-- Automatic renewal using background service, with configurable renewal frequency
+- Automatic renewal using a background service, with configurable renewal frequency.
 - Preview mode to see which actions the app will perform (including which bindings will be added/updated)
 - SAN support (multi-domain certificates)
 - Support for v2 of the Let's Encrypt API including Wildcard Certificate support (*.example.com)
@@ -28,6 +29,8 @@ Features:
 - Optional Pre/Post request powershell scripting for advanced deployment (Exchange, RDS, multi-server etc)
 - Web Hook support for custom reporting.
 
+The Community edition is free, Professional and Enterprise license keys are available for commercial organisations or users who wish to help fund development.
+
 ----------
 Quick Start (IIS users)
 ----------
@@ -35,7 +38,7 @@ Quick Start (IIS users)
 2. Click 'New Certificate', optionally choose your IIS site (binding hostnames will be auto detected, or just enter them manually). Save your settings and click 'Request Certificate'
 3. All done! The certificate will renew automatically.
 
-Advanced users can explore the different validation modes, deployment modes and other advanced options.
+Users with more complex requirements can explore the different validation modes, deployment modes and other advanced options.
 
 Development & Bug Reporting
 -------------
