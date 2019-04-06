@@ -2,7 +2,7 @@
 {
     public class ServiceConfig
     {
-        public bool UseHTTPS { get; set; } = true;
+        public bool UseHTTPS { get; set; } = false;
 #if DEBUG
         public int Port { get; set; } = 9695;
 #else
