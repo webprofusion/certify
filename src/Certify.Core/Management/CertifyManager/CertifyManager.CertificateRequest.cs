@@ -434,6 +434,9 @@ namespace Certify.Management
 
             LogMessage(managedCertificate.Id, $"Beginning Certificate Request Process: {managedCertificate.Name} using ACME Provider:{_acmeClientProvider.GetProviderName()}");
 
+
+            LogMessage(managedCertificate.Id, $"Requested domains to include on certificate: {string.Join(";", managedCertificate.GetCertificateDomains())}");
+
             ReportProgress(progress,
                 new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RegisterDomainIdentity, managedCertificate)
             );
@@ -1064,7 +1067,7 @@ namespace Certify.Management
                         {
                             ReportProgress(progress,
                                 new RequestProgressState(RequestState.Running,
-                                    string.Format(CoreSR.CertifyManager_ReqestValidationFromLetsEncrypt, domain),
+                                    string.Format(CoreSR.CertifyManager_ReqestValidationFromCertificateAuthority, domain),
                                     managedCertificate));
                         }
                     }
