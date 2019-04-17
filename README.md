@@ -1,7 +1,7 @@
 # Certify The Web - SSL Manager UI for Windows
 
-- Home page for downloads and info : [https://certifytheweb.com/](https://certifytheweb.com/)
-- Docs covering v4 onwards can be found at: [https://docs.certifytheweb.com](https://docs.certifytheweb.com)
+- Home page for downloads, info and support : [https://certifytheweb.com/](https://certifytheweb.com/)
+- Documentation can be found at: [https://docs.certifytheweb.com](https://docs.certifytheweb.com)
 - Community Discussions: [https://community.certifytheweb.com](https://community.certifytheweb.com)
 
 The SSL/TLS Certificate Management GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/). This app makes it easy to automatically request, install and continuously renew free SSL certificates for Windows/IIS. You can also use these certificates for any other services which requires a domain certificate.  
@@ -57,16 +57,3 @@ Translation
 
 You can help translate the app by cloning the repo and installing ResXManager to easily update translation text:
 https://marketplace.visualstudio.com/items?itemName=TomEnglert.ResXManager
-
-Developer Build/Run Requirements:
-----------------------
-
-> - Visual Studio 2017 Community Edition (or higher) 
-> - A local instance of IIS installed (for http validation, not required for DNS validation).
-> - Restoring NuGet packages using "Update-Package -reinstall" can be useful where nuget restore fails.
-> - The UI needs the background service to be running. You can configure Visual Studio to launch both the Certify.UI project and the Certify.Service project via Solution > Properties > Multiple Startup Projects
-
-> **Note:**  For development you will require a publicly accessible IP mapped to the domain/subdomain you want to test with. The Let's Encrypt service will need to be able to access your test site remotely via HTTP in order to complete authorisation challenges.
-> The app consists of a UI and background service. The background service must be running for the UI to operate. 
-
-support {at} certifytheweb.com
