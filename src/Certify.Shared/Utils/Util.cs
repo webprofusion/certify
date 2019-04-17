@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -21,7 +23,7 @@ namespace Certify.Management
         /// check for problems which could affect app use
         /// </summary>
         /// <returns>  </returns>
-        public static Task<List<ActionResult>> PerformAppDiagnostics()
+        public static async Task<List<ActionResult>> PerformAppDiagnostics()
         {
             var results = new List<ActionResult>();
 
@@ -69,7 +71,27 @@ namespace Certify.Management
             {
                 results.Add(new ActionResult { IsSuccess = false, Message = $"Could not check how much disk space is left on drive C:" });
             }
-            return Task.FromResult(results);
+
+            // check internet time service
+
+            var timeResult = await CheckTimeServer();
+            if (timeResult != null)
+            {
+                var diff = timeResult - DateTime.Now;
+                if (Math.Abs(diff.Value.TotalSeconds) > 50)
+                {
+                    results.Add(new ActionResult { IsSuccess = false, Message = $"Note: Your system time does not appear to be in sync with an internet time service, this can result in certificate request errors." });
+                } else
+                {
+                    results.Add(new ActionResult { IsSuccess = true, Message = $"System time is correct." });
+                }
+                
+            } else
+            {
+                results.Add(new ActionResult { IsSuccess = false, Message = $"Note: Could not confirm system time sync using a public NTP server. Ensure system time is correct to avoid certificate request errors." });
+            }
+
+            return results;
         }
 
         public static void SetSupportedTLSVersions() => ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
@@ -463,6 +485,56 @@ namespace Certify.Management
         {
             var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(val);
             return ToUrlSafeBase64String(bytes);
+        }
+
+        public static async Task<DateTime?> CheckTimeServer()
+        {
+            // https://stackoverflow.com/questions/1193955/how-to-query-an-ntp-server-using-c
+
+            try
+            {
+                const string NtpServer = "pool.ntp.org";
+
+                const int DaysTo1900 = 1900 * 365 + 95; // 95 = offset for leap-years etc.
+                const long TicksPerSecond = 10000000L;
+                const long TicksPerDay = 24 * 60 * 60 * TicksPerSecond;
+                const long TicksTo1900 = DaysTo1900 * TicksPerDay;
+
+                var ntpData = new byte[48];
+                ntpData[0] = 0x1B; // LeapIndicator = 0 (no warning), VersionNum = 3 (IPv4 only), Mode = 3 (Client Mode)
+
+                var addresses = Dns.GetHostEntry(NtpServer).AddressList;
+                var ipEndPoint = new IPEndPoint(addresses[0], 123);
+                long pingDuration = Stopwatch.GetTimestamp(); // temp access (JIT-Compiler need some time at first call)
+                using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp))
+                {
+                    await socket.ConnectAsync(ipEndPoint);
+                    socket.ReceiveTimeout = 5000;
+                    socket.Send(ntpData);
+                    pingDuration = Stopwatch.GetTimestamp(); // after Send-Method to reduce WinSocket API-Call time
+
+                    socket.Receive(ntpData);
+                    pingDuration = Stopwatch.GetTimestamp() - pingDuration;
+                }
+
+                long pingTicks = pingDuration * TicksPerSecond / Stopwatch.Frequency;
+
+                // optional: display response-time
+                // Console.WriteLine("{0:N2} ms", new TimeSpan(pingTicks).TotalMilliseconds);
+
+                long intPart = (long)ntpData[40] << 24 | (long)ntpData[41] << 16 | (long)ntpData[42] << 8 | ntpData[43];
+                long fractPart = (long)ntpData[44] << 24 | (long)ntpData[45] << 16 | (long)ntpData[46] << 8 | ntpData[47];
+                long netTicks = intPart * TicksPerSecond + (fractPart * TicksPerSecond >> 32);
+
+                var networkDateTime = new DateTime(TicksTo1900 + netTicks + pingTicks / 2);
+
+                return networkDateTime.ToLocalTime(); // without ToLocalTime() = faster
+            }
+            catch
+            {
+                // fail
+                return null;
+            }
         }
     }
 }
