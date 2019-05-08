@@ -1,4 +1,4 @@
-# Current Project Roadmap (Late 2018- Mid 2019)
+# Current Project Roadmap (Mid 2019- Mid 2020)
 
 The below items are general topics which may or may not include current GitHub issues.
 
@@ -6,9 +6,12 @@ The below items are general topics which may or may not include current GitHub i
 
 ## Deployment:
 * Deployment Tasks: configurable, deferrable deployment for exports, ccs, ssh/sftp, apache, nginx, exchange etc
+* Better general support for non-IIS scenarios
+* Deploy certs to vault (Hashicorp Vault etc)
+* Fetch latest from vault (deploy to bindings)
 * Default password on PFX etc, optional custom per managed cert. Needs data protection.
 * support for IIS wildcard bindings (*.example.com) - only when cert has matching wildcard?
-* Need to warn user when their deployment wil target no bindings
+* Need to warn user when their deployment will target no bindings
 * CCS/Web farm - Simplest/best way to achieve coordinated (or proxied) challenge responses?
 
 ## Remote server support
@@ -22,7 +25,7 @@ The below items are general topics which may or may not include current GitHub i
 * Possibly sort checked items to the top, or scroll to first and sort in reverse domain order
 
 ## DNS Validation
-* Provider custom CNAME redirection service (probably based on a hosted acme-dns solution)
+* Provide custom CNAME redirection service (probably based on a hosted acme-dns solution)
 * Additional DNS API support (community provided)
 
 ## Upgrading
@@ -41,7 +44,7 @@ The below items are general topics which may or may not include current GitHub i
 * Possibly use letsdebug.net API for extended diagnostics
 
 ## Docs/Portal/API
-* Website looks awful, clean up
+* Website improvements
 * Documentation updates
 * Separate dashboard app from main website
 * Move API to AWS/Azure functions
@@ -58,3 +61,8 @@ The below items are general topics which may or may not include current GitHub i
 * Full config backup/restore - needs to be protected if it contains credentials. Option for cloud sync/backup (files can be v. large).
 * Windows Admin Center extension?
 * Proxy support
+
+# Investigate
+* Cross platform UI options for desktop app (mac os & linux support)
+* Centralised management options
+* Storage in Hashicorp Vault, Azure etc and retrieval (one instance can renew and store a cert for other instances to consume)
