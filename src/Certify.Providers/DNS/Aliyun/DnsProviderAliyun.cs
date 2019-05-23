@@ -13,7 +13,7 @@ namespace Certify.Providers.DNS.Aliyun
     /// <summary>
     /// Alibaba Cloud DNS API Provider contributed by https://github.com/TkYu
     /// </summary>
-    public class DnsProviderAliyun : IDnsProvider
+    public class DnsProviderAliyun : DnsProviderBase, IDnsProvider
     {
         private ILog _log;
 
@@ -113,8 +113,15 @@ namespace Certify.Providers.DNS.Aliyun
         {
             try
             {
-                var rootDomain = request.TargetDomainName.Replace("*.", "");
-                var rr = request.RecordName.Replace(rootDomain, "").TrimEnd('.');
+                var domainInfo = await DetermineZoneDomainRoot(request.RecordName, request.ZoneId);
+                if (string.IsNullOrEmpty(domainInfo.RootDomain))
+                {
+                    return new ActionResult { IsSuccess = false, Message = "Failed to determine root domain in zone." };
+                }
+
+                var rootDomain = domainInfo.RootDomain;
+                var rr = NormaliseRecordName(domainInfo, request.RecordName);
+
                 await AddDomainRecord(rootDomain, rr, RecordType.TXT, request.RecordValue);
                 return new ActionResult
                 {
@@ -136,8 +143,14 @@ namespace Certify.Providers.DNS.Aliyun
         {
             try
             {
-                var rootDomain = request.TargetDomainName.Replace("*.", "");
-                var rr = request.RecordName.Replace(rootDomain, "").TrimEnd('.');
+                var domainInfo = await DetermineZoneDomainRoot(request.RecordName, request.ZoneId);
+                if (string.IsNullOrEmpty(domainInfo.RootDomain))
+                {
+                    return new ActionResult { IsSuccess = false, Message = "Failed to determine root domain in zone." };
+                }
+
+                var rootDomain = domainInfo.RootDomain;
+                var rr = NormaliseRecordName(domainInfo, request.RecordName);
                 var records = await GetDnsRecords(rootDomain);
                 var targetRecord = records.First(c => c.Type == "TXT" && c.RR == rr);//throw if not exists
                 await DeleteDomainRecord(targetRecord.RecordId);
@@ -189,7 +202,7 @@ namespace Certify.Providers.DNS.Aliyun
             return records;
         }
 
-        public async Task<List<DnsZone>> GetZones()
+        public override async Task<List<DnsZone>> GetZones()
         {
             //TODO does aliyun really have Zones?
             var zones = new List<DnsZone>();
