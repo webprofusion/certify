@@ -146,12 +146,15 @@ namespace Certify.Management
 
         public void BeginTrackingProgress(RequestProgressState state)
         {
-            var existing = _progressResults.FirstOrDefault(p => p.ManagedCertificate.Id == state.ManagedCertificate.Id);
-            if (existing != null)
+            lock (_progressResults)
             {
-                _progressResults.Remove(existing);
+                var existing = _progressResults?.FirstOrDefault(p => p.ManagedCertificate.Id == state.ManagedCertificate.Id);
+                if (existing != null)
+                {
+                    _progressResults.Remove(existing);
+                }
+                _progressResults.Add(state);
             }
-            _progressResults.Add(state);
         }
 
         public async Task<bool> LoadSettingsAsync(bool skipIfLoaded)
