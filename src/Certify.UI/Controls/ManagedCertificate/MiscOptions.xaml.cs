@@ -27,18 +27,21 @@ namespace Certify.UI.Controls.ManagedCertificate
             //check file exists, if not inform user
             if (!string.IsNullOrEmpty(certPath) && System.IO.File.Exists(certPath))
             {
-                //open file
-                var cert = CertificateManager.LoadCertificate(certPath);
-
-                if (cert != null)
+                //open file, can fail if file is in use
+                try
                 {
-                    //var test = cert.PrivateKey.KeyExchangeAlgorithm;
-                    // System.Diagnostics.Debug.WriteLine(test.ToString());
+                    var cert = CertificateManager.LoadCertificate(certPath);
 
-                    X509Certificate2UI.DisplayCertificate(cert);
+                    if (cert != null)
+                    {
+                        //var test = cert.PrivateKey.KeyExchangeAlgorithm;
+                        // System.Diagnostics.Debug.WriteLine(test.ToString());
+
+                        X509Certificate2UI.DisplayCertificate(cert);
+                    }
+
                 }
-
-                //MessageBox.Show(Newtonsoft.Json.JsonConvert.SerializeObject(cert.PrivateKey, Newtonsoft.Json.Formatting.Indented));
+                catch { }
             }
             else
             {
