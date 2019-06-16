@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27004.2009
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29009.5
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{B92D2D90-CB9F-4ED7-BA98-EA3E1E4F8C56}"
 	ProjectSection(SolutionItems) = preProject
@@ -79,7 +79,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Providers", "Providers", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DeploymentTasks", "DeploymentTasks", "{CBCD6F99-567A-413A-8629-69C7CABE0E22}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Certify.Providers.Deployment.Core", "src\Certify.Providers\DeploymentTasks\Core\Certify.Providers.Deployment.Core.csproj", "{45F10A46-83F9-4768-B26B-26EDA00CDD28}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Providers.Deployment.Core", "src\Certify.Providers\DeploymentTasks\Core\Certify.Providers.Deployment.Core.csproj", "{45F10A46-83F9-4768-B26B-26EDA00CDD28}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
