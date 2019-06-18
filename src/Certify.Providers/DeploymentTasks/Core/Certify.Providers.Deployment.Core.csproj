@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="Asmodat.Standard.SSH.NET" Version="1.0.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="SimpleImpersonation" Version="3.0.0" />
   </ItemGroup>
 
