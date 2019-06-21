@@ -1,5 +1,4 @@
-﻿
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Config;
@@ -38,14 +37,17 @@ namespace Certify.Providers.DeploymentTasks
         /// <param name="credentials"></param>
         /// <param name="isPreviewOnly"></param>
         /// <returns></returns>
-        public override async Task<ActionResult> Execute(
+        public override async Task<List<ActionResult>> Execute(
           ILog log,
           Models.ManagedCertificate managedCert,
           DeploymentTaskConfig settings,
           Dictionary<string, string> credentials,
-          bool isPreviewOnly
+          bool isPreviewOnly,
+          DeploymentProviderDefinition definition = null
           )
         {
+
+            definition = GetDefinition(definition);
 
             var sshConfig = SshClient.GetConnectionConfig(settings, credentials);
 
@@ -62,14 +64,19 @@ namespace Certify.Providers.DeploymentTasks
             log?.Information("Executing command via SSH");
 
             var results = ssh.ExecuteCommands(commandList);
+
             if (results.Any(r => r.IsError))
             {
                 var firstError = results.First(c => c.IsError == true);
-                return new ActionResult { IsSuccess = false, Message = $"One or more commands failed: {firstError.Command} :: {firstError.Result}" };
+                return new List<ActionResult> {
+                    new ActionResult { IsSuccess = false, Message = $"One or more commands failed: {firstError.Command} :: {firstError.Result}" }
+                };
             }
             else
             {
-                return new ActionResult { IsSuccess = true, Message = "Nothing to do" };
+                return new List<ActionResult> {
+                    new ActionResult { IsSuccess = true, Message = "Nothing to do" }
+                };
             }
 
         }

@@ -35,14 +35,17 @@ namespace Certify.Providers.DeploymentTasks
             };
         }
 
-        public override async Task<ActionResult> Execute(
-            ILog log, 
-            Models.ManagedCertificate managedCert, 
-            DeploymentTaskConfig settings, 
-            Dictionary<string, string> credentials, 
-            bool isPreviewOnly
+        public override async Task<List<ActionResult>> Execute(
+            ILog log,
+            Models.ManagedCertificate managedCert,
+            DeploymentTaskConfig settings,
+            Dictionary<string, string> credentials,
+            bool isPreviewOnly,
+            DeploymentProviderDefinition definition = null
             )
         {
+
+            definition = GetDefinition(definition);
 
             UserCredentials windowsCredentials = null;
 
@@ -65,7 +68,9 @@ namespace Certify.Providers.DeploymentTasks
                 }
                 catch
                 {
-                    return new ActionResult { IsSuccess = false, Message = "CCS Export task with Windows Credentials requires username and password." };
+                    return new List<ActionResult>{
+                        new ActionResult { IsSuccess = false, Message = "CCS Export task with Windows Credentials requires username and password." }
+                    };
                 }
             }
 
@@ -75,7 +80,7 @@ namespace Certify.Providers.DeploymentTasks
 
             var fileList = new Dictionary<string, string>();
 
-            var destinationPath = settings.Parameters?.FirstOrDefault(d=>d.Key=="path")?.Value;
+            var destinationPath = settings.Parameters?.FirstOrDefault(d => d.Key == "path")?.Value;
 
             foreach (var domain in domains)
             {
@@ -97,7 +102,9 @@ namespace Certify.Providers.DeploymentTasks
 
             if (fileList.Count == 0)
             {
-                return new ActionResult { IsSuccess = true, Message = $"{Definition.Title}: Nothing to copy." };
+                return new List<ActionResult>{
+                    new ActionResult { IsSuccess = true, Message = $"{Definition.Title}: Nothing to copy." }
+                   };
             }
             else
             {
@@ -108,7 +115,9 @@ namespace Certify.Providers.DeploymentTasks
 
             }
 
-            return await Task.FromResult(new ActionResult { IsSuccess = true, Message = "File copying completed" });
+            return new List<ActionResult>{
+                await Task.FromResult(new ActionResult { IsSuccess = true, Message = "File copying completed" })
+            };
         }
     }
 }

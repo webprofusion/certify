@@ -10,15 +10,32 @@ namespace Certify.Providers.DeploymentTasks
 {
     public interface IDeploymentTaskProvider
     {
-        Task<ActionResult> Execute(
+        Task<List<ActionResult>> Execute(
             ILog log,
             ManagedCertificate managedCert,
-            DeploymentTaskConfig settings, 
-            Dictionary<string, string> credentials, 
-            bool isPreviewOnly
+            DeploymentTaskConfig settings,
+            Dictionary<string, string> credentials,
+            bool isPreviewOnly,
+            DeploymentProviderDefinition definition
             );
 
-        DeploymentProviderDefinition GetDefinition();
+        DeploymentProviderDefinition GetDefinition(DeploymentProviderDefinition currentDefinition = null);
+    }
+
+    /// <summary>
+    /// An attempt to establish or use a remote connection has failed
+    /// </summary>
+    public class RemoteConnectionException : Exception
+    {
+        public RemoteConnectionException(string message)
+       : base(message)
+        {
+        }
+
+        public RemoteConnectionException(string message, Exception inner)
+            : base(message, inner)
+        {
+        }
     }
 
     public class DeploymentTaskProviderBase : IDeploymentTaskProvider
@@ -31,13 +48,30 @@ namespace Certify.Providers.DeploymentTasks
             }
         }
 
-        public virtual Task<ActionResult> Execute(
+        public virtual Task<List<ActionResult>> Execute(
             ILog log, ManagedCertificate managedCert,
-            DeploymentTaskConfig settings, 
-            Dictionary<string, string> credentials, 
-            bool isPreviewOnly) => throw new NotImplementedException();
+            DeploymentTaskConfig settings,
+            Dictionary<string, string> credentials,
+            bool isPreviewOnly,
+            DeploymentProviderDefinition definition = null
+            ) => throw new NotImplementedException();
 
-        public virtual DeploymentProviderDefinition GetDefinition() => Definition;
+        /// <summary>
+        /// Returns either the current definition or the default for this instance type
+        /// </summary>
+        /// <param name="definition">Current definition or null. Used to override the base definition when inheriting</param>
+        /// <returns></returns>
+        public DeploymentProviderDefinition GetDefinition(DeploymentProviderDefinition currentDefinition)
+        {
+            if (currentDefinition != null)
+            {
+                return currentDefinition;
+            }
+            else
+            {
+                return Definition;
+            }
+        }
     }
 
     public class DeploymentTask
@@ -56,7 +90,7 @@ namespace Certify.Providers.DeploymentTasks
 
         private Dictionary<string, string> _credentials;
 
-        public async Task<ActionResult> Execute(
+        public async Task<List<ActionResult>> Execute(
             ILog log,
             ManagedCertificate managedCert,
             bool isPreviewOnly = true
@@ -66,17 +100,21 @@ namespace Certify.Providers.DeploymentTasks
             {
                 try
                 {
-                    return await TaskProvider.Execute(log, managedCert, TaskConfig, _credentials, isPreviewOnly);
+                    return await TaskProvider.Execute(log, managedCert, TaskConfig, _credentials, isPreviewOnly, null);
                 }
                 catch (Exception exp)
                 {
-                    return new ActionResult { IsSuccess = false, Message = $"Task Failed: {TaskProvider.GetDefinition()?.Title } :: {exp?.ToString()}"};
+                    return new List<ActionResult>{
+                        new ActionResult { IsSuccess = false, Message = $"Task Failed: {TaskProvider.GetDefinition()?.Title } :: {exp?.ToString()}" }
+                    };
                 }
 
             }
             else
             {
-                return new ActionResult { IsSuccess = false, Message = "Cannot Execute Deployment Task: TaskProvider or Config not set." };
+                return new List<ActionResult>{
+                    new ActionResult { IsSuccess = false, Message = "Cannot Execute Deployment Task: TaskProvider or Config not set." }
+                    };
             }
         }
     }

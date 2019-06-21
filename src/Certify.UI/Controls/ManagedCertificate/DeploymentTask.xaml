@@ -47,7 +47,7 @@
                             DockPanel.Dock="Left"
                             Orientation="Horizontal">
                 <Label Width="160" Content="{Binding Name}" />
-                <ComboBox Width="250" SelectedValue="{Binding Value}" ItemsSource="{Binding Options}" />
+                <ComboBox Width="250" SelectedValue="{Binding Value}" ItemsSource="{Binding Options}" SelectedValuePath="Key" DisplayMemberPath="Value" />
             </StackPanel>
         </DataTemplate>
         <DataTemplate x:Key="ProviderPasswordParameter">

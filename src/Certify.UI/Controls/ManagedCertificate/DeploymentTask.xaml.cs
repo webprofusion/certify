@@ -118,7 +118,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 AppViewModel.SelectedItem.DeploymentTasks = new System.Collections.ObjectModel.ObservableCollection<DeploymentTaskConfig>();
             }
 
-            // add/update edited deployment task in selectedItem cofig
+            // add/update edited deployment task in selectedItem config
             if (EditModel.SelectedItem.Id == null)
             {
                 //add new
@@ -130,6 +130,8 @@ namespace Certify.UI.Controls.ManagedCertificate
                 AppViewModel.SelectedItem.DeploymentTasks[AppViewModel.SelectedItem.DeploymentTasks.IndexOf(original)] = EditModel.SelectedItem;
             }
 
+
+          
             return true;
         }
 

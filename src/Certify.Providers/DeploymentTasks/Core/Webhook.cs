@@ -21,7 +21,5 @@ namespace Certify.Providers.DeploymentTasks
                 }
             };
         }
-
-        
     }
 }

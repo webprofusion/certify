@@ -102,6 +102,14 @@ namespace Certify.UI.Controls.ManagedCertificate
         private async void RunDeploymentTask_Click(object sender, RoutedEventArgs e)
         {
             var task = (sender as Button).DataContext as DeploymentTaskConfig;
+
+            // save main first
+            /*if (ItemViewModel.IsChanged)
+            {
+                (App.Current as App).ShowNotification("You need to save your changes first.", true);
+                return;
+            }*/
+
             if (MessageBox.Show("Run task '"+task.TaskName+"' now? The most recent certificate details will be used.", "Run Task?", MessageBoxButton.YesNo)== MessageBoxResult.Yes)
             {
                 // execute task now
@@ -115,8 +123,18 @@ namespace Certify.UI.Controls.ManagedCertificate
                     MessageBox.Show($"The deployment task failed to complete. {result.Title} :: {result.Description}");
                 } else
                 {
-                    MessageBox.Show($"The deployment task completed with no reported errors.");
+                    (App.Current as App).ShowNotification("The deployment task completed with no reported errors.");
+                    
                 }
+            }
+        }
+
+        private void DeleteDeploymentTask_Click(object sender, RoutedEventArgs e)
+        {
+            var task = (sender as Button).DataContext as DeploymentTaskConfig;
+            if (MessageBox.Show("Are you sure you wish to delete task '" + task.TaskName + "'?", "Delete Task?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            {
+                ItemViewModel.SelectedItem.DeploymentTasks.Remove(task);
             }
         }
     }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Certify.Providers.DeploymentTasks;
 using Renci.SshNet;
 
 namespace Certify.Providers.Deployment.Core.Shared
@@ -104,6 +105,10 @@ namespace Certify.Providers.Deployment.Core.Shared
                     }
 
                     sftp.Disconnect();
+                }
+                catch (Renci.SshNet.Common.SshConnectionException e)
+                {
+                    throw new RemoteConnectionException(e.Message, e);
                 }
                 catch (Exception e)
                 {

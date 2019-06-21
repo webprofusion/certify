@@ -42,14 +42,14 @@ namespace Certify.Providers.Deployment.Core.Shared
             if (_credentials == null)
             {
                 // cannot impersonate without credentials, attempt as current user
-                isSuccess = PerformFileCopying(destFiles);
+                isSuccess = PerformFileWrites(destFiles);
             }
             else
             {
                 // write new files as destination user
                 Impersonation.RunAsUser(_credentials, LogonType.Interactive, () =>
                 {
-                    isSuccess = PerformFileCopying(destFiles);
+                    isSuccess = PerformFileWrites(destFiles);
 
                 });
             }
@@ -57,7 +57,30 @@ namespace Certify.Providers.Deployment.Core.Shared
             return isSuccess;
         }
 
-        private static bool PerformFileCopying(Dictionary<string, byte[]> destFiles)
+        public bool CopyLocalToRemote(Dictionary<string, byte[]> destFiles)
+        {
+            
+            var isSuccess = true;
+
+            if (_credentials == null)
+            {
+                // cannot impersonate without credentials, attempt as current user
+                isSuccess = PerformFileWrites(destFiles);
+            }
+            else
+            {
+                // write new files as destination user
+                Impersonation.RunAsUser(_credentials, LogonType.Interactive, () =>
+                {
+                    isSuccess = PerformFileWrites(destFiles);
+
+                });
+            }
+
+            return isSuccess;
+        }
+
+        private static bool PerformFileWrites(Dictionary<string, byte[]> destFiles)
         {
             var isSuccess = true;
             foreach (var dest in destFiles)

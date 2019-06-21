@@ -385,9 +385,13 @@ namespace Certify.Management
 
             foreach (var task in deploymentTasks)
             {
-                var result = await task.Execute(log, managedCert, isPreviewOnly: isPreviewOnly);
+                var results = await task.Execute(log, managedCert, isPreviewOnly: isPreviewOnly);
 
-                steps.Add(new ActionStep { HasError = !result.IsSuccess, Description = result.Message });
+                foreach(var r in results)
+                {
+                    steps.Add(new ActionStep { HasError = !r.IsSuccess, Description = r.Message });
+                }
+                
             }
 
             return steps;

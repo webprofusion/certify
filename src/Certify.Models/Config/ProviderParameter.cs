@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace Certify.Models.Config
 {
@@ -46,52 +47,36 @@ namespace Certify.Models.Config
 
         public OptionType? Type { get; set; }
 
-        public List<string> Options
-        {
-            get
-            {
-                var options = new List<string>();
-                if (!string.IsNullOrEmpty(OptionsList))
-                {
-                    options.AddRange(OptionsList.Split(';'));
-                }
-
-                return options;
-            }
-        }
-
         /// <summary>
         /// Returns a parsed version of OptionsList converted into a key/value dictionary
         /// </summary>
-       /* public Dictionary<string, string> Options
+        [JsonIgnore]
+        public Dictionary<string, string> Options
         {
             get
             {
                 var options = new Dictionary<string, string>();
                 if (!string.IsNullOrEmpty(OptionsList))
                 {
-                    var optionCategories = OptionsList.Split(';');
-                    foreach (var o in optionCategories)
+                    foreach (var o in OptionsList.Split(';'))
                     {
                         var keyValuePair = o.Split('=');
-                        if (keyValuePair.Length == 2)
+                        if (keyValuePair.Length == 1)
                         {
-                            options.Add(keyValuePair[0].Trim(), keyValuePair[1].Trim());
+                            // item has a key only
+                            options.Add(keyValuePair[0].Trim(), keyValuePair[0].Trim());
                         }
                         else
                         {
-                            if (keyValuePair.Length == 1)
-                            {
-                                options.Add(keyValuePair[0], keyValuePair[0]);
-                            }
+                            // item has a key and description value
+                            options.Add(keyValuePair[0].Trim(), keyValuePair[1].Trim());
                         }
                     }
-
-
                 }
+
                 return options;
             }
-        }*/
+        }
     }
 }
 
