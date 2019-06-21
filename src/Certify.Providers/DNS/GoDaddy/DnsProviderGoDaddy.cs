@@ -38,7 +38,7 @@ namespace Certify.Providers.DNS.GoDaddy
         private readonly string _authKey;
         private readonly string _authSecret;
         private const string _baseUri = "https://api.godaddy.com/v1/";
-        private const string _listZonesUri = _baseUri + "domains?limit=500";
+        private const string _listZonesUri = _baseUri + "domains?limit=1000";
         private const string _createRecordUri = _baseUri + "domains/{0}/records";
         private const string _listRecordsUri = _baseUri + "domains/{0}/records/{1}";
         private const string _deleteRecordUri = _baseUri + "domains/{0}/records/{1}";
