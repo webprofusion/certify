@@ -7,12 +7,11 @@
     xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     xmlns:certifyui="clr-namespace:Certify.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
     xmlns:fa="http://schemas.fontawesome.io/icons/"
     xmlns:local="clr-namespace:Certify.UI.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Models"
     xmlns:misc="clr-namespace:Certify.Shared.Utils;assembly=Certify.Shared"
+    xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Models"
     xmlns:utils="clr-namespace:Certify.UI.Utils"
     d:DataContext="{d:DesignInstance Type=certifyui:ManagedCertificateDesignViewModel,
                                      IsDesignTimeCreatable=True}"

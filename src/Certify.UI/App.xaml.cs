@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Windows;
 using Serilog;
+using ToastNotifications;
+using ToastNotifications.Lifetime;
+using ToastNotifications.Position;
+using ToastNotifications.Messages;
 
 namespace Certify.UI
 {
@@ -9,6 +13,8 @@ namespace Certify.UI
     /// </summary>
     public partial class App : Application
     {
+
+        private Notifier _notifier;
 
         protected Certify.UI.ViewModel.AppViewModel MainViewModel
         {
@@ -53,11 +59,27 @@ namespace Certify.UI
             base.OnStartup(e);
 
             Log?.Information("UI Startup");
+
+            // setup notifications toast handler
+            _notifier = new Notifier(cfg =>
+            {
+                cfg.PositionProvider = new WindowPositionProvider(
+                    parentWindow: Application.Current.MainWindow,
+                    corner: Corner.TopRight,
+                    offsetX: 10,
+                    offsetY: 10);
+
+                cfg.LifetimeSupervisor = new TimeAndCountBasedLifetimeSupervisor(
+                    notificationLifetime: TimeSpan.FromSeconds(3),
+                    maximumNotificationCount: MaximumNotificationCount.FromCount(5));
+
+                cfg.Dispatcher = Application.Current.Dispatcher;
+            });
         }
 
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-          
+
             var feedbackMsg = "";
             if (e.ExceptionObject != null)
             {
@@ -68,6 +90,19 @@ namespace Certify.UI
 
             var d = new Windows.Feedback(feedbackMsg, isException: true);
             d.ShowDialog();
+        }
+
+        public void ShowNotification(string msg, bool isError = false)
+        {
+            if (isError)
+            {
+                _notifier.ShowError(msg);
+            }
+            else
+            {
+                _notifier.ShowInformation(msg);
+            }
+
         }
     }
 }
