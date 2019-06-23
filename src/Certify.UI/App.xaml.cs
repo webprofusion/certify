@@ -92,15 +92,32 @@ namespace Certify.UI
             d.ShowDialog();
         }
 
-        public void ShowNotification(string msg, bool isError = false)
+        public enum NotificationType
         {
-            if (isError)
+            Info = 1,
+            Success = 2,
+            Error = 3,
+            Warning = 4
+        }
+        public void ShowNotification(string msg, NotificationType type = NotificationType.Info, bool autoClose = true)
+        {
+            var opts = new ToastNotifications.Core.MessageOptions {  ShowCloseButton = false };
+
+            if (type == NotificationType.Error)
             {
-                _notifier.ShowError(msg);
+                _notifier.ShowError(msg, opts);
+            }
+            else if (type == NotificationType.Success)
+            {
+                _notifier.ShowSuccess(msg, opts);
+            }
+            else if (type == NotificationType.Warning)
+            {
+                _notifier.ShowWarning(msg, opts);
             }
             else
             {
-                _notifier.ShowInformation(msg);
+                _notifier.ShowInformation(msg, opts);
             }
 
         }

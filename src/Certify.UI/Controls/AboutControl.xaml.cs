@@ -87,7 +87,7 @@ namespace Certify.UI.Controls
                 {
                     if (!silent)
                     {
-                        MessageBox.Show(ConfigResources.UpdateCheckLatestVersion, ConfigResources.AppName);
+                        (App.Current as App).ShowNotification(ConfigResources.UpdateCheckLatestVersion, App.NotificationType.Success);                 
                     }
                 }
             }
