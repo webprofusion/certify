@@ -6,12 +6,10 @@ using System.Threading.Tasks;
 using Certify.Config;
 using Certify.Core.Management.DeploymentTasks;
 using Certify.Management;
-using Certify.Models;
 using Certify.Providers.Deployment.Core.Shared;
 using Certify.Providers.DeploymentTasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
-using Serilog;
 using SimpleImpersonation;
 
 namespace Certify.Core.Tests.Integration
@@ -256,8 +254,7 @@ namespace Certify.Core.Tests.Integration
                 Parameters = new List<Models.Config.ProviderParameterSetting>
                 {
                     new Models.Config.ProviderParameterSetting("path_cert", outputPath+".crt"),
-                    new Models.Config.ProviderParameterSetting("path_key", outputPath+".key"),
-                    new Models.Config.ProviderParameterSetting("path_chain", outputPath+".chain")
+                    new Models.Config.ProviderParameterSetting("path_key", outputPath+".key")
                 }
             };
 
@@ -280,7 +277,6 @@ namespace Certify.Core.Tests.Integration
 
             File.Delete(outputPath + ".crt");
             File.Delete(outputPath + ".key");
-           
         }
     }
 }

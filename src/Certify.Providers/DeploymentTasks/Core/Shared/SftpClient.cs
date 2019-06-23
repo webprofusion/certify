@@ -40,18 +40,24 @@ namespace Certify.Providers.Deployment.Core.Shared
                 destFiles.Add(filesSrcDest[sourcePath], content);
             }
 
+            return CopyLocalToRemote(destFiles);
+        }
+
+        public bool CopyLocalToRemote(Dictionary<string, byte[]> files)
+        {
+
             var isSuccess = true;
 
             // upload new files as destination user
             var pk = GetPrivateKeyFile();
-            
+
             using (var sftp = new Renci.SshNet.SftpClient(_config.Host, _config.Username, pk))
             {
                 try
                 {
                     sftp.Connect();
 
-                    foreach (var dest in destFiles)
+                    foreach (var dest in files)
                     {
                         try
                         {
@@ -81,7 +87,6 @@ namespace Certify.Providers.Deployment.Core.Shared
 
             return isSuccess;
         }
-
         /// <summary>
         /// List a remote directory in the console.
         /// </summary>

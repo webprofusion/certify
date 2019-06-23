@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -18,14 +19,26 @@ namespace Certify.Providers.DeploymentTasks
     {
         public ProviderParameter StorePath = new ProviderParameter();
 
+        /// <summary>
+        /// Terminology from https://en.wikipedia.org/wiki/Chain_of_trust
+        /// </summary>
+        [Flags]
+        enum ExportFlags
+        {
+            EndEntityCertificate = 1,
+            IntermediateCertificates = 4,
+            RootCertificate = 6,
+            PrivateKey = 8
+        }
+
         public static new DeploymentProviderDefinition Definition { get; }
 
         static private Dictionary<string, string> ExportTypes = new Dictionary<string, string> {
             {"pemcrt", "PEM - Primary Certificate (e.g. .crt)" },
-            {"pemchain", "PEM - Intermediate Certificate Chain (e.g. .chain)" },
+            {"pemchain", "PEM - Intermediate Certificate Chain + Root CA Cert (e.g. .chain)" },
             {"pemkey", "PEM - Private Key (e.g. .key)" },
             {"pemfull", "PEM - Full Certificate Chain" },
-            {"pemchainpartial", "PEM - Primary Certficate + Intermediate Certificate Chain (e.g. .crt)" },
+            {"pemcrtpartialchain", "PEM - Primary Certficate + Intermediate Certificate Chain (e.g. .crt)" },
             {"pfxfull", "PFX (PKCX#12), Full certificate including private key" }
         };
 
@@ -92,19 +105,23 @@ namespace Certify.Providers.DeploymentTasks
             }
             else if (exportType == "pemkey")
             {
-                files.Add(destPath, GetCertKeyPem(pfxData, certPwd));
+                files.Add(destPath, GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.PrivateKey));
             }
             else if (exportType == "pemchain")
             {
-                files.Add(destPath, GetCertChain(pfxData, false));
+                files.Add(destPath, GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.IntermediateCertificates));
             }
             else if (exportType == "pemcrt")
             {
-                files.Add(destPath, GetCertPem(pfxData, false));
+                files.Add(destPath, GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.EndEntityCertificate));
             }
-            else if (exportType == "pemchainpartial")
+            else if (exportType == "pemcrtpartialchain")
             {
-                files.Add(destPath, GetCertChain(pfxData, true));
+                files.Add(destPath, GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates));
+            }
+            else if (exportType == "pemfull")
+            {
+                files.Add(destPath, GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.PrivateKey | ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates | ExportFlags.RootCertificate));
             }
 
             // copy to destination
@@ -116,7 +133,7 @@ namespace Certify.Providers.DeploymentTasks
                 var sshConfig = SshClient.GetConnectionConfig(settings, credentials);
 
                 var sftp = new SftpClient(sshConfig);
-                string remotePath = "/";
+                string remotePath = destPath;
 
                 if (isPreviewOnly)
                 {
@@ -125,10 +142,7 @@ namespace Certify.Providers.DeploymentTasks
                 else
                 {
                     // copy via sftp
-                    var copiedOK = sftp.CopyLocalToRemote(new Dictionary<string, string>
-                    {
-                        {managedCert.CertificatePath, remotePath }
-                    });
+                    copiedOk = sftp.CopyLocalToRemote(files);
 
                     log.Information($"{definition.Title}: copied file via sftp to {remotePath}");
                 }
@@ -154,61 +168,56 @@ namespace Certify.Providers.DeploymentTasks
         /// Get PEM encoded cert bytes (intermediates only or full chain) from PFX bytes
         /// </summary>
         /// <param name="pfxData"></param>
-        /// <param name="fullChain"></param>
+        /// <param name="pwd">private key password</param>
+        /// <param name="flags">Flags for component types to export</param>
         /// <returns></returns>
-        private byte[] GetCertChain(byte[] pfxData, bool fullChain)
+        private byte[] GetCertComponentsAsPEMBytes(byte[] pfxData, string pwd, ExportFlags flags)
         {
             // See also https://www.digicert.com/ssl-support/pem-ssl-creation.htm
 
-
-            var certCollection = new X509Certificate2Collection();
-            certCollection.Import(pfxData);
-
-            var leafCert = certCollection[certCollection.Count - 1];
+            var cert = new X509Certificate2(pfxData, pwd);
+            var chain = new X509Chain();
+            chain.Build(cert);
 
             using (var writer = new StringWriter())
             {
                 var certParser = new X509CertificateParser();
                 var pemWriter = new PemWriter(writer);
 
-                foreach (var c in certCollection)
-                {
-                    if (c.Thumbprint != leafCert.Thumbprint || fullChain == true)
-                    {
-                        var export = c.Export(X509ContentType.Cert);
+                //output in order of private key, primary cert, intermediates, root
 
-                        var o = certParser.ReadCertificate(export);
-                        pemWriter.WriteObject(o);
-                    }
+                if (flags.HasFlag(ExportFlags.PrivateKey))
+                {
+                    var key = GetCertKeyPem(pfxData, pwd);
+                    writer.Write(key);
                 }
 
-                return System.Text.ASCIIEncoding.ASCII.GetBytes(writer.ToString());
-            }
-        }
+                int i = 0;
+                foreach (var c in chain.ChainElements)
+                {
+                    if (i == 0 && flags.HasFlag(ExportFlags.EndEntityCertificate))
+                    {
+                        // first cert is end entity cert (primary certificate)
+                        var o = c.Certificate.Export(X509ContentType.Cert);
+                        pemWriter.WriteObject(certParser.ReadCertificate(o));
 
-        /// <summary>
-        /// Get PEM encoded cert bytes from PFX bytes
-        /// </summary>
-        /// <param name="pfxData"></param>
-        /// <param name="fullChain"></param>
-        /// <returns></returns>
-        private byte[] GetCertPem(byte[] pfxData, bool fullChain)
-        {
+                    }
+                    else if (i == chain.ChainElements.Count - 1 && flags.HasFlag(ExportFlags.RootCertificate))
+                    {
+                        // last cert is root ca public cert
+                        var o = c.Certificate.Export(X509ContentType.Cert);
+                        pemWriter.WriteObject(certParser.ReadCertificate(o));
+                    }
+                    else if (flags.HasFlag(ExportFlags.IntermediateCertificates))
+                    {
+                        // intermediate cert(s), if any
+                        var o = c.Certificate.Export(X509ContentType.Cert);
+                        pemWriter.WriteObject(certParser.ReadCertificate(o));
+                    }
+                    i++;
+                }
 
-            var certCollection = new X509Certificate2Collection();
-            certCollection.Import(pfxData);
-
-            var leafCert = certCollection[certCollection.Count - 1];
-
-            using (var writer = new StringWriter())
-            {
-                var certParser = new X509CertificateParser();
-                var pemWriter = new PemWriter(writer);
-
-                var export = leafCert.Export(X509ContentType.Cert);
-
-                var o = certParser.ReadCertificate(export);
-                pemWriter.WriteObject(o);
+                writer.Flush();
 
                 return System.Text.ASCIIEncoding.ASCII.GetBytes(writer.ToString());
             }
@@ -220,34 +229,25 @@ namespace Certify.Providers.DeploymentTasks
         /// <param name="pfxData"></param>
         /// <param name="pwd"></param>
         /// <returns></returns>
-        private byte[] GetCertKeyPem(byte[] pfxData, string pwd)
+        private string GetCertKeyPem(byte[] pfxData, string pwd)
         {
-
             using (var s = new MemoryStream(pfxData))
             {
 
-                var pkcs12store = new Pkcs12Store(s, pwd.ToCharArray());
-                var keyAlias = pkcs12store.Aliases
+                var pkcsStore = new Pkcs12Store(s, pwd.ToCharArray());
+                var keyAlias = pkcsStore.Aliases
                                         .OfType<string>()
-                                        .Where(a => pkcs12store.IsKeyEntry(a))
+                                        .Where(a => pkcsStore.IsKeyEntry(a))
                                         .FirstOrDefault();
 
-                var key = pkcs12store.GetKey(keyAlias).Key;
+                var key = pkcsStore.GetKey(keyAlias).Key;
 
-                if (key.IsPrivate)
+                using (var writer = new StringWriter())
                 {
-                    using (var writer = new StringWriter())
-                    {
-                        var pemWriter = new PemWriter(writer);
-
-                        pemWriter.WriteObject(key);
-                        writer.Flush();
-                        return System.Text.ASCIIEncoding.ASCII.GetBytes(writer.ToString());
-                    }
+                    new PemWriter(writer).WriteObject(key);
+                    writer.Flush();
+                    return writer.ToString();
                 }
-
-                // no key found
-                return null;
             }
         }
     }

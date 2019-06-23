@@ -51,7 +51,7 @@ namespace Certify.Providers.DeploymentTasks
             if (certPath != null)
             {
                 settings.Parameters.Find(p => p.Key == "path").Value = certPath.Value;
-                settings.Parameters.Find(p => p.Key == "type").Value = "pemchainpartial";
+                settings.Parameters.Find(p => p.Key == "type").Value = "pemcrtpartialchain";
                 results.AddRange(await base.Execute(log, managedCert, settings, credentials, isPreviewOnly, definition));
             }
 
