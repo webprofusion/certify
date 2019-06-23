@@ -50,7 +50,6 @@ namespace Certify.Service
             var serviceConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
             serviceConfig.ServiceFaultMsg = "";
-
            
             if (serviceConfig.UseHTTPS)
             {
@@ -65,7 +64,6 @@ namespace Certify.Service
             }
 
             var serviceUri = $"{(serviceConfig.UseHTTPS ? "https" : "http")}://{serviceConfig.Host}:{serviceConfig.Port}";
-
 
             try
             {
@@ -120,7 +118,6 @@ namespace Certify.Service
                 _webApp.Dispose();
             }
         }
-
 
         public bool InstallSelfSignedCert(string host, int port)
         {

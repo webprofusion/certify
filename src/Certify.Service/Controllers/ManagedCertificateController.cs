@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Web.Http;
+using System.Web.Http.Cors;
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
@@ -9,6 +10,7 @@ using Serilog;
 
 namespace Certify.Service
 {
+    [EnableCors(origins: "*", headers: "*", methods: "*")]
     [RoutePrefix("api/managedcertificates")]
     public class ManagedCertificatesController : Controllers.ControllerBase
     {

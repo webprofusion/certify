@@ -1,9 +1,10 @@
-﻿using LightInject;
+﻿using System.Net;
+using System.Web.Http;
+using LightInject;
 using Microsoft.AspNet.SignalR;
+using Newtonsoft.Json.Serialization;
 using Owin;
 using Swashbuckle.Application;
-using System.Net;
-using System.Web.Http;
 
 namespace Certify.Service
 {
@@ -18,15 +19,14 @@ namespace Certify.Service
             var config = new HttpConfiguration();
 
             // enable windows auth credentials
-            var listener = (Microsoft.Owin.Host.HttpListener.OwinHttpListener)appBuilder.Properties["Microsoft.Owin.Host.HttpListener.OwinHttpListener"];
-            listener.Listener.AuthenticationSchemes = AuthenticationSchemes.IntegratedWindowsAuthentication;
+            var owinHttp = appBuilder.Properties["Microsoft.Owin.Host.HttpListener.OwinHttpListener"] as Microsoft.Owin.Host.HttpListener.OwinHttpListener;
+            owinHttp.Listener.AuthenticationSchemes = AuthenticationSchemes.IntegratedWindowsAuthentication;
 
-            // inject single CertifyManager for service to use
-            _container = new ServiceContainer();
-            _container.RegisterApiControllers();
-            _container.EnableWebApi(config);
-
-            _container.Register<Management.ICertifyManager, Management.CertifyManager>(new PerContainerLifetime());
+#if DEBUG
+            config
+              .EnableSwagger(c => c.SingleApiVersion("v1", "Service API for local install of Certify SSL Manager"))
+              .EnableSwaggerUi();
+#endif
 
             config.MapHttpAttributeRoutes();
 
@@ -35,18 +35,25 @@ namespace Certify.Service
                 routeTemplate: "api/{controller}/{id}",
                 defaults: new { id = RouteParameter.Optional }
                 );
-#if DEBUG
-            config
-              .EnableSwagger(c => c.SingleApiVersion("v1", "Service API for local install of Certify SSL Manager"))
-              .EnableSwaggerUi();
-#endif
 
-            // appBuilder.UseCors(Microsoft.Owin.Cors.CorsOptions.AllowAll);
+            config.Formatters.JsonFormatter.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
 
+            appBuilder.UseCors(Microsoft.Owin.Cors.CorsOptions.AllowAll);
+            
             appBuilder.MapSignalR("/api/status", new HubConfiguration());
             appBuilder.UseWebApi(config);
 
+            _container = new ServiceContainer();
+
+            _container.RegisterApiControllers();
+            _container.EnableWebApi(config);
+
+            // inject single CertifyManager for service to use
+            _container.Register<Management.ICertifyManager, Management.CertifyManager>(new PerContainerLifetime());
+
             var currentCertifyManager = _container.GetInstance<Management.ICertifyManager>();
+
+            // attached handlers for SignalR hub updates
             currentCertifyManager.OnRequestProgressStateUpdated += (Models.RequestProgressState obj) =>
             {
                 // notify client(s) of status updates
@@ -59,13 +66,13 @@ namespace Certify.Service
                 StatusHub.SendManagedCertificateUpdate(obj);
             };
 
-            // use a timer to poll for periodic jobs (cleanup, renewal etc)
-            _timer = new System.Timers.Timer(60 * 60 * 1000);// every 60 minutes
+            // hourly jobs timer (renewal etc)
+            _timer = new System.Timers.Timer(60 * 60 * 1000); // every 60 minutes
             _timer.Elapsed += _timer_Elapsed;
             _timer.Start();
 
-            // use a timer to poll for periodic jobs (cleanup, renewal etc)
-            _dailyTimer = new System.Timers.Timer(24 * 60 * 60 * 1000);// every 24 hrs
+            // daily jobs timer ((cleanup etc)
+            _dailyTimer = new System.Timers.Timer(24 * 60 * 60 * 1000); // every 24 hrs
             _dailyTimer.Elapsed += _dailyTimer_Elapsed;
             _dailyTimer.Start();
         }

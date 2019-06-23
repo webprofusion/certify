@@ -2,9 +2,11 @@
 using Certify.Models;
 using System.Threading.Tasks;
 using System.Web.Http;
+using System.Web.Http.Cors;
 
 namespace Certify.Service
 {
+    [EnableCors(origins: "*", headers: "*", methods: "*")]
     [RoutePrefix("api/system")]
     public class SystemController : Controllers.ControllerBase
     {
