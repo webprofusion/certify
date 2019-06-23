@@ -21,7 +21,7 @@ namespace Certify.CLI
 
             var managedCertificates = _certifyClient.GetManagedCertificates(new ManagedCertificateFilter()).Result;
             Console.ForegroundColor = ConsoleColor.White;
-
+#if BINDING_CHECKS
             Console.WriteLine("Checking existing bindings..");
 
             var bindingConfig = Certify.Utils.Networking.GetCertificateBindings().Where(b => b.Port == 443);
@@ -47,7 +47,7 @@ namespace Certify.CLI
             {
                 Console.WriteLine("No duplicate IP:Port bindings identified.");
             }
-
+#endif
             Console.WriteLine("Running cert diagnostics..");
 
             var countSiteIdsFixed = 0;

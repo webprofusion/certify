@@ -909,7 +909,7 @@ namespace Certify.Providers.ACME.Certes
 
             var pfxPath = ExportFullCertPFX(certFriendlyName, csrKey, certificateChain, certId, domainAsPath);
 
-            ExportFullCertPEM(csrKey, certificateChain, certId, domainAsPath);
+            // ExportFullCertPEM(csrKey, certificateChain, certId, domainAsPath);
 
             return new ProcessStepResult { IsSuccess = true, Result = pfxPath };
         }

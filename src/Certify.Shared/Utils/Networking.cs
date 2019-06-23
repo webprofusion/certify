@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.NetworkInformation;
 using Certify.Models;
 
@@ -8,6 +7,8 @@ namespace Certify.Utils
 {
     public class Networking
     {
+
+#if BINDING_CHECKS
         public static List<BindingInfo> GetCertificateBindings()
         {
             try
@@ -48,6 +49,7 @@ namespace Certify.Utils
                 return false;
             }
         }
+#endif
 
         public static List<IPAddressOption> GetIPAddresses()
         {
