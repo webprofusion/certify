@@ -46,5 +46,10 @@ namespace Certify.Models.Config
         /// If true, task requires either windows or SSH credentials depending on whether deployment target is local, remote windows or ssh
         /// </summary>
         public bool RequiresCredentials { get; set; }
+
+        /// <summary>
+        /// If true, deployment task supports remote target (scripts, commands, file copies etc)
+        /// </summary>
+        public bool EnableRemoteOptions { get; set; } = true;
     }
 }

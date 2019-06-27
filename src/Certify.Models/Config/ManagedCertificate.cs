@@ -149,7 +149,7 @@ namespace Certify.Models
         public string CertificatePreviousThumbprintHash { get; set; }
         public bool CertificateRevoked { get; set; }
         public string CurrentOrderUri { get; set; }
-        public string CertificatePasswordCredentialKey { get;set;}
+        public string CertificatePassword { get;set;}
 
         public override string ToString() => $"[{Id ?? "null"}]: \"{Name}\"";
 
