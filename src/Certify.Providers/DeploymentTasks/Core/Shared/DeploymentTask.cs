@@ -20,6 +20,11 @@ namespace Certify.Providers.DeploymentTasks
             );
 
         DeploymentProviderDefinition GetDefinition(DeploymentProviderDefinition currentDefinition = null);
+
+        Task<List<ActionResult>> Validate(ManagedCertificate managedCert,
+            DeploymentTaskConfig settings,
+            Dictionary<string, string> credentials,
+            DeploymentProviderDefinition definition);
     }
 
     /// <summary>
@@ -55,6 +60,17 @@ namespace Certify.Providers.DeploymentTasks
             bool isPreviewOnly,
             DeploymentProviderDefinition definition = null
             ) => throw new NotImplementedException();
+
+        public virtual Task<List<ActionResult>> Validate(
+           ManagedCertificate managedCert,
+           DeploymentTaskConfig settings,
+           Dictionary<string, string> credentials,
+           DeploymentProviderDefinition definition = null
+           )
+        {
+            return Task.FromResult(new List<ActionResult> { });
+        }
+
 
         /// <summary>
         /// Returns either the current definition or the default for this instance type

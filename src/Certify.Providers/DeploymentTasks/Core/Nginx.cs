@@ -20,7 +20,7 @@ namespace Certify.Providers.DeploymentTasks
             {
                 Id = "Certify.Providers.DeploymentTasks.Nginx",
                 Title = "Deploy to nginx",
-                IsExperimental = true,
+                IsExperimental = false,
                 Description = "Deploy latest certificate to a local or remote nginx server",
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
                 {

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Certify.Config;
+using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Providers.Deployment.Core.Shared;
@@ -50,7 +51,7 @@ namespace Certify.Providers.DeploymentTasks
             {
                 Id = "Certify.Providers.DeploymentTasks.CertificateExport",
                 Title = "Export Certificate",
-                IsExperimental = true,
+                IsExperimental = false,
                 Description = "Deploy latest certificate to a file (locally or remote)",
                 ProviderParameters =
 
@@ -59,6 +60,24 @@ namespace Certify.Providers.DeploymentTasks
                         new ProviderParameter { Key = "type", Name = "Export As", IsRequired = true, IsCredential = false, Value = "pfx", Type=OptionType.Select, OptionsList = optionsList },
                         }
             };
+        }
+
+        public override Task<List<ActionResult>> Validate(ManagedCertificate managedCert, DeploymentTaskConfig settings, Dictionary<string, string> credentials, DeploymentProviderDefinition definition = null)
+        {
+            //return base.Validate(managedCert, settings, credentials, definition);
+
+            var results = new List<ActionResult> { };
+            if (settings.ChallengeProvider == StandardAuthTypes.STANDARD_AUTH_WINDOWS)
+            {
+                //if windows network and paths are not UNC, fail validation
+                var path = settings.Parameters.FirstOrDefault(c => c.Key == "path")?.Value.Trim();
+                if (!path.StartsWith("\\\\"))
+                {
+                    results.Add(new ActionResult { IsSuccess = false, Message = "UNC Path Expected for Windows Network resource" });
+                }
+            }
+
+            return Task.FromResult(results);
         }
 
         public override async Task<List<ActionResult>> Execute(
@@ -127,7 +146,7 @@ namespace Certify.Providers.DeploymentTasks
             // copy to destination
 
             bool copiedOk = false;
-            if (settings.ChallengeProvider == "Certify.StandardChallenges.SSH")
+            if (settings.ChallengeProvider == StandardAuthTypes.STANDARD_AUTH_SSH)
             {
                 // sftp file copy
                 var sshConfig = SshClient.GetConnectionConfig(settings, credentials);
@@ -147,11 +166,11 @@ namespace Certify.Providers.DeploymentTasks
                     log.Information($"{definition.Title}: copied file via sftp to {remotePath}");
                 }
             }
-            else if (settings.ChallengeProvider == "Certify.StandardChallenges.Windows")
+            else if (settings.ChallengeProvider == StandardAuthTypes.STANDARD_AUTH_WINDOWS)
             {
                 // windows remote file copy
             }
-            else if (settings.ChallengeProvider == "Certify.StandardChallenges.Local")
+            else if (settings.ChallengeProvider == StandardAuthTypes.STANDARD_AUTH_LOCAL)
             {
                 // local file copy (may still require credentials)
 

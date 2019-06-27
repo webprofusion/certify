@@ -14,7 +14,8 @@ namespace Certify.Providers.DeploymentTasks
                 Id = "Certify.Providers.DeploymentTasks.Webhook",
                 Title = "Webhook",
                 IsExperimental = true,
-                Description = "Call a custom webhook on renewal sucess or failure",
+                Description = "Call a custom webhook on renewal success or failure",
+                EnableRemoteOptions = false,
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
                 {
                      new ProviderParameter{ Key="url", Name="Webhook URL", IsRequired=true, IsCredential=false  },
