@@ -22,6 +22,7 @@ namespace Certify.Core.Management.Challenges
 {
     public class ChallengeProviders
     {
+        
         public class CredentialsRequiredException : Exception
         {
         }
@@ -155,7 +156,7 @@ namespace Certify.Core.Management.Challenges
                 },
                  new ChallengeProviderDefinition
                 {
-                    Id = "Certify.StandardChallenges.Generic",
+                    Id = StandardAuthTypes.STANDARD_AUTH_GENERIC,
                     ChallengeType = "",
                     Title = "Username and Password",
                     Description = "Standard username and password credentials",
@@ -168,7 +169,7 @@ namespace Certify.Core.Management.Challenges
                 },
                  new ChallengeProviderDefinition
                 {
-                    Id = "Certify.StandardChallenges.Windows",
+                    Id = StandardAuthTypes.STANDARD_AUTH_WINDOWS,
                     ChallengeType = "",
                     Title = "Windows Credentials",
                     Description = "Windows username and password credentials",
@@ -182,7 +183,7 @@ namespace Certify.Core.Management.Challenges
                 },
                   new ChallengeProviderDefinition
                 {
-                    Id = "Certify.StandardChallenges.SSH",
+                    Id = StandardAuthTypes.STANDARD_AUTH_SSH,
                     ChallengeType = "",
                     Title = "SSH Credentials",
                     Description = "SSH username, password and private key credentials",

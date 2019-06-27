@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Certify.Config;
 using Certify.Core.Management.DeploymentTasks;
 using Certify.Management;
+using Certify.Models;
 using Certify.Providers.Deployment.Core.Shared;
 using Certify.Providers.DeploymentTasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -163,7 +164,7 @@ namespace Certify.Core.Tests.Integration
                 TaskTypeId = Providers.DeploymentTasks.CertificateExport.Definition.Id.ToLower(),
                 IsDeferred = false,
                 TaskName = "A test pfx export task",
-                ChallengeProvider = "Certify.StandardChallenges.Local",
+                ChallengeProvider = StandardAuthTypes.STANDARD_AUTH_LOCAL,
 
                 Parameters = new List<Models.Config.ProviderParameterSetting>
                 {
@@ -203,7 +204,7 @@ namespace Certify.Core.Tests.Integration
                 TaskTypeId = Providers.DeploymentTasks.Apache.Definition.Id.ToLower(),
                 IsDeferred = false,
                 TaskName = "A test Apache export task",
-                ChallengeProvider = "Certify.StandardChallenges.Local",
+                ChallengeProvider = StandardAuthTypes.STANDARD_AUTH_LOCAL,
 
                 Parameters = new List<Models.Config.ProviderParameterSetting>
                 {
@@ -249,7 +250,7 @@ namespace Certify.Core.Tests.Integration
                 TaskTypeId = Providers.DeploymentTasks.Nginx.Definition.Id.ToLower(),
                 IsDeferred = false,
                 TaskName = "A test Nginx export task",
-                ChallengeProvider = "Certify.StandardChallenges.Local",
+                ChallengeProvider = StandardAuthTypes.STANDARD_AUTH_LOCAL,
 
                 Parameters = new List<Models.Config.ProviderParameterSetting>
                 {

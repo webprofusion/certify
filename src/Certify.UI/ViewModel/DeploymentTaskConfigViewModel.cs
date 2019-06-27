@@ -27,7 +27,7 @@ namespace Certify.UI.ViewModel
             }
             set
             {
-                if (SelectedItem != null && value!=null)
+                if (SelectedItem != null && value != null)
                 {
                     SelectedItem.ChallengeCredentialKey = value.StorageKey;
                 }
@@ -42,9 +42,9 @@ namespace Certify.UI.ViewModel
 
         public Dictionary<string, string> TargetTypes { get; set; } = new Dictionary<string, string>
         {
-            { "Certify.StandardChallenges.Local","Local"},
-            { "Certify.StandardChallenges.Windows","Windows (Network)"},
-            { "Certify.StandardChallenges.SSH","SSH (Remote)"}
+            { StandardAuthTypes.STANDARD_AUTH_LOCAL,"Local"},
+            { StandardAuthTypes.STANDARD_AUTH_WINDOWS,"Windows (Network)"},
+            { StandardAuthTypes.STANDARD_AUTH_SSH,"SSH (Remote)"}
         };
 
         public DeploymentTaskConfigViewModel(DeploymentTaskConfig item)
@@ -141,7 +141,7 @@ namespace Certify.UI.ViewModel
         {
             get
             {
-                var cmd ="Command: certify deploy \""+_appViewModel.SelectedItem.Name+"\" \""+SelectedItem?.TaskName+"\"";
+                var cmd = "Command: certify deploy \"" + _appViewModel.SelectedItem.Name + "\" \"" + SelectedItem?.TaskName + "\"";
                 return cmd;
             }
         }
