@@ -52,7 +52,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{18771CE7-CCC9-4178-917D-1CDA037899D6}</ProjectGuid>
+    <ProjectGuid>{7D4DEE0D-88B3-4DB8-B214-C0EC4FC4711F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Certify.Core.Tests</RootNamespace>
