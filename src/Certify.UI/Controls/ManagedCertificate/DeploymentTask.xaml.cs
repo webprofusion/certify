@@ -113,6 +113,8 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             EditModel.CaptureEditedParameters();
 
+            // validate task configuration using the selected provider
+
             if (AppViewModel.SelectedItem.DeploymentTasks==null)
             {
                 AppViewModel.SelectedItem.DeploymentTasks = new System.Collections.ObjectModel.ObservableCollection<DeploymentTaskConfig>();

@@ -73,7 +73,6 @@
   <PropertyGroup />
   <ItemGroup>
     <ProjectReference Include="..\..\Certify.Client\Certify.Client.csproj" />
-    <ProjectReference Include="..\..\Certify.Core\Certify.Core.csproj" />
     <ProjectReference Include="..\..\Certify.Models\Certify.Models.csproj" />
   </ItemGroup>
   <ItemGroup>

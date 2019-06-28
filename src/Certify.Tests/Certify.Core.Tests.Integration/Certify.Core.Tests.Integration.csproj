@@ -69,11 +69,11 @@
   <Import Project="..\..\Certify.Plugins\Licensing\packages\MSTest.TestAdapter.1.1.18\build\net45\MSTest.TestAdapter.props" Condition="Exists('..\..\Certify.Plugins\Licensing\packages\MSTest.TestAdapter.1.1.18\build\net45\MSTest.TestAdapter.props')" />
   <PropertyGroup />
   <ItemGroup>
-    <ProjectReference Include="..\..\Certify.Core\Certify.Core.csproj" />
     <ProjectReference Include="..\..\Certify.Models\Certify.Models.csproj" />
     <ProjectReference Include="..\..\Certify.Providers\DNS\AWSRoute53\AWSRoute53.csproj" />
     <ProjectReference Include="..\..\Certify.Providers\DNS\Azure\Azure.csproj" />
     <ProjectReference Include="..\..\Certify.Providers\DNS\Cloudflare\Cloudflare.csproj" />
+    <ProjectReference Include="..\..\Certify.Service\Certify.Service.csproj" />
     <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>

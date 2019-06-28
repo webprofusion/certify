@@ -364,10 +364,6 @@
       <Project>{cec76bb6-5b17-4267-b1ff-5ea0f67eb1c5}</Project>
       <Name>Certify.Client</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Certify.CLI\Certify.CLI.csproj">
-      <Project>{da0ccd9f-8cbd-4471-93e0-53bcfb6ca25e}</Project>
-      <Name>Certify.CLI</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj">
       <Project>{1efdebe9-468b-4aa0-afd4-1c6d0a321be5}</Project>
       <Name>Certify.Locales</Name>

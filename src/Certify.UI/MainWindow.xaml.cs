@@ -65,7 +65,7 @@ namespace Certify.UI
                 return;
             }
 
-            if (!_appViewModel.IsRegisteredVersion && _appViewModel.ManagedCertificates != null && _appViewModel.ManagedCertificates.Count >= 3)
+            if (!_appViewModel.IsRegisteredVersion && _appViewModel.ManagedCertificates != null && _appViewModel.ManagedCertificates.Count >= NUM_ITEMS_FOR_REMINDER)
             {
                 MessageBox.Show(SR.MainWindow_TrialLimitationReached);
 
@@ -76,7 +76,7 @@ namespace Certify.UI
             }
             else
             {
-                if (_appViewModel.IsRegisteredVersion && _appViewModel.ManagedCertificates?.Count >= NUM_ITEMS_FOR_REMINDER)
+                if (_appViewModel.IsRegisteredVersion && _appViewModel.ManagedCertificates?.Count >= NUM_ITEMS_FOR_LIMIT)
                 {
                     var licensingManager = ViewModel.AppViewModel.Current.PluginManager?.LicensingManager;
 
