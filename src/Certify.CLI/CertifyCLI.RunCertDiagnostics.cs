@@ -7,7 +7,12 @@ namespace Certify.CLI
 {
     public partial class CertifyCLI
     {
-        public void RunCertDiagnostics(bool autoFix = false)
+        /// <summary>
+        /// Run general diagnostics, optionally fixing binding deployment
+        /// </summary>
+        /// <param name="autoFix">Attempt to re-apply current certificate</param>
+        /// <param name="forceAutoDeploy">Change all deployment modes to Auto</param>
+        public void RunCertDiagnostics(bool autoFix = false, bool forceAutoDeploy = false)
         {
             string stripNonNumericFromString(string input)
             {
@@ -53,10 +58,17 @@ namespace Certify.CLI
             var countSiteIdsFixed = 0;
             var countBindingRedeployments = 0;
 
+
             foreach (var site in managedCertificates)
             {
 
                 var redeployRequired = false;
+
+                if (autoFix)
+                {
+                    redeployRequired = true;
+                }
+
                 if ((site.GroupId != site.ServerSiteId) || !isNumeric(site.ServerSiteId))
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
@@ -67,7 +79,7 @@ namespace Certify.CLI
 
                     if (autoFix)
                     {
-                      
+
                         site.ServerSiteId = stripNonNumericFromString(site.ServerSiteId);
                         site.GroupId = site.ServerSiteId;
                         //update managed site
@@ -81,6 +93,21 @@ namespace Certify.CLI
                     }
                 }
 
+                if (autoFix && forceAutoDeploy)
+                {
+                    redeployRequired = true;
+
+                    if (site.RequestConfig.DeploymentSiteOption != DeploymentOption.Auto && site.RequestConfig.DeploymentSiteOption != DeploymentOption.AllSites)
+                    {
+                        Console.WriteLine("\t Auto fixing managed cert deployment mode: " + site.Name);
+                        site.RequestConfig.DeploymentSiteOption = DeploymentOption.Auto;
+
+                        var update = _certifyClient.UpdateManagedCertificate(site);
+                        update.ConfigureAwait(true);
+                        update.Wait();
+                    }
+                }
+
                 if (!string.IsNullOrEmpty(site.CertificatePath) && System.IO.File.Exists(site.CertificatePath))
                 {
                     Console.WriteLine($"{site.Name}");
@@ -90,9 +117,10 @@ namespace Certify.CLI
                     {
                         try
                         {
-                            var storedCert = CertificateManager.GetCertificateFromStore(site.RequestConfig.PrimaryDomain);
+                            var storedCert = CertificateManager.GetCertificateByThumbprint(site.CertificateThumbprintHash);
                             if (storedCert != null)
                             {
+                                // cert in store, check permissions
                                 Console.WriteLine($"Stored cert :: " + storedCert.FriendlyName);
                                 var test = fileCert.PrivateKey.KeyExchangeAlgorithm;
                                 Console.WriteLine(test.ToString());
@@ -102,16 +130,15 @@ namespace Certify.CLI
                                 {
                                     Console.WriteLine("\t Access: " + a.IdentityReference.Value.ToString());
                                 }
+                            }
 
-                                // check if siteID has any special characters
-                                if (redeployRequired && autoFix)
+                            // re-deploy certificate if possible
+                            if (redeployRequired && autoFix)
+                            {
+
+                                //re-apply current certificate file to store and bindings
+                                if (!string.IsNullOrEmpty(site.CertificateThumbprintHash))
                                 {
-
-                                    //reapply current certificate bindings
-
-                             
-                                    
-
                                     var bindingApply = _certifyClient.ReapplyCertificateBindings(site.Id, false);
                                     bindingApply.ConfigureAwait(true);
                                     bindingApply.Wait();
@@ -124,8 +151,8 @@ namespace Certify.CLI
                                         Console.ForegroundColor = ConsoleColor.Red;
                                         Console.WriteLine("\t Error: Failed to re-applying certificate bindings:" + site.Name);
                                         Console.ForegroundColor = ConsoleColor.White;
-                                       
-                                    } else
+                                    }
+                                    else
                                     {
                                         Console.ForegroundColor = ConsoleColor.Green;
                                         Console.WriteLine("\t Info: re-applied certificate bindings:" + site.Name);
@@ -134,17 +161,16 @@ namespace Certify.CLI
 
                                     System.Threading.Thread.Sleep(5000);
                                 }
-
-                            }
-                            else
-                            {
-                                if (redeployRequired)
+                                else
                                 {
+
                                     Console.ForegroundColor = ConsoleColor.DarkYellow;
-                                    Console.WriteLine($"Warning: {site.Name} :: Stored cert not found, bindings cannot be redeployed");
+                                    Console.WriteLine($"Warning: {site.Name} :: No certificate information, bindings cannot be redeployed");
                                     Console.ForegroundColor = ConsoleColor.White;
+
                                 }
                             }
+
                         }
                         catch (Exception exp)
                         {
@@ -157,7 +183,7 @@ namespace Certify.CLI
                         //Console.WriteLine($"{site.Name} certificate file does not exist: {site.CertificatePath}");
                         if (redeployRequired)
                         {
-                            Console.WriteLine($"{site.Name} has no current certificate are requires manual verification/redeploy of cert.");
+                            Console.WriteLine($"{site.Name} has no current certificate and requires manual verification/redeploy of cert.");
                         }
                     }
                 }

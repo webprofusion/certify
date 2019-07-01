@@ -2,7 +2,7 @@
   "profiles": {
     "Certify.CLI": {
       "commandName": "Project",
-      "commandLineArgs": "diag"
+      "commandLineArgs": "diag autofix forceautodeploy"
     }
   }
 }

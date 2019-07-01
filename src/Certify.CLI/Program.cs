@@ -64,13 +64,19 @@ namespace Certify.CLI
                 if (args.Contains("diag", StringComparer.InvariantCultureIgnoreCase))
                 {
                     var autoFix = false;
+                    var forceAutoDeploy = false;
 
                     if (args.Contains("autofix"))
                     {
                         autoFix = true;
                     }
 
-                    p.RunCertDiagnostics(autoFix);
+                    if (args.Contains("forceautodeploy"))
+                    {
+                        forceAutoDeploy = true;
+                    }
+
+                    p.RunCertDiagnostics(autoFix, forceAutoDeploy);
                 }
 
                 if (args.Contains("importcsv", StringComparer.InvariantCultureIgnoreCase))
