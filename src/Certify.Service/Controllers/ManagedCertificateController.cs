@@ -176,7 +176,7 @@ namespace Certify.Service
         }
 
         [HttpGet, Route("deploymentproviders/")]
-        public async Task<List<DeploymentProviderDefinition>> GetDeploymentProviderList() => await Core.Management.DeploymentTasks.DeploymentTaskProviderFactory.GetDeploymentTaskProviders();
+        public async Task<List<DeploymentProviderDefinition>> GetDeploymentProviderList() => await _certifyManager.GetDeploymentProviders();
 
         [HttpGet, Route("challengeapis/")]
         public async Task<List<ChallengeProviderDefinition>> GetChallengeAPIList() => await Core.Management.Challenges.ChallengeProviders.GetChallengeAPIProviders();

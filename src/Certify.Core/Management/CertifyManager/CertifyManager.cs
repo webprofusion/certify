@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Certify.Core.Management.Challenges;
 using Certify.Management.Servers;
 using Certify.Models;
+using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Certify.Providers.ACME.Certes;
@@ -55,7 +56,7 @@ namespace Certify.Management
             _progressResults = new ObservableCollection<RequestProgressState>();
 
             _pluginManager = new PluginManager();
-            _pluginManager.LoadPlugins();
+            _pluginManager.LoadPlugins(new List<string> { "Licensing", "DashboardClient", "DeploymentTasks" });
 
             // TODO: convert providers to plugins, allow for async init
             var userAgent = Util.GetUserAgent();
@@ -323,5 +324,9 @@ namespace Certify.Management
             }
         }
 
+        public async Task<List<DeploymentProviderDefinition>> GetDeploymentProviders()
+        {
+            return await Core.Management.DeploymentTasks.DeploymentTaskProviderFactory.GetDeploymentTaskProviders(_pluginManager.DeploymentTaskProviders);
+        }
     }
 }

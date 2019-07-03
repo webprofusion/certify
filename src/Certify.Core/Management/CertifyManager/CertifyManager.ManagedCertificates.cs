@@ -363,7 +363,8 @@ namespace Certify.Management
                 {
                     try
                     {
-                        var provider = DeploymentTaskProviderFactory.Create(taskConfig.TaskTypeId.ToLower());
+                        
+                        var provider = DeploymentTaskProviderFactory.Create(taskConfig.TaskTypeId.ToLower(), _pluginManager.DeploymentTaskProviders);
 
                         Dictionary<string, string> credentials = null;
 

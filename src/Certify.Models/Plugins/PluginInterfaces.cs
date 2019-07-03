@@ -1,5 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Certify.Models.Config;
 using Certify.Models.Shared;
+using Certify.Providers.DeploymentTasks;
 using Registration.Core.Models.Shared;
 
 namespace Certify.Models.Plugins
@@ -34,5 +37,11 @@ namespace Certify.Models.Plugins
         Task<bool> RegisterInstance(RegisteredInstance instance, string email, string pwd, bool createAccount);
 
         Task<bool> ReportUserActionRequiredAsync(ItemActionRequired actionRequired);
+    }
+
+    public interface IDeploymentTaskProviderPlugin
+    {
+        List<DeploymentProviderDefinition> GetProviders();
+        IDeploymentTaskProvider GetProvider(string id);
     }
 }

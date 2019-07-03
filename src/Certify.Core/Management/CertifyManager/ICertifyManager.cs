@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Models;
+using Certify.Models.Config;
 using Certify.Models.Providers;
 
 namespace Certify.Management
@@ -33,7 +34,7 @@ namespace Certify.Management
         Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate, bool isPreviewMode, IProgress<RequestProgressState> progress = null);
 
         Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId);
-        
+
         Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate);
 
         Task<CertificateRequestResult> PerformDummyCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null);
@@ -71,5 +72,7 @@ namespace Certify.Management
         void ReportProgress(IProgress<RequestProgressState> progress, RequestProgressState state, bool logThisEvent = true);
 
         Task<List<ActionStep>> PerformDeploymentTask(ILog log, string managedCertificateId, string taskId, bool isPreviewOnly, bool skipDeferredTasks);
+
+        Task<List<DeploymentProviderDefinition>> GetDeploymentProviders();
     }
 }

@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using Certify.Models.Plugins;
+using Certify.Providers.DeploymentTasks;
 using Serilog;
 
 namespace Certify.Management
@@ -12,6 +14,7 @@ namespace Certify.Management
     {
         public ILicensingManager LicensingManager { get; set; }
         public IDashboardClient DashboardClient { get; set; }
+        public List<IDeploymentTaskProviderPlugin> DeploymentTaskProviders { get; set; }
 
         private Models.Providers.ILog _log = null;
 
@@ -55,12 +58,29 @@ namespace Certify.Management
             return default(T);
         }
 
-        public void LoadPlugins()
+        public void LoadPlugins(List<string> includeSet)
         {
             var s = Stopwatch.StartNew();
+            
+            if (includeSet.Contains("Licensing"))
+            {
+                LicensingManager = LoadPlugin<ILicensingManager>("Licensing.dll", typeof(ILicensingManager)) as ILicensingManager;
 
-            LicensingManager = LoadPlugin<ILicensingManager>("Licensing.dll", typeof(ILicensingManager)) as ILicensingManager;
-            DashboardClient = LoadPlugin<IDashboardClient>("DashboardClient.dll", typeof(IDashboardClient)) as IDashboardClient;
+            }
+
+            if (includeSet.Contains("DashboardClient"))
+            {
+                DashboardClient = LoadPlugin<IDashboardClient>("DashboardClient.dll", typeof(IDashboardClient)) as IDashboardClient;
+            }
+
+            if (includeSet.Contains("DeploymentTasks"))
+            {
+                var deploymentTaskPlugin = LoadPlugin<IDeploymentTaskProviderPlugin>("DeploymentTasks.dll", typeof(IDeploymentTaskProviderPlugin)) as IDeploymentTaskProviderPlugin;
+                DeploymentTaskProviders = new List<IDeploymentTaskProviderPlugin>
+                {
+                    deploymentTaskPlugin
+                };
+            }
 
             s.Stop();
 

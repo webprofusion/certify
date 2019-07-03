@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Client;
@@ -41,7 +42,7 @@ namespace Certify.CLI
         {
             _pluginManager = new Management.PluginManager();
 
-            _pluginManager.LoadPlugins();
+            _pluginManager.LoadPlugins(new List<string> { "Licensing" });
         }
 
         private bool IsRegistered()
