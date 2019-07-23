@@ -86,7 +86,7 @@ namespace Certify.Core.Management.Challenges
             };
         }
 
-        public async Task<DnsChallengeHelperResult> CompleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, string domain, string txtRecordName, string txtRecordValue)
+        public async Task<DnsChallengeHelperResult> CompleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, string domain, string txtRecordName, string txtRecordValue, bool isTestMode)
         {
             // for a given managed site configuration, attempt to complete the required challenge by
             // creating the required TXT record
@@ -158,6 +158,16 @@ namespace Certify.Core.Management.Challenges
                 return new DnsChallengeHelperResult
                 {
                     Result = new ActionResult { IsSuccess = false, Message = "DNS Challenge API Provider not set or not recognised. Select an API to proceed." },
+                    PropagationSeconds = 0,
+                    IsAwaitingUser = false
+                };
+            }
+
+            if (isTestMode && !dnsAPIProvider.IsTestModeSupported)
+            {
+                return new DnsChallengeHelperResult
+                {
+                    Result = new ActionResult { IsSuccess = true, Message = dnsAPIProvider.ProviderTitle + " does not perform any tests." },
                     PropagationSeconds = 0,
                     IsAwaitingUser = false
                 };

@@ -74,6 +74,8 @@ namespace Certify.Models.Providers
 
         string ProviderHelpUrl { get; }
 
+        bool IsTestModeSupported { get; }
+
         List<ProviderParameter> ProviderParameters { get; }
     }
 

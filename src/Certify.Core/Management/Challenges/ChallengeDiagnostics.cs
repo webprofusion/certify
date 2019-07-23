@@ -244,7 +244,8 @@ namespace Certify.Core.Management.Challenges
                                 log,
                                 domain.Replace("*.", ""),
                                 managedCertificate,
-                                simulatedAuthorization
+                                simulatedAuthorization,
+                                isTestMode: true
                             );
 
                         result.Message = dnsResult.Result.Message;
@@ -349,7 +350,7 @@ namespace Certify.Core.Management.Challenges
                     if (requiredChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                     {
                         // perform dns-01 challenge response
-                        var check = await PerformChallengeResponse_Dns01(log, domain, managedCertificate, pendingAuth);
+                        var check = await PerformChallengeResponse_Dns01(log, domain, managedCertificate, pendingAuth, isTestMode: false);
                         pendingAuth.AttemptedChallenge.ConfigCheckedOK = check.Result.IsSuccess;
                         pendingAuth.AttemptedChallenge.ChallengeResultMsg = check.Result.Message;
                         pendingAuth.AttemptedChallenge.IsAwaitingUser = check.IsAwaitingUser;
@@ -611,7 +612,7 @@ namespace Certify.Core.Management.Challenges
             return () => checkQueue.All(check => check());
         }
 
-        private async Task<DnsChallengeHelperResult> PerformChallengeResponse_Dns01(ILog log, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
+        private async Task<DnsChallengeHelperResult> PerformChallengeResponse_Dns01(ILog log, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, bool isTestMode)
         {
             var dnsChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
 
@@ -636,7 +637,7 @@ namespace Certify.Core.Management.Challenges
             // create DNS records (manually or via automation)
             var dnsHelper = new DnsChallengeHelper();
 
-            var dnsResult = await dnsHelper.CompleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value);
+            var dnsResult = await dnsHelper.CompleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value, isTestMode);
 
             if (!dnsResult.Result.IsSuccess)
             {

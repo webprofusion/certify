@@ -22,6 +22,8 @@ namespace Certify.Core.Management.Challenges.DNS
 
         string IDnsProvider.ProviderHelpUrl => Definition.HelpUrl;
 
+        public bool IsTestModeSupported => Definition.IsTestModeSupported;
+
         List<ProviderParameter> IDnsProvider.ProviderParameters => Definition.ProviderParameters;
 
         private readonly string _createScriptPath = "";

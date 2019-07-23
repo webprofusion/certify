@@ -50,6 +50,8 @@ namespace Certify.Providers.DNS.DnsMadeEasy
 
         public string ProviderHelpUrl => Definition.HelpUrl;
 
+        public bool IsTestModeSupported => Definition.IsTestModeSupported;
+
         public List<ProviderParameter> ProviderParameters => Definition.ProviderParameters;
 
         public static ChallengeProviderDefinition Definition => new ChallengeProviderDefinition

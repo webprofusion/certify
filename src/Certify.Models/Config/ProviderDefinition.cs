@@ -20,7 +20,7 @@ namespace Certify.Models.Config
         public List<ProviderParameter> ProviderParameters { get; set; }
         public string Config { get; set; }
         public bool IsExperimental { get; set; }
-
+        public bool IsTestModeSupported { get; set; } = true;
         public ProviderDefinition()
         {
             ProviderParameters = new List<ProviderParameter>();

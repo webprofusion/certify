@@ -17,6 +17,8 @@ namespace Certify.Core.Management.Challenges.DNS
 
         string IDnsProvider.ProviderHelpUrl => Definition.HelpUrl;
 
+        bool IDnsProvider.IsTestModeSupported => Definition.IsTestModeSupported;
+
         List<ProviderParameter> IDnsProvider.ProviderParameters => Definition.ProviderParameters;
 
         private ILog _log;
@@ -31,7 +33,8 @@ namespace Certify.Core.Management.Challenges.DNS
             ProviderParameters = new List<ProviderParameter>() { new ProviderParameter { Description = "Email address to prompt changes", IsRequired = false, Key = "email", Name = "Email to Notify (optional)", IsCredential = false } },
             ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
             Config = "Provider=Certify.Providers.DNS.Manual",
-            HandlerType = ChallengeHandlerType.MANUAL
+            HandlerType = ChallengeHandlerType.MANUAL,
+            IsTestModeSupported = false
         };
 
         public DnsProviderManual(Dictionary<string, string> parameters)

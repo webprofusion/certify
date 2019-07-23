@@ -25,6 +25,8 @@ namespace Certify.Providers.DNS.OVH
 
         public string ProviderHelpUrl => Definition.HelpUrl;
 
+        public bool IsTestModeSupported => Definition.IsTestModeSupported;
+
         public List<ProviderParameter> ProviderParameters => Definition.ProviderParameters;
 
         public const string DefaultOvhEndpoint = "https://eu.api.ovh.com/1.0/";

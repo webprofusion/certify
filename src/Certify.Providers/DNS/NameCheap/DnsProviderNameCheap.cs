@@ -75,6 +75,7 @@ namespace Certify.Providers.DNS.NameCheap
         public string ProviderTitle => Definition.Title;
         public string ProviderDescription => Definition.Description;
         public string ProviderHelpUrl => Definition.HelpUrl;
+        public bool IsTestModeSupported => Definition.IsTestModeSupported;
         public List<ProviderParameter> ProviderParameters => Definition.ProviderParameters;
 
         #endregion

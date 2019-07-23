@@ -30,6 +30,8 @@ namespace Certify.Core.Management.Challenges
 
         public string ProviderHelpUrl => "";
 
+        public bool IsTestModeSupported => true;
+
         public List<ProviderParameter> ProviderParameters => new List<ProviderParameter>();
 
         public async Task<ActionResult> Test()

@@ -111,6 +111,8 @@ namespace Certify.Providers.DNS.MSDNS
 
         public string ProviderDescription => DnsProviderMSDNS.Definition.Description;
 
+        public bool IsTestModeSupported => Definition.IsTestModeSupported;
+
         public string ProviderHelpUrl => DnsProviderMSDNS.Definition.HelpUrl;
 
         public List<ProviderParameter> ProviderParameters => DnsProviderMSDNS.Definition.ProviderParameters;
