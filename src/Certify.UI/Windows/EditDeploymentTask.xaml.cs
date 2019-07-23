@@ -27,9 +27,9 @@ namespace Certify.UI.Windows
             DeploymentTaskEditor.SetEditItem(config);
         }
 
-        private void Save_Click(object sender, RoutedEventArgs e)
+        private async void Save_Click(object sender, RoutedEventArgs e)
         {
-            if (DeploymentTaskEditor.Save())
+            if (await DeploymentTaskEditor.Save())
             {
                 Close();
             }

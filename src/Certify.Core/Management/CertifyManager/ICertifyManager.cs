@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Certify.Config;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
@@ -74,5 +75,7 @@ namespace Certify.Management
         Task<List<ActionStep>> PerformDeploymentTask(ILog log, string managedCertificateId, string taskId, bool isPreviewOnly, bool skipDeferredTasks);
 
         Task<List<DeploymentProviderDefinition>> GetDeploymentProviders();
+
+        Task<List<ActionResult>> ValidateDeploymentTask(ManagedCertificate managedCertificate, DeploymentTaskConfig taskConfig);
     }
 }

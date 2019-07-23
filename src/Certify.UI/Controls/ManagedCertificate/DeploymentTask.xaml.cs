@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Certify.Config;
+using Certify.Models;
 using Certify.Models.Config;
 
 namespace Certify.UI.Controls.ManagedCertificate
@@ -40,7 +41,6 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             InitializeComponent();
             DataContext = EditModel;
-            EditModel.RefreshOptions();
 
             this.StoredCredentials.ItemsSource = EditModel.FilteredCredentials;
 
@@ -48,11 +48,19 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         public void SetEditItem(DeploymentTaskConfig config)
         {
+
             EditModel = new ViewModel.DeploymentTaskConfigViewModel(config);
             DataContext = EditModel;
 
             EditModel.RefreshOptions();
-            
+
+        }
+
+        protected override void OnInitialized(EventArgs e)
+        {
+            base.OnInitialized(e);
+
+
         }
 
         private async void AddStoredCredential_Click(object sender, RoutedEventArgs e)
@@ -96,8 +104,8 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             if (TaskProviderList.SelectedValue != null)
             {
-                 /*ProviderDescription.Text = this.EditModel.DeploymentProvider.Description;
-                DeploymentTaskParams.ItemsSource = DeploymentProvider.ProviderParameters;*/
+                /*ProviderDescription.Text = this.EditModel.DeploymentProvider.Description;
+               DeploymentTaskParams.ItemsSource = DeploymentProvider.ProviderParameters;*/
                 await EditModel.RefreshOptions();
             }
         }
@@ -107,15 +115,51 @@ namespace Certify.UI.Controls.ManagedCertificate
             await EditModel.RefreshOptions();
         }
 
-        
 
-        public bool Save()
+
+        public async Task<bool> Save()
         {
             EditModel.CaptureEditedParameters();
 
             // validate task configuration using the selected provider
 
-            if (AppViewModel.SelectedItem.DeploymentTasks==null)
+            string msgTitle = "Edit Deployment Task";
+
+            if (EditModel.SelectedItem.TaskTypeId == null)
+            {
+                MessageBox.Show("Please select the required Task Type.", msgTitle);
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(EditModel.SelectedItem.TaskName))
+            {
+                // check task name populated
+                MessageBox.Show("A unique Task Name required, this may be used later to run the task manually.", msgTitle);
+                return false;
+            }
+            else
+            {
+                // check task name is unique for this managed cert
+                if (AppViewModel.SelectedItem.DeploymentTasks?.Any() == true)
+                {
+                    if (AppViewModel.SelectedItem.DeploymentTasks.Any(t => t.Id != EditModel.SelectedItem.Id && t.TaskName.ToLower().Trim() == EditModel.SelectedItem.TaskName.ToLower().Trim()))
+                    {
+                        MessageBox.Show("A unique Task Name is required, this task name is already in use for this managed certificate.", msgTitle);
+                        return false;
+                    }
+                }
+            }
+
+            // validate task provider specific config
+            var results = await AppViewModel.CertifyClient.ValidateDeploymentTask(new Models.Utils.DeploymentTaskValidationInfo { ManagedCertificate = AppViewModel.SelectedItem, TaskConfig = EditModel.SelectedItem });
+            if (results.Any(r => r.IsSuccess == false))
+            {
+                var firstFailure = results.FirstOrDefault(r => r.IsSuccess == false);
+                MessageBox.Show(firstFailure.Message, msgTitle);
+                return false;
+            }
+
+            if (AppViewModel.SelectedItem.DeploymentTasks == null)
             {
                 AppViewModel.SelectedItem.DeploymentTasks = new System.Collections.ObjectModel.ObservableCollection<DeploymentTaskConfig>();
             }
@@ -126,14 +170,15 @@ namespace Certify.UI.Controls.ManagedCertificate
                 //add new
                 EditModel.SelectedItem.Id = Guid.NewGuid().ToString();
                 AppViewModel.SelectedItem.DeploymentTasks.Add(EditModel.SelectedItem);
-            } else
+            }
+            else
             {
                 var original = AppViewModel.SelectedItem.DeploymentTasks.First(f => f.Id == EditModel.SelectedItem.Id);
                 AppViewModel.SelectedItem.DeploymentTasks[AppViewModel.SelectedItem.DeploymentTasks.IndexOf(original)] = EditModel.SelectedItem;
             }
 
 
-          
+
             return true;
         }
 

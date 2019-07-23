@@ -53,7 +53,7 @@ namespace Certify.UI.ViewModel
             {
                 item = new DeploymentTaskConfig
                 {
-                    Description = "A description for this task",
+                    ChallengeProvider = StandardAuthTypes.STANDARD_AUTH_LOCAL,
                     Parameters = new List<ProviderParameterSetting>()
                 };
             }

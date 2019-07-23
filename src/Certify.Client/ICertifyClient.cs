@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Certify.Config;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Utils;
 
 namespace Certify.Client
 {
@@ -11,40 +13,6 @@ namespace Certify.Client
     /// </summary>
     public interface ICertifyClient
     {
-        /*
-         *
-        Preferences: /preferences
-
-        Settings to be save/loaded via the client api (still tied to Core App)
-
-        GetPreferences()
-        SetPreferences()
-
-        Primary Contact Registration /contact/
-
-        GetPrimaryContact
-        SetPrimaryContact : set the current contact registration for all subsequent requests
-
-        Web Server Status: /server
-
-        GetServerSummary("IIS") - summary of general info for this server, IIS Version, .Net version etc
-        IsServerAvailable("IIS");
-        GetServerVersion("IIS")
-        GetServerSiteList("IIS")
-        GetServerSiteDomains("IIS",siteId);
-
-         Managed Certificates: /managedcertificates/
-
-        GetManagedCertificates(filter)
-        GetManagedCertificate(id)
-        AddOrUpdateManagedCertificate
-        DeleteManagedCertificate
-
-        PreviewAutoRenewal - return list of managed sites which would be currently included in an auto renew run
-        BeginAutoRenewal - Begin auto renewal process and returns list of managedcertificates included in this run
-        BeginCertificateRequest(managedcertificate id) - Begins a single manage site certificate request
-        CheckCertificateRequest(managedcertificate id) - poll until completed/failed or timeout
-        */
 
         Shared.ServiceConfig GetAppServiceConfig();
 
@@ -133,6 +101,8 @@ namespace Certify.Client
         Task<List<DeploymentProviderDefinition>> GetDeploymentProviderList();
 
         Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly);
+
+        Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo info);
 
         #endregion Managed Certificates
 

@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Cors;
+using Certify.Config;
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Utils;
 using Serilog;
 
 namespace Certify.Service
@@ -104,6 +106,13 @@ namespace Certify.Service
             }
 
             return await _certifyManager.PerformDeploymentTask(null, managedCertificateId, taskId, isPreviewOnly, skipDeferred);
+        }
+
+        [HttpPost, Route("validatedeploymenttask")]
+        public async Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo info)
+        {  
+            DebugLog();
+            return await _certifyManager.ValidateDeploymentTask(info.ManagedCertificate, info.TaskConfig);
         }
 
         /// <summary>

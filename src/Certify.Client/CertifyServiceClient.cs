@@ -4,8 +4,10 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Certify.Config;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Utils;
 using Microsoft.AspNet.SignalR.Client;
 using Newtonsoft.Json;
 
@@ -350,6 +352,12 @@ namespace Certify.Client
         {
             var response = await FetchAsync($"managedcertificates/performdeployment/{isPreviewOnly}/{managedCertificateId}/{taskId}");
             return JsonConvert.DeserializeObject<List<ActionStep>>(response);
+        }
+
+        public async Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo info)
+        {
+            var result = await PostAsync($"managedcertificates/validatedeploymenttask", info);
+            return JsonConvert.DeserializeObject<List<ActionResult>>(await result.Content.ReadAsStringAsync());
         }
 
         #endregion Managed Certificates

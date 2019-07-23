@@ -103,9 +103,36 @@
         </StackPanel>
 
 
+        <StackPanel DockPanel.Dock="Left">
+
+            <StackPanel.Style>
+                <Style>
+                    <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SelectedItem.TaskTypeId}" Value="{x:Null}">
+                            <Setter Property="UIElement.Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+            <TextBlock
+                Margin="5,9,0,0"
+                FontWeight="Bold"
+                Text="To begin, select a deployment task type to configure." />
+        </StackPanel>
 
         <StackPanel Width="360" DockPanel.Dock="Left">
 
+            <StackPanel.Style>
+                <Style>
+                    <Setter Property="UIElement.Visibility" Value="Visible" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SelectedItem.TaskTypeId}" Value="{x:Null}">
+                            <Setter Property="UIElement.Visibility" Value="Hidden" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
             <StackPanel
                 Margin="0,8,0,0"
                 DockPanel.Dock="Top"
@@ -116,7 +143,7 @@
                     x:Name="TaskName"
                     Width="225"
                     Margin="0,0,8,0"
-                    mah:TextBoxHelper.Watermark="Optional"
+                    mah:TextBoxHelper.Watermark="A unique name for this task"
                     KeyUp="TaskName_KeyUp"
                     Text="{Binding SelectedItem.TaskName, UpdateSourceTrigger=PropertyChanged}" />
             </StackPanel>
@@ -131,7 +158,7 @@
                     Width="225"
                     Height="48"
                     Margin="0,0,8,0"
-                    mah:TextBoxHelper.Watermark="Optional"
+                    mah:TextBoxHelper.Watermark="Optionally describe this task."
                     AcceptsReturn="True"
                     Text="{Binding SelectedItem.Description, UpdateSourceTrigger=PropertyChanged}"
                     TextWrapping="Wrap"
@@ -167,7 +194,17 @@
                 </StackPanel>
             </StackPanel>
         </StackPanel>
-        <StackPanel DockPanel.Dock="Left">
+        <StackPanel DockPanel.Dock="Right">
+            <StackPanel.Style>
+                <Style>
+                    <Setter Property="UIElement.Visibility" Value="Visible" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SelectedItem.TaskTypeId}" Value="{x:Null}">
+                            <Setter Property="UIElement.Visibility" Value="Hidden" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
             <StackPanel>
                 <StackPanel.Style>
                     <Style>

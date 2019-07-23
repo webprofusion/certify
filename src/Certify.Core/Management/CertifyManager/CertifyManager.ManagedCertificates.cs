@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Certify.Config;
 using Certify.Core.Management.DeploymentTasks;
 using Certify.Models;
+using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Providers.DeploymentTasks;
 
@@ -396,6 +398,21 @@ namespace Certify.Management
             }
 
             return steps;
+        }
+
+        public async Task<List<ActionResult>> ValidateDeploymentTask(ManagedCertificate managedCertificate, DeploymentTaskConfig taskConfig)
+        {
+            var credentialsManager = new CredentialsManager();
+            var provider = DeploymentTaskProviderFactory.Create(taskConfig.TaskTypeId.ToLower(), _pluginManager.DeploymentTaskProviders);
+
+            Dictionary<string, string> credentials = null;
+
+            if (!string.IsNullOrEmpty(taskConfig.ChallengeCredentialKey))
+            {
+                credentials = await credentialsManager.GetUnlockedCredentialsDictionary(taskConfig.ChallengeCredentialKey);
+            }
+
+            return await provider.Validate(managedCertificate, taskConfig, credentials, provider.GetDefinition());
         }
     }
 }
