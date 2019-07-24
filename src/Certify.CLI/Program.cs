@@ -8,8 +8,10 @@ namespace Certify.CLI
     {
         const int MAX_CHALLENGE_SERVER_RUNTIME = 1000 * 60 * 30;  // Allow up to 30 mins of run time for the challenge server (normall run time is
 
-        private static int Main(string[] args)
+        private static async Task<int> Main(string[] args)
         {
+            var defaultFontColour = Console.ForegroundColor;
+
             var p = new CertifyCLI();
 
             if (args.Length == 0)
@@ -19,15 +21,22 @@ namespace Certify.CLI
             }
             else
             {
-                if (args.Contains("storeserverconfig", StringComparer.InvariantCultureIgnoreCase))
+                var command = "";
+
+                if (args.Any())
+                {
+                    command = args[0].ToLower().Trim();
+                }
+
+                if (command == "storeserverconfig")
                 {
                     SharedUtils.ServiceConfigManager.StoreCurrentAppServiceConfig();
                     return 0;
                 }
 
-                if (args.Contains("httpchallenge", StringComparer.InvariantCultureIgnoreCase))
+                if (command == "httpchallenge")
                 {
-                    return StartHttpChallengeServer(args);
+                    return await StartHttpChallengeServer(args);
                 }
 
                 p.ShowVersion();
@@ -36,32 +45,60 @@ namespace Certify.CLI
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
                     System.Console.WriteLine("Certify SSL Manager service not started.");
-                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.ForegroundColor = defaultFontColour;
                     return -1;
                 }
 
-                Task.Run(async () =>
-                {
-                    await p.LoadPreferences();
-                });
+                await p.LoadPreferences();
 
                 p.ShowACMEInfo();
 
-                if (args.Contains("renew", StringComparer.InvariantCultureIgnoreCase))
+                if (command == "renew")
                 {
                     // perform auto renew all
-                    var renewalTask = p.PerformAutoRenew();
-                    renewalTask.ConfigureAwait(true);
-                    renewalTask.Wait();
+                    await p.PerformAutoRenew();
                 }
 
-                if (args.Contains("list", StringComparer.InvariantCultureIgnoreCase))
+                if (command == "deploy")
                 {
-                    //list managed sites and status
+                    string managedCertName = null;
+                    string taskName = null;
+
+                    if (args.Length >= 3)
+                    {
+                        // got command, cert and task name
+                        managedCertName = args[1].Trim();
+                        taskName = args[2].Trim();
+                    }
+                    else if (args.Length == 2)
+                    {
+                        // got command and cert name, run all deployment tasks
+                        managedCertName = args[1].Trim();
+                    }
+                    else
+                    {
+                        // incomplete args
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        System.Console.WriteLine("Deploy: Missing arguments for Managed Certificate Name and Task Name");
+                        Console.ForegroundColor = defaultFontColour;
+
+                        p.ShowHelp();
+                    }
+
+                    if (managedCertName != null)
+                    {
+                        var result = await p.PerformDeployment(managedCertName, taskName);
+                    }
+
+                }
+
+                if (command == "list")
+                {
+                    // list managed sites and status
                     p.ListManagedCertificates();
                 }
 
-                if (args.Contains("diag", StringComparer.InvariantCultureIgnoreCase))
+                if (command == "diag")
                 {
                     var autoFix = false;
                     var forceAutoDeploy = false;
@@ -79,11 +116,9 @@ namespace Certify.CLI
                     p.RunCertDiagnostics(autoFix, forceAutoDeploy);
                 }
 
-                if (args.Contains("importcsv", StringComparer.InvariantCultureIgnoreCase))
+                if (command == "importcsv")
                 {
-                    var importTask = p.ImportCSV(args);
-                    importTask.ConfigureAwait(true);
-                    importTask.Wait();
+                    await p.ImportCSV(args);
                 }
             }
 #if DEBUG
@@ -93,7 +128,7 @@ namespace Certify.CLI
             return 0;
         }
 
-        private static int StartHttpChallengeServer(string[] args)
+        private static async Task<int> StartHttpChallengeServer(string[] args)
         {
             System.Console.WriteLine("Starting Certify Http Challenge Server");
 
@@ -106,35 +141,31 @@ namespace Certify.CLI
 
             var keys = args[1].Replace("keys=", "").Split(',');
 
-            var task = Task.Run(async () =>
+
+            // start an http challenge server
+            var challengeServer = new Core.Management.Challenges.HttpChallengeServer();
+            var config = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
+
+            if (!challengeServer.Start(config.HttpChallengeServerPort, controlKey: keys[0], checkKey: keys[1]))
             {
-                // start an http challenge server
-                var challengeServer = new Core.Management.Challenges.HttpChallengeServer();
-                var config = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
+                // failed to start http challenge server
+                return -1;
+            }
 
-                if (!challengeServer.Start(config.HttpChallengeServerPort, controlKey: keys[0], checkKey: keys[1]))
-                {
-                    // failed to start http challenge server
-                    return -1;
-                }
+            // wait for server to stop
 
-                // wait for server to stop
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            while (challengeServer.IsRunning() && stopwatch.ElapsedMilliseconds < MAX_CHALLENGE_SERVER_RUNTIME)
+            {
+                await Task.Delay(500);
+            }
 
-                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-                while (challengeServer.IsRunning() && stopwatch.ElapsedMilliseconds < MAX_CHALLENGE_SERVER_RUNTIME )
-                {
-                    await Task.Delay(500);
-                }
-
-                // if we exceeded the allowed time for challenge server to run, ensure it is closed and quit
-                if (challengeServer.IsRunning())
-                {
-                    challengeServer.Stop();
-                }
-                return 0;
-            });
-
-            return task.Result;
+            // if we exceeded the allowed time for challenge server to run, ensure it is closed and quit
+            if (challengeServer.IsRunning())
+            {
+                challengeServer.Stop();
+            }
+            return 0;
         }
     }
 }

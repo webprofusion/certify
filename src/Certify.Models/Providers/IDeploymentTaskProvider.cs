@@ -9,6 +9,7 @@ namespace Certify.Providers.DeploymentTasks
 {
     public interface IDeploymentTaskProvider
     {
+
         Task<List<ActionResult>> Execute(
             ILog log,
             ManagedCertificate managedCert,

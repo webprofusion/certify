@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
+    xmlns:fa="http://schemas.fontawesome.io/icons/"
     xmlns:local="clr-namespace:Certify.UI.Windows"
     xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -173,7 +174,13 @@
                     <CheckBox IsChecked="{Binding SelectedItem.IsDeferred}" />
                 </StackPanel>
 
-                <StackPanel>
+                <StackPanel
+                    x:Name="DeferredInstructions1"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    MouseUp="DeferredInstructions1_MouseUp"
+                    Orientation="Vertical"
+                    ToolTip="Click to copy to clipboard">
                     <StackPanel.Style>
                         <Style>
                             <Setter Property="UIElement.Visibility" Value="Hidden" />
@@ -184,13 +191,28 @@
                             </Style.Triggers>
                         </Style>
                     </StackPanel.Style>
+
+                    <Label
+                        HorizontalAlignment="Left"
+                        Content="Deployment Task CLI Command:"
+                        FontWeight="Bold" />
+
+                    <fa:FontAwesome
+                        Width="16"
+                        Height="16"
+                        Margin="16,0,0,0"
+                        HorizontalAlignment="Left"
+                        Icon="Copy" />
+
                     <TextBlock
                         x:Name="DeferredInstructions"
-                        Height="50"
-                        Margin="22,0,10,0"
+                        Margin="16,0,0,0"
+                        HorizontalAlignment="Left"
                         Style="{StaticResource Instructions}"
                         Text="{Binding CLICommand}"
                         TextWrapping="Wrap" />
+
+
                 </StackPanel>
             </StackPanel>
         </StackPanel>

@@ -141,7 +141,7 @@ namespace Certify.UI.ViewModel
         {
             get
             {
-                var cmd = "Command: certify deploy \"" + _appViewModel.SelectedItem.Name + "\" \"" + SelectedItem?.TaskName + "\"";
+                var cmd = "certify deploy \"" + _appViewModel.SelectedItem.Name + "\" \"" + SelectedItem?.TaskName + "\"";
                 return cmd;
             }
         }

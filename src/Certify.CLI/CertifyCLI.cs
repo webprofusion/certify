@@ -124,14 +124,13 @@ namespace Certify.CLI
             Console.ForegroundColor = ConsoleColor.White;
             System.Console.WriteLine("Usage: certify <command> \n");
             System.Console.WriteLine("certify renew : renew certificates for all auto renewed managed sites");
+            System.Console.WriteLine("certify deploy \"<ManagedCertName>\" \"<TaskName>\" : run a specific deployment task for the given managed certificate");
             System.Console.WriteLine("certify list : list managed certificates and current running/not running status in IIS");
             System.Console.WriteLine("certify diag : check existing ssl bindings and managed certificate integrity");
             System.Console.WriteLine("certify importcsv : import managed certificates from a CSV file.");
             System.Console.WriteLine("\n\n");
-            System.Console.WriteLine("\n\n");
             System.Console.WriteLine("For help, see the docs at https://docs.certifytheweb.com");
 
-            System.Console.WriteLine("\n");
         }
 
         internal async Task PerformAutoRenew()

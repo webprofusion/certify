@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
     <Configurations>Debug;Release;Debug;Release</Configurations>
@@ -61,7 +61,9 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <StartupObject>Certify.CLI.Program</StartupObject>
   </PropertyGroup>
-  <PropertyGroup />
+  <PropertyGroup>
+    <LangVersion>default</LangVersion>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Certify.Client\Certify.Client.csproj" />
     <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />
@@ -74,4 +76,8 @@
     <None Include="App.config" />
     <None Include="app.manifest" />
   </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="REM copy latest plugin builds to target output before creating other build output&#xD;&#xA;xcopy /i /Y C:\Work\Builds\CertifyPlugins\*.dll $(TargetDir)\Plugins" />
+  </Target>
 </Project>

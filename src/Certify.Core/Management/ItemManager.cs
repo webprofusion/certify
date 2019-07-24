@@ -343,6 +343,12 @@ namespace Certify.Management
             var items = _managedCertificatesCache.Values.AsQueryable();
             if (filter != null)
             {
+
+                if (!string.IsNullOrEmpty(filter.Name))
+                {
+                    items = items.Where(i => i.Name.ToLowerInvariant().Trim()==filter.Name.ToLowerInvariant().Trim());
+                }
+
                 if (!string.IsNullOrEmpty(filter.Keyword))
                 {
                     items = items.Where(i => i.Name.ToLowerInvariant().Contains(filter.Keyword.ToLowerInvariant()));

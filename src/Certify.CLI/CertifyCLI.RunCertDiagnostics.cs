@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models;
 
@@ -12,7 +13,7 @@ namespace Certify.CLI
         /// </summary>
         /// <param name="autoFix">Attempt to re-apply current certificate</param>
         /// <param name="forceAutoDeploy">Change all deployment modes to Auto</param>
-        public void RunCertDiagnostics(bool autoFix = false, bool forceAutoDeploy = false)
+        public async Task RunCertDiagnostics(bool autoFix = false, bool forceAutoDeploy = false)
         {
             string stripNonNumericFromString(string input)
             {
@@ -24,7 +25,7 @@ namespace Certify.CLI
                 return int.TryParse(input, out _);
             }
 
-            var managedCertificates = _certifyClient.GetManagedCertificates(new ManagedCertificateFilter()).Result;
+            var managedCertificates = await _certifyClient.GetManagedCertificates(new ManagedCertificateFilter());
             Console.ForegroundColor = ConsoleColor.White;
 #if BINDING_CHECKS
             Console.WriteLine("Checking existing bindings..");
@@ -58,10 +59,8 @@ namespace Certify.CLI
             var countSiteIdsFixed = 0;
             var countBindingRedeployments = 0;
 
-
             foreach (var site in managedCertificates)
             {
-
                 var redeployRequired = false;
 
                 if (autoFix)
@@ -85,10 +84,8 @@ namespace Certify.CLI
                         //update managed site
                         Console.WriteLine("\t Auto fixing managed cert ServerSiteID: " + site.Name);
 
-                        var update = _certifyClient.UpdateManagedCertificate(site);
-                        update.ConfigureAwait(true);
-                        update.Wait();
-
+                        var update = await _certifyClient.UpdateManagedCertificate(site);
+                        
                         countSiteIdsFixed++;
                     }
                 }
@@ -102,9 +99,7 @@ namespace Certify.CLI
                         Console.WriteLine("\t Auto fixing managed cert deployment mode: " + site.Name);
                         site.RequestConfig.DeploymentSiteOption = DeploymentOption.Auto;
 
-                        var update = _certifyClient.UpdateManagedCertificate(site);
-                        update.ConfigureAwait(true);
-                        update.Wait();
+                        var update = await _certifyClient.UpdateManagedCertificate(site);
                     }
                 }
 
@@ -139,13 +134,10 @@ namespace Certify.CLI
                                 //re-apply current certificate file to store and bindings
                                 if (!string.IsNullOrEmpty(site.CertificateThumbprintHash))
                                 {
-                                    var bindingApply = _certifyClient.ReapplyCertificateBindings(site.Id, false);
-                                    bindingApply.ConfigureAwait(true);
-                                    bindingApply.Wait();
-
+                                    var result = await _certifyClient.ReapplyCertificateBindings(site.Id, false);
+                                    
                                     countBindingRedeployments++;
 
-                                    var result = bindingApply.Result;
                                     if (!result.IsSuccess)
                                     {
                                         Console.ForegroundColor = ConsoleColor.Red;
@@ -192,6 +184,67 @@ namespace Certify.CLI
             // TODO: get refresh of managed certs and for each current cert thumbprint, verify binding thumbprint match
 
             Console.WriteLine("-----------");
+        }
+
+        public async Task<bool> PerformDeployment(string managedCertName, string taskName)
+        {
+
+            var managedCertificates = await _certifyClient.GetManagedCertificates(new ManagedCertificateFilter { Name = managedCertName });
+
+            if (managedCertificates.Count == 1)
+            {
+                if (!string.IsNullOrEmpty(taskName))
+                {
+                    var managedCert = managedCertificates.Single();
+
+                    // identify specific task
+                    Console.WriteLine("Performing deployment task '" + taskName + "'..");
+                    var task = managedCert.DeploymentTasks.FirstOrDefault(t => t.TaskName.ToLowerInvariant().Trim() == taskName.ToLowerInvariant().Trim());
+
+                    if (task != null)
+                    {
+                        var results = await _certifyClient.PerformDeployment(managedCert.Id, task.Id, isPreviewOnly: false);
+
+                        if (results.Any(r => r.HasError == true))
+                        {
+                            var err = results.First(f => f.HasError == true);
+                            Console.WriteLine("One or more task steps failed: " + err.Description);
+                            return false;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Deployment task completed.");
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Task '" + taskName + "' not found. Deployment failed.");
+                        return false;
+                    }
+                }
+                else
+                {
+                    // perform all deployment tasks
+                    Console.WriteLine("Performing all deployment tasks for managed certificate '" + managedCertName + "'..");
+                }
+            }
+            else
+            {
+                if (managedCertificates.Count > 1)
+                {
+                    // too many matches
+                    Console.WriteLine("Managed Certificate name matched more than one item. Deployment failed.");
+                    return false;
+                }
+                else
+                {
+                    // no matches
+                    Console.WriteLine("Managed Certificate name has no matches. Deployment failed.");
+                    return false;
+                }
+            }
+            throw new NotImplementedException();
         }
     }
 }

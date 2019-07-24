@@ -150,6 +150,17 @@ namespace Certify.UI.Controls.ManagedCertificate
                 }
             }
 
+            // if remote target, check target specified. TODO: Could also check host resolves.
+            if (
+                EditModel.SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_LOCAL &&
+                string.IsNullOrEmpty(EditModel.SelectedItem.TargetHost)
+                )
+            {
+                // check task name populated
+                MessageBox.Show("Target Host name or IP is required if deployment target is not Local.", msgTitle);
+                return false;
+            }
+
             // validate task provider specific config
             var results = await AppViewModel.CertifyClient.ValidateDeploymentTask(new Models.Utils.DeploymentTaskValidationInfo { ManagedCertificate = AppViewModel.SelectedItem, TaskConfig = EditModel.SelectedItem });
             if (results.Any(r => r.IsSuccess == false))
@@ -185,6 +196,44 @@ namespace Certify.UI.Controls.ManagedCertificate
         private void TaskName_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
         {
             EditModel.RaisePropertyChangedEvent("CLICommand");
+        }
+        private async Task<bool> WaitForClipboard(string text)
+        {
+            // if running under terminal services etc the clipboard can take multiple attempts to set
+            // https://stackoverflow.com/questions/68666/clipbrd-e-cant-open-error-when-setting-the-clipboard-from-net
+            for (var i = 0; i < 10; i++)
+            {
+                try
+                {
+                    Clipboard.SetText(text);
+
+                    return true;
+                }
+                catch { }
+
+                await Task.Delay(50);
+            }
+
+            return false;
+        }
+
+        private async void DeferredInstructions1_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            // copy command to clipboard
+            if (sender != null)
+            {
+                var text = EditModel.CLICommand;
+                var copiedOK = await WaitForClipboard(text);
+
+                if (copiedOK)
+                {
+                    MessageBox.Show("Deployment Task command has been copied to the clipboard.");
+                }
+                else
+                {
+                    MessageBox.Show("Another process is preventing access to the clipboard. Please try again.");
+                }
+            }
         }
     }
 }

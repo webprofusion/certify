@@ -68,5 +68,8 @@
     <PackageReference Include="System.ValueTuple" Version="4.5.0" /> 
     <PackageReference Include="Topshelf" Version="4.2.0" /> 
     <PackageReference Include="Topshelf.Serilog" Version="4.2.0" /> 
-  </ItemGroup> 
+  </ItemGroup>
+ <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+   <Exec Command="REM copy latest plugin builds to target output before creating other build output&#xD;&#xA;xcopy /i /Y C:\Work\Builds\CertifyPlugins\*.dll $(TargetDir)\Plugins" />
+ </Target> 
 </Project>
