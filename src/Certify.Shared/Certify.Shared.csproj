@@ -81,7 +81,7 @@
     <PackageReference Include="ARSoft.Tools.Net" Version="2.2.9" />
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.10.0" />
     <PackageReference Include="System.Management.Automation.dll" Version="10.0.10586" />
-    <PackageReference Include="TaskScheduler" Version="2.8.11" /> 
+    <PackageReference Include="TaskScheduler" Version="2.8.15" /> 
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />

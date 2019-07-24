@@ -392,11 +392,8 @@
     <SplashScreen Include="Assets\Images\splashscreen.png" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="ControlzEx">
-      <Version>3.0.2.4</Version>
-    </PackageReference>
     <PackageReference Include="Fody">
-      <Version>5.0.6</Version>
+      <Version>5.1.1</Version>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
