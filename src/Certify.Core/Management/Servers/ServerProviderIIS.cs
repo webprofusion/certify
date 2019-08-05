@@ -359,9 +359,10 @@ namespace Certify.Management.Servers
                                     if (bindingSpec.IsHTTPS)
                                     {
                                         binding.Protocol = "https";
-                                        binding.BindingInformation = bindingSpecString;
+                                       
                                         binding.CertificateStoreName = bindingSpec.CertificateStore;
                                         binding.CertificateHash = bindingSpec.CertificateHashBytes;
+                                        binding.BindingInformation = bindingSpecString;
                                     }
                                     else
                                     {
@@ -549,6 +550,17 @@ namespace Certify.Management.Servers
         {
             var siteInfo = Map(site);
 
+            byte[] bindingHash = null;
+
+            try
+            {
+                // attempting to read certificate hash for an invalid cert can cause an exception
+                bindingHash = binding.CertificateHash;
+            }
+            catch
+            {
+            }
+
             return new BindingInfo()
             {
                 SiteId = siteInfo.Id,
@@ -559,9 +571,9 @@ namespace Certify.Management.Servers
                 Port = binding.EndPoint?.Port ?? 0,
                 IsHTTPS = binding.Protocol.ToLower() == "https",
                 Protocol = binding.Protocol.ToLower(),
-                HasCertificate = (binding.CertificateHash != null),
-                CertificateHash = binding.CertificateHash != null ? HashBytesToThumprint(binding.CertificateHash) : null,
-                CertificateHashBytes = binding.CertificateHash
+                HasCertificate = (bindingHash != null),
+                CertificateHash = bindingHash != null ? HashBytesToThumprint(bindingHash) : null,
+                CertificateHashBytes = bindingHash
             };
         }
 
