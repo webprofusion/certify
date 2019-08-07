@@ -96,7 +96,7 @@ namespace Certify.Management
             }
             else
             {
-                return new ActionResult { IsSuccess = true, Message = "Nothing to test" };
+                return new ActionResult { IsSuccess = true, Message = "No test available." };
             }
         }
 
