@@ -31,7 +31,7 @@ namespace Certify.Management
 
         private string GetPluginFolderPath()
         {
-            var executableLocation = Assembly.GetEntryAssembly().Location;
+            var executableLocation = Assembly.GetExecutingAssembly().Location;
             var path = Path.Combine(Path.GetDirectoryName(executableLocation), "Plugins");
             return path;
         }
@@ -40,8 +40,10 @@ namespace Certify.Management
         {
             try
             {
+                var pluginPath = GetPluginFolderPath() + "\\" + dllFileName;
+
                 // https://stackoverflow.com/questions/10732933/can-i-use-activator-createinstance-with-an-interface
-                var loadedType = (from t in Assembly.LoadFrom(GetPluginFolderPath() + "\\" + dllFileName).GetExportedTypes()
+                var loadedType = (from t in Assembly.LoadFrom(pluginPath).GetExportedTypes()
                                   where !t.IsInterface && !t.IsAbstract
                                   where interfaceType.IsAssignableFrom(t)
                                   select t)
