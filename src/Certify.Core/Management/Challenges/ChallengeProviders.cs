@@ -171,12 +171,26 @@ namespace Certify.Core.Management.Challenges
                 {
                     Id = StandardAuthTypes.STANDARD_AUTH_WINDOWS,
                     ChallengeType = "",
-                    Title = "Windows Credentials",
+                    Title = "Windows Credentials (Network)",
                     Description = "Windows username and password credentials",
                     HandlerType = ChallengeHandlerType.INTERNAL,
                     ProviderParameters= new List<ProviderParameter>
                     {
                        new ProviderParameter{ Key="domain",Name="Domain", IsRequired=false, IsPassword=false, IsCredential=true },
+                       new ProviderParameter{ Key="username",Name="Username", IsRequired=true, IsPassword=false, IsCredential=true },
+                       new ProviderParameter{ Key="password",Name="Password", IsRequired=true, IsPassword=true, IsCredential=true },
+                    }
+                },
+                  new ChallengeProviderDefinition
+                {
+                    Id = StandardAuthTypes.STANDARD_AUTH_LOCAL,
+                    ChallengeType = "",
+                    Title = "Windows Credentials (Local)",
+                    Description = "Windows username and password credentials",
+                    HandlerType = ChallengeHandlerType.INTERNAL,
+                    ProviderParameters= new List<ProviderParameter>
+                    {
+                       new ProviderParameter{ Key="domain",Name="Domain", IsRequired=false, IsPassword=false, IsCredential=true, Description="(optional)" },
                        new ProviderParameter{ Key="username",Name="Username", IsRequired=true, IsPassword=false, IsCredential=true },
                        new ProviderParameter{ Key="password",Name="Password", IsRequired=true, IsPassword=true, IsCredential=true },
                     }
