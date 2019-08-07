@@ -104,11 +104,11 @@ namespace Certify.UI.Controls.ManagedCertificate
             var task = (sender as Button).DataContext as DeploymentTaskConfig;
 
             // save main first
-            /*if (ItemViewModel.IsChanged)
+            if (ItemViewModel.SelectedItem.IsChanged)
             {
-                (App.Current as App).ShowNotification("You need to save your changes first.", true);
+                (App.Current as App).ShowNotification("You have unsaved changes.", App.NotificationType.Error, true);
                 return;
-            }*/
+            }
 
             if (MessageBox.Show("Run task '"+task.TaskName+"' now? The most recent certificate details will be used.", "Run Task?", MessageBoxButton.YesNo)== MessageBoxResult.Yes)
             {
