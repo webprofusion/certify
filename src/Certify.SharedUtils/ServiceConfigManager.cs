@@ -50,10 +50,20 @@ namespace Certify.SharedUtils
             {
                 if (File.Exists(serviceConfigFile))
                 {
-                    serviceConfig = JsonConvert.DeserializeObject<ServiceConfig>(File.ReadAllText(serviceConfigFile));
+                    var config = File.ReadAllText(serviceConfigFile);
+                    if (!string.IsNullOrWhiteSpace(config))
+                    {
+                        serviceConfig = JsonConvert.DeserializeObject<ServiceConfig>(config);
+                    }
                 }
             }
             catch { }
+
+            // if something went wrong, default to standard config
+            if (serviceConfig == null)
+            {
+                serviceConfig = new ServiceConfig();
+            }
 
             return serviceConfig;
         }
@@ -66,6 +76,11 @@ namespace Certify.SharedUtils
 
         public static void StoreUpdatedAppServiceConfig(ServiceConfig config)
         {
+            if (config == null)
+            {
+                return;
+            }
+
             var appDataPath = GetAppDataFolder();
             var serviceConfigFile = appDataPath + "\\serviceconfig.json";
 #if DEBUG
