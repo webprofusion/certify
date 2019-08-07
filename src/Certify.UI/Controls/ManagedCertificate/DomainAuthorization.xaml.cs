@@ -15,17 +15,6 @@ namespace Certify.UI.Controls.ManagedCertificate
         public DomainAuthorization()
         {
             InitializeComponent();
-
-            AppViewModel.PropertyChanged += AppViewModel_PropertyChanged;
-        }
-
-        private void AppViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == "SelectedItem")
-            {
-                //RefreshCredentialOptions();
-                //ItemViewModel.RaisePropertyChanged(nameof(ItemViewModel.PrimaryChallengeConfig));
-            }
         }
 
         private void AddAuth_Click(object sender, System.Windows.RoutedEventArgs e)
