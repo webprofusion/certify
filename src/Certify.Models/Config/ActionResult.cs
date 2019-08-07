@@ -2,6 +2,13 @@
 {
     public class ActionResult
     {
+        public ActionResult() { }
+        public ActionResult(string msg, bool isSuccess)
+        {
+            Message = msg;
+            IsSuccess = isSuccess;
+        }
+
         public bool IsSuccess { get; set; }
         public string Message { get; set; }
     }
