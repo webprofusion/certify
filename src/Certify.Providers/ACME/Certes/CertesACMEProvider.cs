@@ -453,7 +453,7 @@ namespace Certify.Providers.ACME.Certes
                         {
                             remainingAttempts--;
 
-                            log.Error($"BeginCertificateOrder: creating/retrieving order. Retries remaining:{remainingAttempts} ");
+                            log.Information($"BeginCertificateOrder: creating/retrieving order. Retries remaining:{remainingAttempts} ");
 
                             if (orderUri != null)
                             {
@@ -718,6 +718,7 @@ namespace Certify.Providers.ACME.Certes
                     while (attempts > 0 && result.Status == ChallengeStatus.Pending || result.Status == ChallengeStatus.Processing)
                     {
                         result = await challenge.Resource();
+                        await Task.Delay(500);
                     }
 
                     if (result.Status == ChallengeStatus.Valid)
