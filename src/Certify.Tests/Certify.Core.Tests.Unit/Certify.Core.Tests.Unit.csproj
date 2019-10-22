@@ -73,6 +73,14 @@
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <PropertyGroup />
   <ItemGroup>
+    <None Remove="Assets\Powershell\Simple.ps1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\Powershell\Simple.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\Certify.Locales\Certify.Locales.csproj" />
     <ProjectReference Include="..\..\Certify.Models\Certify.Models.csproj" />
     <ProjectReference Include="..\..\Certify.Providers\ACME\ACMESharpCore\Certify.Providers.ACME.ACMESharpCore.csproj" />
