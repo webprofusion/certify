@@ -259,28 +259,7 @@ namespace Certify.Management
 
         public bool VerifyUpdateFile(string tempFile, string expectedHash, bool throwOnDeviation = true)
         {
-            var signatureVerified = false;
             var hashVerified = false;
-
-            //get verified signed file cert
-            var cert = GetFileCertificate(tempFile);
-
-            //ensure cert subject
-            if (!(cert != null && cert.SubjectName.Name.StartsWith("CN=Webprofusion Pty Ltd, O=Webprofusion Pty Ltd")))
-            {
-                if (throwOnDeviation)
-                {
-                    throw new Exception("Downloaded file failed digital signature check.");
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                signatureVerified = true;
-            }
 
             //verify file SHA256
             string computedSHA256 = null;
@@ -305,7 +284,7 @@ namespace Certify.Management
                 }
             }
 
-            if (hashVerified && signatureVerified)
+            if (hashVerified)
             {
                 return true;
             }
