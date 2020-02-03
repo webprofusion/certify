@@ -66,12 +66,14 @@ namespace Certify.Management
                             var src = error.InvocationInfo.MyCommand?.ToString() ?? error.InvocationInfo.InvocationName;
                             output.AppendLine($"{src}: {error}\n{error.InvocationInfo.PositionMessage}");
                         };
+
                         // capture write-* methods (except write-host)
                         shell.Streams.Warning.DataAdded += (sender, args) => output.AppendLine(shell.Streams.Warning[args.Index].Message);
                         shell.Streams.Debug.DataAdded += (sender, args) => output.AppendLine(shell.Streams.Debug[args.Index].Message);
                         shell.Streams.Verbose.DataAdded += (sender, args) => output.AppendLine(shell.Streams.Verbose[args.Index].Message);
 
                         var outputData = new PSDataCollection<PSObject>();
+
                         outputData.DataAdded += (sender, args) =>
                         {
                             // capture all main output
@@ -81,6 +83,7 @@ namespace Certify.Management
                                 output.AppendLine(data.ToString());
                             }
                         };
+
                         await Task.Run(() =>
                         {
                             try

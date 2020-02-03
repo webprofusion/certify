@@ -53,6 +53,8 @@ namespace Certify.UI.Controls.ManagedCertificate
                 ItemViewModel.RaiseSelectedItemChanges();
 
                 AppViewModel.IsChanged = false;
+
+                ToggleAdvancedView();
             }
         }
 
@@ -378,6 +380,18 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void ToggleAdvancedView()
         {
+            if (ItemViewModel.SelectedItem != null &&
+                (!string.IsNullOrEmpty(ItemViewModel.SelectedItem.RequestConfig.PostRequestPowerShellScript)
+                ||
+                !string.IsNullOrEmpty(ItemViewModel.SelectedItem.RequestConfig.PreRequestPowerShellScript)
+                ||
+                !string.IsNullOrEmpty(ItemViewModel.SelectedItem.RequestConfig.WebhookUrl))
+                )
+            {
+                // force advanced view to show if using scripting or webhooks
+                CheckAdvancedView.IsChecked = true;
+            }
+
             if (CheckAdvancedView.IsChecked == false)
             {
                 TabScripting.Visibility = Visibility.Collapsed;

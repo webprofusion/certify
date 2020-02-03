@@ -1,4 +1,12 @@
 ﻿[
+
+  {
+    "Title": "Simple Scripting Test",
+    "Description": "Logs results to a file (see script for details).",
+    "Language": "PowerShell",
+    "Usage": "PostRequest",
+    "File": "SimpleTest.ps1"
+  },
   {
     "Title": "MS Exchange (2013 or higher): Enable Certificate",
     "Description": "Enable Certificate for common services including: POP,IMAP,SMTP,IIS",
@@ -19,5 +27,12 @@
     "Language": "PowerShell",
     "Usage": "PostRequest",
     "File": "RDPListenerService.ps1"
+  },
+  {
+    "Title": "MS Web Management Service (Web Deploy etc): Enable Certificate",
+    "Description": "Enable Certificate for Web Management Service",
+    "Language": "PowerShell",
+    "Usage": "PostRequest",
+    "File": "WebManagementService.ps1"
   }
 ]
