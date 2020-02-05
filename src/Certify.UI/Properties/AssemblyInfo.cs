@@ -9,7 +9,7 @@ using System.Windows;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Certify SSL Manager")]
-[assembly: AssemblyCopyright("Copyright © Webprofusion Pty Ltd 2019")]
+[assembly: AssemblyCopyright("Copyright © Webprofusion Pty Ltd 2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -41,5 +41,5 @@ using System.Windows;
 //
 // You can specify all the values or you can default the Build and Revision Numbers by using the '*'
 // as shown below: [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("4.0.0.*")]
-[assembly: AssemblyFileVersion("4.0.0.0")]
+[assembly: AssemblyVersion("5.0.0.*")]
+[assembly: AssemblyFileVersion("5.0.0.0")]
