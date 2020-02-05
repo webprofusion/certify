@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -12,6 +12,18 @@ namespace Certify.Core.Tests.Unit
     [TestClass]
     public class ManagedItemTests
     {
+        private const string TEST_PATH = "Tests";
+
+        public ManagedItemTests() {
+
+            var itemManager= new ItemManager(TEST_PATH);
+            Task.Run(async () =>
+            {
+                await itemManager.DeleteAllManagedCertificates();
+            });
+            
+        }
+
         private ManagedCertificate BuildTestManagedCertificate()
         {
             var testSite = new ManagedCertificate
@@ -44,7 +56,7 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Ensure managed sites list loads")]
         public async Task TestLoadManagedCertificates()
         {
-            var managedCertificateSettings = new ItemManager("Tests");
+            var managedCertificateSettings = new ItemManager(TEST_PATH);
             var testCert = BuildTestManagedCertificate();
             try
             {
@@ -62,7 +74,7 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Ensure managed site can be created, retrieved and deleted")]
         public async Task TestCreateDeleteManagedCertificate()
         {
-            var itemManager = new ItemManager("Tests");
+            var itemManager = new ItemManager(TEST_PATH);
 
 
             var testSite = new ManagedCertificate
@@ -108,7 +120,7 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Ensure managed site can be created, retrieved and deleted")]
         public async Task TestCreateManyManagedCertificates()
         {
-            var itemManager = new ItemManager("Tests");
+            var itemManager = new ItemManager(TEST_PATH);
 
             var testItem = new ManagedCertificate
             {
@@ -136,7 +148,7 @@ namespace Certify.Core.Tests.Unit
 
             // create competing sets of tasks to create managed items
 
-            var numItems = 1000;
+            var numItems = 20000;
 
             // now attempt async creation of bindings
             var taskSet = new Task[numItems];
@@ -174,14 +186,14 @@ namespace Certify.Core.Tests.Unit
             {
 
                 // now clean up
-                var allManagedItems = await itemManager.GetManagedCertificates();
+               /* var allManagedItems = await itemManager.GetManagedCertificates();
                 foreach (var item in allManagedItems)
                 {
                     if (item.Name.StartsWith("MultiTest_"))
                     {
                         await itemManager.DeleteManagedCertificate(item);
                     }
-                }
+                }*/
             }
         }
     }

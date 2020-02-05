@@ -89,7 +89,7 @@ namespace Certify.Management
                 await db.OpenAsync();
                 using (var tran = db.BeginTransaction())
                 {
-                    foreach (var deleted in _managedCertificatesCache.Values.Where(s => s.Deleted).ToList())
+                    /*foreach (var deleted in _managedCertificatesCache.Values.Where(s => s.Deleted).ToList())
                     {
                         using (var cmd = new SQLiteCommand("DELETE FROM manageditem WHERE id=@id", db))
                         {
@@ -97,7 +97,7 @@ namespace Certify.Management
                             await cmd.ExecuteNonQueryAsync();
                         }
                         _managedCertificatesCache.TryRemove(deleted.Id, out var val);
-                    }
+                    }*/
 
                     foreach (var changed in _managedCertificatesCache.Values.Where(s => s.IsChanged))
                     {
