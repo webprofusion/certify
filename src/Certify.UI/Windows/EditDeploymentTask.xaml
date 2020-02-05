@@ -1,41 +1,48 @@
 ﻿<Controls:MetroWindow
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
-        xmlns:local="clr-namespace:Certify.UI.Windows"
-        xmlns:ManagedCertificate="clr-namespace:Certify.UI.Controls.ManagedCertificate" x:Class="Certify.UI.Windows.EditDeploymentTask"
-        mc:Ignorable="d"
-     BorderThickness="1"
+    x:Class="Certify.UI.Windows.EditDeploymentTask"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:ManagedCertificate="clr-namespace:Certify.UI.Controls.ManagedCertificate"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Certify.UI.Windows"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="Edit Deployment Task"
+    Width="808"
+    Height="420"
+    BorderThickness="1"
     GlowBrush="{DynamicResource AccentColorBrush}"
     ResizeMode="CanResize"
     WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False"
-        Title="Edit Deployment Task" Height="420" Width="808">
+    mc:Ignorable="d">
     <DockPanel LastChildFill="True">
 
-        
-        <DockPanel DockPanel.Dock="Bottom" Margin="0,0,24,16">
+
+        <DockPanel Margin="0,0,24,16" DockPanel.Dock="Bottom">
             <Button
                 x:Name="Cancel"
                 Width="75"
                 Margin="16,0,0,0"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Top"
-               
+                Click="Cancel_Click"
                 Content="Cancel"
-                DockPanel.Dock="Right" Click="Cancel_Click" />
+                DockPanel.Dock="Right" />
             <Button
                 x:Name="Save"
                 Width="77"
                 Margin="16,0,0,0"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Top"
-              
+                Click="Save_Click"
                 Content="OK"
-                DockPanel.Dock="Right" Click="Save_Click" />
+                DockPanel.Dock="Right" />
         </DockPanel>
-        <ManagedCertificate:DeploymentTask x:Name="DeploymentTaskEditor" DockPanel.Dock="Top" VerticalAlignment="Top" Margin="8,0,0,0"/>
+        <ManagedCertificate:DeploymentTask
+            x:Name="DeploymentTaskEditor"
+            Margin="8,0,0,0"
+            VerticalAlignment="Top"
+            DockPanel.Dock="Top" />
     </DockPanel>
 </Controls:MetroWindow>

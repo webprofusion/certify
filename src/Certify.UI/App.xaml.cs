@@ -34,17 +34,17 @@ namespace Certify.UI
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            /*
+            
 
             // get the current app style (theme and accent) from the application you can then use the
             // current theme and custom accent instead set a new theme
             Tuple<MahApps.Metro.AppTheme, MahApps.Metro.Accent> appStyle = MahApps.Metro.ThemeManager.DetectAppStyle(Application.Current);
 
-            // now set the Green accent and dark theme
+            // now set the accent and base theme
             MahApps.Metro.ThemeManager.ChangeAppStyle(Application.Current,
-                                        MahApps.Metro.ThemeManager.GetAccent("Red"),
+                                        MahApps.Metro.ThemeManager.GetAccent("Steel"),
                                         MahApps.Metro.ThemeManager.GetAppTheme("BaseLight"));
-*/
+
 
             // Test translations
             //System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("zh-HANS");
