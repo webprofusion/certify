@@ -127,7 +127,7 @@
                     Width="400"
                     Margin="46,8,12,12"
                     HorizontalAlignment="Left"
-                    Background="#efefef">
+                    Background="{DynamicResource ControlBackgroundBrush}">
                     <StackPanel.Style>
                         <Style>
                             <Setter Property="StackPanel.Visibility" Value="Visible" />

@@ -255,5 +255,27 @@ namespace Certify.UI.Controls
                 _selectedStoredCredential = null;
             }
         }
+
+        private void ToggleTheme_Click(object sender, RoutedEventArgs e)
+        {
+            var appStyle = MahApps.Metro.ThemeManager.DetectAppStyle(Application.Current);
+
+            if (appStyle.Item1.Name=="BaseLight")
+            {
+                MahApps.Metro.ThemeManager.ChangeAppStyle(Application.Current,
+                                     MahApps.Metro.ThemeManager.GetAccent("Lime"),
+                                     MahApps.Metro.ThemeManager.GetAppTheme("BaseDark"));
+                _prefs.UITheme = "Dark";
+
+            } else
+            {
+                MahApps.Metro.ThemeManager.ChangeAppStyle(Application.Current,
+                                     MahApps.Metro.ThemeManager.GetAccent("Lime"),
+                                     MahApps.Metro.ThemeManager.GetAppTheme("BaseLight"));
+                _prefs.UITheme = "Light";
+            }
+
+            this.SettingsUpdated(sender, e);
+        }
     }
 }

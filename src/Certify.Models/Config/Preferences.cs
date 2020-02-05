@@ -48,5 +48,7 @@
         public CertificateCleanupMode? CertificateCleanupMode { get; set; }
 
         public bool EnableStatusReporting { get; set; } = true;
+
+        public string UITheme { get; set; }
     }
 }

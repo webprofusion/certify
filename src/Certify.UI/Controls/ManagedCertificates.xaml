@@ -60,7 +60,7 @@
                 Name="lvManagedCertificates"
                 Grid.Row="1"
                 AutomationProperties.Name="Managed Certificates List"
-                Background="#FCFCFC"
+                Background="{DynamicResource ControlBackgroundBrush}"
                 ItemsSource="{Binding ManagedCertificates}"
                 ScrollViewer.CanContentScroll="True"
                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
@@ -121,8 +121,9 @@
         <GridSplitter
             Grid.Column="1"
             Width="10"
+            Margin="4,0,0,0"
             HorizontalAlignment="Stretch"
-            Background="White" />
+            Background="{DynamicResource AccentColorBrush4}" />
         <Grid x:Name="MainItemView" Grid.Column="2">
 
             <managedcertificate:ManagedCertificateSettings

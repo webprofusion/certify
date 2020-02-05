@@ -56,8 +56,8 @@
                 Margin="0,4,8,4"
                 VerticalAlignment="Top"
                 AutomationProperties.Name="Dismiss"
-                Background="White"
-                BorderBrush="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}"
+                Background="{DynamicResource FlatButtonBackgroundBrush}"
+                BorderBrush="{DynamicResource FlatButtonBackgroundBrush}"
                 Click="Dismiss_Click"
                 DockPanel.Dock="Right"
                 ToolTip="Dismiss">
@@ -68,7 +68,7 @@
                         Height="16"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}"
+                        Foreground="{DynamicResource IdealForegroundColorBrush}"
                         Icon="WindowClose" />
                 </StackPanel>
             </Button>
@@ -173,7 +173,7 @@
         <DockPanel
             Grid.Row="2"
             Margin="8,0,8,0"
-            Background="#FCFCFC"
+            Background="{DynamicResource ControlBackgroundBrush}"
             Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
             <!--  Managed Item display name  -->
             <DockPanel

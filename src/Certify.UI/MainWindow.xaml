@@ -167,7 +167,7 @@
                 Width="300"
                 Header="Flyout"
                 Position="Right"
-                Theme="Inverse" />
+                Theme="Adapt" />
         </Controls:FlyoutsControl>
     </Controls:MetroWindow.Flyouts>
 </Controls:MetroWindow>
