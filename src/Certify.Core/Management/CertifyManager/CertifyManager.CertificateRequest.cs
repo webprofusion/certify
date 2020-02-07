@@ -334,7 +334,7 @@ namespace Certify.Management
                     if (resumePaused && managedCertificate.Health == ManagedCertificateHealth.AwaitingUser)
                     {
                         // resume a previously paused request
-                        await CompleteCertificateRequestProcessing(log, managedCertificate, progress, result, config, null);
+                        await CompleteCertificateRequestProcessing(log, managedCertificate, progress, null);
                     }
                     else
                     {
@@ -555,15 +555,17 @@ namespace Certify.Management
                            logThisEvent: true
                            );
             }
-            await CompleteCertificateRequestProcessing(log, managedCertificate, progress, result, config, pendingOrder);
+            await CompleteCertificateRequestProcessing(log, managedCertificate, progress, pendingOrder);
         }
 
-        private async Task CompleteCertificateRequestProcessing(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, CertificateRequestResult result, CertRequestConfig config, PendingOrder pendingOrder)
+        private async Task<CertificateRequestResult> CompleteCertificateRequestProcessing(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, PendingOrder pendingOrder)
         {
+            var result = new CertificateRequestResult { ManagedItem = managedCertificate, IsSuccess = false, Message = "" };
+
             // if we don't have a pending order, load the details of the most recent order
             if (pendingOrder == null && managedCertificate.CurrentOrderUri != null)
             {
-                pendingOrder = await _acmeClientProvider.BeginCertificateOrder(log, config, managedCertificate.CurrentOrderUri);
+                pendingOrder = await _acmeClientProvider.BeginCertificateOrder(log, managedCertificate.RequestConfig, managedCertificate.CurrentOrderUri);
             }
             else
             {
@@ -748,7 +750,7 @@ namespace Certify.Management
 
                 // Perform CSR request and generate certificate
 
-                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, config, pendingOrder.OrderUri);
+                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, managedCertificate.RequestConfig, pendingOrder.OrderUri);
 
                 if (certRequestResult.IsSuccess)
                 {
@@ -910,6 +912,8 @@ namespace Certify.Management
                 LogMessage(managedCertificate.Id, result.Message, LogItemType.CertficateRequestFailed);
                 ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate));
             }
+
+            return result;
         }
 
         private async Task PerformAutomatedChallengeResponses(ILog log, ManagedCertificate managedCertificate, IEnumerable<string> distinctDomains, List<PendingAuthorization> authorizations, CertificateRequestResult result, CertRequestConfig config, IProgress<RequestProgressState> progress)
@@ -1156,6 +1160,29 @@ namespace Certify.Management
                     LogMessage(managedCertificate.Id, result.Message, LogItemType.GeneralError);
                 }
             }
+            return result;
+        }
+
+
+        /// <summary>
+        /// Fetch an existing certificate from the certificate authority
+        /// </summary>
+        /// <param name="managedCertificate"></param>
+        /// <param name="progress"></param>
+        /// <param name="isPreviewOnly"></param>
+        /// <returns></returns>
+        public async Task<CertificateRequestResult> FetchCertificate(ManagedCertificate managedCertificate,
+           IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false)
+        {
+
+            if (!isPreviewOnly)
+            {
+                _tc?.TrackEvent("RefetchCertificate");
+            }
+
+            _serviceLog?.Information($"{(isPreviewOnly ? "Previewing" : "Performing")} Certificate Refetch: {managedCertificate.Name}");
+
+            var result = await CompleteCertificateRequestProcessing(_serviceLog, managedCertificate, progress, null);
             return result;
         }
 

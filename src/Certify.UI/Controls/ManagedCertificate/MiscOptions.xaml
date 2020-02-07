@@ -102,10 +102,23 @@
                 </StackPanel>
             </StackPanel>
 
-            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Actions</TextBlock>
+            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Advanced Actions</TextBlock>
 
             <DockPanel LastChildFill="False">
-
+                <StackPanel DockPanel.Dock="Top">
+                    <TextBlock
+                        Grid.Row="4"
+                        Margin="0,8,32,0"
+                        HorizontalAlignment="Left"
+                        Style="{StaticResource Instructions}"
+                        Text="{x:Static Resources:SR.ManagedCertificateSettings_ExportTip}" />
+                    <TextBox
+                        x:Name="CertPath"
+                        MaxWidth="500"
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Left"
+                        Text="{Binding SelectedItem.CertificatePath, TargetNullValue={x:Static Resources:SR.ManagedCertificateSettings_CertificatePathEmpty}}" />
+                </StackPanel>
                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
                     <Button
                         x:Name="OpenCertificateFile"
@@ -114,11 +127,7 @@
                         HorizontalAlignment="Left"
                         Click="OpenCertificateFile_Click"
                         Content="{x:Static Resources:SR.ManagedCertificateSettings_ViewCertificate}" />
-                    <TextBlock
-                        x:Name="CertPath"
-                        Margin="8,0,0,0"
-                        Style="{StaticResource Instructions}"
-                        Text="{Binding SelectedItem.CertificatePath, TargetNullValue={x:Static Resources:SR.ManagedCertificateSettings_CertificatePathEmpty}}" />
+
                 </StackPanel>
 
                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
@@ -131,12 +140,7 @@
                         HorizontalAlignment="Left"
                         Click="ReapplyCertBindings_Click"
                         Content="{x:Static Resources:SR.ManagedCertificateSettings_ReapplyCertificate}" />
-                    <TextBlock
-                        Grid.Row="2"
-                        Grid.Column="0"
-                        Margin="8,0,0,0"
-                        Style="{StaticResource Instructions}"
-                        Text="You can optionally re-deploy the latest certificate without requesting a new one " />
+
                 </StackPanel>
 
                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
@@ -174,14 +178,17 @@
                         <Label Background="#FFFFC7C7" Content="{x:Static Resources:SR.ManagedCertificateSettings_CertificateRevokeWarning}" />
                     </Border>
                 </StackPanel>
-                <StackPanel DockPanel.Dock="Top">
-                    <TextBlock
-                        Grid.Row="4"
-                        Margin="0,8,32,0"
-                        HorizontalAlignment="Right"
-                        Style="{StaticResource Instructions}"
-                        Text="{x:Static Resources:SR.ManagedCertificateSettings_ExportTip}" />
+
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                    <Button
+                        x:Name="RefetchCertificate"
+                        Width="220"
+                        Margin="0,4,0,0"
+                        Click="RefetchCertificate_Click">
+                        Re-fetch Latest Certificate
+                    </Button>
                 </StackPanel>
+
             </DockPanel>
         </DockPanel>
     </ScrollViewer>

@@ -184,6 +184,17 @@ namespace Certify.Service
             return result;
         }
 
+        [HttpGet, Route("fetch/{managedItemId}/{isPreviewOnly}")]
+        public async Task<CertificateRequestResult> FetchCertificate(string managedItemId, bool isPreviewOnly)
+        {
+            DebugLog();
+
+            var managedCertificate = await _certifyManager.GetManagedCertificate(managedItemId);
+
+            var result = await _certifyManager.FetchCertificate(managedCertificate);
+            return result;
+        }
+
         [HttpGet, Route("deploymentproviders/")]
         public async Task<List<DeploymentProviderDefinition>> GetDeploymentProviderList() => await _certifyManager.GetDeploymentProviders();
 

@@ -85,6 +85,7 @@ namespace Certify.Client
         Task<List<CertificateRequestResult>> BeginAutoRenewal();
 
         Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly);
+        Task<CertificateRequestResult> RefetchCertificate(string managedItemId);
 
         Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused);
 

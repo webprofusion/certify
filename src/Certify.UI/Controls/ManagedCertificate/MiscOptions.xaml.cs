@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Certify.Locales;
@@ -89,6 +90,14 @@ namespace Certify.UI.Controls.ManagedCertificate
                 {
                     await ItemViewModel.ReapplyCertificateBindings(ItemViewModel.SelectedItem.Id, false);
                 }
+            }
+        }
+
+        private async void RefetchCertificate_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show("Re-fetch certificate from Certificate Authority?", "Confirm Re-Fetch?", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
+            {
+                await ItemViewModel.RefetchCertificate(ItemViewModel.SelectedItem.Id);
             }
         }
     }

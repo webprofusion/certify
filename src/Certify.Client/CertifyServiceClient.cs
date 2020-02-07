@@ -336,6 +336,12 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<CertificateRequestResult>(response);
         }
 
+        public async Task<CertificateRequestResult> RefetchCertificate(string managedItemId)
+        {
+            var response = await FetchAsync($"managedcertificates/fetch/{managedItemId}/{false}");
+            return JsonConvert.DeserializeObject<CertificateRequestResult>(response);
+        }
+
         public async Task<List<ChallengeProviderDefinition>> GetChallengeAPIList()
         {
             var response = await FetchAsync($"managedcertificates/challengeapis/");

@@ -554,6 +554,8 @@ namespace Certify.UI.ViewModel
 
         public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly) => await _appViewModel.CertifyClient.ReapplyCertificateBindings(managedItemId, isPreviewOnly);
 
+        public async Task<CertificateRequestResult> RefetchCertificate(string managedItemId) => await _appViewModel.CertifyClient.RefetchCertificate(managedItemId);
+
         public async Task<List<StatusMessage>> TestChallengeResponse(ManagedCertificate managedCertificate) => await _appViewModel.CertifyClient.TestChallengeConfiguration(managedCertificate);
 
         public async Task<StatusMessage> RevokeSelectedItem()
