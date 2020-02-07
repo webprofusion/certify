@@ -48,14 +48,14 @@
                                 Margin="16,0,0,8"
                                 FontFamily="Segoe UI Light"
                                 FontSize="36"
-                                Foreground="#FF313131"
+                                Foreground="{StaticResource AccentBaseColorBrush}"
                                 TextWrapping="Wrap"><Run
                                     FontFamily="Segoe UI Semibold"
                                     FontWeight="Bold"
                                     Text="Certify" /><Run Text=" the web" /></TextBlock>
                             <TextBlock
                                 Margin="16,0,0,0"
-                                Foreground="#FF545454"
+                                Foreground="{StaticResource AccentBaseColorBrush}"
                                 TextWrapping="Wrap"><Run Text="{x:Static res:SR.ManagedCertificates_NoItemSelectedDesc}" /></TextBlock>
                         </StackPanel>
                     </Border>
@@ -185,7 +185,6 @@
                         <TextBlock
                             Margin="16,0,16,16"
                             FontFamily="Segoe UI Light"
-                            FontSize="14"
                             TextWrapping="Wrap"><Run Text="{x:Static res:SR.GettingStarted_DashboardIntro}" /></TextBlock>
                         <StackPanel Orientation="Horizontal">
 

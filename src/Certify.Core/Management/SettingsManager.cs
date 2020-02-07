@@ -28,6 +28,7 @@ namespace Certify.Management
             EnableStatusReporting = true;
             VaultPath = @"C:\ProgramData\ACMESharp";
             InstanceId = null;
+            UITheme = null;
         }
 
         public static CoreAppSettings Current
@@ -115,6 +116,7 @@ namespace Certify.Management
         public bool EnableStatusReporting { get; set; }
 
         public CertificateCleanupMode? CertificateCleanupMode { get; set; }
+        public string UITheme { get; set; }
     }
 
     public class SettingsManager
@@ -135,6 +137,7 @@ namespace Certify.Management
             CoreAppSettings.Current.UseBackgroundServiceAutoRenewal = prefs.UseBackgroundServiceAutoRenewal;
             CoreAppSettings.Current.EnableHttpChallengeServer = prefs.EnableHttpChallengeServer;
             CoreAppSettings.Current.EnableCertificateCleanup = prefs.EnableCertificateCleanup;
+            CoreAppSettings.Current.UITheme = prefs.UITheme;
 
             if (prefs.CertificateCleanupMode == null)
             {
@@ -168,7 +171,8 @@ namespace Certify.Management
                 EnableHttpChallengeServer = CoreAppSettings.Current.EnableHttpChallengeServer,
                 EnableCertificateCleanup = CoreAppSettings.Current.EnableCertificateCleanup,
                 EnableStatusReporting = CoreAppSettings.Current.EnableStatusReporting,
-                CertificateCleanupMode = CoreAppSettings.Current.CertificateCleanupMode
+                CertificateCleanupMode = CoreAppSettings.Current.CertificateCleanupMode,
+                UITheme = CoreAppSettings.Current.UITheme
             };
 
             return prefs;

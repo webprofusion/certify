@@ -178,6 +178,12 @@ namespace Certify.UI
                 return;
             }
 
+            // set theme based on pref
+            if (_appViewModel.Preferences.UITheme != null)
+            {
+                ((Certify.UI.App)App.Current).ToggleTheme(_appViewModel.Preferences.UITheme);
+            }
+
             var diagnostics = await Management.Util.PerformAppDiagnostics();
             if (diagnostics.Any(d => d.IsSuccess == false))
             {

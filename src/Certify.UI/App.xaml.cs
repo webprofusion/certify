@@ -32,18 +32,29 @@ namespace Certify.UI
             }
         }
 
+        public string ToggleTheme(string initialTheme = null)
+        {
+            var appStyle = MahApps.Metro.ThemeManager.DetectAppStyle(Application.Current);
+
+            if ((appStyle.Item1.Name == "BaseLight" && initialTheme == null) || initialTheme == "Dark")
+            {
+                MahApps.Metro.ThemeManager.ChangeAppStyle(Application.Current,
+                                     MahApps.Metro.ThemeManager.GetAccent("Green"),
+                                     MahApps.Metro.ThemeManager.GetAppTheme("BaseDark"));
+                return "Dark";
+
+            }
+            else
+            {
+                MahApps.Metro.ThemeManager.ChangeAppStyle(Application.Current,
+                                     MahApps.Metro.ThemeManager.GetAccent("Green"),
+                                     MahApps.Metro.ThemeManager.GetAppTheme("BaseLight"));
+                return "Light";
+            }
+        }
         protected override void OnStartup(StartupEventArgs e)
         {
-            
 
-            // get the current app style (theme and accent) from the application you can then use the
-            // current theme and custom accent instead set a new theme
-            Tuple<MahApps.Metro.AppTheme, MahApps.Metro.Accent> appStyle = MahApps.Metro.ThemeManager.DetectAppStyle(Application.Current);
-
-            // now set the accent and base theme
-            MahApps.Metro.ThemeManager.ChangeAppStyle(Application.Current,
-                                        MahApps.Metro.ThemeManager.GetAccent("Steel"),
-                                        MahApps.Metro.ThemeManager.GetAppTheme("BaseLight"));
 
 
             // Test translations
@@ -101,7 +112,7 @@ namespace Certify.UI
         }
         public void ShowNotification(string msg, NotificationType type = NotificationType.Info, bool autoClose = true)
         {
-            var opts = new ToastNotifications.Core.MessageOptions {  ShowCloseButton = false };
+            var opts = new ToastNotifications.Core.MessageOptions { ShowCloseButton = false };
 
             if (type == NotificationType.Error)
             {
