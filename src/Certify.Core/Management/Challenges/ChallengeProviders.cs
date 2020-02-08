@@ -22,7 +22,7 @@ namespace Certify.Core.Management.Challenges
 {
     public class ChallengeProviders
     {
-        
+
         public class CredentialsRequiredException : Exception
         {
         }
@@ -164,6 +164,18 @@ namespace Certify.Core.Management.Challenges
                     ProviderParameters= new List<ProviderParameter>
                     {
                        new ProviderParameter{ Key="username",Name="Username", IsRequired=true, IsPassword=false, IsCredential=true },
+                       new ProviderParameter{ Key="password",Name="Password", IsRequired=true, IsPassword=true, IsCredential=true },
+                    }
+                },
+                  new ChallengeProviderDefinition
+                {
+                    Id = StandardAuthTypes.STANDARD_AUTH_PASSWORD,
+                    ChallengeType = "",
+                    Title = "Password",
+                    Description = "Standard Password credential",
+                    HandlerType = ChallengeHandlerType.INTERNAL,
+                    ProviderParameters= new List<ProviderParameter>
+                    {
                        new ProviderParameter{ Key="password",Name="Password", IsRequired=true, IsPassword=true, IsCredential=true },
                     }
                 },
