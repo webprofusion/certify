@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Certify.Models;
 
 namespace Certify.UI.Controls
 {
@@ -20,6 +23,7 @@ namespace Certify.UI.Controls
         public Settings()
         {
             InitializeComponent();
+          
         }
 
         private async Task LoadCurrentSettings()
@@ -79,6 +83,8 @@ namespace Certify.UI.Controls
             //load stored credentials list
             await MainViewModel.RefreshStoredCredentialsList();
             CredentialsList.ItemsSource = MainViewModel.StoredCredentials;
+
+            this.CertificateAuthorityList.ItemsSource  = CertificateAuthority.CertificateAuthorities.Where(c => c.IsEnabled == true);
         }
 
         private void Button_NewContact(object sender, RoutedEventArgs e)
@@ -261,6 +267,11 @@ namespace Certify.UI.Controls
             _prefs.UITheme = ((Certify.UI.App)App.Current).ToggleTheme();
 
             this.SettingsUpdated(sender, e);
+        }
+
+        private void CertificateAuthorityList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
         }
     }
 }

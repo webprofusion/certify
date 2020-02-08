@@ -48,13 +48,57 @@
                         </StackPanel>
                     </Button>
 
+                    <!--  Certificate Authority Preference  -->
                     <StackPanel
-                        Height="32"
-                        Margin="8,0,10,0"
+                        Margin="8"
+                        DockPanel.Dock="Top"
                         Orientation="Horizontal">
-                        <Button
-                            Width="160"
+                        <Label Content="Certificate Authority:" />
+                        <ComboBox
+                            x:Name="CertificateAuthorityList"
+                            Width="180"
+                            Margin="24,0,0,0"
+                            HorizontalAlignment="Left"
+                            DisplayMemberPath="Title"
+                            SelectedValuePath="Id"
+                            SelectionChanged="CertificateAuthorityList_SelectionChanged" />
+
+                    </StackPanel>
+                    <Grid
+                        MaxWidth="600"
+                        Margin="8"
+                        HorizontalAlignment="Left">
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" />
+
+                        </Grid.RowDefinitions>
+
+                        <Label
+                            Grid.Row="0"
+                            Grid.Column="0"
                             Margin="0,0,0,0"
+                            Content="{x:Static res:SR.Settings_PrimaryContact}" />
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Margin="8,5,0,0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Top"
+                            FontWeight="Bold"
+                            Text="{Binding PrimaryContactEmail}" />
+
+                        <Button
+                            Grid.Row="0"
+                            Grid.Column="2"
+                            Height="32"
+                            Margin="32,0,0,8"
                             Click="Button_NewContact">
                             <StackPanel Orientation="Horizontal">
                                 <fa:ImageAwesome
@@ -65,14 +109,38 @@
                                 <TextBlock Margin="6,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.New_Contact}" /></TextBlock>
                             </StackPanel>
                         </Button>
-                        <Label Content="{x:Static res:SR.Settings_PrimaryContact}" />
+
+                        <Label
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Margin="0,0,0,0"
+                            Content="Staging/Test Contact (optional)" />
                         <TextBlock
-                            Margin="4,5,0,0"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Margin="8,5,0,0"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Top"
                             FontWeight="Bold"
                             Text="{Binding PrimaryContactEmail}" />
-                    </StackPanel>
+
+                        <Button
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Height="32"
+                            Margin="32,0,0,0"
+                            Click="Button_NewContact">
+                            <StackPanel Orientation="Horizontal">
+                                <fa:ImageAwesome
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource AccentColorBrush3}"
+                                    Icon="Flag" />
+                                <TextBlock Margin="6,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.New_Contact}" /></TextBlock>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
                     <StackPanel Margin="8,8,10,0" Orientation="Vertical">
                         <StackPanel Margin="0,8" Orientation="Horizontal">
                             <Controls:NumericUpDown
@@ -215,7 +283,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="64" />
                         <RowDefinition Height="32" />
-                        <RowDefinition Height="64*" />
+                        <RowDefinition Height="auto" />
                         <RowDefinition Height="48" />
                     </Grid.RowDefinitions>
                     <TextBlock
@@ -231,30 +299,31 @@
                         HorizontalAlignment="Right"
                         Click="AddStoredCredential_Click"
                         Content="Add New Stored Credential" />
-                    <ListView
-                        x:Name="CredentialsList"
-                        Grid.Row="2"
-                        Margin="0,8"
-                        SelectionChanged="CredentialsList_SelectionChanged"
-                        SelectionMode="Single">
+                    <ScrollViewer Grid.Row="2">
+                        <ListView
+                            x:Name="CredentialsList"
+                            Height="Auto"
+                            SelectionChanged="CredentialsList_SelectionChanged"
+                            SelectionMode="Single">
 
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
 
-                                <StackPanel Orientation="Horizontal">
-                                    <fa:FontAwesome Margin="0,0,8,0" Icon="Compass" />
-                                    <TextBlock
-                                        Margin="0,0,8,0"
-                                        FontWeight="Bold"
-                                        Text="{Binding Title}" />
-                                    <TextBlock
-                                        Margin="0,0,8,0"
-                                        FontWeight="Bold"
-                                        Text="{Binding DateCreated}" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
+                                    <StackPanel Orientation="Horizontal">
+                                        <fa:FontAwesome Margin="0,0,8,0" Icon="Compass" />
+                                        <TextBlock
+                                            Margin="0,0,8,0"
+                                            FontWeight="Bold"
+                                            Text="{Binding Title}" />
+                                        <TextBlock
+                                            Margin="0,0,8,0"
+                                            FontWeight="Bold"
+                                            Text="{Binding DateCreated}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </ScrollViewer>
                     <StackPanel
                         Grid.Row="3"
                         Margin="0,0,0,8"
@@ -288,6 +357,7 @@
                     </StackPanel>
                 </Grid>
             </TabItem>
+
         </TabControl>
     </StackPanel>
 </UserControl>

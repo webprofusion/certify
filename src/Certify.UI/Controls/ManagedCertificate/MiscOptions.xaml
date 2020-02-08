@@ -70,6 +70,25 @@
                         IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" />
                 </StackPanel>
 
+                <!--  Certificate Authority Preference  -->
+                <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
+                    <Label Content="Preferred Certificate Authority" />
+                    <ComboBox
+                        x:Name="CertificateAuthorityList"
+                        Width="270"
+                        Margin="120,0,0,0"
+                        HorizontalAlignment="Left"
+                        DisplayMemberPath="Title"
+                        ItemsSource="{Binding CertificateAuthorities}"
+                        SelectedValue="{Binding SelectedItem.CertificateAuthorityId}"
+                        SelectedValuePath="Id"
+                        SelectionChanged="CertificateAuthorityList_SelectionChanged" />
+
+                    <CheckBox
+                        Margin="120,4,0,4"
+                        Content="Use Staging Mode (For Testing Only)"
+                        IsChecked="{Binding SelectedItem.UseStagingMode}" />
+                </StackPanel>
                 <!--  CSR Options  -->
                 <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
                     <Label Content="CSR Signing Algorithm" />

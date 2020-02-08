@@ -22,6 +22,7 @@ namespace Certify.Models
             new CertificateAuthority{
                 Id="letsencrypt.org",
                 Title ="Let's Encrypt",
+                Description="Let's Encrypt is a free, automated, and open certificate authority brought to you by the nonprofit Internet Security Research Group (ISRG). Certificates are valid for 90 days.",
                 APIType = CertAuthorityAPIType.ACME_V2,
                 WebsiteUrl ="https://letsencrypt.org/",
                 PrivacyPolicyUrl ="https://letsencrypt.org/privacy/",
@@ -38,13 +39,14 @@ namespace Certify.Models
             },
              new CertificateAuthority{
                 Id="buypass.com",
-                Title ="BuyPass",
+                Title ="Buypass Go SSL",
+                Description="Buypass Go SSL is a free SSL certificate service from Buypass CA using the Buypass ACME API.",
                 APIType = CertAuthorityAPIType.ACME_V2,
                 WebsiteUrl ="https://www.buypass.com/",
                 PrivacyPolicyUrl ="https://www.buypass.com/about-buypass/privacy-policy",
-                ProductionAPIEndpoint = null,
+                ProductionAPIEndpoint = "https://api.buypass.com/acme/directory",
                 StagingAPIEndpoint = "https://api.test4.buypass.no/acme-v02/directory",
-                IsEnabled=false,
+                IsEnabled=true,
                 SANLimit=15,
                 SupportedRequests = new List<CertAuthoritySupportedRequests>{
                     CertAuthoritySupportedRequests.DOMAIN_SINGLE,
@@ -58,7 +60,7 @@ namespace Certify.Models
         public CertAuthorityAPIType APIType { get; set; }
         public List<CertAuthoritySupportedRequests> SupportedRequests { get; set; }
         public string Title { get; set; }
-        public string Decription { get; set; }
+        public string Description { get; set; }
         public string WebsiteUrl { get; set; }
         public string PrivacyPolicyUrl { get; set; }
         public string TermsAndConditionsUrl { get; set; }

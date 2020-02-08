@@ -29,6 +29,8 @@ namespace Certify.Management
             VaultPath = @"C:\ProgramData\ACMESharp";
             InstanceId = null;
             UITheme = null;
+            CertificateAuthorityFallback = null;
+            DefaultCertificateAuthority = null;
         }
 
         public static CoreAppSettings Current
@@ -116,7 +118,22 @@ namespace Certify.Management
         public bool EnableStatusReporting { get; set; }
 
         public CertificateCleanupMode? CertificateCleanupMode { get; set; }
+
         public string UITheme { get; set; }
+        /// <summary>
+        /// ID of default CA
+        /// </summary>
+        public string DefaultCertificateAuthority { get; set; }
+
+        /// <summary>
+        /// Id of alternative CA if renewal order fails (none, auto, etc)
+        /// </summary>
+        public string CertificateAuthorityFallback { get; set; }
+
+        /// <summary>
+        /// Id of default credentials (password) to use for private keys etc
+        /// </summary>
+        public string DefaultKeyCredentials { get; set; }
     }
 
     public class SettingsManager
@@ -138,6 +155,11 @@ namespace Certify.Management
             CoreAppSettings.Current.EnableHttpChallengeServer = prefs.EnableHttpChallengeServer;
             CoreAppSettings.Current.EnableCertificateCleanup = prefs.EnableCertificateCleanup;
             CoreAppSettings.Current.UITheme = prefs.UITheme;
+
+            CoreAppSettings.Current.DefaultCertificateAuthority = prefs.DefaultCertificateAuthority;
+            CoreAppSettings.Current.CertificateAuthorityFallback = prefs.CertificateAuthorityFallback;
+
+            CoreAppSettings.Current.DefaultKeyCredentials = prefs.DefaultKeyCredentials;
 
             if (prefs.CertificateCleanupMode == null)
             {
@@ -172,7 +194,10 @@ namespace Certify.Management
                 EnableCertificateCleanup = CoreAppSettings.Current.EnableCertificateCleanup,
                 EnableStatusReporting = CoreAppSettings.Current.EnableStatusReporting,
                 CertificateCleanupMode = CoreAppSettings.Current.CertificateCleanupMode,
-                UITheme = CoreAppSettings.Current.UITheme
+                UITheme = CoreAppSettings.Current.UITheme,
+                DefaultCertificateAuthority = CoreAppSettings.Current.DefaultCertificateAuthority,
+                CertificateAuthorityFallback = CoreAppSettings.Current.CertificateAuthorityFallback,
+                DefaultKeyCredentials = CoreAppSettings.Current.DefaultKeyCredentials
             };
 
             return prefs;

@@ -100,5 +100,10 @@ namespace Certify.UI.Controls.ManagedCertificate
                 await ItemViewModel.RefetchCertificate(ItemViewModel.SelectedItem.Id);
             }
         }
+
+        private void CertificateAuthorityList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
     }
 }

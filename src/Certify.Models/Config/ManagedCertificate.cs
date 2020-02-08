@@ -41,14 +41,20 @@ namespace Certify.Models
             RequestConfig = new CertRequestConfig();
 
             IncludeInAutoRenew = true;
-
+            
             CertificateAuthorityId = "letsencrypt.org";
+            UseStagingMode = false;
         }
 
         /// <summary>
         /// Default CA to use for this request
         /// </summary>
         public string CertificateAuthorityId { get; set; }
+
+        /// <summary>
+        /// If true, the staging (test) API and account key will be used for orders
+        /// </summary>
+        public bool UseStagingMode { get; set; }
 
         /// <summary>
         /// If true, the auto renewal process will include this item in attempted renewal operations

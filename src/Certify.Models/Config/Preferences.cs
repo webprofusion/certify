@@ -50,5 +50,21 @@
         public bool EnableStatusReporting { get; set; } = true;
 
         public string UITheme { get; set; }
+
+        /// <summary>
+        /// ID of default CA
+        /// </summary>
+        public string DefaultCertificateAuthority { get; set; }
+
+        /// <summary>
+        /// Id of alternative CA if renewal order fails (none, auto, etc)
+        /// </summary>
+        public string CertificateAuthorityFallback { get; set; }
+
+        /// <summary>
+        /// Id of default credentials (password) to use for private keys etc
+        /// </summary>
+        public string DefaultKeyCredentials { get; set; }
+
     }
 }

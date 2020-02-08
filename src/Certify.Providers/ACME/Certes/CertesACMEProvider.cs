@@ -4,7 +4,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Security.Cryptography.X509Certificates;
+
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Certes;
@@ -14,6 +15,9 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
+using Org.BouncyCastle.OpenSsl;
+using Org.BouncyCastle.Pkcs;
+using Org.BouncyCastle.X509;
 
 namespace Certify.Providers.ACME.Certes
 {
@@ -89,7 +93,8 @@ namespace Certify.Providers.ACME.Certes
     {
         private AcmeContext _acme;
 #if DEBUG
-        private readonly Uri _serviceUri = WellKnownServers.LetsEncryptStagingV2;
+        private readonly Uri _serviceUri = new Uri(CertificateAuthority.CertificateAuthorities.Find(a => a.Id == "buypass.com").ProductionAPIEndpoint);
+
 #else
         private readonly Uri _serviceUri = WellKnownServers.LetsEncryptV2;
 #endif
@@ -839,14 +844,14 @@ namespace Certify.Providers.ACME.Certes
             var order = await orderContext.Resource();
 
             var attempts = 5;
-            while (attempts > 0 && order?.Status != OrderStatus.Ready)
+            while (attempts > 0 && (order?.Status != OrderStatus.Ready && order?.Status != OrderStatus.Valid))
             {
                 await Task.Delay(2000);
                 order = await orderContext.Resource();
                 attempts--;
             }
 
-            if (order?.Status != OrderStatus.Ready)
+            if (order?.Status != OrderStatus.Ready && order?.Status != OrderStatus.Valid)
             {
                 return new ProcessStepResult { IsSuccess = false, ErrorMessage = "Certificate Request did not complete. Order did not reach Ready status in the time allowed.", Result = order };
             }
@@ -886,12 +891,22 @@ namespace Certify.Providers.ACME.Certes
             DateTime? certExpiration = null;
             try
             {
-                certificateChain = await orderContext.Generate(new CsrInfo
+                if (order.Status == OrderStatus.Valid)
                 {
-                    CommonName = _idnMapping.GetAscii(config.PrimaryDomain)
-                }, csrKey);
+                    // download existing cert, TODO: need to re-use key from time of last finalize 
+                    certificateChain = await orderContext.Download();
+                }
+                else
+                {
+                    // finalise and download
+                    certificateChain = await orderContext.Generate(new CsrInfo
+                    {
+                        CommonName = _idnMapping.GetAscii(config.PrimaryDomain)
+                    }, csrKey);
+                }
 
-                var cert = new X509Certificate2(certificateChain.Certificate.ToDer());
+
+                var cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(certificateChain.Certificate.ToDer());
                 certExpiration = cert.NotAfter;
                 certFriendlyName += $"{cert.GetEffectiveDateString()} to {cert.GetExpirationDateString()}";
             }
@@ -910,9 +925,35 @@ namespace Certify.Providers.ACME.Certes
 
             var pfxPath = ExportFullCertPFX(certFriendlyName, csrKey, certificateChain, certId, domainAsPath);
 
-            // ExportFullCertPEM(csrKey, certificateChain, certId, domainAsPath);
-
             return new ProcessStepResult { IsSuccess = true, Result = pfxPath };
+        }
+
+        private byte[] GetCACertsFromStore()
+        {
+            // get list of known CAs as Issuer certs from cert store
+            // derived from PR idea by @pkiguy https://github.com/webprofusion/certify/pull/340
+
+            var store = new System.Security.Cryptography.X509Certificates.X509Store(
+                System.Security.Cryptography.X509Certificates.StoreName.Root,
+                System.Security.Cryptography.X509Certificates.StoreLocation.LocalMachine);
+
+            store.Open(System.Security.Cryptography.X509Certificates.OpenFlags.ReadOnly);
+            var allCACerts = store.Certificates;
+
+            using (var writer = new StringWriter())
+            {
+                var pemWriter = new PemWriter(writer);
+                var certParser = new X509CertificateParser();
+
+                foreach (var c in allCACerts)
+                {
+                    Org.BouncyCastle.X509.X509Certificate parsedCert = certParser.ReadCertificate(c.GetRawCertData());
+                    pemWriter.WriteObject(parsedCert);
+                }
+
+                writer.Flush();
+                return System.Text.ASCIIEncoding.ASCII.GetBytes(writer.ToString());
+            }
         }
 
         private string ExportFullCertPFX(string certFriendlyName, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
@@ -928,6 +969,7 @@ namespace Certify.Providers.ACME.Certes
             var pfxPath = Path.Combine(storePath, pfxFile);
 
             var pfx = certificateChain.ToPfx(csrKey);
+            pfx.AddIssuers(GetCACertsFromStore());
             var pfxBytes = pfx.Build(certFriendlyName, "");
 
             System.IO.File.WriteAllBytes(pfxPath, pfxBytes);

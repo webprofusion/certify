@@ -134,6 +134,7 @@ namespace Certify.UI.ViewModel
                 }
             }
         }
+        public IEnumerable<CertificateAuthority> CertificateAuthorities => CertificateAuthority.CertificateAuthorities.Where(c=>c.IsEnabled==true);
 
         internal async Task<bool> SaveManagedCertificateChanges()
         {
