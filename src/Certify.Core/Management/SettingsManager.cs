@@ -28,7 +28,6 @@ namespace Certify.Management
             EnableStatusReporting = true;
             VaultPath = @"C:\ProgramData\ACMESharp";
             InstanceId = null;
-            UITheme = null;
             CertificateAuthorityFallback = null;
             DefaultCertificateAuthority = null;
         }
@@ -119,7 +118,6 @@ namespace Certify.Management
 
         public CertificateCleanupMode? CertificateCleanupMode { get; set; }
 
-        public string UITheme { get; set; }
         /// <summary>
         /// ID of default CA
         /// </summary>
@@ -154,7 +152,6 @@ namespace Certify.Management
             CoreAppSettings.Current.UseBackgroundServiceAutoRenewal = prefs.UseBackgroundServiceAutoRenewal;
             CoreAppSettings.Current.EnableHttpChallengeServer = prefs.EnableHttpChallengeServer;
             CoreAppSettings.Current.EnableCertificateCleanup = prefs.EnableCertificateCleanup;
-            CoreAppSettings.Current.UITheme = prefs.UITheme;
 
             CoreAppSettings.Current.DefaultCertificateAuthority = prefs.DefaultCertificateAuthority;
             CoreAppSettings.Current.CertificateAuthorityFallback = prefs.CertificateAuthorityFallback;
@@ -194,7 +191,6 @@ namespace Certify.Management
                 EnableCertificateCleanup = CoreAppSettings.Current.EnableCertificateCleanup,
                 EnableStatusReporting = CoreAppSettings.Current.EnableStatusReporting,
                 CertificateCleanupMode = CoreAppSettings.Current.CertificateCleanupMode,
-                UITheme = CoreAppSettings.Current.UITheme,
                 DefaultCertificateAuthority = CoreAppSettings.Current.DefaultCertificateAuthority,
                 CertificateAuthorityFallback = CoreAppSettings.Current.CertificateAuthorityFallback,
                 DefaultKeyCredentials = CoreAppSettings.Current.DefaultKeyCredentials

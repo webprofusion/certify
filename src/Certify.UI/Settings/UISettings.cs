@@ -12,6 +12,8 @@ namespace Certify.UI.Settings
         public double Left { get; set; }
         public double Top { get; set; }
 
+        public string UITheme { get; set; }
+
         public static UISettings Load()
         {
             var uiSettingsFilePath = Management.Util.GetAppDataFolder() + "\\" + SETTINGS_FILE;

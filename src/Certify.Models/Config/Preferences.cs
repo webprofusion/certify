@@ -49,8 +49,6 @@
 
         public bool EnableStatusReporting { get; set; } = true;
 
-        public string UITheme { get; set; }
-
         /// <summary>
         /// ID of default CA
         /// </summary>

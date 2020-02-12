@@ -23,7 +23,7 @@ namespace Certify.UI.Controls
         public Settings()
         {
             InitializeComponent();
-          
+
         }
 
         private async Task LoadCurrentSettings()
@@ -84,7 +84,7 @@ namespace Certify.UI.Controls
             await MainViewModel.RefreshStoredCredentialsList();
             CredentialsList.ItemsSource = MainViewModel.StoredCredentials;
 
-            this.CertificateAuthorityList.ItemsSource  = CertificateAuthority.CertificateAuthorities.Where(c => c.IsEnabled == true);
+            this.CertificateAuthorityList.ItemsSource = CertificateAuthority.CertificateAuthorities.Where(c => c.IsEnabled == true);
         }
 
         private void Button_NewContact(object sender, RoutedEventArgs e)
@@ -264,9 +264,19 @@ namespace Certify.UI.Controls
 
         private void ToggleTheme_Click(object sender, RoutedEventArgs e)
         {
-            _prefs.UITheme = ((Certify.UI.App)App.Current).ToggleTheme();
 
-            this.SettingsUpdated(sender, e);
+            var uiTheme = ((Certify.UI.App)App.Current).ToggleTheme();
+
+            var uiSettings = UI.Settings.UISettings.Load();
+
+            if (uiSettings == null)
+            {
+                uiSettings = new UI.Settings.UISettings();
+            }
+
+            uiSettings.UITheme = uiTheme;
+            UI.Settings.UISettings.Save(uiSettings);
+
         }
 
         private void CertificateAuthorityList_SelectionChanged(object sender, SelectionChangedEventArgs e)

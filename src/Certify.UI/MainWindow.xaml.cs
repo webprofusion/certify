@@ -140,6 +140,13 @@ namespace Certify.UI
                 Height = uiSettings.Height;
                 Left = uiSettings.Left;
                 Top = uiSettings.Top;
+
+
+                // set theme based on pref
+                if (uiSettings.UITheme != null)
+                {
+                    ((Certify.UI.App)App.Current).ToggleTheme(uiSettings.UITheme);
+                }
             }
 
             await PerformAppStartupChecks();
@@ -176,12 +183,6 @@ namespace Certify.UI
 
                 App.Current.Shutdown();
                 return;
-            }
-
-            // set theme based on pref
-            if (_appViewModel.Preferences.UITheme != null)
-            {
-                ((Certify.UI.App)App.Current).ToggleTheme(_appViewModel.Preferences.UITheme);
             }
 
             var diagnostics = await Management.Util.PerformAppDiagnostics();
@@ -319,14 +320,18 @@ namespace Certify.UI
                 e.Cancel = true;
             }
 
-            var uiSettings = new UISettings
-            {
-                Width = Width,
-                Height = Height,
-                Left = Left,
-                Top = Top
-            };
+            var uiSettings = UISettings.Load();
 
+            if (uiSettings == null)
+            {
+                uiSettings = new UISettings();
+            }
+
+            uiSettings.Width = Width;
+            uiSettings.Height = Height;
+            uiSettings.Left = Left;
+            uiSettings.Top = Top;
+            
             UISettings.Save(uiSettings);
         }
     }
