@@ -466,7 +466,7 @@
     <value>The log file for this item has not been created yet.</value>
   </data>
   <data name="ManagedCertificateSettings_CertificateNotReady" xml:space="preserve">
-    <value>The certificate file for this item has not been created yet.</value>
+    <value>The certificate file for this item has not been created yet or the file has been deleted.</value>
   </data>
   <data name="ChallengeError" xml:space="preserve">
     <value>Challenge Error</value>

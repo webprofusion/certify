@@ -5,7 +5,7 @@
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyVersion>4.0.0.40001</AssemblyVersion>
     <FileVersion>4.0.0.0</FileVersion>
-    <Version>4.1.0</Version>
+    <Version>5.0.0</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>Certify SSL Manager API Models</Description>
     <Company>Webprofusion Pty ltd</Company>
