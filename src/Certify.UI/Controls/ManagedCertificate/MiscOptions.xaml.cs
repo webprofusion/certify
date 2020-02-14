@@ -22,7 +22,6 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void OpenCertificateFile_Click(object sender, RoutedEventArgs e)
         {
-            // get file path for log
             var certPath = ItemViewModel.SelectedItem.CertificatePath;
 
             //check file exists, if not inform user
@@ -84,13 +83,19 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private async void ReapplyCertBindings_Click(object sender, RoutedEventArgs e)
         {
-            if (!string.IsNullOrEmpty(ItemViewModel.SelectedItem.CertificatePath))
+            var certPath = ItemViewModel.SelectedItem.CertificatePath;
+            if (!string.IsNullOrEmpty(certPath) && System.IO.File.Exists(certPath))
             {
                 if (MessageBox.Show("Re-apply certificate to website bindings?", "Confirm Re-Apply?", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
                 {
                     await ItemViewModel.ReapplyCertificateBindings(ItemViewModel.SelectedItem.Id, false);
                 }
             }
+            else
+            {
+                MessageBox.Show(SR.ManagedCertificateSettings_CertificateNotReady);
+            }
+
         }
 
         private async void RefetchCertificate_Click(object sender, RoutedEventArgs e)
