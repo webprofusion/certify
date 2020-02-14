@@ -294,7 +294,10 @@ namespace Certify.Models
                                     if (!string.IsNullOrWhiteSpace(d))
                                     {
                                         var domainMatchKey = d.Trim().ToLower();
-                                        configsPerDomain.Add(domainMatchKey, c);
+                                        if (!configsPerDomain.ContainsKey(domainMatchKey))
+                                        {
+                                            configsPerDomain.Add(domainMatchKey, c);
+                                        }
                                     }
                                 }
                             }
