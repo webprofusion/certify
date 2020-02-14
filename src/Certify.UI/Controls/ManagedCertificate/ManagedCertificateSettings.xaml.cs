@@ -58,6 +58,10 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
+        private void ShowValidationError(string msg)
+        {
+            (App.Current as App).ShowNotification(msg, App.NotificationType.Error, true);
+        }
         private async Task<bool> ValidateAndSave(Models.ManagedCertificate item)
         {
             /*if (item.Id == null && MainViewModel.SelectedWebSite == null)
@@ -73,13 +77,13 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             if (item.Id == null && item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
             {
-                MessageBox.Show("Sorry, the tls-sni-01 challenge type is no longer supported by Let's Encrypt for new certificates.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowValidationError("Sorry, the tls-sni-01 challenge type is no longer supported by Let's Encrypt for new certificates.");
                 return false;
             }
 
             if (string.IsNullOrEmpty(item.Name))
             {
-                MessageBox.Show(SR.ManagedCertificateSettings_NameRequired, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowValidationError(SR.ManagedCertificateSettings_NameRequired);
                 return false;
             }
 
@@ -111,7 +115,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             if (ItemViewModel.SelectedItem.DomainOptions.Any(d => d.IsSelected && (!d.Domain.Contains(".") || d.Domain.ToLower().EndsWith(".local"))))
             {
                 // one or more selected domains does not include a label seperator (is an internal host name) or end in .local
-                MessageBox.Show("One or more domains specified are internal hostnames. Certificates for internal host names are not supported by the Certificate Authority.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowValidationError("One or more domains specified are internal hostnames. Certificates for internal host names are not supported by the Certificate Authority.");
                 return false;
             }
 
@@ -129,26 +133,26 @@ namespace Certify.UI.Controls.ManagedCertificate
                 )
             {
 
-                MessageBox.Show("Wildcard domains cannot use http-01 validation for domain authorization. Use dns-01 instead.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowValidationError("Wildcard domains cannot use http-01 validation for domain authorization. Use dns-01 instead.");
                 return false;
             }
 
             // TLS-SNI-01 (deprecated)
             if (item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
             {
-                MessageBox.Show("The tls-sni-01 challenge type is no longer available. You need to switch to either http-01 or dns-01.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowValidationError("The tls-sni-01 challenge type is no longer available. You need to switch to either http-01 or dns-01.");
                 return false;
             }
 
             if (item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS && c.ChallengeProvider == null))
             {
-                MessageBox.Show("The dns-01 challenge type requires a DNS Update Method selection.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowValidationError("The dns-01 challenge type requires a DNS Update Method selection.");
                 return false;
             }
 
             if (item.RequestConfig.Challenges.Count(c => string.IsNullOrEmpty(c.DomainMatch)) > 1)
             {
-                MessageBox.Show("Only one authorization configuration can be used match any domain (domain match blank). Specify domain(s) to match or remove additional configuration. ", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowValidationError("Only one authorization configuration can be used match any domain (domain match blank). Specify domain(s) to match or remove additional configuration. ");
                 return false;
             }
 
@@ -162,7 +166,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                     {
                         if (p.IsRequired && string.IsNullOrEmpty(p.Value))
                         {
-                            MessageBox.Show($"Challenge configuration parameter required: {p.Name}", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                            ShowValidationError($"Challenge configuration parameter required: {p.Name}");
                             return false;
                         }
                     }
@@ -174,7 +178,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             if (numSelectedDomains > 100)
             {
-                MessageBox.Show($"Certificates cannot include more than 100 names. You will need to remove names or split your certificate into 2 or more managed certificates.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowValidationError($"Certificates cannot include more than 100 names. You will need to remove names or split your certificate into 2 or more managed certificates.");
                 return false;
             }
 
@@ -209,12 +213,12 @@ namespace Certify.UI.Controls.ManagedCertificate
                 if (string.IsNullOrEmpty(item.RequestConfig.WebhookUrl) ||
                     !Uri.TryCreate(item.RequestConfig.WebhookUrl, UriKind.Absolute, out var uri))
                 {
-                    MessageBox.Show(SR.ManagedCertificateSettings_HookMustBeValidUrl, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                    ShowValidationError(SR.ManagedCertificateSettings_HookMustBeValidUrl);
                     return false;
                 }
                 if (string.IsNullOrEmpty(item.RequestConfig.WebhookMethod))
                 {
-                    MessageBox.Show(SR.ManagedCertificateSettings_HookMethodMustBeSet, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                    ShowValidationError(SR.ManagedCertificateSettings_HookMethodMustBeSet);
                     return false;
                 }
             }
