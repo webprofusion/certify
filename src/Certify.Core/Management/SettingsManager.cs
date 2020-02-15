@@ -29,7 +29,8 @@ namespace Certify.Management
             VaultPath = @"C:\ProgramData\ACMESharp";
             InstanceId = null;
             CertificateAuthorityFallback = null;
-            DefaultCertificateAuthority = null;
+            DefaultCertificateAuthority = "letsencrypt.org";
+            EnabledAutomaticCAFailover = false;
         }
 
         public static CoreAppSettings Current
@@ -132,6 +133,12 @@ namespace Certify.Management
         /// Id of default credentials (password) to use for private keys etc
         /// </summary>
         public string DefaultKeyCredentials { get; set; }
+
+        /// <summary>
+        /// If true, the app will decide which Certificate Authority to choose from the list of supported providers.
+        /// The preferred provider will be chosen first, with fallback to any other supported (and configured) providers if a failure occurs.
+        /// </summary>
+        public bool EnabledAutomaticCAFailover { get; set; }
     }
 
     public class SettingsManager
@@ -154,7 +161,7 @@ namespace Certify.Management
             CoreAppSettings.Current.EnableCertificateCleanup = prefs.EnableCertificateCleanup;
 
             CoreAppSettings.Current.DefaultCertificateAuthority = prefs.DefaultCertificateAuthority;
-            CoreAppSettings.Current.CertificateAuthorityFallback = prefs.CertificateAuthorityFallback;
+            CoreAppSettings.Current.EnabledAutomaticCAFailover = prefs.EnabledAutomaticCAFailover;
 
             CoreAppSettings.Current.DefaultKeyCredentials = prefs.DefaultKeyCredentials;
 
@@ -192,8 +199,8 @@ namespace Certify.Management
                 EnableStatusReporting = CoreAppSettings.Current.EnableStatusReporting,
                 CertificateCleanupMode = CoreAppSettings.Current.CertificateCleanupMode,
                 DefaultCertificateAuthority = CoreAppSettings.Current.DefaultCertificateAuthority,
-                CertificateAuthorityFallback = CoreAppSettings.Current.CertificateAuthorityFallback,
-                DefaultKeyCredentials = CoreAppSettings.Current.DefaultKeyCredentials
+                DefaultKeyCredentials = CoreAppSettings.Current.DefaultKeyCredentials,
+                EnabledAutomaticCAFailover = CoreAppSettings.Current.EnabledAutomaticCAFailover
             };
 
             return prefs;

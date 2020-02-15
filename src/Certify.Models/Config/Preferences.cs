@@ -17,6 +17,9 @@
         FullCleanup = 3
     }
 
+    /// <summary>
+    /// Note the settings specified here are mapped to CoreAppSettings
+    /// </summary>
     public class Preferences : BindableBase
     {
         public bool EnableAppTelematics { get; set; } = true;
@@ -55,14 +58,14 @@
         public string DefaultCertificateAuthority { get; set; }
 
         /// <summary>
-        /// Id of alternative CA if renewal order fails (none, auto, etc)
-        /// </summary>
-        public string CertificateAuthorityFallback { get; set; }
-
-        /// <summary>
         /// Id of default credentials (password) to use for private keys etc
         /// </summary>
         public string DefaultKeyCredentials { get; set; }
 
+        /// <summary>
+        /// If true, the app will decide which Certificate Authority to choose from the list of supported providers.
+        /// The preferred provider will be chosen first, with fallback to any other supported (and configured) providers if a failure occurs.
+        /// </summary>
+        public bool EnabledAutomaticCAFailover { get; set; }
     }
 }

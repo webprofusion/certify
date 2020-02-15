@@ -1233,6 +1233,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Preferred Certificate Authority.
+        /// </summary>
+        public static string PreferredCertificateAuthority {
+            get {
+                return ResourceManager.GetString("PreferredCertificateAuthority", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There are no requests currently in progress..
         /// </summary>
         public static string ProgressMonitor_NoProgress {

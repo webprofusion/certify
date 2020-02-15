@@ -120,8 +120,8 @@
         </Grid>
         <GridSplitter
             Grid.Column="1"
-            Width="10"
-            Margin="4,0,0,0"
+            Width="2"
+            Margin="8,0,0,0"
             HorizontalAlignment="Stretch"
             Background="{DynamicResource AccentColorBrush4}" />
         <Grid x:Name="MainItemView" Grid.Column="2">

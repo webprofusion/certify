@@ -148,6 +148,12 @@
     <Compile Include="Controls\QuickStart.xaml.cs">
       <DependentUpon>QuickStart.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\SettingsCredentials.xaml.cs">
+      <DependentUpon>SettingsCredentials.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\SettingsGeneral.xaml.cs">
+      <DependentUpon>SettingsGeneral.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Settings\UISettings.cs" />
     <Compile Include="Utils\CSRAlgCheckedConverter.cs" />
     <Compile Include="Utils\NullableDateFormatter.cs" />
@@ -249,6 +255,14 @@
     <Page Include="Controls\QuickStart.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\SettingsCredentials.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\SettingsGeneral.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Controls\Settings.xaml">
       <SubType>Designer</SubType>

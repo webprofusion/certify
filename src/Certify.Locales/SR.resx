@@ -668,4 +668,7 @@
   <data name="Settings_EnableStatusReporting" xml:space="preserve">
     <value>Enable Status Reports to Dashboard</value>
   </data>
+  <data name="PreferredCertificateAuthority" xml:space="preserve">
+    <value>Preferred Certificate Authority</value>
+  </data>
 </root>
