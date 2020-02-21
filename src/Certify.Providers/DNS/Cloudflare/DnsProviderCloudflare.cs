@@ -73,6 +73,7 @@ namespace Certify.Providers.DNS.Cloudflare
         private HttpClient _client = new HttpClient();
 
         private readonly string _authKey;
+        private readonly string _apiToken;
         private readonly string _emailAddress;
 
         private const string _baseUri = "https://api.cloudflare.com/client/v4/";
@@ -103,14 +104,16 @@ namespace Certify.Providers.DNS.Cloudflare
                 {
                     Id = "DNS01.API.Cloudflare",
                     Title = "Cloudflare DNS API",
-                    Description = "Validates via Cloudflare DNS APIs using credentials",
+                    Description = "Validates via Cloudflare DNS APIs using credentials (using API Token or Email + AuthKey pair)",
                     HelpUrl = "https://docs.certifytheweb.com/docs/dns-cloudflare.html",
                     PropagationDelaySeconds = 60,
                     ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{Key="emailaddress", Name="Email Address", IsRequired=true },
                         new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true },
-                        new ProviderParameter{ Key="zoneid",Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false },
-                        new ProviderParameter{ Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="60", IsCredential=false },
+                        new ProviderParameter{Key="apitoken", Name="API Token", IsRequired=false, Description="Used instead of Email + Auth Key" }
+                        new ProviderParameter{Key="zoneid",Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false },
+                        new ProviderParameter{Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="60", IsCredential=false },
+
                      },
                     ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                     Config = "Provider=Certify.Providers.DNS.Cloudflare",
@@ -121,8 +124,14 @@ namespace Certify.Providers.DNS.Cloudflare
 
         public DnsProviderCloudflare(Dictionary<string, string> credentials)
         {
-            _authKey = credentials["authkey"];
-            _emailAddress = credentials["emailaddress"];
+            _authKey = credentials.ContainsKey("authkey") ? credentials["authkey"] : null;
+            _apiToken = credentials.ContainsKey("apitoken") ? credentials["apitoken"] : null;
+            _emailAddress = credentials.ContainsKey("emailaddress") ? credentials["emailaddress"] : null;
+
+            if (string.IsNullOrEmpty(_apiToken) && (string.IsNullOrEmpty(_emailAddress) || string.IsNullOrEmpty(_authKey)))
+            {
+                throw new ArgumentException($"{this.ProviderTitle} requires either an API Token or an Email Address + AuthKey");
+            }
         }
 
         public async Task<ActionResult> Test()
@@ -150,8 +159,17 @@ namespace Certify.Providers.DNS.Cloudflare
         private HttpRequestMessage CreateRequest(HttpMethod method, string url)
         {
             var request = new HttpRequestMessage(method, url);
-            request.Headers.Add("X-AUTH-KEY", _authKey);
-            request.Headers.Add("X-AUTH-EMAIL", _emailAddress);
+            if (!string.IsNullOrEmpty(_apiToken))
+            {
+                request.Headers.Add("Authorization", $"Bearer {_apiToken}");
+            }
+            else
+            {
+                request.Headers.Add("X-AUTH-KEY", _authKey);
+                request.Headers.Add("X-AUTH-EMAIL", _emailAddress);
+            }
+
+
             return request;
         }
 
