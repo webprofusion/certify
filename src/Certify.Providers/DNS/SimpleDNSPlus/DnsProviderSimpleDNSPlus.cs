@@ -70,13 +70,13 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
                     Title = "SimpleDNSPlus DNS API",
                     Description = "Validates via SimpleDNSPlus DNS APIs using credentials",
                     HelpUrl = "https://simpledns.com/swagger-ui/",
-                    PropagationDelaySeconds = 60,
+                    PropagationDelaySeconds = 120,
                     ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{ Key="authserver", Name="Server IP", IsRequired=true },
                         new ProviderParameter{ Key="authkey", Name="Auth Key", IsRequired=true },
                         new ProviderParameter{ Key="authsecret", Name="Auth Secret", IsRequired=true },
                         new ProviderParameter{ Key="zoneid", Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false },
-                        new ProviderParameter{ Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="60", IsCredential=false }
+                        new ProviderParameter{ Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="120", IsCredential=false }
                     },
                     ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                     Config = "Provider=Certify.Providers.DNS.SimpleDNSPlus",

@@ -38,7 +38,7 @@ namespace Certify.Providers.DNS.GoDaddy
         private readonly string _authKey;
         private readonly string _authSecret;
         private const string _baseUri = "https://api.godaddy.com/v1/";
-        private const string _listZonesUri = _baseUri + "domains?limit=500";
+        private const string _listZonesUri = _baseUri + "domains?limit=999";
         private const string _createRecordUri = _baseUri + "domains/{0}/records";
         private const string _listRecordsUri = _baseUri + "domains/{0}/records/{1}";
         private const string _deleteRecordUri = _baseUri + "domains/{0}/records/{1}";
@@ -67,12 +67,12 @@ namespace Certify.Providers.DNS.GoDaddy
                     Title = "GoDaddy DNS API",
                     Description = "Validates via GoDaddy DNS APIs using credentials",
                     HelpUrl = "http://docs.certifytheweb.com/docs/dns-godaddy.html",
-                    PropagationDelaySeconds = 60,
+                    PropagationDelaySeconds = 120,
                     ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{ Key="authkey", Name="Auth Key", IsRequired=true },
                         new ProviderParameter{ Key="authsecret", Name="Auth Secret", IsRequired=true },
                         new ProviderParameter{ Key="zoneid", Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false },
-                        new ProviderParameter{ Key="propagationdelay", Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="60", IsCredential=false }
+                        new ProviderParameter{ Key="propagationdelay", Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="120", IsCredential=false }
                     },
                     ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                     Config = "Provider=Certify.Providers.DNS.GoDaddy",

@@ -40,7 +40,7 @@ namespace Certify.Providers.DNS.OVH
                     Title = "OVH DNS API",
                     Description = "Validates via OVH APIs using credentials generated from the token creation page https://api.ovh.com/createToken/index.cgi?GET=/*&PUT=/*&POST=/*&DELETE=/*  ",
                     HelpUrl = "http://docs.certifytheweb.com/docs/dns-ovh.html", // TODO !
-                    PropagationDelaySeconds = 60,
+                    PropagationDelaySeconds = 120,
                     ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{Key=ApplicationKeyParamKey, Name="Application Key", IsRequired=true },
                         new ProviderParameter{Key=ApplicationSecretParamKey, Name="Application Secret", IsRequired=true },
@@ -48,7 +48,7 @@ namespace Certify.Providers.DNS.OVH
                                               Description =$"Should be one of the following : {OvhClient.GetAvailableEndpointsAsString()}" },
                         new ProviderParameter{Key=ConsumerKeyParamKey, Name="Consumer Key", IsRequired=true },
                         new ProviderParameter{Key="zoneid", Name="DNS Zone Id", Description="Zone Id is the root domain name e.g. example.com", IsRequired=true, IsPassword=false, IsCredential=false },
-                        new ProviderParameter{Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="60", IsCredential=false }
+                        new ProviderParameter{Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="120", IsCredential=false }
                     },
                     ChallengeType = Certify.Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                     Config = "Provider=Certify.Providers.DNS.Ovh",
