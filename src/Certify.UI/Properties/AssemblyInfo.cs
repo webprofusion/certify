@@ -9,7 +9,7 @@ using System.Windows;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Certify SSL Manager")]
-[assembly: AssemblyCopyright("Copyright © Webprofusion Pty Ltd 2019")]
+[assembly: AssemblyCopyright("Copyright © Webprofusion Pty Ltd")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
