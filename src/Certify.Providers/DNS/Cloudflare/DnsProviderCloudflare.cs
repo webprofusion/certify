@@ -108,8 +108,8 @@ namespace Certify.Providers.DNS.Cloudflare
                     HelpUrl = "https://docs.certifytheweb.com/docs/dns-cloudflare.html",
                     PropagationDelaySeconds = 60,
                     ProviderParameters = new List<ProviderParameter>{
-                        new ProviderParameter{Key="emailaddress", Name="Email Address", IsRequired=true },
-                        new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true },
+                        new ProviderParameter{Key="emailaddress", Name="Email Address", IsRequired=false, Description="Required if not using API Token" },
+                        new ProviderParameter{Key="authkey", Name="Auth Key",  IsRequired=false, Description="Required if not using API Token" },
                         new ProviderParameter{Key="apitoken", Name="API Token", IsRequired=false, Description="Used instead of Email + Auth Key" },
                         new ProviderParameter{Key="zoneid",Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false },
                         new ProviderParameter{Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="60", IsCredential=false },
@@ -364,7 +364,7 @@ namespace Certify.Providers.DNS.Cloudflare
         {
             _log = log;
 
-            if (parameters.ContainsKey("propagationdelay"))
+            if (parameters?.ContainsKey("propagationdelay") == true)
             {
                 if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
                 {

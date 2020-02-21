@@ -97,7 +97,7 @@ namespace Certify.Core.Management.Challenges.DNS
         {
             _log = log;
             
-            if (parameters.ContainsKey("propagationdelay"))
+            if (parameters?.ContainsKey("propagationdelay") == true)
             {
                 if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
                 {

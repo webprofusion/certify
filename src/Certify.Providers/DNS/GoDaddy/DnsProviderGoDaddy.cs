@@ -308,7 +308,7 @@ namespace Certify.Providers.DNS.GoDaddy
         {
             _log = log;
 
-            if (parameters.ContainsKey("propagationdelay"))
+            if (parameters?.ContainsKey("propagationdelay") == true)
             {
                 if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
                 {

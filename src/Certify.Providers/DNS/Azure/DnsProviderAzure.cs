@@ -100,7 +100,7 @@ namespace Certify.Providers.DNS.Azure
 
             _dnsClient.SubscriptionId = _credentials["subscriptionid"];
 
-            if (parameters.ContainsKey("propagationdelay"))
+            if (parameters?.ContainsKey("propagationdelay") == true)
             {
                 if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
                 {
