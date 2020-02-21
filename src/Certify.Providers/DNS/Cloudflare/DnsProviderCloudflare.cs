@@ -110,7 +110,7 @@ namespace Certify.Providers.DNS.Cloudflare
                     ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{Key="emailaddress", Name="Email Address", IsRequired=true },
                         new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=true },
-                        new ProviderParameter{Key="apitoken", Name="API Token", IsRequired=false, Description="Used instead of Email + Auth Key" }
+                        new ProviderParameter{Key="apitoken", Name="API Token", IsRequired=false, Description="Used instead of Email + Auth Key" },
                         new ProviderParameter{Key="zoneid",Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false },
                         new ProviderParameter{Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="60", IsCredential=false },
 
