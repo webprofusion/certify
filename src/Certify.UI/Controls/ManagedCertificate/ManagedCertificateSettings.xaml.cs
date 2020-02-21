@@ -110,12 +110,18 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return false;
             }
 
+            if (ItemViewModel.SelectedItem.DomainOptions.Any(d => d.IsSelected && (!d.Domain.Contains(".") || d.Domain.ToLower().EndsWith(".local"))))
+            {
+                // one or more selected domains does not include a label seperator (is an internal host name) or end in .local
+                MessageBox.Show("One or more domains specified are internal hostnames. Certificates for internal host names are not supported by the Certificate Authority.", SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
             // if title set to the default, use the primary domain
             if (item.Name == SR.ManagedCertificateSettings_DefaultTitle)
             {
                 item.Name = ItemViewModel.PrimarySubjectDomain.Domain;
             }
-
 
             // certificates cannot request wildcards unless they also use DNS validation
             if (
