@@ -88,16 +88,6 @@ namespace Certify.Management
                 await db.OpenAsync();
                 using (var tran = db.BeginTransaction())
                 {
-                    foreach (var deleted in _managedCertificatesCache.Values.Where(s => s.Deleted).ToList())
-                    {
-                        using (var cmd = new SQLiteCommand("DELETE FROM manageditem WHERE id=@id", db))
-                        {
-                            cmd.Parameters.Add(new SQLiteParameter("@id", deleted.Id));
-                            await cmd.ExecuteNonQueryAsync();
-                        }
-                        _managedCertificatesCache.TryRemove(deleted.Id, out var val);
-                    }
-
                     foreach (var changed in _managedCertificatesCache.Values.Where(s => s.IsChanged))
                     {
                         using (var cmd = new SQLiteCommand("INSERT OR REPLACE INTO manageditem (id,parentid,json) VALUES (@id,@parentid, @json)", db))
@@ -257,7 +247,7 @@ namespace Certify.Management
 
                     foreach (var site in managedCertificateList)
                     {
-                        site.IsChanged = false;
+                        site.IsChanged = true;
                         _managedCertificatesCache.AddOrUpdate(site.Id, site, (key, oldValue) => site);
                     }
                 }
