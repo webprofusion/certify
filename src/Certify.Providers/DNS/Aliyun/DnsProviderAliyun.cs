@@ -20,7 +20,8 @@ namespace Certify.Providers.DNS.Aliyun
         private readonly string _accessKeyId;
         private readonly string _accessKeySecret;
 
-        public int PropagationDelaySeconds => Definition.PropagationDelaySeconds;
+        private int? _customPropagationDelay = null;
+        public int PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
 
         public string ProviderId => Definition.Id;
 
@@ -66,6 +67,13 @@ namespace Certify.Providers.DNS.Aliyun
                             IsRequired = true,
                             IsPassword = false,
                             IsCredential = false
+                        },
+                        new ProviderParameter{ 
+                            Key="propagationdelay",
+                            Name="Propagation Delay Seconds", 
+                            IsRequired=false, IsPassword=false, 
+                            Value="120", 
+                            IsCredential=false 
                         }
                     },
                     ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
@@ -235,9 +243,18 @@ namespace Certify.Providers.DNS.Aliyun
             return zones;
         }
 
-        public async Task<bool> InitProvider(ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+
+            if (parameters.ContainsKey("propagationdelay"))
+            {
+                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                {
+                    _customPropagationDelay = customPropDelay;
+                }
+            }
+
             return await Task.FromResult(true);
         }
 

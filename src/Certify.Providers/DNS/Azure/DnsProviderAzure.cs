@@ -17,7 +17,8 @@ namespace Certify.Providers.DNS.Azure
 
         private Dictionary<string, string> _credentials;
 
-        public int PropagationDelaySeconds => Definition.PropagationDelaySeconds;
+        private int? _customPropagationDelay = null;
+        public int PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
 
         public string ProviderId => Definition.Id;
 
@@ -46,7 +47,8 @@ namespace Certify.Providers.DNS.Azure
                         new ProviderParameter{Key="secret",Name="Svc Principal Secret", IsRequired=true , IsPassword=true},
                         new ProviderParameter{Key="subscriptionid",Name="DNS Subscription Id", IsRequired=true , IsPassword=false},
                         new ProviderParameter{Key="resourcegroupname",Name="Resource Group Name", IsRequired=true , IsPassword=false},
-                        new ProviderParameter{ Key="zoneid",Name="DNS Zone Name", IsRequired=true, IsPassword=false, IsCredential=false }
+                        new ProviderParameter{Key="zoneid",Name="DNS Zone Name", IsRequired=true, IsPassword=false, IsCredential=false },
+                        new ProviderParameter{Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="60", IsCredential=false }
                     },
                     ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                     Config = "Provider=Certify.Providers.DNS.Azure",
@@ -82,7 +84,7 @@ namespace Certify.Providers.DNS.Azure
             }
         }
 
-        public async Task<bool> InitProvider(ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
 
@@ -97,6 +99,14 @@ namespace Certify.Providers.DNS.Azure
             _dnsClient = new DnsManagementClient(serviceCreds);
 
             _dnsClient.SubscriptionId = _credentials["subscriptionid"];
+
+            if (parameters.ContainsKey("propagationdelay"))
+            {
+                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                {
+                    _customPropagationDelay = customPropDelay;
+                }
+            }
             return true;
         }
 
@@ -134,7 +144,9 @@ namespace Certify.Providers.DNS.Azure
                     }
                 }
 
-            } catch {
+            }
+            catch
+            {
                 // No record exist
             }
 
@@ -147,7 +159,7 @@ namespace Certify.Providers.DNS.Azure
                        RecordType.TXT,
                        recordSetParams
                 );
-                               
+
 
                 if (result != null)
                 {

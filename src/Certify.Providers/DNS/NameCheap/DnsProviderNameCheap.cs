@@ -12,7 +12,7 @@ using Certify.Models.Providers;
 // ReSharper disable once CheckNamespace
 namespace Certify.Providers.DNS.NameCheap
 {
-    public class DnsProviderNameCheap: IDnsProvider
+    public class DnsProviderNameCheap : IDnsProvider
     {
         public DnsProviderNameCheap(Dictionary<string, string> credentials)
         {
@@ -55,7 +55,8 @@ namespace Certify.Providers.DNS.NameCheap
                 {
                     new ProviderParameter { Key = PARAM_API_USER, Name = "API User", IsRequired = true, IsPassword = false },
                     new ProviderParameter { Key = PARAM_API_KEY, Name = "API Key", IsRequired = true, IsPassword = true },
-                    new ProviderParameter { Key = PARAM_IP, Name = "Your IP", Description = "IP Address of the server that sends requests to NameCheap API", IsRequired = true, IsPassword = false }
+                    new ProviderParameter { Key = PARAM_IP, Name = "Your IP", Description = "IP Address of the server that sends requests to NameCheap API", IsRequired = true, IsPassword = false },
+                    new ProviderParameter { Key= "propagationdelay", Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="120", IsCredential=false }
                 },
                 ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.NameCheap",
@@ -70,7 +71,8 @@ namespace Certify.Providers.DNS.NameCheap
         /// </summary>
         public static ProviderDefinition Definition { get; }
 
-        public int PropagationDelaySeconds => Definition.PropagationDelaySeconds;
+        private int? _customPropagationDelay = null;
+        public int PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
         public string ProviderId => Definition.Id;
         public string ProviderTitle => Definition.Title;
         public string ProviderDescription => Definition.Description;
@@ -84,9 +86,18 @@ namespace Certify.Providers.DNS.NameCheap
         /// <summary>
         /// Initializes the provider.
         /// </summary>
-        public Task<bool> InitProvider(ILog log = null)
+        public Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+
+            if (parameters.ContainsKey("propagationdelay"))
+            {
+                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                {
+                    _customPropagationDelay = customPropDelay;
+                }
+            }
+
             return Task.FromResult(true);
         }
 
@@ -99,13 +110,13 @@ namespace Certify.Providers.DNS.NameCheap
             {
                 var zones = await GetZonesBatchAsync(1);
                 if (zones?.Any() == true)
-                    return new ActionResult {IsSuccess = true, Message = "Test completed."};
+                    return new ActionResult { IsSuccess = true, Message = "Test completed." };
 
-                return new ActionResult {IsSuccess = true, Message = "Test completed, but no zones returned."};
+                return new ActionResult { IsSuccess = true, Message = "Test completed, but no zones returned." };
             }
             catch (Exception ex)
             {
-                return new ActionResult {IsSuccess = false, Message = "Test failed: " + ex.Message };
+                return new ActionResult { IsSuccess = false, Message = "Test failed: " + ex.Message };
             }
         }
 
@@ -345,7 +356,7 @@ namespace Certify.Providers.DNS.NameCheap
                 throw new Exception($"NameCheap API method {request.RequestUri} returned invalid XML response:\n{content}", ex);
             }
 
-            if(xml.Attribute("Status")?.Value.ToLower() != "ok")
+            if (xml.Attribute("Status")?.Value.ToLower() != "ok")
                 throw new Exception($"NameCheap API method {request.RequestUri} returned an error status '{xml.Attribute("Status")?.Value}':\n{content}");
 
             return xml;
@@ -356,7 +367,7 @@ namespace Certify.Providers.DNS.NameCheap
         /// </summary>
         private Dictionary<string, string> WithDefaultArgs(string command, Dictionary<string, string> args = null)
         {
-            if(args == null)
+            if (args == null)
                 args = new Dictionary<string, string>();
 
             args.Add("ApiUser", _apiUser);
@@ -380,7 +391,7 @@ namespace Certify.Providers.DNS.NameCheap
             var matchingZone = knownZones.Select(x => x.ZoneId)
                                          .FirstOrDefault(x => domain.EndsWith(x, StringComparison.InvariantCultureIgnoreCase));
 
-            if(matchingZone == null)
+            if (matchingZone == null)
                 throw new ArgumentException($"Domain {domain} is not managed by this account!");
 
             // for "example.co.uk": SLD = "example", TLD = "co.uk"

@@ -44,7 +44,8 @@ namespace Certify.Providers.DNS.GoDaddy
         private const string _deleteRecordUri = _baseUri + "domains/{0}/records/{1}";
         private const string _updateRecordUri = _baseUri + "domains/{0}/records/{1}/{2}";
 
-        public int PropagationDelaySeconds => Definition.PropagationDelaySeconds;
+        private int? _customPropagationDelay = null;
+        public int PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
 
         public string ProviderId => Definition.Id;
 
@@ -70,7 +71,8 @@ namespace Certify.Providers.DNS.GoDaddy
                     ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{ Key="authkey", Name="Auth Key", IsRequired=true },
                         new ProviderParameter{ Key="authsecret", Name="Auth Secret", IsRequired=true },
-                        new ProviderParameter{ Key="zoneid", Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false }
+                        new ProviderParameter{ Key="zoneid", Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false },
+                        new ProviderParameter{ Key="propagationdelay", Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="60", IsCredential=false }
                     },
                     ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                     Config = "Provider=Certify.Providers.DNS.GoDaddy",
@@ -302,9 +304,18 @@ namespace Certify.Providers.DNS.GoDaddy
             return zones;
         }
 
-        public async Task<bool> InitProvider(ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+
+            if (parameters.ContainsKey("propagationdelay"))
+            {
+                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                {
+                    _customPropagationDelay = customPropDelay;
+                }
+            }
+
             return await Task.FromResult(true);
         }
     }

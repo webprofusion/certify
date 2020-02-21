@@ -43,7 +43,7 @@ namespace Certify.Providers.DNS.AWSRoute53
                     ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{ Key="accesskey",Name="Access Key", IsRequired=true, IsPassword=false },
                         new ProviderParameter{ Key="secretaccesskey",Name="Secret Access Key", IsRequired=true, IsPassword=true },
-                        new ProviderParameter{ Key="propagationdelay",Name="Propagation Delay Seconds (optional)", IsRequired=false, IsPassword=false, Value="60", IsCredential=false },
+                        new ProviderParameter{ Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="60", IsCredential=false },
                         new ProviderParameter{ Key="zoneid",Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false },
                     },
                     ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
@@ -270,9 +270,18 @@ namespace Certify.Providers.DNS.AWSRoute53
             return results;
         }
 
-        public async Task<bool> InitProvider(ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+
+            if (parameters.ContainsKey("propagationdelay"))
+            {
+                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                {
+                    _customPropagationDelay = customPropDelay;
+                }
+            }
+
             return await Task.FromResult(true);
         }
     }

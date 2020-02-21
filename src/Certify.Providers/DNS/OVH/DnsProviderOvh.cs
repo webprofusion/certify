@@ -15,7 +15,8 @@ namespace Certify.Providers.DNS.OVH
         private ILog _log;
         private readonly Dictionary<string, string> credentials;
 
-        public int PropagationDelaySeconds => Definition.PropagationDelaySeconds;
+        private int? _customPropagationDelay = null;
+        public int PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
 
         public string ProviderId => Definition.Id;
 
@@ -46,7 +47,8 @@ namespace Certify.Providers.DNS.OVH
                         new ProviderParameter{Key=ApplicationEndpointParamKey, Name="Endpoint name of OVH API", IsRequired=false,
                                               Description =$"Should be one of the following : {OvhClient.GetAvailableEndpointsAsString()}" },
                         new ProviderParameter{Key=ConsumerKeyParamKey, Name="Consumer Key", IsRequired=true },
-                        new ProviderParameter{Key="zoneid", Name="DNS Zone Id", Description="Zone Id is the root domain name e.g. example.com", IsRequired=true, IsPassword=false, IsCredential=false }
+                        new ProviderParameter{Key="zoneid", Name="DNS Zone Id", Description="Zone Id is the root domain name e.g. example.com", IsRequired=true, IsPassword=false, IsCredential=false },
+                        new ProviderParameter{Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="60", IsCredential=false }
                     },
                     ChallengeType = Certify.Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                     Config = "Provider=Certify.Providers.DNS.Ovh",
@@ -138,9 +140,18 @@ namespace Certify.Providers.DNS.OVH
             this.credentials = credentials;
         }
 
-        public async Task<bool> InitProvider(ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+
+            if (parameters.ContainsKey("propagationdelay"))
+            {
+                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                {
+                    _customPropagationDelay = customPropDelay;
+                }
+            }
+
             return await Task.FromResult(true);
         }
 

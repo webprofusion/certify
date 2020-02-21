@@ -51,7 +51,7 @@ namespace Certify.Core.Tests
             _credentials = await credentialsManager.GetUnlockedCredentialsDictionary(_credStorageKey);
 
             _provider = new Providers.DNS.AWSRoute53.DnsProviderAWSRoute53(_credentials);
-            await _provider.InitProvider();
+            await _provider.InitProvider(new Dictionary<string, string> { });
         }
 
         [TestMethod, TestCategory("DNS")]

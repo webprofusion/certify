@@ -32,7 +32,7 @@ namespace Certify.Models.Providers
 
     public interface IDnsProvider
     {
-        Task<bool> InitProvider(ILog log = null);
+        Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null);
 
         /// <summary>
         /// Perform a test of credentials, usually by listings DNS zones

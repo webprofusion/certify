@@ -40,7 +40,7 @@ namespace Certify.Core.Management.Challenges.DNS
             }
         }
 
-        public DnsProviderManual(Dictionary<string, string> parameters)
+        public DnsProviderManual()
         {
         }
 
@@ -73,7 +73,7 @@ namespace Certify.Core.Management.Challenges.DNS
             return Task.FromResult(new List<DnsZone>());
         }
 
-        Task<bool> IDnsProvider.InitProvider(ILog log)
+        Task<bool> IDnsProvider.InitProvider(Dictionary<string, string> parameters, ILog log)
         {
             _log = log;
 

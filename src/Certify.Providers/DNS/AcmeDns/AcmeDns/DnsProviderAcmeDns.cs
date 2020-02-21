@@ -85,7 +85,6 @@ namespace Certify.Providers.DNS.AcmeDns
                 MissingMemberHandling = MissingMemberHandling.Ignore,
                 NullValueHandling = NullValueHandling.Ignore
             };
-
         }
 
         private async Task<ValueTuple<AcmeDnsRegistration, bool>> Register(string settingsPath, string domainId)
@@ -225,9 +224,18 @@ namespace Certify.Providers.DNS.AcmeDns
             return await Task.FromResult(results);
         }
 
-        public async Task<bool> InitProvider(ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+
+            if (parameters.ContainsKey("propagationdelay"))
+            {
+                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                {
+                    _customPropagationDelay = customPropDelay;
+                }
+            }
+
             return await Task.FromResult(true);
         }
 
