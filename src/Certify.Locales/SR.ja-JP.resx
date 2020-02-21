@@ -550,7 +550,7 @@
     <value>新しい連絡先を登録すると、証明書の要求を開始できます。</value>
   </data>
   <data name="MainWindow_IISNotAvailable" xml:space="preserve">
-    <value>このサーバーでIISが検出されなかったため、重要な機能は使用できなくなりました。 IISがインストールされ、このサーバーで動作していることが分かっている場合は、サーバーのオペレーティングシステムのバージョンとIISのバージョンの詳細を提供する apps@webprofusion にこのエラーを報告してください</value>
+    <value>このサーバーでIISが検出されなかったため、重要な機能は使用できなくなりました。 IISがインストールされ、このサーバーで動作していることが分かっている場合は、サーバーのオペレーティングシステムのバージョンとIISのバージョンの詳細を提供する support@certifytheweb.com にこのエラーを報告してください</value>
   </data>
   <data name="ManagedCertificateSettings_Include" xml:space="preserve">
     <value>インクルード</value>

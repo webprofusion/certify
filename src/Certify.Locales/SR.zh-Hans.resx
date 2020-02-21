@@ -517,7 +517,7 @@
     <value>先注册一个联系人，然后就可以开始请求证书了。</value>
   </data>
   <data name="MainWindow_IISNotAvailable" xml:space="preserve">
-    <value>此服务器上并没有检测到IIS，重要的功能无法使用。如果你确认IIS已安装并能正常运行，请将此错误以及您的系统版本和IIS版本发送至 apps@webprofusion。</value>
+    <value>此服务器上并没有检测到IIS，重要的功能无法使用。如果你确认IIS已安装并能正常运行，请将此错误以及您的系统版本和IIS版本发送至 support@certifytheweb.com。</value>
   </data>
   <data name="MainWindow_RenewAllConfirm" xml:space="preserve">
     <value>将会把所有已配置自动续期的站点重新续期，继续？</value>

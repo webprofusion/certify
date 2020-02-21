@@ -382,7 +382,7 @@
     <value>Esto renovará los certificados para todos los elementos de auto-renovación. ¿Proceder?</value>
   </data>
   <data name="MainWindow_IISNotAvailable" xml:space="preserve">
-    <value>No se detectó IIS en este servidor, una serie de características importantes no estarán disponible. Si IIS está instalado y ejecutándose en este servidor, informe este error a apps@webprofusion proporcionando detalles de la versión del sistema operativo del servidor y las versiones de IIS.</value>
+    <value>No se detectó IIS en este servidor, una serie de características importantes no estarán disponible. Si IIS está instalado y ejecutándose en este servidor, informe este error a support@certifytheweb.com proporcionando detalles de la versión del sistema operativo del servidor y las versiones de IIS.</value>
   </data>
   <data name="MainWindow_GetStartGuideWithNewCert" xml:space="preserve">
     <value>Comience registrando un nuevo contacto, luego puede comenzar a solicitar certificados.</value>

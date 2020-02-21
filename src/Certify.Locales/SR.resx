@@ -265,7 +265,7 @@
     <value>Password</value>
   </data>
   <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
-    <value>This version is free for evaluation and will manage a limited number of certificates. To remove this limitation please purchase a registration key. If you have previously donated please email apps@webprofusion.com with details of your sponsorship PayPal transaction to obtain a free key. This offer is also open to developers who have PRs accepted for this app on GitHub.</value>
+    <value>This version is free for evaluation and will manage a limited number of certificates. To remove this limitation please purchase a registration key. Registered users can get support by emailing support@certifytheweb.com</value>
   </data>
   <data name="AboutControl_RegistrationTypeLabel" xml:space="preserve">
     <value>Not Registered</value>
@@ -528,7 +528,7 @@
     <value>This will renew certificates for all auto-renewed items. Proceed?</value>
   </data>
   <data name="MainWindow_IISNotAvailable" xml:space="preserve">
-    <value>IIS Was not detected on this server, important functionality will be unavailable. If you know IIS is installed and working on this server, please report this error to apps@webprofusion providing details of your server Operating System version and IIS versions</value>
+    <value>IIS Was not detected on this server, important functionality will be unavailable. If you know IIS is installed and working on this server, please report this error to support@certifytheweb.com providing details of your server Operating System version and IIS versions</value>
   </data>
   <data name="MainWindow_GetStartGuideWithNewCert" xml:space="preserve">
     <value>Get started by registering a new contact, then you can start requesting certificates.</value>

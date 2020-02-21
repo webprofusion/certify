@@ -513,7 +513,7 @@
     <value>Dette fornyer sertifikater for alle automatisk fornyede elementer. Fortsette?</value>
   </data>
   <data name="MainWindow_IISNotAvailable" xml:space="preserve">
-    <value>IIS ble ikke oppdaget på denne serveren, viktig funksjonalitet vil ikke være tilgjengelig. Hvis du vet at IIS er installert og jobber på denne serveren, vennligst rapporter denne feilen til apps@webprofusion, og gi detaljer om serverens operativsystemversjon og IIS-versjoner</value>
+    <value>IIS ble ikke oppdaget på denne serveren, viktig funksjonalitet vil ikke være tilgjengelig. Hvis du vet at IIS er installert og jobber på denne serveren, vennligst rapporter denne feilen til support@certifytheweb.com, og gi detaljer om serverens operativsystemversjon og IIS-versjoner</value>
   </data>
   <data name="MainWindow_GetStartGuideWithNewCert" xml:space="preserve">
     <value>Kom i gang ved å registrere en ny kontakt, så kan du begynne å be om sertifikater.</value>

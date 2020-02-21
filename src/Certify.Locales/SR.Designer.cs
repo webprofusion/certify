@@ -19,7 +19,7 @@ namespace Certify.Locales {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class SR {
@@ -133,7 +133,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This version is free for evaluation and will manage a limited number of certificates. To remove this limitation please purchase a registration key. If you have previously donated please email apps@webprofusion.com with details of your sponsorship PayPal transaction to obtain a free key. This offer is also open to developers who have PRs accepted for this app on GitHub..
+        ///   Looks up a localized string similar to This version is free for evaluation and will manage a limited number of certificates. To remove this limitation please purchase a registration key. Registered users can get support by emailing support@certifytheweb.com.
         /// </summary>
         public static string AboutControl_TrialDetailLabel {
             get {
@@ -475,7 +475,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to IIS Was not detected on this server, important functionality will be unavailable. If you know IIS is installed and working on this server, please report this error to apps@webprofusion providing details of your server Operating System version and IIS versions.
+        ///   Looks up a localized string similar to IIS Was not detected on this server, important functionality will be unavailable. If you know IIS is installed and working on this server, please report this error to support@certifytheweb.com providing details of your server Operating System version and IIS versions.
         /// </summary>
         public static string MainWindow_IISNotAvailable {
             get {
