@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.SQLite;
@@ -58,15 +58,9 @@ namespace Certify.Management
             return Path.Combine(appDataPath, $"{ITEMMANAGERCONFIG}.db");
         }
 
-        /// <summary>
-        /// Perform a full backup and save of the current set of managed sites
-        /// </summary>
-        public async Task StoreAllManagedItems()
+        private async Task CreateManagedItemsSchema()
         {
-            var watch = Stopwatch.StartNew();
-
-            //create database if it doesn't exist
-            if (!File.Exists(_dbPath))
+            try
             {
                 using (var db = new SQLiteConnection(_connectionString))
                 {
@@ -77,10 +71,22 @@ namespace Certify.Management
                     }
                 }
             }
-            else
+            catch { }
+        }
+
+        /// <summary>
+        /// Perform a full backup and save of the current set of managed sites
+        /// </summary>
+        public async Task StoreAllManagedItems()
+        {
+            var watch = Stopwatch.StartNew();
+
+            //create database if it doesn't exist
+            if (!File.Exists(_dbPath))
             {
-               
+                await this.CreateManagedItemsSchema();
             }
+
 
             // save all new/modified items into settings database
             using (var db = new SQLiteConnection(_connectionString))
@@ -141,7 +147,8 @@ namespace Certify.Management
                 }
                 catch
                 {
-                    // error checking for upgrade
+                    // error checking for upgrade, ensure table exists
+                    await CreateManagedItemsSchema();
 
                     return false;
                 }
@@ -170,31 +177,32 @@ namespace Certify.Management
             {
                 var managedCertificates = new List<ManagedCertificate>();
                 using (var db = new SQLiteConnection(_connectionString))
-                using (var cmd = new SQLiteCommand("SELECT id, json FROM manageditem", db))
                 {
-                    await db.OpenAsync();
-                    using (var reader = await cmd.ExecuteReaderAsync())
+                    using (var cmd = new SQLiteCommand("SELECT id, json FROM manageditem", db))
                     {
-                        while (await reader.ReadAsync())
+                        await db.OpenAsync();
+                        using (var reader = await cmd.ExecuteReaderAsync())
                         {
-                            var itemId = (string)reader["id"];
-
-                            var managedCertificate = JsonConvert.DeserializeObject<ManagedCertificate>((string)reader["json"]);
-
-                            // in some cases users may have previously manipulated the id, causing
-                            // duplicates. Correct the ID here (database Id is unique):
-                            if (managedCertificate.Id != itemId)
+                            while (await reader.ReadAsync())
                             {
-                                managedCertificate.Id = itemId;
-                                Debug.WriteLine("LoadSettings: Corrected managed site id: " + managedCertificate.Name);
-                            }
+                                var itemId = (string)reader["id"];
 
-                            managedCertificates.Add(managedCertificate);
+                                var managedCertificate = JsonConvert.DeserializeObject<ManagedCertificate>((string)reader["json"]);
+
+                                // in some cases users may have previously manipulated the id, causing
+                                // duplicates. Correct the ID here (database Id is unique):
+                                if (managedCertificate.Id != itemId)
+                                {
+                                    managedCertificate.Id = itemId;
+                                    Debug.WriteLine("LoadSettings: Corrected managed site id: " + managedCertificate.Name);
+                                }
+
+                                managedCertificates.Add(managedCertificate);
+                            }
+                            reader.Close();
                         }
-                        reader.Close();
                     }
                 }
-
 
                 _managedCertificatesCache.Clear();
 
