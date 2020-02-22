@@ -707,6 +707,19 @@ namespace Certify.Providers.Certes
 
             if (!attemptedChallenge.IsValidated)
             {
+                try
+                {
+                    await _acme.HttpClient.ConsumeNonce();
+                }
+                catch (Exception)
+                {
+                    return new StatusMessage
+                    {
+                        IsOK = false,
+                        Message = "Failed to resume communication with Certificate Authority API. Try again later."
+                    };
+                }
+
                 IChallengeContext challenge = (IChallengeContext)attemptedChallenge.ChallengeData;
                 try
                 {
