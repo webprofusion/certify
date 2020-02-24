@@ -287,9 +287,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                     {
                         var msg = ((Exception)result.Result)?.ToString();
                         Log?.Error($"RequestCertificate: {msg}");
-
-                        // problem communicating or completing the request
-                        MessageBox.Show($"A problem occurred completing this request. Please refer to the log file for more details. \r\n {msg}");
                     }
                 }
 

@@ -103,7 +103,7 @@ namespace Certify.Core.Management.Challenges
                 {
                     Log("Checking for auto close.");
                     var time = _lastRequestTime - DateTime.Now;
-                    if (Math.Abs(time.TotalSeconds) > 30)
+                    if (Math.Abs(time.TotalSeconds) > 60)
                     {
                         Log("No requests recently, stopping server.");
                         Stop();
