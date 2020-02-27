@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -19,8 +19,12 @@ namespace Certify.Management
         /// <param name="serverProvider"></param>
         /// <param name="certifyManager"></param>
         /// <returns></returns>
-        public async Task<List<ActionStep>> GeneratePreview(ManagedCertificate item, ICertifiedServer serverProvider,
-            ICertifyManager certifyManager)
+        public async Task<List<ActionStep>> GeneratePreview(
+                    ManagedCertificate item,
+                    ICertifiedServer serverProvider,
+                    ICertifyManager certifyManager,
+                    ICredentialsManager credentialsManager
+            )
         {
             var newLine = "\r\n";
             var steps = new List<ActionStep>();
@@ -39,7 +43,7 @@ namespace Certify.Management
 
             if (hasDomains)
             {
-                var allCredentials = await new CredentialsManager().GetStoredCredentials();
+                var allCredentials = await credentialsManager.GetStoredCredentials();
 
                 var allDomains = new List<string> { item.RequestConfig.PrimaryDomain };
 

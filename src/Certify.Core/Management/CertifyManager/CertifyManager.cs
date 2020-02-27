@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -28,6 +28,7 @@ namespace Certify.Management
         private ChallengeDiagnostics _challengeDiagnostics = null;
         private IdnMapping _idnMapping = new IdnMapping();
         private PluginManager _pluginManager { get; set; }
+        private ICredentialsManager _credentialsManager { get; set; }
         private TelemetryClient _tc = null;
         private bool _isRenewAllInProgress { get; set; }
         private ILog _serviceLog { get; set; }
@@ -51,6 +52,7 @@ namespace Certify.Management
             Util.SetSupportedTLSVersions();
 
             _itemManager = new ItemManager();
+            _credentialsManager = new CredentialsManager();
             _serverProvider = (ICertifiedServer)new ServerProviderIIS();
 
             _progressResults = new ObservableCollection<RequestProgressState>();

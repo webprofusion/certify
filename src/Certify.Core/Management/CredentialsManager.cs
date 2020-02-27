@@ -12,7 +12,18 @@ using Newtonsoft.Json;
 
 namespace Certify.Management
 {
-    public class CredentialsManager
+    public interface ICredentialsManager
+    {
+        Task<bool> DeleteCredential(string storageKey);
+        Task<List<StoredCredential>> GetStoredCredentials(string type = null);
+        Task<StoredCredential> GetStoredCredential(string storageKey);
+        Task<string> GetUnlockedCredential(string storageKey);
+        Task<Dictionary<string, string>> GetUnlockedCredentialsDictionary(string storageKey);
+        Task<StoredCredential> UpdateCredential(StoredCredential credentialInfo);
+    }
+
+
+    public class CredentialsManager : ICredentialsManager
     {
         public const string CREDENTIALSTORE = "cred";
 
@@ -173,7 +184,7 @@ namespace Certify.Management
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public async Task<List<StoredCredential>> GetStoredCredentials()
+        public async Task<List<StoredCredential>> GetStoredCredentials(string type = null)
         {
             var path = GetDbPath();
 
@@ -190,7 +201,10 @@ namespace Certify.Management
                         while (await reader.ReadAsync())
                         {
                             var storedCredential = JsonConvert.DeserializeObject<StoredCredential>((string)reader["json"]);
-                            credentials.Add(storedCredential);
+                            if (string.IsNullOrEmpty(type) || type == storedCredential.ProviderType)
+                            {
+                                credentials.Add(storedCredential);
+                            }
                         }
                     }
                     db.Close();

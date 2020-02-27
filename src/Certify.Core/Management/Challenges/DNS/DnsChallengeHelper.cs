@@ -20,7 +20,11 @@ namespace Certify.Core.Management.Challenges
     public class DnsChallengeHelper
     {
         private readonly IdnMapping _idnMapping = new IdnMapping();
-
+        private readonly ICredentialsManager _credentialsManager;
+        public DnsChallengeHelper(ICredentialsManager credentialsManager)
+        {
+            _credentialsManager = credentialsManager;
+        }
         public async Task<DnsChallengeHelperResult> GetDnsProvider(string providerTypeId, string credentialsId, Dictionary<string, string> parameters)
         {
             var credentialsManager = new CredentialsManager();
@@ -91,7 +95,6 @@ namespace Certify.Core.Management.Challenges
             // for a given managed site configuration, attempt to complete the required challenge by
             // creating the required TXT record
 
-            var credentialsManager = new CredentialsManager();
             var credentials = new Dictionary<string, string>();
 
             IDnsProvider dnsAPIProvider = null;
@@ -108,7 +111,7 @@ namespace Certify.Core.Management.Challenges
                 // decode credentials string array
                 try
                 {
-                    credentials = await credentialsManager.GetUnlockedCredentialsDictionary(challengeConfig.ChallengeCredentialKey);
+                    credentials = await _credentialsManager.GetUnlockedCredentialsDictionary(challengeConfig.ChallengeCredentialKey);
                 }
                 catch (Exception)
                 {
@@ -267,7 +270,7 @@ namespace Certify.Core.Management.Challenges
         {
             // for a given managed site configuration, attempt to delete the TXT record created for
             // the challenge
-            var credentialsManager = new CredentialsManager();
+         
             var credentials = new Dictionary<string, string>();
 
             IDnsProvider dnsAPIProvider = null;
@@ -299,7 +302,7 @@ namespace Certify.Core.Management.Challenges
                 // decode credentials string array
                 try
                 {
-                    credentials = await credentialsManager.GetUnlockedCredentialsDictionary(challengeConfig.ChallengeCredentialKey);
+                    credentials = await _credentialsManager.GetUnlockedCredentialsDictionary(challengeConfig.ChallengeCredentialKey);
                 }
                 catch (Exception)
                 {

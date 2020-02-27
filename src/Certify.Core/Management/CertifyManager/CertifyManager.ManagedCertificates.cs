@@ -317,11 +317,11 @@ namespace Certify.Management
             }
         }
 
-        public async Task<List<ActionStep>> GeneratePreview(ManagedCertificate item) => await new PreviewManager().GeneratePreview(item, _serverProvider, this);
+        public async Task<List<ActionStep>> GeneratePreview(ManagedCertificate item) => await new PreviewManager().GeneratePreview(item, _serverProvider, this, _credentialsManager);
 
         public async Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId)
         {
-            var dnsHelper = new Core.Management.Challenges.DnsChallengeHelper();
+            var dnsHelper = new Core.Management.Challenges.DnsChallengeHelper(_credentialsManager);
             var result = await dnsHelper.GetDnsProvider(providerTypeId, credentialsId, null);
 
             if (result.Provider != null)
@@ -351,8 +351,7 @@ namespace Certify.Management
             }
 
             // perform or preview each task
-            var credentialsManager = new CredentialsManager();
-
+           
             var deploymentTasks = new List<DeploymentTask>();
 
             var taskList = managedCert.DeploymentTasks?.Where(t => string.IsNullOrEmpty(taskId) || taskId == t.Id);
@@ -372,7 +371,7 @@ namespace Certify.Management
 
                         if (!string.IsNullOrEmpty(taskConfig.ChallengeCredentialKey))
                         {
-                            credentials = await credentialsManager.GetUnlockedCredentialsDictionary(taskConfig.ChallengeCredentialKey);
+                            credentials = await _credentialsManager.GetUnlockedCredentialsDictionary(taskConfig.ChallengeCredentialKey);
                         }
 
                         var deploymentTask = new DeploymentTask(provider, taskConfig, credentials);
