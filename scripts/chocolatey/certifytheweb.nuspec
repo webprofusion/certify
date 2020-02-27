@@ -27,7 +27,7 @@ This is a nuspec. It mostly adheres to https://docs.nuget.org/create/Nuspec-Refe
     <!-- Is the version a prerelease of a version? https://docs.nuget.org/create/versioning#creating-prerelease-packages -->
     <!-- Note that unstable versions like 0.0.1 can be considered a released version, but it's possible that one can release a 0.0.1-beta before you release a 0.0.1 version. If the version number is final, that is considered a released version and not a prerelease. -->
     <version>4.1.7</version>
-    <packageSourceUrl>https://github.com/webprofusion/certify/tree/master/scripts/chocolatey</packageSourceUrl>
+    <packageSourceUrl>https://github.com/webprofusion/certify/blob/development/scripts/chocolatey/</packageSourceUrl>
     <!-- owners is a poor name for maintainers of the package. It sticks around by this name for compatibility reasons. It basically means you. -->
     <owners>Webprofusion</owners>
     <!-- ============================== -->
@@ -39,7 +39,7 @@ This is a nuspec. It mostly adheres to https://docs.nuget.org/create/Nuspec-Refe
     <projectUrl>https://certifytheweb.com</projectUrl>
     <iconUrl>https://certifytheweb.com/images/icon.png</iconUrl>
     <copyright>Webprofusion Pty Ltd</copyright>
-    <licenseUrl>https://raw.githubusercontent.com/webprofusion/certify/master/eula.txt</licenseUrl>
+    <licenseUrl>https://raw.githubusercontent.com/webprofusion/certify/development/eula.txt</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <projectSourceUrl>https://github.com/webprofusion/certify</projectSourceUrl>
     <docsUrl>https://docs.certifytheweb.com</docsUrl>
@@ -47,28 +47,13 @@ This is a nuspec. It mostly adheres to https://docs.nuget.org/create/Nuspec-Refe
     <bugTrackerUrl>https://github.com/webprofusion/certify/issues</bugTrackerUrl>
     <tags>certifytheweb certify letsencrypt ssl iis win https certificate acme windows simple</tags>
     <summary>The GUI to manage free letsencrypt.org https certificates for Windows</summary>
-    <description>Easily install and auto-renew free SSL/TLS certificates from letsencrypt.org for your IIS/Windows servers. Setting up https has never been easier. </description>
+    <description>The GUI to easily request, install, managed and auto-renew free SSL/TLS certificates from ACME CAs such as letsencrypt.org for your IIS/Windows servers. Setting up https has never been easier. </description>
     <releaseNotes>https://certifytheweb.com/home/changelog</releaseNotes>
     <!-- =============================== -->      
 
     <dependencies>
       <dependency id="dotnet4.6.2" />
     </dependencies>
-
-    <!-- Specifying dependencies and version ranges? https://docs.nuget.org/create/versioning#specifying-version-ranges-in-.nuspec-files -->
-    <!--<dependencies>
-      <dependency id="" version="__MINIMUM_VERSION__" />
-      <dependency id="" version="[__EXACT_VERSION__]" />
-      <dependency id="" version="[_MIN_VERSION_INCLUSIVE, MAX_VERSION_INCLUSIVE]" />
-      <dependency id="" version="[_MIN_VERSION_INCLUSIVE, MAX_VERSION_EXCLUSIVE)" />
-      <dependency id="" />
-      <dependency id="chocolatey-core.extension" version="1.1.0" />
-    </dependencies>-->
-    <!-- chocolatey-core.extension - https://chocolatey.org/packages/chocolatey-core.extension
-         - You want to use Get-UninstallRegistryKey on less than 0.9.10 (in chocolateyUninstall.ps1)
-         - You want to use Get-PackageParameters and on less than 0.11.0
-         - You want to take advantage of other functions in the core community maintainer's team extension package
-    -->
 
   </metadata>
   <files>
