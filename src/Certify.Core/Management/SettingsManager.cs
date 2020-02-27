@@ -30,7 +30,7 @@ namespace Certify.Management
             InstanceId = null;
             CertificateAuthorityFallback = null;
             DefaultCertificateAuthority = "letsencrypt.org";
-            EnabledAutomaticCAFailover = false;
+            EnableAutomaticCAFailover = false;
         }
 
         public static CoreAppSettings Current
@@ -138,7 +138,7 @@ namespace Certify.Management
         /// If true, the app will decide which Certificate Authority to choose from the list of supported providers.
         /// The preferred provider will be chosen first, with fallback to any other supported (and configured) providers if a failure occurs.
         /// </summary>
-        public bool EnabledAutomaticCAFailover { get; set; }
+        public bool EnableAutomaticCAFailover { get; set; }
     }
 
     public class SettingsManager
@@ -161,7 +161,7 @@ namespace Certify.Management
             CoreAppSettings.Current.EnableCertificateCleanup = prefs.EnableCertificateCleanup;
 
             CoreAppSettings.Current.DefaultCertificateAuthority = prefs.DefaultCertificateAuthority;
-            CoreAppSettings.Current.EnabledAutomaticCAFailover = prefs.EnabledAutomaticCAFailover;
+            CoreAppSettings.Current.EnableAutomaticCAFailover = prefs.EnableAutomaticCAFailover;
 
             CoreAppSettings.Current.DefaultKeyCredentials = prefs.DefaultKeyCredentials;
 
@@ -200,7 +200,7 @@ namespace Certify.Management
                 CertificateCleanupMode = CoreAppSettings.Current.CertificateCleanupMode,
                 DefaultCertificateAuthority = CoreAppSettings.Current.DefaultCertificateAuthority,
                 DefaultKeyCredentials = CoreAppSettings.Current.DefaultKeyCredentials,
-                EnabledAutomaticCAFailover = CoreAppSettings.Current.EnabledAutomaticCAFailover
+                EnableAutomaticCAFailover = CoreAppSettings.Current.EnableAutomaticCAFailover
             };
 
             return prefs;
