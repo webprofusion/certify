@@ -77,7 +77,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             if (item.Id == null && item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
             {
-                ShowValidationError("Sorry, the tls-sni-01 challenge type is no longer supported by Let's Encrypt for new certificates.");
+                ShowValidationError("Sorry, the tls-sni-01 challenge type is no longer supported for new certificates.");
                 return false;
             }
 

@@ -133,7 +133,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This version is free for evaluation and will manage a limited number of certificates. To remove this limitation please purchase a registration key. If you have previously donated please email apps@webprofusion.com with details of your sponsorship PayPal transaction to obtain a free key. This offer is also open to developers who have PRs accepted for this app on GitHub..
+        ///   Looks up a localized string similar to This version is free for evaluation and will manage a limited number of certificates. To remove this limitation please purchase a registration key. Registered users can get support by emailing support@certifytheweb.com.
         /// </summary>
         public static string AboutControl_TrialDetailLabel {
             get {
@@ -475,7 +475,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to IIS Was not detected on this server, important functionality will be unavailable. If you know IIS is installed and working on this server, please report this error to apps@webprofusion providing details of your server Operating System version and IIS versions.
+        ///   Looks up a localized string similar to IIS Was not detected on this server, important functionality will be unavailable. If you know IIS is installed and working on this server, please report this error to support@certifytheweb.com providing details of your server Operating System version and IIS versions.
         /// </summary>
         public static string MainWindow_IISNotAvailable {
             get {
@@ -773,7 +773,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The following selected domains will be included as a single certificate request. The Lets Encrypt service must be able to access all of these domains via port 80 (for HTTP challenges) or port 443 (for TLS-SNI challenges) for the certification process to work..
+        ///   Looks up a localized string similar to The following selected domains will be included as a single certificate request. The issuing Certificate Authority must be able to access all of these domains via port 80 (for HTTP challenges) or port 443 (for TLS-SNI challenges) for the certification process to work..
         /// </summary>
         public static string ManagedCertificateSettings_DomainIncluded {
             get {
@@ -1170,7 +1170,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There was a problem registering with Let&apos;s Encrypt using this email address. Check the email address is valid and that this computer has an open connection to the internet (outgoing https is required for API calls)..
+        ///   Looks up a localized string similar to There was a problem registering with the Certificate Authority using this email address. Check the email address is valid and that this computer has an open connection to the internet (outgoing https is required for API calls)..
         /// </summary>
         public static string New_Contact_EmailError {
             get {
@@ -1197,7 +1197,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The email address provided may be used to notify you of upcoming certificate renewals if required. Invalid email addresses will be rejected by Let&apos;s Encrypt..
+        ///   Looks up a localized string similar to The email address provided may be used to notify you of upcoming certificate renewals if required. Invalid email addresses will be rejected by the Certificate Authority..
         /// </summary>
         public static string New_Contact_Tip2 {
             get {

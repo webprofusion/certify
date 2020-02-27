@@ -112,7 +112,7 @@ namespace Certify.CLI
                         string acmeInfo = certifyManager.GetAcmeSummary();
 
                         Console.ForegroundColor = ConsoleColor.DarkYellow;
-                        System.Console.WriteLine("Let's Encrypt ACME API: " + acmeInfo);
+                        System.Console.WriteLine("ACME API: " + acmeInfo);
                         System.Console.WriteLine("ACMESharp Vault: " + vaultInfo);
             */
             System.Console.WriteLine("");

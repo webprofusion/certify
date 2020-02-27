@@ -78,7 +78,7 @@ namespace Certify.Models
         public CertRequestConfig RequestConfig { get; set; }
 
         /// <summary>
-        /// Optional list of deployment tasks to perform after reuqest/renewal or on demand
+        /// Optional list of deployment tasks to perform after request/renewal or on demand
         /// </summary>
         public ObservableCollection<DeploymentTaskConfig> DeploymentTasks { get; set; }
 

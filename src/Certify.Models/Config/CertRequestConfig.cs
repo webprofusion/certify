@@ -8,7 +8,7 @@ namespace Certify.Models
     public class CertRequestChallengeConfig : BindableBase
     {
         /// <summary>
-        /// In the case of Lets Encrypt, the challenge type this request will use (eg. http-01) 
+        /// In the case of ACME CA, the challenge type this request will use (eg. http-01) 
         /// </summary>
         public string ChallengeType { get; set; }
 
@@ -64,7 +64,6 @@ namespace Certify.Models
         /// Root path for our website content, used when responding to file based challenges 
         /// </summary>
         ///
-        [Obsolete]
         public string WebsiteRootPath { get; set; }
 
         /// <summary>
@@ -123,9 +122,9 @@ namespace Certify.Models
         public bool EnableFailureNotifications { get; set; } = true;
 
         /// <summary>
-        /// In the case of Let's Encrypt, the primary challenge type this request will use (eg. http-01) 
+        /// In the case of ACME, the primary challenge type this request will use (eg. http-01) 
         /// </summary>
-        [Obsolete("ChallengeType is now determined in Challenges collection")]
+        [Obsolete("ChallengeType is now determined in Challenges collection. This value is preserved for upgrade of legacy settings.")]
         public string ChallengeType { get; set; } = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP;
 
         /// <summary>

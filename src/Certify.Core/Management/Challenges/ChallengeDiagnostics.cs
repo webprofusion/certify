@@ -124,7 +124,7 @@ namespace Certify.Core.Management.Challenges
                     var challengeType = challengeConfig.ChallengeType;
                     if (challengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
                     {
-                        log.Warning("tls-sni-01 challenge type is no longer supported by the Let's Encrypt service. Falling back to http-01");
+                        log.Warning("tls-sni-01 challenge type is no longer supported by the Certificate Authority. Falling back to http-01");
                         challengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP;
                     }
 
@@ -377,7 +377,7 @@ namespace Certify.Core.Management.Challenges
                 return new ActionResult { IsSuccess = false, Message = msg };
             }
 
-            log.Information($"Preparing challenge response for Let's Encrypt server to check at: {httpChallenge.ResourceUri} with content {httpChallenge.Value}");
+            log.Information($"Preparing challenge response for the issuing Certificate Authority to check at: {httpChallenge.ResourceUri} with content {httpChallenge.Value}");
             log.Information("If the challenge response file is not accessible at this exact URL the validation will fail and a certificate will not be issued.");
 
             // get website root path (from challenge config or fallback to deprecated
@@ -635,7 +635,7 @@ namespace Certify.Core.Management.Challenges
             }
 
             // create DNS records (manually or via automation)
-            var dnsHelper = new DnsChallengeHelper();
+            var dnsHelper = new DnsChallengeHelper(new CredentialsManager());
 
             var dnsResult = await dnsHelper.CompleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value, isTestMode);
 

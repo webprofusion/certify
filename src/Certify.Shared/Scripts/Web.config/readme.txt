@@ -1,7 +1,7 @@
 ﻿About This Config
 -------------------------
 
-When Let's Encrypt performs validation over http (known as an http-01 challenge) 
+When the ACME-Enabled Certificate Authority (e.g. Let's Encrypt) performs validation over http (known as an http-01 challenge) 
 they ask for a randomly named text file to be created in the /.well-known/acme-challenge
  path of your website. So they should be able to retrieve it at 
 http://<yourdomain>/.well-known/acme-challenge/<filename>

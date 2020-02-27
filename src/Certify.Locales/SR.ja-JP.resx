@@ -550,7 +550,7 @@
     <value>新しい連絡先を登録すると、証明書の要求を開始できます。</value>
   </data>
   <data name="MainWindow_IISNotAvailable" xml:space="preserve">
-    <value>このサーバーでIISが検出されなかったため、重要な機能は使用できなくなりました。 IISがインストールされ、このサーバーで動作していることが分かっている場合は、サーバーのオペレーティングシステムのバージョンとIISのバージョンの詳細を提供する apps@webprofusion にこのエラーを報告してください</value>
+    <value>このサーバーでIISが検出されなかったため、重要な機能は使用できなくなりました。 IISがインストールされ、このサーバーで動作していることが分かっている場合は、サーバーのオペレーティングシステムのバージョンとIISのバージョンの詳細を提供する support@certifytheweb.com にこのエラーを報告してください</value>
   </data>
   <data name="ManagedCertificateSettings_Include" xml:space="preserve">
     <value>インクルード</value>
@@ -637,7 +637,7 @@
     <value>Webhookのメソッドを設定する必要があります。</value>
   </data>
   <data name="ManagedCertificateSettings_DomainIncluded" xml:space="preserve">
-    <value>以下の選択されたドメインは、単一の証明書要求として含まれます。 Lets Encryptサービスは、認証プロセスが機能するために、ポート80（HTTPチャレンジの場合）またはポート443（TLS-SNIチャレンジの場合）を介して、これらのすべてのドメインにアクセスできる必要があります。</value>
+    <value>以下の選択されたドメインは、単一の証明書要求として含まれます。 ACMEサービスは、認証プロセスが機能するために、ポート80（HTTPチャレンジの場合）またはポート443（TLS-SNIチャレンジの場合）を介して、これらのすべてのドメインにアクセスできる必要があります。</value>
   </data>
   <data name="Registration_KeyValidationError" xml:space="preserve">
     <value>ライセンスキーの検証中に問題が発生しました。もう一度お試しになるか、サポートにお問い合わせください。</value>

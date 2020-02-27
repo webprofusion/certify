@@ -127,7 +127,7 @@
     <value>ドメインの検証が完了: {0}</value>
   </data>
   <data name="CertifyManager_RequestCertificate" xml:space="preserve">
-    <value>Let's Encrypt で証明書を要求</value>
+    <value>ACME CA で証明書を要求</value>
   </data>
   <data name="CertifyManager_CompleteRequest" xml:space="preserve">
     <value>証明書の要求を完了しました。</value>
@@ -148,10 +148,10 @@
     <value>更新をスキップ、既存の証明書は利用できます。</value>
   </data>
   <data name="ManagedCertificateType_LocalIIS" xml:space="preserve">
-    <value>ローカルIIS、SSL証明書を Let's Encrypt</value>
+    <value>ローカルIIS、SSL証明書を ACME CA</value>
   </data>
   <data name="ManagedCertificateType_Manual" xml:space="preserve">
-    <value>マニュアルのSSL証明書を Let's Encrypt</value>
+    <value>マニュアルのSSL証明書を ACME CA</value>
   </data>
   <data name="CertifyManager_CertificateInstallFailed" xml:space="preserve">
     <value>証明書のインストール中にエラーが発生しました。 証明書ファイルが有効でない可能性があります：{0}</value>

@@ -118,10 +118,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="ManagedCertificateType_LocalIIS" xml:space="preserve">
-    <value>Local IIS, SSL Certificate via Let's Encrypt</value>
+    <value>Local IIS, SSL Certificate via ACME CA</value>
   </data>
   <data name="ManagedCertificateType_Manual" xml:space="preserve">
-    <value>Manual SSL Certificate via Let's Encrypt</value>
+    <value>Manual SSL Certificate via ACME CA</value>
   </data>
   <data name="Finish" xml:space="preserve">
     <value>Finish</value>
@@ -155,7 +155,7 @@
     <value>Certificate created ready for manual binding: {0}</value>
   </data>
   <data name="CertifyManager_LetsEncryptServiceTimeout" xml:space="preserve">
-    <value>The Let's Encrypt service did not issue a valid certificate in the time allowed. {0}</value>
+    <value>The ACME CA service did not issue a valid certificate in the time allowed. {0}</value>
   </data>
   <data name="CertifyManager_ValidationForChallengeNotSuccess" xml:space="preserve">
     <value>Validation of the required challenges did not complete successfully. {0}</value>
@@ -185,7 +185,7 @@ Check you have https SNI bindings for your site
 (ex: '0123456789ABCDEF0123456789ABCDEF.0123456789ABCDEF0123456789ABCDEF.acme.invalid') before proceeding.</value>
   </data>
   <data name="CertifyManager_ReqestValidationFromLetsEncrypt" xml:space="preserve">
-    <value>Requesting Validation from Let's Encrypt: {0}</value>
+    <value>Requesting Validation: {0}</value>
   </data>
   <data name="CertifyManager_AutoBinding" xml:space="preserve">
     <value>Performing Automated Certificate Binding</value>

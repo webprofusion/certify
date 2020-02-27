@@ -172,7 +172,7 @@
     <value>To use Certify SSL Manager and the free Let's Encrypt service to acquire SSL certificates you must first register as a contact.</value>
   </data>
   <data name="New_Contact_Tip2" xml:space="preserve">
-    <value>The email address provided may be used to notify you of upcoming certificate renewals if required. Invalid email addresses will be rejected by Let's Encrypt.</value>
+    <value>The email address provided may be used to notify you of upcoming certificate renewals if required. Invalid email addresses will be rejected by the Certificate Authority.</value>
   </data>
   <data name="New_Contact" xml:space="preserve">
     <value>New Contact</value>
@@ -220,7 +220,7 @@
     <value>Sorry, there was a problem submitting your feedback.</value>
   </data>
   <data name="New_Contact_EmailError" xml:space="preserve">
-    <value>There was a problem registering with Let's Encrypt using this email address. Check the email address is valid and that this computer has an open connection to the internet (outgoing https is required for API calls).</value>
+    <value>There was a problem registering with the Certificate Authority using this email address. Check the email address is valid and that this computer has an open connection to the internet (outgoing https is required for API calls).</value>
   </data>
   <data name="New_Contact_NeedAgree" xml:space="preserve">
     <value>You need to agree to the latest LetsEncrypt.org Subscriber Agreement.</value>
@@ -265,7 +265,7 @@
     <value>Password</value>
   </data>
   <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
-    <value>This version is free for evaluation and will manage a limited number of certificates. To remove this limitation please purchase a registration key. If you have previously donated please email apps@webprofusion.com with details of your sponsorship PayPal transaction to obtain a free key. This offer is also open to developers who have PRs accepted for this app on GitHub.</value>
+    <value>This version is free for evaluation and will manage a limited number of certificates. To remove this limitation please purchase a registration key. Registered users can get support by emailing support@certifytheweb.com</value>
   </data>
   <data name="AboutControl_RegistrationTypeLabel" xml:space="preserve">
     <value>Not Registered</value>
@@ -364,7 +364,7 @@
     <value>Display Name:</value>
   </data>
   <data name="ManagedCertificateSettings_DomainIncluded" xml:space="preserve">
-    <value>The following selected domains will be included as a single certificate request. The Lets Encrypt service must be able to access all of these domains via port 80 (for HTTP challenges) or port 443 (for TLS-SNI challenges) for the certification process to work.</value>
+    <value>The following selected domains will be included as a single certificate request. The issuing Certificate Authority must be able to access all of these domains via port 80 (for HTTP challenges) or port 443 (for TLS-SNI challenges) for the certification process to work.</value>
   </data>
   <data name="ManagedCertificateSettings_SelectDomain" xml:space="preserve">
     <value>Domains and Subdomains to include:</value>
@@ -528,7 +528,7 @@
     <value>This will renew certificates for all auto-renewed items. Proceed?</value>
   </data>
   <data name="MainWindow_IISNotAvailable" xml:space="preserve">
-    <value>IIS Was not detected on this server, important functionality will be unavailable. If you know IIS is installed and working on this server, please report this error to apps@webprofusion providing details of your server Operating System version and IIS versions</value>
+    <value>IIS Was not detected on this server, important functionality will be unavailable. If you know IIS is installed and working on this server, please report this error to support@certifytheweb.com providing details of your server Operating System version and IIS versions</value>
   </data>
   <data name="MainWindow_GetStartGuideWithNewCert" xml:space="preserve">
     <value>Get started by registering a new contact, then you can start requesting certificates.</value>

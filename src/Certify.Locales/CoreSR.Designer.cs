@@ -245,7 +245,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Requesting Certificate via Lets Encrypt.
+        ///   Looks up a localized string similar to Requesting Certificate via Certificate Authority.
         /// </summary>
         public static string CertifyManager_RequestCertificate {
             get {

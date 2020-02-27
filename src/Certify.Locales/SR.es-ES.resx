@@ -169,10 +169,10 @@
     <value>¿Estás de acuerdo con el Acuerdo del suscriptor de LetsEncrypt.org? Consulte su sitio web para obtener todos los detalles antes de continuar. https://letsencrypt.org/repository/</value>
   </data>
   <data name="New_Contact_Tip1" xml:space="preserve">
-    <value>Debe registrarse como contacto para utilizar Certify y el servicio gratuito Let's Encrypt para adquirir certificados SSL.</value>
+    <value>Debe registrarse como contacto para utilizar Certify y el servicio gratuito ACME CA para obtener certificados SSL.</value>
   </data>
   <data name="New_Contact_Tip2" xml:space="preserve">
-    <value>La dirección de correo electrónico provista se puede ser utilizada para notificarle acerca de la próxima renovación de certificados si es necesario. Las direcciones de correo electrónico no válidas serán rechazadas por Let's Encrypt.</value>
+    <value>La dirección de correo electrónico provista se puede ser utilizada para notificarle acerca de la próxima renovación de certificados si es necesario. Las direcciones de correo electrónico no válidas serán rechazadas por la autoridad de certificación.</value>
   </data>
   <data name="New_Contact" xml:space="preserve">
     <value>Nuevo contacto</value>
@@ -382,7 +382,7 @@
     <value>Esto renovará los certificados para todos los elementos de auto-renovación. ¿Proceder?</value>
   </data>
   <data name="MainWindow_IISNotAvailable" xml:space="preserve">
-    <value>No se detectó IIS en este servidor, una serie de características importantes no estarán disponible. Si IIS está instalado y ejecutándose en este servidor, informe este error a apps@webprofusion proporcionando detalles de la versión del sistema operativo del servidor y las versiones de IIS.</value>
+    <value>No se detectó IIS en este servidor, una serie de características importantes no estarán disponible. Si IIS está instalado y ejecutándose en este servidor, informe este error a support@certifytheweb.com proporcionando detalles de la versión del sistema operativo del servidor y las versiones de IIS.</value>
   </data>
   <data name="MainWindow_GetStartGuideWithNewCert" xml:space="preserve">
     <value>Comience registrando un nuevo contacto, luego puede comenzar a solicitar certificados.</value>

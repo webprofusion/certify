@@ -130,16 +130,16 @@
     <value>Sertifikatforespørsel og automatisert bindingsoppdatering (IIS) fullført</value>
   </data>
   <data name="ManagedCertificateType_LocalIIS" xml:space="preserve">
-    <value>Lokalt IIS, SSL-sertifikat via Let's Encrypt</value>
+    <value>Lokalt IIS, SSL-sertifikat via ACME CA</value>
   </data>
   <data name="ManagedCertificateType_Manual" xml:space="preserve">
-    <value>Manuelt sertifikat fra Let's Encrypt</value>
+    <value>Manuelt sertifikat fra ACME CA</value>
   </data>
   <data name="CertifyManager_CertificateInstallFailed" xml:space="preserve">
     <value>Det oppsto en feil ved installering av sertifikatet. Sertifikatfilen er kanskje ikke gyldig: {0}</value>
   </data>
   <data name="CertifyManager_LetsEncryptServiceTimeout" xml:space="preserve">
-    <value>Let's Encrypt-tjenesten utstedte ikke et gyldig sertifikat innenfor tillatt tid. {0}</value>
+    <value>ACME CA-tjenesten utstedte ikke et gyldig sertifikat innenfor tillatt tid. {0}</value>
   </data>
   <data name="CertifyManager_RequestFailed" xml:space="preserve">
     <value>{0}: Forespørsel mislyktes - {1} {2}</value>
@@ -185,7 +185,7 @@
     <value>Registrering av domeneidentifikatorer</value>
   </data>
   <data name="CertifyManager_ReqestValidationFromLetsEncrypt" xml:space="preserve">
-    <value>Be om validering fra Let's Encrypt: {0}</value>
+    <value>Be om validering fra ACME CA: {0}</value>
   </data>
   <data name="CertifyManager_SkipRenewalOk" xml:space="preserve">
     <value>Eksisterende sertifikat er fortsatt OK, vil ikke bli fornyet.</value>

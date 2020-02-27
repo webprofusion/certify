@@ -726,7 +726,7 @@ namespace Certify.Management
                             // could not begin authorization
 
                             LogMessage(managedCertificate.Id,
-                                $"Could not complete authorization for domain with Let's Encrypt: [{domain}] {(authorization?.AuthorizationError ?? "Could not register domain identifier")}");
+                                $"Could not complete authorization for domain with the Certificate Authority: [{domain}] {(authorization?.AuthorizationError ?? "Could not register domain identifier")}");
                             failureSummaryMessage = $"[{domain}] : {authorization?.AuthorizationError}";
 
                             validationFailed = true;
@@ -1085,7 +1085,7 @@ namespace Certify.Management
                     // could not begin authorization
 
                     LogMessage(managedCertificate.Id,
-                        $"Could not begin authorization for domain with Let's Encrypt: [{domain}] {(authorization?.AuthorizationError ?? "Could not register domain identifier")} ");
+                        $"Could not begin authorization for domain with the Certificate Authority: [{domain}] {(authorization?.AuthorizationError ?? "Could not register domain identifier")} ");
                     failureSummaryMessage = $"[{domain}] : {authorization?.AuthorizationError}";
                 }
             }

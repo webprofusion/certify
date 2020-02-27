@@ -28,7 +28,7 @@ namespace Certify.UI.ViewModel
         }
 
         /// <summary>
-        /// Let's Encrypt - supported challenge types 
+        /// ACME - supported challenge types 
         /// </summary>
         public IEnumerable<string> ChallengeTypes { get; set; } = new string[] {
             SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,

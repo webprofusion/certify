@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -51,8 +51,9 @@ namespace Certify.Management
 
                 // certificate summary
                 var certDescription = new StringBuilder();
+
                 certDescription.AppendLine(
-                    "A new certificate will be requested from the *Let's Encrypt* certificate authority for the following domains:"
+                    $"A new certificate will be requested from the *{CertificateAuthority.GetCertificateAuthority(item.CertificateAuthorityId)?.Title ?? "Default"}* certificate authority for the following domains:"
                     );
 
                 certDescription.AppendLine($"\n**{item.RequestConfig.PrimaryDomain}** (Primary Domain)");
@@ -147,7 +148,7 @@ namespace Certify.Management
                             newLine);
 
                         challengeInfo.AppendLine(
-                            $"Let's Encrypt will follow any redirection in place (such as rewriting the URL to *https*) but the initial request will be made via *http* on port 80. " +
+                            $"The issuing Certificate Authority will follow any redirection in place (such as rewriting the URL to *https*) but the initial request will be made via *http* on port 80. " +
                             newLine);
                     }
 
@@ -180,7 +181,7 @@ namespace Certify.Management
                         }
 
                         challengeInfo.AppendLine(
-                            newLine + $"Let's Encrypt will follow any redirection in place (such as a substitute CNAME pointing to another domain) but the initial request will be made against any of the domain's nameservers. "
+                            newLine + $"The issuing Certificate Authority will follow any redirection in place (such as a substitute CNAME pointing to another domain) but the initial request will be made against any of the domain's nameservers. "
                             );
                     }
 
@@ -228,7 +229,7 @@ namespace Certify.Management
 
                 // cert request step
                 var certRequest =
-                    $"A Certificate Signing Request (CSR) will be submitted to the *Let's Encrypt certificate authority*, using the **{item.RequestConfig.CSRKeyAlg}** signing algorithm.";
+                    $"A Certificate Signing Request (CSR) will be submitted to the Certificate Authority, using the **{item.RequestConfig.CSRKeyAlg}** signing algorithm.";
                 steps.Add(new ActionStep
                 {
                     Title = $"{stepIndex}. Certificate Request",
