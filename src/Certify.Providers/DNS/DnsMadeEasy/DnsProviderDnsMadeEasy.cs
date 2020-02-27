@@ -40,7 +40,8 @@ namespace Certify.Providers.DNS.DnsMadeEasy
         private string _apiKey;
         private string _apiSecret;
 
-        public int PropagationDelaySeconds => Definition.PropagationDelaySeconds;
+        private int? _customPropagationDelay = null;
+        public int PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
 
         public string ProviderId => Definition.Id;
 
@@ -60,11 +61,12 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             Title = "DnsMadeEasy DNS API",
             Description = "Validates via DnsMadeEasy APIs using credentials found in your DnsMadeEasy control panel under Config - Account Settings",
             HelpUrl = "http://docs.certifytheweb.com/docs/dns-dnsmadeeasy.html",
-            PropagationDelaySeconds = 60,
+                    PropagationDelaySeconds = 120,
             ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{Key="apikey", Name="API Key", IsRequired=true },
                         new ProviderParameter{Key="apisecret", Name="API Secret", IsRequired=true },
-                        new ProviderParameter{ Key="zoneid",Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false }
+                        new ProviderParameter{ Key="zoneid",Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false },
+                        new ProviderParameter{ Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="120", IsCredential=false }
                     },
             ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
             Config = "Provider=Certify.Providers.DNS.DnsMadeEasy",
@@ -271,9 +273,18 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             }
         }
 
-        public async Task<bool> InitProvider(ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+
+            if (parameters?.ContainsKey("propagationdelay") == true)
+            {
+                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                {
+                    _customPropagationDelay = customPropDelay;
+                }
+            }
+
             return await Task.FromResult(true);
         }
 

@@ -107,7 +107,7 @@ namespace Certify.Core.Management.Challenges
 
         public Task<List<DnsZone>> GetZones() => throw new NotImplementedException();
 
-        public async Task<bool> InitProvider(ILog log)
+        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log)
         {
             _log = log;
             return await Task.FromResult(true);

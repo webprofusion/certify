@@ -59,14 +59,6 @@ namespace Certify.Core.Management.Challenges.DNS
             {
                 _deleteScriptPath = parameters["deletescriptpath"];
             }
-
-            if (parameters.ContainsKey("propagationdelay"))
-            {
-                if (int.TryParse(parameters["propagationdelay"], out var customPropDelay))
-                {
-                    _customPropagationDelay = customPropDelay;
-                }
-            }
         }
 
         public async Task<ActionResult> CreateRecord(DnsRecord request)
@@ -101,9 +93,18 @@ namespace Certify.Core.Management.Challenges.DNS
 
         Task<List<DnsZone>> IDnsProvider.GetZones() => Task.FromResult(new List<DnsZone>());
 
-        Task<bool> IDnsProvider.InitProvider(ILog log)
+        Task<bool> IDnsProvider.InitProvider(Dictionary<string, string> parameters, ILog log)
         {
             _log = log;
+            
+            if (parameters?.ContainsKey("propagationdelay") == true)
+            {
+                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                {
+                    _customPropagationDelay = customPropDelay;
+                }
+            }
+
             return Task.FromResult(true);
         }
 

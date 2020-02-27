@@ -17,7 +17,8 @@ namespace Certify.Providers.DNS.Azure
 
         private Dictionary<string, string> _credentials;
 
-        public int PropagationDelaySeconds => Definition.PropagationDelaySeconds;
+        private int? _customPropagationDelay = null;
+        public int PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
 
         public string ProviderId => Definition.Id;
 
@@ -77,7 +78,7 @@ namespace Certify.Providers.DNS.Azure
             }
         }
 
-        public async Task<bool> InitProvider(ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
 
@@ -89,10 +90,17 @@ namespace Certify.Providers.DNS.Azure
                 _credentials["secret"]
                 );
 
-            _dnsClient = new DnsManagementClient(serviceCreds)
+            _dnsClient = new DnsManagementClient(serviceCreds);
+
+            _dnsClient.SubscriptionId = _credentials["subscriptionid"];
+
+            if (parameters?.ContainsKey("propagationdelay") == true)
             {
-                SubscriptionId = _credentials["subscriptionid"]
-            };
+                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                {
+                    _customPropagationDelay = customPropDelay;
+                }
+            }
             return true;
         }
 

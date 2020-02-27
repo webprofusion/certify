@@ -55,7 +55,8 @@ namespace Certify.Providers.DNS.NameCheap
                 {
                     new ProviderParameter { Key = PARAM_API_USER, Name = "API User", IsRequired = true, IsPassword = false },
                     new ProviderParameter { Key = PARAM_API_KEY, Name = "API Key", IsRequired = true, IsPassword = true },
-                    new ProviderParameter { Key = PARAM_IP, Name = "Your IP", Description = "IP Address of the server that sends requests to NameCheap API", IsRequired = true, IsPassword = false }
+                    new ProviderParameter { Key = PARAM_IP, Name = "Your IP", Description = "IP Address of the server that sends requests to NameCheap API", IsRequired = true, IsPassword = false },
+                    new ProviderParameter { Key= "propagationdelay", Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="120", IsCredential=false }
                 },
                 ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.NameCheap",
@@ -70,7 +71,8 @@ namespace Certify.Providers.DNS.NameCheap
         /// </summary>
         public static ChallengeProviderDefinition Definition { get; }
 
-        public int PropagationDelaySeconds => Definition.PropagationDelaySeconds;
+        private int? _customPropagationDelay = null;
+        public int PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
         public string ProviderId => Definition.Id;
         public string ProviderTitle => Definition.Title;
         public string ProviderDescription => Definition.Description;
@@ -85,9 +87,18 @@ namespace Certify.Providers.DNS.NameCheap
         /// <summary>
         /// Initializes the provider.
         /// </summary>
-        public Task<bool> InitProvider(ILog log = null)
+        public Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+
+            if (parameters?.ContainsKey("propagationdelay") == true)
+            {
+                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                {
+                    _customPropagationDelay = customPropDelay;
+                }
+            }
+
             return Task.FromResult(true);
         }
 

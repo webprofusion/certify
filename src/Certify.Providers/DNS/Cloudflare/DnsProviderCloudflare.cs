@@ -83,7 +83,8 @@ namespace Certify.Providers.DNS.Cloudflare
         private const string _deleteRecordUri = _baseUri + "zones/{0}/dns_records/{1}";
         private const string _updateRecordUri = _baseUri + "zones/{0}/dns_records/{1}";
 
-        public int PropagationDelaySeconds => Definition.PropagationDelaySeconds;
+        private int? _customPropagationDelay = null;
+        public int PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
 
         public string ProviderId => Definition.Id;
 
@@ -108,7 +109,9 @@ namespace Certify.Providers.DNS.Cloudflare
                         new ProviderParameter{Key="emailaddress", Name="Email Address", IsRequired=false, Description="Required if not using API Token" },
                         new ProviderParameter{Key="authkey", Name="Auth Key", IsRequired=false, Description="Required if not using API Token" },
                         new ProviderParameter{Key="apitoken", Name="API Token", IsRequired=false, Description="Used instead of Email + Auth Key" },
-                        new ProviderParameter{Key="zoneid",Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false }
+                        new ProviderParameter{Key="zoneid",Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false },
+                        new ProviderParameter{Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="60", IsCredential=false },
+
                      },
             ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
             Config = "Provider=Certify.Providers.DNS.Cloudflare",
@@ -353,9 +356,18 @@ namespace Certify.Providers.DNS.Cloudflare
             return zones;
         }
 
-        public async Task<bool> InitProvider(ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+
+            if (parameters?.ContainsKey("propagationdelay") == true)
+            {
+                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                {
+                    _customPropagationDelay = customPropDelay;
+                }
+            }
+
             return await Task.FromResult(true);
         }
     }

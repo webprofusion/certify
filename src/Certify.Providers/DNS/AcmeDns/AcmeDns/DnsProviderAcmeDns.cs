@@ -170,7 +170,7 @@ namespace Certify.Providers.DNS.AcmeDns
 
         public async Task<ActionResult> Test()
         {
-            return new ActionResult { IsSuccess = true, Message = "Test completed, but no zones returned." };
+            return await Task.FromResult(new ActionResult { IsSuccess = true, Message = "Test completed, but no zones returned." });
         }
 
         public async Task<ActionResult> CreateRecord(DnsRecord request)
@@ -218,7 +218,9 @@ namespace Certify.Providers.DNS.AcmeDns
 
         public async Task<ActionResult> DeleteRecord(DnsRecord request)
         {
-            return new ActionResult { IsSuccess = true, Message = $"Dns Record Delete completed: {request.RecordName}" };
+            return await Task.FromResult(
+                new ActionResult { IsSuccess = true, Message = $"Dns Record Delete completed: {request.RecordName}" }
+                );
         }
 
         public async Task<List<DnsZone>> GetZones()
@@ -227,9 +229,18 @@ namespace Certify.Providers.DNS.AcmeDns
             return await Task.FromResult(results);
         }
 
-        public async Task<bool> InitProvider(ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+
+            if (parameters?.ContainsKey("propagationdelay") == true)
+            {
+                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                {
+                    _customPropagationDelay = customPropDelay;
+                }
+            }
+
             return await Task.FromResult(true);
         }
 

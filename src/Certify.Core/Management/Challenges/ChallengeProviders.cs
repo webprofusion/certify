@@ -109,7 +109,7 @@ namespace Certify.Core.Management.Challenges
             {
                 if (providerDefinition.Id == DNS.DnsProviderManual.Definition.Id)
                 {
-                    dnsAPIProvider = new DNS.DnsProviderManual(parameters);
+                    dnsAPIProvider = new DNS.DnsProviderManual();
                 }
             }
             else if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.CUSTOM_SCRIPT)
@@ -122,7 +122,7 @@ namespace Certify.Core.Management.Challenges
 
             if (dnsAPIProvider != null)
             {
-                await dnsAPIProvider.InitProvider(log);
+                await dnsAPIProvider.InitProvider(parameters, log);
             }
 
             return dnsAPIProvider;

@@ -13,7 +13,7 @@ namespace Certify.Providers.DNS.MSDNS
     public class DnsProviderMSDNS : IDnsProvider
     {
         private readonly string _serverip;
-        private readonly int? _customPropagationDelay = null;
+        private int? _customPropagationDelay = null;
         private readonly string _username;
         private readonly string _domain;
         private SecureString _password;
@@ -96,7 +96,7 @@ namespace Certify.Providers.DNS.MSDNS
                         new ProviderParameter{ Key="domain", Name="Domain", IsRequired = false, IsCredential = true, IsPassword = false},
                         new ProviderParameter{ Key="protocol", Name="Remote Management Protocol", IsRequired = true, IsCredential = false, IsPassword = false, Description="Must be one of the following: DCOM, WinRM", Value="DCOM", OptionsList="DCOM;WinRM" },
                         new ProviderParameter{ Key="authentication", Name="Authentication", IsRequired = true, IsCredential = false, IsPassword = false, Description="Must be one of the following: Basic, CredSsp, Default, Digest, Kerberos, Negotiate, NtlmDomain", Value="Default", OptionsList="Basic;CredSsp;Default;Digest;Kerberos;Negotiate;NtlmDomain" },
-                        new ProviderParameter{ Key="propagationdelay",Name="Propagation Delay Seconds (optional)", IsRequired=false, IsPassword=false, Value="60", IsCredential=false },
+                        new ProviderParameter{ Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="60", IsCredential=false },
                     },
             ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
             Config = "Provider=Certify.Providers.DNS.MSDNS",
@@ -128,7 +128,10 @@ namespace Certify.Providers.DNS.MSDNS
                 CimMethodParameter.Create("OwnerName", request.RecordName, CimType.String, CimFlags.None),
                 CimMethodParameter.Create("DescriptiveText", request.RecordValue, CimType.String, CimFlags.None)
             };
-            session.InvokeMethod(@"root\MicrosoftDNS", "MicrosoftDNS_TXTType", "CreateInstanceFromPropertyData", parameters);
+
+            _ = await Task.FromResult(
+                session.InvokeMethod(@"root\MicrosoftDNS", "MicrosoftDNS_TXTType", "CreateInstanceFromPropertyData", parameters)
+                );
 
             return new ActionResult() { IsSuccess = true, Message = "DNS record updated" };
         }
@@ -143,20 +146,31 @@ namespace Certify.Providers.DNS.MSDNS
                 session.DeleteInstance(txtRecord);
             }
 
-            return new ActionResult { IsSuccess = true, Message = "DNS record removed." };
+            return await Task.FromResult(new ActionResult { IsSuccess = true, Message = "DNS record removed." });
         }
 
         public async Task<List<DnsZone>> GetZones()
         {
             var session = CreateCimSession();
             var zones = new List<DnsZone>();
+
             GetZones(session).ForEach(o => zones.Add(new DnsZone() { Name = o, ZoneId = o }));
-            return zones;
+            
+            return await Task.FromResult(zones);
         }
 
-        public async Task<bool> InitProvider(ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+
+            if (parameters?.ContainsKey("propagationdelay") == true)
+            {
+                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                {
+                    _customPropagationDelay = customPropDelay;
+                }
+            }
+
             return await Task.FromResult(true);
         }
 
