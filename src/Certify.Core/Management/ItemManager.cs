@@ -59,15 +59,9 @@ namespace Certify.Management
             return Path.Combine(appDataPath, $"{ITEMMANAGERCONFIG}.db");
         }
 
-        /// <summary>
-        /// Perform a full backup and save of the current set of managed sites
-        /// </summary>
-        public async Task StoreAllManagedItems()
+        private async Task CreateManagedItemsSchema()
         {
-            var watch = Stopwatch.StartNew();
-
-            //create database if it doesn't exist
-            if (!File.Exists(_dbPath))
+            try
             {
                 using (var db = new SQLiteConnection(_connectionString))
                 {
@@ -78,10 +72,22 @@ namespace Certify.Management
                     }
                 }
             }
-            else
-            {
+            catch { }
+        }
 
+        /// <summary>
+        /// Perform a full backup and save of the current set of managed sites
+        /// </summary>
+        public async Task StoreAllManagedItems()
+            {
+            var watch = Stopwatch.StartNew();
+
+            //create database if it doesn't exist
+            if (!File.Exists(_dbPath))
+            {
+                await this.CreateManagedItemsSchema();
             }
+
 
             // save all new/modified items into settings database
             using (var db = new SQLiteConnection(_connectionString))
@@ -89,16 +95,6 @@ namespace Certify.Management
                 await db.OpenAsync();
                 using (var tran = db.BeginTransaction())
                 {
-                    /*foreach (var deleted in _managedCertificatesCache.Values.Where(s => s.Deleted).ToList())
-                    {
-                        using (var cmd = new SQLiteCommand("DELETE FROM manageditem WHERE id=@id", db))
-                        {
-                            cmd.Parameters.Add(new SQLiteParameter("@id", deleted.Id));
-                            await cmd.ExecuteNonQueryAsync();
-                        }
-                        _managedCertificatesCache.TryRemove(deleted.Id, out var val);
-                    }*/
-
                     foreach (var changed in _managedCertificatesCache.Values.Where(s => s.IsChanged))
                     {
                         using (var cmd = new SQLiteCommand("INSERT OR REPLACE INTO manageditem (id,parentid,json) VALUES (@id,@parentid, @json)", db))
@@ -152,7 +148,8 @@ namespace Certify.Management
                 }
                 catch
                 {
-                    // error checking for upgrade
+                    // error checking for upgrade, ensure table exists
+                    await CreateManagedItemsSchema();
 
                     return false;
                 }
@@ -262,7 +259,7 @@ namespace Certify.Management
 
                     foreach (var site in managedCertificateList)
                     {
-                        site.IsChanged = false;
+                        site.IsChanged = true;
                         _managedCertificatesCache.AddOrUpdate(site.Id, site, (key, oldValue) => site);
                     }
                 }
