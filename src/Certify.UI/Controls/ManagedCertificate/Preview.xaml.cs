@@ -29,7 +29,13 @@ namespace Certify.UI.Controls.ManagedCertificate
             var _markdownPipelineBuilder = new Markdig.MarkdownPipelineBuilder();
             _markdownPipelineBuilder.Extensions.Add(new Markdig.Extensions.Tables.PipeTableExtension());
             _markdownPipeline = _markdownPipelineBuilder.Build();
-            _css = System.IO.File.ReadAllText(System.AppDomain.CurrentDomain.BaseDirectory + "\\Assets\\CSS\\markdown.css");
+            try
+            {
+                _css = System.IO.File.ReadAllText(System.AppDomain.CurrentDomain.BaseDirectory + "\\Assets\\CSS\\markdown.css");
+            } catch
+            {
+                // will fail in design mode
+            }
 
         }
 
