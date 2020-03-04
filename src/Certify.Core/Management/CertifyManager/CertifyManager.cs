@@ -205,7 +205,7 @@ namespace Certify.Management
 
             if (CoreAppSettings.Current.UseBackgroundServiceAutoRenewal)
             {
-                await PerformRenewalAllManagedCertificates(true, null);
+                await PerformRenewalAllManagedCertificates(new RenewalSettings { }, null);
             }
 
             return await Task.FromResult(true);

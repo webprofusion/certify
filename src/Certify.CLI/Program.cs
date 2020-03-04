@@ -50,7 +50,7 @@ namespace Certify.CLI
                 if (args.Contains("renew", StringComparer.InvariantCultureIgnoreCase))
                 {
                     // perform auto renew all
-                    var renewalTask = p.PerformAutoRenew();
+                    var renewalTask = p.PerformAutoRenew(args);
                     renewalTask.ConfigureAwait(true);
                     renewalTask.Wait();
                 }

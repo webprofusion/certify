@@ -26,7 +26,7 @@ namespace Certify.Management
         /// <param name="autoRenewalOnly">  </param>
         /// <param name="progressTrackers">  </param>
         /// <returns>  </returns>
-        public async Task<List<CertificateRequestResult>> PerformRenewalAllManagedCertificates(bool autoRenewalOnly = true, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null)
+        public async Task<List<CertificateRequestResult>> PerformRenewalAllManagedCertificates(RenewalSettings settings, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null)
         {
             if (_isRenewAllInProgress)
             {
@@ -45,10 +45,10 @@ namespace Certify.Management
             IEnumerable<ManagedCertificate> managedCertificates = await _itemManager.GetManagedCertificates(
                 new ManagedCertificateFilter
                 {
-                    IncludeOnlyNextAutoRenew = true
+                    IncludeOnlyNextAutoRenew = !settings.ForceRenewal
                 }, reloadAll: true);
 
-            if (autoRenewalOnly)
+            if (settings.AutoRenewalsOnly)
             {
                 // auto renew enabled sites in order of oldest date renewed first
                 managedCertificates = managedCertificates.Where(s => s.IncludeInAutoRenew == true)
@@ -79,9 +79,9 @@ namespace Certify.Management
                 BeginTrackingProgress(progressState);
 
                 // determine if this site requires renewal
-                var isRenewalRequired = IsRenewalRequired(managedCertificate, renewalIntervalDays);
+                var isRenewalRequired = settings.ForceRenewal || IsRenewalRequired(managedCertificate, renewalIntervalDays);
                 var isRenewalOnHold = false;
-                if (isRenewalRequired)
+                if (isRenewalRequired && !settings.ForceRenewal)
                 {
                     //check if we have renewal failures, if so wait a bit longer
                     isRenewalOnHold = !IsRenewalRequired(managedCertificate, renewalIntervalDays, checkFailureStatus: true);
@@ -128,7 +128,8 @@ namespace Certify.Management
                                TaskCreationOptions.LongRunning
                            ));
                         }
-                    } else
+                    }
+                    else
                     {
                         //send progress back to report skip
                         var progress = (IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id];

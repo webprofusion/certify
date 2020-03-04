@@ -52,7 +52,7 @@ namespace Certify.UI.Tests.Integration
 
             await appModel.RefreshStoredCredentialsList();
 
-            appModel.RenewAll(true);
+            appModel.RenewAll(new RenewalSettings { });
         }
     }
 }

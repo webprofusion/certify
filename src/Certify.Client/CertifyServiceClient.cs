@@ -267,9 +267,9 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<StatusMessage>(response);
         }
 
-        public async Task<List<CertificateRequestResult>> BeginAutoRenewal()
+        public async Task<List<CertificateRequestResult>> BeginAutoRenewal(RenewalSettings settings)
         {
-            var response = await PostAsync("managedcertificates/autorenew", null);
+            var response = await PostAsync("managedcertificates/autorenew", settings);
             var serializer = new JsonSerializer();
             using (StreamReader sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
             using (JsonTextReader reader = new JsonTextReader(sr))
@@ -286,7 +286,8 @@ namespace Certify.Client
                 var response = await FetchAsync($"managedcertificates/renewcert/{managedItemId}/{resumePaused}");
                 return JsonConvert.DeserializeObject<CertificateRequestResult>(response);
             }
-            catch (Exception exp) {
+            catch (Exception exp)
+            {
                 return new CertificateRequestResult
                 {
                     IsSuccess = false,

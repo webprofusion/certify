@@ -353,7 +353,7 @@ namespace Certify.UI.ViewModel
             {
                 i.IsChanged = false;
 
-                if (HasDeprecatedChallengeTypes==false && i.RequestConfig.Challenges.Any(c=>c.ChallengeType== SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
+                if (HasDeprecatedChallengeTypes == false && i.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
                 {
                     HasDeprecatedChallengeTypes = true;
                 }
@@ -367,7 +367,7 @@ namespace Certify.UI.ViewModel
 
             await RefreshStoredCredentialsList();
 
-       
+
         }
 
         private void CertifyClient_SendMessage(string arg1, string arg2)
@@ -436,14 +436,14 @@ namespace Certify.UI.ViewModel
             //var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
         }
 
-        public async void RenewAll(bool autoRenewalsOnly)
+        public async void RenewAll(RenewalSettings settings)
         {
             //FIXME: currently user can run renew all again while renewals are still in progress
 
             Dictionary<string, Progress<RequestProgressState>> itemTrackers = new Dictionary<string, Progress<RequestProgressState>>();
             foreach (var s in ManagedCertificates)
             {
-                if ((autoRenewalsOnly && s.IncludeInAutoRenew) || !autoRenewalsOnly)
+                if ((settings.AutoRenewalsOnly && s.IncludeInAutoRenew) || !settings.AutoRenewalsOnly)
                 {
                     var progressState = new RequestProgressState(RequestState.Running, "Starting..", s);
                     if (!itemTrackers.ContainsKey(s.Id))
@@ -456,7 +456,15 @@ namespace Certify.UI.ViewModel
                 }
             }
 
-            await CertifyClient.BeginAutoRenewal();
+            try
+            {
+                await CertifyClient.BeginAutoRenewal(settings);
+            }
+            catch (TaskCanceledException exp)
+            {
+                // very long running renewal may time out on task await
+                _uiLog?.Warning("Auto Renewal UI task cancelled (timeout) " + exp.ToString());
+            }
 
             // now continue to poll status of current request. should this just be a query for all
             // current requests?
@@ -570,6 +578,6 @@ namespace Certify.UI.ViewModel
             });
         }
 
-        public ICommand RenewAllCommand => new RelayCommand<bool>(RenewAll);
+        public ICommand RenewAllCommand => new RelayCommand<RenewalSettings>(RenewAll);
     }
 }
