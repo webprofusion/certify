@@ -81,12 +81,14 @@ namespace Certify.Management
                 if (Math.Abs(diff.Value.TotalSeconds) > 50)
                 {
                     results.Add(new ActionResult { IsSuccess = false, Message = $"Note: Your system time does not appear to be in sync with an internet time service, this can result in certificate request errors." });
-                } else
+                }
+                else
                 {
                     results.Add(new ActionResult { IsSuccess = true, Message = $"System time is correct." });
                 }
-                
-            } else
+
+            }
+            else
             {
                 results.Add(new ActionResult { IsSuccess = false, Message = $"Note: Could not confirm system time sync using a public NTP server. Ensure system time is correct to avoid certificate request errors." });
             }
@@ -209,57 +211,36 @@ namespace Certify.Management
             }
         }
 
-        /// <summary>
-        /// Gets the certificate the file is signed with.
-        /// </summary>
-        /// <param name="filename"> 
-        /// The path of the signed file from which to create the X.509 certificate.
-        /// </param>
-        /// <returns> The certificate the file is signed with </returns>
-        public X509Certificate2 GetFileCertificate(string filename)
+
+
+        public bool VerifyUpdateFile(string tempFile, string expectedHash, bool throwOnDeviation = true)
         {
-            // https://blogs.msdn.microsoft.com/windowsmobile/2006/05/17/programmatically-checking-the-authenticode-signature-on-a-file/
-            X509Certificate2 cert = null;
-            try
+            bool performCertValidation = false;
+
+            bool signatureVerified = false;
+
+            if (performCertValidation)
             {
-                cert = new X509Certificate2(X509Certificate.CreateFromSignedFile(filename));
+                //get verified signed file cert
+                var cert = CertificateManager.GetFileCertificate(tempFile);
 
-                var chain = new X509Chain();
-                var chainPolicy = new X509ChainPolicy()
+                //ensure cert subject
+                if (!(cert != null && cert.SubjectName.Name.StartsWith("CN=Webprofusion Pty Ltd, O=Webprofusion Pty Ltd")))
                 {
-                    RevocationMode = X509RevocationMode.Online,
-                    RevocationFlag = X509RevocationFlag.EntireChain
-                };
-                chain.ChainPolicy = chainPolicy;
-
-                if (chain.Build(cert))
-                {
-                    foreach (var chainElement in chain.ChainElements)
+                    if (throwOnDeviation)
                     {
-                        foreach (var chainStatus in chainElement.ChainElementStatus)
-                        {
-                            System.Diagnostics.Debug.WriteLine(chainStatus.StatusInformation);
-                        }
+                        throw new Exception("Downloaded file failed digital signature check.");
+                    }
+                    else
+                    {
+                        return false;
                     }
                 }
                 else
                 {
-                    throw new Exception("Could not build cert chain");
+                    signatureVerified = true;
                 }
             }
-            catch (CryptographicException e)
-            {
-                Console.WriteLine("Error {0} : {1}", e.GetType(), e.Message);
-                Console.WriteLine("Couldn't parse the certificate." +
-                                  "Be sure it is an X.509 certificate");
-                return null;
-            }
-            return cert;
-        }
-
-        public bool VerifyUpdateFile(string tempFile, string expectedHash, bool throwOnDeviation = true)
-        {
-            var hashVerified = false;
 
             //verify file SHA256
             string computedSHA256 = null;
@@ -267,6 +248,8 @@ namespace Certify.Management
             {
                 computedSHA256 = GetFileSHA256(stream);
             }
+
+            bool hashVerified = false;
 
             if (expectedHash.ToLower() == computedSHA256)
             {
@@ -284,7 +267,7 @@ namespace Certify.Management
                 }
             }
 
-            if (hashVerified)
+            if (hashVerified && (!performCertValidation || (performCertValidation && signatureVerified)))
             {
                 return true;
             }
@@ -410,9 +393,29 @@ namespace Certify.Management
 
         private static string GetDotNetVersion(int releaseKey)
         {
+            if (releaseKey >= 528040)
+            {
+                return "4.8 or later";
+            }
+
+            if (releaseKey >= 461808)
+            {
+                return "4.7.2";
+            }
+
+            if (releaseKey >= 461308)
+            {
+                return "4.7.1";
+            }
+
             if (releaseKey >= 460798)
             {
-                return "4.7 or later";
+                return "4.7";
+            }
+
+            if (releaseKey >= 460798)
+            {
+                return "4.7";
             }
 
             if (releaseKey >= 394802)

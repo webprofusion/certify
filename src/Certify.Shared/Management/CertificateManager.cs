@@ -16,6 +16,7 @@ using Org.BouncyCastle.Crypto.Operators;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Crypto.Prng;
 using Org.BouncyCastle.Math;
+using Org.BouncyCastle.Ocsp;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.Utilities;
 using Org.BouncyCastle.X509;
@@ -85,6 +86,72 @@ namespace Certify.Management
 
             // if subject matches sni and SAN is ok, return true
             return x509.SubjectDN.ToString() == $"CN={sni}" && sniOK;
+        }
+
+        /// <summary>
+        /// Gets the certificate the file is signed with.
+        /// </summary>
+        /// <param name="filename"> 
+        /// The path of the signed file from which to create the X.509 certificate.
+        /// </param>
+        /// <returns> The certificate the file is signed with </returns>
+        public static X509Certificate2 GetFileCertificate(string filename)
+        {
+            // https://blogs.msdn.microsoft.com/windowsmobile/2006/05/17/programmatically-checking-the-authenticode-signature-on-a-file/
+            X509Certificate2 cert = null;
+            try
+            {
+                cert = new X509Certificate2(System.Security.Cryptography.X509Certificates.X509Certificate.CreateFromSignedFile(filename));
+
+                CheckCertChain(cert);
+
+            }
+            catch (CryptographicException e)
+            {
+                Console.WriteLine("Error {0} : {1}", e.GetType(), e.Message);
+                Console.WriteLine("Couldn't parse the certificate." +
+                                  "Be sure it is an X.509 certificate");
+                return null;
+            }
+            return cert;
+        }
+
+        /// <summary>
+        /// Check validity and revocation status of a certificate chain
+        /// </summary>
+        /// <param name="cert"></param>
+        /// <returns></returns>
+        public static string[] CheckCertChain(X509Certificate2 cert)
+        {
+            var chain = new X509Chain();
+            var chainPolicy = new X509ChainPolicy()
+            {
+                RevocationMode = X509RevocationMode.Online,
+                RevocationFlag = X509RevocationFlag.EntireChain
+            };
+            chain.ChainPolicy = chainPolicy;
+
+            var results = new List<string>();
+
+            if (chain.Build(cert))
+            {
+                foreach (var chainElement in chain.ChainElements)
+                {
+                    foreach (var chainStatus in chainElement.ChainElementStatus)
+                    {
+                        if (chainStatus.Status.HasFlag(X509ChainStatusFlags.Revoked))
+                        {
+                            results.Add($"{chainElement.Certificate.Subject} :: {chainStatus.StatusInformation}");
+                        }
+                        System.Diagnostics.Debug.WriteLine(chainStatus.StatusInformation);
+                    }
+                }
+                return results.ToArray();
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public static X509Certificate2 LoadCertificate(string filename)
