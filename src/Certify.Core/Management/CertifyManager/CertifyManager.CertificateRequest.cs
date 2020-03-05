@@ -435,7 +435,9 @@ namespace Certify.Management
                 new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RegisterDomainIdentity, managedCertificate)
             );
 
+#pragma warning disable CS0618 // Type or member is obsolete
             if (config.ChallengeType == null && (config.Challenges == null || !config.Challenges.Any()))
+#pragma warning restore CS0618 // Type or member is obsolete
             {
                 config.Challenges = new ObservableCollection<CertRequestChallengeConfig>(
                     new List<CertRequestChallengeConfig> {
@@ -1193,6 +1195,8 @@ namespace Certify.Management
             {
                 _tc.TrackEvent("RevokeCertificate");
             }
+            var cert = CertificateManager.GetFileCertificate(managedCertificate.CertificatePath);
+           
 
             var result = await _acmeClientProvider.RevokeCertificate(log, managedCertificate);
             if (result.IsOK)

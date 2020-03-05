@@ -103,7 +103,9 @@ namespace Certify.Core.Management.Challenges
             }
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public async Task<ActionResult> DeleteRecord(DnsRecord request) => throw new NotImplementedException();
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
         public Task<List<DnsZone>> GetZones() => throw new NotImplementedException();
 

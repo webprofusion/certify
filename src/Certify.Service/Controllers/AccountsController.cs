@@ -33,7 +33,9 @@ namespace Certify.Service
         }
 
         [HttpDelete, Route("{storageKey}")]
+#pragma warning disable IDE0060 // Remove unused parameter
         public async Task<bool> DeleteAccount(string storageKey)
+#pragma warning restore IDE0060 // Remove unused parameter
         {
             DebugLog();
 

@@ -255,7 +255,9 @@ namespace Certify.Models
                 // there are no challenge configs defined return a default based on the parent
                 return new CertRequestChallengeConfig
                 {
+#pragma warning disable CS0618 // Type or member is obsolete
                     ChallengeType = RequestConfig.ChallengeType
+#pragma warning restore CS0618 // Type or member is obsolete
                 };
             }
             else
@@ -347,7 +349,9 @@ namespace Certify.Models
                         // no match, return default
                         return new CertRequestChallengeConfig
                         {
+#pragma warning disable CS0618 // Type or member is obsolete
                             ChallengeType = RequestConfig.ChallengeType
+#pragma warning restore CS0618 // Type or member is obsolete
                         };
                     }
                 }
