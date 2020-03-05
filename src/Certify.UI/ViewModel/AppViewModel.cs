@@ -449,14 +449,14 @@ namespace Certify.UI.ViewModel
             //var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
         }
 
-        public async void RenewAll(bool autoRenewalsOnly)
+        public async void RenewAll(RenewalSettings settings)
         {
             //FIXME: currently user can run renew all again while renewals are still in progress
 
             var itemTrackers = new Dictionary<string, Progress<RequestProgressState>>();
             foreach (var s in ManagedCertificates)
             {
-                if ((autoRenewalsOnly && s.IncludeInAutoRenew) || !autoRenewalsOnly)
+                if ((settings.AutoRenewalsOnly && s.IncludeInAutoRenew) || !settings.AutoRenewalsOnly)
                 {
                     var progressState = new RequestProgressState(RequestState.Running, "Starting..", s);
                     if (!itemTrackers.ContainsKey(s.Id))
@@ -469,7 +469,15 @@ namespace Certify.UI.ViewModel
                 }
             }
 
-            await CertifyClient.BeginAutoRenewal();
+            try
+            {
+                await CertifyClient.BeginAutoRenewal(settings);
+            }
+            catch (TaskCanceledException exp)
+            {
+                // very long running renewal may time out on task await
+                _uiLog?.Warning("Auto Renewal UI task cancelled (timeout) " + exp.ToString());
+            }
 
             // now continue to poll status of current request. should this just be a query for all
             // current requests?
@@ -592,6 +600,7 @@ namespace Certify.UI.ViewModel
             });
         }
 
+        public ICommand RenewAllCommand => new RelayCommand<RenewalSettings>(RenewAll);
         public ObservableCollection<DeploymentProviderDefinition> DeploymentTaskProviders { get; set; } = new ObservableCollection<DeploymentProviderDefinition> { };
 
         public async Task RefreshDeploymentTaskProviderList()
@@ -602,6 +611,5 @@ namespace Certify.UI.ViewModel
                 DeploymentTaskProviders = new System.Collections.ObjectModel.ObservableCollection<Models.Config.DeploymentProviderDefinition>(list.OrderBy(l => l.Title));
             });
         }
-        public ICommand RenewAllCommand => new RelayCommand<bool>(RenewAll);
     }
 }

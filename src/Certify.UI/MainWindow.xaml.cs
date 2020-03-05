@@ -108,6 +108,14 @@ namespace Certify.UI
 
         private async void Button_RenewAll(object sender, RoutedEventArgs e)
         {
+            var settings = new Models.RenewalSettings { };
+
+            // if ctrl is pressed, force renewal
+            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+            {
+                settings.ForceRenewal = true;
+            }
+
             // save or discard site changes before creating a new site/certificate
             if (!await _itemViewModel.ConfirmDiscardUnsavedChanges())
             {
@@ -118,14 +126,13 @@ namespace Certify.UI
             if (MessageBox.Show(SR.MainWindow_RenewAllConfirm, SR.Renew_All, MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 _appViewModel.MainUITabIndex = (int)PrimaryUITabs.CurrentProgress;
-
-                var autoRenewalsOnly = true;
+               
                 // renewals is a long running process so we need to run renewals process in the
                 // background and present UI to show progress.
                 // TODO: We should prevent starting the renewals process if it is currently in progress.
-                if (_appViewModel.RenewAllCommand.CanExecute(autoRenewalsOnly))
+                if (_appViewModel.RenewAllCommand.CanExecute(settings))
                 {
-                    _appViewModel.RenewAllCommand.Execute(autoRenewalsOnly);
+                    _appViewModel.RenewAllCommand.Execute(settings);
                 }
             }
         }

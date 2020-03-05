@@ -56,7 +56,7 @@ namespace Certify.CLI
                 if (command == "renew")
                 {
                     // perform auto renew all
-                    await p.PerformAutoRenew();
+                    await p.PerformAutoRenew(args);
                 }
 
                 if (command == "deploy")

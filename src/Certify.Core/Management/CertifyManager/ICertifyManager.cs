@@ -52,7 +52,7 @@ namespace Certify.Management
 
         Task<List<DomainOption>> GetDomainOptionsFromSite(string siteId);
 
-        Task<List<CertificateRequestResult>> PerformRenewalAllManagedCertificates(bool autoRenewalOnly = true, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null);
+        Task<List<CertificateRequestResult>> PerformRenewalAllManagedCertificates(RenewalSettings settings, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null);
 
         RequestProgressState GetRequestProgressState(string managedItemId);
 

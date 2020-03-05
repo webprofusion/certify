@@ -133,8 +133,15 @@ namespace Certify.CLI
 
         }
 
-        internal async Task PerformAutoRenew()
+        internal async Task PerformAutoRenew(string[] args)
         {
+            bool forceRenewal = false;
+
+            if (args.Contains("--force-renewal"))
+            {
+                forceRenewal = true;
+            }
+
             if (_tc == null)
             {
                 InitTelematics();
@@ -147,9 +154,13 @@ namespace Certify.CLI
 
             Console.ForegroundColor = ConsoleColor.White;
             System.Console.WriteLine("\nPerforming Auto Renewals..\n");
+            if (forceRenewal)
+            {
+                System.Console.WriteLine("\nForcing auto renew (--force-renewal specified). \n");
+            }
 
             //go through list of items configured for auto renew, perform renewal and report the result
-            var results = await _certifyClient.BeginAutoRenewal();
+            var results = await _certifyClient.BeginAutoRenewal(new RenewalSettings { ForceRenewal = forceRenewal });
             Console.ForegroundColor = ConsoleColor.White;
 
             foreach (var r in results)

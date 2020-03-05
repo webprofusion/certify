@@ -82,7 +82,7 @@ namespace Certify.Client
 
         Task<StatusMessage> RevokeManageSiteCertificate(string managedItemId);
 
-        Task<List<CertificateRequestResult>> BeginAutoRenewal();
+        Task<List<CertificateRequestResult>> BeginAutoRenewal(RenewalSettings settings);
 
         Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly);
         Task<CertificateRequestResult> RefetchCertificate(string managedItemId);

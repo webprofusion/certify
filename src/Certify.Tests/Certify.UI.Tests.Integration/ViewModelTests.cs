@@ -57,7 +57,9 @@ namespace Certify.UI.Tests.Integration
 
             Assert.IsTrue(appModel.HasRegisteredContacts, "Should have a registered contact");
 
-            appModel.RenewAll(true);
+            await appModel.RefreshStoredCredentialsList();
+
+            appModel.RenewAll(new RenewalSettings { });
         }
     }
 }

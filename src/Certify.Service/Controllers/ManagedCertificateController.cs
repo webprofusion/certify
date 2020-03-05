@@ -120,11 +120,11 @@ namespace Certify.Service
         /// </summary>
         /// <returns></returns>
         [HttpPost, Route("autorenew")]
-        public async Task<List<CertificateRequestResult>> BeginAutoRenewal()
+        public async Task<List<CertificateRequestResult>> BeginAutoRenewal(RenewalSettings settings)
         {
             DebugLog();
 
-            return await _certifyManager.PerformRenewalAllManagedCertificates(true, null);
+            return await _certifyManager.PerformRenewalAllManagedCertificates(settings, null);
         }
 
         [HttpGet, Route("renewcert/{managedItemId}/{resumePaused}")]

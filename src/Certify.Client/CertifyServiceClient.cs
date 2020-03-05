@@ -276,9 +276,9 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<StatusMessage>(response);
         }
 
-        public async Task<List<CertificateRequestResult>> BeginAutoRenewal()
+        public async Task<List<CertificateRequestResult>> BeginAutoRenewal(RenewalSettings settings)
         {
-            var response = await PostAsync("managedcertificates/autorenew", null);
+            var response = await PostAsync("managedcertificates/autorenew", settings);
             var serializer = new JsonSerializer();
             using (var sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
             using (var reader = new JsonTextReader(sr))
