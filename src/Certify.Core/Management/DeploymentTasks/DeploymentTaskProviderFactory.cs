@@ -24,7 +24,10 @@ namespace Certify.Core.Management.DeploymentTasks
 
             foreach (var p in providerPlugins)
             {
-                definitions.AddRange(p.GetProviders());
+                if (p != null)
+                {
+                    definitions.AddRange(p.GetProviders());
+                }
             }
 
             return await Task.FromResult(definitions);
