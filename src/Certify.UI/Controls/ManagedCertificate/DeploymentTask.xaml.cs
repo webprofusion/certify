@@ -52,7 +52,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             EditModel = new ViewModel.DeploymentTaskConfigViewModel(config);
             DataContext = EditModel;
 
-            EditModel.RefreshOptions();
+            Task.Run(async () => { await EditModel.RefreshOptions(); });
 
         }
 
@@ -123,7 +123,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             // validate task configuration using the selected provider
 
-            string msgTitle = "Edit Deployment Task";
+            var msgTitle = "Edit Deployment Task";
 
             if (EditModel.SelectedItem.TaskTypeId == null)
             {

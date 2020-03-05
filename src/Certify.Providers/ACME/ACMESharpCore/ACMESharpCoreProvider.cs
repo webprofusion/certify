@@ -59,12 +59,11 @@ namespace Certfy.Providers.ACME.ACMESharpCore
         private AcmeProtocolClient _client;
         private LoggingHandler _loggingHandler;
         private string _userAgentName = "Certify SSL Manager";
-        private string _settingsFolder;
+
         private HttpClient _httpClient;
 
-        public ACMESharpCoreProvider(string acmeBaseUri, string settingsPath, string userAgentName)
+        public ACMESharpCoreProvider(string acmeBaseUri, string userAgentName)
         {
-            _settingsFolder = settingsPath;
 
             var assembly = typeof(AcmeProtocolClient).Assembly.GetName();
 
@@ -148,6 +147,7 @@ namespace Certfy.Providers.ACME.ACMESharpCore
             {
                 var pendingAuthz = new PendingAuthorization
                 {
+                    Identifier = new IdentifierItem { Id = authz }
                     //TODO
                 };
                 authorizations.Add(pendingAuthz);
@@ -170,7 +170,7 @@ namespace Certfy.Providers.ACME.ACMESharpCore
         public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId)
         {
             var order = await _client.GetOrderDetailsAsync("");
-            var certData = await _client.GetOrderCertificateAsync(order);
+            _ = await _client.GetOrderCertificateAsync(order);
 
             return new ProcessStepResult { IsSuccess = true };
         }

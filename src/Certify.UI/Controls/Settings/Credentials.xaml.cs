@@ -16,8 +16,6 @@ namespace Certify.UI.Controls.Settings
     {
         protected Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
 
-        private bool settingsInitialised = false;
-
         private Models.Config.StoredCredential _selectedStoredCredential = null;
 
         public Credentials()
@@ -35,16 +33,12 @@ namespace Certify.UI.Controls.Settings
 
             DataContext = MainViewModel;
 
-            settingsInitialised = true;
-
             //load stored credentials list
             await MainViewModel.RefreshStoredCredentialsList();
             CredentialsList.ItemsSource = MainViewModel.StoredCredentials;
         }
 
-        private async void UserControl_Loaded(object sender, RoutedEventArgs e) =>
-            // reload settings
-            await LoadCurrentSettings();
+        private async void UserControl_Loaded(object sender, RoutedEventArgs e) => await LoadCurrentSettings();
 
         private void AddStoredCredential_Click(object sender, RoutedEventArgs e)
         {
@@ -101,7 +95,6 @@ namespace Certify.UI.Controls.Settings
         private async void TestStoredCredential_Click(object sender, RoutedEventArgs e)
         {
             if (_selectedStoredCredential != null)
-
             {
                 Mouse.OverrideCursor = Cursors.Wait;
 

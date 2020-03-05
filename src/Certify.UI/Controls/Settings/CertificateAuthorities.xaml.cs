@@ -23,7 +23,7 @@ namespace Certify.UI.Controls.Settings
     {
         protected Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
 
-        private bool settingsInitialised = false;
+        private bool _settingsInitialised = false;
         private Models.Preferences _prefs => MainViewModel.Preferences;
           
         public CertificateAuthorities()
@@ -31,9 +31,9 @@ namespace Certify.UI.Controls.Settings
             InitializeComponent();
         }
 
-        private async void UserControl_Loaded(object sender, RoutedEventArgs e) =>  await LoadSettings();
+        private void UserControl_Loaded(object sender, RoutedEventArgs e) =>  LoadSettings();
 
-        public async Task LoadSettings()
+        public void LoadSettings()
         {
             if (!MainViewModel.IsServiceAvailable)
             {
@@ -48,7 +48,7 @@ namespace Certify.UI.Controls.Settings
 
             CertificateAuthorityList.SelectedValue = _prefs.DefaultCertificateAuthority;
 
-            settingsInitialised = true;
+            _settingsInitialised = true;
         }
 
         private void Button_NewContact(object sender, RoutedEventArgs e)
@@ -63,7 +63,7 @@ namespace Certify.UI.Controls.Settings
 
         private async void SettingsUpdated(object sender, RoutedEventArgs e)
         {
-            if (settingsInitialised)
+            if (_settingsInitialised)
             {
                 _prefs.EnableAutomaticCAFailover = (EnableAutomaticCAFailover.IsChecked == true);
 

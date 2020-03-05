@@ -58,6 +58,8 @@ namespace Certify.Core.Management.Challenges
 
         public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
+            _log?.Information($"Creating Record {request.RecordName}");
+
             // for a given managed site configuration, attempt to complete the required challenge by
             // creating the required TXT record
 
@@ -65,7 +67,7 @@ namespace Certify.Core.Management.Challenges
             // name> -v <record value>
 
             var providerSpecificConfig = "ROUTE53";
-            var credentialsString = string.Join(",", _credentials);
+            // var credentialsString = string.Join(",", _credentials);
 
             // var config = providerDetails.Config.Split(';');
             //get our driver type

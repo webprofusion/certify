@@ -1195,14 +1195,14 @@ namespace Certify.Management
             {
                 _tc.TrackEvent("RevokeCertificate");
             }
-            var cert = CertificateManager.GetFileCertificate(managedCertificate.CertificatePath);
-           
 
             var result = await _acmeClientProvider.RevokeCertificate(log, managedCertificate);
+
             if (result.IsOK)
             {
                 managedCertificate.CertificateRevoked = true;
             }
+
             return result;
         }
     }

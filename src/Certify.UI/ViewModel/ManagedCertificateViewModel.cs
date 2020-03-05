@@ -117,7 +117,9 @@ namespace Certify.UI.ViewModel
                         {
                             new CertRequestChallengeConfig
                             {
+#pragma warning disable CS0618 // Type or member is obsolete
                                 ChallengeType = SelectedItem.RequestConfig.ChallengeType
+#pragma warning restore CS0618 // Type or member is obsolete
                             }
                         };
                     }

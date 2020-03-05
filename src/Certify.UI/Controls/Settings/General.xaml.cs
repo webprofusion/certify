@@ -24,7 +24,7 @@ namespace Certify.UI.Controls.Settings
             InitializeComponent();
         }
 
-        private async Task LoadCurrentSettings()
+        private void LoadCurrentSettings()
         {
 
             if (!MainViewModel.IsServiceAvailable)
@@ -75,7 +75,7 @@ namespace Certify.UI.Controls.Settings
             settingsInitialised = true;
         }
 
- 
+
         private void Button_ScheduledTaskConfig(object sender, RoutedEventArgs e)
         {
             //show UI to update auto renewal task
@@ -157,10 +157,7 @@ namespace Certify.UI.Controls.Settings
 
         private void RenewalMaxRequests_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double?> e) => SettingsUpdated(sender, e);
 
-        private async void UserControl_Loaded(object sender, RoutedEventArgs e) =>
-            // reload settings
-            await LoadCurrentSettings();
-
+        private void UserControl_Loaded(object sender, RoutedEventArgs e) => LoadCurrentSettings();
 
         private void ToggleTheme_Click(object sender, RoutedEventArgs e)
         {
