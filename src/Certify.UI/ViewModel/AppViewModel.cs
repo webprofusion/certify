@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -127,9 +128,22 @@ namespace Certify.UI.ViewModel
 
         public bool HasDeprecatedChallengeTypes { get; set; } = false;
 
-        public virtual bool HasRegisteredContacts =>
-                // FIXME: this property is async, either cache or reduce reliance
-                Task.Run(() => CertifyClient.GetPrimaryContact()).Result != null;
+        public ObservableCollection<AccountDetails> AccountDetails = new ObservableCollection<AccountDetails>();
+
+        public async Task RefreshAccountsList()
+        {
+            var list = await CertifyClient.GetAccounts();
+
+            AccountDetails.Clear();
+
+            foreach (var a in list)
+            {
+                a.Title = $"{CertificateAuthority.GetCertificateAuthority(a.CertificateAuthorityId).Title} [{(a.IsStagingAccount ? "Staging" : "Production")}]";
+                AccountDetails.Add(a);
+            }
+        }
+
+        public virtual bool HasRegisteredContacts => AccountDetails.Any();
 
         public async Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly)
         {
@@ -154,13 +168,12 @@ namespace Certify.UI.ViewModel
 
         public bool IsRegisteredVersion { get; set; }
 
-        internal async Task<bool> AddContactRegistration(ContactRegistration reg)
+        internal async Task<ActionResult> AddContactRegistration(ContactRegistration reg)
         {
-            var addedOk = await CertifyClient.SetPrimaryContact(reg);
+            var result = await CertifyClient.AddAccount(reg);
 
-            // TODO: report errors
             RaisePropertyChangedEvent(nameof(HasRegisteredContacts));
-            return addedOk;
+            return result;
         }
 
         public int MainUITabIndex { get; set; }
@@ -326,6 +339,21 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        static SemaphoreSlim _prefLock = new SemaphoreSlim(1, 1);
+        public virtual async Task SavePreferences()
+        {
+            // we use a semaphore to lock the save to preferences to stop multiple callers saves prefs at the same time (unlikely)
+            await _prefLock.WaitAsync();
+            try
+            {
+                await this.CertifyClient.SetPreferences(Preferences);
+            }
+            catch
+            {
+                _prefLock.Release();
+            }
+        }
+
         /// <summary>
         /// Load initial settings including preferences, list of managed sites, primary contact 
         /// </summary>
@@ -348,7 +376,7 @@ namespace Certify.UI.ViewModel
 
             ManagedCertificates = new System.Collections.ObjectModel.ObservableCollection<Models.ManagedCertificate>(list);
 
-            PrimaryContactEmail = await CertifyClient.GetPrimaryContact();
+            await RefreshAccountsList();
 
             await RefreshChallengeAPIList();
 
@@ -538,17 +566,17 @@ namespace Certify.UI.ViewModel
         public async Task RefreshStoredCredentialsList()
         {
             var list = await CertifyClient.GetCredentials();
-            
-                if (StoredCredentials == null)
-                {
-                    StoredCredentials = new ObservableCollection<StoredCredential>();
-                }
 
-                StoredCredentials.Clear();
-                foreach(var c in list)
-                {
-                    StoredCredentials.Add(c);
-                }
+            if (StoredCredentials == null)
+            {
+                StoredCredentials = new ObservableCollection<StoredCredential>();
+            }
+
+            StoredCredentials.Clear();
+            foreach (var c in list)
+            {
+                StoredCredentials.Add(c);
+            }
 
             RaisePropertyChangedEvent(nameof(StoredCredentials));
         }
@@ -571,7 +599,7 @@ namespace Certify.UI.ViewModel
             var list = await CertifyClient.GetDeploymentProviderList();
             App.Current.Dispatcher.Invoke((Action)delegate
             {
-                DeploymentTaskProviders = new System.Collections.ObjectModel.ObservableCollection<Models.Config.DeploymentProviderDefinition>(list.OrderBy(l=>l.Title));
+                DeploymentTaskProviders = new System.Collections.ObjectModel.ObservableCollection<Models.Config.DeploymentProviderDefinition>(list.OrderBy(l => l.Title));
             });
         }
         public ICommand RenewAllCommand => new RelayCommand<bool>(RenewAll);

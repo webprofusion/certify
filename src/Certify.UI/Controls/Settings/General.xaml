@@ -1,5 +1,5 @@
 <UserControl
-    x:Class="Certify.UI.Controls.SettingsGeneral"
+    x:Class="Certify.UI.Controls.Settings.General"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
@@ -15,8 +15,7 @@
     Loaded="UserControl_Loaded"
     mc:Ignorable="d">
 
-
-    <StackPanel Margin="0,8,0,16" Orientation="Vertical">
+    <StackPanel Margin="0,8,0,8" Orientation="Vertical">
         <Button
             Name="ConfigureAutoRenew"
             Width="160"
@@ -34,66 +33,7 @@
             </StackPanel>
         </Button>
 
-        <!--  Certificate Authority Preference  -->
-        <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
-            <StackPanel Margin="8" Orientation="Horizontal">
-                <Label Content="{x:Static res:SR.PreferredCertificateAuthority}" />
-                <ComboBox
-                    x:Name="CertificateAuthorityList"
-                    Width="180"
-                    Margin="24,0,0,0"
-                    HorizontalAlignment="Left"
-                    DisplayMemberPath="Title"
-                    SelectedValuePath="Id"
-                    SelectionChanged="CertificateAuthorityList_SelectionChanged" />
-                <CheckBox
-                    x:Name="EnableAutomaticCAFailover"
-                    Margin="32,0,0,0"
-                    Checked="SettingsUpdated"
-                    Content="Enable Automatic CA Failover"
-                    ToolTip="If the preferred Certificate Authority fails to renew your certificate, attempt an alternative (if configured)"
-                    Unchecked="SettingsUpdated" />
 
-            </StackPanel>
-            <Label Content="Certificate Authority Accounts" />
-            <StackPanel Margin="8" Orientation="Horizontal" />
-            <ScrollViewer Height="100">
-                <ListView
-                    x:Name="AccountList"
-                    Height="Auto"
-                    SelectionMode="Single">
-
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-
-                            <StackPanel Orientation="Horizontal">
-                                <fa:FontAwesome Margin="0,0,8,0" Icon="UserCircle" />
-                                <TextBlock
-                                    Margin="0,0,8,0"
-                                    FontWeight="Bold"
-                                    Text="{Binding Title}" />
-                                <TextBlock
-                                    Margin="0,0,8,0"
-                                    FontWeight="Bold"
-                                    Text="{Binding Email}" />
-
-                                <Button
-                                    Grid.Row="0"
-                                    Grid.Column="2"
-                                    Height="24"
-                                    Margin="32,0,0,8"
-                                    Click="Button_NewContact">
-                                    <StackPanel Orientation="Horizontal">
-
-                                        <TextBlock Margin="6,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.New_Contact}" /></TextBlock>
-                                    </StackPanel>
-                                </Button>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-            </ScrollViewer>
-        </StackPanel>
 
         <StackPanel Margin="8,8,10,0" Orientation="Vertical">
             <StackPanel Margin="0,8" Orientation="Horizontal">

@@ -7,70 +7,36 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Certify.Models;
 
-namespace Certify.UI.Controls
+namespace Certify.UI.Controls.Settings
 {
     /// <summary>
     /// Interaction logic for Settings.xaml
     /// </summary>
-    public partial class SettingsGeneral : UserControl
+    public partial class General : UserControl
     {
         protected Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
 
         private bool settingsInitialised = false;
-        private Models.Preferences _prefs = null;
-        private Models.Config.StoredCredential _selectedStoredCredential = null;
+        private Models.Preferences _prefs => MainViewModel.Preferences;
 
-        private List<AccountItem> Accounts;
-
-        internal class AccountItem
-        {
-            public string ID { get; set; }
-            public string Title { get; set; }
-
-            public string CertificateAuthorityId { get; set; }
-            public bool IsStagingAccount { get; set; } = false;
-
-            public string Email { get; set; }
-            public string AccountURI { get; set; }
-            public string AccountKey { get; set; }
-        }
-
-        public SettingsGeneral()
+        public General()
         {
             InitializeComponent();
-
         }
-
 
         private async Task LoadCurrentSettings()
         {
-
 
             if (!MainViewModel.IsServiceAvailable)
             {
                 return;
             }
 
-            //TODO: we could now bind to Preferences
-            _prefs = await MainViewModel.CertifyClient.GetPreferences();
-
             if (_prefs.UseBackgroundServiceAutoRenewal)
             {
                 // if scheduled task not in use, remove legacy option to modify
                 ConfigureAutoRenew.Visibility = Visibility.Collapsed;
             }
-
-            MainViewModel.PrimaryContactEmail = await MainViewModel.CertifyClient.GetPrimaryContact();
-
-            this.Accounts = new List<AccountItem>();
-            foreach (var ca in CertificateAuthority.CertificateAuthorities)
-            {
-                this.Accounts.Add(new AccountItem { ID = ca.Id + "_production", CertificateAuthorityId = ca.Id, Title = $"{ca.Title} ({ca.WebsiteUrl}, Default)", IsStagingAccount = false, Email = MainViewModel.PrimaryContactEmail });
-                this.Accounts.Add(new AccountItem { ID = ca.Id + "_staging", CertificateAuthorityId = ca.Id, Title = $"{ca.Title} ({ca.WebsiteUrl}, Staging)", IsStagingAccount = true, Email = MainViewModel.PrimaryContactEmail });
-            }
-            this.AccountList.ItemsSource = Accounts;
-
-
 
             EnableTelematicsCheckbox.IsChecked = _prefs.EnableAppTelematics;
             EnableProxyAPICheckbox.IsChecked = _prefs.EnableValidationProxyAPI;
@@ -100,32 +66,16 @@ namespace Certify.UI.Controls
             }
 
             EnableStatusReporting.IsChecked = _prefs.EnableStatusReporting;
-            EnableAutomaticCAFailover.IsChecked = _prefs.EnabledAutomaticCAFailover;
 
             RenewalIntervalDays.Value = _prefs.RenewalIntervalDays;
             RenewalMaxRequests.Value = _prefs.MaxRenewalRequests;
 
             DataContext = MainViewModel;
 
-            this.CertificateAuthorityList.ItemsSource = CertificateAuthority.CertificateAuthorities.Where(c => c.IsEnabled == true);
-
-            CertificateAuthorityList.SelectedValue = _prefs.DefaultCertificateAuthority;
-
             settingsInitialised = true;
-
-
         }
 
-        private void Button_NewContact(object sender, RoutedEventArgs e)
-        {
-            //present new contact dialog
-            var d = new Windows.EditContactDialog
-            {
-                Owner = Window.GetWindow(this)
-            };
-            d.ShowDialog();
-        }
-
+ 
         private void Button_ScheduledTaskConfig(object sender, RoutedEventArgs e)
         {
             //show UI to update auto renewal task
@@ -145,7 +95,6 @@ namespace Certify.UI.Controls
                 _prefs.EnableHttpChallengeServer = (EnableHttpChallengeServer.IsChecked == true);
 
                 _prefs.EnableStatusReporting = (EnableStatusReporting.IsChecked == true);
-                _prefs.EnabledAutomaticCAFailover = (EnableAutomaticCAFailover.IsChecked == true);
 
                 _prefs.EnableEFS = (EnableEFS.IsChecked == true);
                 _prefs.IgnoreStoppedSites = (IgnoreStoppedSites.IsChecked == true);
@@ -198,11 +147,8 @@ namespace Certify.UI.Controls
                     _prefs.EnableCertificateCleanup = true;
                 }
 
-
-                _prefs.DefaultCertificateAuthority = CertificateAuthorityList.SelectedValue.ToString();
-
                 // save settings
-                await MainViewModel.CertifyClient.SetPreferences(_prefs);
+                await MainViewModel.SavePreferences();
 
             }
         }
@@ -233,7 +179,6 @@ namespace Certify.UI.Controls
 
         }
 
-        private void CertificateAuthorityList_SelectionChanged(object sender, SelectionChangedEventArgs e) => SettingsUpdated(sender, e);
 
 
     }

@@ -51,14 +51,17 @@ namespace Certify.UI
             }
         }
 
-        protected override async Task<IEnumerable<DomainOption>> GetDomainOptionsFromSite(string siteId) => await Task.Run(() =>
-                                                                                                                      {
-                                                                                                                          return Enumerable.Range(1, 50).Select(i => new DomainOption()
-                                                                                                                          {
-                                                                                                                              Domain = $"www{i}.domain.example.org",
-                                                                                                                              IsPrimaryDomain = i == 1,
-                                                                                                                              IsSelected = true
-                                                                                                                          });
-                                                                                                                      });
+        protected async override Task<IEnumerable<DomainOption>> GetDomainOptionsFromSite(string siteId)
+        {
+            return await Task.Run(() =>
+                    {
+                        return Enumerable.Range(1, 50).Select(i => new DomainOption()
+                        {
+                            Domain = $"www{i}.domain.example.org",
+                            IsPrimaryDomain = i == 1,
+                            IsSelected = true
+                        });
+                    });
+        }
     }
 }

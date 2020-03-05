@@ -368,19 +368,23 @@ namespace Certify.Client
 
         #endregion Managed Certificates
 
-        #region Contacts
+        #region Accounts
 
-        public async Task<string> GetPrimaryContact()
+        public async Task<List<AccountDetails>> GetAccounts()
         {
-            var result = await FetchAsync("contacts/primary");
-            return JsonConvert.DeserializeObject<string>(result);
+            var result = await FetchAsync("accounts");
+            return JsonConvert.DeserializeObject<List<AccountDetails>>(result);
         }
 
-        public async Task<bool> SetPrimaryContact(ContactRegistration contact)
+        public async Task<ActionResult> AddAccount(ContactRegistration contact)
         {
-            var result = await PostAsync("contacts/primary", contact);
-            return JsonConvert.DeserializeObject<bool>(await result.Content.ReadAsStringAsync());
+            var result = await PostAsync("accounts", contact);
+            return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
+
+        #endregion
+
+        #region Credentials
 
         public async Task<List<StoredCredential>> GetCredentials()
         {
@@ -406,6 +410,6 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
 
-        #endregion Contacts
+        #endregion 
     }
 }

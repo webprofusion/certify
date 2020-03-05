@@ -7,12 +7,12 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Certify.Models;
 
-namespace Certify.UI.Controls
+namespace Certify.UI.Controls.Settings
 {
     /// <summary>
     /// Interaction logic for Settings.xaml
     /// </summary>
-    public partial class SettingsCredentials : UserControl
+    public partial class Credentials : UserControl
     {
         protected Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
 
@@ -20,7 +20,7 @@ namespace Certify.UI.Controls
 
         private Models.Config.StoredCredential _selectedStoredCredential = null;
 
-        public SettingsCredentials()
+        public Credentials()
         {
             InitializeComponent();
 

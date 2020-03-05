@@ -214,8 +214,7 @@ namespace Certify.UI
 
             _appViewModel.IsLoading = false;
 
-            // check if primary contact registered with LE
-            EnsureContactRegistered();
+        
 
             if (!_appViewModel.IsRegisteredVersion)
             {

@@ -93,7 +93,7 @@ namespace Certify.Providers.ACME.Certes
     {
         private AcmeContext _acme;
 #if DEBUG
-        private readonly Uri _serviceUri = new Uri(CertificateAuthority.CertificateAuthorities.Find(a => a.Id == "buypass.com").ProductionAPIEndpoint);
+        private readonly Uri _serviceUri = new Uri(CertificateAuthority.CertificateAuthorities.Find(a => a.Id == "letsencrypt.org").ProductionAPIEndpoint);
 
 #else
         private readonly Uri _serviceUri = WellKnownServers.LetsEncryptV2;
@@ -323,7 +323,7 @@ namespace Certify.Providers.ACME.Certes
         }
 
         /// <summary>
-        /// Determine if we have a currently registered account with the ACME CA (Let's Encrypt)
+        /// Determine if we have a currently registered account with the ACME CA (e.g. Let's Encrypt)
         /// </summary>
         /// <returns>  </returns>
         public bool IsAccountRegistered()
@@ -354,13 +354,24 @@ namespace Certify.Providers.ACME.Certes
             }
         }
 
+        public AccountDetails GetCurrentAcmeAccount()
+        {
+            return new AccountDetails
+            {
+                ID = _settings.AccountUri.Split('/').Last(),
+                AccountKey = _settings.AccountKey,
+                AccountURI = _settings.AccountUri,
+                Email = _settings.AccountEmail
+            };
+        }
+
         /// <summary>
-        /// Register a new account with the ACME CA (Let's Encrypt), accepting terms and conditions
+        /// Register a new account with the ACME CA (e.g. Let's Encrypt), accepting terms and conditions
         /// </summary>
         /// <param name="log">  </param>
         /// <param name="email">  </param>
         /// <returns>  </returns>
-        public async Task<bool> AddNewAccountAndAcceptTOS(ILog log, string email)
+        public async Task<ActionResult<AccountDetails>> AddNewAccountAndAcceptTOS(ILog log, string email)
         {
             try
             {
@@ -388,7 +399,17 @@ namespace Certify.Providers.ACME.Certes
                     // re-init provider based on new account key
                     await InitProvider(null);
 
-                    return true;
+                    return new ActionResult<AccountDetails>
+                    {
+                        IsSuccess = true,
+                        Result = new AccountDetails
+                        {
+                            AccountKey = _settings.AccountKey,
+                            Email = _settings.AccountEmail,
+                            AccountURI = _settings.AccountUri,
+                            ID = _settings.AccountUri.Split('/').Last()
+                        }
+                    };
                 }
                 else
                 {
@@ -398,7 +419,7 @@ namespace Certify.Providers.ACME.Certes
             catch (Exception exp)
             {
                 log.Error($"Failed to register account {email} with certificate authority: {exp.Message}");
-                return false;
+                return new ActionResult<AccountDetails> { IsSuccess = false, Message = $"Failed to register account {email} with certificate authority: {exp.Message}" };
             }
         }
 

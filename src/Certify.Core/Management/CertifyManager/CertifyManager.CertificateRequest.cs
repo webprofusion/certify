@@ -297,12 +297,6 @@ namespace Certify.Management
                 log = ManagedCertificateLog.GetLogger(managedCertificate.Id, _loggingLevelSwitch);
             }
 
-            //enable or disable EFS flag on private key certs based on preference
-            if (CoreAppSettings.Current.EnableEFS)
-            {
-                _vaultProvider.EnableSensitiveFileEncryption();
-            }
-
             // start with a failure result, set to success when succeeding
             var result = new CertificateRequestResult { ManagedItem = managedCertificate, IsSuccess = false, Message = "" };
 
@@ -522,7 +516,7 @@ namespace Certify.Management
                                 ActionType = "manualdns",
                                 InstanceTitle = Environment.MachineName,
                                 Message = instructions,
-                                NotificationEmail = GetPrimaryContactEmail() // todo: how to get this from correct challenge config
+                                NotificationEmail = (await GetAccountDetailsForManagedItem(managedCertificate))?.Email
                             });
                         }
                     }

@@ -7,7 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Certify.Models;
 
-namespace Certify.UI.Controls
+namespace Certify.UI.Controls.Settings
 {
     /// <summary>
     /// Interaction logic for Settings.xaml

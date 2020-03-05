@@ -107,13 +107,10 @@ namespace Certify.Client
 
         #endregion Managed Certificates
 
-        #region Contacts
-
-        Task<string> GetPrimaryContact();
-
-        Task<bool> SetPrimaryContact(ContactRegistration contact);
-
-      
-        #endregion Contacts
+        #region Accounts
+        Task<List<AccountDetails>> GetAccounts();
+        Task<ActionResult> AddAccount(ContactRegistration contact);
+        
+        #endregion Accounts
     }
 }

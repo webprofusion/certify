@@ -18,7 +18,7 @@ namespace Certify.Models.Plugins
 
         Task<string> GetAcmeAccountStatus();
 
-        Task<bool> AddNewAccountAndAcceptTOS(ILog log, string email);
+        Task<ActionResult<AccountDetails>> AddNewAccountAndAcceptTOS(ILog log, string email);
 
         Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config, string orderUri = null);
 

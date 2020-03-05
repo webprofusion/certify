@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -23,12 +23,12 @@ namespace Certify.Management
     {
         private ItemManager _itemManager = null;
         private IACMEClientProvider _acmeClientProvider = null;
-        private IVaultProvider _vaultProvider = null;
         private ICertifiedServer _serverProvider = null;
         private ChallengeDiagnostics _challengeDiagnostics = null;
         private IdnMapping _idnMapping = new IdnMapping();
         private PluginManager _pluginManager { get; set; }
         private ICredentialsManager _credentialsManager { get; set; }
+
         private TelemetryClient _tc = null;
         private bool _isRenewAllInProgress { get; set; }
         private ILog _serviceLog { get; set; }
@@ -36,7 +36,6 @@ namespace Certify.Management
 
         private bool _httpChallengeServerAvailable = false;
         private ConcurrentDictionary<string, SimpleAuthorizationChallengeItem> _currentChallenges = new ConcurrentDictionary<string, SimpleAuthorizationChallengeItem>();
-
         private ObservableCollection<RequestProgressState> _progressResults { get; set; }
 
         public event Action<RequestProgressState> OnRequestProgressStateUpdated;
@@ -68,7 +67,6 @@ namespace Certify.Management
             certes.InitProvider(_serviceLog).Wait();
 
             _acmeClientProvider = certes;
-            _vaultProvider = certes;
 
             // init remaining utilities and optionally enable telematics
             _challengeDiagnostics = new ChallengeDiagnostics(CoreAppSettings.Current.EnableValidationProxyAPI);
@@ -79,7 +77,7 @@ namespace Certify.Management
             }
 
             _httpChallengePort = serverConfig.HttpChallengeServerPort;
-            _httpChallengeServerClient.Timeout = new TimeSpan(0, 0, 5);
+            _httpChallengeServerClient.Timeout = new TimeSpan(0, 0, 20);
 
             if (_tc != null)
             {
@@ -88,7 +86,7 @@ namespace Certify.Management
 
             _serviceLog?.Information("Certify Manager Started");
 
-            PerformUpgrades().Wait();
+            PerformAccountUpgrades().Wait();
         }
 
         private void InitLogging(Shared.ServiceConfig serverConfig)
@@ -123,27 +121,6 @@ namespace Certify.Management
                 default:
                     _loggingLevelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Information;
                     break;
-            }
-        }
-
-        public async Task PerformUpgrades()
-        {
-            // check if there are no registered contacts, if so see if we are upgrading from a vault
-            if (GetContactRegistrations().Count == 0)
-            {
-                var acmeVaultMigration = new Models.Compat.ACMEVaultUpgrader();
-
-                if (acmeVaultMigration.HasACMEVault())
-                {
-                    var email = acmeVaultMigration.GetContact();
-
-                    if (!string.IsNullOrEmpty(email))
-                    {
-                        var addedOK = await _acmeClientProvider.AddNewAccountAndAcceptTOS(_serviceLog, email);
-
-                        _serviceLog?.Information("Account upgrade completed (vault)");
-                    }
-                }
             }
         }
 

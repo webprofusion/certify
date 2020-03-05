@@ -60,19 +60,19 @@ namespace Certify.UI.Windows
             {
                 Mouse.OverrideCursor = Cursors.Wait;
 
-                var addedOK = await MainViewModel.AddContactRegistration(Item);
+                var result = await MainViewModel.AddContactRegistration(Item);
 
                 Mouse.OverrideCursor = Cursors.Arrow;
 
-                if (addedOK)
+                if (result.IsSuccess)
                 {
-                    MainViewModel.PrimaryContactEmail = await MainViewModel.CertifyClient.GetPrimaryContact();
+                    await MainViewModel.RefreshAccountsList();
+
                     Close();
                 }
                 else
                 {
-                    // FIXME: specific error message or a general try again message
-                    MessageBox.Show(Certify.Locales.SR.New_Contact_EmailError);
+                    MessageBox.Show(result.Message);
                 }
             }
             else

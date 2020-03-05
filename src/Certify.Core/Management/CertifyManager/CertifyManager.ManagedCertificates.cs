@@ -81,7 +81,7 @@ namespace Certify.Management
                     {
                         InstanceId = CoreAppSettings.Current.InstanceId,
                         MachineName = Environment.MachineName,
-                        PrimaryContactEmail = GetPrimaryContactEmail(),
+                        PrimaryContactEmail = (await GetAccountDetailsForManagedItem(managedCertificate))?.Email,
                         ManagedSite = managedCertificate,
                         AppVersion = Util.GetAppVersion().ToString()
                     };

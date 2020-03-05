@@ -1,11 +1,11 @@
 <UserControl
-    x:Class="Certify.UI.Controls.Settings"
+    x:Class="Certify.UI.Controls.Settings.Settings"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
     xmlns:certifyui="clr-namespace:Certify.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:Certify.UI.Controls"
+    xmlns:local="clr-namespace:Certify.UI.Controls.Settings"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DataContext="{d:DesignInstance Type=certifyui:AppDesignViewModel,
                                      IsDesignTimeCreatable=True}"
@@ -26,10 +26,14 @@
                 Controls:ControlsHelper.HeaderFontSize="12"
                 Header="Settings"
                 IsSelected="True">
-                <local:SettingsGeneral />
+                <local:General />
+            </TabItem>
+            <TabItem Controls:ControlsHelper.HeaderFontSize="12" Header="Certificate Authorities">
+                <local:CertificateAuthorities />
+
             </TabItem>
             <TabItem Controls:ControlsHelper.HeaderFontSize="12" Header="Stored Credentials">
-                <local:SettingsCredentials />
+                <local:Credentials />
 
             </TabItem>
 

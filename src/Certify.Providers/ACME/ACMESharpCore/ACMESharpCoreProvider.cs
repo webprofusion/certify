@@ -74,7 +74,7 @@ namespace Certfy.Providers.ACME.ACMESharpCore
 
         }
 
-        public async Task<bool> InitProvider(ILog log = null )
+        public async Task<bool> InitProvider(ILog log = null)
         {
             if (log != null)
             {
@@ -106,14 +106,31 @@ namespace Certfy.Providers.ACME.ACMESharpCore
             await _client.GetNonceAsync();
         }
 
-        public async Task<bool> AddNewAccountAndAcceptTOS(ILog log, string email)
+        public async Task<ActionResult<Certify.Models.AccountDetails>> AddNewAccountAndAcceptTOS(ILog log, string email)
         {
             _log.Debug("Adding new account");
 
-            var account = await _client.CreateAccountAsync(new string[] { email.Trim() }, termsOfServiceAgreed: true);
-
-            return true;
-
+            try
+            {
+                var account = await _client.CreateAccountAsync(new string[] { email.Trim() }, termsOfServiceAgreed: true);
+                return new ActionResult<Certify.Models.AccountDetails>
+                {
+                    IsSuccess = true,
+                    Result = new Certify.Models.AccountDetails
+                    {
+                        ID = account.Payload.Id,
+                        AccountKey = account.Payload.Key.ToString()
+                    }
+                };
+            }
+            catch (Exception exp)
+            {
+                return new ActionResult<Certify.Models.AccountDetails>
+                {
+                    IsSuccess = false,
+                    Message = "Failed to add account. Check email address is valid and system can contact the ACME API. " + exp.ToString()
+                };
+            }
         }
 
         public async Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config, string orderUri = null)
@@ -220,7 +237,7 @@ namespace Certfy.Providers.ACME.ACMESharpCore
 
         public async Task<StatusMessage> SubmitChallenge(ILog log, string challengeType, AuthorizationChallengeItem attemptedChallenge)
         {
-       
+
             if (attemptedChallenge == null)
             {
                 return new StatusMessage
@@ -232,7 +249,7 @@ namespace Certfy.Providers.ACME.ACMESharpCore
 
             if (!attemptedChallenge.IsValidated)
             {
-              //  IChallengeContext challenge = (IChallengeContext)attemptedChallenge.ChallengeData;
+                //  IChallengeContext challenge = (IChallengeContext)attemptedChallenge.ChallengeData;
                 try
                 {
                     var result = await _client.AnswerChallengeAsync(attemptedChallenge.ResourceUri);
@@ -254,11 +271,11 @@ namespace Certfy.Providers.ACME.ACMESharpCore
                     }
                     else
                     {
-                        
+
                         return new StatusMessage
                         {
                             IsOK = false,
-                            Message =result.Error.ToString()
+                            Message = result.Error.ToString()
                         };
                     }
                 }

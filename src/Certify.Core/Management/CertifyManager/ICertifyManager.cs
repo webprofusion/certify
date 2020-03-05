@@ -28,9 +28,9 @@ namespace Certify.Management
 
         Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallengeResponses(string challengeType);
 
-        List<RegistrationItem> GetContactRegistrations();
+        Task<List<AccountDetails>> GetAccountRegistrations();
 
-        string GetPrimaryContactEmail();
+        Task<ActionResult> AddAccount(ContactRegistration reg);
 
         Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate, bool isPreviewMode, IProgress<RequestProgressState> progress = null);
 
@@ -39,10 +39,6 @@ namespace Certify.Management
         Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate);
 
         Task<CertificateRequestResult> PerformDummyCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null);
-
-        Task<bool> AddRegisteredContact(ContactRegistration reg);
-
-        void RemoveAllContacts();
 
         Task<List<BindingInfo>> GetPrimaryWebSites(bool ignoreStoppedSites);
 

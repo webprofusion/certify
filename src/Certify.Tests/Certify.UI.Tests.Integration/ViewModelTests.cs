@@ -32,9 +32,16 @@ namespace Certify.UI.Tests.Integration
                 })
                 );
 
-            mockClient.Setup(c => c.GetPrimaryContact())
+            mockClient.Setup(c => c.GetAccounts())
                 .Returns(
-                Task.FromResult("test@example.com")
+                Task.FromResult(
+                    new List<AccountDetails> {
+                        new AccountDetails {
+                            Email = "test@example.com",
+                            IsStagingAccount = true,
+                            CertificateAuthorityId = StandardCertAuthorities.LETS_ENCRYPT
+                        }
+                    })
                 );
 
             mockClient.Setup(c => c.GetCredentials())
@@ -49,8 +56,6 @@ namespace Certify.UI.Tests.Integration
             Assert.IsTrue(appModel.ManagedCertificates.Count > 0, "Should have managed sites");
 
             Assert.IsTrue(appModel.HasRegisteredContacts, "Should have a registered contact");
-
-            await appModel.RefreshStoredCredentialsList();
 
             appModel.RenewAll(true);
         }

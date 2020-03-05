@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Certify.Models
 {
@@ -14,6 +15,12 @@ namespace Certify.Models
         DOMAIN_SINGLE,
         DOMAIN_MULTIPLE_SAN,
         DOMAIN_WILDCARD
+    }
+
+    public static class StandardCertAuthorities
+    {
+        public static string LETS_ENCRYPT = "letsencrypt.org";
+        public static string BUYPASS = "buypass.com";
     }
 
     public class CertificateAuthority
@@ -55,6 +62,11 @@ namespace Certify.Models
                 }
             }
         };
+
+        public static CertificateAuthority GetCertificateAuthority(string id)
+        {
+            return CertificateAuthorities.FirstOrDefault(c => c.Id == id);
+        }
 
         public string Id { get; set; }
         public CertAuthorityAPIType APIType { get; set; }
