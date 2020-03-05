@@ -27,7 +27,6 @@ namespace Certify.Core.Tests
         private int testSiteHttpPort = 81;
         private string _awsCredStorageKey = "";
 
-        private ILog _log;
         private string _siteId = "";
 
         public CertRequestTests()

@@ -66,6 +66,6 @@
         /// If true, the app will decide which Certificate Authority to choose from the list of supported providers.
         /// The preferred provider will be chosen first, with fallback to any other supported (and configured) providers if a failure occurs.
         /// </summary>
-        public bool EnabledAutomaticCAFailover { get; set; }
+        public bool EnableAutomaticCAFailover { get; set; }
     }
 }

@@ -24,8 +24,6 @@ namespace Certify.Core.Tests
         private string testSitePath = "c:\\inetpub\\wwwroot";
         private int testSiteHttpPort = 81;
         private string _awsCredStorageKey = "";
-
-        private ILog _log;
         private string _siteId = "";
 
         public DeploymentPreviewTests()

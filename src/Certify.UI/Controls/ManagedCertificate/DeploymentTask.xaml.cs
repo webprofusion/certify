@@ -95,7 +95,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             //EditModel.SelectedItem.IsChanged = true;
         }
 
-        private async void ShowParamLookup_Click(object sender, RoutedEventArgs e)
+        private void ShowParamLookup_Click(object sender, RoutedEventArgs e)
         {
             // EditModel.ShowZoneLookup = true;
         }

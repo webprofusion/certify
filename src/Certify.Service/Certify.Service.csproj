@@ -41,7 +41,7 @@
     <Content Include="icon.ico" />
   </ItemGroup>
  <ItemGroup> 
-    <PackageReference Include="LightInject" Version="6.2.0" /> 
+    <PackageReference Include="LightInject" Version="6.2.1" /> 
     <PackageReference Include="LightInject.WebApi" Version="2.0.0" /> 
     <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.1" /> 
     <PackageReference Include="Microsoft.AspNet.SignalR.Core" Version="2.4.1" /> 
@@ -71,6 +71,6 @@
     <PackageReference Include="Topshelf.Serilog" Version="4.2.1" /> 
   </ItemGroup>
  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-   <Exec Command="REM copy latest plugin builds to target output before creating other build output&#xD;&#xA;xcopy /i /Y C:\Work\Builds\CertifyPlugins\*.dll $(TargetDir)\Plugins" />
+   <Exec Command="REM copy latest plugin builds to target output before creating other build output&#xD;&#xA;REM xcopy /i /Y C:\Work\Builds\CertifyPlugins\*.dll $(TargetDir)Plugins" />
  </Target> 
 </Project>

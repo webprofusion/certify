@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="ACMESharpCore" Version="2.1.0.113" />
-    <PackageReference Include="Portable.BouncyCastle" Version="1.8.5.2" />
+    <PackageReference Include="Portable.BouncyCastle" Version="1.8.6" />
   </ItemGroup>
 
   <ItemGroup>

@@ -148,11 +148,14 @@
     <Compile Include="Controls\QuickStart.xaml.cs">
       <DependentUpon>QuickStart.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\SettingsCredentials.xaml.cs">
-      <DependentUpon>SettingsCredentials.xaml</DependentUpon>
+    <Compile Include="Controls\Settings\CertificateAuthorities.xaml.cs">
+      <DependentUpon>CertificateAuthorities.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\SettingsGeneral.xaml.cs">
-      <DependentUpon>SettingsGeneral.xaml</DependentUpon>
+    <Compile Include="Controls\Settings\Credentials.xaml.cs">
+      <DependentUpon>Credentials.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Settings\General.xaml.cs">
+      <DependentUpon>General.xaml</DependentUpon>
     </Compile>
     <Compile Include="Settings\UISettings.cs" />
     <Compile Include="Utils\CSRAlgCheckedConverter.cs" />
@@ -256,15 +259,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Controls\SettingsCredentials.xaml">
+    <Page Include="Controls\Settings\CertificateAuthorities.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\Settings\Credentials.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\SettingsGeneral.xaml">
+    <Page Include="Controls\Settings\General.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\Settings.xaml">
+    <Page Include="Controls\Settings\Settings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -288,7 +295,7 @@
     <Compile Include="Controls\ProgressMonitor.xaml.cs">
       <DependentUpon>ProgressMonitor.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\Settings.xaml.cs">
+    <Compile Include="Controls\Settings\Settings.xaml.cs">
       <DependentUpon>Settings.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainWindow.xaml.cs">
@@ -407,7 +414,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Fody">
-      <Version>6.1.0</Version>
+      <Version>6.1.1</Version>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
@@ -421,7 +428,7 @@
       <Version>0.3.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.ApplicationInsights">
-      <Version>2.12.1</Version>
+      <Version>2.13.1</Version>
     </PackageReference>
     <PackageReference Include="NETStandard.Library">
       <Version>2.0.3</Version>
@@ -430,7 +437,7 @@
       <Version>12.0.3</Version>
     </PackageReference>
     <PackageReference Include="PropertyChanged.Fody">
-      <Version>3.2.5</Version>
+      <Version>3.2.6</Version>
     </PackageReference>
     <PackageReference Include="Serilog">
       <Version>2.9.0</Version>

@@ -111,7 +111,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        private void DomainFilter_TextChanged(object sender, TextChangedEventArgs e) => SetFilter();//var defaultView = CollectionViewSource.GetDefaultView(DomainOptionsList.DataContext);//defaultView.Refresh();
+        private void DomainFilter_TextChanged(object sender, TextChangedEventArgs e) => SetFilter();
 
         private void RemoveDomainOption_Click(object sender, RoutedEventArgs e)
         {
