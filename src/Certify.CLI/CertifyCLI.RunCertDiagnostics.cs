@@ -127,6 +127,13 @@ namespace Certify.CLI
                                 }
                             }
 
+                            var chainResults = CertificateManager.CheckCertChain(fileCert);
+
+                            foreach(var result in chainResults)
+                            {
+                                Console.WriteLine($"\t Cert Status Check: {fileCert.Subject} " + result);
+                            }
+
                             // re-deploy certificate if possible
                             if (redeployRequired && autoFix)
                             {

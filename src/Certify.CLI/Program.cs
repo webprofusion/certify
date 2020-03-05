@@ -113,7 +113,7 @@ namespace Certify.CLI
                         forceAutoDeploy = true;
                     }
 
-                    p.RunCertDiagnostics(autoFix, forceAutoDeploy);
+                    await p.RunCertDiagnostics(autoFix, forceAutoDeploy);
                 }
 
                 if (command == "importcsv")

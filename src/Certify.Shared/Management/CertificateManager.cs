@@ -116,6 +116,17 @@ namespace Certify.Management
             return cert;
         }
 
+
+        /// <summary>
+        /// Check validity and revocation status of a certificate chain
+        /// </summary>
+        /// <param name="cert"></param>
+        /// <returns></returns>
+        public static string[] CheckCertChain(string filename)
+        {
+            var cert = LoadCertificate(filename);
+            return CheckCertChain(cert);
+        }
         /// <summary>
         /// Check validity and revocation status of a certificate chain
         /// </summary>
@@ -127,45 +138,52 @@ namespace Certify.Management
             var chainPolicy = new X509ChainPolicy()
             {
                 RevocationMode = X509RevocationMode.Online,
-                RevocationFlag = X509RevocationFlag.EntireChain
+                RevocationFlag = X509RevocationFlag.EndCertificateOnly
             };
             chain.ChainPolicy = chainPolicy;
 
             var results = new List<string>();
 
-            if (chain.Build(cert))
+            try
             {
+                var buildOK = chain.Build(cert);
                 foreach (var chainElement in chain.ChainElements)
                 {
                     foreach (var chainStatus in chainElement.ChainElementStatus)
                     {
-                        if (chainStatus.Status.HasFlag(X509ChainStatusFlags.Revoked))
-                        {
-                            results.Add($"{chainElement.Certificate.Subject} :: {chainStatus.StatusInformation}");
-                        }
+                        results.Add($"{chainElement.Certificate.Subject} :: {chainStatus.StatusInformation}");
                         System.Diagnostics.Debug.WriteLine(chainStatus.StatusInformation);
                     }
                 }
-                return results.ToArray();
             }
-            else
+            catch (Exception exp)
             {
-                return null;
+                results.Add(exp.Message);
             }
+
+            return results.ToArray();
         }
 
         public static X509Certificate2 LoadCertificate(string filename)
         {
-            var cert = new X509Certificate2();
-            cert.Import(filename);
-            return cert;
+            try
+            {
+                var cert = new X509Certificate2();
+                cert.Import(filename);
+                return cert;
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine($"LoadCertificate: Failed to load certificate: {filename}" + exp.Message);
+                return null;
+            }
         }
 
         public static async Task<X509Certificate2> StoreCertificate(
-            string host, 
-            string pfxFile, 
-            bool isRetry = false, 
-            bool enableRetryBehaviour = true, 
+            string host,
+            string pfxFile,
+            bool isRetry = false,
+            bool enableRetryBehaviour = true,
             StoreName storeName = DEFAULT_STORE_NAME)
         {
             // https://support.microsoft.com/en-gb/help/950090/installing-a-pfx-file-using-x509certificate-from-a-standard--net-appli
@@ -188,7 +206,7 @@ namespace Certify.Management
                     // hack/workaround - importing cert from system account causes private key to be
                     // transient. Re-import the same cert fixes it. re -try apply .net dev on why
                     // re-import helps with private key: https://stackoverflow.com/questions/40892512/add-a-generated-certificate-to-the-store-and-update-an-iis-site-binding
-                    return await StoreCertificate(host, pfxFile, isRetry: true, storeName:storeName);
+                    return await StoreCertificate(host, pfxFile, isRetry: true, storeName: storeName);
                 }
             }
 
@@ -371,9 +389,9 @@ namespace Certify.Management
             return null;
         }
 
-        public static X509Store GetStore(StoreName storeName= DEFAULT_STORE_NAME) => new X509Store(storeName, StoreLocation.LocalMachine);
+        public static X509Store GetStore(StoreName storeName = DEFAULT_STORE_NAME) => new X509Store(storeName, StoreLocation.LocalMachine);
 
-        public static bool IsCertificateInStore(X509Certificate2 cert, StoreName storeName=StoreName.My)
+        public static bool IsCertificateInStore(X509Certificate2 cert, StoreName storeName = StoreName.My)
         {
             var certExists = false;
 
