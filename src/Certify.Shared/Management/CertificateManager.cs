@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -38,8 +38,8 @@ namespace Certify.Management
             // create self-signed certificate
             var serialNumber = BigIntegers.CreateRandomInRange(BigInteger.One, BigInteger.ValueOf(long.MaxValue), random);
             var certificateGenerator = new X509V3CertificateGenerator();
-            certificateGenerator.SetSubjectDN(new X509Name($"CN={(subject != null ? subject : domain)}"));
-            certificateGenerator.SetIssuerDN(new X509Name($"CN={(subject != null ? subject : domain)}"));
+            certificateGenerator.SetSubjectDN(new X509Name($"CN={(subject ?? domain)}"));
+            certificateGenerator.SetIssuerDN(new X509Name($"CN={(subject ?? domain)}"));
             certificateGenerator.SetSerialNumber(serialNumber);
             certificateGenerator.SetNotBefore(dateFrom ?? DateTime.UtcNow);
             certificateGenerator.SetNotAfter(dateTo ?? DateTime.UtcNow.AddMinutes(5));

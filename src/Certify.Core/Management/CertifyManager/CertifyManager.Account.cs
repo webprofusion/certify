@@ -38,6 +38,12 @@ namespace Certify.Management
             if (json != null)
             {
                 var account = JsonConvert.DeserializeObject<AccountDetails>(json);
+
+                if (account.CertificateAuthorityId == null)
+                {
+                    account.CertificateAuthorityId = StandardCertAuthorities.LETS_ENCRYPT;
+                }
+
                 return account;
             }
             else
