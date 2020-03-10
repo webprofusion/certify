@@ -96,14 +96,21 @@ namespace Certify.Management
 
             if (storedCredential.ProviderType.StartsWith("DNS"))
             {
-                var dnsProvider = await ChallengeProviders.GetDnsProvider(storedCredential.ProviderType, credentials, new Dictionary<string, string> { });
-
-                if (dnsProvider == null)
+                try
                 {
-                    return new ActionResult { IsSuccess = false, Message = "Could not create DNS provider API. Invalid or unrecognised." };
-                }
+                    var dnsProvider = await ChallengeProviders.GetDnsProvider(storedCredential.ProviderType, credentials, new Dictionary<string, string> { });
 
-                return await dnsProvider.Test();
+                    if (dnsProvider == null)
+                    {
+                        return new ActionResult { IsSuccess = false, Message = "Could not create DNS provider API. Invalid or unrecognised." };
+                    }
+
+                    return await dnsProvider.Test();
+                }
+                catch (Exception exp)
+                {
+                    return new ActionResult { IsSuccess = false, Message = "Failed to init DNS Provider " + storedCredential.ProviderType + " :: " + exp.Message };
+                }
             }
             else
             {
