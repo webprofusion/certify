@@ -27,25 +27,30 @@ namespace Certify.Management
         {
             var results = new List<ActionResult>();
 
-            var tempPath = "";
+            var tempFilePath = "";
             var tempFolder = Path.GetTempPath();
 
-            // attempt to create a 1MB temp file, detect if it fails
-            try
+            // if current user can create temp files, attempt to create a 1MB temp file, detect if it fails
+            if (!string.IsNullOrEmpty(tempFolder))
             {
-                tempPath = Path.GetTempFileName();
+                try
+                {
+                    tempFilePath = Path.GetTempFileName();
 
-                var fs = new FileStream(tempPath, FileMode.Open);
-                fs.Seek(1024 * 1024, SeekOrigin.Begin);
-                fs.WriteByte(0);
-                fs.Close();
+                    using (var fs = new FileStream(tempFilePath, FileMode.Open))
+                    {
+                        fs.Seek(1024 * 1024, SeekOrigin.Begin);
+                        fs.WriteByte(0);
+                        fs.Close();
+                    }
 
-                File.Delete(tempPath);
-                results.Add(new ActionResult { IsSuccess = true, Message = $"Created test temp file OK." });
-            }
-            catch (Exception exp)
-            {
-                results.Add(new ActionResult { IsSuccess = false, Message = $"Could not create a temp file ({tempPath}). Windows has a limit of 65535 files in the temp folder ({tempFolder}). Clear temp files before proceeding. {exp.Message}" });
+                    File.Delete(tempFilePath);
+                    results.Add(new ActionResult { IsSuccess = true, Message = $"Created test temp file OK." });
+                }
+                catch (Exception exp)
+                {
+                    results.Add(new ActionResult { IsSuccess = false, Message = $"Could not create a temp file ({tempFilePath}). Windows has a limit of 65535 files in the temp folder ({tempFolder}). Clear temp files before proceeding. {exp.Message}" });
+                }
             }
 
             // check free disk space
