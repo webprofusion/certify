@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,6 +6,7 @@ using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using Certify.Models.Certify.Models;
 using Certify.Models.Providers;
 using Certify.Utils;
 using Org.BouncyCastle.Asn1;
@@ -98,7 +99,8 @@ namespace Certify.Management
         public static X509Certificate2 GetFileCertificate(string filename)
         {
             // https://blogs.msdn.microsoft.com/windowsmobile/2006/05/17/programmatically-checking-the-authenticode-signature-on-a-file/
-            X509Certificate2 cert = null;
+            X509Certificate2 cert;
+
             try
             {
                 cert = new X509Certificate2(System.Security.Cryptography.X509Certificates.X509Certificate.CreateFromSignedFile(filename));
@@ -113,6 +115,7 @@ namespace Certify.Management
                                   "Be sure it is an X.509 certificate");
                 return null;
             }
+
             return cert;
         }
 
@@ -162,6 +165,44 @@ namespace Certify.Management
             }
 
             return results.ToArray();
+        }
+
+        /// <summary>
+        /// Load certificate as PFX from file, extract issuer cert and End Entity cert, then query Ocsp status
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public static async Task<CertificateStatusType> CheckOcspRevokedStatus(string filename)
+        {
+            try
+            {
+
+                var cert = LoadCertificate(filename);
+
+                var chain = new X509Chain();
+                chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+                chain.Build(cert);
+
+                Org.BouncyCastle.X509.X509Certificate issuerCert = null;
+
+                if (chain.ChainElements.Count > 1)
+                {
+                    var issuer = chain.ChainElements[1].Certificate;
+                    issuerCert = new X509CertificateParser().ReadCertificate(issuer.RawData);
+                }
+
+                if (cert != null)
+                {
+                    var endEntityCert = new X509CertificateParser().ReadCertificate(cert.RawData);
+                    return await Shared.Utils.OcspUtils.Query(endEntityCert, issuerCert);
+                }
+
+                return CertificateStatusType.Unknown;
+            }
+            catch (Exception)
+            {
+                return CertificateStatusType.Unknown;
+            }
         }
 
         public static X509Certificate2 LoadCertificate(string filename)

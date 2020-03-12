@@ -85,7 +85,7 @@ namespace Certify.CLI
                         Console.WriteLine("\t Auto fixing managed cert ServerSiteID: " + site.Name);
 
                         var update = await _certifyClient.UpdateManagedCertificate(site);
-                        
+
                         countSiteIdsFixed++;
                     }
                 }
@@ -129,10 +129,26 @@ namespace Certify.CLI
 
                             var chainResults = CertificateManager.CheckCertChain(fileCert);
 
-                            foreach(var result in chainResults)
+                            foreach (var result in chainResults)
                             {
-                                Console.WriteLine($"\t Cert Status Check: {fileCert.Subject} " + result);
+                                Console.WriteLine($"\t Cert Ocsp Status Check: {fileCert.Subject} " + result);
                             }
+
+
+                            var ocspCheck = await CertificateManager.CheckOcspRevokedStatus(site.CertificatePath);
+                            Console.ForegroundColor = ConsoleColor.White;
+
+                            if (ocspCheck == Models.Certify.Models.CertificateStatusType.Revoked || ocspCheck == Models.Certify.Models.CertificateStatusType.Expired)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine($"\t Ocsp Status Check: {fileCert.Subject} " + ocspCheck);
+                                Console.ForegroundColor = ConsoleColor.White;
+                            }
+                            else
+                            {
+                                Console.WriteLine($"\t Ocsp Status Check: {fileCert.Subject} " + ocspCheck);
+                            }
+
 
                             // re-deploy certificate if possible
                             if (redeployRequired && autoFix)
@@ -142,7 +158,7 @@ namespace Certify.CLI
                                 if (!string.IsNullOrEmpty(site.CertificateThumbprintHash))
                                 {
                                     var result = await _certifyClient.ReapplyCertificateBindings(site.Id, false);
-                                    
+
                                     countBindingRedeployments++;
 
                                     if (!result.IsSuccess)
