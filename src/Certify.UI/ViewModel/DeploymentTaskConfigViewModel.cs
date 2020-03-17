@@ -82,18 +82,25 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        internal async Task RefreshOptions()
+        internal async Task RefreshOptions(bool resetDefaults = false)
         {
             if (SelectedItem.TaskTypeId != null)
             {
                 DeploymentProvider = _appViewModel.DeploymentTaskProviders.First(d => d.Id == SelectedItem.TaskTypeId);
+
+                if (resetDefaults)
+                {
+                    SelectedItem.TaskName = "";
+                    SelectedItem.Description = "";
+                    SelectedItem.IsDeferred = false;
+                }
 
                 RefreshParameters();
                 await RefreshCredentialOptions();
 
                 if (string.IsNullOrEmpty(SelectedItem.TaskName))
                 {
-                    SelectedItem.Description = DeploymentProvider.Title;
+                    SelectedItem.TaskName = DeploymentProvider.DefaultTitle ?? DeploymentProvider.Title;
                 }
 
                 if (string.IsNullOrEmpty(SelectedItem.Description))
@@ -101,6 +108,7 @@ namespace Certify.UI.ViewModel
                     SelectedItem.Description = DeploymentProvider.Description;
                 }
 
+                RaisePropertyChangedEvent(nameof(SelectedItem));
                 RaisePropertyChangedEvent(nameof(EditableParameters));
                 RaisePropertyChangedEvent(nameof(SelectedCredentialItem));
             }

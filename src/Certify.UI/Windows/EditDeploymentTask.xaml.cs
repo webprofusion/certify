@@ -18,13 +18,16 @@ namespace Certify.UI.Windows
     /// <summary>
     /// Interaction logic for EditDeploymentTask.xaml
     /// </summary>
-    public partial class EditDeploymentTask 
+    public partial class EditDeploymentTask
     {
         public EditDeploymentTask(DeploymentTaskConfig config)
         {
             InitializeComponent();
 
-            DeploymentTaskEditor.SetEditItem(config);
+            if (config != null)
+            {
+                DeploymentTaskEditor.SetEditItem(config);
+            }
         }
 
         private async void Save_Click(object sender, RoutedEventArgs e)

@@ -10,6 +10,12 @@ namespace Certify.Models.Config
         PLUGIN = 4,
         INTERNAL = 5
     }
+    public enum TaskPreconditionType
+    {
+        None = 0, // run task whether step was success or failure
+        OnSuccess = 1, // run task only if last step was success
+        OnFailure = 2, // run task only if last step was failure
+    }
 
     public class ProviderDefinition
     {
@@ -27,21 +33,21 @@ namespace Certify.Models.Config
         }
     }
 
-    public class ChallengeProviderDefinition: ProviderDefinition
+    public class ChallengeProviderDefinition : ProviderDefinition
     {
         public string ChallengeType { get; set; }
         public ChallengeHandlerType HandlerType { get; set; }
         public int PropagationDelaySeconds { get; set; }
 
-        public ChallengeProviderDefinition(): base()
+        public ChallengeProviderDefinition() : base()
         {
-            
+
         }
     }
 
     public class DeploymentProviderDefinition : ProviderDefinition
     {
-       
+
         /// <summary>
         /// If true, task requires either windows or SSH credentials depending on whether deployment target is local, remote windows or ssh
         /// </summary>
@@ -51,5 +57,16 @@ namespace Certify.Models.Config
         /// If true, deployment task supports remote target (scripts, commands, file copies etc)
         /// </summary>
         public bool EnableRemoteOptions { get; set; } = true;
+
+        /// <summary>
+        /// Default title for a new task of this type
+        /// </summary>
+        public string DefaultTitle { get; set; }
+
+        /// <summary>
+        /// Defines whether task will condition based on preconditions
+        /// </summary>
+        public TaskPreconditionType PreconditionType { get; set; } = TaskPreconditionType.OnSuccess;
+
     }
 }

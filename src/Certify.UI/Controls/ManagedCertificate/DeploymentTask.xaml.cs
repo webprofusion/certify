@@ -59,8 +59,6 @@ namespace Certify.UI.Controls.ManagedCertificate
         protected override void OnInitialized(EventArgs e)
         {
             base.OnInitialized(e);
-
-
         }
 
         private async void AddStoredCredential_Click(object sender, RoutedEventArgs e)
@@ -104,9 +102,7 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             if (TaskProviderList.SelectedValue != null)
             {
-                /*ProviderDescription.Text = this.EditModel.DeploymentProvider.Description;
-               DeploymentTaskParams.ItemsSource = DeploymentProvider.ProviderParameters;*/
-                await EditModel.RefreshOptions();
+                await EditModel.RefreshOptions(resetDefaults: true);
             }
         }
 
