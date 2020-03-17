@@ -267,7 +267,7 @@ namespace Certify.UI
             {
                 //start by registering
                 MessageBox.Show(SR.MainWindow_GetStartGuideWithNewCert);
-                var d = new Windows.EditContactDialog { };
+                var d = new Windows.EditAccountDialog { };
                 d.ShowDialog();
             }
         }

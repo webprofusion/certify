@@ -165,17 +165,8 @@
   <data name="Register_Contact" xml:space="preserve">
     <value>Registrar Contacto</value>
   </data>
-  <data name="NewContact_AgreeConfirm" xml:space="preserve">
-    <value>¿Estás de acuerdo con el Acuerdo del suscriptor de LetsEncrypt.org? Consulte su sitio web para obtener todos los detalles antes de continuar. https://letsencrypt.org/repository/</value>
-  </data>
-  <data name="New_Contact_Tip1" xml:space="preserve">
-    <value>Debe registrarse como contacto para utilizar Certify y el servicio gratuito ACME CA para obtener certificados SSL.</value>
-  </data>
   <data name="New_Contact_Tip2" xml:space="preserve">
     <value>La dirección de correo electrónico provista se puede ser utilizada para notificarle acerca de la próxima renovación de certificados si es necesario. Las direcciones de correo electrónico no válidas serán rechazadas por la autoridad de certificación.</value>
-  </data>
-  <data name="New_Contact" xml:space="preserve">
-    <value>Nuevo contacto</value>
   </data>
   <data name="Send_Feedback" xml:space="preserve">
     <value>Enviar comentarios</value>
@@ -257,9 +248,6 @@
   </data>
   <data name="Send_Feedback_Error" xml:space="preserve">
     <value>Lo sentimos, hubo un problema al enviar sus comentarios.</value>
-  </data>
-  <data name="New_Contact_NeedAgree" xml:space="preserve">
-    <value>Debe aceptar el último Acuerdo de Suscriptor de LetsEncrypt.org.</value>
   </data>
   <data name="Registration_NeedEmail" xml:space="preserve">
     <value>Ingrese la dirección de correo electrónico que utilizó al registrar su clave.</value>

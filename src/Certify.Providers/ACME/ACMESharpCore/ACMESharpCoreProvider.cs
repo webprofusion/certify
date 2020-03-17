@@ -73,7 +73,7 @@ namespace Certfy.Providers.ACME.ACMESharpCore
 
         }
 
-        public async Task<bool> InitProvider(ILog log = null)
+        public async Task<bool> InitProvider(string acmeApiEndpoint, ILog log = null)
         {
             if (log != null)
             {

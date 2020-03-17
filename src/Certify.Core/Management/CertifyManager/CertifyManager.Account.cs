@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models;
+using Certify.Providers.ACME.Certes;
 using Newtonsoft.Json;
 
 namespace Certify.Management
@@ -59,7 +60,7 @@ namespace Certify.Management
             var acmeCredentials = await _credentialsManager.GetStoredCredentials(StandardAuthTypes.STANDARD_ACME_ACCOUNT);
             if (acmeCredentials.Any())
             {
-             
+
                 // got stored acme accounts
                 foreach (var c in acmeCredentials)
                 {
@@ -69,7 +70,7 @@ namespace Certify.Management
                         list.Add(acc);
                     }
                 }
-               
+
             }
             else
             {
@@ -86,13 +87,21 @@ namespace Certify.Management
             // attempt to register the new contact
             if (reg.AgreedToTermsAndConditions)
             {
-                _serviceLog?.Information($"Registering contact with ACME CA {_acmeClientProvider.GetAcmeBaseURI()}]: {reg.EmailAddress}");
 
-                var addAccountResult= await _acmeClientProvider.AddNewAccountAndAcceptTOS(_serviceLog, reg.EmailAddress);
+                // new provider needed for this new account
+                var key = Guid.NewGuid().ToString();
+                var certAuthority = CertificateAuthority.CertificateAuthorities.First(a => a.Id == reg.CertificateAuthorityId);
+
+                var acmeProvider = await GetACMEProvider(key, reg.IsStaging ? certAuthority.StagingAPIEndpoint : certAuthority.ProductionAPIEndpoint);
+
+                _serviceLog?.Information($"Registering account with ACME CA {acmeProvider.GetAcmeBaseURI()}]: {reg.EmailAddress}");
+
+                var addAccountResult = await acmeProvider.AddNewAccountAndAcceptTOS(_serviceLog, reg.EmailAddress);
+
                 if (addAccountResult.IsSuccess)
                 {
-
                     // store new account details as credentials
+                    addAccountResult.Result.ID = key;
                     await StoreAccountAsCredential(addAccountResult.Result);
                 }
 
@@ -109,10 +118,10 @@ namespace Certify.Management
         {
             await _credentialsManager.UpdateCredential(new Models.Config.StoredCredential
             {
-                StorageKey = Guid.NewGuid().ToString(),
+                StorageKey = account.ID ?? Guid.NewGuid().ToString(),
                 ProviderType = StandardAuthTypes.STANDARD_ACME_ACCOUNT,
                 Secret = JsonConvert.SerializeObject(account),
-                Title = $"{account.CertificateAuthorityId}_{(account.IsStagingAccount?"Staging":"Production")}"
+                Title = $"{account.CertificateAuthorityId}_{(account.IsStagingAccount ? "Staging" : "Production")}"
             });
         }
 
@@ -127,15 +136,14 @@ namespace Certify.Management
                 // if we have no accounts we need to check for required upgrades
                 // contacts may be JSON or legacy vault 
 
-                if (_acmeClientProvider is Providers.ACME.Certes.CertesACMEProvider)
-                {
-                    var provider = (Providers.ACME.Certes.CertesACMEProvider)_acmeClientProvider;
-                    var acc = provider.GetCurrentAcmeAccount();
-                    acc.CertificateAuthorityId = StandardCertAuthorities.LETS_ENCRYPT;
-                    accounts.Add(acc);
+                var newId = Guid.NewGuid().ToString();
+                var provider = await GetACMEProvider(newId, CertificateAuthority.CertificateAuthorities.Find(c => c.Id == StandardCertAuthorities.LETS_ENCRYPT).ProductionAPIEndpoint);
 
-                    await StoreAccountAsCredential(acc);
-                }
+                var acc = (provider as CertesACMEProvider).GetCurrentAcmeAccount();
+                acc.ID = newId;
+                acc.CertificateAuthorityId = StandardCertAuthorities.LETS_ENCRYPT;
+                accounts.Add(acc);
+
 
                 if (accounts.Count() == 0)
                 {
@@ -148,7 +156,7 @@ namespace Certify.Management
 
                         if (!string.IsNullOrEmpty(email))
                         {
-                            var addedOK = await _acmeClientProvider.AddNewAccountAndAcceptTOS(_serviceLog, email);
+                            var addedOK = await provider.AddNewAccountAndAcceptTOS(_serviceLog, email);
 
                             _serviceLog?.Information("Account upgrade completed (vault)");
                         }

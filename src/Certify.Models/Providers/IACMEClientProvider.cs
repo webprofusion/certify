@@ -12,7 +12,7 @@ namespace Certify.Models.Plugins
 
         string GetAcmeBaseURI();
 
-        Task<bool> InitProvider(ILog log = null);
+        Task<bool> InitProvider(string acmeApiEndpoint, ILog log = null);
 
         Task<Uri> GetAcmeTermsOfService();
 
@@ -35,6 +35,23 @@ namespace Certify.Models.Plugins
 
     public class PendingOrder
     {
+        public PendingOrder() { }
+
+        /// <summary>
+        /// if failure message is provider a default failed pending order object is created
+        /// </summary>
+        /// <param name="failureMessage"></param>
+        public PendingOrder(string failureMessage)
+        {
+
+            Authorizations = new List<PendingAuthorization> {
+                                        new PendingAuthorization{
+                                            IsFailure = true,
+                                            AuthorizationError = failureMessage
+                                        }
+                                    };
+        }
+
         public List<PendingAuthorization> Authorizations { get; set; }
         public string OrderUri { get; set; }
         public bool IsPendingAuthorizations { get; set; } = true;

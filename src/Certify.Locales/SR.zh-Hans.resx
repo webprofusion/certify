@@ -165,17 +165,8 @@
   <data name="Register_Contact" xml:space="preserve">
     <value>新建联系方式</value>
   </data>
-  <data name="NewContact_AgreeConfirm" xml:space="preserve">
-    <value>你是否同意 LetsEncrypt.org 订阅者用户协议？请再继续前参照官网的详细介绍，https://letsencrypt.org/repository/</value>
-  </data>
-  <data name="New_Contact_Tip1" xml:space="preserve">
-    <value>要使用免费的Let's Encrypt证书服务你需要现注册为一个联系人。</value>
-  </data>
   <data name="New_Contact_Tip2" xml:space="preserve">
     <value>这个邮箱地址将会在未来可能需要续期的时候通知你，不合法的电子邮箱地址将会被Let's Encrypt拒绝。</value>
-  </data>
-  <data name="New_Contact" xml:space="preserve">
-    <value>新建联系方式</value>
   </data>
   <data name="Send_Feedback" xml:space="preserve">
     <value>发送反馈</value>
@@ -233,9 +224,6 @@
   </data>
   <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
     <value>这是试用版。要移除这个限制，请购买密钥。</value>
-  </data>
-  <data name="New_Contact_NeedAgree" xml:space="preserve">
-    <value>你需要同意最新的LesEncrypt.org订阅协议。</value>
   </data>
   <data name="OK" xml:space="preserve">
     <value>确定</value>
@@ -656,9 +644,6 @@
   </data>
   <data name="Settings_EnableHttpChallengeServer" xml:space="preserve">
     <value>启用HTTP验证服务</value>
-  </data>
-  <data name="New_Contact_EmailError" xml:space="preserve">
-    <value>使用此Email注册Let's Encrypt的时候遇到了问题。请确认邮箱有效并且网络连接正常（API调用需要外发的HTTPS请求）。</value>
   </data>
   <data name="Settings_EnableCertificateCleanup" xml:space="preserve">
     <value>启用证书清理</value>

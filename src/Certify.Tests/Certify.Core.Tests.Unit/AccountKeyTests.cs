@@ -19,7 +19,7 @@ namespace Certify.Core.Tests.Unit
         public void CreateProblemKey()
         {
             var userAgent = Util.GetUserAgent();
-            var certes = new CertesACMEProvider(Util.GetAppDataFolder() + "\\certes", userAgent);
+            var certes = new CertesACMEProvider(Util.GetAppDataFolder() + "\\certes_test", userAgent);
 
             var keyFound = false;
             newKey = null;

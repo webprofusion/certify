@@ -21,7 +21,7 @@
             Grid.Row="0"
             Margin="8"
             Style="{StaticResource Instructions}">
-            Certificate Authorities are the organisations who can issue trusted certificates. For each (ACME) Certificate Authority you wish to use you need register an Account. Accounts can either be Production (live, trusted certificates) or Staging (test, non-trusted). If you register multiple accounts this enables you to use automatic Certificate Authority Failover, so if your preferred Certificate Authority can't issue a new certificate an alternative provider can be used automatically.
+            Certificate Authorities are the organisations who can issue trusted certificates. You need to reigster an account for each (ACME) Certificate Authority you wish to use. Accounts can either be Production (live, trusted certificates) or Staging (test, non-trusted). If you register with multiple authorities this enables you to use automatic Certificate Authority Failover, so if your preferred Certificate Authority can't issue a new certificate an alternative provider can be used automatically.
         </TextBlock>
 
         <StackPanel Orientation="Horizontal">
@@ -43,10 +43,21 @@
                 Unchecked="SettingsUpdated" />
 
         </StackPanel>
-        <TextBlock Margin="8,8,0,0" Style="{StaticResource Subheading}">Certificate Authority Accounts</TextBlock>
+
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Margin="8,8,0,0" Style="{StaticResource Subheading}">Certificate Authority Accounts</TextBlock>
+            <Button
+                Grid.Row="0"
+                Grid.Column="2"
+                Height="24"
+                Margin="8,8,8,8"
+                Click="Button_NewContact">
+                New Account
+            </Button>
+        </StackPanel>
 
         <StackPanel Orientation="Horizontal" />
-        <ScrollViewer Height="100">
+        <ScrollViewer Height="300">
             <ListView
                 x:Name="AccountList"
                 Height="Auto"
@@ -64,7 +75,7 @@
                                 Click="Button_NewContact">
                                 <StackPanel Orientation="Horizontal">
 
-                                    <TextBlock Margin="6,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.New_Contact}" /></TextBlock>
+                                    <TextBlock Margin="6,0" VerticalAlignment="Center"><Run Text="Edit" /></TextBlock>
                                 </StackPanel>
                             </Button>
                             <fa:FontAwesome

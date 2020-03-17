@@ -302,7 +302,7 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Windows\EditContactDialog.xaml">
+    <Page Include="Windows\EditAccountDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -340,8 +340,8 @@
     <Compile Include="Utils\BooleanConverters.cs" />
     <Compile Include="ViewModel\AppViewModel.cs" />
     <Compile Include="ViewModel\RelayCommand.cs" />
-    <Compile Include="Windows\EditContactDialog.xaml.cs">
-      <DependentUpon>EditContactDialog.xaml</DependentUpon>
+    <Compile Include="Windows\EditAccountDialog.xaml.cs">
+      <DependentUpon>EditAccountDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>

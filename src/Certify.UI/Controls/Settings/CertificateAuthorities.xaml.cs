@@ -54,7 +54,7 @@ namespace Certify.UI.Controls.Settings
         private void Button_NewContact(object sender, RoutedEventArgs e)
         {
             //present new contact dialog
-            var d = new Windows.EditContactDialog
+            var d = new Windows.EditAccountDialog
             {
                 Owner = Window.GetWindow(this)
             };

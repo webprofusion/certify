@@ -123,9 +123,6 @@
   <data name="Send_Feedback_Email" xml:space="preserve">
     <value>あなたのメール アドレス (回答が必要な場合):</value>
   </data>
-  <data name="New_Contact_NeedAgree" xml:space="preserve">
-    <value>最新の LetsEncrypt.org 加入者契約に同意する必要があります。</value>
-  </data>
   <data name="Yes_I_Agree" xml:space="preserve">
     <value>はい、同意します</value>
   </data>
@@ -293,9 +290,6 @@
   </data>
   <data name="Register_Contact" xml:space="preserve">
     <value>登録連絡先</value>
-  </data>
-  <data name="NewContact_AgreeConfirm" xml:space="preserve">
-    <value>あなたはLetsEncrypt.org加入者契約に同意しますか？続行する前に、詳細についてはそれぞれのWebサイトを参照してください。 https://letsencrypt.org/repository/！</value>
   </data>
   <data name="ManagedCertificatesSettings_RefreshDomains" xml:space="preserve">
     <value>更新</value>
@@ -465,9 +459,6 @@
   <data name="Send_Feedback" xml:space="preserve">
     <value>フィードバックの送信</value>
   </data>
-  <data name="New_Contact" xml:space="preserve">
-    <value>新しい連絡先</value>
-  </data>
   <data name="Registration_NeedKey" xml:space="preserve">
     <value>ライセンスキーを入力してください。</value>
   </data>
@@ -617,9 +608,6 @@
   </data>
   <data name="ManagedCertificateSettings_CertificateNotReady" xml:space="preserve">
     <value>このアイテムの証明書ファイルはまだ作成されていません。</value>
-  </data>
-  <data name="New_Contact_Tip1" xml:space="preserve">
-    <value>Certify SSL マネージャーと無料の暗号化サービスを使用してSSL証明書を取得するには、最初に連絡先として登録する必要があります。</value>
   </data>
   <data name="Dashboard_AddIntro" xml:space="preserve">
     <value>このサーバーをダッシュボードに追加するには、https://certifytheweb.com/profile にサインインして詳細を入力するか、新しいアカウントを登録します。</value>

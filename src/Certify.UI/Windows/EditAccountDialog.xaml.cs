@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
@@ -7,21 +9,23 @@ using Certify.Models;
 namespace Certify.UI.Windows
 {
     /// <summary>
-    /// Interaction logic for EditContactDialog.xaml 
+    /// Edit details for an ACME Account
     /// </summary>
-    public partial class EditContactDialog
+    public partial class EditAccountDialog
     {
         public ContactRegistration Item { get; set; }
 
         protected Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
 
-        public EditContactDialog()
+        public IEnumerable<CertificateAuthority> CertificateAuthorities => CertificateAuthority.CertificateAuthorities;
+
+        public EditAccountDialog()
         {
             InitializeComponent();
 
             Item = new ContactRegistration();
 
-            DataContext = Item;
+            DataContext = this;
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
@@ -79,6 +83,11 @@ namespace Certify.UI.Windows
             {
                 MessageBox.Show(Certify.Locales.SR.New_Contact_NeedAgree);
             }
+        }
+
+        private void CertificateAuthorityList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+
         }
     }
 }

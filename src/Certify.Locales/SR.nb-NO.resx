@@ -162,17 +162,8 @@
   <data name="Register_Contact" xml:space="preserve">
     <value>Registrer kontakt</value>
   </data>
-  <data name="NewContact_AgreeConfirm" xml:space="preserve">
-    <value>Godtar du LetsEncrypt.org-abonnentavtalen? Se på deres hjemmeside for full detaljer før du fortsetter. https://letsencrypt.org/repository/</value>
-  </data>
-  <data name="New_Contact_Tip1" xml:space="preserve">
-    <value>For å bruke Certify og Let's Encrypt-tjenesten for å skaffe SSL-sertifikater må du først registrere deg som kontaktperson.</value>
-  </data>
   <data name="New_Contact_Tip2" xml:space="preserve">
     <value>E-postadressen som er oppgitt, kan brukes til å varsle deg om kommende sertifikatfornyelser hvis nødvendig. Ugyldige e-postadresser blir avvist av Let's Encrypt.</value>
-  </data>
-  <data name="New_Contact" xml:space="preserve">
-    <value>Ny kontakt</value>
   </data>
   <data name="Send_Feedback" xml:space="preserve">
     <value>Send tilbakemelding</value>
@@ -215,9 +206,6 @@
   </data>
   <data name="Send_Feedback_Error" xml:space="preserve">
     <value>Ops... Det oppsto en feil da vi skulle sende tilbakemeldingen</value>
-  </data>
-  <data name="New_Contact_NeedAgree" xml:space="preserve">
-    <value>Du må godta den nyeste LetsEncrypt.org-abonnementsavtalen.</value>
   </data>
   <data name="Registration_NeedEmail" xml:space="preserve">
     <value>Vennligst skriv inn e-postadressen du brukte når du registrerte nøkkelen.</value>

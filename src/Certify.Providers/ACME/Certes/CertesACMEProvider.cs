@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -92,12 +92,8 @@ namespace Certify.Providers.ACME.Certes
     public class CertesACMEProvider : IACMEClientProvider, IVaultProvider
     {
         private AcmeContext _acme;
-#if DEBUG
-        private readonly Uri _serviceUri = new Uri(CertificateAuthority.CertificateAuthorities.Find(a => a.Id == "letsencrypt.org").ProductionAPIEndpoint);
 
-#else
-        private readonly Uri _serviceUri = WellKnownServers.LetsEncryptV2;
-#endif
+        private Uri _serviceUri = null;
 
         private readonly string _settingsFolder = null;
 
@@ -124,19 +120,21 @@ namespace Certify.Providers.ACME.Certes
 
         public string GetProviderName() => "Certes";
 
-        public string GetAcmeBaseURI() => _acme.DirectoryUri.ToString();
+        public string GetAcmeBaseURI() => _serviceUri?.ToString();
 
         public async Task<Uri> GetAcmeTermsOfService() => await _acme.TermsOfService();
 
         /// <summary>
         /// Initialise provider settings, loading current account key if present
         /// </summary>
-        public async Task<bool> InitProvider(ILog log = null)
+        public async Task<bool> InitProvider(string acmeApiEndpoint, ILog log = null)
         {
             if (log != null)
             {
                 _log = log;
             }
+
+            _serviceUri = new Uri(acmeApiEndpoint);
 
             _lastInitDateTime = DateTime.Now;
 
@@ -234,10 +232,7 @@ namespace Certify.Providers.ACME.Certes
         {
             if (_acme == null)
             {
-                if (log != null)
-                {
-                    log.Error("No account context. Cannot update account key.");
-                }
+                log?.Error("No account context. Cannot update account key.");
 
                 return false;
             }
@@ -394,10 +389,10 @@ namespace Certify.Providers.ACME.Certes
 
                 if (keyUpdated && settingsSaved)
                 {
-                    log.Information($"Registering account {email} with certificate authority");
+                    log?.Information($"Registering account {email} with certificate authority");
 
                     // re-init provider based on new account key
-                    await InitProvider(null);
+                   // await InitProvider(acmeApiEndpoint, _log);
 
                     return new ActionResult<AccountDetails>
                     {
@@ -437,7 +432,7 @@ namespace Certify.Providers.ACME.Certes
             {
                 // our acme context nonce may have expired (which returns "JWS has an invalid
                 // anti-replay nonce") so start a new one
-                await InitProvider(null);
+                await InitProvider(_serviceUri.ToString(), _log);
             }
 
             var pendingOrder = new PendingOrder { IsPendingAuthorizations = true };
@@ -470,6 +465,7 @@ namespace Certify.Providers.ACME.Certes
                 var remainingAttempts = 3;
                 var orderCreated = false;
                 object lastException = null;
+                var orderErrorMsg = "";
 
                 try
                 {
@@ -497,16 +493,40 @@ namespace Certify.Providers.ACME.Certes
                         }
                         catch (Exception exp)
                         {
-                            remainingAttempts--;
 
-                            var msg = exp.ToString();
+                            orderErrorMsg = exp.Message;
 
-                            if (exp.InnerException != null && exp.InnerException is AcmeRequestException)
+                            if (exp is AcmeRequestException)
                             {
-                                msg = (exp.InnerException as AcmeRequestException).Error?.Detail;
+                                var err = (exp as AcmeRequestException).Error;
+                                orderErrorMsg = err?.Detail ?? orderErrorMsg;
+
+                                if ((int)err.Status == 429)
+                                {
+                                    // hit an ACME API rate limit 
+
+                                    log.Warning($"BeginCertificateOrder: encountered a rate limit while communicating with the ACME API");
+
+                                    return new PendingOrder(orderErrorMsg);
+                                }
+
+                                if (err.Type?.EndsWith("accountDoesNotExist") == true)
+                                {
+                                    // wrong account details, probably used staging for prod or vice versa
+                                    log.Warning($"BeginCertificateOrder: attempted to use invalid account details with the ACME API");
+
+                                    return new PendingOrder(orderErrorMsg);
+                                    
+                                }
+                            }
+                            else if (exp.InnerException != null && exp.InnerException is AcmeRequestException)
+                            {
+                                orderErrorMsg = (exp.InnerException as AcmeRequestException).Error?.Detail ?? orderErrorMsg;
                             }
 
-                            log.Error($"BeginCertificateOrder: error creating order. Retries remaining:{remainingAttempts} :: {msg} ");
+                            remainingAttempts--;
+
+                            log.Error($"BeginCertificateOrder: error creating order. Retries remaining:{remainingAttempts} :: {orderErrorMsg} ");
 
                             lastException = exp;
 
@@ -524,20 +544,11 @@ namespace Certify.Providers.ACME.Certes
                 }
                 catch (NullReferenceException exp)
                 {
-                    var msg = $"Failed to begin certificate order (account problem or API is not currently available): {exp}";
+                    var msg = $"Failed to begin certificate order (account problem or API is not currently available): {exp.Message}";
 
                     log.Error(msg);
-
-                    pendingOrder.Authorizations =
-                    new List<PendingAuthorization> {
-                    new PendingAuthorization
-                    {
-                        AuthorizationError = msg,
-                        IsFailure=true
-                    }
-                   };
-
-                    return pendingOrder;
+                   
+                    return new PendingOrder(msg);
                 }
 
                 if (order == null)
@@ -551,12 +562,7 @@ namespace Certify.Providers.ACME.Certes
 
                     }
 
-                    return new PendingOrder
-                    {
-                        Authorizations = new List<PendingAuthorization> {
-                          new PendingAuthorization{ IsFailure = true, AuthorizationError=msg}
-                        }
-                    };
+                    return new PendingOrder(msg);
 
                 }
 
@@ -678,20 +684,11 @@ namespace Certify.Providers.ACME.Certes
                 // failed to register one or more domain identifier with LE (invalid, rate limit or
                 // CAA fail?)
 
-                var msg = $"Failed to begin certificate order: {exp.Error?.Detail}";
+                var msg = $"Could not begin certificate order: {exp.Error?.Detail}";
 
                 log.Error(msg);
 
-                pendingOrder.Authorizations =
-                new List<PendingAuthorization> {
-                    new PendingAuthorization
-                    {
-                        AuthorizationError = msg,
-                        IsFailure=true
-                    }
-               };
-
-                return pendingOrder;
+                return new PendingOrder(msg);
             }
         }
 

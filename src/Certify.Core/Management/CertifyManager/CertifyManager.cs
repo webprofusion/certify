@@ -22,7 +22,7 @@ namespace Certify.Management
     public partial class CertifyManager : ICertifyManager, IDisposable
     {
         private ItemManager _itemManager = null;
-        private IACMEClientProvider _acmeClientProvider = null;
+
         private ICertifiedServer _serverProvider = null;
         private ChallengeDiagnostics _challengeDiagnostics = null;
         private IdnMapping _idnMapping = new IdnMapping();
@@ -35,6 +35,8 @@ namespace Certify.Management
         private Serilog.Core.LoggingLevelSwitch _loggingLevelSwitch { get; set; }
 
         private bool _httpChallengeServerAvailable = false;
+
+        private ConcurrentDictionary<string, IACMEClientProvider> _acmeClientProviders = new ConcurrentDictionary<string, IACMEClientProvider>();
         private ConcurrentDictionary<string, SimpleAuthorizationChallengeItem> _currentChallenges = new ConcurrentDictionary<string, SimpleAuthorizationChallengeItem>();
         private ObservableCollection<RequestProgressState> _progressResults { get; set; }
 
@@ -59,14 +61,8 @@ namespace Certify.Management
             _pluginManager = new PluginManager();
             _pluginManager.LoadPlugins(new List<string> { "Licensing", "DashboardClient", "DeploymentTasks" });
 
-            // TODO: convert providers to plugins, allow for async init
-            var userAgent = Util.GetUserAgent();
 
-            var certes = new CertesACMEProvider(Management.Util.GetAppDataFolder() + "\\certes", userAgent);
 
-            certes.InitProvider(_serviceLog).Wait();
-
-            _acmeClientProvider = certes;
 
             // init remaining utilities and optionally enable telematics
             _challengeDiagnostics = new ChallengeDiagnostics(CoreAppSettings.Current.EnableValidationProxyAPI);
@@ -87,6 +83,38 @@ namespace Certify.Management
             _serviceLog?.Information("Certify Manager Started");
 
             PerformAccountUpgrades().Wait();
+        }
+
+
+        private async Task<IACMEClientProvider> GetACMEProvider(ManagedCertificate managedItem)
+        {
+            // determine account to use for the given managed cert
+            var acc = await GetAccountDetailsForManagedItem(managedItem);
+
+            var ca = CertificateAuthority.CertificateAuthorities.FirstOrDefault(c => c.Id == acc.CertificateAuthorityId);
+            var acmeBaseUrl = managedItem.UseStagingMode ? ca.StagingAPIEndpoint : ca.ProductionAPIEndpoint;
+            return await GetACMEProvider(acc.ID, acmeBaseUrl);
+        }
+
+        private async Task<IACMEClientProvider> GetACMEProvider(string key, string acmeApiEndpoint = null)
+        {
+            // get or init acme provider required for the given account
+            if (_acmeClientProviders.TryGetValue(key, out var provider))
+            {
+                return provider;
+            }
+            else
+            {
+                var userAgent = Util.GetUserAgent();
+
+                var newProvider = new CertesACMEProvider(Management.Util.GetAppDataFolder() + "\\certes_"+key, userAgent);
+
+                await newProvider.InitProvider(acmeApiEndpoint, _serviceLog);
+
+                _acmeClientProviders.TryAdd(key, newProvider);
+
+                return newProvider;
+            }
         }
 
         private void InitLogging(Shared.ServiceConfig serverConfig)

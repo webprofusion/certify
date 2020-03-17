@@ -1161,15 +1161,6 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to New Contact.
-        /// </summary>
-        public static string New_Contact {
-            get {
-                return ResourceManager.GetString("New_Contact", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to There was a problem registering with the Certificate Authority using this email address. Check the email address is valid and that this computer has an open connection to the internet (outgoing https is required for API calls)..
         /// </summary>
         public static string New_Contact_EmailError {
@@ -1179,7 +1170,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You need to agree to the latest LetsEncrypt.org Subscriber Agreement..
+        ///   Looks up a localized string similar to To proceed, confirm that you agree to the current terms and conditions for this Certificate Authority..
         /// </summary>
         public static string New_Contact_NeedAgree {
             get {
@@ -1188,7 +1179,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to To use Certify SSL Manager and the free Let&apos;s Encrypt service to acquire SSL certificates you must first register as a contact..
+        ///   Looks up a localized string similar to To request certificates you need to register with each of the Certificate Authorities that you want to use..
         /// </summary>
         public static string New_Contact_Tip1 {
             get {
@@ -1202,15 +1193,6 @@ namespace Certify.Locales {
         public static string New_Contact_Tip2 {
             get {
                 return ResourceManager.GetString("New_Contact_Tip2", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Do you agree to the LetsEncrypt.org Subscriber Agreement? Refer to their website for full details before proceeding. https://letsencrypt.org/repository/.
-        /// </summary>
-        public static string NewContact_AgreeConfirm {
-            get {
-                return ResourceManager.GetString("NewContact_AgreeConfirm", resourceCulture);
             }
         }
         

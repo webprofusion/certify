@@ -328,14 +328,14 @@ namespace Certify.Management
                     if (resumePaused && managedCertificate.Health == ManagedCertificateHealth.AwaitingUser)
                     {
                         // resume a previously paused request
-                        await CompleteCertificateRequestProcessing(log, managedCertificate, progress, null);
+                        result = await CompleteCertificateRequestProcessing(log, managedCertificate, progress, null);
                     }
                     else
                     {
                         if (managedCertificate.Health != ManagedCertificateHealth.AwaitingUser)
                         {
                             // perform normal certificate challenge/response/renewal
-                            await PerformCertificateRequestProcessing(log, managedCertificate, progress, result, config);
+                            result = await PerformCertificateRequestProcessing(log, managedCertificate, progress, result, config);
                         }
                         else
                         {
@@ -421,10 +421,12 @@ namespace Certify.Management
             return Task.FromResult(challengeResponses);
         }
 
-        private async Task PerformCertificateRequestProcessing(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, CertificateRequestResult result, CertRequestConfig config)
+        private async Task<CertificateRequestResult> PerformCertificateRequestProcessing(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, CertificateRequestResult result, CertRequestConfig config)
         {
             //primary domain and each subject alternative name must now be registered as an identifier with LE and validated
             LogMessage(managedCertificate.Id, $"{Util.GetUserAgent()}");
+
+            var _acmeClientProvider = await GetACMEProvider(managedCertificate);
 
             LogMessage(managedCertificate.Id, $"Beginning Certificate Request Process: {managedCertificate.Name} using ACME Provider:{_acmeClientProvider.GetProviderName()}");
 
@@ -466,13 +468,15 @@ namespace Certify.Management
                 if (authorizations.Any(a => a.IsFailure))
                 {
                     //failed to begin the order
-                    result.Message = $"Failed to create certificate order: {authorizations.FirstOrDefault(a => a.IsFailure)?.AuthorizationError}";
+                    result.IsSuccess = false;
+                    result.Abort = true;
+                    result.Message = $"{authorizations.FirstOrDefault(a => a.IsFailure)?.AuthorizationError}";
 
                     ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result });
                     await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
                     LogMessage(managedCertificate.Id, result.Message, LogItemType.CertficateRequestFailed);
 
-                    return;
+                    return result;
                 }
                 else
                 {
@@ -522,11 +526,12 @@ namespace Certify.Management
                             });
                         }
                     }
-                    return;
+
+                    // return now and let user action the paused request
+                    return result;
                 }
 
-                // if any of our authorizations require a delay for challenge response propagation,
-                // wait now.
+                // if any of our authorizations require a delay for challenge response propagation, wait now.
                 var propagationSecondsRequired = authorizations.Max(a => a.AttemptedChallenge?.PropagationSeconds);
                 if (authorizations.Any() && propagationSecondsRequired > 0)
                 {
@@ -551,12 +556,14 @@ namespace Certify.Management
                            logThisEvent: true
                            );
             }
-            await CompleteCertificateRequestProcessing(log, managedCertificate, progress, pendingOrder);
+            return await CompleteCertificateRequestProcessing(log, managedCertificate, progress, pendingOrder);
         }
 
         private async Task<CertificateRequestResult> CompleteCertificateRequestProcessing(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, PendingOrder pendingOrder)
         {
             var result = new CertificateRequestResult { ManagedItem = managedCertificate, IsSuccess = false, Message = "" };
+
+            var _acmeClientProvider = await GetACMEProvider(managedCertificate);
 
             // if we don't have a pending order, load the details of the most recent order
             if (pendingOrder == null && managedCertificate.CurrentOrderUri != null)
@@ -1195,7 +1202,7 @@ namespace Certify.Management
             {
                 _tc.TrackEvent("RevokeCertificate");
             }
-
+            var _acmeClientProvider = await GetACMEProvider(managedCertificate);
             var result = await _acmeClientProvider.RevokeCertificate(log, managedCertificate);
 
             if (result.IsOK)

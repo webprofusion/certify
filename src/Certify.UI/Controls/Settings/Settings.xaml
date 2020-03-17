@@ -24,7 +24,7 @@
             <TabItem
                 MinWidth="100"
                 Controls:ControlsHelper.HeaderFontSize="12"
-                Header="Settings"
+                Header="General"
                 IsSelected="True">
                 <local:General />
             </TabItem>

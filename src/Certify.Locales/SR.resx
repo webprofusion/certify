@@ -165,17 +165,11 @@
   <data name="Register_Contact" xml:space="preserve">
     <value>Register Contact</value>
   </data>
-  <data name="NewContact_AgreeConfirm" xml:space="preserve">
-    <value>Do you agree to the LetsEncrypt.org Subscriber Agreement? Refer to their website for full details before proceeding. https://letsencrypt.org/repository/</value>
-  </data>
   <data name="New_Contact_Tip1" xml:space="preserve">
-    <value>To use Certify SSL Manager and the free Let's Encrypt service to acquire SSL certificates you must first register as a contact.</value>
+    <value>To request certificates you need to register with each of the Certificate Authorities that you want to use.</value>
   </data>
   <data name="New_Contact_Tip2" xml:space="preserve">
     <value>The email address provided may be used to notify you of upcoming certificate renewals if required. Invalid email addresses will be rejected by the Certificate Authority.</value>
-  </data>
-  <data name="New_Contact" xml:space="preserve">
-    <value>New Contact</value>
   </data>
   <data name="Send_Feedback" xml:space="preserve">
     <value>Send Feedback</value>
@@ -223,7 +217,7 @@
     <value>There was a problem registering with the Certificate Authority using this email address. Check the email address is valid and that this computer has an open connection to the internet (outgoing https is required for API calls).</value>
   </data>
   <data name="New_Contact_NeedAgree" xml:space="preserve">
-    <value>You need to agree to the latest LetsEncrypt.org Subscriber Agreement.</value>
+    <value>To proceed, confirm that you agree to the current terms and conditions for this Certificate Authority.</value>
   </data>
   <data name="Registration_NeedEmail" xml:space="preserve">
     <value>Please enter the email address you used when registering your key.</value>
