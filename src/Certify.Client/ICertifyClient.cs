@@ -110,7 +110,8 @@ namespace Certify.Client
         #region Accounts
         Task<List<AccountDetails>> GetAccounts();
         Task<ActionResult> AddAccount(ContactRegistration contact);
-        
+        Task<ActionResult> RemoveAccount(string storageKey);
+
         #endregion Accounts
     }
 }

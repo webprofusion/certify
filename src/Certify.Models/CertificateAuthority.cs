@@ -52,7 +52,7 @@ namespace Certify.Models
                 WebsiteUrl ="https://www.buypass.com/",
                 PrivacyPolicyUrl ="https://www.buypass.com/about-buypass/privacy-policy",
                 ProductionAPIEndpoint = "https://api.buypass.com/acme/directory",
-                StagingAPIEndpoint = "https://api.test4.buypass.no/acme-v02/directory",
+                StagingAPIEndpoint = "https://api.test4.buypass.no/acme/directory",
                 IsEnabled=true,
                 SANLimit=15,
                 SupportedRequests = new List<CertAuthoritySupportedRequests>{

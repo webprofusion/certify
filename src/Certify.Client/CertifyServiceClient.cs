@@ -382,6 +382,12 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
 
+        public async Task<ActionResult> RemoveAccount(string storageKey)
+        {
+            var result = await DeleteAsync($"accounts/remove/{storageKey}");
+            return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
+        }
+
         #endregion
 
         #region Credentials

@@ -137,7 +137,7 @@
     <value>Domain already has current authorization, skipping verification: {0}</value>
   </data>
   <data name="CertifyManager_RequestCertificate" xml:space="preserve">
-    <value>Requesting Certificate via Let's Encrypt</value>
+    <value>Requesting Certificate via Certificate Authority</value>
   </data>
   <data name="CertifyManager_CompleteRequest" xml:space="preserve">
     <value>Completed Certificate Request.</value>

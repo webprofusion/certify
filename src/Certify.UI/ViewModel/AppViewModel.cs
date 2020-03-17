@@ -175,6 +175,15 @@ namespace Certify.UI.ViewModel
             RaisePropertyChangedEvent(nameof(HasRegisteredContacts));
             return result;
         }
+        internal async Task<ActionResult> RemoveAccount(string storageKey)
+        {
+            var result = await CertifyClient.RemoveAccount(storageKey);
+
+            await RefreshAccountsList();
+            RaisePropertyChangedEvent(nameof(HasRegisteredContacts));
+
+            return result;
+        }
 
         public int MainUITabIndex { get; set; }
 

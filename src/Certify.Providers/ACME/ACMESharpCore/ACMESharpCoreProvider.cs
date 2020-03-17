@@ -52,7 +52,7 @@ namespace Certfy.Providers.ACME.ACMESharpCore
         }
     }
 
-    public class ACMESharpCoreProvider : IACMEClientProvider, IVaultProvider
+    public class ACMESharpCoreProvider : IACMEClientProvider
     {
         private ILog _log;
         private string _acmeBaseUri;
@@ -73,7 +73,7 @@ namespace Certfy.Providers.ACME.ACMESharpCore
 
         }
 
-        public async Task<bool> InitProvider(string acmeApiEndpoint, ILog log = null)
+        public async Task<bool> InitProvider(ILog log = null)
         {
             if (log != null)
             {
@@ -175,14 +175,32 @@ namespace Certfy.Providers.ACME.ACMESharpCore
             return new ProcessStepResult { IsSuccess = true };
         }
 
-        public async void DeleteContactRegistration(string id)
+        public async Task<bool> DeactivateAccount(ILog log)
         {
-            await _client.DeactivateAccountAsync();
+            try
+            {
+                _ = await _client.DeactivateAccountAsync();
+                return true;
+            }
+            catch (Exception exp)
+            {
+                log.Error(exp.Message);
+                return false;
+            }
         }
 
-        public void EnableSensitiveFileEncryption()
+        public async Task<bool> UpdateAccount(ILog log, string email, bool termsAgreed)
         {
-            throw new System.NotImplementedException();
+            try
+            {
+                _ = await _client.UpdateAccountAsync(new[] { email });
+                return true;
+            }
+            catch( Exception exp)
+            {
+                log.Error(exp.Message);
+                return false;
+            }
         }
 
         public async Task<string> GetAcmeAccountStatus()
@@ -200,11 +218,6 @@ namespace Certfy.Providers.ACME.ACMESharpCore
         {
             var tos = await _client.GetDirectoryAsync();
             return new Uri(tos.Meta.TermsOfService);
-        }
-
-        public List<RegistrationItem> GetContactRegistrations()
-        {
-            throw new System.NotImplementedException();
         }
 
         public string GetProviderName()

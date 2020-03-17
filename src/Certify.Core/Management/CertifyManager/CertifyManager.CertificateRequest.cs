@@ -428,6 +428,17 @@ namespace Certify.Management
 
             var _acmeClientProvider = await GetACMEProvider(managedCertificate);
 
+            if (_acmeClientProvider == null)
+            {
+                result.IsSuccess = false;
+                result.Abort = true;
+                result.Message = $"There is no matching ACME account for the currently selected Certificate Authority.";
+
+                ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result });
+                await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
+                return result;
+            }
+
             LogMessage(managedCertificate.Id, $"Beginning Certificate Request Process: {managedCertificate.Name} using ACME Provider:{_acmeClientProvider.GetProviderName()}");
 
 

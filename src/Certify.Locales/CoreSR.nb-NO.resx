@@ -124,7 +124,7 @@
     <value>Domenevalidering fullført: {0}</value>
   </data>
   <data name="CertifyManager_RequestCertificate" xml:space="preserve">
-    <value>Ber om sertifikat fra Let's Encrypt</value>
+    <value>Ber om sertifikat fra ACME CA</value>
   </data>
   <data name="CertifyManager_CompleteRequestAndUpdateBinding" xml:space="preserve">
     <value>Sertifikatforespørsel og automatisert bindingsoppdatering (IIS) fullført</value>

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -15,6 +15,7 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
+
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.X509;
@@ -89,7 +90,7 @@ namespace Certify.Providers.ACME.Certes
     /// <summary>
     /// ACME Provider using certes https://github.com/fszlin/certes
     /// </summary>
-    public class CertesACMEProvider : IACMEClientProvider, IVaultProvider
+    public class CertesACMEProvider : IACMEClientProvider
     {
         private AcmeContext _acme;
 
@@ -109,40 +110,64 @@ namespace Certify.Providers.ACME.Certes
         private readonly string _userAgentName = "Certify SSL Manager";
         private ILog _log = null;
 
-        public CertesACMEProvider(string settingsPath, string userAgentName)
+        public CertesACMEProvider(string acmeBaseUri, string settingsPath, string userAgentName)
         {
             _settingsFolder = settingsPath;
 
             var certesAssembly = typeof(AcmeContext).Assembly.GetName();
 
             _userAgentName = $"{userAgentName} {certesAssembly.Name}/{certesAssembly.Version.ToString()}";
+
+            _serviceUri = new Uri(acmeBaseUri);
         }
 
         public string GetProviderName() => "Certes";
 
         public string GetAcmeBaseURI() => _serviceUri?.ToString();
 
-        public async Task<Uri> GetAcmeTermsOfService() => await _acme.TermsOfService();
-
-        /// <summary>
-        /// Initialise provider settings, loading current account key if present
-        /// </summary>
-        public async Task<bool> InitProvider(string acmeApiEndpoint, ILog log = null)
+        public async Task<Uri> GetAcmeTermsOfService()
         {
-            if (log != null)
+
+            if (_acme == null)
             {
-                _log = log;
+                // no acme context setup yet (account not yet initialised), create a temporary context
+                PreInitAcmeContext();
+                _acme = new AcmeContext(_serviceUri, null, _httpClient);
             }
 
-            _serviceUri = new Uri(acmeApiEndpoint);
+            return await _acme.TermsOfService();
+        }
 
+        /// <summary>
+        /// setup the basic settings before we init the acme context
+        /// </summary>
+        /// <param name="acmeDirectoryUrl"></param>
+        private void PreInitAcmeContext()
+        {
             _lastInitDateTime = DateTime.Now;
 
             _loggingHandler = new LoggingHandler(new HttpClientHandler(), _log);
             var customHttpClient = new System.Net.Http.HttpClient(_loggingHandler);
             customHttpClient.DefaultRequestHeaders.Add("User-Agent", _userAgentName);
 
+#if DEBUG
+            customHttpClient.Timeout = TimeSpan.FromSeconds(10);
+#endif
+
             _httpClient = new AcmeHttpClient(_serviceUri, customHttpClient);
+        }
+
+        /// <summary>
+        /// Initialise provider settings, loading current account key if present
+        /// </summary>
+        public async Task<bool> InitProvider(ILog log = null)
+        {
+            if (log != null)
+            {
+                _log = log;
+            }
+
+            PreInitAcmeContext();
 
             LoadSettings();
 
@@ -225,6 +250,37 @@ namespace Certify.Providers.ACME.Certes
             {
                 // we failed to check the account status, probably because of connectivity. Assume OK
                 return "ok";
+            }
+        }
+
+
+        public async Task<bool> DeactivateAccount(ILog log)
+        {
+            var acc = await _acme.Account();
+            var result = await acc.Deactivate();
+
+            if (result.Status == AccountStatus.Deactivated)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateAccount(ILog log, string email, bool termsAgreed)
+        {
+            var acc = await _acme.Account();
+
+            var results = await acc.Update(new string[] { email }, termsAgreed);
+            if (results.Status == AccountStatus.Valid)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 
@@ -392,7 +448,7 @@ namespace Certify.Providers.ACME.Certes
                     log?.Information($"Registering account {email} with certificate authority");
 
                     // re-init provider based on new account key
-                   // await InitProvider(acmeApiEndpoint, _log);
+                    // await InitProvider(acmeApiEndpoint, _log);
 
                     return new ActionResult<AccountDetails>
                     {
@@ -432,7 +488,7 @@ namespace Certify.Providers.ACME.Certes
             {
                 // our acme context nonce may have expired (which returns "JWS has an invalid
                 // anti-replay nonce") so start a new one
-                await InitProvider(_serviceUri.ToString(), _log);
+                await InitProvider(_log);
             }
 
             var pendingOrder = new PendingOrder { IsPendingAuthorizations = true };
@@ -495,10 +551,16 @@ namespace Certify.Providers.ACME.Certes
                         {
 
                             orderErrorMsg = exp.Message;
-
+                            if (exp is TaskCanceledException)
+                            {
+                                log.Warning($"BeginCertificateOrder: timeout while communicating with the ACME API");
+                            }
                             if (exp is AcmeRequestException)
                             {
                                 var err = (exp as AcmeRequestException).Error;
+
+                                // e.g. urn:ietf:params:acme:error:userActionRequired
+
                                 orderErrorMsg = err?.Detail ?? orderErrorMsg;
 
                                 if ((int)err.Status == 429)
@@ -516,8 +578,9 @@ namespace Certify.Providers.ACME.Certes
                                     log.Warning($"BeginCertificateOrder: attempted to use invalid account details with the ACME API");
 
                                     return new PendingOrder(orderErrorMsg);
-                                    
+
                                 }
+
                             }
                             else if (exp.InnerException != null && exp.InnerException is AcmeRequestException)
                             {
@@ -547,7 +610,7 @@ namespace Certify.Providers.ACME.Certes
                     var msg = $"Failed to begin certificate order (account problem or API is not currently available): {exp.Message}";
 
                     log.Error(msg);
-                   
+
                     return new PendingOrder(msg);
                 }
 
@@ -556,13 +619,18 @@ namespace Certify.Providers.ACME.Certes
 
                     var msg = "Failed to begin certificate order.";
 
-                    if (lastException != null && (lastException as Exception).InnerException is AcmeRequestException)
+                    if (lastException is AcmeRequestException)
                     {
-                        msg = ((lastException as Exception).InnerException as AcmeRequestException).Error?.Detail;
+                        var err = (lastException as AcmeRequestException).Error;
 
+                        msg = err?.Detail ?? msg;
+                        if (lastException != null && (lastException as Exception).InnerException is AcmeRequestException)
+                        {
+                            msg = ((lastException as Exception).InnerException as AcmeRequestException).Error?.Detail ?? msg;
+                        }
                     }
 
-                    return new PendingOrder(msg);
+                    return new PendingOrder("Error creating Order with Certificate Authority: " + msg);
 
                 }
 
@@ -1067,11 +1135,6 @@ namespace Certify.Providers.ACME.Certes
                 list.Add(new RegistrationItem { Name = _settings.AccountEmail });
             }
             return list;
-        }
-
-        public void DeleteContactRegistration(string id)
-        {
-            // do nothing for this provider
         }
 
         public void EnableSensitiveFileEncryption()

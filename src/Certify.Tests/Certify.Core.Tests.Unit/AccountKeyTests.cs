@@ -18,9 +18,6 @@ namespace Certify.Core.Tests.Unit
         [TestInitialize]
         public void CreateProblemKey()
         {
-            var userAgent = Util.GetUserAgent();
-            var certes = new CertesACMEProvider(Util.GetAppDataFolder() + "\\certes_test", userAgent);
-
             var keyFound = false;
             newKey = null;
             var attempts = 0;
@@ -62,8 +59,6 @@ namespace Certify.Core.Tests.Unit
                 }
                 attempts++;
             }
-
-            //certes.InitProvider().Wait();
 
         }
 

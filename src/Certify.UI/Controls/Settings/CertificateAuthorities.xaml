@@ -7,8 +7,6 @@
     xmlns:local="clr-namespace:Certify.UI.Controls.Settings"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-    d:DataContext="{d:DesignInstance Type=Certify.UI.AppDesignViewModel,
-                                     IsDesignTimeCreatable=True}"
     d:DesignHeight="450"
     d:DesignWidth="800"
     Loaded="UserControl_Loaded"
@@ -68,15 +66,16 @@
 
                         <StackPanel Orientation="Horizontal">
                             <Button
-                                Grid.Row="0"
-                                Grid.Column="2"
+                                Height="24"
+                                Margin="0,8,8,8"
+                                Click="Button_Delete">
+                                Delete
+                            </Button>
+                            <Button
                                 Height="24"
                                 Margin="0,8,8,8"
                                 Click="Button_NewContact">
-                                <StackPanel Orientation="Horizontal">
-
-                                    <TextBlock Margin="6,0" VerticalAlignment="Center"><Run Text="Edit" /></TextBlock>
-                                </StackPanel>
+                                Edit
                             </Button>
                             <fa:FontAwesome
                                 Margin="0,8,8,0"

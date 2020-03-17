@@ -136,7 +136,15 @@ namespace Certify.UI.ViewModel
                 }
             }
         }
-        public IEnumerable<CertificateAuthority> CertificateAuthorities => CertificateAuthority.CertificateAuthorities.Where(c=>c.IsEnabled==true);
+        public IEnumerable<CertificateAuthority> CertificateAuthorities
+        {
+            get
+            {
+                var list = CertificateAuthority.CertificateAuthorities.Where(c => c.IsEnabled == true).ToList();
+                list.Insert(0, new CertificateAuthority { Id = "", Title = "Auto" });
+                return list;
+            }
+        }
 
         internal async Task<bool> SaveManagedCertificateChanges()
         {

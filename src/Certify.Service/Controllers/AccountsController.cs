@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Certify.Management;
@@ -32,13 +33,11 @@ namespace Certify.Service
             return await _certifyManager.AddAccount(registration);
         }
 
-        [HttpDelete, Route("{storageKey}")]
-        public async Task<bool> DeleteAccount(string storageKey)
+        [HttpDelete, Route("remove/{storageKey}")]
+        public async Task<ActionResult> RemoveAccount(string storageKey)
         {
-            DebugLog($"Deleting a account {storageKey}" );
-
-            // not implemented
-            return await Task.FromResult(false);
+            DebugLog();
+            return await _certifyManager.RemoveAccount(storageKey);
         }
     }
 }

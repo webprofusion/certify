@@ -21,7 +21,7 @@ namespace Certify.UI.Controls.Settings
     /// </summary>
     public partial class CertificateAuthorities : UserControl
     {
-        protected Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
+        public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
 
         private bool _settingsInitialised = false;
         private Models.Preferences _prefs => MainViewModel.Preferences;
@@ -29,6 +29,7 @@ namespace Certify.UI.Controls.Settings
         public CertificateAuthorities()
         {
             InitializeComponent();
+            this.DataContext = MainViewModel;
         }
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e) =>  LoadSettings();
@@ -75,5 +76,18 @@ namespace Certify.UI.Controls.Settings
 
         private void CertificateAuthorityList_SelectionChanged(object sender, SelectionChangedEventArgs e) => SettingsUpdated(sender, e);
 
+        private async void Button_Delete(object sender, RoutedEventArgs e)
+        {
+            if (sender!=null)
+            {
+                var button = sender as Button;
+                var account = button.DataContext as AccountDetails;
+
+                if (MessageBox.Show($"Remove this account? {account.AccountURI}", "Confirm Account Removal", MessageBoxButton.YesNoCancel)== MessageBoxResult.Yes)
+                {
+                    await MainViewModel.RemoveAccount(account.StorageKey??account.ID);
+                }    
+            }
+        }
     }
 }

@@ -93,6 +93,14 @@ namespace Certify.UI
                 new RequestProgressState( RequestState.Running, "This is a long message to test text overflow and wrapping", ManagedCertificates[0], false),
                 new RequestProgressState( RequestState.Error, "This is another long message to test text overflow and wrapping", ManagedCertificates[1], false),
             };
+
+            AccountDetails = new ObservableCollection<AccountDetails>
+            {
+                new AccountDetails{ ID="123", CertificateAuthorityId=StandardCertAuthorities.LETS_ENCRYPT, IsStagingAccount=false, Email="test@example.com", Title = "Title"},
+                new AccountDetails{ ID="124", CertificateAuthorityId=StandardCertAuthorities.LETS_ENCRYPT, IsStagingAccount=true, Email="test@example.com", Title = "Title"},
+                new AccountDetails{ ID="125", CertificateAuthorityId=StandardCertAuthorities.BUYPASS, IsStagingAccount=true, Email="test@example.com", Title = "Title"},
+                new AccountDetails{ ID="126", CertificateAuthorityId=StandardCertAuthorities.BUYPASS, IsStagingAccount=false, Email="test@example.com", Title = "Title"}
+            };
         }
 
         private string MockDataStore;

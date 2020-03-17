@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models;
+using Certify.Models.Config;
 using Certify.Providers.ACME.Certes;
 using Newtonsoft.Json;
 
@@ -19,6 +20,7 @@ namespace Certify.Management
         {
             // determine the current current contact
             string currentCA = CoreAppSettings.Current.DefaultCertificateAuthority ?? StandardCertAuthorities.LETS_ENCRYPT;
+
             if (!string.IsNullOrEmpty(item.CertificateAuthorityId))
             {
                 currentCA = item.CertificateAuthorityId;
@@ -27,11 +29,10 @@ namespace Certify.Management
             var accounts = await GetAccountRegistrations();
 
             // get current account details for this CA (depending on whether this managed certificate uses staging mode or not)
-            var account = accounts.FirstOrDefault(a => a.CertificateAuthorityId == currentCA && a.IsStagingAccount == item.UseStagingMode);
-
-            return account;
+            return accounts.FirstOrDefault(a => a.CertificateAuthorityId == currentCA && a.IsStagingAccount == item.UseStagingMode);
 
         }
+
         private async Task<AccountDetails> GetAccountDetailsFromCredential(Models.Config.StoredCredential credential)
         {
             var json = await _credentialsManager.GetUnlockedCredential(credential.StorageKey);
@@ -89,10 +90,10 @@ namespace Certify.Management
             {
 
                 // new provider needed for this new account
-                var key = Guid.NewGuid().ToString();
+                var storageKey = Guid.NewGuid().ToString();
                 var certAuthority = CertificateAuthority.CertificateAuthorities.First(a => a.Id == reg.CertificateAuthorityId);
 
-                var acmeProvider = await GetACMEProvider(key, reg.IsStaging ? certAuthority.StagingAPIEndpoint : certAuthority.ProductionAPIEndpoint);
+                var acmeProvider = await GetACMEProvider(storageKey, reg.IsStaging ? certAuthority.StagingAPIEndpoint : certAuthority.ProductionAPIEndpoint);
 
                 _serviceLog?.Information($"Registering account with ACME CA {acmeProvider.GetAcmeBaseURI()}]: {reg.EmailAddress}");
 
@@ -101,7 +102,11 @@ namespace Certify.Management
                 if (addAccountResult.IsSuccess)
                 {
                     // store new account details as credentials
-                    addAccountResult.Result.ID = key;
+                    addAccountResult.Result.ID = storageKey;
+                    addAccountResult.Result.StorageKey = storageKey;
+                    addAccountResult.Result.CertificateAuthorityId = certAuthority.Id;
+                    addAccountResult.Result.IsStagingAccount = reg.IsStaging;
+
                     await StoreAccountAsCredential(addAccountResult.Result);
                 }
 
@@ -125,6 +130,24 @@ namespace Certify.Management
             });
         }
 
+        public async Task<ActionResult> RemoveAccount(string storageKey)
+        {
+
+            var accounts = await GetAccountRegistrations();
+            var account = accounts.FirstOrDefault(a => a.StorageKey == storageKey);
+            if (account != null)
+            {
+                _serviceLog?.Information($"Deleting account {storageKey}: " + account.AccountURI);
+
+                var resultOk = await _credentialsManager.DeleteCredential(storageKey);
+                return new ActionResult("RemoveAccount", resultOk);
+            }
+            else
+            {
+                return new ActionResult("Account not found.", false);
+            }
+        }
+
         private async Task PerformAccountUpgrades()
         {
             // check if there are no registered contacts, if so see if we are upgrading from a vault
@@ -137,13 +160,19 @@ namespace Certify.Management
                 // contacts may be JSON or legacy vault 
 
                 var newId = Guid.NewGuid().ToString();
-                var provider = await GetACMEProvider(newId, CertificateAuthority.CertificateAuthorities.Find(c => c.Id == StandardCertAuthorities.LETS_ENCRYPT).ProductionAPIEndpoint);
+
+                // create provider pointing to legacy storage
+                var apiEndpoint = CertificateAuthority.CertificateAuthorities.Find(c => c.Id == StandardCertAuthorities.LETS_ENCRYPT).ProductionAPIEndpoint;
+                var provider = new CertesACMEProvider(apiEndpoint, Management.Util.GetAppDataFolder() + "\\certes", Util.GetUserAgent());
+                await provider.InitProvider(_serviceLog);
 
                 var acc = (provider as CertesACMEProvider).GetCurrentAcmeAccount();
                 acc.ID = newId;
+                acc.StorageKey = newId;
+                acc.IsStagingAccount = false;
                 acc.CertificateAuthorityId = StandardCertAuthorities.LETS_ENCRYPT;
                 accounts.Add(acc);
-
+                await StoreAccountAsCredential(acc);
 
                 if (accounts.Count() == 0)
                 {

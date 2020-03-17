@@ -32,6 +32,8 @@ namespace Certify.Management
 
         Task<ActionResult> AddAccount(ContactRegistration reg);
 
+        Task<ActionResult> RemoveAccount(string storageKey);
+
         Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate, bool isPreviewMode, IProgress<RequestProgressState> progress = null);
 
         Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId);

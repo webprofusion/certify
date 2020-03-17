@@ -12,13 +12,17 @@ namespace Certify.Models.Plugins
 
         string GetAcmeBaseURI();
 
-        Task<bool> InitProvider(string acmeApiEndpoint, ILog log = null);
+        Task<bool> InitProvider(ILog log = null);
 
         Task<Uri> GetAcmeTermsOfService();
 
         Task<string> GetAcmeAccountStatus();
 
         Task<ActionResult<AccountDetails>> AddNewAccountAndAcceptTOS(ILog log, string email);
+
+        Task<bool> DeactivateAccount(ILog log);
+
+        Task<bool> UpdateAccount(ILog log, string email, bool termsAgreed);
 
         Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config, string orderUri = null);
 
