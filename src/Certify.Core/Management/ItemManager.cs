@@ -435,5 +435,24 @@ namespace Certify.Management
                 }
             }
         }
+
+#if DEBUG
+        public async Task DeleteManagedCertificatesByName(string nameStartsWith)
+        {
+            // save modified items into settings database
+            using (var db = new SQLiteConnection(_connectionString))
+            {
+                await db.OpenAsync();
+                using (var tran = db.BeginTransaction())
+                {
+                    using (var cmd = new SQLiteCommand("DELETE FROM manageditem WHERE json like '%\"Name\":\""+nameStartsWith+"% '", db))
+                    {
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                    tran.Commit();
+                }
+            }
+        }
+#endif
     }
 }

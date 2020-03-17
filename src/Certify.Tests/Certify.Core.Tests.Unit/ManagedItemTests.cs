@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models;
@@ -14,14 +15,15 @@ namespace Certify.Core.Tests.Unit
     {
         private const string TEST_PATH = "Tests";
 
-        public ManagedItemTests() {
+        public ManagedItemTests()
+        {
 
-            var itemManager= new ItemManager(TEST_PATH);
+            var itemManager = new ItemManager(TEST_PATH);
             Task.Run(async () =>
             {
                 await itemManager.DeleteAllManagedCertificates();
             });
-            
+
         }
 
         private ManagedCertificate BuildTestManagedCertificate()
@@ -148,7 +150,7 @@ namespace Certify.Core.Tests.Unit
 
             // create competing sets of tasks to create managed items
 
-            var numItems = 20000;
+            var numItems = 1000;
 
             // now attempt async creation of bindings
             var taskSet = new Task[numItems];
@@ -157,15 +159,13 @@ namespace Certify.Core.Tests.Unit
 
             for (var i = 0; i < numItems; i++)
             {
-                taskSet[i] = new Task(() =>
-               {
-                   testItem.Name = "MultiTest_" + i;
-                   testItem.Id = Guid.NewGuid().ToString();
-                   var result = itemManager.UpdatedManagedCertificate(testItem).Result;
+                taskSet[i] = Task.Run(async () =>
+              {
+                  testItem.Name = "MultiTest_" + i;
+                  testItem.Id = Guid.NewGuid().ToString();
+                  await itemManager.UpdatedManagedCertificate(testItem);
 
-               });
-
-                taskSet[i].Start();
+              });
             }
 
             // create a large number of managed items, to see if we encounter isses saving/loading from DB async       
@@ -186,14 +186,8 @@ namespace Certify.Core.Tests.Unit
             {
 
                 // now clean up
-               /* var allManagedItems = await itemManager.GetManagedCertificates();
-                foreach (var item in allManagedItems)
-                {
-                    if (item.Name.StartsWith("MultiTest_"))
-                    {
-                        await itemManager.DeleteManagedCertificate(item);
-                    }
-                }*/
+                await itemManager.DeleteManagedCertificatesByName("MultiTest_");
+                
             }
         }
     }

@@ -206,7 +206,8 @@ namespace Certify.Core.Tests
 
                 var deployStep = preview.Find(a => a.Category == "Deployment");
                 Assert.IsTrue(deployStep.Substeps.Count == 1, "Only 1 binding deployment expected");
-                Assert.IsTrue(deployStep.Substeps[0].Description == $"Add https binding | {testPreviewSiteName} | ***:443:{hostname} SNI**");
+                var expected = $"Add https binding | {testPreviewSiteName} | ***:443:{hostname} SNI**";
+                Assert.AreEqual(expected, deployStep.Substeps[0].Description);
 
                 // Deployment Mode = Single Site, Non SNI, Static IP
                 testManagedCert.RequestConfig.DeploymentSiteOption = DeploymentOption.SingleSite;
@@ -216,7 +217,9 @@ namespace Certify.Core.Tests
                 previewSummary = GetPreviewSummary(preview);
                 deployStep = preview.Find(a => a.Category == "Deployment");
                 Assert.IsTrue(deployStep.Substeps.Count == 1, "Only 1 binding deployment expected");
-                Assert.IsTrue(deployStep.Substeps[0].Description == $"Add https binding | {testPreviewSiteName} | ***:443:{hostname} SNI**");
+
+                expected = $"Add https binding | {testPreviewSiteName} | ***:443:{hostname} SNI**";
+                Assert.AreEqual(expected, deployStep.Substeps[0].Description);
 
 
             }

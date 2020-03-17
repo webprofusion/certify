@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Certify.Core.Tests
 {
     [TestClass]
+    [Ignore("Requires credential setup")]
     public class DnsAPITestAzure : IntegrationTestBase
     {
         protected string _credStorageKey = "";

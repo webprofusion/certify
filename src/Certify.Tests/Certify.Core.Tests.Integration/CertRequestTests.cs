@@ -25,7 +25,7 @@ namespace Certify.Core.Tests
         private string testSiteDomain = "";
         private string testSitePath = "c:\\inetpub\\wwwroot";
         private int testSiteHttpPort = 81;
-        private string _awsCredStorageKey = "";
+        private string _testCredStorageKey = "";
 
         private string _siteId = "";
 
@@ -40,12 +40,12 @@ namespace Certify.Core.Tests
             iisManager = new ServerProviderIIS();
 
             // see integrationtestbase for environment variable replacement
-            PrimaryTestDomain = ConfigSettings["AWS_TestDomain"];
+            PrimaryTestDomain = ConfigSettings["Cloudflare_TestDomain"];
 
             testSiteDomain = "integration1." + PrimaryTestDomain;
             testSitePath = PrimaryIISRoot;
 
-            _awsCredStorageKey = ConfigSettings["TestCredentialsKey_Route53"];
+            _testCredStorageKey = ConfigSettings["TestCredentialsKey_Cloudflare"];
 
             if (ConfigSettings["HttpPort"] != null)
             {
@@ -193,7 +193,7 @@ namespace Certify.Core.Tests
                 var result = await certifyManager.PerformCertificateRequest(_log, dummyManagedCertificate);
 
                 //ensure cert request was successful
-                Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");
+                Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed. Ensure http site is accessible.");
 
                 //have cert file details
                 Assert.IsNotNull(dummyManagedCertificate.CertificatePath);
@@ -367,9 +367,9 @@ namespace Certify.Core.Tests
                     Challenges = new ObservableCollection<CertRequestChallengeConfig> {
                         new CertRequestChallengeConfig{
                             ChallengeType="dns-01",
-                            ChallengeProvider= "DNS01.API.Route53",
-                            ChallengeCredentialKey=_awsCredStorageKey,
-                            ZoneId =  ConfigSettings["AWS_ZoneId"]
+                            ChallengeProvider= "DNS01.API.Cloudflare",
+                            ChallengeCredentialKey=_testCredStorageKey,
+                            ZoneId =  ConfigSettings["Cloudflare_ZoneId"]
         }
                     },
                     DeploymentSiteOption = DeploymentOption.SingleSite
@@ -449,9 +449,9 @@ namespace Certify.Core.Tests
                         {
                             new CertRequestChallengeConfig{
                                 ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                                ChallengeProvider = "DNS01.API.Route53",
-                                ChallengeCredentialKey = _awsCredStorageKey,
-                                ZoneId = ConfigSettings["AWS_ZoneId"]
+                                ChallengeProvider = "DNS01.API.Cloudflare",
+                                ChallengeCredentialKey = _testCredStorageKey,
+                                ZoneId = ConfigSettings["Cloudflare_ZoneId"]
                             }
                         }
                     },

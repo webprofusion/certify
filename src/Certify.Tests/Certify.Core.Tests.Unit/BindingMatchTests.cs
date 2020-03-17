@@ -256,5 +256,46 @@ namespace Certify.Core.Tests.Unit
             };
             Assert.IsTrue(BindingDeploymentManager.HasExistingBinding(bindings, spec));
         }
+
+
+        [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled")]
+        public async Task MixedIPBindingChecks()
+        {
+            var bindings = new List<BindingInfo> {
+                new BindingInfo{ Host="test.com", IP="127.0.0.1", Port=80, Protocol="http" },
+                new BindingInfo{ Host="test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" },
+                new BindingInfo{ Host="www.test.com", IP="127.0.0.1", Port=80, Protocol="http" },
+                new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
+            };
+            var deployment = new BindingDeploymentManager();
+            var testManagedCert = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "MixedIPBindings",
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = "test.com",
+                    PerformAutomatedCertBinding = true,
+                    DeploymentSiteOption = DeploymentOption.Auto,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = "ABC123"
+                            }
+                        }
+                },
+                ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
+            };
+
+            var mockTarget = new MockBindingDeploymentTarget();
+            mockTarget.AllBindings = bindings;
+
+
+            var results = await deployment.StoreAndDeployManagedCertificate(mockTarget, testManagedCert, "test.pfx", false, true);
+        
+            Assert.IsTrue(results.Any());
+        }
     }
 }
