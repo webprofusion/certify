@@ -13,6 +13,7 @@ namespace Certify.Models
     public enum CertAuthoritySupportedRequests
     {
         DOMAIN_SINGLE,
+        DOMAIN_SINGLE_PLUS_WWW,
         DOMAIN_MULTIPLE_SAN,
         DOMAIN_WILDCARD
     }
@@ -29,7 +30,7 @@ namespace Certify.Models
             new CertificateAuthority{
                 Id="letsencrypt.org",
                 Title ="Let's Encrypt",
-                Description="Let's Encrypt is a free, automated, and open certificate authority brought to you by the nonprofit Internet Security Research Group (ISRG). Certificates are valid for 90 days.",
+                Description="Let's Encrypt is a free, automated, and open certificate authority. Certificates are valid for 90 days and can contain up to 100 domains/subdomains or wildcards.",
                 APIType = CertAuthorityAPIType.ACME_V2,
                 WebsiteUrl ="https://letsencrypt.org/",
                 PrivacyPolicyUrl ="https://letsencrypt.org/privacy/",
@@ -47,17 +48,17 @@ namespace Certify.Models
              new CertificateAuthority{
                 Id="buypass.com",
                 Title ="Buypass Go SSL",
-                Description="Buypass Go SSL is a free SSL certificate service from Buypass CA using the Buypass ACME API.",
+                Description="Buypass Go SSL is a free SSL certificate service from Buypass CA using the Buypass ACME API. Certificates are valid for 180 days and can be for one domain wildcard or contain 1 (one) domain and one www. subdomain (optional).",
                 APIType = CertAuthorityAPIType.ACME_V2,
                 WebsiteUrl ="https://www.buypass.com/",
                 PrivacyPolicyUrl ="https://www.buypass.com/about-buypass/privacy-policy",
                 ProductionAPIEndpoint = "https://api.buypass.com/acme/directory",
                 StagingAPIEndpoint = "https://api.test4.buypass.no/acme/directory",
                 IsEnabled=true,
-                SANLimit=15,
+                SANLimit=1,
                 SupportedRequests = new List<CertAuthoritySupportedRequests>{
                     CertAuthoritySupportedRequests.DOMAIN_SINGLE,
-                    CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN,
+                    CertAuthoritySupportedRequests.DOMAIN_SINGLE_PLUS_WWW,
                     CertAuthoritySupportedRequests.DOMAIN_WILDCARD
                 }
             }

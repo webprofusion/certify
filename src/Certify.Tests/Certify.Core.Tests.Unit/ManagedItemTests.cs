@@ -186,7 +186,9 @@ namespace Certify.Core.Tests.Unit
             {
 
                 // now clean up
+#if DEBUG
                 await itemManager.DeleteManagedCertificatesByName("MultiTest_");
+#endif
                 
             }
         }

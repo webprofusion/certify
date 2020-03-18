@@ -106,9 +106,6 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        private void CertificateAuthorityList_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
 
-        }
     }
 }

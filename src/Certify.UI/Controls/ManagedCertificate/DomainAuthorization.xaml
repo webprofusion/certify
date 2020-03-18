@@ -70,7 +70,8 @@
                 <Button
                     x:Name="AddAuth"
                     MaxWidth="160"
-                    Margin="8,0,0,0"
+                    Margin="16,8,0,0"
+                    HorizontalAlignment="Left"
                     Click="AddAuth_Click">
                     Add Configuration
                 </Button>

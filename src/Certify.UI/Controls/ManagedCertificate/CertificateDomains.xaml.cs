@@ -15,15 +15,13 @@ namespace Certify.UI.Controls.ManagedCertificate
         protected Certify.UI.ViewModel.ManagedCertificateViewModel ItemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
         protected Certify.UI.ViewModel.AppViewModel AppViewModel => UI.ViewModel.AppViewModel.Current;
 
-        private Models.ManagedCertificate SelectedItem => ItemViewModel.SelectedItem;
-
         public CertificateDomains()
         {
             InitializeComponent();
             AppViewModel.PropertyChanged += MainViewModel_PropertyChanged;
         }
 
-        private void SetFilter() => CollectionViewSource.GetDefaultView(SelectedItem.DomainOptions).Filter = (item) =>
+        private void SetFilter() => CollectionViewSource.GetDefaultView(ItemViewModel.SelectedItem.DomainOptions).Filter = (item) =>
                                   {
                                       var filter = DomainFilter.Text.Trim();
                                       return filter == "" || filter.Split(';').Where(f => f.Trim() != "").Any(f =>
@@ -54,15 +52,17 @@ namespace Certify.UI.Controls.ManagedCertificate
                     WebsiteDropdown.Text = "(No IIS Sites Found)";
                 }
 
-                if (SelectedItem != null)
+               
+
+                if (ItemViewModel.SelectedItem != null)
                 {
                     // if website previously selected, preselect in dropdown
-                    if (SelectedItem.GroupId == null)
+                    if (ItemViewModel.SelectedItem.GroupId == null)
                     {
-                        SelectedItem.GroupId = "";
+                        ItemViewModel.SelectedItem.GroupId = "";
                     }
 
-                    var selectedWebsite = ItemViewModel.WebSiteList.FirstOrDefault(w => w.SiteId == SelectedItem.GroupId);
+                    var selectedWebsite = ItemViewModel.WebSiteList.FirstOrDefault(w => w.SiteId == ItemViewModel.SelectedItem.GroupId);
                     if (selectedWebsite != null)
                     {
                         ItemViewModel.SelectedWebSite = selectedWebsite;
@@ -125,6 +125,11 @@ namespace Certify.UI.Controls.ManagedCertificate
                 }
 
             }
+        }
+
+        private void CertificateAuthorityList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ItemViewModel.RaisePropertyChangedEvent(nameof(ItemViewModel.CertificateAuthorityDescription));
         }
     }
 }

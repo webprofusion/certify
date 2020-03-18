@@ -45,7 +45,7 @@
             <CheckBox
                 Width="297"
                 Margin="132,4,0,4"
-                Content="Use Staging API (For Testing Only)"
+                Content="Use Staging (Test) Mode"
                 IsChecked="{Binding Item.IsStaging}" />
         </StackPanel>
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
@@ -64,7 +64,7 @@
         </StackPanel>
         <TextBlock
             Width="490"
-            Margin="12"
+            Margin="12,8,8,0"
             DockPanel.Dock="Top"
             Style="{StaticResource Instructions}"
             TextWrapping="Wrap"><Run Text="{x:Static res:SR.New_Contact_Tip2}" /></TextBlock>
@@ -76,8 +76,9 @@
             Style="{StaticResource Instructions}"
             Text="{x:Static res:SR.New_Contact_NeedAgree}"
             TextWrapping="Wrap" />
+        
         <CheckBox
-            Margin="12,12,0,12"
+            Margin="12,12,12,12"
             HorizontalAlignment="Left"
             VerticalAlignment="Top"
             Content="{x:Static res:SR.Yes_I_Agree}"
