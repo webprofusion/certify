@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Certify.Models;
+using Certify.Models.Config;
 
 namespace Certify.UI.Controls.Settings
 {
@@ -35,9 +36,9 @@ namespace Certify.UI.Controls.Settings
 
             //load stored credentials list
             await MainViewModel.RefreshStoredCredentialsList();
-            CredentialsList.ItemsSource = MainViewModel.StoredCredentials;
+            CredentialsList.ItemsSource = FilteredStoredCredentials;
         }
-
+        private IEnumerable<StoredCredential> FilteredStoredCredentials => MainViewModel.StoredCredentials.Where(c => c.ProviderType != StandardAuthTypes.STANDARD_ACME_ACCOUNT);
         private async void UserControl_Loaded(object sender, RoutedEventArgs e) => await LoadCurrentSettings();
 
         private void AddStoredCredential_Click(object sender, RoutedEventArgs e)
@@ -70,7 +71,7 @@ namespace Certify.UI.Controls.Settings
 
         private void UpdateDisplayedCredentialsList() => App.Current.Dispatcher.Invoke((Action)delegate
                                                        {
-                                                           CredentialsList.ItemsSource = MainViewModel.StoredCredentials;
+                                                           CredentialsList.ItemsSource = FilteredStoredCredentials;
                                                        });
 
         private async void DeleteStoredCredential_Click(object sender, RoutedEventArgs e)

@@ -160,7 +160,7 @@ namespace Certify.Providers.ACME.Certes
         /// <summary>
         /// Initialise provider settings, loading current account key if present
         /// </summary>
-        public async Task<bool> InitProvider(ILog log = null)
+        public async Task<bool> InitProvider(ILog log = null, AccountDetails account = null)
         {
             if (log != null)
             {
@@ -169,25 +169,52 @@ namespace Certify.Providers.ACME.Certes
 
             PreInitAcmeContext();
 
-            LoadSettings();
-
-            if (!string.IsNullOrEmpty(_settings.AccountKey))
+            if (_settings == null)
             {
-                if (System.IO.File.Exists(_settingsFolder + "\\c-acc.key"))
+                if (account == null)
                 {
-                    //remove legacy key info
-                    System.IO.File.Delete(_settingsFolder + "\\c-acc.key");
+                    // if initalising without a known account, attempt to load details form storage
+                    if (System.IO.File.Exists(_settingsFolder + "\\c-settings.json"))
+                    {
+                        var json = System.IO.File.ReadAllText(_settingsFolder + "\\c-settings.json");
+                        _settings = Newtonsoft.Json.JsonConvert.DeserializeObject<CertesSettings>(json);
+                    }
+                    else
+                    {
+                        _settings = new CertesSettings();
+                    }
+
+                    if (!string.IsNullOrEmpty(_settings.AccountKey))
+                    {
+                        if (System.IO.File.Exists(_settingsFolder + "\\c-acc.key"))
+                        {
+                            //remove legacy key info
+                            System.IO.File.Delete(_settingsFolder + "\\c-acc.key");
+                        }
+                        SetAcmeContextAccountKey(_settings.AccountKey);
+                    }
+                    else
+                    {
+                        // no account key in settings, check .key (legacy key file)
+                        if (System.IO.File.Exists(_settingsFolder + "\\c-acc.key"))
+                        {
+                            var pem = System.IO.File.ReadAllText(_settingsFolder + "\\c-acc.key");
+                            SetAcmeContextAccountKey(pem);
+                        }
+                    }
                 }
-                SetAcmeContextAccountKey(_settings.AccountKey);
+                else
+                {
+                    _settings = new CertesSettings();
+                    _settings.AccountEmail = account.Email;
+                    _settings.AccountKey = account.AccountKey;
+                    _settings.AccountUri = account.AccountURI;
+                    SetAcmeContextAccountKey(_settings.AccountKey);
+                }
             }
             else
             {
-                // no account key in settings, check .key (legacy key file)
-                if (System.IO.File.Exists(_settingsFolder + "\\c-acc.key"))
-                {
-                    var pem = System.IO.File.ReadAllText(_settingsFolder + "\\c-acc.key");
-                    SetAcmeContextAccountKey(pem);
-                }
+                SetAcmeContextAccountKey(_settings.AccountKey);
             }
 
             _currentOrders = new Dictionary<string, IOrderContext>();
@@ -297,35 +324,21 @@ namespace Certify.Providers.ACME.Certes
                 // allocate new key and inform LE of key change
                 // same default key type as certes
                 var newKey = KeyFactory.NewKey(KeyAlgorithm.ES256);
-                var account = await _acme.ChangeKey(newKey);
-                _settings.AccountKey = newKey.ToPem();
-                var savedOK = await SaveSettings();
 
-                ArchiveAccountKey(await _acme.Account());
+                await _acme.ChangeKey(newKey);
 
-                return savedOK;
+                await PopulateSettingsFromCurrentAccount();
+
+                return true;
             }
         }
 
-        /// <summary>
-        /// Load provider settings or create new
-        /// </summary>
-        private void LoadSettings()
+        private async Task PopulateSettingsFromCurrentAccount()
         {
-            if (!System.IO.Directory.Exists(_settingsFolder))
-            {
-                System.IO.Directory.CreateDirectory(_settingsFolder);
-            }
+            var pem = _acme.AccountKey.ToPem();
 
-            if (System.IO.File.Exists(_settingsFolder + "\\c-settings.json"))
-            {
-                var json = System.IO.File.ReadAllText(_settingsFolder + "\\c-settings.json");
-                _settings = Newtonsoft.Json.JsonConvert.DeserializeObject<CertesSettings>(json);
-            }
-            else
-            {
-                _settings = new CertesSettings();
-            }
+            _settings.AccountKey = pem;
+            _settings.AccountUri = (await _acme.Account()).Location.ToString();
         }
 
         private async Task<bool> WriteAllTextAsync(string path, string content)
@@ -345,30 +358,6 @@ namespace Certify.Providers.ACME.Certes
             {
                 return false;
             }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Save current provider settings
-        /// </summary>
-        private async Task<bool> SaveSettings() => await WriteAllTextAsync(_settingsFolder + "\\c-settings.json", Newtonsoft.Json.JsonConvert.SerializeObject(_settings));
-
-        /// <summary>
-        /// Save the current account key
-        /// </summary>
-        /// <returns>  </returns>
-        private bool ArchiveAccountKey(IAccountContext accountContext)
-        {
-            var pem = _acme.AccountKey.ToPem();
-
-            _settings.AccountKey = pem;
-            _settings.AccountUri = accountContext.Location.ToString();
-
-            var entry = $"\r\n\r{DateTime.Now}\r\n{ _settings.AccountUri ?? "" }\r\n{_settings.AccountEmail ?? ""}\r\n{_settings.AccountKey}";
-
-            // archive account id history
-            System.IO.File.AppendAllText(_settingsFolder + "\\c-acc-archive", entry);
 
             return true;
         }
@@ -407,13 +396,20 @@ namespace Certify.Providers.ACME.Certes
 
         public AccountDetails GetCurrentAcmeAccount()
         {
-            return new AccountDetails
+            if (!string.IsNullOrEmpty(_settings.AccountUri))
             {
-                ID = _settings.AccountUri.Split('/').Last(),
-                AccountKey = _settings.AccountKey,
-                AccountURI = _settings.AccountUri,
-                Email = _settings.AccountEmail
-            };
+                return new AccountDetails
+                {
+                    ID = _settings.AccountUri.Split('/').Last(),
+                    AccountKey = _settings.AccountKey,
+                    AccountURI = _settings.AccountUri,
+                    Email = _settings.AccountEmail
+                };
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -439,11 +435,13 @@ namespace Certify.Providers.ACME.Certes
 
                 _settings.AccountEmail = email;
 
-                // archive account key and update current settings with new ACME account key and account URI
-                var keyUpdated = ArchiveAccountKey(account);
-                var settingsSaved = await SaveSettings();
+                await PopulateSettingsFromCurrentAccount();
 
-                if (keyUpdated && settingsSaved)
+                // archive account key and update current settings with new ACME account key and account URI
+                // var keyUpdated = ArchiveAccountKey(account);
+                // var settingsSaved = await SaveSettings();
+
+                //  if (keyUpdated && settingsSaved)
                 {
                     log?.Information($"Registering account {email} with certificate authority");
 
@@ -462,10 +460,10 @@ namespace Certify.Providers.ACME.Certes
                         }
                     };
                 }
-                else
-                {
-                    throw new Exception($"Failed to save account settings: keyUpdate:{keyUpdated} settingsSaved:{settingsSaved}");
-                }
+                /* else
+                 {
+                     throw new Exception($"Failed to save account settings: keyUpdate:{keyUpdated} settingsSaved:{settingsSaved}");
+                 }*/
             }
             catch (Exception exp)
             {
@@ -549,6 +547,7 @@ namespace Certify.Providers.ACME.Certes
                         }
                         catch (Exception exp)
                         {
+                            log.Error(exp.ToString());
 
                             orderErrorMsg = exp.Message;
                             if (exp is TaskCanceledException)
@@ -627,6 +626,13 @@ namespace Certify.Providers.ACME.Certes
                         if (lastException != null && (lastException as Exception).InnerException is AcmeRequestException)
                         {
                             msg = ((lastException as Exception).InnerException as AcmeRequestException).Error?.Detail ?? msg;
+                        }
+                    }
+                    else
+                    {
+                        if (lastException is Exception)
+                        {
+                            msg += "::" + (lastException as Exception).ToString();
                         }
                     }
 

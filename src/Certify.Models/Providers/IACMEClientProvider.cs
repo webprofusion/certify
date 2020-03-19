@@ -12,7 +12,7 @@ namespace Certify.Models.Plugins
 
         string GetAcmeBaseURI();
 
-        Task<bool> InitProvider(ILog log = null);
+        Task<bool> InitProvider(ILog log = null, AccountDetails account = null);
 
         Task<Uri> GetAcmeTermsOfService();
 

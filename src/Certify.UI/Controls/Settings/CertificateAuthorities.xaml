@@ -19,7 +19,7 @@
             Grid.Row="0"
             Margin="8"
             Style="{StaticResource Instructions}">
-            Certificate Authorities are the organisations who can issue trusted certificates. You need to reigster an account for each (ACME) Certificate Authority you wish to use. Accounts can either be Production (live, trusted certificates) or Staging (test, non-trusted). If you register with multiple authorities this enables you to use automatic Certificate Authority Failover, so if your preferred Certificate Authority can't issue a new certificate an alternative provider can be used automatically.
+            Certificate Authorities are the organisations who can issue trusted certificates. You need to register an account for each (ACME) Certificate Authority you wish to use. Accounts can either be Production (live, trusted certificates) or Staging (test, non-trusted). If you register with multiple authorities this may enable you to use automatic Certificate Authority Failover, so if your preferred Certificate Authority can't issue a new certificate an alternative compatible provider can be used automatically.
         </TextBlock>
 
         <StackPanel Orientation="Horizontal">

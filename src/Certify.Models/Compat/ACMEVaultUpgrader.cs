@@ -8,8 +8,14 @@ namespace Certify.Models.Compat
 
         public bool HasACMEVault()
         {
-            if (System.IO.File.Exists(_vaultPath)) return true;
-            else return false;
+            if (System.IO.File.Exists(_vaultPath))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public string GetContact()

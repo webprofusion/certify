@@ -73,7 +73,7 @@ namespace Certfy.Providers.ACME.ACMESharpCore
 
         }
 
-        public async Task<bool> InitProvider(ILog log = null)
+        public async Task<bool> InitProvider(ILog log = null, Certify.Models.AccountDetails account = null)
         {
             if (log != null)
             {
@@ -196,7 +196,7 @@ namespace Certfy.Providers.ACME.ACMESharpCore
                 _ = await _client.UpdateAccountAsync(new[] { email });
                 return true;
             }
-            catch( Exception exp)
+            catch (Exception exp)
             {
                 log.Error(exp.Message);
                 return false;

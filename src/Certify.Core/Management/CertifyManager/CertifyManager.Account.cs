@@ -154,12 +154,10 @@ namespace Certify.Management
 
             var accounts = await GetAccountRegistrations();
 
-            if (accounts.Count() == 0)
+            if (!accounts.Any())
             {
                 // if we have no accounts we need to check for required upgrades
                 // contacts may be JSON or legacy vault 
-
-                var newId = Guid.NewGuid().ToString();
 
                 // create provider pointing to legacy storage
                 var apiEndpoint = CertificateAuthority.CertificateAuthorities.Find(c => c.Id == StandardCertAuthorities.LETS_ENCRYPT).ProductionAPIEndpoint;
@@ -167,12 +165,17 @@ namespace Certify.Management
                 await provider.InitProvider(_serviceLog);
 
                 var acc = (provider as CertesACMEProvider).GetCurrentAcmeAccount();
-                acc.ID = newId;
-                acc.StorageKey = newId;
-                acc.IsStagingAccount = false;
-                acc.CertificateAuthorityId = StandardCertAuthorities.LETS_ENCRYPT;
-                accounts.Add(acc);
-                await StoreAccountAsCredential(acc);
+                if (acc != null)
+                {
+                    // we have a legacy certes account to migrate to the newer account store
+                    var newId = Guid.NewGuid().ToString();
+                    acc.ID = newId;
+                    acc.StorageKey = newId;
+                    acc.IsStagingAccount = false;
+                    acc.CertificateAuthorityId = StandardCertAuthorities.LETS_ENCRYPT;
+                    accounts.Add(acc);
+                    await StoreAccountAsCredential(acc);
+                }
 
                 if (accounts.Count() == 0)
                 {
@@ -185,9 +188,23 @@ namespace Certify.Management
 
                         if (!string.IsNullOrEmpty(email))
                         {
-                            var addedOK = await provider.AddNewAccountAndAcceptTOS(_serviceLog, email);
-
-                            _serviceLog?.Information("Account upgrade completed (vault)");
+                            var registerResult = await provider.AddNewAccountAndAcceptTOS(_serviceLog, email);
+                            if (registerResult.IsSuccess)
+                            {
+                                var newId = Guid.NewGuid().ToString();
+                                acc = registerResult.Result;
+                                acc.ID = newId;
+                                acc.StorageKey = newId;
+                                acc.IsStagingAccount = false;
+                                acc.CertificateAuthorityId = StandardCertAuthorities.LETS_ENCRYPT;
+                                accounts.Add(acc);
+                                await StoreAccountAsCredential(acc);
+                                _serviceLog?.Information("Account upgrade completed (vault)");
+                            } else
+                            {
+                                _serviceLog?.Information($"Account upgrade failed (vault):{registerResult?.Message}");
+                            }
+                            
                         }
                     }
                 }
