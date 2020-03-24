@@ -14,7 +14,11 @@ namespace Certify.Service
         {
             get
             {
-                if (_context == null) _context = GlobalHost.ConnectionManager.GetHubContext<StatusHub>();
+                if (_context == null)
+                {
+                    _context = GlobalHost.ConnectionManager.GetHubContext<StatusHub>();
+                }
+
                 return _context;
             }
         }

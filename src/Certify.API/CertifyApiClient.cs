@@ -7,22 +7,28 @@ using System.Threading.Tasks;
 using Certify.Client;
 using Certify.Models;
 using Certify.Models.Config;
+using Newtonsoft.Json;
 
 namespace Certify.API
 {
+
     public class CreateRequest
     {
         public string Title { get; set; }
         public IEnumerable<string> Domains { get; set; }
 
         public bool IncludeInAutoRenew { get; set; } = true;
+        public CreateRequest()
+        {
 
+        }
         public CreateRequest(string title, IEnumerable<string> domains)
         {
             Title = title;
             Domains = domains;
         }
     }
+
     public class CertifyApiClient
     {
         ICertifyClient _client;
@@ -31,11 +37,12 @@ namespace Certify.API
             _client = new Certify.Client.CertifyServiceClient();
         }
 
-        public async Task<ActionResult> Create(CreateRequest request)
+
+        public async Task<ActionResult<ManagedCertificate>> CreateManagedCertificate(CreateRequest request)
         {
             if (request.Domains == null || !request.Domains.Any())
             {
-                return new ActionResult("Certificate request must contain one or more domains", false);
+                return new ActionResult<ManagedCertificate>("Certificate request must contain one or more domains", false);
             }
 
             request.Domains = request.Domains.Select(d => d.ToLowerInvariant().Trim())
@@ -56,6 +63,7 @@ namespace Certify.API
                 Name = request.Title,
                 IncludeInAutoRenew = true,
                 ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS,
+                UseStagingMode = true,
                 RequestConfig = new CertRequestConfig
                 {
                     PrimaryDomain = request.Domains.First(),
@@ -85,12 +93,31 @@ namespace Certify.API
                 }
                 else
                 {
-                    return new ActionResult { IsSuccess = false, Message = "Failed to create managed certificate." };
+                    return new ActionResult<ManagedCertificate> { IsSuccess = false, Message = "Failed to create managed certificate." };
                 }
             }
             catch (Exception exp)
             {
-                return new ActionResult { IsSuccess = false, Message = "Failed to create managed certificate: " + exp.ToString() };
+                return new ActionResult<ManagedCertificate> { IsSuccess = false, Message = "Failed to create managed certificate: " + exp.ToString() };
+            }
+        }
+
+        public async Task<ActionResult> DeleteManagedCertificate(string id)
+        {
+            try
+            {
+                if (await _client.DeleteManagedCertificate(id))
+                {
+                    return new ActionResult("OK", true);
+                }
+                else
+                {
+                    return new ActionResult("Not Found", false);
+                }
+            }
+            catch (Exception exp)
+            {
+                return new ActionResult { IsSuccess = false, Message = "Failed to perform delete operation: " + exp.ToString() };
             }
         }
 
@@ -105,6 +132,20 @@ namespace Certify.API
             catch (Exception exp)
             {
                 return new ActionResult { IsSuccess = false, Message = "Failed to perform renew all operation: " + exp.ToString() };
+            }
+        }
+
+        public async Task<ActionResult> GetSystemVersion()
+        {
+            try
+            {
+                var result = await _client.GetAppVersion();
+
+                return new ActionResult(result, true);
+            }
+            catch (Exception exp)
+            {
+                return new ActionResult { IsSuccess = false, Message = "Failed to get system version: " + exp.ToString() };
             }
         }
 
