@@ -75,7 +75,7 @@ namespace Certify.Core.Management.Challenges.DNS
         private static ProviderParameter _defaultPropagationDelayParam = new ProviderParameter
         {
             Key = "propagationdelay",
-            Name = "Propagation Delay (Seconds)",
+            Name = "Propagation Delay Seconds",
             IsRequired = false,
             IsPassword = false,
             Value = DefaultPropagationDelay.ToString(),

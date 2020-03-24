@@ -126,7 +126,7 @@ namespace Certify.Core.Management.Challenges
             {
                 if (providerDefinition.Config.Contains("Provider=Certify.Providers.DNS.PoshACME"))
                 {
-                    var scriptPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Scripts\DNS\PoshACME\DnsPlugins");
+                    var scriptPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Scripts\DNS\PoshACME\Plugins");
                     var ps = new DNS.DnsProviderPoshACME(parameters, credentials, scriptPath);
                     ps.DelegateProviderDefinition = providerDefinition;
 
