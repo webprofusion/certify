@@ -33,7 +33,7 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
         public DnsRecord[] Result { get; set; }
     }
 
-    public class DnsProviderSimpleDNSPlus : IDnsProvider
+    public class DnsProviderSimpleDNSPlus : DnsProviderBase, IDnsProvider
     {
         private ILog _log;
         private HttpClient _client = new HttpClient();
@@ -43,9 +43,6 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
         private string _baseUri;
         private string _listZonesUri;
         private string _createRecordUri;
-        private string _listRecordsUri;
-        private string _deleteRecordUri;
-        private string _updateRecordUri;
 
         private int? _customPropagationDelay = null;
         public int PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
@@ -97,9 +94,6 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
             _baseUri = "https://" + _authServer + "/v2/";
             _listZonesUri = _baseUri + "zones";
             _createRecordUri = _baseUri + "zones/{0}/records";
-            _listRecordsUri = _baseUri + "zones/{0}/records";
-            _deleteRecordUri = _baseUri + "zones/{0}/records";
-            _updateRecordUri = _baseUri + "zones/{0}/records";
         }
 
         public async Task<ActionResult> Test()
@@ -138,46 +132,23 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
             return request;
         }
 
-        private async Task<List<DnsRecord>> GetDnsRecords(string zoneName)
-        {
-            var records = new List<DnsRecord>();
-
-            var domains = zoneName.Split(new char[] { '.' });
-            var tldName = domains[domains.Length - 2] + "." + domains[domains.Length - 1];
-            var sub = "";
-
-            for (var i = 0; i < domains.Length - 1; i++)
-            {
-                sub += domains[i];
-            }
-
-            var request = CreateRequest(HttpMethod.Get, $"{string.Format(_listRecordsUri, tldName)}");
-
-            var result = await _client.SendAsync(request);
-
-            if (result.IsSuccessStatusCode)
-            {
-                var content = await result.Content.ReadAsStringAsync();
-                var dnsResult = JsonConvert.DeserializeObject<DnsRecordSimpleDNSPlus[]>(content);
-
-                records.AddRange(dnsResult.Select(x => new DnsRecord { RecordId = x.Name, RecordName = x.Name, RecordType = x.Type, RecordValue = x.Data }));
-            }
-            else
-            {
-                throw new Exception($"Could not get DNS records for zone {tldName}. Result: {result.StatusCode} - {await result.Content.ReadAsStringAsync()}");
-            }
-
-            return records;
-        }
-
         private async Task<ActionResult> AddDnsRecord(string zoneName, string recordname, string value)
         {
             var request = CreateRequest(new HttpMethod("PATCH"), string.Format(_createRecordUri, zoneName));
-            var rec = new DnsRecordSimpleDNSPlus();
-            rec.Type = "TXT"; rec.Name = recordname + "." + zoneName; rec.Data = value; rec.TTL = 600; rec.Remove = false;
+            var rec = new DnsRecordSimpleDNSPlus()
+            {
+                Type = "TXT",
+                Name = recordname + "." + zoneName,
+                Data = value,
+                TTL = 600,
+                Remove = false
+            };
+
             var recarr = new object[] { rec };
+
             request.Content = new StringContent(
                 JsonConvert.SerializeObject(recarr)
+
                 );
 
             request.Content.Headers.ContentType.MediaType = "application/json";
@@ -202,74 +173,46 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
             }
         }
 
-        private async Task<ActionResult> UpdateDnsRecord(string zoneName, DnsRecord record, string value)
-        {
-            await Test();
-
-            var request = CreateRequest(HttpMethod.Put, string.Format(_updateRecordUri, zoneName));
-
-            request.Content = new StringContent(
-                JsonConvert.SerializeObject(new object[] { new
-                        {
-                            Name = record.RecordName,
-                            Type = "TXT",
-                            Data = value,
-                            TTL = 600
-                        }
-                    })
-                );
-
-            request.Content.Headers.ContentType.MediaType = "application/json";
-
-            var result = await _client.SendAsync(request);
-
-            if (!result.IsSuccessStatusCode)
-            {
-                return new ActionResult
-                {
-                    IsSuccess = false,
-                    Message = $"Could not update dns record {record.RecordName} to zone {zoneName}. Result: {result.StatusCode} - {await result.Content.ReadAsStringAsync()}"
-                };
-            }
-            else
-            {
-                return new ActionResult { IsSuccess = true, Message = "DNS record updated" };
-            }
-        }
-
         public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
-            //check if record already exists
-            var domains = request.RecordName.Split(new char[] { '.' });
-            var tldName = domains[domains.Length - 2] + "." + domains[domains.Length - 1];
-            var sub = "";
-            for (var i = 0; i < domains.Length - 2; i++)
+            // determine root domain and normalise new record name
+            var domainInfo = await DetermineZoneDomainRoot(request.RecordName, request.ZoneId);
+            if (string.IsNullOrEmpty(domainInfo.RootDomain))
             {
-                if (i == 0)
-                {
-                    sub += domains[i];
-                }
-                else
-                {
-                    sub += "." + domains[i];
-                }
+                return new ActionResult { IsSuccess = false, Message = "Failed to determine root domain in zone." };
             }
-            var records = await GetDnsRecords(tldName);
-            var record = records.FirstOrDefault(x => x.RecordName == sub);
 
-            return await AddDnsRecord(tldName, sub, request.RecordValue);
+            var rootDomain = domainInfo.RootDomain;
+            var subdomainRecord = NormaliseRecordName(domainInfo, request.RecordName);
+
+            return await AddDnsRecord(rootDomain, subdomainRecord, request.RecordValue);
         }
 
         public async Task<ActionResult> DeleteRecord(DnsRecord requestreq)
         {
+            // determine root domain and normalise new record name
+            var domainInfo = await DetermineZoneDomainRoot(requestreq.RecordName, requestreq.ZoneId);
+            if (string.IsNullOrEmpty(domainInfo.RootDomain))
+            {
+                return new ActionResult { IsSuccess = false, Message = "Failed to determine root domain in zone." };
+            }
+
+            var rootDomain = domainInfo.RootDomain;
+            var subdomainRecord = NormaliseRecordName(domainInfo, requestreq.RecordName);
+
             // grab all the txt records for the zone as a json array, remove the txt record in
             // question, and send an update command.
-            var recordname = requestreq.RecordName;
-            var zoneName = requestreq.RootDomain;
-            var request = CreateRequest(new HttpMethod("PATCH"), string.Format(_createRecordUri, zoneName));
-            var rec = new DnsRecordSimpleDNSPlus();
-            rec.Type = "TXT"; rec.Name = recordname + "." + zoneName; rec.Remove = true;
+
+            var request = CreateRequest(new HttpMethod("PATCH"), string.Format(_createRecordUri, rootDomain));
+            var rec = new DnsRecordSimpleDNSPlus
+            {
+                Type = "TXT",
+                Name = subdomainRecord + "." + rootDomain,
+                Remove = true
+            };
+
             var recarr = new object[] { rec };
+
             request.Content = new StringContent(
                 JsonConvert.SerializeObject(recarr)
                 );
@@ -283,7 +226,7 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
                 return new ActionResult
                 {
                     IsSuccess = false,
-                    Message = $"Could not delete dns record {recordname} to zone {zoneName}. Result: {result.StatusCode} - {await result.Content.ReadAsStringAsync()}"
+                    Message = $"Could not delete dns record {subdomainRecord} to zone {rootDomain}. Result: {result.StatusCode} - {await result.Content.ReadAsStringAsync()}"
                 };
             }
             else
@@ -296,7 +239,7 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
             }
         }
 
-        public async Task<List<DnsZone>> GetZones()
+        public async override Task<List<DnsZone>> GetZones()
         {
             var zones = new List<DnsZone>();
 
