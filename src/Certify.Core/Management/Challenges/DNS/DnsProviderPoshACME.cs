@@ -415,7 +415,7 @@ namespace Certify.Core.Management.Challenges.DNS
               new ChallengeProviderDefinition
             {
                 Id = "DNS01.API.PoshACME.Loopia",
-                Title = "Linode DNS API (using Posh-ACME)",
+                Title = "Loopia DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
                 HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Loopia-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
