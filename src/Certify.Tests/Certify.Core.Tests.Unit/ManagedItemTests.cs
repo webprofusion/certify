@@ -33,7 +33,7 @@ namespace Certify.Core.Tests.Unit
                 Id = Guid.NewGuid().ToString(),
                 Name = "TestSite..",
                 GroupId = "test",
-
+                UseStagingMode = true,
                 RequestConfig = new CertRequestConfig
                 {
                     PrimaryDomain = "testsite.com",
@@ -84,7 +84,7 @@ namespace Certify.Core.Tests.Unit
                 Id = Guid.NewGuid().ToString(),
                 Name = "TestSite..",
                 GroupId = "test",
-
+                UseStagingMode = true,
                 RequestConfig = new CertRequestConfig
                 {
                     PrimaryDomain = "testsite.com",
@@ -129,7 +129,7 @@ namespace Certify.Core.Tests.Unit
                 Id = Guid.NewGuid().ToString(),
                 Name = "TestSite..",
                 GroupId = "test",
-
+                UseStagingMode = true,
                 RequestConfig = new CertRequestConfig
                 {
                     PrimaryDomain = "testsite.com",

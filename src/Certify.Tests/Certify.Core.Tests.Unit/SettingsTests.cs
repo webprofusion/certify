@@ -8,7 +8,7 @@ namespace Certify.Core.Tests.Unit
     [TestClass]
     public class SettingsTest
     {
-        [TestMethod, Description("Ensure a site which should be renewed correctly requires renewa, where failure has previously occurred")]
+        [TestMethod, Description("Ensure a site which should be renewed correctly requires renewal, where failure has previously occurred")]
         public void TestCheckAutoRenewalPeriodRequiredWithFailures()
         {
             // setup

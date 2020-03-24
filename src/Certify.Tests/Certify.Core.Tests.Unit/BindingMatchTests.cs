@@ -69,7 +69,7 @@ namespace Certify.Core.Tests.Unit
                 Id = Guid.NewGuid().ToString(),
                 Name = "TestSite..",
                 GroupId = "test",
-
+                UseStagingMode = true,
                 RequestConfig = new CertRequestConfig
                 {
                     PrimaryDomain = "test.com",
@@ -272,6 +272,7 @@ namespace Certify.Core.Tests.Unit
             {
                 Id = Guid.NewGuid().ToString(),
                 Name = "MixedIPBindings",
+                UseStagingMode = true,
                 RequestConfig = new CertRequestConfig
                 {
                     PrimaryDomain = "test.com",

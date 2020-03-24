@@ -101,6 +101,7 @@ namespace Certify.Core.Tests
                     Id = Guid.NewGuid().ToString(),
                     Name = testPreviewSiteName,
                     GroupId = site.Id.ToString(),
+                    UseStagingMode = true,
                     RequestConfig = new CertRequestConfig
                     {
                         PrimaryDomain = wildcardDomain,
@@ -181,6 +182,7 @@ namespace Certify.Core.Tests
                     Id = Guid.NewGuid().ToString(),
                     Name = testPreviewSiteName,
                     GroupId = site.Id.ToString(),
+                    UseStagingMode = true,
                     RequestConfig = new CertRequestConfig
                     {
                         PrimaryDomain = wildcardDomain,

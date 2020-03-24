@@ -90,6 +90,7 @@ namespace Certify.Core.Tests
                 Id = Guid.NewGuid().ToString(),
                 Name = testSiteName,
                 GroupId = site.Id.ToString(),
+                UseStagingMode = true,
                 RequestConfig = new CertRequestConfig
                 {
                     PrimaryDomain = testSiteDomain,
@@ -168,6 +169,7 @@ namespace Certify.Core.Tests
                     Id = Guid.NewGuid().ToString(),
                     Name = testIDNDomain,
                     GroupId = site.Id.ToString(),
+                    UseStagingMode = true,
                     DomainOptions = new ObservableCollection<DomainOption> {
                     new DomainOption{ Domain= testIDNDomain, IsManualEntry=true, IsPrimaryDomain=true, IsSelected=true}
                 },
@@ -248,6 +250,7 @@ namespace Certify.Core.Tests
                     Id = Guid.NewGuid().ToString(),
                     Name = testSiteName,
                     GroupId = site.Id.ToString(),
+                    UseStagingMode = true,
                     RequestConfig = new CertRequestConfig
                     {
                         PrimaryDomain = domainList[0],
@@ -311,6 +314,7 @@ namespace Certify.Core.Tests
                 Id = Guid.NewGuid().ToString(),
                 Name = testSiteName,
                 GroupId = site.Id.ToString(),
+                UseStagingMode = true,
                 RequestConfig = new CertRequestConfig
                 {
                     PrimaryDomain = domainList[0],
@@ -356,6 +360,7 @@ namespace Certify.Core.Tests
                 Id = Guid.NewGuid().ToString(),
                 Name = testSiteName,
                 GroupId = site.Id.ToString(),
+                UseStagingMode = true,
                 RequestConfig = new CertRequestConfig
                 {
                     PrimaryDomain = testSiteDomain,
@@ -437,6 +442,7 @@ namespace Certify.Core.Tests
                     Id = Guid.NewGuid().ToString(),
                     Name = testWildcardSiteName,
                     GroupId = site.Id.ToString(),
+                    UseStagingMode = true,
                     RequestConfig = new CertRequestConfig
                     {
                         PrimaryDomain = wildcardDomain,

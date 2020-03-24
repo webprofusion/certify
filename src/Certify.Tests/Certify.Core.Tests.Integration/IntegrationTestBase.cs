@@ -47,6 +47,7 @@ namespace Certify.Core.Tests
                 Id = Guid.NewGuid().ToString(),
                 Name = siteName,
                 GroupId = siteId,
+                UseStagingMode = true,
                 RequestConfig = new CertRequestConfig
                 {
                     PrimaryDomain = testDomain,
