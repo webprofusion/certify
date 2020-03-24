@@ -103,7 +103,7 @@ namespace Certify.Core.Management.Challenges.DNS
         };
 
         /// <summary>
-        /// List of definitions that use this provider as a base. Each definnes the info, parameters, credentials and script to be run.
+        /// List of definitions that use this provider as a base. Each defines the info, parameters, credentials and script to be run.
         /// </summary>
 
         public static List<ChallengeProviderDefinition> ExtendedProviders = new List<ChallengeProviderDefinition>
@@ -207,7 +207,6 @@ namespace Certify.Core.Management.Challenges.DNS
             },
             new ChallengeProviderDefinition
             {
-
                 Id = "DNS01.API.PoshACME.ClouDNS",
                 Title = "ClouDNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
@@ -221,14 +220,13 @@ namespace Certify.Core.Management.Challenges.DNS
                     _defaultPropagationDelayParam
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=AutoDNS",
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=ClouDNS",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = true,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
             {
-
                 Id = "DNS01.API.PoshACME.DNSPod",
                 Title = "DNSPod DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
@@ -248,7 +246,6 @@ namespace Certify.Core.Management.Challenges.DNS
             },
             new ChallengeProviderDefinition
             {
-
                 Id = "DNS01.API.PoshACME.DNSimple",
                 Title = "DNSimple DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
@@ -267,7 +264,6 @@ namespace Certify.Core.Management.Challenges.DNS
             },
             new ChallengeProviderDefinition
             {
-
                 Id = "DNS01.API.PoshACME.DeSEC",
                 Title = "deSEC DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
@@ -286,7 +282,6 @@ namespace Certify.Core.Management.Challenges.DNS
             },
             new ChallengeProviderDefinition
             {
-
                 Id = "DNS01.API.PoshACME.Dreamhost",
                 Title = "Dreamhost DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
@@ -305,7 +300,6 @@ namespace Certify.Core.Management.Challenges.DNS
             },
             new ChallengeProviderDefinition
             {
-
                 Id = "DNS01.API.PoshACME.Dynu",
                 Title = "Dynu DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
@@ -325,7 +319,6 @@ namespace Certify.Core.Management.Challenges.DNS
             },
             new ChallengeProviderDefinition
             {
-
                 Id = "DNS01.API.PoshACME.EasyDNS",
                 Title = "EasyDNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
@@ -335,7 +328,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 {
                     new ProviderParameter { Key = "EDToken", Name = "Token", IsRequired = true, IsCredential = true },
                     new ProviderParameter { Key = "EDKey", Name = "Key", IsRequired = true, IsCredential = true },
-                    new ProviderParameter { Key = "EDUseSandbox", Name = "Use Sandbox", Type= OptionType.Boolean,  Value="0" },
+                    new ProviderParameter { Key = "EDUseSandbox", Name = "Use Sandbox", Type= OptionType.Boolean,  Value="0", IsHidden=true },
                     _defaultPropagationDelayParam
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
@@ -452,12 +445,12 @@ namespace Certify.Core.Management.Challenges.DNS
                     _defaultPropagationDelayParam
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=LuaDNS",
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=LuaDns",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = true,
                 IsExperimental = true
             },
-                  new ChallengeProviderDefinition
+            new ChallengeProviderDefinition
             {
                 Id = "DNS01.API.PoshACME.NameCom",
                 Title = "name.com DNS API (using Posh-ACME)",
@@ -479,7 +472,6 @@ namespace Certify.Core.Management.Challenges.DNS
             },
             new ChallengeProviderDefinition
             {
-
                 Id = "DNS01.API.PoshACME.NS1",
                 Title = "NS1 DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
@@ -496,9 +488,8 @@ namespace Certify.Core.Management.Challenges.DNS
                 IsTestModeSupported = true,
                 IsExperimental = true
             },
-             new ChallengeProviderDefinition
+            new ChallengeProviderDefinition
             {
-
                 Id = "DNS01.API.PoshACME.PointDNS",
                 Title = "PointDNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
@@ -518,7 +509,6 @@ namespace Certify.Core.Management.Challenges.DNS
             },
             new ChallengeProviderDefinition
             {
-
                 Id = "DNS01.API.PoshACME.Rackspace",
                 Title = "Rackspace Cloud DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
@@ -538,7 +528,6 @@ namespace Certify.Core.Management.Challenges.DNS
             },
             new ChallengeProviderDefinition
             {
-
                 Id = "DNS01.API.PoshACME.Selectel",
                 Title = "Selectel DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
@@ -574,10 +563,8 @@ namespace Certify.Core.Management.Challenges.DNS
                 IsTestModeSupported = true,
                 IsExperimental = true
             },
-
             new ChallengeProviderDefinition
             {
-
                 Id = "DNS01.API.PoshACME.Yandex",
                 Title = "Yandex DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
@@ -594,7 +581,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 IsTestModeSupported = true,
                 IsExperimental = true
             },
-               new ChallengeProviderDefinition
+            new ChallengeProviderDefinition
             {
                 Id = "DNS01.API.PoshACME.Zonomi",
                 Title = "Zonomi DNS API (using Posh-ACME)",
