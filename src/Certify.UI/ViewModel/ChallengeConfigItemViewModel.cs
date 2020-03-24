@@ -41,7 +41,7 @@ namespace Certify.UI.ViewModel
 
         public ObservableCollection<ChallengeProviderDefinition> ChallengeProviders => new ObservableCollection<ChallengeProviderDefinition>(
                     _appViewModel.ChallengeAPIProviders
-                    .Where(p => p.ProviderParameters.Any())
+                    .Where(p => p.ProviderParameters.Any() && p.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                     .OrderBy(p => p.Title)
                     .ToList());
 

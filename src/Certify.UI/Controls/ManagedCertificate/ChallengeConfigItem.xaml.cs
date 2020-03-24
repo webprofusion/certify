@@ -189,6 +189,8 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 EditModel.SelectedItem.ChallengeProvider = challengeProviderType;
 
+                EditModel.SelectedItem.ChallengeCredentialKey = null;
+
                 await RefreshAllOptions();
             }
         }

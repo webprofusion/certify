@@ -37,6 +37,7 @@ namespace Certify.Models.Config
         public string Description { get; set; }
         public bool IsPassword { get; set; }
         public bool IsRequired { get; set; }
+        public bool IsHidden { get; set; }
         public string Value { get; set; }
         public bool IsCredential { get; set; } = true;
 

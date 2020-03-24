@@ -8,8 +8,10 @@ namespace Certify.Models.Config
         CUSTOM_SCRIPT = 2,
         PYTHON_HELPER = 3,
         PLUGIN = 4,
-        INTERNAL = 5
+        INTERNAL = 5,
+        POWERSHELL = 6
     }
+
     public enum TaskPreconditionType
     {
         None = 0, // run task whether step was success or failure

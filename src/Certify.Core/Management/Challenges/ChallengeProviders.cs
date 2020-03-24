@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Certify.Core.Management.Challenges.DNS;
 using Certify.Models;
@@ -17,6 +19,7 @@ using Certify.Providers.DNS.MSDNS;
 using Certify.Providers.DNS.NameCheap;
 using Certify.Providers.DNS.OVH;
 using Certify.Providers.DNS.SimpleDNSPlus;
+using Newtonsoft.Json;
 
 namespace Certify.Core.Management.Challenges
 {
@@ -117,6 +120,18 @@ namespace Certify.Core.Management.Challenges
                 if (providerDefinition.Id == DNS.DnsProviderScripting.Definition.Id)
                 {
                     dnsAPIProvider = new DNS.DnsProviderScripting(parameters);
+                }
+            }
+            else if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.POWERSHELL)
+            {
+                if (providerDefinition.Config.Contains("Provider=Certify.Providers.DNS.PoshACME"))
+                {
+                    var scriptPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Scripts\DNS\PoshACME\DnsPlugins");
+                    var ps = new DNS.DnsProviderPoshACME(parameters, credentials, scriptPath);
+                    ps.DelegateProviderDefinition = providerDefinition;
+
+                    dnsAPIProvider = ps;
+
                 }
             }
 
@@ -236,6 +251,9 @@ namespace Certify.Core.Management.Challenges
                 Providers.DNS.AcmeDns.DnsProviderAcmeDns.Definition,
                 Providers.DNS.NameCheap.DnsProviderNameCheap.Definition
             };
+
+            // TODO : load config from file
+            providers.AddRange(Certify.Core.Management.Challenges.DNS.DnsProviderPoshACME.ExtendedProviders);
 
             try
             {

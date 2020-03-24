@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
@@ -10,17 +11,21 @@ namespace Certify.Management
 {
     public class PowerShellManager
     {
-        public static async Task<string> RunScript(CertificateRequestResult result, string scriptFile)
+        public static async Task<string> RunScript(CertificateRequestResult result, string scriptFile, Dictionary<string, string> parameters = null, string scriptContent = null)
         {
             // argument check for script file existance and .ps1 extension
-            var scriptInfo = new FileInfo(scriptFile);
-            if (!scriptInfo.Exists)
+            FileInfo scriptInfo = null;
+            if (scriptContent == null)
             {
-                throw new ArgumentException($"File '{scriptFile}' does not exist.");
-            }
-            if (scriptInfo.Extension != ".ps1")
-            {
-                throw new ArgumentException($"File '{scriptFile}' is not a powershell script.");
+                scriptInfo = new FileInfo(scriptFile);
+                if (!scriptInfo.Exists)
+                {
+                    throw new ArgumentException($"File '{scriptFile}' does not exist.");
+                }
+                if (scriptInfo.Extension != ".ps1")
+                {
+                    throw new ArgumentException($"File '{scriptFile}' is not a powershell script.");
+                }
             }
 
             var config = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
@@ -33,7 +38,10 @@ namespace Certify.Management
                     runspace.Open();
 
                     // set working directory to the script file's directory
-                    runspace.SessionStateProxy.Path.SetLocation(scriptInfo.DirectoryName);
+                    if (scriptInfo != null)
+                    {
+                        runspace.SessionStateProxy.Path.SetLocation(scriptInfo.DirectoryName);
+                    }
 
                     using (var shell = PowerShell.Create())
                     {
@@ -51,10 +59,28 @@ namespace Certify.Management
                         }
 
                         // add script command to invoke
-                        shell.AddCommand(scriptFile);
+                        if (scriptFile != null)
+                        {
+                            shell.AddCommand(scriptFile);
+                        } else
+                        {
+                            shell.AddScript(scriptContent);
+                        }
 
-                        // pass the result to the script
-                        shell.AddParameter("result", result);
+                        // pass the result to the script if present
+                        if (result != null)
+                        {
+                            shell.AddParameter("result", result);
+                        }
+
+                        // pass parameters to script if present
+                        if (parameters != null)
+                        {
+                            foreach (var a in parameters)
+                            {
+                                shell.AddParameter(a.Key, a.Value);
+                            }
+                        }
 
                         // accumulate output
                         var output = new StringBuilder();

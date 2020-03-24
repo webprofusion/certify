@@ -67,6 +67,7 @@
                     local:PasswordBoxAssistant.BoundPassword="{Binding Value, Mode=TwoWay}" />
             </StackPanel>
         </DataTemplate>
+        <DataTemplate x:Key="ProviderHiddenParameter" />
     </UserControl.Resources>
     <DockPanel>
         <StackPanel

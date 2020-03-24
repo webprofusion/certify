@@ -22,19 +22,21 @@ namespace Certify.UI.Windows
             }
             else if (null == context)
             {
-                throw new Exception("container must be FramekworkElement");
+                throw new Exception("container must be Framework Element");
             }
             else if (null == item)
             {
                 return null;
             }
 
-            template = null;
-
             var providerParameter = item as ProviderParameter;
             if (providerParameter == null)
             {
                 template = context.FindResource("ProviderStringParameter") as DataTemplate;
+            }
+            else if (providerParameter.IsHidden)
+            {
+                template = context.FindResource("ProviderHiddenParameter") as DataTemplate;
             }
             else if (providerParameter.IsPassword)
             {
