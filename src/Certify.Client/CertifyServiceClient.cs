@@ -356,8 +356,16 @@ namespace Certify.Client
 
         public async Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly)
         {
-            var response = await FetchAsync($"managedcertificates/performdeployment/{isPreviewOnly}/{managedCertificateId}/{taskId}");
-            return JsonConvert.DeserializeObject<List<ActionStep>>(response);
+            if (string.IsNullOrEmpty(taskId))
+            {
+                var response = await FetchAsync($"managedcertificates/performdeployment/{isPreviewOnly}/{managedCertificateId}");
+                return JsonConvert.DeserializeObject<List<ActionStep>>(response);
+            } else
+            {
+                var response = await FetchAsync($"managedcertificates/performdeployment/{isPreviewOnly}/{managedCertificateId}/{taskId}");
+                return JsonConvert.DeserializeObject<List<ActionStep>>(response);
+            }
+           
         }
 
         public async Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo info)
