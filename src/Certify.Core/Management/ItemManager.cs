@@ -338,8 +338,13 @@ namespace Certify.Management
 
             // filter and convert dictionary to list TODO: use db instead of in memory filter?
             var items = _managedCertificatesCache.Values.AsQueryable();
+
             if (filter != null)
             {
+                if (!string.IsNullOrEmpty(filter.Id))
+                {
+                    items = items.Where(i => i.Id.ToLowerInvariant().Trim() == filter.Id.ToLowerInvariant().Trim());
+                }
 
                 if (!string.IsNullOrEmpty(filter.Name))
                 {

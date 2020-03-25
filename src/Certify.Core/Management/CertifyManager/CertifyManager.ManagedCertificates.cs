@@ -340,7 +340,7 @@ namespace Certify.Management
 
             var managedCert = await GetManagedCertificate(managedCertificateId);
 
-            if (managedCert==null)
+            if (managedCert == null)
             {
                 steps.Add(new ActionStep { HasError = true, Title = "Deployment", Description = "Managed certificate not found. Could not deploy." });
             }
@@ -351,10 +351,15 @@ namespace Certify.Management
             }
 
             // perform or preview each task
-           
+
             var deploymentTasks = new List<DeploymentTask>();
 
             var taskList = managedCert.DeploymentTasks?.Where(t => string.IsNullOrEmpty(taskId) || taskId == t.Id);
+
+            if (taskList == null || !taskList.Any())
+            {
+                return new List<ActionStep> { new ActionStep { HasError = false, Description = "No matching tasks to perform." } };
+            }
 
             foreach (var taskConfig in taskList)
             {
@@ -364,7 +369,7 @@ namespace Certify.Management
                 {
                     try
                     {
-                        
+
                         var provider = DeploymentTaskProviderFactory.Create(taskConfig.TaskTypeId.ToLower(), _pluginManager.DeploymentTaskProviders);
 
                         Dictionary<string, string> credentials = null;
@@ -389,11 +394,11 @@ namespace Certify.Management
             {
                 var results = await task.Execute(log, managedCert, isPreviewOnly: isPreviewOnly);
 
-                foreach(var r in results)
+                foreach (var r in results)
                 {
                     steps.Add(new ActionStep { HasError = !r.IsSuccess, Description = r.Message });
                 }
-                
+
             }
 
             return steps;

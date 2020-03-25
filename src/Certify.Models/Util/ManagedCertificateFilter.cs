@@ -2,7 +2,10 @@
 {
     public class ManagedCertificateFilter
     {
-        // optional file on specific name
+        // optional filter on Id 
+        public string Id { get; set; }
+
+        // optional filter on specific name
         public string Name { get; set; }
 
         // optional keyword to filter name or domains

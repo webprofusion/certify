@@ -94,23 +94,27 @@ namespace Certify.Service
         }
 
         [HttpGet, Route("performdeployment/{isPreviewOnly}/{managedCertificateId}/{taskId?}")]
-        public async Task<List<ActionStep>> PerformDeploymentTask(string managedCertificateId, bool isPreviewOnly, string taskId)
+        public async Task<List<ActionStep>> PerformDeploymentTasks(string managedCertificateId, bool isPreviewOnly, string taskId)
         {
             DebugLog();
 
-            var skipDeferred = true;
-            // if a taskid has been provided, run it even if it's a deferred task
-            if (!string.IsNullOrEmpty(taskId))
-            {
-                skipDeferred = false;
-            }
+            // perform deployment task for this managed certificate including deferred items
+            return await _certifyManager.PerformDeploymentTask(null, managedCertificateId, taskId, isPreviewOnly, skipDeferredTasks: false);
+        }
 
-            return await _certifyManager.PerformDeploymentTask(null, managedCertificateId, taskId, isPreviewOnly, skipDeferred);
+
+        [HttpGet, Route("performdeployment/{isPreviewOnly}/{managedCertificateId}")]
+        public async Task<List<ActionStep>> PerformDeploymentTask(string managedCertificateId, bool isPreviewOnly)
+        {
+            DebugLog();
+
+            // perform all deployment tasks for this managed certificate including deferred items
+            return await _certifyManager.PerformDeploymentTask(null, managedCertificateId, null, isPreviewOnly, skipDeferredTasks: false);
         }
 
         [HttpPost, Route("validatedeploymenttask")]
         public async Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo info)
-        {  
+        {
             DebugLog();
             return await _certifyManager.ValidateDeploymentTask(info.ManagedCertificate, info.TaskConfig);
         }
