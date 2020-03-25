@@ -6,24 +6,17 @@ using Certify.Models;
 namespace Certify.Service.Tests.Integration
 {
     [TestClass]
-    public class AccountTests
+    public class AccountTests : ServiceTestBase
     {
-        private Client.CertifyServiceClient _client = null;
-
-        [TestInitialize]
-        public void Setup()
-        {
-            _client = new Certify.Client.CertifyServiceClient();
-        }
-
         [TestMethod]
         public async Task TestAddContact()
         {
-            var result = await _client.AddAccount(new Models.ContactRegistration {  
-                EmailAddress="testing@webprofusion.com",
-                CertificateAuthorityId=StandardCertAuthorities.LETS_ENCRYPT, 
-                AgreedToTermsAndConditions=true,  
-                IsStaging=true
+            var result = await _client.AddAccount(new Models.ContactRegistration
+            {
+                EmailAddress = "testing@webprofusion.com",
+                CertificateAuthorityId = StandardCertAuthorities.LETS_ENCRYPT,
+                AgreedToTermsAndConditions = true,
+                IsStaging = true
             });
 
             Assert.IsNotNull(result);
@@ -39,6 +32,7 @@ namespace Certify.Service.Tests.Integration
             Assert.IsNotNull(result);
         }
 
+        [Ignore]
         [TestMethod]
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public async Task TestUpdateAccount()
@@ -47,7 +41,7 @@ namespace Certify.Service.Tests.Integration
             throw new NotImplementedException("Implement Update Account");
             //var result = await _client.Update(new Models.ContactRegistration { EmailAddress = "certify@certifytheweb.com", AgreedToTermsAndConditions = true });
 
-           
+
         }
     }
 }

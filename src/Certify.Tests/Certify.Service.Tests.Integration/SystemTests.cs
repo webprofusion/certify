@@ -1,20 +1,13 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Certify.Service.Tests.Integration
 {
     [TestClass]
-    public class SystemTests
+    public class SystemTests: ServiceTestBase
     {
-        private Client.CertifyServiceClient _client = null;
-
-        [TestInitialize]
-        public void Setup()
-        {
-            _client = new Certify.Client.CertifyServiceClient();
-        }
-
         [TestMethod]
         public async Task TestVersionCheck()
         {

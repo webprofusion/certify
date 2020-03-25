@@ -27,8 +27,12 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(outputExists, "Powershell output file should exist");
             Assert.IsTrue(transcriptLogExists, "Powershell transcript log file should exist");
 
-            System.IO.File.Delete(@"C:\Temp\Certify\TestOutput\TestPSOutput.txt");
-            System.IO.File.Delete(@"C:\Temp\Certify\TestOutput\TestTranscript.txt");
+            try
+            {
+                System.IO.File.Delete(@"C:\Temp\Certify\TestOutput\TestPSOutput.txt");
+                System.IO.File.Delete(@"C:\Temp\Certify\TestOutput\TestTranscript.txt");
+            }
+            catch { }
 
         }
 

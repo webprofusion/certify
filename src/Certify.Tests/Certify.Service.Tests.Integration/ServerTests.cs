@@ -5,16 +5,8 @@ using System.Threading.Tasks;
 namespace Certify.Service.Tests.Integration
 {
     [TestClass]
-    public class ServerTests
+    public class ServerTests: ServiceTestBase
     {
-        private Client.CertifyServiceClient _client = null;
-
-        [TestInitialize]
-        public void Setup()
-        {
-            _client = new Certify.Client.CertifyServiceClient();
-        }
-
         [TestMethod]
         public async Task TestServerAvailable()
         {

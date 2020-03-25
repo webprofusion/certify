@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.AspNetCore.Builder;
 using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace Certify.API.Tests
 {
@@ -20,18 +19,18 @@ namespace Certify.API.Tests
     public class APITests
     {
         Process _apiService;
-        CertifyApiClient _client;
+        Certify _client;
 
         [TestInitialize]
         public async Task InitTests()
         {
-            _client = new Certify.API.CertifyApiClient();
+            _client = new Certify();
 
             // TODO : create API server instance instead of invoking directly
             if (_apiService == null)
             {
                 _apiService = Process.Start(@"C:\Work\GIT\certify\src\Certify.Service\bin\Debug\net462\CertifySSLManager.Service.exe");
-                
+
                 await Task.Delay(2000);
             }
         }
@@ -47,9 +46,23 @@ namespace Certify.API.Tests
         }
 
         [TestMethod]
+        public async Task CanConnectToAPIServer()
+        {
+            var result = await _client.IsAPIAvailable();
+            Assert.IsTrue(result.IsSuccess, result.Message);
+        }
+
+        [TestMethod]
+        public async Task CanFetchServerAPIVersion()
+        {
+            var result = await _client.GetSystemVersion();
+            Assert.IsTrue(result.IsSuccess, result.Message);
+        }
+
+        [TestMethod]
         public async Task CanCreateAndDeleteManagedCertificate()
         {
-            var request = new CreateRequest("Test", new List<string> {
+            var request = new ManagedCertificateCreateOptions("Test", new List<string> {
                     "test.com",
                     "www.test.com"
                 });
@@ -65,8 +78,8 @@ namespace Certify.API.Tests
 
                 Assert.IsTrue(deleteResult.IsSuccess, "Could not delete item");
             }
-            
-            Assert.IsTrue(createdOK,"Could not create item");
+
+            Assert.IsTrue(createdOK, "Could not create item");
 
         }
 

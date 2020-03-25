@@ -6,16 +6,8 @@ using Certify.Models;
 namespace Certify.Service.Tests.Integration
 {
     [TestClass]
-    public class ManagedCertificateTests
+    public class ManagedCertificateTests : ServiceTestBase
     {
-        private Client.CertifyServiceClient _client = null;
-
-        [TestInitialize]
-        public void Setup()
-        {
-            _client = new Certify.Client.CertifyServiceClient();
-        }
-
         [TestMethod]
         public async Task TestGetManagedCertificates()
         {
