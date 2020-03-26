@@ -78,6 +78,11 @@ namespace Certify.Models
         public CertRequestConfig RequestConfig { get; set; }
 
         /// <summary>
+        /// Optional list of tasks (scripts, webhooks etc) to perform after request/renewal or on demand
+        /// </summary>
+        public ObservableCollection<DeploymentTaskConfig> PreRequestTasks { get; set; }
+
+        /// <summary>
         /// Optional list of deployment tasks to perform after request/renewal or on demand
         /// </summary>
         public ObservableCollection<DeploymentTaskConfig> DeploymentTasks { get; set; }
@@ -424,30 +429,5 @@ namespace Certify.Models
         }
     }
 
-    //TODO: may deprecate, was mainly for preview of setup wizard
-    public class ManagedCertificateBinding
-    {
-        public string Hostname { get; set; }
-        public int? Port { get; set; }
-
-        /// <summary>
-        /// IP is either * (all unassigned) or a specific IP
-        /// </summary>
-        public string IP { get; set; }
-
-        public bool UseSNI { get; set; }
-        public string CertName { get; set; }
-        public RequiredActionType PlannedAction { get; set; }
-
-        /// <summary>
-        /// The primary domain is the main domain listed on the certificate
-        /// </summary>
-        public bool IsPrimaryCertificateDomain { get; set; }
-
-        /// <summary>
-        /// For SAN certificates, indicate if this name is an alternative name to be associated with
-        /// a primary domain certificate
-        /// </summary>
-        public bool IsSubjectAlternativeName { get; set; }
-    }
+  
 }

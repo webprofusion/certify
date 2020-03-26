@@ -300,20 +300,35 @@ namespace Certify.Management
             // start with a failure result, set to success when succeeding
             var result = new CertificateRequestResult { ManagedItem = managedCertificate, IsSuccess = false, Message = "" };
 
+            // migrate any existing legacy scripts/hooks etc to Pre/Post deployment tasks
+            managedCertificate = MigrateDeploymentTasks(managedCertificate);
+
             var config = managedCertificate.RequestConfig;
             try
             {
+
                 // run pre-request script, if set
-                if (!string.IsNullOrEmpty(config.PreRequestPowerShellScript))
+                /* if (!string.IsNullOrEmpty(config.PreRequestPowerShellScript))
+                 {
+                     try
+                     {
+                         var scriptOutput = await PowerShellManager.RunScript(result, config.PreRequestPowerShellScript);
+                         LogMessage(managedCertificate.Id, $"Pre-Request Script output: \n{scriptOutput}");
+                     }
+                     catch (Exception ex)
+                     {
+                         LogMessage(managedCertificate.Id, $"Pre-Request Script error:\n{ex.Message}");
+                     }
+                 }
+                 */
+
+                if (managedCertificate.PreRequestTasks?.Any() == true)
                 {
-                    try
+                    // run pre-request tasks, currently if any of these fail the request will abort
+                    var results = await PerformTaskList(log, isPreviewOnly: false, false, managedCertificate, managedCertificate.PreRequestTasks);
+                    if (results.Any(r => r.HasError))
                     {
-                        var scriptOutput = await PowerShellManager.RunScript(result, config.PreRequestPowerShellScript);
-                        LogMessage(managedCertificate.Id, $"Pre-Request Script output: \n{scriptOutput}");
-                    }
-                    catch (Exception ex)
-                    {
-                        LogMessage(managedCertificate.Id, $"Pre-Request Script error:\n{ex.Message}");
+                        result.Abort = true;
                     }
                 }
 
@@ -372,9 +387,20 @@ namespace Certify.Management
             }
             finally
             {
-                // if the request was not aborted, perform post-request actions
-                if (!result.Abort)
+                
+                // run applicable deployment tasks (whether success or failed), powershell
+                var results = await PerformTaskList(log, isPreviewOnly: false, false, managedCertificate, managedCertificate.DeploymentTasks);
+
+                /*
+                //if (!result.Abort)
                 {
+
+                   
+                    if (results.Any(r => r.HasError))
+                    {
+                        result.Abort = true;
+                    }
+
                     // run post-request script, if set
                     if (!string.IsNullOrEmpty(config.PostRequestPowerShellScript))
                     {
@@ -406,7 +432,9 @@ namespace Certify.Management
                             LogMessage(managedCertificate.Id, $"Webhook error: {ex.Message}");
                         }
                     }
+
                 }
+                */
             }
 
             return result;

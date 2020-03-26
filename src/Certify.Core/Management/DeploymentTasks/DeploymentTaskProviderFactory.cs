@@ -17,6 +17,13 @@ namespace Certify.Core.Management.DeploymentTasks
 
             var definitions = new List<DeploymentProviderDefinition>();
 
+            // add core providers
+            definitions.Add(Certify.Providers.DeploymentTasks.Core.Webhook.Definition);
+            definitions.Add(Certify.Providers.DeploymentTasks.Core.IIS.Definition);
+            definitions.Add(Certify.Providers.DeploymentTasks.Core.CertificateStore.Definition);
+            definitions.Add(Certify.Providers.DeploymentTasks.Core.PowershellScript.Definition);
+
+            // add providers from plugins
             if (providerPlugins == null)
             {
                 return definitions;

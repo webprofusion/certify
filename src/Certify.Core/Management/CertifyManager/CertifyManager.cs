@@ -358,9 +358,5 @@ namespace Certify.Management
             }
         }
 
-        public async Task<List<DeploymentProviderDefinition>> GetDeploymentProviders()
-        {
-            return await Core.Management.DeploymentTasks.DeploymentTaskProviderFactory.GetDeploymentTaskProviders(_pluginManager.DeploymentTaskProviders);
-        }
     }
 }

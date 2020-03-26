@@ -6,6 +6,14 @@ using Certify.Models.Config;
 
 namespace Certify.Config
 {
+
+    public enum TaskTriggerType
+    {
+        ALL = 10,
+        ON_SUCCESS = 20,
+        ON_ERROR = 30
+    }
+
     public class DeploymentTaskConfig
     {
 
@@ -66,5 +74,10 @@ namespace Certify.Config
         public DateTime? DateLastExecuted { get; set; }
         public string LastResult { get; set; }
         public RequestState? LastRunStatus { get; set; }
+
+        /// <summary>
+        /// The result state which triggers the task (All, Success, Error) 
+        /// </summary>
+        public TaskTriggerType TaskTrigger { get; set; } = TaskTriggerType.ALL;
     }
 }
