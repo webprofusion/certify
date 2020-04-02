@@ -33,7 +33,10 @@
         <!--  Certificate Authority Preference  -->
         <DockPanel Margin="8,0,8,8" DockPanel.Dock="Top">
             <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Certificate Authority</TextBlock>
-            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+            <StackPanel
+                Margin="0,0,0,0"
+                DockPanel.Dock="Top"
+                Orientation="Horizontal">
                 <ComboBox
                     x:Name="CertificateAuthorityList"
                     Width="180"
@@ -48,13 +51,15 @@
                 <CheckBox
                     Margin="4,4,0,4"
                     Content="Use Staging Mode (Test Certificates)"
-                    IsChecked="{Binding SelectedItem.UseStagingMode}" />
+                    IsChecked="{Binding SelectedItem.UseStagingMode}"
+                    Visibility="{Binding SelectedItem.CertificateAuthorityId, Converter={StaticResource NullCollapsedConverter}}" />
             </StackPanel>
             <TextBlock
-                Margin="8,8"
+                Margin="0,8"
                 DockPanel.Dock="Top"
                 Style="{StaticResource Instructions}"
-                Text="{Binding CertificateAuthorityDescription}" />
+                Text="{Binding CertificateAuthorityDescription}"
+                Visibility="{Binding SelectedItem.CertificateAuthorityId, Converter={StaticResource NullCollapsedConverter}}" />
         </DockPanel>
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <DockPanel Margin="8,0,8,8" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
