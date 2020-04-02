@@ -24,5 +24,15 @@
 
         // filter results to items with the given challenge provider credentials (API key usage etc)
         public string StoredCredentialKey { get; set; }
+
+        /// <summary>
+        /// Optional page index for paging results
+        /// </summary>
+        public int? PageIndex { get; set; }
+
+        /// <summary>
+        /// Optional page size for paging results
+        /// </summary>
+        public int? PageSize { get; set; }
     }
 }

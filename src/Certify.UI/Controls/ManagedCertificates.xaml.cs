@@ -148,18 +148,24 @@ namespace Certify.UI.Controls
 
         private void SelectAndFocus(object obj)
         {
-            _appViewModel.SelectedItem = obj as Models.ManagedCertificate;
+            
+            var managedCert = obj as Models.ManagedCertificate;
+            
 
-            if (lvManagedCertificates.Items.Count > 0 && lvManagedCertificates.Items.Contains(_appViewModel.SelectedItem))
+            if (lvManagedCertificates.Items.Count > 0 && lvManagedCertificates.Items.Contains(managedCert))
             {
                 lvManagedCertificates.UpdateLayout(); // ensure containers exist
 
-                if (lvManagedCertificates.ItemContainerGenerator.ContainerFromItem(_appViewModel.SelectedItem) is ListViewItem item)
+                if (lvManagedCertificates.ItemContainerGenerator.ContainerFromItem(managedCert) is ListViewItem item)
                 {
                     item.Focus();
                     item.IsSelected = true;
                 }
             }
+
+            this.Dispatcher.Invoke(new Action(() => { _appViewModel.SelectedItem = managedCert; }));
+
+          
         }
 
         private async void ListViewItem_PreviewKeyDown(object sender, KeyEventArgs e)
