@@ -83,6 +83,26 @@ namespace Certify.Management
             _serviceLog?.Information("Certify Manager Started");
 
             PerformAccountUpgrades().Wait();
+
+            PerformManagedCertificateMigrations().Wait();
+        }
+
+        private async Task PerformManagedCertificateMigrations()
+        {
+
+            IEnumerable<ManagedCertificate> list = await GetManagedCertificates();
+
+            list = list.Where(i => i.RequestConfig.WebhookUrl != null || i.RequestConfig.PreRequestPowerShellScript != null || i.RequestConfig.PostRequestPowerShellScript != null);
+
+            foreach(var i in list)
+            {
+                var result = MigrateDeploymentTasks(i);
+                if (result.Item2==true)
+                {
+                    // save change
+                    await UpdateManagedCertificate(result.Item1);
+                }
+            }
         }
 
 
@@ -190,12 +210,6 @@ namespace Certify.Management
                 }
                 _progressResults.Add(state);
             }
-        }
-
-        public async Task<bool> LoadSettingsAsync(bool skipIfLoaded)
-        {
-            await _itemManager.LoadAllManagedCertificates(skipIfLoaded);
-            return true;
         }
 
         public void ReportProgress(IProgress<RequestProgressState> progress, RequestProgressState state, bool logThisEvent = true)

@@ -58,7 +58,7 @@ namespace Certify.UI.Utils
         public Visibility Null { get; set; } = Visibility.Collapsed;
         public Visibility NotNull { get; set; } = Visibility.Visible;
 
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value == null ? Null : NotNull;
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (value == null || string.IsNullOrEmpty(value?.ToString())) ? Null : NotNull;
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }

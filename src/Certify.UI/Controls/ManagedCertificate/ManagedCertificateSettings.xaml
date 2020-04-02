@@ -258,7 +258,7 @@
                     AutomationProperties.Name="Deployment">
                     <TabItem.HeaderTemplate>
                         <DataTemplate>
-                            <managedcertificate:TabHeader HeaderText="Deployment" IconName="Cog" />
+                            <managedcertificate:TabHeader HeaderText="Deployment" IconName="Copy" />
                         </DataTemplate>
                     </TabItem.HeaderTemplate>
                     <managedcertificate:Deployment Margin="0,8,0,0" />
@@ -283,7 +283,7 @@
                     AutomationProperties.Name="Other Options">
                     <TabItem.HeaderTemplate>
                         <DataTemplate>
-                            <managedcertificate:TabHeader HeaderText="Other Options" IconName="Cog" />
+                            <managedcertificate:TabHeader HeaderText="Advanced" IconName="Cog" />
                         </DataTemplate>
                     </TabItem.HeaderTemplate>
                     <managedcertificate:MiscOptions Margin="0,8,0,0" />

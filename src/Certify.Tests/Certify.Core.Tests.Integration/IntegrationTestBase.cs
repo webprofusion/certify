@@ -40,7 +40,7 @@ namespace Certify.Core.Tests
 
         }
 
-        public ManagedCertificate GetMockManagedCertificate(string siteName, string siteId, string testDomain, string testPath)
+        public ManagedCertificate GetMockManagedCertificate(string siteName,string testDomain, string siteId =null, string testPath =null)
         {
             var dummyManagedCertificate = new ManagedCertificate
             {

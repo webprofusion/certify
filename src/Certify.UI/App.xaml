@@ -91,6 +91,11 @@
                     </Setter.Value>
                 </Setter>
             </Style>
+
+            <!--  control templates  -->
+            <DataTemplate x:Key="ProviderHiddenParameter" />
         </ResourceDictionary>
+
+
     </Application.Resources>
 </Application>

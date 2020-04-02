@@ -37,12 +37,15 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         protected ViewModel.DeploymentTaskConfigViewModel EditModel = new ViewModel.DeploymentTaskConfigViewModel(null);
 
+        public bool EditAsPostRequestTask { get; set; } = true;
+        
         public DeploymentTask()
         {
             InitializeComponent();
             DataContext = EditModel;
 
             this.StoredCredentials.ItemsSource = EditModel.FilteredCredentials;
+            EditAsPostRequestTask = true;
 
         }
 
@@ -136,14 +139,28 @@ namespace Certify.UI.Controls.ManagedCertificate
             else
             {
                 // check task name is unique for this managed cert
-                if (AppViewModel.SelectedItem.DeploymentTasks?.Any() == true)
+                if (EditAsPostRequestTask)
                 {
-                    if (AppViewModel.SelectedItem.DeploymentTasks.Any(t => t.Id != EditModel.SelectedItem.Id && t.TaskName.ToLower().Trim() == EditModel.SelectedItem.TaskName.ToLower().Trim()))
+                    if (AppViewModel.SelectedItem.PostRequestTasks?.Any() == true)
                     {
-                        MessageBox.Show("A unique Task Name is required, this task name is already in use for this managed certificate.", msgTitle);
-                        return false;
+                        if (AppViewModel.SelectedItem.PostRequestTasks.Any(t => t.Id != EditModel.SelectedItem.Id && t.TaskName.ToLower().Trim() == EditModel.SelectedItem.TaskName.ToLower().Trim()))
+                        {
+                            MessageBox.Show("A unique Task Name is required, this task name is already in use for this managed certificate.", msgTitle);
+                            return false;
+                        }
+                    }
+                } else
+                {
+                    if (AppViewModel.SelectedItem.PreRequestTasks?.Any() == true)
+                    {
+                        if (AppViewModel.SelectedItem.PreRequestTasks.Any(t => t.Id != EditModel.SelectedItem.Id && t.TaskName.ToLower().Trim() == EditModel.SelectedItem.TaskName.ToLower().Trim()))
+                        {
+                            MessageBox.Show("A unique Task Name is required, this pre-request task name is already in use for this managed certificate.", msgTitle);
+                            return false;
+                        }
                     }
                 }
+               
             }
 
             // if remote target, check target specified. TODO: Could also check host resolves.
@@ -166,26 +183,47 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return false;
             }
 
-            if (AppViewModel.SelectedItem.DeploymentTasks == null)
+            if (EditAsPostRequestTask)
             {
-                AppViewModel.SelectedItem.DeploymentTasks = new System.Collections.ObjectModel.ObservableCollection<DeploymentTaskConfig>();
+                if (AppViewModel.SelectedItem.PostRequestTasks == null)
+                {
+                    AppViewModel.SelectedItem.PostRequestTasks = new System.Collections.ObjectModel.ObservableCollection<DeploymentTaskConfig>();
+                }
+
+                // add/update edited deployment task in selectedItem config
+                if (EditModel.SelectedItem.Id == null)
+                {
+                    //add new
+                    EditModel.SelectedItem.Id = Guid.NewGuid().ToString();
+                    AppViewModel.SelectedItem.PostRequestTasks.Add(EditModel.SelectedItem);
+                }
+                else
+                {
+                    var original = AppViewModel.SelectedItem.PostRequestTasks.First(f => f.Id == EditModel.SelectedItem.Id);
+                    AppViewModel.SelectedItem.PostRequestTasks[AppViewModel.SelectedItem.PostRequestTasks.IndexOf(original)] = EditModel.SelectedItem;
+                }
+            } else
+            {
+                if (AppViewModel.SelectedItem.PreRequestTasks == null)
+                {
+                    AppViewModel.SelectedItem.PreRequestTasks = new System.Collections.ObjectModel.ObservableCollection<DeploymentTaskConfig>();
+                }
+
+                // add/update edited deployment task in selectedItem config
+                if (EditModel.SelectedItem.Id == null)
+                {
+                    //add new
+                    EditModel.SelectedItem.Id = Guid.NewGuid().ToString();
+                    AppViewModel.SelectedItem.PreRequestTasks.Add(EditModel.SelectedItem);
+                }
+                else
+                {
+                    var original = AppViewModel.SelectedItem.PreRequestTasks.First(f => f.Id == EditModel.SelectedItem.Id);
+                    AppViewModel.SelectedItem.PostRequestTasks[AppViewModel.SelectedItem.PreRequestTasks.IndexOf(original)] = EditModel.SelectedItem;
+                }
             }
 
-            // add/update edited deployment task in selectedItem config
-            if (EditModel.SelectedItem.Id == null)
-            {
-                //add new
-                EditModel.SelectedItem.Id = Guid.NewGuid().ToString();
-                AppViewModel.SelectedItem.DeploymentTasks.Add(EditModel.SelectedItem);
-            }
-            else
-            {
-                var original = AppViewModel.SelectedItem.DeploymentTasks.First(f => f.Id == EditModel.SelectedItem.Id);
-                AppViewModel.SelectedItem.DeploymentTasks[AppViewModel.SelectedItem.DeploymentTasks.IndexOf(original)] = EditModel.SelectedItem;
-            }
-
-
-
+           
             return true;
         }
 

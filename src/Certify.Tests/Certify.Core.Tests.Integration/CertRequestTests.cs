@@ -510,5 +510,145 @@ namespace Certify.Core.Tests
                 }
             }
         }
+
+        [TestMethod, TestCategory("Tasks")]
+        public async Task TestRunPreAndPostTasks()
+        {
+
+            var managedCertificate = GetMockManagedCertificate("PreDeploymentTask1", testSiteDomain);
+
+            managedCertificate.PreRequestTasks = new ObservableCollection<Config.DeploymentTaskConfig> {
+                    new Config.DeploymentTaskConfig {
+                        Id = Guid.NewGuid().ToString(),
+                        TaskTypeId= Providers.DeploymentTasks.Core.MockTask.Definition.Id,
+                        TaskName="Pre Task 1",
+                        IsFatalOnError=true,
+                        Parameters = new List<Models.Config.ProviderParameterSetting>
+                        {
+                            new Models.Config.ProviderParameterSetting("message", "Hello Pre Task 1"),
+                            new Models.Config.ProviderParameterSetting("throw", "false"),
+                        }
+                    },
+                     new Config.DeploymentTaskConfig {
+                        Id = Guid.NewGuid().ToString(),
+                        TaskTypeId= Providers.DeploymentTasks.Core.MockTask.Definition.Id,
+                        TaskName="Pre Task 2",
+                        IsFatalOnError=true,
+                        Parameters = new List<Models.Config.ProviderParameterSetting>
+                        {
+                            new Models.Config.ProviderParameterSetting("message", "Hello Pre Task 2"),
+                            new Models.Config.ProviderParameterSetting("throw", "false"),
+                        }
+                    }
+            };
+
+            managedCertificate.PostRequestTasks = new ObservableCollection<Config.DeploymentTaskConfig> {
+                    new Config.DeploymentTaskConfig {
+                        Id = Guid.NewGuid().ToString(),
+                        TaskTypeId= Providers.DeploymentTasks.Core.MockTask.Definition.Id,
+                        TaskName="Post Task 1",
+                        IsFatalOnError=true,
+                        Parameters = new List<Models.Config.ProviderParameterSetting>
+                        {
+                            new Models.Config.ProviderParameterSetting("message", "Hello Post Task 1"),
+                            new Models.Config.ProviderParameterSetting("throw", "false"),
+                        }
+                    },
+                     new Config.DeploymentTaskConfig {
+                        Id = Guid.NewGuid().ToString(),
+                        TaskTypeId= Providers.DeploymentTasks.Core.MockTask.Definition.Id,
+                        TaskName="Post Task 2",
+                        IsFatalOnError=true,
+                        Parameters = new List<Models.Config.ProviderParameterSetting>
+                        {
+                            new Models.Config.ProviderParameterSetting("message", "Hello Post Task 2"),
+                            new Models.Config.ProviderParameterSetting("throw", "false"),
+                        }
+                    }
+            };
+
+            try
+            {
+                var result = await certifyManager.PerformCertificateRequest(_log, managedCertificate, skipRequest: true);
+
+                //ensure process success
+                Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");
+            }
+            finally
+            {
+                await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
+            }
+        }
+
+
+        [TestMethod, TestCategory("Tasks")]
+        public async Task TestRunPreAndPostTasksWithFailures()
+        {
+
+            var managedCertificate = GetMockManagedCertificate("PreDeploymentTask2", testSiteDomain);
+
+            managedCertificate.PreRequestTasks = new ObservableCollection<Config.DeploymentTaskConfig> {
+                    new Config.DeploymentTaskConfig {
+                        Id = Guid.NewGuid().ToString(),
+                        TaskTypeId= Providers.DeploymentTasks.Core.MockTask.Definition.Id,
+                        TaskName="Pre Task 1",
+                        IsFatalOnError=true,
+                        Parameters = new List<Models.Config.ProviderParameterSetting>
+                        {
+                            new Models.Config.ProviderParameterSetting("message", "Hello Pre Task 1"),
+                            new Models.Config.ProviderParameterSetting("throw", "true"),
+                        }
+                    },
+                     new Config.DeploymentTaskConfig {
+                        Id = Guid.NewGuid().ToString(),
+                        TaskTypeId= Providers.DeploymentTasks.Core.MockTask.Definition.Id,
+                        TaskName="Pre Task 2",
+                        IsFatalOnError=true,
+                        Parameters = new List<Models.Config.ProviderParameterSetting>
+                        {
+                            new Models.Config.ProviderParameterSetting("message", "Hello Pre Task 2"),
+                            new Models.Config.ProviderParameterSetting("throw", "false"),
+                        }
+                    }
+            };
+
+            managedCertificate.PostRequestTasks = new ObservableCollection<Config.DeploymentTaskConfig> {
+                    new Config.DeploymentTaskConfig {
+                        Id = Guid.NewGuid().ToString(),
+                        TaskTypeId= Providers.DeploymentTasks.Core.MockTask.Definition.Id,
+                        TaskName="Post Task 1",
+                        IsFatalOnError=true,
+                        Parameters = new List<Models.Config.ProviderParameterSetting>
+                        {
+                            new Models.Config.ProviderParameterSetting("message", "Hello Post Task 1"),
+                            new Models.Config.ProviderParameterSetting("throw", "false"),
+                        }
+                    },
+                     new Config.DeploymentTaskConfig {
+                        Id = Guid.NewGuid().ToString(),
+                        TaskTypeId= Providers.DeploymentTasks.Core.MockTask.Definition.Id,
+                        TaskName="Post Task 2",
+                        IsFatalOnError=true,
+                        Parameters = new List<Models.Config.ProviderParameterSetting>
+                        {
+                            new Models.Config.ProviderParameterSetting("message", "Hello Post Task 2"),
+                            new Models.Config.ProviderParameterSetting("throw", "false"),
+                        }
+                    }
+            };
+
+            try
+            {
+                var result = await certifyManager.PerformCertificateRequest(_log, managedCertificate, skipRequest: true);
+
+                //ensure 1 step fails
+                Assert.IsTrue(result.Actions.First(s => s.Key == "PreRequestTasks").Substeps.Count(a => a.HasError) == 1, "One pre-request step should fail");
+                Assert.IsTrue(result.Actions.First(s => s.Key == "PostRequestTasks").Substeps.Count(a => !a.HasError) == 2, "Two post-request steps should succeed");
+            }
+            finally
+            {
+                await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
+            }
+        }
     }
 }

@@ -16,8 +16,6 @@ namespace Certify.Management
 
         Task<List<ActionStep>> RunServerDiagnostics(StandardServerTypes serverType, string siteId);
 
-        Task<bool> LoadSettingsAsync(bool skipIfLoaded);
-
         Task<ManagedCertificate> GetManagedCertificate(string id);
 
         Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter = null);
@@ -50,7 +48,7 @@ namespace Certify.Management
 
         Task<CertificateRequestResult> FetchCertificate(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false);
 
-        Task<CertificateRequestResult> PerformCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool resumePaused = false);
+        Task<CertificateRequestResult> PerformCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool resumePaused = false, bool skipRequest = false);
 
         Task<List<DomainOption>> GetDomainOptionsFromSite(string siteId);
 

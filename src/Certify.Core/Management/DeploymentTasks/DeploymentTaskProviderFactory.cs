@@ -18,10 +18,14 @@ namespace Certify.Core.Management.DeploymentTasks
             var definitions = new List<DeploymentProviderDefinition>();
 
             // add core providers
-            definitions.Add(Certify.Providers.DeploymentTasks.Core.Webhook.Definition);
-            definitions.Add(Certify.Providers.DeploymentTasks.Core.IIS.Definition);
-            definitions.Add(Certify.Providers.DeploymentTasks.Core.CertificateStore.Definition);
-            definitions.Add(Certify.Providers.DeploymentTasks.Core.PowershellScript.Definition);
+            definitions.Add(Providers.DeploymentTasks.Core.Webhook.Definition);
+            definitions.Add(Providers.DeploymentTasks.Core.IIS.Definition);
+            definitions.Add(Providers.DeploymentTasks.Core.CertificateStore.Definition);
+            definitions.Add(Providers.DeploymentTasks.Core.PowershellScript.Definition);
+
+#if DEBUG
+            definitions.Add(Providers.DeploymentTasks.Core.MockTask.Definition);
+#endif
 
             // add providers from plugins
             if (providerPlugins == null)
@@ -42,6 +46,33 @@ namespace Certify.Core.Management.DeploymentTasks
 
         public static IDeploymentTaskProvider Create(string taskTypeId, List<IDeploymentTaskProviderPlugin> providerPlugins)
         {
+            if (taskTypeId == null) {
+                return null;
+            }
+
+            taskTypeId = taskTypeId.ToLower();
+
+            if(taskTypeId == Providers.DeploymentTasks.Core.Webhook.Definition.Id.ToLower())
+            {
+                return new Certify.Providers.DeploymentTasks.Core.Webhook();
+            }
+            else if (taskTypeId == Providers.DeploymentTasks.Core.IIS.Definition.Id.ToLower())
+            {
+                return new Certify.Providers.DeploymentTasks.Core.IIS();
+            }
+            else if (taskTypeId == Providers.DeploymentTasks.Core.CertificateStore.Definition.Id.ToLower())
+            {
+                return new Certify.Providers.DeploymentTasks.Core.CertificateStore();
+            }
+            else if (taskTypeId == Providers.DeploymentTasks.Core.PowershellScript.Definition.Id.ToLower())
+            {
+                return new Certify.Providers.DeploymentTasks.Core.PowershellScript();
+            }
+            else if (taskTypeId == Providers.DeploymentTasks.Core.MockTask.Definition.Id.ToLower())
+            {
+                return new Certify.Providers.DeploymentTasks.Core.MockTask();
+            }
+
             if (providerPlugins == null)
             {
                 return null;

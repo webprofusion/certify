@@ -85,7 +85,7 @@ namespace Certify.Models
         /// <summary>
         /// Optional list of deployment tasks to perform after request/renewal or on demand
         /// </summary>
-        public ObservableCollection<DeploymentTaskConfig> DeploymentTasks { get; set; }
+        public ObservableCollection<DeploymentTaskConfig> PostRequestTasks { get; set; }
 
         /// <summary>
         /// Unique ID for this managed item

@@ -20,9 +20,12 @@ namespace Certify.UI.Windows
     /// </summary>
     public partial class EditDeploymentTask
     {
-        public EditDeploymentTask(DeploymentTaskConfig config)
+  
+        public EditDeploymentTask(DeploymentTaskConfig config, bool editAsPostRequestTask)
         {
             InitializeComponent();
+
+            DeploymentTaskEditor.EditAsPostRequestTask = editAsPostRequestTask;
 
             if (config != null)
             {

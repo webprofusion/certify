@@ -82,17 +82,27 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void AddDeploymentTask_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            var dialog = new EditDeploymentTask(null)
+            var dialog = new EditDeploymentTask(null, true)
             {
-               Owner = Window.GetWindow(this)
+                Owner = Window.GetWindow(this)
             };
             dialog.Show();
         }
 
+        private void AddPreRequestTask_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            var dialog = new EditDeploymentTask(null, false)
+            {
+                Owner = Window.GetWindow(this)
+            };
+            dialog.Show();
+        }
+
+
         private void EditDeploymentTask_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             var config = (sender as Button).DataContext as DeploymentTaskConfig;
-            var dialog = new EditDeploymentTask(config)
+            var dialog = new EditDeploymentTask(config, true)
             {
                 Owner = Window.GetWindow(this)
             };
@@ -110,21 +120,22 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return;
             }
 
-            if (MessageBox.Show("Run task '"+task.TaskName+"' now? The most recent certificate details will be used.", "Run Task?", MessageBoxButton.YesNo)== MessageBoxResult.Yes)
+            if (MessageBox.Show("Run task '" + task.TaskName + "' now? The most recent certificate details will be used.", "Run Task?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 // execute task now
                 Mouse.OverrideCursor = Cursors.Wait;
-                var results = await UI.ViewModel.AppViewModel.Current.PerformDeployment(ItemViewModel.SelectedItem.Id, task.Id, isPreviewOnly:false);
+                var results = await UI.ViewModel.AppViewModel.Current.PerformDeployment(ItemViewModel.SelectedItem.Id, task.Id, isPreviewOnly: false);
                 Mouse.OverrideCursor = Cursors.Arrow;
 
                 if (results.Any(r => r.HasError))
                 {
                     var result = results.First(r => r.HasError == true);
                     MessageBox.Show($"The deployment task failed to complete. {result.Title} :: {result.Description}");
-                } else
+                }
+                else
                 {
                     (App.Current as App).ShowNotification("The deployment task completed with no reported errors.");
-                    
+
                 }
             }
         }
@@ -134,7 +145,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             var task = (sender as Button).DataContext as DeploymentTaskConfig;
             if (MessageBox.Show("Are you sure you wish to delete task '" + task.TaskName + "'?", "Delete Task?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
-                ItemViewModel.SelectedItem.DeploymentTasks.Remove(task);
+                ItemViewModel.SelectedItem.PostRequestTasks.Remove(task);
             }
         }
     }

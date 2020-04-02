@@ -206,21 +206,137 @@
             <DockPanel DockPanel.Dock="Top">
 
                 <StackPanel DockPanel.Dock="Top">
-                    <TextBlock Margin="0,16,0,0" Style="{StaticResource Subheading}">Additional Deployment Tasks</TextBlock>
-                    <StackPanel Orientation="Horizontal">
+                    <TextBlock Margin="0,16,0,0" Style="{StaticResource Subheading}">Deployment Tasks</TextBlock>
+                    <StackPanel Orientation="Vertical">
                         <TextBlock Style="{StaticResource Instructions}" Text="You can optionally add any number of additional deployment tasks:" />
+
                         <Button
                             Width="80"
+                            Height="20"
                             Margin="8,0,0,0"
-                            HorizontalAlignment="Right"
+                            HorizontalAlignment="Left"
                             Click="AddDeploymentTask_Click"
-                            Content="Add"
-                            DockPanel.Dock="Left" />
+                            DockPanel.Dock="Left">
+                            <StackPanel Orientation="Horizontal">
+                                <fa:ImageAwesome
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource AccentColorBrush3}"
+                                    Icon="PlusCircle" />
+                                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center">Add</TextBlock>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                     <ItemsControl
-                        x:Name="DeploymentTasks"
+                        x:Name="PostRequestTasks"
                         Margin="0,16,0,0"
-                        ItemsSource="{Binding SelectedItem.DeploymentTasks}">
+                        ItemsSource="{Binding SelectedItem.PostRequestTasks}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,8,0,8">
+
+                                    <DockPanel>
+                                        <fa:FontAwesome
+                                            Width="32"
+                                            Height="32"
+                                            Margin="0,8,0,0"
+                                            HorizontalAlignment="Stretch"
+                                            DockPanel.Dock="Left"
+                                            Icon="cogs" />
+
+                                        <Button
+                                            x:Name="DeleteDeploymentTask"
+                                            Width="24"
+                                            Height="20"
+                                            Margin="8,0,0,0"
+                                            VerticalAlignment="Top"
+                                            Click="DeleteDeploymentTask_Click"
+                                            CommandParameter="{Binding}"
+                                            DockPanel.Dock="Right">
+                                            <StackPanel Orientation="Horizontal">
+                                                <fa:ImageAwesome
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{DynamicResource AccentColorBrush3}"
+                                                    Icon="Trash" />
+
+                                            </StackPanel>
+                                        </Button>
+                                        <Button
+                                            Width="60"
+                                            Height="20"
+                                            Margin="8,0,0,0"
+                                            VerticalAlignment="Top"
+                                            Click="EditDeploymentTask_Click"
+                                            CommandParameter="{Binding}"
+                                            DockPanel.Dock="Right">
+                                            <StackPanel Orientation="Horizontal">
+                                                <fa:ImageAwesome
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{DynamicResource AccentColorBrush3}"
+                                                    Icon="Edit" />
+                                                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center">Edit</TextBlock>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button
+                                            x:Name="RunDeploymentTask"
+                                            Width="60"
+                                            Height="20"
+                                            Margin="8,0,0,0"
+                                            VerticalAlignment="Top"
+                                            Click="RunDeploymentTask_Click"
+                                            CommandParameter="{Binding}"
+                                            DockPanel.Dock="Right">
+                                            <StackPanel Orientation="Horizontal">
+                                                <fa:ImageAwesome
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{DynamicResource AccentColorBrush3}"
+                                                    Icon="Play" />
+                                                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center">Run</TextBlock>
+                                            </StackPanel>
+                                        </Button>
+
+                                        <StackPanel Margin="0,0,0,0" DockPanel.Dock="Left">
+                                            <TextBlock FontWeight="SemiBold" Text="{Binding TaskName}" />
+                                            <TextBlock
+                                                DockPanel.Dock="Left"
+                                                Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                                                Text="{Binding Description}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Top">
+                    <TextBlock Margin="0,16,0,0" Style="{StaticResource Subheading}">Pre-Request Tasks</TextBlock>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Style="{StaticResource Instructions}" Text="You can optionally add any number of tasks to run before the certificate request begins:" />
+                        <Button
+                            Width="80"
+                            Height="20"
+                            Margin="8,0,0,0"
+                            HorizontalAlignment="Left"
+                            Click="AddPreRequestTask_Click"
+                            DockPanel.Dock="Left">
+                            <StackPanel Orientation="Horizontal">
+                                <fa:ImageAwesome
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource AccentColorBrush3}"
+                                    Icon="PlusCircle" />
+                                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center">Add</TextBlock>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                    <ItemsControl
+                        x:Name="PreRequestTasks"
+                        Margin="0,16,0,0"
+                        ItemsSource="{Binding SelectedItem.PreRequestTasks}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Margin="0,8,0,8">

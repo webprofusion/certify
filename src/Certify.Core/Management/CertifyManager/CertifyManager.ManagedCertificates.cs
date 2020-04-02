@@ -18,7 +18,10 @@ namespace Certify.Management
 
         public async Task<ManagedCertificate> GetManagedCertificate(string id) => await _itemManager.GetManagedCertificate(id);
 
-        public async Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter = null) => await _itemManager.GetManagedCertificates(filter, true);
+        public async Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter = null)
+        {
+            return await _itemManager.GetManagedCertificates(filter);
+        }
 
         public async Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate site)
         {

@@ -9,7 +9,8 @@ namespace Certify.Config
 
     public enum TaskTriggerType
     {
-        ALL = 10,
+        NOT_ENABLED = 0,
+        ANY_STATUS = 10,
         ON_SUCCESS = 20,
         ON_ERROR = 30
     }
@@ -78,6 +79,6 @@ namespace Certify.Config
         /// <summary>
         /// The result state which triggers the task (All, Success, Error) 
         /// </summary>
-        public TaskTriggerType TaskTrigger { get; set; } = TaskTriggerType.ALL;
+        public TaskTriggerType TaskTrigger { get; set; } = TaskTriggerType.ANY_STATUS;
     }
 }

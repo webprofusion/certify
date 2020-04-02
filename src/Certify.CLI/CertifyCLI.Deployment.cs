@@ -21,7 +21,7 @@ namespace Certify.CLI
                 {
                     // identify specific task
                     Console.WriteLine("Performing deployment task '" + taskName + "'..");
-                    var task = managedCert.DeploymentTasks.FirstOrDefault(t => t.TaskName.ToLowerInvariant().Trim() == taskName.ToLowerInvariant().Trim());
+                    var task = managedCert.PostRequestTasks.FirstOrDefault(t => t.TaskName.ToLowerInvariant().Trim() == taskName.ToLowerInvariant().Trim());
 
                     if (task != null)
                     {

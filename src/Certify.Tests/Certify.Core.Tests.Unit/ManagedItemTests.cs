@@ -150,7 +150,7 @@ namespace Certify.Core.Tests.Unit
 
             // create competing sets of tasks to create managed items
 
-            var numItems = 1000;
+            var numItems = 100; // 100,000 items takes about 40 mins to generate
 
             // now attempt async creation of bindings
             var taskSet = new Task[numItems];
@@ -159,13 +159,10 @@ namespace Certify.Core.Tests.Unit
 
             for (var i = 0; i < numItems; i++)
             {
-                taskSet[i] = Task.Run(async () =>
-              {
-                  testItem.Name = "MultiTest_" + i;
-                  testItem.Id = Guid.NewGuid().ToString();
-                  await itemManager.UpdatedManagedCertificate(testItem);
+                testItem.Name = "MultiTest_" + i;
+                testItem.Id = Guid.NewGuid().ToString();
 
-              });
+                taskSet[i] =  itemManager.UpdatedManagedCertificate(testItem);
             }
 
             // create a large number of managed items, to see if we encounter isses saving/loading from DB async       
@@ -189,7 +186,7 @@ namespace Certify.Core.Tests.Unit
 #if DEBUG
                 await itemManager.DeleteManagedCertificatesByName("MultiTest_");
 #endif
-                
+
             }
         }
     }

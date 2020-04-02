@@ -32,7 +32,7 @@ namespace Certify.Management
                 return steps;
             }
 
-            var taskList = managedCert.DeploymentTasks?.Where(t => string.IsNullOrEmpty(taskId) || taskId == t.Id);
+            var taskList = managedCert.PostRequestTasks?.Where(t => string.IsNullOrEmpty(taskId) || taskId == t.Id);
 
             if (taskList == null || !taskList.Any())
             {
@@ -44,6 +44,11 @@ namespace Certify.Management
 
         private async Task<List<ActionStep>> PerformTaskList(ILog log, bool isPreviewOnly, bool skipDeferredTasks, ManagedCertificate managedCert, IEnumerable<DeploymentTaskConfig> taskList)
         {
+            if (taskList == null || !taskList.Any())
+            {
+                // nothing to do
+                return new List<ActionStep>();
+            }
 
             if (log == null)
             {
@@ -79,20 +84,106 @@ namespace Certify.Management
                     }
                     catch (Exception exp)
                     {
-                        steps.Add(new ActionStep { HasError = true, Title = "Deployment Task: " + taskConfig.TaskName, Description = "Cannot create task provider for deployment task: " + exp.ToString() });
+                        steps.Add(new ActionStep { HasError = true, Title = "Task: " + taskConfig.TaskName, Description = "Cannot create task provider for deployment task: " + exp.ToString() });
                     }
                 }
             }
 
+            ActionStep previousActionStep = null;
+            bool shouldRunCurrentTask = true;
+            string taskTriggerReason = "Task will run for any status";
+
             foreach (var task in deploymentTasks)
             {
-                var results = await task.Execute(log, managedCert, isPreviewOnly: isPreviewOnly);
-
-                foreach (var r in results)
+                if (task.TaskConfig.TaskTrigger == TaskTriggerType.ANY_STATUS)
                 {
-                    steps.Add(new ActionStep { HasError = !r.IsSuccess, Description = r.Message });
+                    shouldRunCurrentTask = true;
+                    taskTriggerReason = "Task will run for any status";
+                }
+                else if (task.TaskConfig.TaskTrigger == TaskTriggerType.NOT_ENABLED)
+                {
+                    shouldRunCurrentTask = false;
+                    taskTriggerReason = "Task is not enabled and will be skipped.";
+                }
+                else if (task.TaskConfig.TaskTrigger == TaskTriggerType.ON_SUCCESS)
+                {
+                    if (previousActionStep == null || previousActionStep.HasError == false)
+                    {
+                        shouldRunCurrentTask = true;
+                        taskTriggerReason = "Task is enabled and previous step was successful.";
+                    }
+                    else if (previousActionStep.HasError == true)
+                    {
+                        shouldRunCurrentTask = false;
+                        taskTriggerReason = "Task is enabled but will not run because previous step was unsuccessful.";
+                    }
+
+                }
+                else if (task.TaskConfig.TaskTrigger == TaskTriggerType.ON_ERROR)
+                {
+                    if (previousActionStep == null || previousActionStep.HasError == false)
+                    {
+                        shouldRunCurrentTask = false;
+                        taskTriggerReason = "Task is enabled but will not run because previous step was successful.";
+                    }
+                    else if (previousActionStep.HasError == true)
+                    {
+                        shouldRunCurrentTask = true;
+                        taskTriggerReason = "Task is enabled and will run because previous step was unsuccessful.";
+                    }
+
                 }
 
+                if (task.TaskConfig.IsDeferred && skipDeferredTasks)
+                {
+                    shouldRunCurrentTask = false;
+                    taskTriggerReason = "Task is enabled but will not run because execution is deferred.";
+                }
+
+
+                List<ActionResult> taskResults = new List<ActionResult>();
+
+                if (shouldRunCurrentTask)
+                {
+                    taskResults = await task.Execute(log, managedCert, isPreviewOnly: isPreviewOnly);
+                }
+                else
+                {
+                    taskResults.Add(new ActionResult(taskTriggerReason, true));
+                }
+
+                var subSteps = new List<ActionStep>();
+
+                var stepIndex = 1;
+
+                foreach (var r in taskResults)
+                {
+                    subSteps.Add(new ActionStep
+                    {
+                        HasError = !r.IsSuccess,
+                        Description = r.Message,
+                        Title = $"Task Step {stepIndex} of {task.TaskConfig.TaskName}",
+                        Key = task.TaskConfig.Id + "_" + stepIndex,
+                        Category = "Task Step"
+                    });
+
+                    stepIndex++;
+                }
+
+                var currentStep = new ActionStep
+                {
+                    Key = task.TaskConfig.Id,
+                    Title = task.TaskConfig.TaskName,
+                    Category = "Task",
+                    HasError = (taskResults != null && taskResults.Any(t => t.IsSuccess == false) ? true : false),
+                    Description = taskTriggerReason,
+                    HasWarning = !shouldRunCurrentTask,
+                    Substeps = subSteps
+                };
+
+                steps.Add(currentStep);
+
+                previousActionStep = currentStep;
             }
 
             return steps;
@@ -118,8 +209,10 @@ namespace Certify.Management
         /// </summary>
         /// <param name="managedCertificate"></param>
         /// <returns></returns>
-        public ManagedCertificate MigrateDeploymentTasks(ManagedCertificate managedCertificate)
+        public Tuple<ManagedCertificate,bool> MigrateDeploymentTasks(ManagedCertificate managedCertificate)
         {
+            bool requiredMigration = false;
+
             if (!string.IsNullOrEmpty(managedCertificate.RequestConfig.PreRequestPowerShellScript))
             {
                 if (managedCertificate.PreRequestTasks == null)
@@ -144,6 +237,7 @@ namespace Certify.Management
                 if (!managedCertificate.PreRequestTasks.Any(t => t.TaskName == "[Pre-Request Script]"))
                 {
                     managedCertificate.PreRequestTasks.Insert(0, task);
+                    requiredMigration = true;
                 }
 
                 managedCertificate.RequestConfig.PreRequestPowerShellScript = null;
@@ -151,9 +245,9 @@ namespace Certify.Management
 
             if (!string.IsNullOrEmpty(managedCertificate.RequestConfig.PostRequestPowerShellScript))
             {
-                if (managedCertificate.DeploymentTasks == null)
+                if (managedCertificate.PostRequestTasks == null)
                 {
-                    managedCertificate.DeploymentTasks = new System.Collections.ObjectModel.ObservableCollection<DeploymentTaskConfig>();
+                    managedCertificate.PostRequestTasks = new System.Collections.ObjectModel.ObservableCollection<DeploymentTaskConfig>();
                 }
 
                 //add post-request script task
@@ -171,9 +265,10 @@ namespace Certify.Management
                         }
                 };
 
-                if (!managedCertificate.DeploymentTasks.Any(t => t.TaskName == "[Post-Request Script]"))
+                if (!managedCertificate.PostRequestTasks.Any(t => t.TaskName == "[Post-Request Script]"))
                 {
-                    managedCertificate.DeploymentTasks.Insert(0, task);
+                    managedCertificate.PostRequestTasks.Insert(0, task);
+                    requiredMigration = true;
                 }
 
                 managedCertificate.RequestConfig.PostRequestPowerShellScript = null;
@@ -181,21 +276,30 @@ namespace Certify.Management
 
             if (!string.IsNullOrEmpty(managedCertificate.RequestConfig.WebhookUrl))
             {
-                if (managedCertificate.DeploymentTasks == null)
+                if (managedCertificate.PostRequestTasks == null)
                 {
-                    managedCertificate.DeploymentTasks = new System.Collections.ObjectModel.ObservableCollection<DeploymentTaskConfig>();
+                    managedCertificate.PostRequestTasks = new System.Collections.ObjectModel.ObservableCollection<DeploymentTaskConfig>();
                 }
 
                 //add post-request script task for webhook, migrate trigger type to task trigger type
 
-                var triggerType = TaskTriggerType.ALL;
-                if (managedCertificate.RequestConfig.WebhookTrigger == Webhook.ON_SUCCESS)
+                var triggerType = TaskTriggerType.ANY_STATUS;
+
+                if (managedCertificate.RequestConfig.WebhookTrigger == Webhook.ON_NONE)
+                {
+                    triggerType = TaskTriggerType.NOT_ENABLED;
+                }
+                else if (managedCertificate.RequestConfig.WebhookTrigger == Webhook.ON_SUCCESS)
                 {
                     triggerType = TaskTriggerType.ON_SUCCESS;
                 }
                 else if (managedCertificate.RequestConfig.WebhookTrigger == Webhook.ON_ERROR)
                 {
                     triggerType = TaskTriggerType.ON_ERROR;
+                }
+                else if (managedCertificate.RequestConfig.WebhookTrigger == Webhook.ON_SUCCESS_OR_ERROR)
+                {
+                    triggerType = TaskTriggerType.ANY_STATUS;
                 }
 
                 var task = new DeploymentTaskConfig
@@ -214,15 +318,18 @@ namespace Certify.Management
                         }
                 };
 
-                if (!managedCertificate.DeploymentTasks.Any(t => t.TaskName == "[Post-Request Webhook]"))
+                if (!managedCertificate.PostRequestTasks.Any(t => t.TaskName == "[Post-Request Webhook]"))
                 {
-                    managedCertificate.DeploymentTasks.Insert(0, task);
+                    managedCertificate.PostRequestTasks.Insert(0, task);
+                    requiredMigration = true;
                 }
 
                 managedCertificate.RequestConfig.WebhookUrl = null;
+                managedCertificate.RequestConfig.WebhookTrigger = Webhook.ON_NONE;
+
             }
 
-            return managedCertificate;
+            return new Tuple<ManagedCertificate, bool>(managedCertificate, requiredMigration);
         }
     }
 }

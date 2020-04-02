@@ -161,7 +161,7 @@ namespace Certify.API
                 if (!string.IsNullOrEmpty(taskId))
                 {
                     // identify specific task
-                    var task = managedCert.DeploymentTasks.FirstOrDefault(t => t.Id.ToLowerInvariant().Trim() == taskId.ToLowerInvariant().Trim());
+                    var task = managedCert.PostRequestTasks.FirstOrDefault(t => t.Id.ToLowerInvariant().Trim() == taskId.ToLowerInvariant().Trim());
 
                     if (task != null)
                     {
