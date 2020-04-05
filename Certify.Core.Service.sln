@@ -69,6 +69,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{9A70DE
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Service", "src\Certify.Service\Certify.Service.csproj", "{CBB8E5C8-D605-4CCC-93AD-0BBCA37735DD}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransIP", "src\Certify.Providers\DNS\TransIP\TransIP.csproj", "{BCF0B252-5F61-42AA-918E-0C64C0770392}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -253,6 +255,14 @@ Global
 		{CBB8E5C8-D605-4CCC-93AD-0BBCA37735DD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CBB8E5C8-D605-4CCC-93AD-0BBCA37735DD}.Release|x64.ActiveCfg = Release|Any CPU
 		{CBB8E5C8-D605-4CCC-93AD-0BBCA37735DD}.Release|x64.Build.0 = Release|Any CPU
+		{BCF0B252-5F61-42AA-918E-0C64C0770392}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCF0B252-5F61-42AA-918E-0C64C0770392}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BCF0B252-5F61-42AA-918E-0C64C0770392}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BCF0B252-5F61-42AA-918E-0C64C0770392}.Debug|x64.Build.0 = Debug|Any CPU
+		{BCF0B252-5F61-42AA-918E-0C64C0770392}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BCF0B252-5F61-42AA-918E-0C64C0770392}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BCF0B252-5F61-42AA-918E-0C64C0770392}.Release|x64.ActiveCfg = Release|Any CPU
+		{BCF0B252-5F61-42AA-918E-0C64C0770392}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -280,6 +290,7 @@ Global
 		{9C095EB3-3B0A-44C9-9728-6118E7C5B934} = {3BE55972-6A8A-454E-9C79-DBDBC9ADAB18}
 		{4FE830FC-5B13-4A27-AF18-8E135C0314F2} = {3BE55972-6A8A-454E-9C79-DBDBC9ADAB18}
 		{E537F4ED-E129-487A-BDAB-59BB430A603A} = {3BE55972-6A8A-454E-9C79-DBDBC9ADAB18}
+		{BCF0B252-5F61-42AA-918E-0C64C0770392} = {3BE55972-6A8A-454E-9C79-DBDBC9ADAB18}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D27296BB-12D3-44A5-B5A2-B79EB1AB223D}

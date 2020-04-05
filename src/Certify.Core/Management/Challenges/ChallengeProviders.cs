@@ -19,6 +19,7 @@ using Certify.Providers.DNS.MSDNS;
 using Certify.Providers.DNS.NameCheap;
 using Certify.Providers.DNS.OVH;
 using Certify.Providers.DNS.SimpleDNSPlus;
+using Certify.Providers.DNS.TransIP;
 using Newtonsoft.Json;
 
 namespace Certify.Core.Management.Challenges
@@ -106,6 +107,10 @@ namespace Certify.Core.Management.Challenges
                 else if (providerDefinition.Id == DnsProviderNameCheap.Definition.Id)
                 {
                     dnsAPIProvider = new DnsProviderNameCheap(credentials);
+                }
+                else if (providerDefinition.Id == DnsProviderTransIP.Definition.Id)
+                {
+                    dnsAPIProvider = new DnsProviderTransIP(credentials);
                 }
             }
             else if (providerDefinition.HandlerType == Models.Config.ChallengeHandlerType.MANUAL)
@@ -249,7 +254,8 @@ namespace Certify.Core.Management.Challenges
                 Providers.DNS.OVH.DnsProviderOvh.Definition,
                 Providers.DNS.Aliyun.DnsProviderAliyun.Definition,
                 Providers.DNS.AcmeDns.DnsProviderAcmeDns.Definition,
-                Providers.DNS.NameCheap.DnsProviderNameCheap.Definition
+                Providers.DNS.NameCheap.DnsProviderNameCheap.Definition,
+                Providers.DNS.TransIP.DnsProviderTransIP.Definition
             };
 
             // TODO : load config from file
