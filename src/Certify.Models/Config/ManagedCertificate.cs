@@ -41,9 +41,12 @@ namespace Certify.Models
             RequestConfig = new CertRequestConfig();
 
             IncludeInAutoRenew = true;
-            
-            CertificateAuthorityId = "letsencrypt.org";
+
+#if DEBUG
+            UseStagingMode = true;
+#else
             UseStagingMode = false;
+#endif
         }
 
         /// <summary>

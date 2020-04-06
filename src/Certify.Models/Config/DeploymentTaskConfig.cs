@@ -55,6 +55,9 @@ namespace Certify.Config
         /// </summary>
         public int RetryDelaySeconds { get; set; } = 10;
 
+        /// <summary>
+        /// The challenge provider is the authentication type required (Local, Network, SSH etc)
+        /// </summary>
         public string ChallengeProvider { get; set; }
         public string ChallengeCredentialKey { get; set; }
 
