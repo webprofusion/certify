@@ -32,7 +32,22 @@ namespace Certify.Management
                 return steps;
             }
 
-            var taskList = managedCert.PostRequestTasks?.Where(t => string.IsNullOrEmpty(taskId) || taskId == t.Id);
+            var taskList = managedCert.PostRequestTasks.AsEnumerable();
+
+
+            // if task id provided, determine if task is from pre-request task list or post-request task list
+            if (taskId != null)
+            {
+                if (managedCert.PreRequestTasks?.Any(t => t.Id == taskId) == true)
+                {
+                    taskList = managedCert.PreRequestTasks.Where(t => t.Id == taskId);
+                }
+                else
+                {
+                    taskList = managedCert.PreRequestTasks.Where(t => t.Id == taskId);
+                }
+
+            }
 
             if (taskList == null || !taskList.Any())
             {
@@ -167,6 +182,16 @@ namespace Certify.Management
                         Category = "Task Step"
                     });
 
+
+                    if (r.IsSuccess)
+                    {
+                        log?.Information(r.Message);
+                    }
+                    else
+                    {
+                        log?.Error(r.Message);
+                    }
+
                     stepIndex++;
                 }
 
@@ -201,7 +226,15 @@ namespace Certify.Management
                 credentials = await credentialsManager.GetUnlockedCredentialsDictionary(taskConfig.ChallengeCredentialKey);
             }
 
-            return await provider.Validate(managedCertificate, taskConfig, credentials, provider.GetDefinition());
+            try
+            {
+                var validationResult = await provider.Validate(managedCertificate, taskConfig, credentials, provider.GetDefinition());
+                return validationResult;
+            }
+            catch (Exception exp)
+            {
+                return new List<ActionResult> { new ActionResult("Failed to validate task: " + exp.ToString(), false) };
+            }
         }
 
         /// <summary>
@@ -209,7 +242,7 @@ namespace Certify.Management
         /// </summary>
         /// <param name="managedCertificate"></param>
         /// <returns></returns>
-        public Tuple<ManagedCertificate,bool> MigrateDeploymentTasks(ManagedCertificate managedCertificate)
+        public Tuple<ManagedCertificate, bool> MigrateDeploymentTasks(ManagedCertificate managedCertificate)
         {
             bool requiredMigration = false;
 
@@ -228,7 +261,7 @@ namespace Certify.Management
                     ChallengeProvider = StandardAuthTypes.STANDARD_AUTH_LOCAL,
                     TaskName = "[Pre-Request Script]",
                     IsFatalOnError = true,
-                    
+
                     Parameters = new List<ProviderParameterSetting> {
                             new ProviderParameterSetting("scriptpath", managedCertificate.RequestConfig.PreRequestPowerShellScript),
                             new ProviderParameterSetting("inputresult","true")

@@ -308,21 +308,6 @@ namespace Certify.Management
             try
             {
 
-                // run pre-request script, if set
-                /* if (!string.IsNullOrEmpty(config.PreRequestPowerShellScript))
-                 {
-                     try
-                     {
-                         var scriptOutput = await PowerShellManager.RunScript(result, config.PreRequestPowerShellScript);
-                         LogMessage(managedCertificate.Id, $"Pre-Request Script output: \n{scriptOutput}");
-                     }
-                     catch (Exception ex)
-                     {
-                         LogMessage(managedCertificate.Id, $"Pre-Request Script error:\n{ex.Message}");
-                     }
-                 }
-                 */
-
                 if (managedCertificate.PreRequestTasks?.Any() == true)
                 {
                     // run pre-request tasks, currently if any of these fail the request will abort
@@ -332,31 +317,31 @@ namespace Certify.Management
                     var results = await PerformTaskList(log, isPreviewOnly: false, false, managedCertificate, managedCertificate.PreRequestTasks);
 
                     // log results
-                    ActionStep preRequestTasks = new ActionStep {
+                    var preRequestTasks = new ActionStep
+                    {
                         Category = "Pre-Request Tasks",
                         Key = "PreRequestTasks",
                         Substeps = new List<ActionStep>(),
-                        HasError = results.Any(r=>r.HasError),
+                        HasError = results.Any(r => r.HasError),
                         HasWarning = results.Any(r => r.HasWarning),
-                    }; 
+                    };
 
                     foreach (var r in results)
                     {
-                        LogMessage(managedCertificate.Id, $"{r.Title} :: {r.Description}", (r.HasError || r.HasWarning) ? LogItemType.CertficateRequestAttentionRequired : LogItemType.GeneralInfo);
+                        // LogMessage(managedCertificate.Id, $"{r.Title} :: {r.Description}", (r.HasError || r.HasWarning) ? LogItemType.CertficateRequestAttentionRequired : LogItemType.GeneralInfo);
 
                         r.Category = "Pre-Request Tasks";
                         preRequestTasks.Substeps.Add(r);
-                       
+
                     }
                     result.Actions.Add(preRequestTasks);
 
                     if (results.Any(r => r.HasError))
                     {
                         result.Abort = true;
-
+          
                         var msg = $"Request was aborted due to failed Pre-Request Task.";
 
-                        LogMessage(managedCertificate.Id, msg);
                         result.Message = msg;
                     }
                 }
@@ -439,7 +424,7 @@ namespace Certify.Management
                 var results = await PerformTaskList(log, isPreviewOnly: false, false, managedCertificate, managedCertificate.PostRequestTasks);
 
                 // log results
-                ActionStep postRequestTasks = new ActionStep
+                var postRequestTasks = new ActionStep
                 {
                     Category = "Post-Request Tasks",
                     Key = "PostRequestTasks",
@@ -458,61 +443,17 @@ namespace Certify.Management
                 }
                 result.Actions.Add(postRequestTasks);
 
-                //TODO: this may not be applicable as certificate may already be deployed to some extent so probably counts a completed with warnings instead
+                // certificate may already be deployed to some extent so this counts a completed with warnings
                 if (results.Any(r => r.HasError))
                 {
-                    result.Abort = true;
+                    result.IsSuccess = false;
 
-                    var msg = $"Request was aborted due to failed Post-Request Task.";
-
-                    LogMessage(managedCertificate.Id, msg);
+                    var msg = $"Deployment Tasks did not complete successfully.";
                     result.Message = msg;
-                }
 
-                /*
-                //if (!result.Abort)
-                {
-
-                   
-                    if (results.Any(r => r.HasError))
-                    {
-                        result.Abort = true;
-                    }
-
-                    // run post-request script, if set
-                    if (!string.IsNullOrEmpty(config.PostRequestPowerShellScript))
-                    {
-                        try
-                        {
-                            var scriptOutput = await PowerShellManager.RunScript(result, config.PostRequestPowerShellScript);
-                            LogMessage(managedCertificate.Id, $"Post-Request Script output:\n{scriptOutput}");
-                        }
-                        catch (Exception ex)
-                        {
-                            LogMessage(managedCertificate.Id, $"Post-Request Script error: {ex.Message}");
-                        }
-                    }
-
-                    // run webhook triggers, if set
-                    if (
-                        (config.WebhookTrigger == Webhook.ON_SUCCESS && result.IsSuccess) ||
-                        (config.WebhookTrigger == Webhook.ON_ERROR && !result.IsSuccess) ||
-                        (config.WebhookTrigger == Webhook.ON_SUCCESS_OR_ERROR)
-                    )
-                    {
-                        try
-                        {
-                            var webHookResult = await Webhook.SendRequest(config, result.IsSuccess);
-                            LogMessage(managedCertificate.Id, $"Webhook invoked: Url: {config.WebhookUrl}, Success: {webHookResult.Success}, StatusCode: {webHookResult.StatusCode}");
-                        }
-                        catch (Exception ex)
-                        {
-                            LogMessage(managedCertificate.Id, $"Webhook error: {ex.Message}");
-                        }
-                    }
+                    ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate));
 
                 }
-                */
             }
 
             return result;

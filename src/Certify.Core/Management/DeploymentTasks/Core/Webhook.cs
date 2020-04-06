@@ -5,9 +5,14 @@ using Certify.Config;
 using Certify.Models;
 using Certify.Models.Providers;
 using Certify.Models.Config;
+using System;
+using System.Linq;
 
 namespace Certify.Providers.DeploymentTasks.Core
 {
+    /// <summary>
+    /// Provider Webhook deployment task. Webhook testing can be performed with `npx http-echo-server`
+    /// </summary>
     public class Webhook : IDeploymentTaskProvider
     {
         public static DeploymentProviderDefinition Definition { get; }
@@ -15,17 +20,56 @@ namespace Certify.Providers.DeploymentTasks.Core
 
         public async Task<List<ActionResult>> Execute(ILog log, ManagedCertificate managedCert, DeploymentTaskConfig settings, Dictionary<string, string> credentials, bool isPreviewOnly, DeploymentProviderDefinition definition)
         {
-            var config = managedCert.RequestConfig;
 
-            var webHookResult = await Certify.Shared.Utils.Webhook.SendRequest(config, managedCert.LastRenewalStatus != RequestState.Error);
-            log.Information($"Webhook invoked: Url: {config.WebhookUrl}, Success: {webHookResult.Success}, StatusCode: {webHookResult.StatusCode}");
+            try
+            {
+                var webhookConfig = new Shared.Utils.Webhook.WebhookConfig
+                {
+                    Url = settings.Parameters.FirstOrDefault(p => p.Key == "url")?.Value,
+                    Method = settings.Parameters.FirstOrDefault(p => p.Key == "method")?.Value,
+                    ContentType = settings.Parameters.FirstOrDefault(p => p.Key == "contenttype")?.Value,
+                    ContentBody = settings.Parameters.FirstOrDefault(p => p.Key == "contentbody")?.Value
+                };
 
-            throw new System.NotImplementedException();
+                if (!isPreviewOnly)
+                {
+                    var webHookResult = await Certify.Shared.Utils.Webhook.SendRequest(webhookConfig, managedCert, managedCert.LastRenewalStatus != RequestState.Error);
+
+                    var msg = $"Webhook invoked: Url: {webhookConfig.Url}, Success: {webHookResult.Success}, StatusCode: {webHookResult.StatusCode}";
+
+                    log.Information(msg);
+
+                    return new List<ActionResult> { new ActionResult(msg, true) };
+                }
+                else
+                {
+                    return await Validate(managedCert, settings, credentials, definition);
+                }
+            }
+            catch (Exception exp)
+            {
+                return new List<ActionResult> { new ActionResult("Webhook call failed: " + exp.ToString(), false) };
+            }
         }
 
-        public Task<List<ActionResult>> Validate(ManagedCertificate managedCert, DeploymentTaskConfig settings, Dictionary<string, string> credentials, DeploymentProviderDefinition definition)
+        public async Task<List<ActionResult>> Validate(ManagedCertificate managedCert, DeploymentTaskConfig settings, Dictionary<string, string> credentials, DeploymentProviderDefinition definition)
         {
-            throw new System.NotImplementedException();
+            var results = new List<ActionResult>();
+
+            var url = settings.Parameters.FirstOrDefault(p => p.Key == "url")?.Value;
+            var method = settings.Parameters.FirstOrDefault(p => p.Key == "method")?.Value;
+
+            if (url == null || !Uri.TryCreate(url, UriKind.Absolute, out var result))
+            {
+                results.Add(new ActionResult($"The webhook url must be a valid url.", false));
+            }
+
+            if (string.IsNullOrEmpty(method))
+            {
+                results.Add(new ActionResult($"The webhook HTTP method must be a selected.", false));
+            }
+
+            return results;
         }
 
         static Webhook()

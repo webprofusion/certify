@@ -33,23 +33,6 @@ namespace Certify.Providers.DeploymentTasks
         {
             if (TaskProvider != null && TaskConfig != null)
             {
-
-                // TODO: ensure path checks moved to dependant task logic
-                /*
-                 * if (string.IsNullOrEmpty(managedCert.CertificatePath))
-                {
-                    return new List<ActionResult>{
-                        new ActionResult { IsSuccess = false, Message = $"Task Cannot Execute: {TaskProvider.GetDefinition()?.Title } :: there is no current certificate." }
-                    };
-                }
-
-                if (!System.IO.File.Exists(managedCert.CertificatePath))
-                {
-                    return new List<ActionResult>{
-                        new ActionResult { IsSuccess = false, Message = $"Task Cannot Execute: {TaskProvider.GetDefinition()?.Title } :: source certificate file does not exist." }
-                    };
-                }*/
-
                 try
                 {
                     return await TaskProvider.Execute(log, managedCert, TaskConfig, _credentials, isPreviewOnly, null);
@@ -57,7 +40,7 @@ namespace Certify.Providers.DeploymentTasks
                 catch (Exception exp)
                 {
                     return new List<ActionResult>{
-                        new ActionResult { IsSuccess = false, Message = $"Task Failed: {TaskProvider.GetDefinition()?.Title } :: {exp?.ToString()}" }
+                        new ActionResult { IsSuccess = false, Message = $"{TaskConfig.TaskName} ({TaskProvider.GetDefinition()?.Title }) :: Task Failed with Exception :: {exp?.ToString()}" }
                     };
                 }
 

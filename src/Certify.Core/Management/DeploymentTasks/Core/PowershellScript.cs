@@ -52,7 +52,7 @@ namespace Certify.Providers.DeploymentTasks.Core
 
             definition = GetDefinition(definition);
 
-            var command = settings.Parameters.FirstOrDefault(c => c.Key == "path")?.Value;
+            var command = settings.Parameters.FirstOrDefault(c => c.Key == "scriptpath")?.Value;
             var args = settings.Parameters.FirstOrDefault(c => c.Key == "args")?.Value;
 
             var commandList = new List<string>
@@ -84,9 +84,25 @@ namespace Certify.Providers.DeploymentTasks.Core
 
         }
 
-        public Task<List<ActionResult>> Validate(ManagedCertificate managedCert, DeploymentTaskConfig settings, Dictionary<string, string> credentials, DeploymentProviderDefinition definition)
+        public async Task<List<ActionResult>> Validate(ManagedCertificate managedCert, DeploymentTaskConfig settings, Dictionary<string, string> credentials, DeploymentProviderDefinition definition)
         {
-            throw new System.NotImplementedException();
+            var results = new List<ActionResult>();
+
+            var path = settings.Parameters.FirstOrDefault(c => c.Key == "scriptpath")?.Value;
+
+            if (string.IsNullOrEmpty(path))
+            {
+                results.Add(new ActionResult("A path to a script is required.", false));
+            }
+            else
+            {
+                if (!System.IO.File.Exists(path))
+                {
+                    results.Add(new ActionResult("There is no script file present at the given path: " + path, false));
+                }
+            }
+
+            return results;
         }
     }
 }

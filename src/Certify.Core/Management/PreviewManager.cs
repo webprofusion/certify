@@ -33,6 +33,8 @@ namespace Certify.Management
 
             var hasDomains = true;
 
+            var allTaskProviders = await certifyManager.GetDeploymentProviders();
+
             // ensure defaults are applied for the deployment mode, overwriting any previous selections
             item.RequestConfig.ApplyDeploymentOptionDefaults();
 
@@ -219,14 +221,17 @@ namespace Certify.Management
                 });
                 stepIndex++;
 
-                // pre request scripting steps
-                if (!string.IsNullOrEmpty(item.RequestConfig.PreRequestPowerShellScript))
+                // pre request tasks
+                if (item.PreRequestTasks?.Any() == true)
                 {
+                    var substeps = item.PreRequestTasks.Select(t => new ActionStep { Key = t.Id, Title = $"{t.TaskName} ({allTaskProviders.FirstOrDefault(p => p.Id == t.TaskTypeId)?.Title})", Description = t.Description });
+
                     steps.Add(new ActionStep
                     {
-                        Title = $"{stepIndex}. Pre-Request Powershell",
-                        Category = "PreRequestScripting",
-                        Description = $"Execute PowerShell Script: *{item.RequestConfig.PreRequestPowerShellScript}*"
+                        Title = $"{stepIndex}. Pre-Request Tasks",
+                        Category = "PreRequestTasks",
+                        Description = $"Run {substeps.Count()} Pre-Request Tasks",
+                        Substeps = substeps.ToList()
                     });
                     stepIndex++;
                 }
@@ -242,29 +247,6 @@ namespace Certify.Management
                 });
                 stepIndex++;
 
-                // post request scripting steps
-                if (!string.IsNullOrEmpty(item.RequestConfig.PostRequestPowerShellScript))
-                {
-                    steps.Add(new ActionStep
-                    {
-                        Title = $"{stepIndex}. Post-Request Powershell",
-                        Category = "PostRequestScripting",
-                        Description = $"Execute PowerShell Script: *{item.RequestConfig.PostRequestPowerShellScript}*"
-                    });
-                    stepIndex++;
-                }
-
-                // webhook scripting steps
-                if (!string.IsNullOrEmpty(item.RequestConfig.WebhookUrl))
-                {
-                    steps.Add(new ActionStep
-                    {
-                        Title = $"{stepIndex}. Post-Request WebHook",
-                        Description = $"Execute WebHook *{item.RequestConfig.WebhookUrl}*"
-                    });
-
-                    stepIndex++;
-                }
 
                 // deployment & binding steps
 
@@ -372,6 +354,23 @@ namespace Certify.Management
 
                 steps.Add(deploymentStep);
                 stepIndex++;
+
+
+                // post request deployment tasks
+                if (item.PostRequestTasks?.Any() == true)
+                {
+
+                    var substeps = item.PostRequestTasks.Select(t => new ActionStep { Key = t.Id, Title = $"{t.TaskName} ({allTaskProviders.FirstOrDefault(p => p.Id == t.TaskTypeId)?.Title})", Description = t.Description });
+
+                    steps.Add(new ActionStep
+                    {
+                        Title = $"{stepIndex}. Post-Request (Deployment) Tasks",
+                        Category = "PostRequestTasks",
+                        Description = $"Run {substeps.Count()} Post-Request Tasks",
+                        Substeps = substeps.ToList()
+                    });
+                    stepIndex++;
+                }
 
                 stepIndex = steps.Count;
             }

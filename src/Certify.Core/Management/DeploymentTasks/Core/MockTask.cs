@@ -51,7 +51,8 @@ namespace Certify.Providers.DeploymentTasks.Core
             definition = GetDefinition(definition);
 
             var msg = settings.Parameters.FirstOrDefault(c => c.Key == "message")?.Value;
-            var shouldThrow = bool.Parse(settings.Parameters.FirstOrDefault(c => c.Key == "throw")?.Value);
+
+            bool.TryParse(settings.Parameters.FirstOrDefault(c => c.Key == "throw")?.Value, out var shouldThrow);
 
             if (string.IsNullOrEmpty(msg))
             {
