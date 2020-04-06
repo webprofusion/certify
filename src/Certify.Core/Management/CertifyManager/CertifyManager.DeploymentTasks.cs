@@ -224,12 +224,13 @@ namespace Certify.Management
                 var task = new DeploymentTaskConfig
                 {
                     Id = Guid.NewGuid().ToString(),
-                    ChallengeProvider = Certify.Providers.DeploymentTasks.Core.PowershellScript.Definition.Id,
+                    TaskTypeId = Certify.Providers.DeploymentTasks.Core.PowershellScript.Definition.Id,
+                    ChallengeProvider = StandardAuthTypes.STANDARD_AUTH_LOCAL,
                     TaskName = "[Pre-Request Script]",
                     IsFatalOnError = true,
-                    TaskTypeId = Certify.Providers.DeploymentTasks.Core.PowershellScript.Definition.Id,
+                    
                     Parameters = new List<ProviderParameterSetting> {
-                            new ProviderParameterSetting("path", managedCertificate.RequestConfig.PreRequestPowerShellScript),
+                            new ProviderParameterSetting("scriptpath", managedCertificate.RequestConfig.PreRequestPowerShellScript),
                             new ProviderParameterSetting("inputresult","true")
                         }
                 };
@@ -254,13 +255,13 @@ namespace Certify.Management
                 var task = new DeploymentTaskConfig
                 {
                     Id = Guid.NewGuid().ToString(),
-                    ChallengeProvider = Certify.Providers.DeploymentTasks.Core.PowershellScript.Definition.Id,
+                    TaskTypeId = Certify.Providers.DeploymentTasks.Core.PowershellScript.Definition.Id,
+                    ChallengeProvider = StandardAuthTypes.STANDARD_AUTH_LOCAL,
                     TaskName = "[Post-Request Script]",
                     IsFatalOnError = true,
                     TaskTrigger = TaskTriggerType.ON_SUCCESS,
-                    TaskTypeId = Certify.Providers.DeploymentTasks.Core.PowershellScript.Definition.Id,
                     Parameters = new List<ProviderParameterSetting> {
-                            new ProviderParameterSetting("scriptpath", managedCertificate.RequestConfig.PreRequestPowerShellScript),
+                            new ProviderParameterSetting("scriptpath", managedCertificate.RequestConfig.PostRequestPowerShellScript),
                             new ProviderParameterSetting("inputresult","true")
                         }
                 };

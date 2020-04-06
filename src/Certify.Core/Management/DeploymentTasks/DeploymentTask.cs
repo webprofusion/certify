@@ -33,7 +33,10 @@ namespace Certify.Providers.DeploymentTasks
         {
             if (TaskProvider != null && TaskConfig != null)
             {
-                if (string.IsNullOrEmpty(managedCert.CertificatePath))
+
+                // TODO: ensure path checks moved to dependant task logic
+                /*
+                 * if (string.IsNullOrEmpty(managedCert.CertificatePath))
                 {
                     return new List<ActionResult>{
                         new ActionResult { IsSuccess = false, Message = $"Task Cannot Execute: {TaskProvider.GetDefinition()?.Title } :: there is no current certificate." }
@@ -45,7 +48,7 @@ namespace Certify.Providers.DeploymentTasks
                     return new List<ActionResult>{
                         new ActionResult { IsSuccess = false, Message = $"Task Cannot Execute: {TaskProvider.GetDefinition()?.Title } :: source certificate file does not exist." }
                     };
-                }
+                }*/
 
                 try
                 {
