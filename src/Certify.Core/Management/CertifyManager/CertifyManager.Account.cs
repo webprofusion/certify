@@ -29,8 +29,15 @@ namespace Certify.Management
             var accounts = await GetAccountRegistrations();
 
             // get current account details for this CA (depending on whether this managed certificate uses staging mode or not)
-            return accounts.FirstOrDefault(a => a.CertificateAuthorityId == currentCA && a.IsStagingAccount == item.UseStagingMode);
+            var matchingAccount =  accounts.FirstOrDefault(a => a.CertificateAuthorityId == currentCA && a.IsStagingAccount == item.UseStagingMode);
 
+            if (matchingAccount==null)
+            {
+                var log = ManagedCertificateLog.GetLogger(item.Id, new Serilog.Core.LoggingLevelSwitch(Serilog.Events.LogEventLevel.Error));
+                log?.Error($"Failed to match ACME account for managed certificate. Cannot continue request. :: {item.Name} CA: {currentCA} {(item.UseStagingMode?"[Staging Mode]":"[Production]")}");
+            }
+
+            return matchingAccount;
         }
 
         private async Task<AccountDetails> GetAccountDetailsFromCredential(Models.Config.StoredCredential credential)
