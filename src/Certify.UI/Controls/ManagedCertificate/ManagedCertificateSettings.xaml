@@ -56,21 +56,13 @@
                 Margin="0,4,8,4"
                 VerticalAlignment="Top"
                 AutomationProperties.Name="Dismiss"
-                Background="{DynamicResource FlatButtonBackgroundBrush}"
-                BorderBrush="{DynamicResource FlatButtonBackgroundBrush}"
+                BorderThickness="0"
                 Click="Dismiss_Click"
                 DockPanel.Dock="Right"
                 ToolTip="Dismiss">
-                <StackPanel Orientation="Horizontal">
-                    <fa:ImageAwesome
-                        Grid.Column="1"
-                        Width="16"
-                        Height="16"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Foreground="{DynamicResource IdealForegroundColorBrush}"
-                        Icon="WindowClose" />
-                </StackPanel>
+
+                <fa:ImageAwesome Foreground="{DynamicResource AccentColorBrush3}" Icon="Close" />
+
             </Button>
         </DockPanel>
 

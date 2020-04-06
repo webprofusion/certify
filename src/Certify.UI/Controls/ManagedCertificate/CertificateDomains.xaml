@@ -133,10 +133,12 @@
                                 Margin="0,4,0,4"
                                 DockPanel.Dock="Top"
                                 Orientation="Horizontal">
+
                                 <Button
                                     Width="32"
                                     Margin="0,0,4,0"
                                     AutomationProperties.Name="Select All"
+                                    BorderThickness="0"
                                     Command="{Binding SANSelectAllCommand}"
                                     ToolTip="{x:Static Resources:SR.SelectAll}">
                                     <fa:ImageAwesome
@@ -150,6 +152,7 @@
                                     Width="32"
                                     Margin="0,0,4,0"
                                     AutomationProperties.Name="Select None"
+                                    BorderThickness="0"
                                     Command="{Binding SANSelectNoneCommand}"
                                     ToolTip="{x:Static Resources:SR.ManagedCertificateSettings_SelectNone}">
                                     <fa:ImageAwesome
@@ -158,10 +161,13 @@
                                         Icon="SquareOutline" />
 
                                 </Button>
+
+
                                 <Button
                                     Width="32"
                                     Margin="0,0,4,0"
-                                    AutomationProperties.Name="Select All"
+                                    AutomationProperties.Name="Refresh Domains"
+                                    BorderThickness="0"
                                     Click="RefreshSanList_Click"
                                     ToolTip="{x:Static Resources:SR.ManagedCertificatesSettings_RefreshDomains}">
                                     <fa:ImageAwesome
@@ -171,13 +177,13 @@
 
                                 </Button>
 
-
                                 <Label Content="Filter:" />
                                 <TextBox
                                     x:Name="DomainFilter"
                                     Width="120"
                                     AutomationProperties.Name="Filter domains"
                                     TextChanged="DomainFilter_TextChanged" />
+
                             </StackPanel>
                             <DataGrid
                                 x:Name="DomainOptionsList"
