@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -48,8 +48,8 @@ namespace Certify.Providers.DNS.TransIP
                     HelpUrl = "https://docs.certifytheweb.com/docs/dns-transip.html",
                     PropagationDelaySeconds = 300,
                     ProviderParameters = new List<ProviderParameter>{
-                        new ProviderParameter{ Key="login", Name="Name", IsRequired=true },
-                        new ProviderParameter{ Key="privatekey", Name="PrivateKey", IsRequired=true, IsMultiLine=true },
+                        new ProviderParameter{ Key="login", Name="User Name", IsRequired=true, IsCredential=true },
+                        new ProviderParameter{ Key="privatekey", Name="PrivateKey", IsRequired=true, IsMultiLine=true, IsCredential=true },
                         new ProviderParameter{ Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="300", IsCredential=false }
                     },
                     ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
