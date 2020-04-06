@@ -240,7 +240,7 @@ namespace Certify.Core.Management
                             }
                         }
 
-                        if (b.Protocol != "http" && b.Protocol != "https")
+                        if (b.Protocol != "http" && b.Protocol != "https" && b.Protocol != "ftp")
                         {
                             // skip bindings for other service types
                             updateBinding = false;
@@ -249,7 +249,7 @@ namespace Certify.Core.Management
                         if (updateBinding)
                         {
                             //SSL port defaults to 443 or the config default, unless we already have an https binding, in which case re-use same port
-                            var sslPort = 443;
+                            var sslPort = b.IsFtpSite ? 21 : 443;
                             var targetIPAddress = "*";
 
                             if (!string.IsNullOrWhiteSpace(requestConfig.BindingPort))
@@ -279,22 +279,42 @@ namespace Certify.Core.Management
                             //create/update binding and associate new cert
 
                             //if any binding elements configured, use those, otherwise auto bind using defaults and SNI
+                            if (!b.IsFtpSite)
+                            {
+                                var stepActions = await UpdateBinding(
+                                   deploymentTarget,
+                                   site,
+                                   existingBindings,
+                                   certStoreName,
+                                   certHash,
+                                   hostname,
+                                   sslPort: sslPort,
+                                   useSNI: (requestConfig.BindingUseSNI != null ? (bool)requestConfig.BindingUseSNI : true),
+                                   ipAddress: targetIPAddress,
+                                   alwaysRecreateBindings: requestConfig.AlwaysRecreateBindings,
+                                   isPreviewOnly: isPreviewOnly
+                               );
 
-                            var stepActions = await UpdateBinding(
-                                deploymentTarget,
-                                site,
-                                existingBindings,
-                                certStoreName,
-                                certHash,
-                                hostname,
-                                sslPort: sslPort,
-                                useSNI: (requestConfig.BindingUseSNI != null ? (bool)requestConfig.BindingUseSNI : true),
-                                ipAddress: targetIPAddress,
-                                alwaysRecreateBindings: requestConfig.AlwaysRecreateBindings,
-                                isPreviewOnly: isPreviewOnly
-                            );
+                                actions.AddRange(stepActions);
+                            }
+                            else
+                            {
 
-                            actions.AddRange(stepActions);
+                                var stepActions = await UpdateFtpBinding(
+                                   deploymentTarget,
+                                   site,
+                                   existingBindings,
+                                   certStoreName,
+                                   managedCertificate.CertificateThumbprintHash,
+                                   sslPort,
+                                   hostname,
+                                   ipAddress: targetIPAddress,
+                                   isPreviewOnly: isPreviewOnly
+                               );
+
+                                actions.AddRange(stepActions);
+                            }
+
                         }
                     }
                     //
@@ -348,6 +368,7 @@ namespace Certify.Core.Management
                                                                 byte[] certificateHash,
                                                                 string host,
                                                                 int sslPort = 443,
+
                                                                 bool useSNI = true,
                                                                 string ipAddress = null,
                                                                 bool alwaysRecreateBindings = false,
@@ -398,7 +419,7 @@ namespace Certify.Core.Management
                 {
                     Title = "Install Certificate For Binding",
                     Category = "Deployment.AddBinding",
-                    Description = $"Add https binding | {site.Name} | **{bindingSpecString} {(useSNI ? "SNI" : "Non-SNI")}**",
+                    Description = $"Add {bindingSpec.Protocol} binding | {site.Name} | **{bindingSpecString} {(useSNI ? "SNI" : "Non-SNI")}**",
                     Key = $"[{site.Id}]:{bindingSpecString}:{useSNI}"
                 };
 
@@ -430,7 +451,7 @@ namespace Certify.Core.Management
                 {
                     Title = "Install Certificate For Binding",
                     Category = "Deployment.UpdateBinding",
-                    Description = $"Update https binding | {site.Name} | **{bindingSpecString} {(useSNI ? "SNI" : "Non-SNI")}**"
+                    Description = $"Update {bindingSpec.Protocol} binding | {site.Name} | **{bindingSpecString} {(useSNI ? "SNI" : "Non-SNI")}**"
                 };
 
                 if (!isPreviewOnly)
@@ -460,5 +481,119 @@ namespace Certify.Core.Management
 
             return steps;
         }
+
+
+        /// <summary>
+        /// creates or updates the https binding for the dns host name specified, assigning the given
+        /// certificate selected from the certificate store
+        /// </summary>
+        /// <param name="site">  </param>
+        /// <param name="certificate">  </param>
+        /// <param name="host">  </param>
+        /// <param name="sslPort">  </param>
+        /// <param name="ipAddress">  </param>
+        public async Task<List<ActionStep>> UpdateFtpBinding(
+                                                                IBindingDeploymentTarget deploymentTarget,
+                                                                IBindingDeploymentTargetItem site,
+                                                                List<BindingInfo> existingBindings,
+                                                                string certStoreName,
+                                                                string certificateHash,
+                                                                int port,
+                                                                string host,
+                                                                string ipAddress,
+                                                                bool isPreviewOnly = false
+                                                                )
+        {
+            var steps = new List<ActionStep>();
+
+            var internationalHost = host ?? "";
+
+            var bindingSpecString = $"{ipAddress}:{port}:{internationalHost}";
+
+            var bindingSpec = new BindingInfo
+            {
+                Host = internationalHost,
+                Protocol = "ftp",
+                IsHTTPS = true,
+                Port = port,
+                IP = ipAddress,
+                SiteId = site.Id,
+                CertificateStore = certStoreName,
+                CertificateHash = certificateHash,
+                IsFtpSite = true
+            };
+
+            if (!HasExistingBinding(existingBindings, bindingSpec))
+            {
+                //there are no existing applicable bindings to update for this domain
+                //add new ftp binding at default port "<ip>:port:hostDnsName";
+
+                var action = new ActionStep
+                {
+                    Title = "Install Certificate For FTP Binding",
+                    Category = "Deployment.AddBinding",
+                    Description = $"Add {bindingSpec.Protocol} binding | {site.Name} | **{bindingSpecString} **",
+                    Key = $"[{site.Id}]:{bindingSpecString}"
+                };
+
+                if (!isPreviewOnly)
+                {
+                    var result = await deploymentTarget.AddBinding(bindingSpec);
+                    if (result.HasError)
+                    {
+                        // failed to add
+                        action.HasError = true;
+                        action.Description += $" Failed to add binding. [{result.Description}]";
+                    }
+                    else
+                    {
+                        if (result.HasWarning)
+                        {
+                            action.HasWarning = true;
+                            action.Description += $" [{result.Description}]";
+                        }
+                    }
+                }
+
+                steps.Add(action);
+            }
+            else
+            {
+                // update one or more existing bindings with new cert
+                var action = new ActionStep
+                {
+                    Title = "Install Certificate For Binding",
+                    Category = "Deployment.UpdateBinding",
+                    Description = $"Update {bindingSpec.Protocol} binding | {site.Name} | **{bindingSpecString}**"
+                };
+
+                if (!isPreviewOnly)
+                {
+                    // Update existing Binding
+                    var result = await deploymentTarget.UpdateBinding(bindingSpec);
+
+                    if (result.HasError)
+                    {
+                        // failed to update
+                        action.HasError = true;
+                        action.Description += $" Failed to update binding. [{result.Description}]";
+                    }
+                    else
+                    {
+                        if (result.HasWarning)
+                        {
+                            // has update warning
+                            action.HasWarning = true;
+                            action.Description += $" [{result.Description}]";
+                        }
+                    }
+                }
+
+                steps.Add(action);
+            }
+
+            return steps;
+        }
     }
+
 }

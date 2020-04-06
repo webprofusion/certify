@@ -20,6 +20,7 @@
 
         public bool IsSNIEnabled { get; set; }
         public bool IsEnabled { get; set; }
+        public bool IsFtpSite { get; set; } = false;
 
         public override string ToString()
         {

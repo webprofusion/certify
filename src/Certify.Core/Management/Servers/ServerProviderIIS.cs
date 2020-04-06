@@ -144,7 +144,6 @@ namespace Certify.Management.Servers
             }
             catch (Exception)
             {
-                srv = null;
                 try
                 {
                     srv = new ServerManager(@"C:\Windows\System32\inetsrv\config\applicationHost.config");
@@ -188,12 +187,25 @@ namespace Certify.Management.Servers
 
                 if (includeOnlyStartedSites)
                 {
-                    //s.State may throw a com exception for sites in an invalid state.
-                    Func<Site, bool> isSiteStarted = (s) =>
+
+                    Func<Site, bool> isSiteStarted = (site) =>
                          {
                              try
                              {
-                                 return s.State == ObjectState.Started;
+                                 if (site.Bindings?.Any(ftp => ftp.Protocol == "ftp") == true)
+                                 {
+                                     //site is ftp site, have to check for state differently
+                                     var ftpState = Convert.ToInt32(
+                                         site.GetChildElement("ftpServer")
+                                         .GetAttributeValue("state")
+                                         );
+
+                                     return ftpState == (int)ObjectState.Started;
+                                 }
+                                 else
+                                 {
+                                     return site.State == ObjectState.Started;
+                                 }
                              }
                              catch (Exception)
                              {
@@ -247,13 +259,24 @@ namespace Certify.Management.Servers
 
                                 try
                                 {
-                                    b.IsEnabled = (site.State == ObjectState.Started);
-                                }
-                                catch (Exception)
-                                {
-                                    System.Diagnostics.Debug.WriteLine("Exception reading IIS Site state value:" + site.Name);
-                                }
+                                    if (site.Bindings?.Any(ftp => ftp.Protocol == "ftp") == true)
+                                    {
+                                        //site is ftp site, have to check for state differently
+                                        var ftpState = Convert.ToInt32(site.GetChildElement("ftpServer").GetAttributeValue("state"));
 
+                                        b.IsEnabled = (ftpState == (int)ObjectState.Started);
+                                    }
+                                    else
+                                    {
+                                        b.IsEnabled = (site.State == ObjectState.Started);
+                                    }
+
+
+                                }
+                                catch (Exception exp)
+                                {
+                                    System.Diagnostics.Debug.WriteLine("Exception reading IIS Site state value:" + site.Name + " :: " + exp.ToString());
+                                }
                                 result.Add(b);
                             }
                         }
@@ -293,6 +316,11 @@ namespace Certify.Management.Servers
             if (string.IsNullOrEmpty(bindingSpec.SiteId))
             {
                 throw new Exception("IIS.AddOrUpdateSiteBinding: SiteId not specified");
+            }
+
+            if (bindingSpec.IsFtpSite)
+            {
+                return await AddOrUpdateFtpSiteBinding(bindingSpec, addNew);
             }
 
             var result = new ActionStep { };
@@ -359,7 +387,7 @@ namespace Certify.Management.Servers
                                     if (bindingSpec.IsHTTPS)
                                     {
                                         binding.Protocol = "https";
-                                       
+
                                         binding.CertificateStoreName = bindingSpec.CertificateStore;
                                         binding.CertificateHash = bindingSpec.CertificateHashBytes;
                                         binding.BindingInformation = bindingSpecString;
@@ -375,11 +403,11 @@ namespace Certify.Management.Servers
                                         //clone existing binding attributes
 
                                         var skippedAttributes = new[] {
-                                    "protocol",
-                                    "bindingInformation",
-                                    "certificateStoreName",
-                                    "certificateHash"
-                                };
+                                            "protocol",
+                                            "bindingInformation",
+                                            "certificateStoreName",
+                                            "certificateHash"
+                                        };
 
                                         foreach (var a in existingBindingAttributes)
                                         {
@@ -459,6 +487,68 @@ namespace Certify.Management.Servers
             return result;
         }
 
+
+        public async Task<ActionStep> AddOrUpdateFtpSiteBinding(BindingInfo bindingSpec, bool addNew)
+        {
+            if (string.IsNullOrEmpty(bindingSpec.SiteId))
+            {
+                throw new Exception("IIS.AddOrUpdateFtpSiteBinding: SiteId not specified");
+            }
+
+            var result = new ActionStep { };
+            var remainingAttempts = 3;
+            var isCompleted = false;
+            while (!isCompleted && remainingAttempts > 0)
+            {
+                try
+                {
+                    using (var iisManager = await GetDefaultServerManager())
+                    {
+       
+                        lock (_iisAPILock)
+                        {
+                            var site = iisManager.Sites.FirstOrDefault(s => s.Id == long.Parse(bindingSpec.SiteId));
+
+                            if (site != null)
+                            {
+    
+                                var ssl = site.ChildElements["ftpServer"].ChildElements["security"].ChildElements["ssl"];
+
+                                ssl["serverCertHash"] = bindingSpec.CertificateHash;
+                                ssl["serverCertStoreName"] = bindingSpec.CertificateStore;
+                 
+                                result = new ActionStep { HasWarning = false, Description = $"New ftp ssl binding added : {bindingSpec}" };
+
+                            }
+
+                            iisManager.CommitChanges();
+                        }
+                    }
+                    isCompleted = true;
+                }
+                catch (Exception exp)
+                {
+                    System.Diagnostics.Debug.WriteLine(exp.ToString());
+                    // failed to commit binding, possible exception due to config still being written
+                    // from another operation
+                    isCompleted = false;
+                    remainingAttempts--;
+
+                    if (remainingAttempts == 0 && !isCompleted)
+                    {
+                        // failed to create this binding, possible due to settings serialisation conflict
+                        throw exp;
+                    }
+                    else
+                    {
+                        var delayMS = 20000 / remainingAttempts; // gradually wait longer between attempts
+                        await Task.Delay(delayMS); // pause to give IIS config time to write to disk before attempting more writes
+                    }
+                }
+            }
+            return result;
+        }
+
         /// <summary>
         /// Simple binding creation for integrations test only
         /// </summary>
@@ -496,16 +586,17 @@ namespace Certify.Management.Servers
             {
                 if (iisManager != null)
                 {
-                    var sites = GetSites(iisManager, ignoreStoppedSites, siteId);
+                    // get site binding info. If specific siteId being checked then query regardless of site state
+                    var sites = GetSites(iisManager, (siteId != null ? false : ignoreStoppedSites), siteId);
 
                     foreach (var site in sites)
                     {
                         foreach (var binding in site.Bindings.OrderByDescending(b => b?.EndPoint?.Port))
                         {
-                            var bindingDetails = GetSiteBinding(site, binding);
+                            var bindingDetails = binding.Protocol.StartsWith("ftp") ? GetFtpSiteBinding(site, binding) : GetSiteBinding(site, binding);
 
                             //ignore bindings which are not http or https
-                            if (bindingDetails.Protocol?.ToLower().StartsWith("http") == true)
+                            if (bindingDetails.Protocol?.ToLower().StartsWith("http") == true || bindingDetails.Protocol?.ToLower().StartsWith("ftp") == true)
                             {
                                 result.Add(bindingDetails);
                             }
@@ -544,8 +635,6 @@ namespace Certify.Management.Servers
             }
         }
 
-        private static char NibbleToHex(byte b) => (char)(b >= 0 && b <= 9 ? '0' + b : 'A' + (b - 10));
-
         private BindingInfo GetSiteBinding(Site site, Binding binding)
         {
             var siteInfo = Map(site);
@@ -574,6 +663,40 @@ namespace Certify.Management.Servers
                 HasCertificate = (bindingHash != null),
                 CertificateHash = bindingHash != null ? HashBytesToThumprint(bindingHash) : null,
                 CertificateHashBytes = bindingHash
+            };
+        }
+
+
+        private BindingInfo GetFtpSiteBinding(Site site, Binding binding)
+        {
+            var siteInfo = Map(site);
+
+            byte[] bindingHash = null;
+
+            try
+            {
+                // attempting to read certificate hash for an invalid cert can cause an exception
+                bindingHash = binding.CertificateHash;
+            }
+            catch
+            {
+            }
+            var bindingComponents = binding.BindingInformation.Split(':');
+
+            return new BindingInfo()
+            {
+                SiteId = siteInfo.Id,
+                SiteName = siteInfo.Name,
+                PhysicalPath = siteInfo.Path,
+                Host = bindingComponents[2],
+                IP = bindingComponents[0],
+                Port = int.Parse(bindingComponents[1]),
+                IsHTTPS = false,
+                Protocol = binding.Protocol.ToLower(),
+                HasCertificate = (bindingHash != null),
+                CertificateHash = bindingHash != null ? HashBytesToThumprint(bindingHash) : null,
+                CertificateHashBytes = bindingHash,
+                IsFtpSite = true
             };
         }
 
@@ -755,44 +878,6 @@ namespace Certify.Management.Servers
                     return false;
                 }
             }
-        }
-
-        /// <summary>
-        /// Finds the IIS <see cref="Site" /> corresponding to a <see cref="ManagedCertificate" />.
-        /// </summary>
-        /// <param name="managedCertificate"> Configured site. </param>
-        /// <returns> The matching IIS Site if found, otherwise null. </returns>
-        private async Task<SiteInfo> FindManagedCertificate(ManagedCertificate managedCertificate)
-        {
-            if (managedCertificate == null)
-            {
-                throw new ArgumentNullException(nameof(managedCertificate));
-            }
-
-            var site = await GetSiteById(managedCertificate.GroupId);
-
-            if (site != null)
-            {
-                //TODO: ? check site has bindings for given domains, otherwise set back to null
-            }
-
-            if (site == null)
-            {
-                site = Map(await GetIISSiteByDomain(managedCertificate.RequestConfig.PrimaryDomain));
-            }
-
-            return site;
-        }
-
-        private string ToUnicodeString(string input)
-        {
-            //if string already has (non-ascii range) unicode characters return original
-            if (input.Any(c => c > 255))
-            {
-                return input;
-            }
-
-            return _idnMapping.GetUnicode(input);
         }
 
         /// <summary>
