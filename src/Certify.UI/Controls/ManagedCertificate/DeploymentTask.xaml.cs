@@ -38,7 +38,7 @@ namespace Certify.UI.Controls.ManagedCertificate
         protected ViewModel.DeploymentTaskConfigViewModel EditModel = new ViewModel.DeploymentTaskConfigViewModel(null);
 
         public bool EditAsPostRequestTask { get; set; } = true;
-        
+
         public DeploymentTask()
         {
             InitializeComponent();
@@ -155,7 +155,8 @@ namespace Certify.UI.Controls.ManagedCertificate
                             return false;
                         }
                     }
-                } else
+                }
+                else
                 {
                     if (AppViewModel.SelectedItem.PreRequestTasks?.Any() == true)
                     {
@@ -166,13 +167,13 @@ namespace Certify.UI.Controls.ManagedCertificate
                         }
                     }
                 }
-               
+
             }
 
             // if remote target, check target specified. TODO: Could also check host resolves.
-            if (
-                EditModel.SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_LOCAL &&
-                string.IsNullOrEmpty(EditModel.SelectedItem.TargetHost)
+            if (!string.IsNullOrEmpty(EditModel.SelectedItem.ChallengeProvider)
+                && EditModel.SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_LOCAL
+                && string.IsNullOrEmpty(EditModel.SelectedItem.TargetHost)
                 )
             {
                 // check task name populated
@@ -208,7 +209,8 @@ namespace Certify.UI.Controls.ManagedCertificate
                     var original = AppViewModel.SelectedItem.PostRequestTasks.First(f => f.Id == EditModel.SelectedItem.Id);
                     AppViewModel.SelectedItem.PostRequestTasks[AppViewModel.SelectedItem.PostRequestTasks.IndexOf(original)] = EditModel.SelectedItem;
                 }
-            } else
+            }
+            else
             {
                 if (AppViewModel.SelectedItem.PreRequestTasks == null)
                 {
@@ -225,11 +227,11 @@ namespace Certify.UI.Controls.ManagedCertificate
                 else
                 {
                     var original = AppViewModel.SelectedItem.PreRequestTasks.First(f => f.Id == EditModel.SelectedItem.Id);
-                    AppViewModel.SelectedItem.PostRequestTasks[AppViewModel.SelectedItem.PreRequestTasks.IndexOf(original)] = EditModel.SelectedItem;
+                    AppViewModel.SelectedItem.PreRequestTasks[AppViewModel.SelectedItem.PreRequestTasks.IndexOf(original)] = EditModel.SelectedItem;
                 }
             }
 
-           
+
             return true;
         }
 

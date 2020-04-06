@@ -39,31 +39,30 @@
 
                 <StackPanel>
 
-                    <Border
-                        Margin="0,0,0,16"
-                        Padding="0,0,0,8"
-                        BorderThickness="0">
-                        <StackPanel>
-                            <TextBlock
-                                Margin="16,0,0,8"
-                                FontFamily="Segoe UI Light"
-                                FontSize="36"
-                                TextWrapping="Wrap"><Run
-                                    FontFamily="Segoe UI Semibold"
-                                    FontWeight="Bold"
-                                    Text="Certify" /><Run Text=" the web" /></TextBlock>
-                            <TextBlock Margin="16,0,0,0" TextWrapping="Wrap"><Run Text="{x:Static res:SR.ManagedCertificates_NoItemSelectedDesc}" /></TextBlock>
-                        </StackPanel>
-                    </Border>
+
+                    <TextBlock
+                        Margin="16,0,0,8"
+                        FontSize="36"
+                        TextWrapping="Wrap"><Run FontWeight="Bold" Text="Certify" /><Run Text=" the web" /></TextBlock>
+                    <TextBlock
+                        Margin="16,0,0,0"
+                        Style="{StaticResource Instructions}"
+                        TextWrapping="Wrap">
+                        <Run>Easily manage the request, auto-renewal and deployment of TLS/SSL certificates from ACME (Automated Certificate Management Environment) enabled Certificate Authorities including the free Let's Encrypt service (https://letsencrypt.org).</Run>
+                        <LineBreak />  <LineBreak />
+                        <Run>For more information, documentation, community discussions and support options, see https://certifytheweb.com</Run>
+
+                    </TextBlock>
 
                     <StackPanel MinHeight="20" Orientation="Vertical">
                         <TextBlock
-                            Margin="16,8,0,16"
+                            Margin="16,16,0,16"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top"
-                            FontFamily="Segoe UI Light"
                             FontSize="20"
-                            TextWrapping="Wrap"><Run Text="Getting Started" /></TextBlock>
+                            TextWrapping="Wrap">
+                            Getting Started
+                        </TextBlock>
 
                         <TextBlock Margin="16,0,0,0" TextWrapping="Wrap"><Run Text="{x:Static res:SR.ManagedCertificates_NoItemSelectedTip}" /><Run Text="&#x9;" /></TextBlock>
 
@@ -117,7 +116,6 @@
                             Margin="16,8,0,16"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top"
-                            FontFamily="Segoe UI Light"
                             FontSize="20"
                             Foreground="White"
                             TextWrapping="Wrap"><Run Text="Warning: Your version of Windows/IIS has limited SSL Support" /></TextBlock>
@@ -158,7 +156,6 @@
                             Margin="16,8,0,16"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top"
-                            FontFamily="Segoe UI Light"
                             FontSize="20"
                             Foreground="White"
                             TextWrapping="Wrap"><Run Text="Warning: Unsupported challenge type in use." /></TextBlock>
@@ -168,20 +165,16 @@
                             Style="{StaticResource Instructions}"><Run Text="One or more managed certificates is still using the unsupported tls-sni-01 challenge type. You must change these to a different challenge under Authorization or they will fail to renew." /></TextBlock>
                     </StackPanel>
 
-                    <StackPanel x:Name="Dashboard">
+                    <StackPanel x:Name="Dashboard" Margin="0,16,0,0">
 
                         <TextBlock
                             Margin="16,8,0,16"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top"
-                            FontFamily="Segoe UI Light"
                             FontSize="20"
                             TextWrapping="Wrap"><Run Text="{x:Static res:SR.GettingStarted_Dashboard}" /></TextBlock>
 
-                        <TextBlock
-                            Margin="16,0,16,16"
-                            FontFamily="Segoe UI Light"
-                            TextWrapping="Wrap"><Run Text="{x:Static res:SR.GettingStarted_DashboardIntro}" /></TextBlock>
+                        <TextBlock Margin="16,0,16,16" TextWrapping="Wrap"><Run Text="{x:Static res:SR.GettingStarted_DashboardIntro}" /></TextBlock>
                         <StackPanel Orientation="Horizontal">
 
                             <Button

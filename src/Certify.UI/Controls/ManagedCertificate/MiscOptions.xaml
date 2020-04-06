@@ -26,7 +26,7 @@
             NotNull="Collapsed"
             Null="Visible" />
     </UserControl.Resources>
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <ScrollViewer Margin="0,16,0,0" VerticalScrollBarVisibility="Auto">
         <DockPanel Margin="8,0,8,8" LastChildFill="False">
 
             <StackPanel

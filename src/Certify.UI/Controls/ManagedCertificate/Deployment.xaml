@@ -44,13 +44,20 @@
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <DockPanel Margin="8,0,8,8" LastChildFill="True">
 
-                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Certificate Deployment</TextBlock>
-
                     <TextBlock
+                        Margin="0,16,0,0"
                         DockPanel.Dock="Top"
-                        Style="{StaticResource Instructions}"
-                        Text="Choose how to apply the certificate:" />
-                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                        Style="{StaticResource Subheading}">
+                        Certificate Deployment
+                    </TextBlock>
+
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">
+                        Deployment of your certificate can be automatic or you can perform your own deployment tasks.
+                    </TextBlock>
+                    <StackPanel
+                        Margin="0,8,0,8"
+                        DockPanel.Dock="Top"
+                        Orientation="Horizontal">
                         <Label Width="130" Content="Deployment Mode:" />
                         <ComboBox
                             x:Name="DeploymentSiteOptions"

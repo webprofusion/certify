@@ -309,9 +309,6 @@
   <data name="ManagedCertificates_Filter" xml:space="preserve">
     <value>Filtrar...</value>
   </data>
-  <data name="ManagedCertificates_NoItemSelectedDesc" xml:space="preserve">
-    <value>Certificados SSL gratuitos proporcionados a través del servicio Let's Encrypt (https://letsencrypt.org).</value>
-  </data>
   <data name="ManagedCertificates_NoItemSelectedTip" xml:space="preserve">
     <value>Seleccione un Sitio Administrado o seleccione Nuevo certificado para comenzar.</value>
   </data>

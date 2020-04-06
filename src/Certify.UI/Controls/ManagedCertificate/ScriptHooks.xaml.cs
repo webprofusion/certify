@@ -119,19 +119,33 @@ namespace Certify.UI.Controls.ManagedCertificate
                 Button_TestWebhook.IsEnabled = false;
 
                 var config = ItemViewModel.SelectedItem.RequestConfig;
+                
                 if (!Uri.TryCreate(config.WebhookUrl, UriKind.Absolute, out var result))
                 {
                     MessageBox.Show($"The webhook url must be a valid url.", SR.ManagedCertificateSettings_WebhookTestFailed, MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
+
                 if (string.IsNullOrEmpty(config.WebhookMethod))
                 {
                     MessageBox.Show($"The webhook method must be selected.", SR.ManagedCertificateSettings_WebhookTestFailed, MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
+
                 var forSuccess = config.WebhookTrigger == Webhook.ON_SUCCESS;
-                var webhookResult = await Webhook.SendRequest(config, forSuccess);
+
+                var webhookResult = await Webhook.SendRequest(
+                    new Webhook.WebhookConfig
+                    {
+                        Url = config.WebhookUrl,
+                        Trigger = config.WebhookTrigger,
+                        ContentType = config.WebhookContentType,
+                        ContentBody = config.WebhookContentBody,
+                        Method = config.WebhookMethod
+                    }, ItemViewModel.SelectedItem, forSuccess);
+
                 var completed = webhookResult.Success ? SR.succeed : SR.failed;
+
                 MessageBox.Show(string.Format(SR.ManagedCertificateSettings_WebhookRequestResult, completed, webhookResult.StatusCode), SR.ManagedCertificateSettings_WebhookTest, MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)

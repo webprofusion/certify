@@ -29,6 +29,34 @@ namespace Certify.Shared.Utils
         public static List<string> TriggerTypes = new List<string>() { ON_NONE, ON_SUCCESS, ON_ERROR, ON_SUCCESS_OR_ERROR };
         public static List<string> Methods = new List<string>() { METHOD_GET, METHOD_POST };
 
+        public class WebhookConfig
+        {
+            /// <summary>
+            /// The trigger for the webhook (None, Success, Error) 
+            /// </summary>
+            public string Trigger { get; set; } = "None";
+
+            /// <summary>
+            /// The http method for the webhook request 
+            /// </summary>
+            public string Method { get; set; }
+
+            /// <summary>
+            /// The http url for the webhook request 
+            /// </summary>
+            public string Url { get; set; }
+
+            /// <summary>
+            /// The http content type header for the webhook request 
+            /// </summary>
+            public string ContentType { get; set; }
+
+            /// <summary>
+            /// The http body template for the webhook request 
+            /// </summary>
+            public string ContentBody { get; set; }
+        }
+
         /// <summary>
         /// Sends an HTTP Request with the requested parameters 
         /// </summary>
@@ -37,35 +65,39 @@ namespace Certify.Shared.Utils
         /// <param name="contentType"></param>
         /// <param name="body"></param>
         /// <returns> A named Tuple with Success boolean and int StatusCode of the HTTP Request </returns>
-        public static async Task<WebhookResult> SendRequest(CertRequestConfig config, bool forSuccess)
+        public static async Task<WebhookResult> SendRequest(WebhookConfig config, ManagedCertificate item, bool forSuccess)
         {
             using (var client = new HttpClient())
             {
-                client.DefaultRequestHeaders.Add("User-Agent", Management.Util.GetUserAgent() + " CertifyManager");
+                client.DefaultRequestHeaders.Add("User-Agent", Management.Util.GetUserAgent());
 
                 HttpRequestMessage message;
-                var Url = ParseValues(config.WebhookUrl, config, forSuccess, true);
-                switch (config.WebhookMethod)
+
+                var url = ParseValues(config.Url, item.RequestConfig, forSuccess, true);
+
+                switch (config.Method)
                 {
                     case METHOD_GET:
-                        message = new HttpRequestMessage(HttpMethod.Get, Url);
+                        message = new HttpRequestMessage(HttpMethod.Get, url);
                         break;
 
                     case METHOD_POST:
-                        message = new HttpRequestMessage(HttpMethod.Post, Url)
+                        message = new HttpRequestMessage(HttpMethod.Post, url)
                         {
                             Content = new StringContent(
-                                ParseValues(!string.IsNullOrEmpty(config.WebhookContentBody) ? config.WebhookContentBody : DEFAULT_BODY,
-                                    config, forSuccess, false),
+                                ParseValues(!string.IsNullOrEmpty(config.ContentBody) ? config.ContentBody : DEFAULT_BODY, item.RequestConfig, forSuccess, false),
                                 Encoding.UTF8,
-                                string.IsNullOrEmpty(config.WebhookContentType) ? "application/json" : config.WebhookContentType)
+                                string.IsNullOrEmpty(config.ContentType) ? "application/json" : config.ContentType
+                                )
                         };
                         break;
 
                     default:
                         throw new ArgumentException("Method must be GET or POST", "method");
                 }
+
                 var resp = await client.SendAsync(message);
+                
                 return new WebhookResult(resp.IsSuccessStatusCode, (int)resp.StatusCode);
             }
         }
@@ -81,9 +113,11 @@ namespace Certify.Shared.Utils
         {
             // add all config properties to template vars
             var vars = new Dictionary<string, string>();
+
             foreach (var prop in config.GetType().GetProperties())
             {
                 var value = prop.GetValue(config)?.ToString() ?? "";
+
                 if (url_encode)
                 {
                     value = WebUtility.UrlEncode(value);
@@ -92,6 +126,7 @@ namespace Certify.Shared.Utils
                 {
                     value = value.Replace(@"\", @"\\");
                 }
+
                 vars[prop.Name.ToLower()] = value;
             }
 

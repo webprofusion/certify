@@ -270,9 +270,6 @@
   <data name="ManagedCertificates_Filter" xml:space="preserve">
     <value>Filter...</value>
   </data>
-  <data name="ManagedCertificates_NoItemSelectedDesc" xml:space="preserve">
-    <value>Gratis SSL-sertifikater levert via Let's Encrypt-tjenesten (https://letsencrypt.org).</value>
-  </data>
   <data name="ManagedCertificates_NoItemSelectedTip" xml:space="preserve">
     <value>Velg et administrert nettsted, eller velg nytt sertifikat for å begynne.</value>
   </data>

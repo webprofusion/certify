@@ -68,9 +68,28 @@ namespace Certify.UI.ViewModel
         }
         internal async Task RefreshWebsiteList()
         {
+            var selectedWebsiteId = SelectedWebSite?.SiteId;
+            
+            IsSiteListQueryProgress = true;
+
             var list = await _appViewModel.CertifyClient.GetServerSiteList(StandardServerTypes.IIS);
-            list.Insert(0, new BindingInfo { SiteName = "(No IIS Website Selected)", SiteId = "" });
-            WebSiteList = new ObservableCollection<BindingInfo>(list);
+            list.Insert(0, new BindingInfo { SiteName = "(No IIS Site Selected)", SiteId = "" });
+
+            if (WebSiteList == null)
+            {
+                WebSiteList = new ObservableCollection<BindingInfo>();
+            }
+
+            WebSiteList.Clear();
+
+            list.ForEach(i => WebSiteList.Add(i));
+
+            IsSiteListQueryProgress = false;
+
+            // restore 
+            SelectedWebSite = WebSiteList.FirstOrDefault(s => s.SiteId == selectedWebsiteId);
+            RaisePropertyChangedEvent(nameof(WebSiteList));
+
         }
 
         /// <summary>
@@ -110,6 +129,7 @@ namespace Certify.UI.ViewModel
         }
 
         public bool IsTestInProgress { get; set; }
+        public bool IsSiteListQueryProgress { get; set; }
 
         public ManagedCertificate SelectedItem
         {
@@ -154,10 +174,11 @@ namespace Certify.UI.ViewModel
             get
             {
                 var list = CertificateAuthority.CertificateAuthorities.Where(c => c.IsEnabled == true).ToList();
-                list.Insert(0, new CertificateAuthority { 
-                    Id = "", 
-                    Title = "Auto", 
-                    Description = "The Certificate Authority will be automatically selected based on compatibility and the configured ACME accounts." 
+                list.Insert(0, new CertificateAuthority
+                {
+                    Id = "",
+                    Title = "Auto",
+                    Description = "The Certificate Authority will be automatically selected based on compatibility and the configured ACME accounts."
                 });
                 return list;
             }

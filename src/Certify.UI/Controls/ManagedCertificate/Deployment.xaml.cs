@@ -102,7 +102,10 @@ namespace Certify.UI.Controls.ManagedCertificate
         private void EditDeploymentTask_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             var config = (sender as Button).DataContext as DeploymentTaskConfig;
-            var dialog = new EditDeploymentTask(config, true)
+
+            var isPostRequestTask = ItemViewModel.SelectedItem.PostRequestTasks.Any(i => i.Id == config.Id);
+
+            var dialog = new EditDeploymentTask(config, isPostRequestTask)
             {
                 Owner = Window.GetWindow(this)
             };

@@ -351,9 +351,6 @@
   <data name="ManagedCertificates_Filter" xml:space="preserve">
     <value>查找...</value>
   </data>
-  <data name="ManagedCertificates_NoItemSelectedDesc" xml:space="preserve">
-    <value>由 Let's Encrypt (https://letsencrypt.org) 提供的免费 SSL 证书。</value>
-  </data>
   <data name="ManagedCertificates_NoItemSelectedTip" xml:space="preserve">
     <value>选择一个已管理的站点或选择新建证书来继续。</value>
   </data>

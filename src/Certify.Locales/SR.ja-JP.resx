@@ -534,9 +534,6 @@
   <data name="ScheduledTaskConfig_FailedToCreateTask" xml:space="preserve">
     <value>指定された資格情報でスケジュールされたタスクを作成できませんでした</value>
   </data>
-  <data name="ManagedCertificates_NoItemSelectedDesc" xml:space="preserve">
-    <value>Let's Encryptサービス（https://letsencrypt.org）で提供される無料のSSL証明書。</value>
-  </data>
   <data name="MainWindow_GetStartGuideWithNewCert" xml:space="preserve">
     <value>新しい連絡先を登録すると、証明書の要求を開始できます。</value>
   </data>

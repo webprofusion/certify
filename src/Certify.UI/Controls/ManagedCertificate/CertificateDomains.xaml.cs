@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -52,7 +52,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                     WebsiteDropdown.Text = "(No IIS Sites Found)";
                 }
 
-               
+
 
                 if (ItemViewModel.SelectedItem != null)
                 {
@@ -81,12 +81,14 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 var siteId = ItemViewModel.SelectedWebSite.SiteId;
 
-                SiteQueryInProgress.Visibility = Visibility.Visible;
-
                 await ItemViewModel.PopulateManagedCertificateSettings(siteId);
-
-                SiteQueryInProgress.Visibility = Visibility.Hidden;
             }
+        }
+
+        private async void RefreshWebsiteList_Click(object sender, RoutedEventArgs e)  {
+        
+            await ItemViewModel.RefreshWebsiteList();
+        
         }
 
         private async void RefreshSanList_Click(object sender, RoutedEventArgs e) => await ItemViewModel.SANRefresh();

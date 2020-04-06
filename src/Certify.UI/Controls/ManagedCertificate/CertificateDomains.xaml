@@ -60,20 +60,27 @@
                             <ComboBox
                                 x:Name="WebsiteDropdown"
                                 Width="240"
-                                AutomationProperties.HelpText="You can optionally select a website hosted on this server to populate the list of domains in your certificate. "
+                                AutomationProperties.HelpText="You can optionally select a site hosted on this server to populate the list of domains in your certificate. "
                                 AutomationProperties.Name="{x:Static Resources:SR.ManagedCertificateSettings_SelectWebsite}"
                                 DisplayMemberPath="SiteName"
-                                ItemsSource="{Binding WebSiteList, UpdateSourceTrigger=Default}"
+                                ItemsSource="{Binding WebSiteList, UpdateSourceTrigger=PropertyChanged}"
                                 SelectedItem="{Binding SelectedWebSite}"
                                 SelectionChanged="Website_SelectionChanged" />
-                            <fa:ImageAwesome
-                                x:Name="SiteQueryInProgress"
-                                Height="16"
-                                Margin="4,0,0,0"
-                                Icon="Refresh"
-                                Spin="True"
-                                SpinDuration="1"
-                                Visibility="Hidden" />
+                            <Button
+                                Width="32"
+                                Margin="0,0,4,0"
+                                AutomationProperties.Name="Refresh Sites"
+                                BorderThickness="0"
+                                Click="RefreshWebsiteList_Click"
+                                ToolTip="Refresh Site List">
+                                <fa:ImageAwesome
+                                    Height="12"
+                                    Foreground="{DynamicResource AccentColorBrush}"
+                                    Icon="Refresh"
+                                    Spin="{Binding IsSiteListQueryProgress}" />
+
+                            </Button>
+
                         </StackPanel>
 
                         <StackPanel
@@ -94,9 +101,11 @@
                                 <Button
                                     x:Name="AddDomains"
                                     Width="32"
-                                    Margin="4,0,0,0"
+                                    Margin="0,0,0,0"
                                     AutomationProperties.Name="Add Domains"
-                                    Click="AddDomains_Click">
+                                    BorderThickness="0"
+                                    Click="AddDomains_Click"
+                                    ToolTip="Add Domains">
                                     <fa:ImageAwesome
                                         Height="12"
                                         Foreground="{DynamicResource AccentColorBrush}"

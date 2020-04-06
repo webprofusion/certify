@@ -259,7 +259,7 @@
     <value>Password</value>
   </data>
   <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
-    <value>This version is free for evaluation and will manage a limited number of certificates. To remove this limitation please purchase a registration key. Registered users can get support by emailing support@certifytheweb.com</value>
+    <value>This version is free for evaluation and will manage a limited number of certificates. To remove this limitation please purchase a registration key at https://certifytheweb.com/register. Registered users can get support by emailing support@certifytheweb.com</value>
   </data>
   <data name="AboutControl_RegistrationTypeLabel" xml:space="preserve">
     <value>Not Registered</value>
@@ -284,9 +284,6 @@
   </data>
   <data name="ManagedCertificates_Filter" xml:space="preserve">
     <value>Filter...</value>
-  </data>
-  <data name="ManagedCertificates_NoItemSelectedDesc" xml:space="preserve">
-    <value>Free SSL Certificates provided via the Let's Encrypt service (https://letsencrypt.org).</value>
   </data>
   <data name="ManagedCertificates_NoItemSelectedTip" xml:space="preserve">
     <value>Select a Managed Certificate or select New Certificate to begin.</value>
@@ -352,7 +349,7 @@
     <value>Options</value>
   </data>
   <data name="ManagedCertificateSettings_SelectWebsite" xml:space="preserve">
-    <value>Select Website (optional):</value>
+    <value>Select Site (optional):</value>
   </data>
   <data name="ManagedCertificateSettings_DisplayName" xml:space="preserve">
     <value>Display Name:</value>
@@ -385,7 +382,7 @@
     <value>Challenge Type:</value>
   </data>
   <data name="ManagedCertificateSettings_WebsiteRoot" xml:space="preserve">
-    <value>Website Root Directory</value>
+    <value>Site Root Directory</value>
   </data>
   <data name="ManagedCertificateSettings_BrowseFolder" xml:space="preserve">
     <value>...</value>
@@ -430,7 +427,7 @@
     <value>Save Error</value>
   </data>
   <data name="ManagedCertificateSettings_SelectWebsiteOrCert" xml:space="preserve">
-    <value>Select the website to create a certificate for.</value>
+    <value>Select the site to create a certificate for.</value>
   </data>
   <data name="ManagedCertificateSettings_NameRequired" xml:space="preserve">
     <value>A name is required for this item.</value>

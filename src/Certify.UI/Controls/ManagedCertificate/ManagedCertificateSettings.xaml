@@ -179,15 +179,7 @@
                     Text="{Binding SelectedItem.Name, UpdateSourceTrigger=PropertyChanged}"
                     ToolTip="Enter a display name for this managed certificate. This is for your own use and is not included in the certificate." />
 
-                <CheckBox
-                    x:Name="CheckAdvancedView"
-                    AutomationProperties.Name="Show Advanced Options"
-                    BorderBrush="{DynamicResource {x:Static SystemColors.InactiveCaptionTextBrushKey}}"
-                    Checked="CheckAdvancedView_Checked"
-                    Content="Show Advanced Options"
-                    DockPanel.Dock="Right"
-                    IsChecked="{Binding IsAdvancedView}"
-                    Unchecked="CheckAdvancedView_Checked" />
+              
             </DockPanel>
 
             <Controls:MetroTabControl

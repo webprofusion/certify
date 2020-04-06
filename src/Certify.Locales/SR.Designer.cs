@@ -133,7 +133,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This version is free for evaluation and will manage a limited number of certificates. To remove this limitation please purchase a registration key. Registered users can get support by emailing support@certifytheweb.com.
+        ///   Looks up a localized string similar to This version is free for evaluation and will manage a limited number of certificates. To remove this limitation please purchase a registration key at https://certifytheweb.com/register. Registered users can get support by emailing support@certifytheweb.com.
         /// </summary>
         public static string AboutControl_TrialDetailLabel {
             get {
@@ -543,15 +543,6 @@ namespace Certify.Locales {
         public static string ManagedCertificates_Filter {
             get {
                 return ResourceManager.GetString("ManagedCertificates_Filter", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Free SSL Certificates provided via the Let&apos;s Encrypt service (https://letsencrypt.org)..
-        /// </summary>
-        public static string ManagedCertificates_NoItemSelectedDesc {
-            get {
-                return ResourceManager.GetString("ManagedCertificates_NoItemSelectedDesc", resourceCulture);
             }
         }
         
@@ -1044,7 +1035,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select Website (optional):.
+        ///   Looks up a localized string similar to Select Site (optional):.
         /// </summary>
         public static string ManagedCertificateSettings_SelectWebsite {
             get {
@@ -1053,7 +1044,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select the website to create a certificate for..
+        ///   Looks up a localized string similar to Select the site to create a certificate for..
         /// </summary>
         public static string ManagedCertificateSettings_SelectWebsiteOrCert {
             get {
@@ -1134,7 +1125,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Website Root Directory.
+        ///   Looks up a localized string similar to Site Root Directory.
         /// </summary>
         public static string ManagedCertificateSettings_WebsiteRoot {
             get {

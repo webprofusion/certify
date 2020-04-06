@@ -26,7 +26,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             InitializeComponent();
             AppViewModel.PropertyChanged += MainViewModel_PropertyChanged;
 
-            ToggleAdvancedView();
+
         }
 
         private void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -49,12 +49,10 @@ namespace Certify.UI.Controls.ManagedCertificate
                     SettingsTab.SelectedItem = TabDomains;
                 }
 
-                // TODO: fix property changed dependencies
                 ItemViewModel.RaiseSelectedItemChanges();
 
                 AppViewModel.IsChanged = false;
 
-                ToggleAdvancedView();
             }
         }
 
@@ -64,11 +62,6 @@ namespace Certify.UI.Controls.ManagedCertificate
         }
         private async Task<bool> ValidateAndSave(Models.ManagedCertificate item)
         {
-            /*if (item.Id == null && MainViewModel.SelectedWebSite == null)
-            {
-                MessageBox.Show(SR.ManagedCertificateSettings_SelectWebsiteOrCert, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
-            }*/
 
             if (item.RequestConfig.Challenges == null)
             {
@@ -377,32 +370,5 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void Dismiss_Click(object sender, RoutedEventArgs e) => AppViewModel.SelectedItem = null;
 
-        private void CheckAdvancedView_Checked(object sender, RoutedEventArgs e) => ToggleAdvancedView();
-
-        private void ToggleAdvancedView()
-        {
-            if (ItemViewModel.SelectedItem != null &&
-                (!string.IsNullOrEmpty(ItemViewModel.SelectedItem.RequestConfig.PostRequestPowerShellScript)
-                ||
-                !string.IsNullOrEmpty(ItemViewModel.SelectedItem.RequestConfig.PreRequestPowerShellScript)
-                ||
-                !string.IsNullOrEmpty(ItemViewModel.SelectedItem.RequestConfig.WebhookUrl))
-                )
-            {
-                // force advanced view to show if using scripting or webhooks
-                CheckAdvancedView.IsChecked = true;
-            }
-
-            if (CheckAdvancedView.IsChecked == false)
-            {
-                TabScripting.Visibility = Visibility.Collapsed;
-    
-            }
-            else
-            {
-                TabScripting.Visibility = Visibility.Visible;
-     
-            }
-        }
     }
 }
