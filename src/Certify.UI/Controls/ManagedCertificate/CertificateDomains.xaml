@@ -9,6 +9,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fa="http://schemas.fontawesome.io/icons/"
     xmlns:local="clr-namespace:Certify.UI.Controls"
+    xmlns:managedcertificate="clr-namespace:Certify.UI.Controls.ManagedCertificate"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Models"
     xmlns:utils="clr-namespace:Certify.UI.Utils"
@@ -30,191 +31,253 @@
             Null="Visible" />
     </UserControl.Resources>
     <DockPanel>
-        <!--  Certificate Authority Preference  -->
-        <DockPanel Margin="8,0,8,8" DockPanel.Dock="Top">
-            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Certificate Authority</TextBlock>
-            <StackPanel
-                Margin="0,0,0,0"
-                DockPanel.Dock="Top"
-                Orientation="Horizontal">
-                <ComboBox
-                    x:Name="CertificateAuthorityList"
-                    Width="180"
-                    Margin="0,0,0,0"
-                    HorizontalAlignment="Left"
-                    DisplayMemberPath="Title"
-                    ItemsSource="{Binding CertificateAuthorities}"
-                    SelectedValue="{Binding SelectedItem.CertificateAuthorityId}"
-                    SelectedValuePath="Id"
-                    SelectionChanged="CertificateAuthorityList_SelectionChanged" />
+        <TabControl
+            x:Name="MainTabControl"
+            Height="auto"
+            Margin="0,0,0,0"
+            HorizontalContentAlignment="Left"
+            VerticalContentAlignment="Stretch"
+            Controls:TabControlHelper.Underlined="TabPanel">
+            <TabItem
+                MinWidth="100"
+                Controls:ControlsHelper.HeaderFontSize="12"
+                Header="Domains"
+                IsSelected="False">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <DockPanel Margin="8,0,8,8" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
 
-                <CheckBox
-                    Margin="4,4,0,4"
-                    Content="Use Staging Mode (Test Certificates)"
-                    IsChecked="{Binding SelectedItem.UseStagingMode}"
-                    Visibility="{Binding SelectedItem.CertificateAuthorityId, Converter={StaticResource NullCollapsedConverter}}" />
-            </StackPanel>
-            <TextBlock
-                Margin="0,8"
-                DockPanel.Dock="Top"
-                Style="{StaticResource Instructions}"
-                Text="{Binding CertificateAuthorityDescription}"
-                Visibility="{Binding SelectedItem.CertificateAuthorityId, Converter={StaticResource NullCollapsedConverter}}" />
-        </DockPanel>
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <DockPanel Margin="8,0,8,8" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
-                <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Certificate Domains</TextBlock>
-                <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}"><Run Text="Select domains from existing hostname bindings on an website or add the domains manually. You can then select " /><Run FontWeight="Bold" Text="Request Certificate " /><Run Text="above or modify options as required." /></TextBlock>
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}"><Run Text="Select domains from existing hostname bindings on an website or add the domains manually. You can then select " /><Run FontWeight="Bold" Text="Request Certificate " /><Run Text="above or modify options as required." /></TextBlock>
 
-                <StackPanel
-                    Margin="0,8,0,0"
-                    DockPanel.Dock="Top"
-                    Orientation="Horizontal">
-                    <Label
-                        x:Name="SelectWebsite"
-                        Width="160"
-                        AutomationProperties.Name="{x:Static Resources:SR.ManagedCertificateSettings_SelectWebsite}"
-                        Content="{x:Static Resources:SR.ManagedCertificateSettings_SelectWebsite}" />
-                    <ComboBox
-                        x:Name="WebsiteDropdown"
-                        Width="240"
-                        AutomationProperties.HelpText="You can optionally select a website hosted on this server to populate the list of domains in your certificate. "
-                        AutomationProperties.Name="{x:Static Resources:SR.ManagedCertificateSettings_SelectWebsite}"
-                        DisplayMemberPath="SiteName"
-                        ItemsSource="{Binding WebSiteList, UpdateSourceTrigger=Default}"
-                        SelectedItem="{Binding SelectedWebSite}"
-                        SelectionChanged="Website_SelectionChanged" />
-                    <fa:ImageAwesome
-                        x:Name="SiteQueryInProgress"
-                        Height="16"
-                        Margin="4,0,0,0"
-                        Icon="Refresh"
-                        Spin="True"
-                        SpinDuration="1"
-                        Visibility="Hidden" />
-                </StackPanel>
+                        <StackPanel
+                            Margin="0,8,0,0"
+                            DockPanel.Dock="Top"
+                            Orientation="Horizontal">
+                            <Label
+                                x:Name="SelectWebsite"
+                                Width="160"
+                                AutomationProperties.Name="{x:Static Resources:SR.ManagedCertificateSettings_SelectWebsite}"
+                                Content="{x:Static Resources:SR.ManagedCertificateSettings_SelectWebsite}" />
+                            <ComboBox
+                                x:Name="WebsiteDropdown"
+                                Width="240"
+                                AutomationProperties.HelpText="You can optionally select a website hosted on this server to populate the list of domains in your certificate. "
+                                AutomationProperties.Name="{x:Static Resources:SR.ManagedCertificateSettings_SelectWebsite}"
+                                DisplayMemberPath="SiteName"
+                                ItemsSource="{Binding WebSiteList, UpdateSourceTrigger=Default}"
+                                SelectedItem="{Binding SelectedWebSite}"
+                                SelectionChanged="Website_SelectionChanged" />
+                            <fa:ImageAwesome
+                                x:Name="SiteQueryInProgress"
+                                Height="16"
+                                Margin="4,0,0,0"
+                                Icon="Refresh"
+                                Spin="True"
+                                SpinDuration="1"
+                                Visibility="Hidden" />
+                        </StackPanel>
 
-                <StackPanel
-                    x:Name="ManualDomainEntry"
-                    Margin="0,8,0,0"
-                    DockPanel.Dock="Top"
-                    Orientation="Vertical">
+                        <StackPanel
+                            x:Name="ManualDomainEntry"
+                            Margin="0,8,0,0"
+                            DockPanel.Dock="Top"
+                            Orientation="Vertical">
 
-                    <StackPanel Orientation="Horizontal">
-                        <Label Width="160" Content="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsToCertificate}" />
-                        <TextBox
-                            x:Name="ManualDomains"
-                            Width="240"
-                            Controls:TextBoxHelper.Watermark="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsHelpText}"
-                            AutomationProperties.HelpText="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsHelpText}"
-                            AutomationProperties.Name="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsToCertificate}" />
-                        <Button
-                            x:Name="AddDomains"
-                            Margin="4,0,0,0"
-                            AutomationProperties.Name="Add Domains"
-                            Click="AddDomains_Click"
-                            Content="Add Domains" />
-                    </StackPanel>
-                </StackPanel>
-                <StackPanel
-                    x:Name="NoBindings"
-                    Margin="0,4,0,0"
-                    DockPanel.Dock="Top"
-                    Orientation="Vertical"
-                    Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=InvBoolVisConverter}, UpdateSourceTrigger=PropertyChanged}">
-                    <TextBlock
-                        Margin="8,0"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Top"
-                        FontFamily="Segoe UI Semibold"
-                        FontWeight="Bold"
-                        Foreground="#FFEA1010"
-                        TextWrapping="WrapWithOverflow"><Run Text="{x:Static Resources:SR.ManagedCertificateSettings_NoHostNameBindingWarning}" /></TextBlock>
-                </StackPanel>
-                <DockPanel
-                    x:Name="DomainOptions"
-                    Margin="0,8,0,0"
-                    DockPanel.Dock="Bottom"
-                    Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=BoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
-                    <Label
-                        Content="{x:Static Resources:SR.ManagedCertificateSettings_SelectDomain}"
-                        DockPanel.Dock="Top"
-                        FontWeight="Bold" />
+                            <StackPanel Orientation="Horizontal">
+                                <Label Width="160" Content="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsToCertificate}" />
+                                <TextBox
+                                    x:Name="ManualDomains"
+                                    Width="240"
+                                    Controls:TextBoxHelper.Watermark="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsHelpText}"
+                                    AutomationProperties.HelpText="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsHelpText}"
+                                    AutomationProperties.Name="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsToCertificate}" />
+
+                                <Button
+                                    x:Name="AddDomains"
+                                    Width="32"
+                                    Margin="4,0,0,0"
+                                    AutomationProperties.Name="Add Domains"
+                                    Click="AddDomains_Click">
+                                    <fa:ImageAwesome
+                                        Height="12"
+                                        Foreground="{DynamicResource AccentColorBrush}"
+                                        Icon="Plus" />
+
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+                        <StackPanel
+                            x:Name="NoBindings"
+                            Margin="0,4,0,0"
+                            DockPanel.Dock="Top"
+                            Orientation="Vertical"
+                            Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=InvBoolVisConverter}, UpdateSourceTrigger=PropertyChanged}">
+                            <TextBlock
+                                Margin="8,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                FontFamily="Segoe UI Semibold"
+                                FontWeight="Bold"
+                                Foreground="#FFEA1010"
+                                TextWrapping="WrapWithOverflow"><Run Text="{x:Static Resources:SR.ManagedCertificateSettings_NoHostNameBindingWarning}" /></TextBlock>
+                        </StackPanel>
+                        <DockPanel
+                            x:Name="DomainOptions"
+                            Margin="0,8,0,0"
+                            DockPanel.Dock="Bottom"
+                            Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=BoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
+                            <Label
+                                Content="{x:Static Resources:SR.ManagedCertificateSettings_SelectDomain}"
+                                DockPanel.Dock="Top"
+                                FontWeight="Bold" />
+                            <StackPanel
+                                Margin="0,4,0,4"
+                                DockPanel.Dock="Top"
+                                Orientation="Horizontal">
+                                <Button
+                                    Width="32"
+                                    Margin="0,0,4,0"
+                                    AutomationProperties.Name="Select All"
+                                    Command="{Binding SANSelectAllCommand}"
+                                    ToolTip="{x:Static Resources:SR.SelectAll}">
+                                    <fa:ImageAwesome
+                                        Height="12"
+                                        Foreground="{DynamicResource AccentColorBrush}"
+                                        Icon="CheckSquare" />
+
+                                </Button>
+
+                                <Button
+                                    Width="32"
+                                    Margin="0,0,4,0"
+                                    AutomationProperties.Name="Select None"
+                                    Command="{Binding SANSelectNoneCommand}"
+                                    ToolTip="{x:Static Resources:SR.ManagedCertificateSettings_SelectNone}">
+                                    <fa:ImageAwesome
+                                        Height="12"
+                                        Foreground="{DynamicResource AccentColorBrush}"
+                                        Icon="SquareOutline" />
+
+                                </Button>
+                                <Button
+                                    Width="32"
+                                    Margin="0,0,4,0"
+                                    AutomationProperties.Name="Select All"
+                                    Click="RefreshSanList_Click"
+                                    ToolTip="{x:Static Resources:SR.ManagedCertificatesSettings_RefreshDomains}">
+                                    <fa:ImageAwesome
+                                        Height="12"
+                                        Foreground="{DynamicResource AccentColorBrush}"
+                                        Icon="Refresh" />
+
+                                </Button>
+
+
+                                <Label Content="Filter:" />
+                                <TextBox
+                                    x:Name="DomainFilter"
+                                    Width="120"
+                                    AutomationProperties.Name="Filter domains"
+                                    TextChanged="DomainFilter_TextChanged" />
+                            </StackPanel>
+                            <DataGrid
+                                x:Name="DomainOptionsList"
+                                AutoGenerateColumns="False"
+                                CanUserAddRows="False"
+                                EnableRowVirtualization="True"
+                                ItemsSource="{Binding SelectedItem.DomainOptions}"
+                                MouseLeftButtonUp="DataGrid_MouseLeftButtonUp"
+                                ScrollViewer.CanContentScroll="True"
+                                ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                SelectionMode="Single"
+                                VirtualizingPanel.IsVirtualizing="True">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Header="{x:Static Resources:SR.ManagedCertificateSettings_Primary}">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <RadioButton
+                                                    HorizontalAlignment="Center"
+                                                    GroupName="PrimaryDomainGroup"
+                                                    IsChecked="{Binding IsPrimaryDomain, UpdateSourceTrigger=PropertyChanged}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridCheckBoxColumn Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Header="{x:Static Resources:SR.ManagedCertificateSettings_Include}" />
+                                    <DataGridTextColumn
+                                        MinWidth="200"
+                                        Binding="{Binding Domain, UpdateSourceTrigger=PropertyChanged}"
+                                        Header="{x:Static Resources:SR.ManagedCertificateSettings_Domain}"
+                                        IsReadOnly="True" />
+                                    <DataGridTemplateColumn>
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button
+                                                    Width="32"
+                                                    Margin="4,0,0,0"
+                                                    AutomationProperties.Name="Remove Domain"
+                                                    Click="RemoveDomainOption_Click">
+                                                    <fa:ImageAwesome
+                                                        Height="12"
+                                                        Margin="0,0,0,0"
+                                                        Icon="Trash" />
+
+                                                </Button>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    </DockPanel>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem
+                MinWidth="140"
+                Controls:ControlsHelper.HeaderFontSize="12"
+                Header="Certificate Authority"
+                IsSelected="False">
+                <!--  Certificate Authority Preference  -->
+                <DockPanel Margin="8,0,8,8" DockPanel.Dock="Top">
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">
+                        Certificate Authorities are the organisations who can issue trusted certificates. You need to register an account under Settings for each (ACME) Certificate Authority you wish to use.
+                    </TextBlock>
+
                     <StackPanel
-                        Margin="0,4,0,4"
+                        Margin="0,16,0,0"
                         DockPanel.Dock="Top"
                         Orientation="Horizontal">
-
-                        <Button
+                        <ComboBox
+                            x:Name="CertificateAuthorityList"
+                            Width="180"
                             Margin="0,0,0,0"
-                            Command="{Binding SANSelectAllCommand}"
-                            Content="{x:Static Resources:SR.SelectAll}" />
-                        <Button
-                            Margin="8,0,0,0"
-                            Command="{Binding SANSelectNoneCommand}"
-                            Content="{x:Static Resources:SR.ManagedCertificateSettings_SelectNone}" />
-                        <Button
-                            Name="RefreshSanList"
-                            Margin="8,0,0,0"
-                            Click="RefreshSanList_Click"
-                            Content="{x:Static Resources:SR.ManagedCertificatesSettings_RefreshDomains}" />
-                        <Label Content="Filter:" />
-                        <TextBox
-                            x:Name="DomainFilter"
-                            Width="120"
-                            AutomationProperties.Name="Filter domains"
-                            TextChanged="DomainFilter_TextChanged" />
-                    </StackPanel>
-                    <DataGrid
-                        x:Name="DomainOptionsList"
-                        AutoGenerateColumns="False"
-                        CanUserAddRows="False"
-                        EnableRowVirtualization="True"
-                        ItemsSource="{Binding SelectedItem.DomainOptions}"
-                        MouseLeftButtonUp="DataGrid_MouseLeftButtonUp"
-                        ScrollViewer.CanContentScroll="True"
-                        ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                        ScrollViewer.VerticalScrollBarVisibility="Auto"
-                        SelectionMode="Single"
-                        VirtualizingPanel.IsVirtualizing="True">
-                        <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="{x:Static Resources:SR.ManagedCertificateSettings_Primary}">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <RadioButton
-                                            HorizontalAlignment="Center"
-                                            GroupName="PrimaryDomainGroup"
-                                            IsChecked="{Binding IsPrimaryDomain, UpdateSourceTrigger=PropertyChanged}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridCheckBoxColumn Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Header="{x:Static Resources:SR.ManagedCertificateSettings_Include}" />
-                            <DataGridTextColumn
-                                MinWidth="200"
-                                Binding="{Binding Domain, UpdateSourceTrigger=PropertyChanged}"
-                                Header="{x:Static Resources:SR.ManagedCertificateSettings_Domain}"
-                                IsReadOnly="True" />
-                            <DataGridTemplateColumn>
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button
-                                            Width="32"
-                                            Margin="4,0,0,0"
-                                            AutomationProperties.Name="Remove Domain"
-                                            Click="RemoveDomainOption_Click">
-                                            <fa:ImageAwesome
-                                                Height="12"
-                                                Margin="0,0,0,0"
-                                                Icon="Trash" />
+                            HorizontalAlignment="Left"
+                            DisplayMemberPath="Title"
+                            ItemsSource="{Binding CertificateAuthorities}"
+                            SelectedValue="{Binding SelectedItem.CertificateAuthorityId}"
+                            SelectedValuePath="Id"
+                            SelectionChanged="CertificateAuthorityList_SelectionChanged" />
 
-                                        </Button>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                        <CheckBox
+                            Margin="4,4,0,4"
+                            Content="Use Staging Mode (Test Certificates)"
+                            IsChecked="{Binding SelectedItem.UseStagingMode}"
+                            Visibility="{Binding SelectedItem.CertificateAuthorityId, Converter={StaticResource NullCollapsedConverter}}" />
+                    </StackPanel>
+                    <TextBlock
+                        Margin="0,8"
+                        DockPanel.Dock="Top"
+                        Style="{StaticResource Instructions}"
+                        Text="{Binding CertificateAuthorityDescription}"
+                        Visibility="{Binding SelectedItem.CertificateAuthorityId, Converter={StaticResource NullCollapsedConverter}}" />
                 </DockPanel>
-            </DockPanel>
-        </ScrollViewer>
+            </TabItem>
+            <TabItem
+                MinWidth="100"
+                Controls:ControlsHelper.HeaderFontSize="12"
+                Header="Advanced"
+                IsSelected="False">
+                <managedcertificate:MiscOptions />
+            </TabItem>
+        </TabControl>
     </DockPanel>
 </UserControl>

@@ -396,12 +396,12 @@ namespace Certify.UI.Controls.ManagedCertificate
             if (CheckAdvancedView.IsChecked == false)
             {
                 TabScripting.Visibility = Visibility.Collapsed;
-                TabOptions.Visibility = Visibility.Collapsed;
+    
             }
             else
             {
                 TabScripting.Visibility = Visibility.Visible;
-                TabOptions.Visibility = Visibility.Visible;
+     
             }
         }
     }

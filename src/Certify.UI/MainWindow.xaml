@@ -37,6 +37,15 @@
             <RowDefinition Height="48" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
+
+        <!--<Grid.LayoutTransform>
+            <ScaleTransform x:Name="ApplicationScaleTransform"
+                        CenterX="0"
+                        CenterY="0"
+                        ScaleX="1.6"
+                        ScaleY="1.6" />
+        </Grid.LayoutTransform>-->
+
         <StackPanel
             Grid.Row="0"
             Margin="8,8,8,0"
@@ -52,7 +61,7 @@
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource AccentColorBrush3}"
+                        Foreground="{DynamicResource AccentColorBrush}"
                         Icon="Globe" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.New_Certificate}" /></TextBlock>
                 </StackPanel>
@@ -66,7 +75,7 @@
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource AccentColorBrush3}"
+                        Foreground="{DynamicResource AccentColorBrush}"
                         Icon="Refresh" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Renew_All}" /></TextBlock>
                 </StackPanel>
@@ -85,7 +94,7 @@
                             Name="UpdateIcon"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            Foreground="{DynamicResource AccentColorBrush3}"
+                            Foreground="{DynamicResource AccentColorBrush}"
                             Icon="Superpowers" />
                         <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Update_Available}" /></TextBlock>
                     </StackPanel>

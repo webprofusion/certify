@@ -64,6 +64,12 @@ namespace Certify.UI.Controls.ManagedCertificate
             base.OnInitialized(e);
         }
 
+        private void TaskTypeSelection_Click(object sender, RoutedEventArgs e)
+        {
+            EditModel.SelectedItem.TaskTypeId = ((sender as Button).DataContext as DeploymentProviderDefinition).Id;
+            EditModel.RaisePropertyChangedEvent("SelectedItem");
+        }
+
         private async void AddStoredCredential_Click(object sender, RoutedEventArgs e)
         {
             var cred = new Windows.EditCredential

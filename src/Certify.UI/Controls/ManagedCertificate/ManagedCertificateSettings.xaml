@@ -90,7 +90,7 @@
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource AccentColorBrush3}"
+                        Foreground="{DynamicResource AccentColorBrush}"
                         Icon="Save" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.Save}" /></TextBlock>
                 </StackPanel>
@@ -105,7 +105,7 @@
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource AccentColorBrush3}"
+                        Foreground="{DynamicResource AccentColorBrush}"
                         Icon="Undo" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.DiscardChanges}" /></TextBlock>
                 </StackPanel>
@@ -119,7 +119,7 @@
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource AccentColorBrush3}"
+                        Foreground="{DynamicResource AccentColorBrush}"
                         Icon="Trash" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.Delete}" /></TextBlock>
                 </StackPanel>
@@ -133,7 +133,7 @@
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource AccentColorBrush3}"
+                        Foreground="{DynamicResource AccentColorBrush}"
                         Icon="Play" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.ManagedCertificateSettings_RequestCertificate}" /></TextBlock>
                 </StackPanel>
@@ -152,7 +152,7 @@
                         Height="16"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource AccentColorBrush3}"
+                        Foreground="{DynamicResource AccentColorBrush}"
                         Icon="Refresh"
                         Spin="True"
                         SpinDuration="1"
@@ -161,7 +161,7 @@
                         Height="16"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource AccentColorBrush3}"
+                        Foreground="{DynamicResource AccentColorBrush}"
                         Icon="CheckCircle"
                         Spin="False"
                         Visibility="{Binding IsTestInProgress, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" />
@@ -228,11 +228,11 @@
                     MinWidth="130"
                     Margin="0"
                     Controls:ControlsHelper.HeaderFontSize="12"
-                    AutomationProperties.Name="Certificate Domains"
+                    AutomationProperties.Name="Certificate"
                     IsSelected="True">
                     <TabItem.HeaderTemplate>
                         <DataTemplate>
-                            <managedcertificate:TabHeader HeaderText="Certificate Domains" IconName="Globe" />
+                            <managedcertificate:TabHeader HeaderText="Certificate" IconName="Globe" />
                         </DataTemplate>
                     </TabItem.HeaderTemplate>
                     <managedcertificate:CertificateDomains Margin="0,8,0,0" />
@@ -276,18 +276,7 @@
                     </TabItem.HeaderTemplate>
                     <managedcertificate:ScriptHooks Margin="0,8,0,0" />
                 </TabItem>
-                <TabItem
-                    x:Name="TabOptions"
-                    MinWidth="100"
-                    Controls:ControlsHelper.HeaderFontSize="12"
-                    AutomationProperties.Name="Other Options">
-                    <TabItem.HeaderTemplate>
-                        <DataTemplate>
-                            <managedcertificate:TabHeader HeaderText="Advanced" IconName="Cog" />
-                        </DataTemplate>
-                    </TabItem.HeaderTemplate>
-                    <managedcertificate:MiscOptions Margin="0,8,0,0" />
-                </TabItem>
+
                 <TabItem
                     x:Name="TabPreview"
                     MinWidth="100"
@@ -295,7 +284,7 @@
                     AutomationProperties.Name="Preview">
                     <TabItem.HeaderTemplate>
                         <DataTemplate>
-                            <managedcertificate:TabHeader HeaderText="Preview" IconName="Comment" />
+                            <managedcertificate:TabHeader HeaderText="Preview" IconName="PlayCircle" />
                         </DataTemplate>
                     </TabItem.HeaderTemplate>
                     <managedcertificate:Preview Margin="0,8,0,0" />

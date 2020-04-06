@@ -28,7 +28,7 @@
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <DockPanel Margin="8,0,8,8" LastChildFill="False">
-            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">General Options</TextBlock>
+
             <StackPanel
                 x:Name="GeneralOptions"
                 Margin="2,0,0,0"
