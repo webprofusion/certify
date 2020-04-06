@@ -307,8 +307,8 @@ namespace Certify.Management
         {
 
 #if DEBUG
-           // filter.PageIndex = 0;
-           // filter.PageSize = 100;
+            // filter.PageIndex = 0;
+            // filter.PageSize = 100;
 #endif
 
             var items = await LoadAllManagedCertificates(filter);
@@ -375,7 +375,7 @@ namespace Certify.Management
                     using (var cmd = new SQLiteCommand("INSERT OR REPLACE INTO manageditem (id, json) VALUES (@id,@json)", db))
                     {
                         cmd.Parameters.Add(new SQLiteParameter("@id", managedCertificate.Id));
-                        cmd.Parameters.Add(new SQLiteParameter("@json", JsonConvert.SerializeObject(managedCertificate)));
+                        cmd.Parameters.Add(new SQLiteParameter("@json", JsonConvert.SerializeObject(managedCertificate, new JsonSerializerSettings { Formatting = Formatting.Indented, NullValueHandling = NullValueHandling.Ignore })));
                         await cmd.ExecuteNonQueryAsync();
                     }
                     tran.Commit();
@@ -406,7 +406,7 @@ namespace Certify.Management
 #if DEBUG
         public async Task DeleteManagedCertificatesByName(string nameStartsWith)
         {
-            var items = await LoadAllManagedCertificates(new ManagedCertificateFilter { Name = nameStartsWith } );
+            var items = await LoadAllManagedCertificates(new ManagedCertificateFilter { Name = nameStartsWith });
 
             items = items.Where(i => i.Name.StartsWith(nameStartsWith));
 
