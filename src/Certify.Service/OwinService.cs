@@ -122,7 +122,7 @@ namespace Certify.Service
         public bool InstallSelfSignedCert(string host, int port)
         {
             var certSubject = "Certify Admin Service";
-            var certStore = System.Security.Cryptography.X509Certificates.StoreName.My;
+            var certStore = CertificateManager.DEFAULT_STORE_NAME;
             var currentCert = CertificateManager.GetCertificateFromStore(certSubject, certStore);
 
             var certUpdated = false;

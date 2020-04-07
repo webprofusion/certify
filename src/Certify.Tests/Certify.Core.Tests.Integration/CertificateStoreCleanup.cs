@@ -36,7 +36,7 @@ namespace Certify.Core.Tests
                     SiteId = site.Id.ToString(),
                     Host = testSiteDomain,
                     CertificateHash = cert2.Thumbprint,
-                    CertificateStore = "MY",
+                    CertificateStore = CertificateManager.DEFAULT_STORE_NAME,
                     IsSNIEnabled = false,
                     Port = 443,
                     Protocol = "https"
@@ -98,7 +98,7 @@ namespace Certify.Core.Tests
                     SiteId = site.Id.ToString(),
                     Host = testSiteDomain,
                     CertificateHash = cert2.Thumbprint,
-                    CertificateStore = "MY",
+                    CertificateStore = CertificateManager.DEFAULT_STORE_NAME,
                     IsSNIEnabled = false,
                     Port = 443,
                     Protocol = "https"
@@ -162,7 +162,7 @@ namespace Certify.Core.Tests
                     SiteId = site.Id.ToString(),
                     Host = testSiteDomain,
                     CertificateHash = cert2.Thumbprint,
-                    CertificateStore = "MY",
+                    CertificateStore = CertificateManager.DEFAULT_STORE_NAME,
                     IsSNIEnabled = false,
                     Port = 443,
                     Protocol = "https"

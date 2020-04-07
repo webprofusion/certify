@@ -861,7 +861,6 @@ namespace Certify.Management
                                 _serverProvider.GetDeploymentTarget(),
                                 managedCertificate,
                                 pfxPath,
-                                cleanupCertStore: true,
                                 isPreviewOnly: false
                             );
 
@@ -1186,7 +1185,6 @@ namespace Certify.Management
                         _serverProvider.GetDeploymentTarget(),
                         managedCertificate,
                         pfxPath,
-                        cleanupCertStore: true,
                         isPreviewOnly: isPreviewOnly
                     );
 

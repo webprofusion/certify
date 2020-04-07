@@ -280,7 +280,7 @@ namespace Certify.Core.Tests
 
             try
             {
-                var certStoreName = "MY";
+                var certStoreName = CertificateManager.DEFAULT_STORE_NAME;
                 var cert = CertificateManager.GetCertificatesFromStore().First();
                 await new IISBindingDeploymentTarget().AddBinding(
                     new BindingInfo
@@ -381,7 +381,6 @@ namespace Certify.Core.Tests
             var actions = await new BindingDeploymentManager().StoreAndDeployManagedCertificate(
                 iisManager.GetDeploymentTarget(),
                 managedCertificate, dummyCertPath,
-                false,
                 false);
 
             foreach (var a in actions)

@@ -26,7 +26,7 @@ namespace Certify.Management
 {
     public static class CertificateManager
     {
-        const StoreName DEFAULT_STORE_NAME = StoreName.My;
+        public const string DEFAULT_STORE_NAME = "My";
 
         public static X509Certificate2 GenerateSelfSignedCertificate(string domain, DateTime? dateFrom = null, DateTime? dateTo = null, string suffix = "[Certify]", string subject = null)
         {
@@ -225,12 +225,21 @@ namespace Certify.Management
             string pfxFile,
             bool isRetry = false,
             bool enableRetryBehaviour = true,
-            StoreName storeName = DEFAULT_STORE_NAME)
+            string storeName = DEFAULT_STORE_NAME,
+            string customFriendlyName = null)
         {
             // https://support.microsoft.com/en-gb/help/950090/installing-a-pfx-file-using-x509certificate-from-a-standard--net-appli
             var certificate = new X509Certificate2(pfxFile, "", X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
-            certificate.GetExpirationDateString();
-            certificate.FriendlyName = host + " [Certify] - " + certificate.GetEffectiveDateString() + " to " + certificate.GetExpirationDateString();
+
+            if (!string.IsNullOrEmpty(customFriendlyName))
+            {
+                certificate.FriendlyName = customFriendlyName;
+            }
+            else
+            {
+                certificate.GetExpirationDateString();
+                certificate.FriendlyName = host + " [Certify] - " + certificate.GetEffectiveDateString() + " to " + certificate.GetExpirationDateString();
+            }
 
             var cert = StoreCertificate(certificate, storeName);
 
@@ -275,83 +284,89 @@ namespace Certify.Management
             }
         }
 
-        public static List<X509Certificate2> GetCertificatesFromStore(string issuerName = null, StoreName storeName = DEFAULT_STORE_NAME)
+        public static List<X509Certificate2> GetCertificatesFromStore(string issuerName = null, string storeName = DEFAULT_STORE_NAME)
         {
-            var store = GetStore(storeName);
-            store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
-
-            var list = new List<X509Certificate2>();
-            var certCollection = !string.IsNullOrEmpty(issuerName) ?
-                store.Certificates.Find(X509FindType.FindByIssuerName, issuerName, false)
-                : store.Certificates;
-
-            foreach (var c in certCollection)
+            var list = new List<X509Certificate2>(); 
+            
+            using (var store = GetStore(storeName))
             {
-                list.Add(c);
-            }
+                store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
 
-            store.Close();
+                var certCollection = !string.IsNullOrEmpty(issuerName) ?
+                    store.Certificates.Find(X509FindType.FindByIssuerName, issuerName, false)
+                    : store.Certificates;
+
+                foreach (var c in certCollection)
+                {
+                    list.Add(c);
+                }
+
+                store.Close();
+            }
             return list;
         }
 
-        public static X509Certificate2 GetCertificateFromStore(string subjectName, StoreName storeName = DEFAULT_STORE_NAME)
+        public static X509Certificate2 GetCertificateFromStore(string subjectName, string storeName = DEFAULT_STORE_NAME)
         {
             X509Certificate2 cert = null;
 
-            var store = GetStore(storeName);
-
-            store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
-
-            var results = store.Certificates.Find(X509FindType.FindBySubjectName, subjectName, false);
-
-            if (results.Count > 0)
+            using (var store = GetStore(storeName))
             {
-                cert = results[0];
+                store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
+
+                var results = store.Certificates.Find(X509FindType.FindBySubjectName, subjectName, false);
+
+                if (results.Count > 0)
+                {
+                    cert = results[0];
+                }
+
+                store.Close();
             }
-
-            store.Close();
-
             return cert;
         }
 
-        public static X509Certificate2 GetCertificateByThumbprint(string thumbprint, StoreName storeName = DEFAULT_STORE_NAME)
+        public static X509Certificate2 GetCertificateByThumbprint(string thumbprint, string storeName = DEFAULT_STORE_NAME)
         {
             X509Certificate2 cert = null;
 
-            var store = GetStore(storeName);
-            store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
-
-            var results = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, false);
-
-            if (results.Count > 0)
+            using (var store = GetStore(storeName))
             {
-                cert = results[0];
+                store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
+
+                var results = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, false);
+
+                if (results.Count > 0)
+                {
+                    cert = results[0];
+                }
+
+                store.Close();
             }
-
-            store.Close();
-
             return cert;
         }
 
-        public static X509Certificate2 StoreCertificate(X509Certificate2 certificate, StoreName storeName = DEFAULT_STORE_NAME)
+        public static X509Certificate2 StoreCertificate(X509Certificate2 certificate, string storeName = DEFAULT_STORE_NAME)
         {
-            var store = GetStore(storeName);
+            using (var store = GetStore(storeName))
+            {
+                store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
 
-            store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
+                store.Add(certificate);
 
-            store.Add(certificate);
-
-            store.Close();
-
+                store.Close();
+            }
             return certificate;
         }
 
-        public static void RemoveCertificate(X509Certificate2 certificate, StoreName storeName = DEFAULT_STORE_NAME)
+        public static void RemoveCertificate(X509Certificate2 certificate, string storeName = DEFAULT_STORE_NAME)
         {
-            var store = GetStore(storeName);
-            store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
-            store.Remove(certificate);
-            store.Close();
+            using (var store = GetStore(storeName))
+            {
+                store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
+                store.Remove(certificate);
+                store.Close();
+            }
         }
 
         /// <summary>
@@ -363,7 +378,6 @@ namespace Certify.Management
         /// <param name="accountName"> user to grant read access for </param>
         public static void GrantUserAccessToCertificatePrivateKey(X509Certificate2 cert, string accountName)
         {
-
             if (cert.PrivateKey is RSACryptoServiceProvider rsa)
             {
                 var privateKeyPath = GetMachineKeyLocation(rsa.CspKeyContainerInfo.UniqueKeyContainerName);
@@ -396,8 +410,7 @@ namespace Certify.Management
 
         private static string GetMachineKeyLocation(string keyFileName)
         {
-            var appDataPath =
-            Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
 
             var machineKeyPath = appDataPath + @"\Microsoft\Crypto\RSA\MachineKeys";
 
@@ -430,9 +443,9 @@ namespace Certify.Management
             return null;
         }
 
-        public static X509Store GetStore(StoreName storeName = DEFAULT_STORE_NAME) => new X509Store(storeName, StoreLocation.LocalMachine);
+        public static X509Store GetStore(string storeName = DEFAULT_STORE_NAME) => new X509Store(storeName, StoreLocation.LocalMachine);
 
-        public static bool IsCertificateInStore(X509Certificate2 cert, StoreName storeName = StoreName.My)
+        public static bool IsCertificateInStore(X509Certificate2 cert, string storeName = DEFAULT_STORE_NAME)
         {
             var certExists = false;
 
@@ -461,7 +474,8 @@ namespace Certify.Management
             DateTime expiryBefore,
             string matchingName,
             List<string> excludedThumbprints,
-            ILog log = null
+            ILog log = null,
+            string storeName = DEFAULT_STORE_NAME
             )
         {
             var removedCerts = new List<string>();
@@ -475,7 +489,7 @@ namespace Certify.Management
                 // if (checkBindings) allCertBindings =  Certify.Utils.Networking.GetCertificateBindings();
 
                 // get all certificates
-                using (var store = GetStore(StoreName.My))
+                using (var store = GetStore(storeName))
                 {
                     store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
 
