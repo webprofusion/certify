@@ -41,22 +41,19 @@
 
 
                     <TextBlock
-                        Margin="16,0,0,8"
+                        Margin="0,0,0,8"
                         FontSize="36"
                         TextWrapping="Wrap"><Run FontWeight="Bold" Text="Certify" /><Run Text=" the web" /></TextBlock>
-                    <TextBlock
-                        Margin="16,0,0,0"
-                        Style="{StaticResource Instructions}"
-                        TextWrapping="Wrap">
-                        <Run>Easily manage the request, auto-renewal and deployment of TLS/SSL certificates from ACME (Automated Certificate Management Environment) enabled Certificate Authorities including the free Let's Encrypt service (https://letsencrypt.org).</Run>
+                    <TextBlock Style="{StaticResource Instructions}" TextWrapping="Wrap">
+                        <Run>Easily automate your TLS/SSL certificates from ACME enabled Certificate Authorities including Let's Encrypt (https://letsencrypt.org) and BuyPass Go (https://www.buypass.com/ssl/products/acme).</Run>
                         <LineBreak />  <LineBreak />
                         <Run>For more information, documentation, community discussions and support options, see https://certifytheweb.com</Run>
 
                     </TextBlock>
 
-                    <StackPanel MinHeight="20" Orientation="Vertical">
+                    <StackPanel Orientation="Vertical">
                         <TextBlock
-                            Margin="16,16,0,16"
+                            Margin="0,16,0,8"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top"
                             FontSize="20"
@@ -64,12 +61,12 @@
                             Getting Started
                         </TextBlock>
 
-                        <TextBlock Margin="16,0,0,0" TextWrapping="Wrap"><Run Text="{x:Static res:SR.ManagedCertificates_NoItemSelectedTip}" /><Run Text="&#x9;" /></TextBlock>
+                        <TextBlock Margin="0,0,0,0" TextWrapping="Wrap"><Run Text="{x:Static res:SR.ManagedCertificates_NoItemSelectedTip}" /><Run Text="&#x9;" /></TextBlock>
 
                         <Button
                             x:Name="QuickStart"
                             Width="180"
-                            Margin="16,8,0,0"
+                            Margin="0,8,0,0"
                             HorizontalAlignment="Left"
                             Click="QuickStart_Click">
                             <StackPanel Orientation="Horizontal">
@@ -87,7 +84,7 @@
 
                     <StackPanel
                         x:Name="IISVersionWarnings"
-                        Margin="16,16,16,16"
+                        Margin="0,16,16,8"
                         Background="DarkRed">
                         <StackPanel.Style>
                             <Style>
@@ -127,7 +124,7 @@
 
                     <StackPanel
                         x:Name="DeprecatedChallengeTypeWarning"
-                        Margin="16,16,16,16"
+                        Margin="0,16,16,16"
                         Background="DarkRed">
                         <StackPanel.Style>
                             <Style>
@@ -168,19 +165,19 @@
                     <StackPanel x:Name="Dashboard" Margin="0,16,0,0">
 
                         <TextBlock
-                            Margin="16,8,0,16"
+                            Margin="0,8,0,8"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top"
                             FontSize="20"
                             TextWrapping="Wrap"><Run Text="{x:Static res:SR.GettingStarted_Dashboard}" /></TextBlock>
 
-                        <TextBlock Margin="16,0,16,16" TextWrapping="Wrap"><Run Text="{x:Static res:SR.GettingStarted_DashboardIntro}" /></TextBlock>
+                        <TextBlock Margin="0,0,16,16" TextWrapping="Wrap"><Run Text="{x:Static res:SR.GettingStarted_DashboardIntro}" /></TextBlock>
                         <StackPanel Orientation="Horizontal">
 
                             <Button
                                 x:Name="AddToDashboard"
-                                Width="180"
-                                Margin="16,0,0,0"
+                                Width="200"
+                                Margin="0,0,0,0"
                                 HorizontalAlignment="Left"
                                 Click="AddToDashboard_Click"
                                 Visibility="{Binding Preferences.IsInstanceRegistered, Converter={StaticResource ResourceKey=InvBoolVisConverter}}">

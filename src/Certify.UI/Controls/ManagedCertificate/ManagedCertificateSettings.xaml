@@ -179,7 +179,7 @@
                     Text="{Binding SelectedItem.Name, UpdateSourceTrigger=PropertyChanged}"
                     ToolTip="Enter a display name for this managed certificate. This is for your own use and is not included in the certificate." />
 
-              
+
             </DockPanel>
 
             <Controls:MetroTabControl
@@ -252,7 +252,8 @@
                     x:Name="TabScripting"
                     MinWidth="100"
                     Controls:ControlsHelper.HeaderFontSize="12"
-                    AutomationProperties.Name="Scripting">
+                    AutomationProperties.Name="Scripting"
+                    Visibility="Collapsed">
                     <TabItem.HeaderTemplate>
                         <DataTemplate>
                             <managedcertificate:TabHeader HeaderText="Scripting" IconName="Code" />

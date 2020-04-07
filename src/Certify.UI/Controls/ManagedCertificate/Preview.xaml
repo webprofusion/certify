@@ -23,7 +23,7 @@
                     IsIndeterminate="True" />
             </StackPanel>
 
-            <DockPanel Margin="8">
+            <DockPanel Margin="0">
                 <TextBlock
                     DockPanel.Dock="Top"
                     Style="{StaticResource Instructions}"

@@ -7,7 +7,6 @@
     xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
     xmlns:fa="http://schemas.fontawesome.io/icons/"
     xmlns:local="clr-namespace:Certify.UI.Windows"
-    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:Certify.Models;assembly=Certify.Models"
     d:DesignHeight="480"
@@ -21,7 +20,7 @@
                 <Label Width="160" Content="{Binding Name}" />
                 <TextBox
                     Width="250"
-                    mah:TextBoxHelper.Watermark="{Binding Description}"
+                    Controls:TextBoxHelper.Watermark="{Binding Description}"
                     KeyUp="ParameterInput_KeyUp"
                     Text="{Binding Value}" />
                 <Button
@@ -71,13 +70,6 @@
     </UserControl.Resources>
 
     <DockPanel LastChildFill="False">
-        <TextBlock
-            Margin="8,0,0,0"
-            DockPanel.Dock="Top"
-            Style="{StaticResource Instructions}"
-            Text="Deployment tasks are a flexible way to deploy your updated certificate or trigger other actions. Tasks can be run immediately after the certificate has updated or they can be deferred (to run manually or via a scheduled task etc.). "
-            TextWrapping="Wrap" />
-
 
         <StackPanel DockPanel.Dock="Top">
 
@@ -109,7 +101,7 @@
                             <DockPanel Margin="8,8,8,8">
                                 <Button
                                     Width="80"
-                                    Height="20"
+                                    Height="32"
                                     Click="TaskTypeSelection_Click"
                                     CommandParameter="{Binding}"
                                     DockPanel.Dock="Left">
@@ -139,14 +131,8 @@
 
         </StackPanel>
 
-        <TabControl
-            x:Name="MainTabControl"
-            Height="auto"
-            Margin="8,8,8,8"
-            HorizontalContentAlignment="Left"
-            VerticalContentAlignment="Stretch"
-            Controls:TabControlHelper.Underlined="TabPanel">
-            <TabControl.Style>
+        <StackPanel>
+            <StackPanel.Style>
                 <Style>
                     <Setter Property="UIElement.Visibility" Value="Visible" />
                     <Style.Triggers>
@@ -155,256 +141,256 @@
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
-            </TabControl.Style>
-
-            <TabItem
-                MinWidth="100"
-                Controls:ControlsHelper.HeaderFontSize="12"
-                Header="General Settings"
-                IsSelected="True">
-
-                <DockPanel
-                    Margin="8"
-                    DockPanel.Dock="Top"
-                    LastChildFill="False">
-
-                    <DockPanel.Style>
-                        <Style>
-                            <Setter Property="UIElement.Visibility" Value="Visible" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedItem.TaskTypeId}" Value="{x:Null}">
-                                    <Setter Property="UIElement.Visibility" Value="Hidden" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DockPanel.Style>
+            </StackPanel.Style>
 
 
-                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">General Settings</TextBlock>
-                    <StackPanel
-                        Margin="0,8,0,0"
+            <TabControl
+                x:Name="MainTabControl"
+                Height="auto"
+                Margin="8,8,8,8"
+                HorizontalContentAlignment="Left"
+                VerticalContentAlignment="Stretch"
+                Controls:TabControlHelper.Underlined="SelectedTabItem"
+                DockPanel.Dock="Top">
+
+                <TabItem
+                    MinWidth="100"
+                    Controls:ControlsHelper.HeaderFontSize="12"
+                    Header="General Settings"
+                    IsSelected="True">
+
+                    <DockPanel
+                        Margin="8"
                         DockPanel.Dock="Top"
-                        Orientation="Horizontal">
-                        <Label Width="100" Content="Task Type" />
+                        LastChildFill="False">
 
-                        <ComboBox
-                            x:Name="TaskProviderList"
-                            Width="225"
-                            Margin="0,0,8,0"
-                            DisplayMemberPath="Title"
-                            ItemsSource="{Binding DeploymentProviders}"
-                            SelectedValue="{Binding SelectedItem.TaskTypeId, UpdateSourceTrigger=PropertyChanged}"
-                            SelectedValuePath="Id"
-                            SelectionChanged="TaskProviderList_SelectionChanged" />
+                        <DockPanel.Style>
+                            <Style>
+                                <Setter Property="UIElement.Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedItem.TaskTypeId}" Value="{x:Null}">
+                                        <Setter Property="UIElement.Visibility" Value="Hidden" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DockPanel.Style>
 
-                    </StackPanel>
+                        <StackPanel
+                            Margin="0,8,0,0"
+                            DockPanel.Dock="Top"
+                            Orientation="Horizontal">
+                            <Label Width="100" Content="Task Type" />
 
-                    <TextBlock
-                        x:Name="ProviderDescription"
-                        Margin="8,8,8,0"
-                        DockPanel.Dock="Top"
-                        Style="{StaticResource Instructions}"
-                        Text="{Binding DeploymentProvider.Description}"
-                        TextWrapping="WrapWithOverflow" />
+                            <ComboBox
+                                x:Name="TaskProviderList"
+                                Width="225"
+                                Margin="0,0,8,0"
+                                DisplayMemberPath="Title"
+                                ItemsSource="{Binding DeploymentProviders}"
+                                SelectedValue="{Binding SelectedItem.TaskTypeId, UpdateSourceTrigger=PropertyChanged}"
+                                SelectedValuePath="Id"
+                                SelectionChanged="TaskProviderList_SelectionChanged" />
 
-                    <StackPanel
-                        Margin="0,8,0,0"
-                        DockPanel.Dock="Top"
-                        Orientation="Horizontal">
-                        <Label Width="100" Content="Task Name" />
+                        </StackPanel>
 
-                        <TextBox
-                            x:Name="TaskName"
-                            Width="225"
-                            Margin="0,0,8,0"
-                            mah:TextBoxHelper.Watermark="A unique name for this task"
-                            KeyUp="TaskName_KeyUp"
-                            Text="{Binding SelectedItem.TaskName, UpdateSourceTrigger=PropertyChanged}" />
-                    </StackPanel>
+                        <TextBlock
+                            x:Name="ProviderDescription"
+                            Margin="8,8,8,0"
+                            DockPanel.Dock="Top"
+                            Style="{StaticResource Instructions}"
+                            Text="{Binding DeploymentProvider.Description}"
+                            TextWrapping="WrapWithOverflow" />
+
+                        <StackPanel
+                            Margin="0,8,0,0"
+                            DockPanel.Dock="Top"
+                            Orientation="Horizontal">
+                            <Label Width="100" Content="Task Name" />
+
+                            <TextBox
+                                x:Name="TaskName"
+                                Width="225"
+                                Margin="0,0,8,0"
+                                Controls:TextBoxHelper.Watermark="A unique name for this task"
+                                KeyUp="TaskName_KeyUp"
+                                Text="{Binding SelectedItem.TaskName, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
 
 
 
-                    <StackPanel
-                        Margin="0,8,0,0"
-                        DockPanel.Dock="Top"
-                        Orientation="Horizontal">
-                        <Label Width="100" Content="Description" />
+                        <StackPanel
+                            Margin="0,8,0,0"
+                            DockPanel.Dock="Top"
+                            Orientation="Horizontal">
+                            <Label Width="100" Content="Description" />
 
-                        <TextBox
-                            x:Name="TaskDescription"
-                            Width="225"
-                            Height="48"
-                            Margin="0,0,8,0"
-                            mah:TextBoxHelper.Watermark="Optionally describe this task."
-                            AcceptsReturn="True"
-                            Text="{Binding SelectedItem.Description, UpdateSourceTrigger=PropertyChanged}"
-                            TextWrapping="Wrap"
-                            VerticalScrollBarVisibility="Auto" />
-                    </StackPanel>
-
-                    <StackPanel
-                        Margin="0,8,0,0"
-                        DockPanel.Dock="Top"
-                        Orientation="Vertical">
-                        <StackPanel Orientation="Horizontal">
-                            <Label Width="100" Content="Defer Task" />
-                            <CheckBox IsChecked="{Binding SelectedItem.IsDeferred}" />
+                            <TextBox
+                                x:Name="TaskDescription"
+                                Width="225"
+                                Height="48"
+                                Margin="0,0,8,0"
+                                Controls:TextBoxHelper.Watermark="Optionally describe this task."
+                                AcceptsReturn="True"
+                                Text="{Binding SelectedItem.Description, UpdateSourceTrigger=PropertyChanged}"
+                                TextWrapping="Wrap"
+                                VerticalScrollBarVisibility="Auto" />
                         </StackPanel>
 
                         <StackPanel
-                            x:Name="DeferredInstructions1"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            MouseUp="DeferredInstructions1_MouseUp"
-                            Orientation="Vertical"
-                            ToolTip="Click to copy to clipboard">
+                            Margin="0,8,0,0"
+                            DockPanel.Dock="Top"
+                            Orientation="Vertical">
+                            <StackPanel Orientation="Horizontal">
+                                <Label Width="100" Content="Defer Task" />
+                                <CheckBox IsChecked="{Binding SelectedItem.IsDeferred}" />
+                            </StackPanel>
+
+                            <StackPanel
+                                x:Name="DeferredInstructions1"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                MouseUp="DeferredInstructions1_MouseUp"
+                                Orientation="Vertical"
+                                ToolTip="Click to copy to clipboard">
+                                <StackPanel.Style>
+                                    <Style>
+                                        <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedItem.IsDeferred}" Value="True">
+                                                <Setter Property="UIElement.Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+
+                                <Label
+                                    HorizontalAlignment="Left"
+                                    Content="Deployment Task CLI Command:"
+                                    FontWeight="Bold" />
+
+                                <fa:FontAwesome
+                                    Width="16"
+                                    Height="16"
+                                    Margin="16,0,0,0"
+                                    HorizontalAlignment="Left"
+                                    Icon="Copy" />
+
+                                <TextBlock
+                                    x:Name="DeferredInstructions"
+                                    Margin="16,0,0,0"
+                                    HorizontalAlignment="Left"
+                                    Style="{StaticResource Instructions}"
+                                    Text="{Binding CLICommand}"
+                                    TextWrapping="Wrap" />
+
+
+                            </StackPanel>
+                        </StackPanel>
+
+
+                    </DockPanel>
+                </TabItem>
+                <TabItem
+                    Width="auto"
+                    Controls:ControlsHelper.HeaderFontSize="12"
+                    Header="Task Parameters">
+
+                    <DockPanel Margin="8,0,0,0" LastChildFill="False">
+
+
+
+                        <StackPanel DockPanel.Dock="Top">
+                            <StackPanel.Style>
+                                <Style>
+                                    <Setter Property="UIElement.Visibility" Value="Visible" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DeploymentProvider.EnableRemoteOptions}" Value="False">
+                                            <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                                <Label Width="160" Content="Target Type" />
+
+                                <ComboBox
+                                    x:Name="TargetType"
+                                    Width="225"
+                                    Margin="0,0,8,0"
+                                    DisplayMemberPath="Value"
+                                    ItemsSource="{Binding TargetTypes}"
+                                    SelectedValue="{Binding SelectedItem.ChallengeProvider}"
+                                    SelectedValuePath="Key"
+                                    SelectionChanged="TargetType_SelectionChanged" />
+                            </StackPanel>
+
+                            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                                <StackPanel.Style>
+                                    <Style>
+                                        <Setter Property="UIElement.Visibility" Value="Visible" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedItem.ChallengeProvider}" Value="Certify.StandardChallenges.Local">
+                                                <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <Label Width="160" Content="Target Host or IP" />
+
+                                <TextBox
+                                    x:Name="TargetHost"
+                                    Width="225"
+                                    Margin="0,0,8,0"
+                                    Controls:TextBoxHelper.Watermark="IP or hostname to connect to"
+                                    Text="{Binding SelectedItem.TargetHost, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                        </StackPanel>
+
+
+
+                        <StackPanel
+                            x:Name="ProviderCredentials"
+                            DockPanel.Dock="Top"
+                            Orientation="Vertical">
                             <StackPanel.Style>
                                 <Style>
                                     <Setter Property="UIElement.Visibility" Value="Collapsed" />
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SelectedItem.IsDeferred}" Value="True">
+                                        <DataTrigger Binding="{Binding UsesCredentials}" Value="True">
                                             <Setter Property="UIElement.Visibility" Value="Visible" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </StackPanel.Style>
 
-                            <Label
-                                HorizontalAlignment="Left"
-                                Content="Deployment Task CLI Command:"
-                                FontWeight="Bold" />
+                            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                                <Label Width="160" Content="Credentials" />
 
-                            <fa:FontAwesome
-                                Width="16"
-                                Height="16"
-                                Margin="16,0,0,0"
-                                HorizontalAlignment="Left"
-                                Icon="Copy" />
-
-                            <TextBlock
-                                x:Name="DeferredInstructions"
-                                Margin="16,0,0,0"
-                                HorizontalAlignment="Left"
-                                Style="{StaticResource Instructions}"
-                                Text="{Binding CLICommand}"
-                                TextWrapping="Wrap" />
-
-
+                                <ComboBox
+                                    x:Name="StoredCredentials"
+                                    Width="225"
+                                    Margin="0,0,8,0"
+                                    DisplayMemberPath="Title"
+                                    ItemsSource="{Binding FilteredCredentials}"
+                                    SelectedItem="{Binding SelectedCredentialItem, Mode=TwoWay}" />
+                                <Button Click="AddStoredCredential_Click" Content="New" />
+                            </StackPanel>
                         </StackPanel>
-                    </StackPanel>
+                        <ItemsControl
+                            x:Name="DeploymentTaskParams"
+                            BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderColor}}"
+                            DockPanel.Dock="Left"
+                            ItemsSource="{Binding DeploymentProvider.ProviderParameters}">
+                            <ItemsControl.ItemTemplateSelector>
+                                <local:ControlTemplateSelector />
+                            </ItemsControl.ItemTemplateSelector>
+                        </ItemsControl>
+                    </DockPanel>
+                </TabItem>
 
 
-                </DockPanel>
-            </TabItem>
-            <TabItem
-                Width="auto"
-                Controls:ControlsHelper.HeaderFontSize="12"
-                Header="Task Parameters">
-
-                <DockPanel Margin="8,0,0,0" LastChildFill="False">
-
-
-
-                    <StackPanel DockPanel.Dock="Top">
-                        <StackPanel.Style>
-                            <Style>
-                                <Setter Property="UIElement.Visibility" Value="Visible" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding DeploymentProvider.EnableRemoteOptions}" Value="False">
-                                        <Setter Property="UIElement.Visibility" Value="Collapsed" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </StackPanel.Style>
-                        <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
-                            <Label Width="160" Content="Target Type" />
-
-                            <ComboBox
-                                x:Name="TargetType"
-                                Width="225"
-                                Margin="0,0,8,0"
-                                DisplayMemberPath="Value"
-                                ItemsSource="{Binding TargetTypes}"
-                                SelectedValue="{Binding SelectedItem.ChallengeProvider}"
-                                SelectedValuePath="Key"
-                                SelectionChanged="TargetType_SelectionChanged" />
-                        </StackPanel>
-
-                        <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
-                            <StackPanel.Style>
-                                <Style>
-                                    <Setter Property="UIElement.Visibility" Value="Visible" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SelectedItem.ChallengeProvider}" Value="Certify.StandardChallenges.Local">
-                                            <Setter Property="UIElement.Visibility" Value="Collapsed" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </StackPanel.Style>
-                            <Label Width="160" Content="Target Host or IP" />
-
-                            <TextBox
-                                x:Name="TargetHost"
-                                Width="225"
-                                Margin="0,0,8,0"
-                                mah:TextBoxHelper.Watermark="IP or hostname to connect to"
-                                Text="{Binding SelectedItem.TargetHost, UpdateSourceTrigger=PropertyChanged}" />
-                        </StackPanel>
-                    </StackPanel>
-
-
-
-                    <StackPanel
-                        x:Name="ProviderCredentials"
-                        DockPanel.Dock="Top"
-                        Orientation="Vertical">
-                        <StackPanel.Style>
-                            <Style>
-                                <Setter Property="UIElement.Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding UsesCredentials}" Value="True">
-                                        <Setter Property="UIElement.Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </StackPanel.Style>
-
-                        <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
-                            <Label Width="160" Content="Credentials" />
-
-                            <ComboBox
-                                x:Name="StoredCredentials"
-                                Width="225"
-                                Margin="0,0,8,0"
-                                DisplayMemberPath="Title"
-                                ItemsSource="{Binding FilteredCredentials}"
-                                SelectedItem="{Binding SelectedCredentialItem, Mode=TwoWay}" />
-                            <Button Click="AddStoredCredential_Click" Content="New" />
-                        </StackPanel>
-                    </StackPanel>
-                    <ItemsControl
-                        x:Name="DeploymentTaskParams"
-                        BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderColor}}"
-                        DockPanel.Dock="Left"
-                        ItemsSource="{Binding DeploymentProvider.ProviderParameters}">
-                        <ItemsControl.ItemTemplateSelector>
-                            <local:ControlTemplateSelector />
-                        </ItemsControl.ItemTemplateSelector>
-                    </ItemsControl>
-                </DockPanel>
-            </TabItem>
-
-
-        </TabControl>
-
-        <ScrollViewer
-            Height="300"
-            Margin="0,0,0,0"
-            DockPanel.Dock="Top"
-            VerticalScrollBarVisibility="Visible">
-
-            <DockPanel Margin="0,0,0,0" LastChildFill="True" />
-        </ScrollViewer>
+            </TabControl>
+        </StackPanel>
     </DockPanel>
 
 </UserControl>
