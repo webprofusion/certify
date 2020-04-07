@@ -101,30 +101,9 @@ namespace Certify.Core.Management
                     .ToList();
 
                 // depending on our deployment mode we decide which sites/bindings to update:
-
                 var deployments = await DeployToAllTargetBindings(deploymentTarget, managedCertificate, requestConfig, certStoreName, certHash, dnsHosts, isPreviewOnly);
 
                 actions.AddRange(deployments);
-
-                // if required, cleanup old certs we are replacing. Only applied if we have deployed
-                // the certificate, otherwise we keep the old one
-
-                // FIXME: need strategy to analyse if there are any users of cert we haven't
-                // accounted for (manually added etc) otherwise we are disposing of a cert which
-                // could still be in use
-
-                /*if (!isPreviewOnly)
-                {
-                    if (cleanupCertStore
-                        && requestConfig.DeploymentSiteOption != DeploymentOption.DeploymentStoreOnly
-                         && requestConfig.DeploymentSiteOption != DeploymentOption.NoDeployment
-                        )
-                    {
-                        //remove old certs for this primary domain
-                        //FIXME:
-                       CertificateManager.CleanupCertificateDuplicates(storedCert, requestConfig.PrimaryDomain);
-                    }
-                }*/
             }
             else
             {
@@ -317,7 +296,6 @@ namespace Certify.Core.Management
 
                         }
                     }
-                    //
                 }
                 catch (Exception exp)
                 {
@@ -440,6 +418,9 @@ namespace Certify.Core.Management
                             action.Description += $" [{result.Description}]";
                         }
                     }
+
+                    // we have added a binding, add to our list of known bindings to avoid trying to add any duplicates
+                    existingBindings.Add(bindingSpec);
                 }
 
                 steps.Add(action);
