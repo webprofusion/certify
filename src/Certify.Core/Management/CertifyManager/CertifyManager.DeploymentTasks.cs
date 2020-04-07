@@ -44,7 +44,7 @@ namespace Certify.Management
                 }
                 else
                 {
-                    taskList = managedCert.PreRequestTasks.Where(t => t.Id == taskId);
+                    taskList = managedCert.PostRequestTasks.Where(t => t.Id == taskId);
                 }
 
             }

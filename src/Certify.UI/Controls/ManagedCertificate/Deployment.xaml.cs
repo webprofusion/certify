@@ -98,7 +98,6 @@ namespace Certify.UI.Controls.ManagedCertificate
             dialog.Show();
         }
 
-
         private void EditDeploymentTask_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             var config = (sender as Button).DataContext as DeploymentTaskConfig;
@@ -146,8 +145,10 @@ namespace Certify.UI.Controls.ManagedCertificate
         private void DeleteDeploymentTask_Click(object sender, RoutedEventArgs e)
         {
             var task = (sender as Button).DataContext as DeploymentTaskConfig;
+            
             if (MessageBox.Show("Are you sure you wish to delete task '" + task.TaskName + "'?", "Delete Task?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
+                ItemViewModel.SelectedItem.PreRequestTasks.Remove(task);
                 ItemViewModel.SelectedItem.PostRequestTasks.Remove(task);
             }
         }

@@ -298,7 +298,7 @@
                     <DockPanel Margin="8,0,0,0" LastChildFill="False">
 
 
-
+                        <!--  Options related to Remote Config  -->
                         <StackPanel DockPanel.Dock="Top">
                             <StackPanel.Style>
                                 <Style>
@@ -379,7 +379,7 @@
                         <ItemsControl
                             x:Name="DeploymentTaskParams"
                             BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderColor}}"
-                            DockPanel.Dock="Left"
+                            DockPanel.Dock="Top"
                             ItemsSource="{Binding DeploymentProvider.ProviderParameters}">
                             <ItemsControl.ItemTemplateSelector>
                                 <local:ControlTemplateSelector />

@@ -55,7 +55,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             EditModel = new ViewModel.DeploymentTaskConfigViewModel(config);
             DataContext = EditModel;
 
-            Task.Run(async () => await RefreshEditModelOptions());
+            Task.Run(async () => await RefreshEditModelOptions(resetDefaults:false));
 
         }
 
@@ -72,9 +72,13 @@ namespace Certify.UI.Controls.ManagedCertificate
             base.OnInitialized(e);
         }
 
-        private void TaskTypeSelection_Click(object sender, RoutedEventArgs e)
+        private async void TaskTypeSelection_Click(object sender, RoutedEventArgs e)
         {
+            // user has selected a task type from the list view of different task providers
             EditModel.SelectedItem.TaskTypeId = ((sender as Button).DataContext as DeploymentProviderDefinition).Id;
+
+            await RefreshEditModelOptions(true);
+
             EditModel.RaisePropertyChangedEvent("SelectedItem");
         }
 
@@ -126,7 +130,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private async void TargetType_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            await EditModel.RefreshOptions();
+            await RefreshEditModelOptions(true);
         }
 
 
@@ -147,37 +151,34 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             if (string.IsNullOrEmpty(EditModel.SelectedItem.TaskName))
             {
+                if (!string.IsNullOrEmpty(EditModel.DeploymentProvider?.DefaultTitle))
+                {
+                    // use default title and continue
+                    EditModel.SelectedItem.TaskName = EditModel.DeploymentProvider.DefaultTitle;
+                }
+            }
+
+            if (string.IsNullOrEmpty(EditModel.SelectedItem.TaskName))
+            {
+
                 // check task name populated
                 MessageBox.Show("A unique Task Name required, this may be used later to run the task manually.", msgTitle);
                 return false;
+
             }
             else
             {
                 // check task name is unique for this managed cert
-                if (EditAsPostRequestTask)
+                if (
+                    AppViewModel.SelectedItem.PostRequestTasks?.Any(t => t.Id != EditModel.SelectedItem.Id && t.TaskName.ToLower().Trim() == EditModel.SelectedItem.TaskName.ToLower().Trim()) == true
+                    || AppViewModel.SelectedItem.PreRequestTasks?.Any(t => t.Id != EditModel.SelectedItem.Id && t.TaskName.ToLower().Trim() == EditModel.SelectedItem.TaskName.ToLower().Trim()) == true
+                 )
                 {
-                    if (AppViewModel.SelectedItem.PostRequestTasks?.Any() == true)
-                    {
-                        if (AppViewModel.SelectedItem.PostRequestTasks.Any(t => t.Id != EditModel.SelectedItem.Id && t.TaskName.ToLower().Trim() == EditModel.SelectedItem.TaskName.ToLower().Trim()))
-                        {
-                            MessageBox.Show("A unique Task Name is required, this task name is already in use for this managed certificate.", msgTitle);
-                            return false;
-                        }
-                    }
+                    MessageBox.Show("A unique Task Name is required, this task name is already in use for this managed certificate.", msgTitle);
+                    return false;
                 }
-                else
-                {
-                    if (AppViewModel.SelectedItem.PreRequestTasks?.Any() == true)
-                    {
-                        if (AppViewModel.SelectedItem.PreRequestTasks.Any(t => t.Id != EditModel.SelectedItem.Id && t.TaskName.ToLower().Trim() == EditModel.SelectedItem.TaskName.ToLower().Trim()))
-                        {
-                            MessageBox.Show("A unique Task Name is required, this pre-request task name is already in use for this managed certificate.", msgTitle);
-                            return false;
-                        }
-                    }
-                }
-
             }
+
 
             // if remote target, check target specified. TODO: Could also check host resolves.
             if (!string.IsNullOrEmpty(EditModel.SelectedItem.ChallengeProvider)

@@ -32,7 +32,6 @@
     <TabControl
         x:Name="MainTabControl"
         Height="auto"
-        Margin="8,8,8,8"
         HorizontalContentAlignment="Left"
         VerticalContentAlignment="Stretch"
         Controls:TabControlHelper.Underlined="TabPanel">

@@ -88,12 +88,12 @@ namespace Certify.UI.ViewModel
             {
                 DeploymentProvider = _appViewModel.DeploymentTaskProviders.First(d => d.Id == SelectedItem.TaskTypeId);
 
-                if (resetDefaults)
+                /*if (resetDefaults)
                 {
                     SelectedItem.TaskName = "";
                     SelectedItem.Description = "";
                     SelectedItem.IsDeferred = false;
-                }
+                }*/
 
                 RefreshParameters();
                 await RefreshCredentialOptions();
@@ -171,9 +171,7 @@ namespace Certify.UI.ViewModel
                     UsesCredentials = false;
                 }
 
-                UsesCredentials = true;
-
-                // our provider parameters are stored in config a s key value apir, but edited as an intermediate providerparameter with full metadata
+                // our provider parameters are stored in config as a key value pair, but edited as an intermediate provider parameter with full metadata
 
                 var providerParams = definition.ProviderParameters.Where(p => p.IsCredential == false).ToList();
 
