@@ -283,7 +283,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                     }
                 }
 
-                ItemViewModel.RaisePropertyChangedEvent(nameof(ItemViewModel.SelectedItemLogEntries));
             }
         }
 

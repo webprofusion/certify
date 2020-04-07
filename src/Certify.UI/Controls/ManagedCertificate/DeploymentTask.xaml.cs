@@ -55,8 +55,16 @@ namespace Certify.UI.Controls.ManagedCertificate
             EditModel = new ViewModel.DeploymentTaskConfigViewModel(config);
             DataContext = EditModel;
 
-            Task.Run(async () => { await EditModel.RefreshOptions(); });
+            Task.Run(async () => await RefreshEditModelOptions());
 
+        }
+
+        private async Task RefreshEditModelOptions(bool resetDefaults = false)
+        {
+            await Dispatcher.InvokeAsync(async () =>
+            {
+                await EditModel.RefreshOptions(resetDefaults: resetDefaults);
+            });
         }
 
         protected override void OnInitialized(EventArgs e)
@@ -83,7 +91,8 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             //refresh credentials list on complete
 
-            await EditModel.RefreshOptions();
+            await RefreshEditModelOptions();
+
             //await RefreshCredentialOptions();
 
             var credential = cred.Item;
@@ -111,7 +120,7 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             if (TaskProviderList.SelectedValue != null)
             {
-                await EditModel.RefreshOptions(resetDefaults: true);
+                await RefreshEditModelOptions(true);
             }
         }
 

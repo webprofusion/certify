@@ -550,6 +550,7 @@ namespace Certify.UI.ViewModel
 
         /* Stored Credentials */
 
+        private object _storedCredentialsLock = new object();
         public ObservableCollection<StoredCredential> StoredCredentials { get; set; }
 
         public async Task<StoredCredential> UpdateCredential(StoredCredential credential)
@@ -587,8 +588,10 @@ namespace Certify.UI.ViewModel
             if (StoredCredentials == null)
             {
                 StoredCredentials = new ObservableCollection<StoredCredential>();
+                System.Windows.Data.BindingOperations.EnableCollectionSynchronization(StoredCredentials, _storedCredentialsLock);
             }
 
+         
             StoredCredentials.Clear();
             foreach (var c in list)
             {
