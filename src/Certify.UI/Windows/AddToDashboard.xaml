@@ -13,6 +13,7 @@
     BorderThickness="1"
     GlowBrush="{DynamicResource AccentColorBrush}"
     ResizeMode="NoResize"
+    TitleCaps="False"
     WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False"
     mc:Ignorable="d">

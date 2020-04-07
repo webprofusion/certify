@@ -14,6 +14,7 @@
     BorderThickness="1"
     GlowBrush="{DynamicResource AccentColorBrush}"
     ResizeMode="NoResize"
+    TitleCaps="False"
     WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False"
     mc:Ignorable="d">
@@ -76,7 +77,7 @@
             Style="{StaticResource Instructions}"
             Text="{x:Static res:SR.New_Contact_NeedAgree}"
             TextWrapping="Wrap" />
-        
+
         <CheckBox
             Margin="12,12,12,12"
             HorizontalAlignment="Left"

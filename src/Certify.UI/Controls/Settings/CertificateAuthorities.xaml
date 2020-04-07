@@ -47,7 +47,6 @@
             <Button
                 Grid.Row="0"
                 Grid.Column="2"
-                Height="24"
                 Margin="8,8,8,8"
                 Click="Button_NewContact">
                 New Account
@@ -65,16 +64,10 @@
                     <DataTemplate>
 
                         <StackPanel Orientation="Horizontal">
-                            <Button
-                                Height="24"
-                                Margin="0,8,8,8"
-                                Click="Button_Delete">
+                            <Button Margin="0,8,8,8" Click="Button_Delete">
                                 Delete
                             </Button>
-                            <Button
-                                Height="24"
-                                Margin="0,8,8,8"
-                                Click="Button_NewContact">
+                            <Button Margin="0,8,8,8" Click="Button_NewContact">
                                 Edit
                             </Button>
                             <fa:FontAwesome

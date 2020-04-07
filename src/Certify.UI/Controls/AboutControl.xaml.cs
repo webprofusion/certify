@@ -87,7 +87,7 @@ namespace Certify.UI.Controls
                 {
                     if (!silent)
                     {
-                        (App.Current as App).ShowNotification(ConfigResources.UpdateCheckLatestVersion, App.NotificationType.Success);                 
+                        (App.Current as App).ShowNotification(ConfigResources.UpdateCheckLatestVersion, App.NotificationType.Success);
                     }
                 }
             }
@@ -111,7 +111,7 @@ namespace Certify.UI.Controls
 
         private void Feedback_Click(object sender, RoutedEventArgs e)
         {
-            var d = new Windows.Feedback("", false);
+            var d = new Windows.Feedback("", false) { Owner = Window.GetWindow(this) };
             d.ShowDialog();
         }
 

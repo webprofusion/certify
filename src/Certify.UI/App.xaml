@@ -43,7 +43,16 @@
                 <Setter Property="TextWrapping" Value="WrapWithOverflow" />
 
             </Style>
-            <Style BasedOn="{StaticResource MahApps.Metro.Styles.WindowButtonCommands.Win10}" TargetType="{x:Type Controls:WindowButtonCommands}" />
+
+            <Style BasedOn="{StaticResource MahApps.Metro.Styles.MetroButton}" TargetType="Button">
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontWeight" Value="Normal" />
+                <Setter Property="BorderThickness" Value="1" />
+
+
+                <Setter Property="Controls:ButtonHelper.PreserveTextCase" Value="True" />
+                <Setter Property="Controls:ButtonHelper.CornerRadius" Value="0" />
+            </Style>
 
             <!--  Style for the Individual Tab Item  -->
             <Style x:Key="TabHeaderWithImage" TargetType="{x:Type TabItem}">

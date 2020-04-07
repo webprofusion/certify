@@ -227,13 +227,15 @@
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Button
-                                                    Width="32"
+                                                    Width="20"
                                                     Margin="4,0,0,0"
                                                     AutomationProperties.Name="Remove Domain"
+                                                    BorderThickness="0"
                                                     Click="RemoveDomainOption_Click">
                                                     <fa:ImageAwesome
                                                         Height="12"
                                                         Margin="0,0,0,0"
+                                                        Foreground="{DynamicResource AccentColorBrush3}"
                                                         Icon="Trash" />
 
                                                 </Button>

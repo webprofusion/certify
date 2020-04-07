@@ -38,9 +38,13 @@ namespace Certify.UI
 
             if ((appStyle.Item1.Name == "BaseLight" && initialTheme == null) || initialTheme == "Dark")
             {
+                var darkTheme = MahApps.Metro.ThemeManager.GetAppTheme("BaseDark");
+
+                darkTheme.Resources["TextBoxBorderBrush"] = "#FFC0C0C0";
+
                 MahApps.Metro.ThemeManager.ChangeAppStyle(Application.Current,
                                      MahApps.Metro.ThemeManager.GetAccent("Green"),
-                                     MahApps.Metro.ThemeManager.GetAppTheme("BaseDark"));
+                                     darkTheme);
                 return "Dark";
 
             }
@@ -100,6 +104,7 @@ namespace Certify.UI
             }
 
             var d = new Windows.Feedback(feedbackMsg, isException: true);
+
             d.ShowDialog();
         }
 
