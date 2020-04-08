@@ -338,9 +338,6 @@ namespace Certify.Management
         {
             var result = await CheckForUpdates();
 
-#if DEBUG
-            result.IsNewerVersion = true;
-#endif
             if (result.IsNewerVersion)
             {
                 string updatePath;
