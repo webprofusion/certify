@@ -510,19 +510,19 @@ namespace Certify.Management.Servers
 
             try
             {
-            // inspired by:
-            // dotnet core System.Security.Cryptography.X509Certificates/src/Internal/Cryptography/Helpers.cs
-            // CertificateHash is stored as 2 nibbles (4-bits) per byte, so convert bytes > hex
-            var output = "";
-            foreach (var b in bytes)
-            {
-                output += ((byte)(b >> 4)).ToString("X");
-                output += ((byte)(b & 0xF)).ToString("X");
+                // inspired by:
+                // dotnet core System.Security.Cryptography.X509Certificates/src/Internal/Cryptography/Helpers.cs
+                // CertificateHash is stored as 2 nibbles (4-bits) per byte, so convert bytes > hex
+                var output = "";
+                foreach (var b in bytes)
+                {
+                    output += ((byte)(b >> 4)).ToString("X");
+                    output += ((byte)(b & 0xF)).ToString("X");
+                }
+                return output;
             }
-            return output;
-        }
             catch
-        {           
+            {
                 // failed to convert bytes to hex. Cert hash is probably invalid.
                 return null;
             }
@@ -534,6 +534,15 @@ namespace Certify.Management.Servers
         {
             var siteInfo = Map(site);
 
+            byte[] bindingHash = null;
+
+            try
+            {
+                // attempting to read certificate hash for an invalid cert can cause an exception
+                bindingHash = binding.CertificateHash;
+            }
+            catch { }
+
             return new BindingInfo()
             {
                 SiteId = siteInfo.Id,
@@ -544,9 +553,9 @@ namespace Certify.Management.Servers
                 Port = binding.EndPoint?.Port ?? 0,
                 IsHTTPS = binding.Protocol.ToLower() == "https",
                 Protocol = binding.Protocol.ToLower(),
-                HasCertificate = (binding.CertificateHash != null),
-                CertificateHash = binding.CertificateHash != null ? HashBytesToThumprint(binding.CertificateHash): null,
-                CertificateHashBytes = binding.CertificateHash
+                HasCertificate = (bindingHash != null),
+                CertificateHash = bindingHash != null ? HashBytesToThumprint(bindingHash) : null,
+                CertificateHashBytes = bindingHash
             };
         }
 
