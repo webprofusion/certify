@@ -18,6 +18,7 @@ namespace Certify.Management
 {
     public class Util
     {
+        public const string APPDATASUBFOLDER = "Certify";
 
         /// <summary>
         /// check for problems which could affect app use
@@ -220,17 +221,20 @@ namespace Certify.Management
 
         public bool VerifyUpdateFile(string tempFile, string expectedHash, bool throwOnDeviation = true)
         {
-            bool performCertValidation = false;
+            bool performCertValidation = true;
 
             bool signatureVerified = false;
 
             if (performCertValidation)
             {
+                // check digital signature
+                bool wintrustSignatureVerified = Security.WinTrust.WinTrust.VerifyEmbeddedSignature(tempFile);
+
                 //get verified signed file cert
                 var cert = CertificateManager.GetFileCertificate(tempFile);
-
+                
                 //ensure cert subject
-                if (!(cert != null && cert.SubjectName.Name.StartsWith("CN=Webprofusion Pty Ltd, O=Webprofusion Pty Ltd")))
+                if (!(cert != null && wintrustSignatureVerified && cert.SubjectName.Name.StartsWith("CN=Webprofusion Pty Ltd, O=Webprofusion Pty Ltd")))
                 {
                     if (throwOnDeviation)
                     {
@@ -249,7 +253,7 @@ namespace Certify.Management
 
             //verify file SHA256
             string computedSHA256 = null;
-            using (Stream stream = new FileStream(tempFile, FileMode.Open, FileAccess.Read, FileShare.Read, 8192, true))
+            using (Stream stream = new FileStream(tempFile, FileMode.Open, FileAccess.Read, FileShare.None, 8192, true))
             {
                 computedSHA256 = GetFileSHA256(stream);
             }
@@ -282,19 +286,59 @@ namespace Certify.Management
             }
         }
 
+        public static string GetUserLocalAppDataFolder()
+        {
+            var path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\" + APPDATASUBFOLDER;
+            if (!System.IO.Directory.Exists(path))
+            {
+                System.IO.Directory.CreateDirectory(path);
+            }
+            return path;
+        }
+
+
+        /// <summary>
+        /// Create a local app data folder. This method will throw an exception if any IO operations fail.
+        /// </summary>
+        /// <param name="folder">subfolder to create</param>
+        /// <returns></returns>
+        public string CreateLocalAppDataPath(string folder)
+        {
+            // create a new temp folder under our Local User %APPDATA% folder for access by our current user
+            var appData = GetUserLocalAppDataFolder();
+
+            var destPath = Path.Combine(appData, folder);
+
+            if (!Directory.Exists(destPath))
+            {
+                Directory.CreateDirectory(destPath);
+            }
+
+            return destPath;
+        }
+
         public async Task<UpdateCheck> DownloadUpdate()
         {
-            var pathname = Path.GetTempPath();
-
             var result = await CheckForUpdates();
 
+#if DEBUG
+            result.IsNewerVersion = true;
+#endif
             if (result.IsNewerVersion)
             {
-                var client = new HttpClient();
-                client.DefaultRequestHeaders.Add("User-Agent", Util.GetUserAgent());
+                string updatePath;
+
+                try
+                {
+                    updatePath = CreateLocalAppDataPath("updates");
+                }
+                catch (Exception)
+                {
+                    throw new Exception("Update failed to download. Could not create temp folder under %APPDATA%");
+                }
 
                 //https://github.com/dotnet/corefx/issues/6849
-                var tempFile = Path.Combine(new string[] { pathname, "CertifySSL_" + result.Version.ToString() + "_Setup.tmp" });
+                var tempFile = Path.Combine(new string[] { updatePath, "CertifySSL_" + result.Version.ToString() + "_Setup.tmp" });
                 var setupFile = tempFile.Replace(".tmp", ".exe");
 
                 var downloadVerified = false;
@@ -312,39 +356,44 @@ namespace Certify.Management
                     // download and verify new setup
                     try
                     {
-                        using (var response = client.GetAsync(result.Message.DownloadFileURL, HttpCompletionOption.ResponseHeadersRead).Result)
+                        using (var client = new HttpClient())
                         {
-                            response.EnsureSuccessStatusCode();
+                            client.DefaultRequestHeaders.Add("User-Agent", Util.GetUserAgent());
 
-                            using (Stream contentStream = await response.Content.ReadAsStreamAsync(), fileStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true))
+                            using (HttpResponseMessage response = client.GetAsync(result.Message.DownloadFileURL, HttpCompletionOption.ResponseHeadersRead).Result)
                             {
-                                var totalRead = 0L;
-                                var totalReads = 0L;
-                                var buffer = new byte[8192];
-                                var isMoreToRead = true;
+                                response.EnsureSuccessStatusCode();
 
-                                do
+                                using (Stream contentStream = await response.Content.ReadAsStreamAsync(), fileStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true))
                                 {
-                                    var read = await contentStream.ReadAsync(buffer, 0, buffer.Length);
-                                    if (read == 0)
-                                    {
-                                        isMoreToRead = false;
-                                    }
-                                    else
-                                    {
-                                        await fileStream.WriteAsync(buffer, 0, read);
+                                    var totalRead = 0L;
+                                    var totalReads = 0L;
+                                    var buffer = new byte[8192];
+                                    var isMoreToRead = true;
 
-                                        totalRead += read;
-                                        totalReads += 1;
-
-                                        if (totalReads % 512 == 0)
+                                    do
+                                    {
+                                        var read = await contentStream.ReadAsync(buffer, 0, buffer.Length);
+                                        if (read == 0)
                                         {
-                                            Console.WriteLine(string.Format("total bytes downloaded so far: {0:n0}", totalRead));
+                                            isMoreToRead = false;
+                                        }
+                                        else
+                                        {
+                                            await fileStream.WriteAsync(buffer, 0, read);
+
+                                            totalRead += read;
+                                            totalReads += 1;
+
+                                            if (totalReads % 512 == 0)
+                                            {
+                                                Console.WriteLine(string.Format("total bytes downloaded so far: {0:n0}", totalRead));
+                                            }
                                         }
                                     }
+                                    while (isMoreToRead);
+                                    fileStream.Close();
                                 }
-                                while (isMoreToRead);
-                                fileStream.Close();
                             }
                         }
                     }

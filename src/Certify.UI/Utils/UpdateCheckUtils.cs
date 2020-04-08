@@ -29,7 +29,6 @@ namespace Certify.UI.Utils
             {
                 if (MessageBox.Show(SR.Update_ReadyToApply, ConfigResources.AppName, MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
                 {
-                    // file has been downloaded and verified
                     var p = new System.Diagnostics.Process();
                     p.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
                     p.StartInfo.FileName = updateCheck.UpdateFilePath;
@@ -37,14 +36,19 @@ namespace Certify.UI.Utils
                     p.StartInfo.RedirectStandardOutput = true;
                     p.StartInfo.RedirectStandardError = true;
                     p.StartInfo.Arguments = "/SILENT";
-                    p.Start();
 
-                    //stop certify.service
-                    /*ServiceController service = new ServiceController("ServiceName");
-                    service.Stop();
-                    service.WaitForStatus(ServiceControllerStatus.Stopped);*/
+                    // re-verify file hash directly before execution
+                    if (new Management.Util().VerifyUpdateFile(updateCheck.UpdateFilePath, updateCheck.Message.SHA256, false))
+                    {
+                        // execute verified file
+                        p.Start();
 
-                    Application.Current.Shutdown();
+                        Application.Current.Shutdown();
+                    }
+                    else
+                    {
+                        MessageBox.Show("The application update failed secondary verification. A malicious process may have changed the setup file after the downloaded completed.", ConfigResources.AppName);
+                    }
                 }
             }
             Mouse.OverrideCursor = Cursors.Arrow;
