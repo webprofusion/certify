@@ -40,7 +40,6 @@ namespace Certify.UI.ViewModel
             // workaround - these should be happening automatically but we're currently having to
             // force them manually
             RaisePropertyChangedEvent(nameof(ChallengeConfigViewModels));
-            RaisePropertyChangedEvent(nameof(SelectedItemLogEntries));
 
             RaisePropertyChangedEvent(nameof(DaysRemaining));
             RaisePropertyChangedEvent(nameof(DateNextRenewalDue));
@@ -196,27 +195,6 @@ namespace Certify.UI.ViewModel
                     }
                 }
                 SelectedItem.IsChanged = true;
-            }
-        }
-
-        [DependsOn(nameof(SelectedItem))]
-        public List<string> SelectedItemLogEntries
-        {
-            get
-            {
-                if (SelectedItem != null && SelectedItem.Id != null)
-                {
-                    try
-                    {
-                        var logPath = ManagedCertificateLog.GetLogPath(SelectedItem.Id);
-                        var logEntries = System.IO.File.ReadAllLines(logPath);
-                        return logEntries.Reverse().Take(50).ToList();
-                    }
-                    catch
-                    {
-                    }
-                }
-                return new List<string> { "Could not retrieve log entries." };
             }
         }
 

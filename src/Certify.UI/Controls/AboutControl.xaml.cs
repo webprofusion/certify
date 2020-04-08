@@ -119,7 +119,7 @@ namespace Certify.UI.Controls
 
         private void Feedback_Click(object sender, RoutedEventArgs e)
         {
-            var d = new Windows.Feedback("", false);
+            var d = new Windows.Feedback("", false) { Owner = Window.GetWindow(this) };
             d.ShowDialog();
         }
 

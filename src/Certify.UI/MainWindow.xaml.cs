@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -262,7 +262,7 @@ namespace Certify.UI
             {
                 //start by registering
                 MessageBox.Show(SR.MainWindow_GetStartGuideWithNewCert);
-                var d = new Windows.EditContactDialog { };
+                var d = new Windows.EditContactDialog { Owner = Window.GetWindow(this) };
                 d.ShowDialog();
             }
         }
