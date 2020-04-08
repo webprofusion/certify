@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -77,9 +78,16 @@ namespace Certify.UI
                 {
                     var licensingManager = ViewModel.AppViewModel.Current.PluginManager?.LicensingManager;
 
-                    if (licensingManager != null && !await licensingManager.IsInstallActive(ViewModel.AppViewModel.ProductTypeId, Management.Util.GetAppDataFolder()))
+                    try
                     {
-                        _appViewModel.IsRegisteredVersion = false;
+                        if (licensingManager != null && !await licensingManager.IsInstallActive(ViewModel.AppViewModel.ProductTypeId, Management.Util.GetAppDataFolder()))
+                        {
+                            _appViewModel.IsRegisteredVersion = false;
+                        }
+                    }
+                    catch (Exception exp)
+                    {
+                        // failed to check status
                     }
                 }
             }
@@ -113,13 +121,13 @@ namespace Certify.UI
             }
 
             // save or discard site changes before creating a new site/certificate
-            if (!await _itemViewModel.ConfirmDiscardUnsavedChanges()) return;         
+            if (!await _itemViewModel.ConfirmDiscardUnsavedChanges()) return;
 
             //present new renew all confirmation
             if (MessageBox.Show(SR.MainWindow_RenewAllConfirm, SR.Renew_All, MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 _appViewModel.MainUITabIndex = (int)PrimaryUITabs.CurrentProgress;
-               
+
                 // renewals is a long running process so we need to run renewals process in the
                 // background and present UI to show progress.
                 // TODO: We should prevent starting the renewals process if it is currently in progress.
