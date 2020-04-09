@@ -19,11 +19,13 @@ namespace Certify.Core.Tests.Unit
         {
 
             var itemManager = new ItemManager(TEST_PATH);
+
+#if DEBUG
             Task.Run(async () =>
             {
                 await itemManager.DeleteAllManagedCertificates();
             });
-
+#endif
         }
 
         private ManagedCertificate BuildTestManagedCertificate()
