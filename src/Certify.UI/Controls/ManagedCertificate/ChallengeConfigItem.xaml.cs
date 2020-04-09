@@ -199,6 +199,14 @@ namespace Certify.UI.Controls.ManagedCertificate
                 EditModel.SelectedItem.ChallengeProvider = challengeProviderType;
 
                 await RefreshAllOptions();
+
+                if (challengeProviderType== "DNS01.Manual")
+                {
+                    MessageBox.Show(
+                        "You have selected the Manual DNS method. This option is provided for testing and is often the most difficult to get working. Do not rely on Manual DNS for normal certificate renewal as the manual process must be repeated for every renewal. Consider other automated options such as acme-dns: https://docs.certifytheweb.com/docs/dns-validation",
+                        "Warning", MessageBoxButton.OK, MessageBoxImage.Exclamation
+                        );
+                }
             }
         }
 
