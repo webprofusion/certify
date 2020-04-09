@@ -195,13 +195,15 @@ namespace Certify.Management
                     stepIndex++;
                 }
 
+                var overallTaskResult = (taskResults != null && taskResults.Any(t => t.IsSuccess == false) ? taskResults.First(t => t.IsSuccess == false).Message : taskTriggerReason);
+
                 var currentStep = new ActionStep
                 {
                     Key = task.TaskConfig.Id,
                     Title = task.TaskConfig.TaskName,
                     Category = "Task",
                     HasError = (taskResults != null && taskResults.Any(t => t.IsSuccess == false) ? true : false),
-                    Description = taskTriggerReason,
+                    Description = overallTaskResult,
                     HasWarning = !shouldRunCurrentTask,
                     Substeps = subSteps
                 };
