@@ -42,6 +42,8 @@ namespace Certify.Management
 
         public event Action<RequestProgressState> OnRequestProgressStateUpdated;
 
+        private ConcurrentDictionary<string, CertificateAuthority> _certificateAuthorities = new ConcurrentDictionary<string, CertificateAuthority>();
+
         public CertifyManager()
         {
             var serverConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
@@ -62,6 +64,26 @@ namespace Certify.Management
             _pluginManager.LoadPlugins(new List<string> { "Licensing", "DashboardClient", "DeploymentTasks" });
 
 
+            // load core CAs and custom CAs
+            foreach (var ca in CertificateAuthority.CoreCertificateAuthorities)
+            {
+                _certificateAuthorities.TryAdd(ca.Id, ca);
+            }
+
+            try
+            {
+                var customCAs = SettingsManager.GetCustomCertificateAuthorities();
+
+                foreach(var ca in customCAs)
+                {
+                    _certificateAuthorities.TryAdd(ca.Id, ca);
+                }
+            }
+            catch (Exception exp)
+            {
+                // failed to load custom CAs
+                _serviceLog.Error(exp.Message);
+            }
 
 
             // init remaining utilities and optionally enable telematics
@@ -94,10 +116,10 @@ namespace Certify.Management
 
             list = list.Where(i => i.RequestConfig.WebhookUrl != null || i.RequestConfig.PreRequestPowerShellScript != null || i.RequestConfig.PostRequestPowerShellScript != null);
 
-            foreach(var i in list)
+            foreach (var i in list)
             {
                 var result = MigrateDeploymentTasks(i);
-                if (result.Item2==true)
+                if (result.Item2 == true)
                 {
                     // save change
                     await UpdateManagedCertificate(result.Item1);
@@ -112,9 +134,19 @@ namespace Certify.Management
             var acc = await GetAccountDetailsForManagedItem(managedItem);
             if (acc != null)
             {
-                var ca = CertificateAuthority.CertificateAuthorities.FirstOrDefault(c => c.Id == acc.CertificateAuthorityId);
-                var acmeBaseUrl = managedItem.UseStagingMode ? ca.StagingAPIEndpoint : ca.ProductionAPIEndpoint;
-                return await GetACMEProvider(acc, acmeBaseUrl);
+                _certificateAuthorities.TryGetValue(acc.CertificateAuthorityId, out var ca);
+
+                if (ca != null)
+                {
+                    var acmeBaseUrl = managedItem.UseStagingMode ? ca.StagingAPIEndpoint : ca.ProductionAPIEndpoint;
+
+                    return await GetACMEProvider(acc, acmeBaseUrl);
+                }
+                else
+                {
+                    // Unknown acme CA. May have been removed from CA list.
+                    return null;
+                }
             }
             else
             {

@@ -67,9 +67,7 @@
                             <Button Margin="0,8,8,8" Click="Button_Delete">
                                 Delete
                             </Button>
-                            <Button Margin="0,8,8,8" Click="Button_NewContact">
-                                Edit
-                            </Button>
+
                             <fa:FontAwesome
                                 Margin="0,8,8,0"
                                 FontSize="24"

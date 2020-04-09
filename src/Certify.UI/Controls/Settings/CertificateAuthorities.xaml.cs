@@ -45,7 +45,7 @@ namespace Certify.UI.Controls.Settings
 
             EnableAutomaticCAFailover.IsChecked = _prefs.EnableAutomaticCAFailover;
 
-            this.CertificateAuthorityList.ItemsSource = CertificateAuthority.CertificateAuthorities.Where(c => c.IsEnabled == true);
+            this.CertificateAuthorityList.ItemsSource = MainViewModel.CertificateAuthorities.Where(c => c.IsEnabled == true);
 
             CertificateAuthorityList.SelectedValue = _prefs.DefaultCertificateAuthority;
 

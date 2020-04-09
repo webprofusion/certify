@@ -378,6 +378,12 @@ namespace Certify.Client
 
         #region Accounts
 
+        public async Task<List<CertificateAuthority>> GetCertificateAuthorities()
+        {
+            var result = await FetchAsync("accounts/authorities");
+            return JsonConvert.DeserializeObject<List<CertificateAuthority>>(result);
+        }
+
         public async Task<List<AccountDetails>> GetAccounts()
         {
             var result = await FetchAsync("accounts");

@@ -108,6 +108,8 @@ namespace Certify.Client
         #endregion Managed Certificates
 
         #region Accounts
+        Task<List<CertificateAuthority>> GetCertificateAuthorities();
+
         Task<List<AccountDetails>> GetAccounts();
         Task<ActionResult> AddAccount(ContactRegistration contact);
         Task<ActionResult> RemoveAccount(string storageKey);

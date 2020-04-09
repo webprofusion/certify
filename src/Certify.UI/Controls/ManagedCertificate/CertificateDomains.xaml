@@ -284,8 +284,7 @@
                         Margin="0,8"
                         DockPanel.Dock="Top"
                         Style="{StaticResource Instructions}"
-                        Text="{Binding CertificateAuthorityDescription}"
-                        Visibility="{Binding SelectedItem.CertificateAuthorityId, Converter={StaticResource NullCollapsedConverter}}" />
+                        Text="{Binding CertificateAuthorityDescription}" />
                 </DockPanel>
             </TabItem>
             <TabItem

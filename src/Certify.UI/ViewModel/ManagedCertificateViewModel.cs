@@ -48,6 +48,7 @@ namespace Certify.UI.ViewModel
             RaisePropertyChangedEvent(nameof(SelectedItem));
             RaisePropertyChangedEvent(nameof(HasSelectedItemDomainOptions));
             RaisePropertyChangedEvent(nameof(HasSelectedItemWebsiteSelection));
+            RaisePropertyChangedEvent(nameof(CertificateAuthorities));
         }
 
         public string CertificateAuthorityDescription
@@ -168,11 +169,13 @@ namespace Certify.UI.ViewModel
                 }
             }
         }
+
+        [DependsOn("_appViewModel.CertificateAuthorities")]
         public IEnumerable<CertificateAuthority> CertificateAuthorities
         {
             get
             {
-                var list = CertificateAuthority.CertificateAuthorities.Where(c => c.IsEnabled == true).ToList();
+                var list = _appViewModel.CertificateAuthorities.Where(c => c.IsEnabled == true).ToList();
                 list.Insert(0, new CertificateAuthority
                 {
                     Id = "",

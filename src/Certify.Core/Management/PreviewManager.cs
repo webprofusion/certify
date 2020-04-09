@@ -34,6 +34,7 @@ namespace Certify.Management
             var hasDomains = true;
 
             var allTaskProviders = await certifyManager.GetDeploymentProviders();
+            var certificateAuthorities = await certifyManager.GetCertificateAuthorities();
 
             // ensure defaults are applied for the deployment mode, overwriting any previous selections
             item.RequestConfig.ApplyDeploymentOptionDefaults();
@@ -57,9 +58,10 @@ namespace Certify.Management
 
                 // certificate summary
                 var certDescription = new StringBuilder();
+                var ca = certificateAuthorities.FirstOrDefault(c => c.Id == item.CertificateAuthorityId);
 
                 certDescription.AppendLine(
-                    $"A new certificate will be requested from the *{CertificateAuthority.GetCertificateAuthority(item.CertificateAuthorityId)?.Title ?? "Default"}* certificate authority for the following domains:"
+                    $"A new certificate will be requested from the *{ca?.Title ?? "Default"}* certificate authority for the following domains:"
                     );
 
                 certDescription.AppendLine($"\n**{item.RequestConfig.PrimaryDomain}** (Primary Domain)");
@@ -230,7 +232,7 @@ namespace Certify.Management
                     {
                         Title = $"{stepIndex}. Pre-Request Tasks",
                         Category = "PreRequestTasks",
-                        Description = $"Run {substeps.Count()} Pre-Request Tasks",
+                        Description = $"Execute {substeps.Count()} Pre-Request Tasks",
                         Substeps = substeps.ToList()
                     });
                     stepIndex++;
@@ -366,7 +368,7 @@ namespace Certify.Management
                     {
                         Title = $"{stepIndex}. Post-Request (Deployment) Tasks",
                         Category = "PostRequestTasks",
-                        Description = $"Run {substeps.Count()} Post-Request Tasks",
+                        Description = $"Execute {substeps.Count()} Post-Request Tasks",
                         Substeps = substeps.ToList()
                     });
                     stepIndex++;

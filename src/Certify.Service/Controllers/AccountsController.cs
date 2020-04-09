@@ -39,5 +39,11 @@ namespace Certify.Service
             DebugLog();
             return await _certifyManager.RemoveAccount(storageKey);
         }
+
+        [HttpGet, Route("authorities")]
+        public async Task<List<CertificateAuthority>> GetCertificateAuthorities()
+        {
+            return await _certifyManager.GetCertificateAuthorities();
+        }
     }
 }

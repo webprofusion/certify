@@ -11,6 +11,7 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
+
         /// <summary>
         /// Get the applicable Account Details for this managed item
         /// </summary>
@@ -29,12 +30,12 @@ namespace Certify.Management
             var accounts = await GetAccountRegistrations();
 
             // get current account details for this CA (depending on whether this managed certificate uses staging mode or not)
-            var matchingAccount =  accounts.FirstOrDefault(a => a.CertificateAuthorityId == currentCA && a.IsStagingAccount == item.UseStagingMode);
+            var matchingAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == currentCA && a.IsStagingAccount == item.UseStagingMode);
 
-            if (matchingAccount==null)
+            if (matchingAccount == null)
             {
                 var log = ManagedCertificateLog.GetLogger(item.Id, new Serilog.Core.LoggingLevelSwitch(Serilog.Events.LogEventLevel.Error));
-                log?.Error($"Failed to match ACME account for managed certificate. Cannot continue request. :: {item.Name} CA: {currentCA} {(item.UseStagingMode?"[Staging Mode]":"[Production]")}");
+                log?.Error($"Failed to match ACME account for managed certificate. Cannot continue request. :: {item.Name} CA: {currentCA} {(item.UseStagingMode ? "[Staging Mode]" : "[Production]")}");
             }
 
             return matchingAccount;
@@ -98,7 +99,13 @@ namespace Certify.Management
 
                 // new provider needed for this new account
                 var storageKey = Guid.NewGuid().ToString();
-                var certAuthority = CertificateAuthority.CertificateAuthorities.First(a => a.Id == reg.CertificateAuthorityId);
+
+                _certificateAuthorities.TryGetValue(reg.CertificateAuthorityId, out var certAuthority);
+
+                if (certAuthority == null)
+                {
+                    return new ActionResult("Invalid Certificate Authority specified.", false);
+                }
 
                 var acmeProvider = await GetACMEProvider(storageKey, reg.IsStaging ? certAuthority.StagingAPIEndpoint : certAuthority.ProductionAPIEndpoint);
 
@@ -122,7 +129,7 @@ namespace Certify.Management
             else
             {
                 // did not agree to terms
-                return new Models.Config.ActionResult { IsSuccess = false, Message = "You must agree to the terms and conditions of the Certificate Authority to register with them." };
+                return new ActionResult("You must agree to the terms and conditions of the Certificate Authority to register with them.", false);
             }
         }
 
@@ -167,7 +174,7 @@ namespace Certify.Management
                 // contacts may be JSON or legacy vault 
 
                 // create provider pointing to legacy storage
-                var apiEndpoint = CertificateAuthority.CertificateAuthorities.Find(c => c.Id == StandardCertAuthorities.LETS_ENCRYPT).ProductionAPIEndpoint;
+                var apiEndpoint = _certificateAuthorities[StandardCertAuthorities.LETS_ENCRYPT].ProductionAPIEndpoint;
                 var provider = new CertesACMEProvider(apiEndpoint, Management.Util.GetAppDataFolder() + "\\certes", Util.GetUserAgent());
                 await provider.InitProvider(_serviceLog);
 
@@ -207,15 +214,21 @@ namespace Certify.Management
                                 accounts.Add(acc);
                                 await StoreAccountAsCredential(acc);
                                 _serviceLog?.Information("Account upgrade completed (vault)");
-                            } else
+                            }
+                            else
                             {
                                 _serviceLog?.Information($"Account upgrade failed (vault):{registerResult?.Message}");
                             }
-                            
+
                         }
                     }
                 }
             }
+        }
+
+        public async Task<List<CertificateAuthority>> GetCertificateAuthorities()
+        {
+            return _certificateAuthorities.Values.ToList();
         }
     }
 }

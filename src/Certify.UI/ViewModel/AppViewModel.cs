@@ -130,6 +130,20 @@ namespace Certify.UI.ViewModel
 
         public ObservableCollection<AccountDetails> AccountDetails = new ObservableCollection<AccountDetails>();
 
+        public ObservableCollection<CertificateAuthority> CertificateAuthorities = new ObservableCollection<CertificateAuthority>();
+
+        public async Task RefreshCertificateAuthorityList()
+        {
+            var list = await CertifyClient.GetCertificateAuthorities();
+
+            CertificateAuthorities.Clear();
+
+            foreach (var a in list)
+            {
+                CertificateAuthorities.Add(a);
+            }
+        }
+
         public async Task RefreshAccountsList()
         {
             var list = await CertifyClient.GetAccounts();
@@ -138,7 +152,8 @@ namespace Certify.UI.ViewModel
 
             foreach (var a in list)
             {
-                a.Title = $"{CertificateAuthority.GetCertificateAuthority(a.CertificateAuthorityId).Title} [{(a.IsStagingAccount ? "Staging" : "Production")}]";
+                var ca = CertificateAuthorities.FirstOrDefault(c => c.Id == a.CertificateAuthorityId);
+                a.Title = $"{ca?.Title ?? "[Unknown CA]"} [{(a.IsStagingAccount ? "Staging" : "Production")}]";
                 AccountDetails.Add(a);
             }
         }
@@ -385,6 +400,8 @@ namespace Certify.UI.ViewModel
 
             ManagedCertificates = new System.Collections.ObjectModel.ObservableCollection<Models.ManagedCertificate>(list);
 
+            await RefreshCertificateAuthorityList();
+
             await RefreshAccountsList();
 
             await RefreshChallengeAPIList();
@@ -591,7 +608,7 @@ namespace Certify.UI.ViewModel
                 System.Windows.Data.BindingOperations.EnableCollectionSynchronization(StoredCredentials, _storedCredentialsLock);
             }
 
-         
+
             StoredCredentials.Clear();
             foreach (var c in list)
             {

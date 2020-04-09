@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using Certify.Models;
@@ -32,7 +33,8 @@ namespace Certify.UI.Controls.ManagedCertificate
             try
             {
                 _css = System.IO.File.ReadAllText(System.AppDomain.CurrentDomain.BaseDirectory + "\\Assets\\CSS\\markdown.css");
-            } catch
+            }
+            catch
             {
                 // will fail in design mode
             }
@@ -76,22 +78,23 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private string GetStepsAsMarkdown(IEnumerable<ActionStep> steps)
         {
-            var markdownText = "";
             var newLine = "\r\n";
+
+            var sb = new StringBuilder();
             foreach (var s in steps)
             {
-                markdownText += newLine + "# " + s.Title + newLine;
-                markdownText += s.Description;
+                sb.AppendLine(newLine + "# " + s.Title);
+                sb.AppendLine(s.Description);
 
                 if (s.Substeps != null)
                 {
                     foreach (var sub in s.Substeps)
                     {
-                        markdownText += sub.Description + newLine;
+                        sb.AppendLine(" - "+sub.Description);
                     }
                 }
             }
-            return markdownText;
+            return sb.ToString();
         }
 
         private async void UserControl_IsVisibleChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)

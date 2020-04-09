@@ -467,8 +467,8 @@ namespace Certify.Providers.ACME.Certes
             }
             catch (Exception exp)
             {
-                log.Error($"Failed to register account {email} with certificate authority: {exp.Message}");
-                return new ActionResult<AccountDetails> { IsSuccess = false, Message = $"Failed to register account {email} with certificate authority: {exp.Message}" };
+                log.Error($"Failed to register account with certificate authority: {exp.Message}");
+                return new ActionResult<AccountDetails> { IsSuccess = false, Message = $"Failed to register account with certificate authority: {exp.Message}" };
             }
         }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Certify.Models;
 
 namespace Certify.Management
@@ -217,6 +218,29 @@ namespace Certify.Management
             }
         }
 
+        public static List<CertificateAuthority> GetCustomCertificateAuthorities()
+        {
+            var caList = new List<CertificateAuthority>();
+            var appDataPath = Util.GetAppDataFolder();
+            var path = appDataPath + "\\ca.json";
+
+            if (System.IO.File.Exists(path))
+            {
+                var configData = System.IO.File.ReadAllText(path);
+                try
+                {
+                    caList = Newtonsoft.Json.JsonConvert.DeserializeObject<List<CertificateAuthority>>(configData);
+
+                }
+                catch (Exception exp)
+                {
+                    throw new Exception($"Failed to load custom certificate authorities:: {path} {exp}");
+                }
+
+            }
+
+            return caList;
+        }
         public static void LoadAppSettings()
         {
             var appDataPath = Util.GetAppDataFolder();
