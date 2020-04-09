@@ -504,19 +504,19 @@ namespace Certify.Management.Servers
                 {
                     using (var iisManager = await GetDefaultServerManager())
                     {
-       
+
                         lock (_iisAPILock)
                         {
                             var site = iisManager.Sites.FirstOrDefault(s => s.Id == long.Parse(bindingSpec.SiteId));
 
                             if (site != null)
                             {
-    
+
                                 var ssl = site.ChildElements["ftpServer"].ChildElements["security"].ChildElements["ssl"];
 
                                 ssl["serverCertHash"] = bindingSpec.CertificateHash;
                                 ssl["serverCertStoreName"] = bindingSpec.CertificateStore;
-                 
+
                                 result = new ActionStep { HasWarning = false, Description = $"New ftp ssl binding added : {bindingSpec}" };
 
                             }
@@ -646,9 +646,7 @@ namespace Certify.Management.Servers
                 // attempting to read certificate hash for an invalid cert can cause an exception
                 bindingHash = binding.CertificateHash;
             }
-            catch
-            {
-            }
+            catch { }
 
             return new BindingInfo()
             {
