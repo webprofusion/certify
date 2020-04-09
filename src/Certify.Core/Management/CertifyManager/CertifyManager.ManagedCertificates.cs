@@ -208,7 +208,10 @@ namespace Certify.Management
                     {
                         try
                         {
-                            _httpChallengeProcess.CloseMainWindow();
+                            if (_httpChallengeProcess !=null && !_httpChallengeProcess.HasExited)
+                            {
+                                _httpChallengeProcess.CloseMainWindow();
+                            }
                         }
                         catch { }
                     }
