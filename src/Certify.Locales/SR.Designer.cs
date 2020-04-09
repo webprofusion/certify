@@ -484,6 +484,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Your license key has expired or is no longer active..
+        /// </summary>
+        public static string MainWindow_KeyExpired {
+            get {
+                return ResourceManager.GetString("MainWindow_KeyExpired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This will renew certificates for all auto-renewed items. Proceed?.
         /// </summary>
         public static string MainWindow_RenewAllConfirm {

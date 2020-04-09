@@ -662,4 +662,7 @@
   <data name="PreferredCertificateAuthority" xml:space="preserve">
     <value>Preferred Certificate Authority</value>
   </data>
+  <data name="MainWindow_KeyExpired" xml:space="preserve">
+    <value>Your license key has expired or is no longer active.</value>
+  </data>
 </root>

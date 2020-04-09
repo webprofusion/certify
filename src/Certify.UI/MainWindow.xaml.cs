@@ -77,13 +77,17 @@ namespace Certify.UI
             }
             else
             {
-                if (_appViewModel.IsRegisteredVersion && _appViewModel.ManagedCertificates?.Count >= NUM_ITEMS_FOR_LIMIT)
+                if (_appViewModel.IsRegisteredVersion && _appViewModel.ManagedCertificates?.Count >= 1)
                 {
                     var licensingManager = ViewModel.AppViewModel.Current.PluginManager?.LicensingManager;
 
                     if (licensingManager != null && !await licensingManager.IsInstallActive(ViewModel.AppViewModel.ProductTypeId, Management.Util.GetAppDataFolder()))
                     {
                         _appViewModel.IsRegisteredVersion = false;
+                    }
+                    else
+                    {
+                        MessageBox.Show(Certify.Locales.SR.MainWindow_KeyExpired);
                     }
                 }
             }
@@ -126,7 +130,7 @@ namespace Certify.UI
             if (MessageBox.Show(SR.MainWindow_RenewAllConfirm, SR.Renew_All, MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 _appViewModel.MainUITabIndex = (int)PrimaryUITabs.CurrentProgress;
-               
+
                 // renewals is a long running process so we need to run renewals process in the
                 // background and present UI to show progress.
                 // TODO: We should prevent starting the renewals process if it is currently in progress.
@@ -221,7 +225,7 @@ namespace Certify.UI
 
             _appViewModel.IsLoading = false;
 
-        
+
 
             if (!_appViewModel.IsRegisteredVersion)
             {
@@ -233,6 +237,13 @@ namespace Certify.UI
             {
                 var updateCheck = await _appViewModel.CertifyClient.CheckForUpdates();
 
+
+#if DEBUG
+                if (updateCheck != null)
+                {
+                    updateCheck.IsNewerVersion = true;
+                }
+#endif
                 if (updateCheck != null && updateCheck.IsNewerVersion)
                 {
                     _appViewModel.UpdateCheckResult = updateCheck;
@@ -267,7 +278,8 @@ namespace Certify.UI
             {
                 //start by registering
                 MessageBox.Show(SR.MainWindow_GetStartGuideWithNewCert);
-                var d = new Windows.EditAccountDialog { };
+                var d = new Windows.EditAccountDialog { Owner = Window.GetWindow(this) };
+
                 d.ShowDialog();
             }
         }
@@ -337,7 +349,7 @@ namespace Certify.UI
             uiSettings.Height = Height;
             uiSettings.Left = Left;
             uiSettings.Top = Top;
-            
+
             UISettings.Save(uiSettings);
         }
     }
