@@ -20,14 +20,14 @@ namespace Certify.UI.Utils
             catch (Exception exp)
             {
                 //could not complete or verify download
-                MessageBox.Show(SR.Update_DownloadFailed);
+                MessageBox.Show(Application.Current.MainWindow, SR.Update_DownloadFailed);
                 System.Diagnostics.Debug.WriteLine(exp.ToString());
                 return null;
             }
 
             if (!string.IsNullOrEmpty(updateCheck.UpdateFilePath))
             {
-                if (MessageBox.Show(SR.Update_ReadyToApply, ConfigResources.AppName, MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
+                if (MessageBox.Show(Application.Current.MainWindow, SR.Update_ReadyToApply, ConfigResources.AppName, MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
                 {
                     var p = new System.Diagnostics.Process();
                     p.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
@@ -47,7 +47,7 @@ namespace Certify.UI.Utils
                     }
                     else
                     {
-                        MessageBox.Show("The application update failed secondary verification. A malicious process may have changed the setup file after the downloaded completed.", ConfigResources.AppName);
+                        MessageBox.Show(Application.Current.MainWindow, "The application update failed secondary verification. A malicious process may have changed the setup file after the downloaded completed.", ConfigResources.AppName);
                     }
                 }
             }

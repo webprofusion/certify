@@ -176,6 +176,9 @@
     <Compile Include="Windows\EditDeploymentTask.xaml.cs">
       <DependentUpon>EditDeploymentTask.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Windows\UpdateAvailable.xaml.cs">
+      <DependentUpon>UpdateAvailable.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Windows\GettingStartedGuide.xaml.cs">
       <DependentUpon>GettingStartedGuide.xaml</DependentUpon>
     </Compile>
@@ -313,6 +316,10 @@
     <Page Include="Windows\EditDeploymentTask.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Windows\UpdateAvailable.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Windows\GettingStartedGuide.xaml">
       <Generator>MSBuild:Compile</Generator>
