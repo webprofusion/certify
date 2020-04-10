@@ -148,6 +148,10 @@ namespace Certify.Providers.ACME.Certes
 
             _loggingHandler = new LoggingHandler(new HttpClientHandler(), _log);
             var customHttpClient = new System.Net.Http.HttpClient(_loggingHandler);
+            if (customHttpClient.DefaultRequestHeaders.Contains("User-Agent"))
+            {
+                customHttpClient.DefaultRequestHeaders.Remove("User-Agent");
+            }
             customHttpClient.DefaultRequestHeaders.Add("User-Agent", _userAgentName);
 
 #if DEBUG
