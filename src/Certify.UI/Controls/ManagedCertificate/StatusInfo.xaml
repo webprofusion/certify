@@ -29,6 +29,7 @@
             x:Key="NullVisibleConverter"
             NotNull="Collapsed"
             Null="Visible" />
+        <utils:ExpiryDateColourConverter x:Key="ExpiryDateColourConverter" />
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="8,0,8,8">
@@ -68,7 +69,10 @@
                             Width="160"
                             Content="Days Remaining:"
                             FontWeight="Bold" />
-                        <Label Content="{Binding DaysRemaining}" FontWeight="Bold" />
+                        <Label
+                            Content="{Binding DaysRemaining}"
+                            FontWeight="Bold"
+                            Foreground="{Binding Path=SelectedItem.DateExpiry, Converter={StaticResource ExpiryDateColourConverter}}" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <Label
@@ -135,35 +139,23 @@
                             Visibility="{Binding SelectedItem.IncludeInAutoRenew, Converter={StaticResource InvBoolVisConverter}}" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
-                        <Label
-                            Width="160"
-                            Content="Last Renewal:"
-                            FontWeight="Bold" />
-                        <Label Content="{Binding SelectedItem.DateRenewed, Converter={StaticResource NullDateFormatter}}" FontWeight="Bold" />
+                        <Label Width="160" Content="Last Renewal:" />
+                        <Label Content="{Binding SelectedItem.DateRenewed, Converter={StaticResource NullDateFormatter}}" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
+                        <Label Width="160" Content="Expiry:" />
                         <Label
-                            Width="160"
-                            Content="Expiry:"
-                            FontWeight="Bold" />
-                        <Label Content="{Binding Path=SelectedItem.DateExpiry, Converter={StaticResource NullDateFormatter}}" FontWeight="Bold" />
+                            Content="{Binding Path=SelectedItem.DateExpiry, Converter={StaticResource NullDateFormatter}}"
+                            FontWeight="Bold"
+                            Foreground="{Binding Path=SelectedItem.DateExpiry, Converter={StaticResource ExpiryDateColourConverter}}" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
-                        <Label
-                            Width="160"
-                            Content="Days Remaining:"
-                            FontWeight="Bold" />
-                        <Label Content="{Binding DaysRemaining}" FontWeight="Bold" />
+                        <Label Width="160" Content="Days Remaining:" />
+                        <Label Content="{Binding DaysRemaining}" Foreground="{Binding Path=SelectedItem.DateExpiry, Converter={StaticResource ExpiryDateColourConverter}}" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
-                        <Label
-                            Width="160"
-                            Content="Next Renewal Due:"
-                            FontWeight="Bold" />
-                        <Label
-                            Content="{Binding Path=DateNextRenewalDue, Converter={StaticResource NullDateFormatter}}"
-                            ContentStringFormat="d"
-                            FontWeight="Bold" />
+                        <Label Width="160" Content="Next Planned Renewal:" />
+                        <Label Content="{Binding Path=DateNextRenewalDue, Converter={StaticResource NullDateFormatter}}" ContentStringFormat="d" />
                     </StackPanel>
                 </StackPanel>
             </StackPanel>

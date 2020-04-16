@@ -24,8 +24,17 @@ namespace Certify.UI.Utils
                 return SR.ExpiryDateConverter_NoCurrentCertificate;
             }
 
-            var days = (int)Math.Abs((DateTime.Now - expiry).Value.TotalDays);
-            return string.Format(SR.ExpiryDateConverter_CertificateExpiresIn, days);
+            var days = (int)(expiry - DateTime.Now).Value.TotalDays;
+
+            if (days < 0)
+            {
+                return string.Format(SR.ExpiryDateConverter_CertificateExpiredNDaysAgo, -days);
+            }
+            else
+            {
+                return string.Format(SR.ExpiryDateConverter_CertificateExpiresIn, days);
+            }
+
         }
     }
 
@@ -53,15 +62,19 @@ namespace Certify.UI.Utils
                 return System.Windows.Media.Brushes.SlateGray;
             }
 
-            var days = (int)Math.Abs((DateTime.Now - expiry).Value.TotalDays);
+            var days = (int)(expiry - DateTime.Now).Value.TotalDays;
 
-            if (days < 7)
+            if (days < 0)
+            {
+                return System.Windows.Media.Brushes.DarkRed;
+            }
+            else if (days < 7)
             {
                 return System.Windows.Media.Brushes.Red;
             }
             else if (days < 30)
             {
-                return System.Windows.Media.Brushes.OrangeRed;
+                return System.Windows.Media.Brushes.Orange;
             }
             else
             {

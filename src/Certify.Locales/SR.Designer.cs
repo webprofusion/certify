@@ -304,6 +304,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Expired {0} Days Ago.
+        /// </summary>
+        public static string ExpiryDateConverter_CertificateExpiredNDaysAgo {
+            get {
+                return ResourceManager.GetString("ExpiryDateConverter_CertificateExpiredNDaysAgo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Expires in {0} days.
         /// </summary>
         public static string ExpiryDateConverter_CertificateExpiresIn {
