@@ -102,7 +102,7 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             var config = (sender as Button).DataContext as DeploymentTaskConfig;
 
-            var isPostRequestTask = ItemViewModel.SelectedItem.PostRequestTasks.Any(i => i.Id == config.Id);
+            var isPostRequestTask = ItemViewModel.SelectedItem.PostRequestTasks?.Any(i => i.Id == config.Id) == true;
 
             var dialog = new EditDeploymentTask(config, isPostRequestTask)
             {

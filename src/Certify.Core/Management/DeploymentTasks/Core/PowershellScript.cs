@@ -21,6 +21,7 @@ namespace Certify.Providers.DeploymentTasks.Core
                 Id = "Certify.Providers.DeploymentTasks.Script",
                 Title = "Run Powershell Script",
                 IsExperimental = true,
+                UsageType = DeploymentProviderUsage.Any,
                 Description = "Run a Powershell script",
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
                 {
@@ -42,7 +43,7 @@ namespace Certify.Providers.DeploymentTasks.Core
         /// <returns></returns>
         public async Task<List<ActionResult>> Execute(
           ILog log,
-          Models.ManagedCertificate managedCert,
+          object subject,
           DeploymentTaskConfig settings,
           Dictionary<string, string> credentials,
           bool isPreviewOnly,
@@ -52,8 +53,13 @@ namespace Certify.Providers.DeploymentTasks.Core
 
             definition = GetDefinition(definition);
 
+            CertificateRequestResult certRequest = subject as CertificateRequestResult;
+
             var command = settings.Parameters.FirstOrDefault(c => c.Key == "scriptpath")?.Value;
             var args = settings.Parameters.FirstOrDefault(c => c.Key == "args")?.Value;
+
+            var inputResultAsArgument = settings.Parameters.FirstOrDefault(c => c.Key == "inputresult")?.Value;
+
 
             var commandList = new List<string>
             {
@@ -62,7 +68,7 @@ namespace Certify.Providers.DeploymentTasks.Core
 
             log?.Information("Executing command via PowerShell");
 
-            var results = await PowerShellManager.RunScript(null, command, null, null);
+            var results = await PowerShellManager.RunScript(certRequest, command, null, null);
 
             return new List<ActionResult> {
                     new ActionResult { IsSuccess = true, Message = results}
@@ -84,7 +90,7 @@ namespace Certify.Providers.DeploymentTasks.Core
 
         }
 
-        public async Task<List<ActionResult>> Validate(ManagedCertificate managedCert, DeploymentTaskConfig settings, Dictionary<string, string> credentials, DeploymentProviderDefinition definition)
+        public async Task<List<ActionResult>> Validate(object subject, DeploymentTaskConfig settings, Dictionary<string, string> credentials, DeploymentProviderDefinition definition)
         {
             var results = new List<ActionResult>();
 

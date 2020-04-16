@@ -18,8 +18,9 @@ namespace Certify.Providers.DeploymentTasks.Core
         public static DeploymentProviderDefinition Definition { get; }
         public DeploymentProviderDefinition GetDefinition(DeploymentProviderDefinition currentDefinition) => (currentDefinition ?? Definition);
 
-        public async Task<List<ActionResult>> Execute(ILog log, ManagedCertificate managedCert, DeploymentTaskConfig settings, Dictionary<string, string> credentials, bool isPreviewOnly, DeploymentProviderDefinition definition)
+        public async Task<List<ActionResult>> Execute(ILog log, object subject, DeploymentTaskConfig settings, Dictionary<string, string> credentials, bool isPreviewOnly, DeploymentProviderDefinition definition)
         {
+            var managedCert = ManagedCertificate.GetManagedCertificate(subject);
 
             try
             {
@@ -52,7 +53,7 @@ namespace Certify.Providers.DeploymentTasks.Core
             }
         }
 
-        public async Task<List<ActionResult>> Validate(ManagedCertificate managedCert, DeploymentTaskConfig settings, Dictionary<string, string> credentials, DeploymentProviderDefinition definition)
+        public async Task<List<ActionResult>> Validate(object subject, DeploymentTaskConfig settings, Dictionary<string, string> credentials, DeploymentProviderDefinition definition)
         {
             var results = new List<ActionResult>();
 
@@ -81,6 +82,7 @@ namespace Certify.Providers.DeploymentTasks.Core
                 IsExperimental = true,
                 Description = "Call a custom webhook on renewal success or failure",
                 EnableRemoteOptions = false,
+                UsageType = DeploymentProviderUsage.Any,
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
                 {
                      new ProviderParameter{ Key="url", Name="Webhook URL", IsRequired=true, IsCredential=false , Description="The url for the webhook request" },

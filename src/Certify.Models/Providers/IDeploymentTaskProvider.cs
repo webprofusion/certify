@@ -12,7 +12,7 @@ namespace Certify.Providers.DeploymentTasks
 
         Task<List<ActionResult>> Execute(
             ILog log,
-            ManagedCertificate managedCert,
+            object subject,
             DeploymentTaskConfig settings,
             Dictionary<string, string> credentials,
             bool isPreviewOnly,
@@ -21,7 +21,7 @@ namespace Certify.Providers.DeploymentTasks
 
         DeploymentProviderDefinition GetDefinition(DeploymentProviderDefinition currentDefinition = null);
 
-        Task<List<ActionResult>> Validate(ManagedCertificate managedCert,
+        Task<List<ActionResult>> Validate(object subject,
             DeploymentTaskConfig settings,
             Dictionary<string, string> credentials,
             DeploymentProviderDefinition definition);

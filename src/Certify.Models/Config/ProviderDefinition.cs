@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Certify.Models.Config
 {
@@ -47,6 +48,14 @@ namespace Certify.Models.Config
         }
     }
 
+    [Flags]
+    public enum DeploymentProviderUsage
+    {
+        Any = 0,
+        PreRequest = 1,
+        PostRequest = 2
+    }
+
     public class DeploymentProviderDefinition : ProviderDefinition
     {
 
@@ -69,6 +78,11 @@ namespace Certify.Models.Config
         /// Defines whether task will condition based on preconditions
         /// </summary>
         public TaskPreconditionType PreconditionType { get; set; } = TaskPreconditionType.OnSuccess;
+        
+        /// <summary>
+        /// Flags for allowed usage types
+        /// </summary>
+        public DeploymentProviderUsage UsageType {get;set;} = DeploymentProviderUsage.Any;
 
     }
 }

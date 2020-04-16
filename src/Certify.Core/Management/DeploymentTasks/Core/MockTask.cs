@@ -18,8 +18,9 @@ namespace Certify.Providers.DeploymentTasks.Core
             Definition = new DeploymentProviderDefinition
             {
                 Id = "Certify.Providers.DeploymentTasks.Mock",
-                Title = "Mock Deployment Task",
+                Title = "Mock Task",
                 IsExperimental = true,
+                UsageType = DeploymentProviderUsage.Any,
                 Description = "Used to test task execution success, failure and logging",
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -40,7 +41,7 @@ namespace Certify.Providers.DeploymentTasks.Core
         /// <returns></returns>
         public async Task<List<ActionResult>> Execute(
           ILog log,
-          Models.ManagedCertificate managedCert,
+          object subject,
           DeploymentTaskConfig settings,
           Dictionary<string, string> credentials,
           bool isPreviewOnly,
@@ -78,7 +79,7 @@ namespace Certify.Providers.DeploymentTasks.Core
             }
         }
 
-        public async Task<List<ActionResult>> Validate(ManagedCertificate managedCert, DeploymentTaskConfig settings, Dictionary<string, string> credentials, DeploymentProviderDefinition definition)
+        public async Task<List<ActionResult>> Validate(object subject, DeploymentTaskConfig settings, Dictionary<string, string> credentials, DeploymentProviderDefinition definition)
         {
             var results = new List<ActionResult> { };
             foreach (var p in definition.ProviderParameters)

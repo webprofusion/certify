@@ -19,9 +19,11 @@ namespace Certify.Providers.DeploymentTasks.Core
 
         private bool _enableCertDoubleImportBehaviour { get; set; } = true;
 
-        public async Task<List<ActionResult>> Execute(ILog log, ManagedCertificate managedCert, DeploymentTaskConfig settings, Dictionary<string, string> credentials, bool isPreviewOnly, DeploymentProviderDefinition definition)
+        public async Task<List<ActionResult>> Execute(ILog log, object subject, DeploymentTaskConfig settings, Dictionary<string, string> credentials, bool isPreviewOnly, DeploymentProviderDefinition definition)
         {
             var results = new List<ActionResult>();
+
+            var managedCert = ManagedCertificate.GetManagedCertificate(subject);
 
             // check settings are valid before proceeding
             var validationResults = await Validate(managedCert, settings, credentials, definition);
@@ -76,7 +78,7 @@ namespace Certify.Providers.DeploymentTasks.Core
             return results;
         }
 
-        public async Task<List<ActionResult>> Validate(ManagedCertificate managedCert, DeploymentTaskConfig settings, Dictionary<string, string> credentials, DeploymentProviderDefinition definition)
+        public async Task<List<ActionResult>> Validate(object subject, DeploymentTaskConfig settings, Dictionary<string, string> credentials, DeploymentProviderDefinition definition)
         {
             var results = new List<ActionResult>();
 
@@ -104,6 +106,7 @@ namespace Certify.Providers.DeploymentTasks.Core
                 Title = "Certificate Store (Local Machine)",
                 DefaultTitle = "Store Certificate",
                 IsExperimental = true,
+                UsageType = DeploymentProviderUsage.PostRequest,
                 Description = "Store certificate in the local Certificate Store",
                 EnableRemoteOptions = false,
                 RequiresCredentials = false,

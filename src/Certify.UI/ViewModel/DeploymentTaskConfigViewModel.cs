@@ -18,6 +18,9 @@ namespace Certify.UI.ViewModel
 
         public DeploymentTaskConfig SelectedItem { get; set; }
 
+        public bool EditAsPostRequestTask { get; set; } = false;
+
+
         public StoredCredential SelectedCredentialItem
         {
             get
@@ -47,8 +50,10 @@ namespace Certify.UI.ViewModel
             { StandardAuthTypes.STANDARD_AUTH_SSH,"SSH (Remote)"}
         };
 
-        public DeploymentTaskConfigViewModel(DeploymentTaskConfig item)
+        public DeploymentTaskConfigViewModel(DeploymentTaskConfig item, bool editAsPostRequestTask)
         {
+            EditAsPostRequestTask = editAsPostRequestTask;
+
             if (item == null)
             {
                 item = new DeploymentTaskConfig
@@ -58,12 +63,19 @@ namespace Certify.UI.ViewModel
                 };
             }
             SelectedItem = item;
+
+
         }
 
         public bool UsesCredentials { get; set; }
 
-        public ObservableCollection<DeploymentProviderDefinition> DeploymentProviders =>
-                    _appViewModel.DeploymentTaskProviders;
+        public ObservableCollection<DeploymentProviderDefinition> DeploymentProviders => 
+            new ObservableCollection<DeploymentProviderDefinition>(
+                    _appViewModel.DeploymentTaskProviders.Where(p =>
+                    p.UsageType == DeploymentProviderUsage.Any
+                    || (EditAsPostRequestTask == false && p.UsageType == DeploymentProviderUsage.PreRequest)
+                    || (EditAsPostRequestTask == true && p.UsageType == DeploymentProviderUsage.PostRequest)
+                    ));
 
         private ICollectionView _filteredCredentials;
         public ICollectionView FilteredCredentials
@@ -133,7 +145,7 @@ namespace Certify.UI.ViewModel
         internal void CaptureEditedParameters()
         {
 
-            this.SelectedItem.ChallengeCredentialKey = SelectedCredentialItem?.StorageKey;
+            SelectedItem.ChallengeCredentialKey = SelectedCredentialItem?.StorageKey;
 
             if (EditableParameters != null)
             {
@@ -195,6 +207,113 @@ namespace Certify.UI.ViewModel
                     SelectedItem.Parameters.Remove(r);
                 }
             }
+        }
+
+        public async Task<ActionResult> Save()
+        {
+            CaptureEditedParameters();
+
+            // validate task configuration using the selected provider
+
+            if (SelectedItem.TaskTypeId == null)
+            {
+                return new ActionResult("Please select the required Task Type.", false);
+            }
+
+            if (string.IsNullOrEmpty(SelectedItem.TaskName))
+            {
+                if (!string.IsNullOrEmpty(DeploymentProvider?.DefaultTitle))
+                {
+                    // use default title and continue
+                    SelectedItem.TaskName = DeploymentProvider.DefaultTitle;
+                }
+            }
+
+            if (string.IsNullOrEmpty(SelectedItem.TaskName))
+            {
+
+                // check task name populated
+                return new ActionResult("A unique Task Name is required, this may be used later to run the task manually.", false);
+
+            }
+            else
+            {
+                // check task name is unique for this managed cert
+                if (
+                    _appViewModel.SelectedItem.PostRequestTasks?.Any(t => t.Id != SelectedItem.Id && t.TaskName.ToLower().Trim() == SelectedItem.TaskName.ToLower().Trim()) == true
+                    || _appViewModel.SelectedItem.PreRequestTasks?.Any(t => t.Id != SelectedItem.Id && t.TaskName.ToLower().Trim() == SelectedItem.TaskName.ToLower().Trim()) == true
+                 )
+                {
+                    return new ActionResult("A unique Task Name is required, this task name is already in use for this managed certificate.", false);
+
+                }
+            }
+
+
+            // if remote target, check target specified. TODO: Could also check host resolves.
+            if (!string.IsNullOrEmpty(SelectedItem.ChallengeProvider)
+                && SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_LOCAL
+                && string.IsNullOrEmpty(SelectedItem.TargetHost)
+                )
+            {
+                // check task name populated
+                return new ActionResult("Target Host name or IP is required if deployment target is not Local.", false);
+            }
+
+            // validate task provider specific config
+            var results = await _appViewModel.ValidateDeploymentTask(
+                new Models.Utils.DeploymentTaskValidationInfo { ManagedCertificate = _appViewModel.SelectedItem, TaskConfig = SelectedItem }
+                );
+
+            if (results.Any(r => r.IsSuccess == false))
+            {
+                var firstFailure = results.FirstOrDefault(r => r.IsSuccess == false);
+                return new ActionResult(firstFailure.Message, false);
+            }
+
+            if (EditAsPostRequestTask)
+            {
+                if (_appViewModel.SelectedItem.PostRequestTasks == null)
+                {
+                    _appViewModel.SelectedItem.PostRequestTasks = new System.Collections.ObjectModel.ObservableCollection<DeploymentTaskConfig>();
+                }
+
+                // add/update edited deployment task in selectedItem config
+                if (SelectedItem.Id == null)
+                {
+                    //add new
+                    SelectedItem.Id = Guid.NewGuid().ToString();
+                    _appViewModel.SelectedItem.PostRequestTasks.Add(SelectedItem);
+                }
+                else
+                {
+                    var original = _appViewModel.SelectedItem.PostRequestTasks.First(f => f.Id == SelectedItem.Id);
+                    _appViewModel.SelectedItem.PostRequestTasks[_appViewModel.SelectedItem.PostRequestTasks.IndexOf(original)] = SelectedItem;
+                }
+            }
+            else
+            {
+                if (_appViewModel.SelectedItem.PreRequestTasks == null)
+                {
+                    _appViewModel.SelectedItem.PreRequestTasks = new System.Collections.ObjectModel.ObservableCollection<DeploymentTaskConfig>();
+                }
+
+                // add/update edited deployment task in selectedItem config
+                if (SelectedItem.Id == null)
+                {
+                    //add new
+                    SelectedItem.Id = Guid.NewGuid().ToString();
+                    _appViewModel.SelectedItem.PreRequestTasks.Add(SelectedItem);
+                }
+                else
+                {
+                    var original = _appViewModel.SelectedItem.PreRequestTasks.First(f => f.Id == SelectedItem.Id);
+                    _appViewModel.SelectedItem.PreRequestTasks[_appViewModel.SelectedItem.PreRequestTasks.IndexOf(original)] = SelectedItem;
+                }
+            }
+
+
+            return new ActionResult("OK", true);
         }
 
     }
