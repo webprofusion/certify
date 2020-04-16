@@ -54,10 +54,10 @@ namespace Certify.Management
                 return new List<ActionStep> { new ActionStep { HasError = false, Description = "No matching tasks to perform." } };
             }
 
-            return await PerformTaskList(log, isPreviewOnly, skipDeferredTasks, managedCert, taskList);
+            return await PerformTaskList(log, isPreviewOnly, skipDeferredTasks, new CertificateRequestResult { ManagedItem= managedCert, IsSuccess=true }, taskList);
         }
 
-        private async Task<List<ActionStep>> PerformTaskList(ILog log, bool isPreviewOnly, bool skipDeferredTasks, ManagedCertificate managedCert, IEnumerable<DeploymentTaskConfig> taskList)
+        private async Task<List<ActionStep>> PerformTaskList(ILog log, bool isPreviewOnly, bool skipDeferredTasks, CertificateRequestResult result, IEnumerable<DeploymentTaskConfig> taskList)
         {
             if (taskList == null || !taskList.Any())
             {
@@ -67,7 +67,7 @@ namespace Certify.Management
 
             if (log == null)
             {
-                log = ManagedCertificateLog.GetLogger(managedCert.Id, _loggingLevelSwitch);
+                log = ManagedCertificateLog.GetLogger(result.ManagedItem.Id, _loggingLevelSwitch);
             }
 
             // perform or preview each task
@@ -160,7 +160,7 @@ namespace Certify.Management
 
                 if (shouldRunCurrentTask)
                 {
-                    taskResults = await task.Execute(log, managedCert, isPreviewOnly: isPreviewOnly);
+                    taskResults = await task.Execute(log, result, isPreviewOnly: isPreviewOnly);
                 }
                 else
                 {

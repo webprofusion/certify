@@ -302,7 +302,7 @@ namespace Certify.Management
             }
 
             // start with a failure result, set to success when succeeding
-            var result = new CertificateRequestResult { ManagedItem = managedCertificate, IsSuccess = false, Message = "", Actions = new List<ActionStep>() };
+            var certRequestResult = new CertificateRequestResult { ManagedItem = managedCertificate, IsSuccess = false, Message = "", Actions = new List<ActionStep>() };
 
             var config = managedCertificate.RequestConfig;
             try
@@ -314,7 +314,7 @@ namespace Certify.Management
 
                     LogMessage(managedCertificate.Id, $"Performing Pre-Request Tasks..");
 
-                    var results = await PerformTaskList(log, isPreviewOnly: false, false, managedCertificate, managedCertificate.PreRequestTasks);
+                    var results = await PerformTaskList(log, isPreviewOnly: false, false, certRequestResult, managedCertificate.PreRequestTasks);
 
                     // log results
                     var preRequestTasks = new ActionStep
@@ -334,23 +334,23 @@ namespace Certify.Management
                         preRequestTasks.Substeps.Add(r);
 
                     }
-                    result.Actions.Add(preRequestTasks);
+                    certRequestResult.Actions.Add(preRequestTasks);
 
                     if (results.Any(r => r.HasError))
                     {
-                        result.Abort = true;
+                        certRequestResult.Abort = true;
 
                         var msg = $"Request was aborted due to failed Pre-Request Task.";
 
-                        result.Message = msg;
+                        certRequestResult.Message = msg;
                     }
                 }
 
                 // if the script has requested the certificate request to be aborted, skip the request
-                if (!result.Abort)
+                if (!certRequestResult.Abort)
                 {
 
-                    if (!skipRequest || managedCertificate.SkipCertificateRequest == true)
+                    if (!skipRequest && managedCertificate.SkipCertificateRequest != true)
                     {
                         if (resumePaused && managedCertificate.Health == ManagedCertificateHealth.AwaitingUser)
                         {
@@ -358,11 +358,11 @@ namespace Certify.Management
                             var r = await CompleteCertificateRequestProcessing(log, managedCertificate, progress, null);
 
                             // copy result from sub-request, preserve existing logged actions
-                            result.Message = r.Message;
-                            result.IsSuccess = r.IsSuccess;
-                            result.ManagedItem = r.ManagedItem;
-                            result.Result = r.Result;
-                            result.Abort = r.Abort;
+                            certRequestResult.Message = r.Message;
+                            certRequestResult.IsSuccess = r.IsSuccess;
+                            certRequestResult.ManagedItem = r.ManagedItem;
+                            certRequestResult.Result = r.Result;
+                            certRequestResult.Abort = r.Abort;
 
                         }
                         else
@@ -370,19 +370,19 @@ namespace Certify.Management
                             if (managedCertificate.Health != ManagedCertificateHealth.AwaitingUser)
                             {
                                 // perform normal certificate challenge/response/renewal
-                                var r = await PerformCertificateRequestProcessing(log, managedCertificate, progress, result, config);
+                                var r = await PerformCertificateRequestProcessing(log, managedCertificate, progress, certRequestResult, config);
 
-                                result.Message = r.Message;
-                                result.IsSuccess = r.IsSuccess;
-                                result.ManagedItem = r.ManagedItem;
-                                result.Result = r.Result;
-                                result.Abort = r.Abort;
+                                certRequestResult.Message = r.Message;
+                                certRequestResult.IsSuccess = r.IsSuccess;
+                                certRequestResult.ManagedItem = r.ManagedItem;
+                                certRequestResult.Result = r.Result;
+                                certRequestResult.Abort = r.Abort;
                             }
                             else
                             {
                                 // request is waiting on user input but has been automatically initiated,
                                 // therefore skip for now
-                                result.Abort = true;
+                                certRequestResult.Abort = true;
                                 LogMessage(managedCertificate.Id, $"Certificate Request Skipped, Awaiting User Input: {managedCertificate.Name}");
                             }
                         }
@@ -391,7 +391,9 @@ namespace Certify.Management
                     {
                         // caller asked to skip the actual certicate request (e.g. unit testing)
                         LogMessage(managedCertificate.Id, $"Certificate Request Skipped (on demand): {managedCertificate.Name}");
-                        result.IsSuccess = true;
+                        certRequestResult.IsSuccess = true;
+
+                        ReportProgress(progress, new RequestProgressState(RequestState.Success, certRequestResult.Message, managedCertificate));
                     }
                 }
             }
@@ -399,8 +401,8 @@ namespace Certify.Management
             {
                 // overall exception thrown during process
 
-                result.IsSuccess = false;
-                result.Abort = true;
+                certRequestResult.IsSuccess = false;
+                certRequestResult.Abort = true;
 
                 try
                 {
@@ -408,21 +410,22 @@ namespace Certify.Management
 
                     log?.Error(exp, $"Certificate request process failed: {exp}");
 
-                    result.Message = string.Format(Certify.Locales.CoreSR.CertifyManager_RequestFailed, managedCertificate.Name, exp.Message, exp);
+                    certRequestResult.Message = string.Format(Certify.Locales.CoreSR.CertifyManager_RequestFailed, managedCertificate.Name, exp.Message, exp);
 
-                    LogMessage(managedCertificate.Id, result.Message, LogItemType.CertficateRequestFailed);
+                    LogMessage(managedCertificate.Id, certRequestResult.Message, LogItemType.CertficateRequestFailed);
 
-                    ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate));
+                    ReportProgress(progress, new RequestProgressState(RequestState.Error, certRequestResult.Message, managedCertificate));
 
-                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
+                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, certRequestResult.Message);
                 }
                 catch { }
             }
             finally
             {
+                certRequestResult.ManagedItem = managedCertificate;
 
                 // run applicable deployment tasks (whether success or failed), powershell
-                var results = await PerformTaskList(log, isPreviewOnly: false, false, managedCertificate, managedCertificate.PostRequestTasks);
+                var results = await PerformTaskList(log, isPreviewOnly: false, false, certRequestResult, managedCertificate.PostRequestTasks);
 
                 // log results
                 var postRequestTasks = new ActionStep
@@ -442,22 +445,26 @@ namespace Certify.Management
                     postRequestTasks.Substeps.Add(r);
 
                 }
-                result.Actions.Add(postRequestTasks);
+                certRequestResult.Actions.Add(postRequestTasks);
 
                 // certificate may already be deployed to some extent so this counts a completed with warnings
                 if (results.Any(r => r.HasError))
                 {
-                    result.IsSuccess = false;
+                    certRequestResult.IsSuccess = false;
 
                     var msg = $"Deployment Tasks did not complete successfully.";
-                    result.Message = msg;
+                    certRequestResult.Message = msg;
 
-                    ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate));
+                    ReportProgress(progress, new RequestProgressState(RequestState.Error, certRequestResult.Message, managedCertificate));
 
+                }
+                else
+                {
+                    ReportProgress(progress, new RequestProgressState(RequestState.Success, certRequestResult.Message, managedCertificate));
                 }
             }
 
-            return result;
+            return certRequestResult;
         }
 
         public Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallengeResponses(string challengeType)

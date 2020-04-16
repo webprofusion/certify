@@ -6,12 +6,13 @@ using System.Management.Automation.Runspaces;
 using System.Text;
 using System.Threading.Tasks;
 using Certify.Models;
+using Certify.Models.Config;
 
 namespace Certify.Management
 {
     public class PowerShellManager
     {
-        public static async Task<string> RunScript(CertificateRequestResult result, string scriptFile = null, Dictionary<string, string> parameters = null, string scriptContent = null)
+        public static async Task<ActionResult> RunScript(CertificateRequestResult result, string scriptFile = null, Dictionary<string, object> parameters = null, string scriptContent = null)
         {
             // argument check for script file existance and .ps1 extension
             FileInfo scriptInfo = null;
@@ -111,27 +112,29 @@ namespace Certify.Management
                             }
                         };
 
-                        await Task.Run(() =>
+
+                        try
                         {
-                            try
-                            {
-                                var async = shell.BeginInvoke<PSObject, PSObject>(null, outputData);
-                                shell.EndInvoke(async);
-                            }
-                            catch (ParseException ex)
-                            {
-                                // this should only happen in case of script syntax errors, otherwise
-                                // errors would be output via the invoke's error stream
-                                output.AppendLine($"{ex.Message}");
-                            }
-                        });
-                        return output.ToString().TrimEnd('\n');
+                            var async = shell.BeginInvoke<PSObject, PSObject>(null, outputData);
+                            shell.EndInvoke(async);
+
+                            return new ActionResult(output.ToString().TrimEnd('\n'), true);
+                        }
+                        catch (ParseException ex)
+                        {
+                            // this should only happen in case of script syntax errors, otherwise
+                            // errors would be output via the invoke's error stream
+                            output.AppendLine($"{ex.Message}");
+
+                            return new ActionResult(output.ToString().TrimEnd('\n'), false);
+                        }
+
                     }
                 }
             }
             catch (Exception ex)
             {
-                return $"Error - {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}";
+                return new ActionResult($"Error - {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}", false);
             }
         }
     }

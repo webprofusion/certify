@@ -649,16 +649,20 @@ namespace Certify.Core.Management.Challenges.DNS
 
         public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
-            string scriptContent = PrepareScript("Add-DnsTxt", request.RecordName, request.RecordValue);
-            var results = await PowerShellManager.RunScript(null, null, _parameters, scriptContent);
-            return new ActionResult(results, true);
+            var scriptContent = PrepareScript("Add-DnsTxt", request.RecordName, request.RecordValue);
+
+            var objParams = _parameters.ToDictionary(p => p.Key, p => p.Value as object);
+
+            return await PowerShellManager.RunScript(null, null, objParams, scriptContent);
         }
 
         public async Task<ActionResult> DeleteRecord(DnsRecord request)
         {
-            string scriptContent = PrepareScript("Remove-DnsTxt", request.RecordName, request.RecordValue);
-            var results = await PowerShellManager.RunScript(null, null, _parameters, scriptContent);
-            return new ActionResult(results, true);
+            var scriptContent = PrepareScript("Remove-DnsTxt", request.RecordName, request.RecordValue);
+
+            var objParams = _parameters.ToDictionary(p => p.Key, p => p.Value as object);
+
+            return await PowerShellManager.RunScript(null, null, objParams, scriptContent);
         }
 
         Task<List<DnsZone>> IDnsProvider.GetZones() => Task.FromResult(new List<DnsZone>());

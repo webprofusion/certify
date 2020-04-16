@@ -104,7 +104,8 @@ namespace Certify.UI.Controls.ManagedCertificate
             try
             {
                 var scriptOutput = await PowerShellManager.RunScript(result, scriptFile);
-                MessageBox.Show(scriptOutput, "Powershell Output", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                MessageBox.Show(scriptOutput.Message, "Powershell Output", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (ArgumentException ex)
             {

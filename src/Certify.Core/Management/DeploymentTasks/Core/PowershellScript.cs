@@ -71,7 +71,7 @@ namespace Certify.Providers.DeploymentTasks.Core
             var results = await PowerShellManager.RunScript(certRequest, command, null, null);
 
             return new List<ActionResult> {
-                    new ActionResult { IsSuccess = true, Message = results}
+                    results
                 };
             /*
             if (results.Any(r => r.IsError))

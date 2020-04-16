@@ -27,7 +27,7 @@ namespace Certify.Providers.DeploymentTasks
 
         public async Task<List<ActionResult>> Execute(
             ILog log,
-            ManagedCertificate managedCert,
+            object subject,
             bool isPreviewOnly = true
             )
         {
@@ -35,7 +35,7 @@ namespace Certify.Providers.DeploymentTasks
             {
                 try
                 {
-                    return await TaskProvider.Execute(log, managedCert, TaskConfig, _credentials, isPreviewOnly, null);
+                    return await TaskProvider.Execute(log, subject, TaskConfig, _credentials, isPreviewOnly, null);
                 }
                 catch (Exception exp)
                 {
