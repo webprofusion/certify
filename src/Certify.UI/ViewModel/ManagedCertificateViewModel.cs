@@ -69,10 +69,11 @@ namespace Certify.UI.ViewModel
         internal async Task RefreshWebsiteList()
         {
             var selectedWebsiteId = SelectedWebSite?.SiteId;
-            
+
             IsSiteListQueryProgress = true;
 
-            var list = await _appViewModel.CertifyClient.GetServerSiteList(StandardServerTypes.IIS);
+            var list = await _appViewModel.GetServerSiteList(StandardServerTypes.IIS);
+
             list.Insert(0, new BindingInfo { SiteName = "(No IIS Site Selected)", SiteId = "" });
 
             if (WebSiteList == null)
@@ -256,7 +257,7 @@ namespace Certify.UI.ViewModel
             {
                 if (SelectedItem != null && SelectedItem.DateExpiry.HasValue)
                 {
-                    return (int)Math.Abs((DateTime.Now - SelectedItem.DateExpiry).Value.TotalDays);
+                    return (int)(SelectedItem.DateExpiry - DateTime.Now).Value.TotalDays;
                 }
 
                 return null;
@@ -579,19 +580,19 @@ namespace Certify.UI.ViewModel
                 return new List<DomainOption>();
             }
 
-            return await _appViewModel.CertifyClient.GetServerSiteDomains(StandardServerTypes.IIS, siteId);
+            return await _appViewModel.GetServerSiteDomains(StandardServerTypes.IIS, siteId);
         }
 
-        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly) => await _appViewModel.CertifyClient.ReapplyCertificateBindings(managedItemId, isPreviewOnly);
+        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly) => await _appViewModel.ReapplyCertificateBindings(managedItemId, isPreviewOnly);
 
-        public async Task<CertificateRequestResult> RefetchCertificate(string managedItemId) => await _appViewModel.CertifyClient.RefetchCertificate(managedItemId);
+        public async Task<CertificateRequestResult> RefetchCertificate(string managedItemId) => await _appViewModel.RefetchCertificate(managedItemId);
 
-        public async Task<List<StatusMessage>> TestChallengeResponse(ManagedCertificate managedCertificate) => await _appViewModel.CertifyClient.TestChallengeConfiguration(managedCertificate);
+        public async Task<List<StatusMessage>> TestChallengeResponse(ManagedCertificate managedCertificate) => await _appViewModel.TestChallengeConfiguration(managedCertificate);
 
         public async Task<StatusMessage> RevokeSelectedItem()
         {
             var managedCertificate = SelectedItem;
-            return await _appViewModel.CertifyClient.RevokeManageSiteCertificate(managedCertificate.Id);
+            return await _appViewModel.RevokeManageSiteCertificate(managedCertificate.Id);
         }
 
         public ICommand SANSelectAllCommand => new RelayCommand<object>(SANSelectAll);

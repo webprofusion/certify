@@ -54,7 +54,7 @@ namespace Certify.UI.Windows
             if (TaskSettings.UseBackgroundService)
             {
                 // let background service do renewals
-                var prefs = await AppViewModel.Current.CertifyClient.GetPreferences();
+                var prefs = await AppViewModel.Current.GetPreferences();
 
                 prefs.UseBackgroundServiceAutoRenewal = true;
 
@@ -73,7 +73,7 @@ namespace Certify.UI.Windows
                     if (taskScheduler.CreateWindowsScheduledTask(Username.Text, Password.Password))
                     {
                         // set pref to use scheduled task for auto renewal let background service do renewals
-                        var prefs = await AppViewModel.Current.CertifyClient.GetPreferences();
+                        var prefs = await AppViewModel.Current.GetPreferences();
                         prefs.UseBackgroundServiceAutoRenewal = false;
                         await AppViewModel.Current.SetPreferences(prefs);
 

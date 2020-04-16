@@ -12,6 +12,9 @@ using Certify.Locales;
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Providers;
+using Certify.Models.Utils;
+using Certify.Shared;
 using PropertyChanged;
 using Serilog;
 
@@ -60,6 +63,11 @@ namespace Certify.UI.ViewModel
 
         public Models.Providers.ILog Log => _uiLog;
 
+        internal async Task<Preferences> GetPreferences()
+        {
+            return await CertifyClient.GetPreferences();
+        }
+
         public const int ProductTypeId = 1;
 
         //private CertifyManager certifyManager = null;
@@ -87,6 +95,11 @@ namespace Certify.UI.ViewModel
         {
             await CertifyClient.SetPreferences(prefs);
             Preferences = prefs;
+        }
+
+        internal async Task<List<BindingInfo>> GetServerSiteList(StandardServerTypes serverType)
+        {
+            return await CertifyClient.GetServerSiteList(serverType);
         }
 
         internal async Task SetInstanceRegistered()
@@ -200,6 +213,11 @@ namespace Certify.UI.ViewModel
             return result;
         }
 
+        public ServiceConfig GetAppServiceConfig()
+        {
+            return CertifyClient.GetAppServiceConfig();
+        }
+
         public int MainUITabIndex { get; set; }
 
         [DependsOn(nameof(ProgressResults))]
@@ -249,17 +267,22 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task<bool> CheckServerAvailability(StandardServerTypes serverType)
         {
-            IsIISAvailable = await CertifyClient.IsServerAvailable(StandardServerTypes.IIS);
+            IsIISAvailable = await CertifyClient.IsServerAvailable(serverType);
 
             if (IsIISAvailable)
             {
-                IISVersion = await CertifyClient.GetServerVersion(StandardServerTypes.IIS);
+                IISVersion = await CertifyClient.GetServerVersion(serverType);
             }
 
             RaisePropertyChangedEvent(nameof(IISVersion));
             RaisePropertyChangedEvent(nameof(ShowIISWarning));
 
             return IsIISAvailable;
+        }
+
+        public async Task<UpdateCheck> CheckForUpdates()
+        {
+            return await CertifyClient.CheckForUpdates();
         }
 
         /// <summary>
@@ -279,6 +302,11 @@ namespace Certify.UI.ViewModel
                     return false;
                 }
             }
+        }
+
+        public async Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo deploymentTaskValidationInfo)
+        {
+            return await CertifyClient.ValidateDeploymentTask(deploymentTaskValidationInfo);
         }
 
         public async Task InitServiceConnections()
@@ -313,6 +341,11 @@ namespace Certify.UI.ViewModel
 
             // connect to status api stream & handle events
             await CertifyClient.ConnectStatusStreamAsync();
+        }
+
+        public async Task<List<DnsZone>> GetDnsProviderZones(string challengeProvider, string challengeCredentialKey)
+        {
+            return await CertifyClient.GetDnsProviderZones(challengeProvider, challengeCredentialKey);
         }
 
         private async void CertifyClient_OnManagedCertificateUpdated(ManagedCertificate obj) => await App.Current.Dispatcher.InvokeAsync(async () =>
@@ -539,30 +572,58 @@ namespace Certify.UI.ViewModel
 
         public async Task<List<ActionStep>> GetPreviewActions(ManagedCertificate item) => await CertifyClient.PreviewActions(item);
 
-        private void UpdateRequestTrackingProgress(RequestProgressState state) => App.Current.Dispatcher.Invoke((Action)delegate
-                                                                                {
-                                                                                    var existing = ProgressResults.FirstOrDefault(p => p.ManagedCertificate.Id == state.ManagedCertificate.Id);
+        private void UpdateRequestTrackingProgress(RequestProgressState state)
+        {
+            App.Current.Dispatcher.Invoke((Action)delegate
+                                        {
+                                            var existing = ProgressResults.FirstOrDefault(p => p.ManagedCertificate.Id == state.ManagedCertificate.Id);
 
-                                                                                    if (existing != null)
-                                                                                    {
-                                                                                        //replace state of progress request
-                                                                                        var index = ProgressResults.IndexOf(existing);
-                                                                                        ProgressResults[index] = state;
-                                                                                    }
-                                                                                    else
-                                                                                    {
-                                                                                        ProgressResults.Add(state);
-                                                                                    }
+                                            if (existing != null)
+                                            {
+                                                //replace state of progress request
+                                                var index = ProgressResults.IndexOf(existing);
+                                                ProgressResults[index] = state;
+                                            }
+                                            else
+                                            {
+                                                ProgressResults.Add(state);
+                                            }
 
-                                                                                    RaisePropertyChangedEvent(nameof(HasRequestsInProgress));
-                                                                                    RaisePropertyChangedEvent(nameof(ProgressResults));
-                                                                                });
+                                            RaisePropertyChangedEvent(nameof(HasRequestsInProgress));
+                                            RaisePropertyChangedEvent(nameof(ProgressResults));
+                                        });
+        }
+
+        internal async Task<List<DomainOption>> GetServerSiteDomains(StandardServerTypes serverType, string siteId)
+        {
+            return await CertifyClient.GetServerSiteDomains(serverType, siteId);
+        }
 
         public void ClearRequestProgressResults()
         {
             ProgressResults = new ObservableCollection<RequestProgressState>();
             RaisePropertyChangedEvent(nameof(HasRequestsInProgress));
             RaisePropertyChangedEvent(nameof(ProgressResults));
+        }
+
+        internal async Task<CertificateRequestResult> RefetchCertificate(string managedItemId)
+        {
+            return await CertifyClient.RefetchCertificate(managedItemId);
+        }
+
+        internal async Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate managedCertificate)
+        {
+            return await CertifyClient.TestChallengeConfiguration(managedCertificate);
+        }
+
+        internal async Task<StatusMessage> RevokeManageSiteCertificate(string id)
+        {
+            return await CertifyClient.RevokeManageSiteCertificate(id);
+        }
+
+        internal async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly)
+        {
+            return await CertifyClient.ReapplyCertificateBindings(managedItemId, isPreviewOnly);
         }
 
         /* Stored Credentials */

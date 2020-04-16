@@ -242,8 +242,8 @@ namespace Certify.UI.Controls.ManagedCertificate
                 });
 
                 // fetch dns zone list from api 
-                var zones = await AppViewModel.CertifyClient.GetDnsProviderZones(EditModel.SelectedItem.ChallengeProvider, EditModel.SelectedItem.ChallengeCredentialKey);
-
+                var zones = await AppViewModel.GetDnsProviderZones(EditModel.SelectedItem.ChallengeProvider, EditModel.SelectedItem.ChallengeCredentialKey);
+          
                 // populate dropdown, default to no selection
                 zones.Insert(0, new Models.Providers.DnsZone { ZoneId = "", Name = "(Select Zone)" });
                 EditModel.DnsZones = new ObservableCollection<Models.Providers.DnsZone>(zones);

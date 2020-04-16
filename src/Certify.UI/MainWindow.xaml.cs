@@ -182,7 +182,8 @@ namespace Certify.UI
             {
                 _appViewModel.IsLoading = false;
 
-                var config = _appViewModel.CertifyClient.GetAppServiceConfig();
+                var config = _appViewModel.GetAppServiceConfig();
+
                 if (!string.IsNullOrEmpty(config.ServiceFaultMsg))
                 {
                     MessageBox.Show("Certify SSL Manager service not started. " + config.ServiceFaultMsg);
@@ -235,14 +236,14 @@ namespace Certify.UI
             //check for updates and report result to view model
             if (_appViewModel.IsServiceAvailable)
             {
-                var updateCheck = await _appViewModel.CertifyClient.CheckForUpdates();
+                var updateCheck = await _appViewModel.CheckForUpdates();
 
                 if (updateCheck != null && updateCheck.IsNewerVersion)
                 {
                     _appViewModel.UpdateCheckResult = updateCheck;
                     _appViewModel.IsUpdateAvailable = true;
 
-                     PerformUpdateConfirmation(updateCheck);
+                    PerformUpdateConfirmation(updateCheck);
                 }
             }
         }
@@ -254,7 +255,7 @@ namespace Certify.UI
                 //start by registering
                 MessageBox.Show(SR.MainWindow_GetStartGuideWithNewCert);
                 var d = new Windows.EditAccountDialog { Owner = Window.GetWindow(this) };
-                
+
                 d.ShowDialog();
             }
         }
@@ -328,7 +329,7 @@ namespace Certify.UI
 
 
             //TODO: move this to UpdateCheckUtils and share with update from About page
-           
+
 
             // offer to start download and notify when ready to apply
             /*
