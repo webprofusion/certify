@@ -15,12 +15,12 @@ namespace Certify.CLI
         /// <param name="forceAutoDeploy">Change all deployment modes to Auto</param>
         public async Task RunCertDiagnostics(bool autoFix = false, bool forceAutoDeploy = false)
         {
-            string stripNonNumericFromString(string input)
+            static string stripNonNumericFromString(string input)
             {
                 return new string(input.Where(c => char.IsDigit(c)).ToArray());
             }
 
-            bool isNumeric(string input)
+            static bool isNumeric(string input)
             {
                 return int.TryParse(input, out _);
             }

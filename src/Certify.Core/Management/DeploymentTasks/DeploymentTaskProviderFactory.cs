@@ -46,13 +46,14 @@ namespace Certify.Core.Management.DeploymentTasks
 
         public static IDeploymentTaskProvider Create(string taskTypeId, List<IDeploymentTaskProviderPlugin> providerPlugins)
         {
-            if (taskTypeId == null) {
+            if (taskTypeId == null)
+            {
                 return null;
             }
 
             taskTypeId = taskTypeId.ToLower();
 
-            if(taskTypeId == Providers.DeploymentTasks.Core.Webhook.Definition.Id.ToLower())
+            if (taskTypeId == Providers.DeploymentTasks.Core.Webhook.Definition.Id.ToLower())
             {
                 return new Certify.Providers.DeploymentTasks.Core.Webhook();
             }
@@ -68,11 +69,12 @@ namespace Certify.Core.Management.DeploymentTasks
             {
                 return new Certify.Providers.DeploymentTasks.Core.PowershellScript();
             }
+#if DEBUG
             else if (taskTypeId == Providers.DeploymentTasks.Core.MockTask.Definition.Id.ToLower())
             {
                 return new Certify.Providers.DeploymentTasks.Core.MockTask();
             }
-
+#endif
             if (providerPlugins == null)
             {
                 return null;

@@ -64,7 +64,7 @@ namespace Certify.Providers.ACME.Certes
         {
             if (_log != null)
             {
-                _log.Debug($"Http Request: {request.ToString()}");
+                _log.Debug($"Http Request: {request}");
                 if (request.Content != null)
                 {
                     _log.Debug(await request.Content.ReadAsStringAsync());
@@ -75,7 +75,7 @@ namespace Certify.Providers.ACME.Certes
 
             if (_log != null)
             {
-                _log.Debug($"Http Response: {response.ToString()}");
+                _log.Debug($"Http Response: {response}");
 
                 if (response.Content != null)
                 {
@@ -116,7 +116,7 @@ namespace Certify.Providers.ACME.Certes
 
             var certesAssembly = typeof(AcmeContext).Assembly.GetName();
 
-            _userAgentName = $"{userAgentName} {certesAssembly.Name}/{certesAssembly.Version.ToString()}";
+            _userAgentName = $"{userAgentName} {certesAssembly.Name}/{certesAssembly.Version}";
 
             _serviceUri = new Uri(acmeBaseUri);
         }
@@ -209,10 +209,12 @@ namespace Certify.Providers.ACME.Certes
                 }
                 else
                 {
-                    _settings = new CertesSettings();
-                    _settings.AccountEmail = account.Email;
-                    _settings.AccountKey = account.AccountKey;
-                    _settings.AccountUri = account.AccountURI;
+                    _settings = new CertesSettings
+                    {
+                        AccountEmail = account.Email,
+                        AccountKey = account.AccountKey,
+                        AccountUri = account.AccountURI
+                    };
                     SetAcmeContextAccountKey(_settings.AccountKey);
                 }
             }
@@ -822,7 +824,7 @@ namespace Certify.Providers.ACME.Certes
                     };
                 }
 
-                IChallengeContext challenge = (IChallengeContext)attemptedChallenge.ChallengeData;
+                var challenge = (IChallengeContext)attemptedChallenge.ChallengeData;
                 try
                 {
                     var result = await challenge.Validate();

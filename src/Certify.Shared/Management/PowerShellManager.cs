@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Management.Automation;
@@ -11,7 +11,7 @@ namespace Certify.Management
 {
     public class PowerShellManager
     {
-        public static async Task<string> RunScript(CertificateRequestResult result, string scriptFile, Dictionary<string, string> parameters = null, string scriptContent = null)
+        public static async Task<string> RunScript(CertificateRequestResult result, string scriptFile = null, Dictionary<string, string> parameters = null, string scriptContent = null)
         {
             // argument check for script file existance and .ps1 extension
             FileInfo scriptInfo = null;
@@ -62,7 +62,8 @@ namespace Certify.Management
                         if (scriptFile != null)
                         {
                             shell.AddCommand(scriptFile);
-                        } else
+                        }
+                        else
                         {
                             shell.AddScript(scriptContent);
                         }

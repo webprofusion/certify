@@ -303,7 +303,7 @@ namespace Certify.Management
                     results.Add(new ActionResult
                     {
                         IsSuccess = true,
-                        Message = $"CheckDNS: '{domain}' resolved to an IP Address {result.AddressList[0].ToString()}. "
+                        Message = $"CheckDNS: '{domain}' resolved to an IP Address {result.AddressList[0]}. "
                     });
                 }
                 catch
@@ -386,7 +386,7 @@ namespace Certify.Management
                     results.Add(new ActionResult
                     {
                         IsSuccess = true,
-                        Message = $"CheckDNS: '{domain}' DNSSEC Check OK - Validation Result: {res.ValidationResult.ToString()}"
+                        Message = $"CheckDNS: '{domain}' DNSSEC Check OK - Validation Result: {res.ValidationResult}"
                     });
                 }
                 else
@@ -394,7 +394,7 @@ namespace Certify.Management
                     results.Add(new ActionResult
                     {
                         IsSuccess = isOk,
-                        Message = $"CheckDNS: '{domain}'DNSSEC Check Failed - Validation Result: {res.ValidationResult.ToString()}"
+                        Message = $"CheckDNS: '{domain}'DNSSEC Check Failed - Validation Result: {res.ValidationResult}"
                     });
                 }
             }

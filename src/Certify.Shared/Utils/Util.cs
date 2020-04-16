@@ -125,7 +125,7 @@ namespace Certify.Management
         public static string GetUserAgent()
         {
             var versionName = "Certify/" + GetAppVersion().ToString();
-            return $"{versionName} (Windows; {Environment.OSVersion.ToString()}) ";
+            return $"{versionName} (Windows; {Environment.OSVersion}) ";
         }
 
         public static Version GetAppVersion()
@@ -221,14 +221,14 @@ namespace Certify.Management
 
         public bool VerifyUpdateFile(string tempFile, string expectedHash, bool throwOnDeviation = true)
         {
-            bool performCertValidation = true;
+            var performCertValidation = true;
 
-            bool signatureVerified = false;
+            var signatureVerified = false;
 
             if (performCertValidation)
             {
                 // check digital signature
-                bool wintrustSignatureVerified = Security.WinTrust.WinTrust.VerifyEmbeddedSignature(tempFile);
+                var wintrustSignatureVerified = Security.WinTrust.WinTrust.VerifyEmbeddedSignature(tempFile);
 
                 //get verified signed file cert
                 var cert = CertificateManager.GetFileCertificate(tempFile);
@@ -258,7 +258,7 @@ namespace Certify.Management
                 computedSHA256 = GetFileSHA256(stream);
             }
 
-            bool hashVerified = false;
+            var hashVerified = false;
 
             if (expectedHash.ToLower() == computedSHA256)
             {
@@ -360,7 +360,7 @@ namespace Certify.Management
                         {
                             client.DefaultRequestHeaders.Add("User-Agent", Util.GetUserAgent());
 
-                            using (HttpResponseMessage response = client.GetAsync(result.Message.DownloadFileURL, HttpCompletionOption.ResponseHeadersRead).Result)
+                            using (var response = client.GetAsync(result.Message.DownloadFileURL, HttpCompletionOption.ResponseHeadersRead).Result)
                             {
                                 response.EnsureSuccessStatusCode();
 
@@ -541,7 +541,8 @@ namespace Certify.Management
 
                 var addresses = Dns.GetHostEntry(NtpServer).AddressList;
                 var ipEndPoint = new IPEndPoint(addresses[0], 123);
-                long pingDuration = Stopwatch.GetTimestamp(); // temp access (JIT-Compiler need some time at first call)
+                var pingDuration = Stopwatch.GetTimestamp(); // temp access (JIT-Compiler need some time at first call)
+
                 using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp))
                 {
                     await socket.ConnectAsync(ipEndPoint);
@@ -553,14 +554,14 @@ namespace Certify.Management
                     pingDuration = Stopwatch.GetTimestamp() - pingDuration;
                 }
 
-                long pingTicks = pingDuration * TicksPerSecond / Stopwatch.Frequency;
+                var pingTicks = pingDuration * TicksPerSecond / Stopwatch.Frequency;
 
                 // optional: display response-time
                 // Console.WriteLine("{0:N2} ms", new TimeSpan(pingTicks).TotalMilliseconds);
 
-                long intPart = (long)ntpData[40] << 24 | (long)ntpData[41] << 16 | (long)ntpData[42] << 8 | ntpData[43];
-                long fractPart = (long)ntpData[44] << 24 | (long)ntpData[45] << 16 | (long)ntpData[46] << 8 | ntpData[47];
-                long netTicks = intPart * TicksPerSecond + (fractPart * TicksPerSecond >> 32);
+                var intPart = (long)ntpData[40] << 24 | (long)ntpData[41] << 16 | (long)ntpData[42] << 8 | ntpData[43];
+                var fractPart = (long)ntpData[44] << 24 | (long)ntpData[45] << 16 | (long)ntpData[46] << 8 | ntpData[47];
+                var netTicks = intPart * TicksPerSecond + (fractPart * TicksPerSecond >> 32);
 
                 var networkDateTime = new DateTime(TicksTo1900 + netTicks + pingTicks / 2);
 

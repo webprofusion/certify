@@ -126,7 +126,7 @@ namespace Certify.Providers.DNS.Cloudflare
 
             if (string.IsNullOrEmpty(_apiToken) && (string.IsNullOrEmpty(_emailAddress) || string.IsNullOrEmpty(_authKey)))
             {
-                throw new ArgumentException($"{this.ProviderTitle} requires either an API Token or an Email Address + AuthKey");
+                throw new ArgumentException($"{ProviderTitle} requires either an API Token or an Email Address + AuthKey");
             }
         }
 
@@ -362,7 +362,7 @@ namespace Certify.Providers.DNS.Cloudflare
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
-                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                if (int.TryParse(parameters["propagationdelay"], out var customPropDelay))
                 {
                     _customPropagationDelay = customPropDelay;
                 }

@@ -135,7 +135,7 @@ namespace Certify.CLI
 
         internal async Task PerformAutoRenew(string[] args)
         {
-            bool forceRenewal = false;
+            var forceRenewal = false;
 
             if (args.Contains("--force-renewal"))
             {
