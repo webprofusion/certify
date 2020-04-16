@@ -25,12 +25,7 @@ namespace Certify.UI.Windows
         {
             InitializeComponent();
 
-            DeploymentTaskEditor.EditAsPostRequestTask = editAsPostRequestTask;
-
-            if (config != null)
-            {
-                DeploymentTaskEditor.SetEditItem(config);
-            }
+            DeploymentTaskEditor.SetEditItem(config, editAsPostRequestTask); 
         }
 
         private async void Save_Click(object sender, RoutedEventArgs e)

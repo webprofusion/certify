@@ -86,7 +86,7 @@
             <TextBlock
                 Margin="5,9,0,0"
                 Style="{StaticResource Instructions}"
-                Text="To begin, select a deployment task type to configure." />
+                Text="To begin, select a task type to configure." />
 
 
 

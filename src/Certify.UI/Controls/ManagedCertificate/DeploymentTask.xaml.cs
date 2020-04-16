@@ -35,27 +35,26 @@ namespace Certify.UI.Controls.ManagedCertificate
     {
         protected ViewModel.AppViewModel AppViewModel => UI.ViewModel.AppViewModel.Current;
 
-        protected ViewModel.DeploymentTaskConfigViewModel EditModel = new ViewModel.DeploymentTaskConfigViewModel(null);
+        protected ViewModel.DeploymentTaskConfigViewModel EditModel;
 
-        public bool EditAsPostRequestTask { get; set; } = true;
 
         public DeploymentTask()
         {
             InitializeComponent();
-            DataContext = EditModel;
-
-            this.StoredCredentials.ItemsSource = EditModel.FilteredCredentials;
-            EditAsPostRequestTask = true;
-
         }
 
-        public void SetEditItem(DeploymentTaskConfig config)
+        public void SetEditItem(DeploymentTaskConfig config, bool editAsPostRequestTask)
         {
 
-            EditModel = new ViewModel.DeploymentTaskConfigViewModel(config);
+            EditModel = new ViewModel.DeploymentTaskConfigViewModel(config, editAsPostRequestTask);
+
+            this.StoredCredentials.ItemsSource = EditModel.FilteredCredentials;
+
             DataContext = EditModel;
 
-            Task.Run(async () => await RefreshEditModelOptions(resetDefaults:false));
+            var providers = EditModel.DeploymentProviders;
+
+            Task.Run(async () => await RefreshEditModelOptions(resetDefaults: false));
 
         }
 
@@ -137,112 +136,17 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         public async Task<bool> Save()
         {
-            EditModel.CaptureEditedParameters();
+            var result = await EditModel.Save();
 
-            // validate task configuration using the selected provider
-
-            var msgTitle = "Edit Deployment Task";
-
-            if (EditModel.SelectedItem.TaskTypeId == null)
+            if (result.IsSuccess)
             {
-                MessageBox.Show("Please select the required Task Type.", msgTitle);
-                return false;
-            }
-
-            if (string.IsNullOrEmpty(EditModel.SelectedItem.TaskName))
-            {
-                if (!string.IsNullOrEmpty(EditModel.DeploymentProvider?.DefaultTitle))
-                {
-                    // use default title and continue
-                    EditModel.SelectedItem.TaskName = EditModel.DeploymentProvider.DefaultTitle;
-                }
-            }
-
-            if (string.IsNullOrEmpty(EditModel.SelectedItem.TaskName))
-            {
-
-                // check task name populated
-                MessageBox.Show("A unique Task Name required, this may be used later to run the task manually.", msgTitle);
-                return false;
-
+                return true;
             }
             else
             {
-                // check task name is unique for this managed cert
-                if (
-                    AppViewModel.SelectedItem.PostRequestTasks?.Any(t => t.Id != EditModel.SelectedItem.Id && t.TaskName.ToLower().Trim() == EditModel.SelectedItem.TaskName.ToLower().Trim()) == true
-                    || AppViewModel.SelectedItem.PreRequestTasks?.Any(t => t.Id != EditModel.SelectedItem.Id && t.TaskName.ToLower().Trim() == EditModel.SelectedItem.TaskName.ToLower().Trim()) == true
-                 )
-                {
-                    MessageBox.Show("A unique Task Name is required, this task name is already in use for this managed certificate.", msgTitle);
-                    return false;
-                }
-            }
-
-
-            // if remote target, check target specified. TODO: Could also check host resolves.
-            if (!string.IsNullOrEmpty(EditModel.SelectedItem.ChallengeProvider)
-                && EditModel.SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_LOCAL
-                && string.IsNullOrEmpty(EditModel.SelectedItem.TargetHost)
-                )
-            {
-                // check task name populated
-                MessageBox.Show("Target Host name or IP is required if deployment target is not Local.", msgTitle);
+                MessageBox.Show(result.Message, "Validation");
                 return false;
             }
-
-            // validate task provider specific config
-            var results = await AppViewModel.CertifyClient.ValidateDeploymentTask(new Models.Utils.DeploymentTaskValidationInfo { ManagedCertificate = AppViewModel.SelectedItem, TaskConfig = EditModel.SelectedItem });
-            if (results.Any(r => r.IsSuccess == false))
-            {
-                var firstFailure = results.FirstOrDefault(r => r.IsSuccess == false);
-                MessageBox.Show(firstFailure.Message, msgTitle);
-                return false;
-            }
-
-            if (EditAsPostRequestTask)
-            {
-                if (AppViewModel.SelectedItem.PostRequestTasks == null)
-                {
-                    AppViewModel.SelectedItem.PostRequestTasks = new System.Collections.ObjectModel.ObservableCollection<DeploymentTaskConfig>();
-                }
-
-                // add/update edited deployment task in selectedItem config
-                if (EditModel.SelectedItem.Id == null)
-                {
-                    //add new
-                    EditModel.SelectedItem.Id = Guid.NewGuid().ToString();
-                    AppViewModel.SelectedItem.PostRequestTasks.Add(EditModel.SelectedItem);
-                }
-                else
-                {
-                    var original = AppViewModel.SelectedItem.PostRequestTasks.First(f => f.Id == EditModel.SelectedItem.Id);
-                    AppViewModel.SelectedItem.PostRequestTasks[AppViewModel.SelectedItem.PostRequestTasks.IndexOf(original)] = EditModel.SelectedItem;
-                }
-            }
-            else
-            {
-                if (AppViewModel.SelectedItem.PreRequestTasks == null)
-                {
-                    AppViewModel.SelectedItem.PreRequestTasks = new System.Collections.ObjectModel.ObservableCollection<DeploymentTaskConfig>();
-                }
-
-                // add/update edited deployment task in selectedItem config
-                if (EditModel.SelectedItem.Id == null)
-                {
-                    //add new
-                    EditModel.SelectedItem.Id = Guid.NewGuid().ToString();
-                    AppViewModel.SelectedItem.PreRequestTasks.Add(EditModel.SelectedItem);
-                }
-                else
-                {
-                    var original = AppViewModel.SelectedItem.PreRequestTasks.First(f => f.Id == EditModel.SelectedItem.Id);
-                    AppViewModel.SelectedItem.PreRequestTasks[AppViewModel.SelectedItem.PreRequestTasks.IndexOf(original)] = EditModel.SelectedItem;
-                }
-            }
-
-
-            return true;
         }
 
         private void TaskName_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
