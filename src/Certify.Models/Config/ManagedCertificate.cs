@@ -165,6 +165,11 @@ namespace Certify.Models
         public string CurrentOrderUri { get; set; }
         public string CertificatePassword { get;set;}
 
+        /// <summary>
+        /// If true, pre/post request tasks will run for renewal but the certificate order won't be performed (used for testing).
+        /// </summary>
+        public bool? SkipCertificateRequest { get; set; }
+
         public override string ToString() => $"[{Id ?? "null"}]: \"{Name}\"";
 
         [JsonIgnore]
@@ -430,6 +435,27 @@ namespace Certify.Models
 
             return isMatch;
         }
+
+        /// <summary>
+        /// Given a CertificateRequestResult or ManagedCertificate, return the managed certiicate
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <returns></returns>
+        public static ManagedCertificate GetManagedCertificate(object subject)
+        {
+            if (subject is CertificateRequestResult)
+            {
+                return (subject as CertificateRequestResult).ManagedItem;
+            }
+
+            if (subject is ManagedCertificate)
+            {
+                return (subject as ManagedCertificate);
+            }
+
+            return null;
+        }
+
     }
 
   

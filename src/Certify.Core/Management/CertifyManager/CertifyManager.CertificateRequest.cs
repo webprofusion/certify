@@ -339,7 +339,7 @@ namespace Certify.Management
                     if (results.Any(r => r.HasError))
                     {
                         result.Abort = true;
-          
+
                         var msg = $"Request was aborted due to failed Pre-Request Task.";
 
                         result.Message = msg;
@@ -349,7 +349,8 @@ namespace Certify.Management
                 // if the script has requested the certificate request to be aborted, skip the request
                 if (!result.Abort)
                 {
-                    if (!skipRequest)
+
+                    if (!skipRequest || managedCertificate.SkipCertificateRequest == true)
                     {
                         if (resumePaused && managedCertificate.Health == ManagedCertificateHealth.AwaitingUser)
                         {

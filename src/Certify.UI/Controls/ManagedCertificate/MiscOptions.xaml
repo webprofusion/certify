@@ -68,6 +68,10 @@
                         Margin="0,4,0,4"
                         Content="{x:Static Resources:SR.ManagedCertificateSettings_NotifyPrimaryContactOnRenewalFailure}"
                         IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" />
+                    <CheckBox
+                        Margin="0,4,0,4"
+                        Content="Skip Certificate Request (Pre/Post Tasks will run but no new certificate order performed)"
+                        IsChecked="{Binding SelectedItem.SkipCertificateRequest}" />
                 </StackPanel>
 
 
