@@ -105,7 +105,7 @@ namespace Certify.Providers.DeploymentTasks.Core
                 Id = "Certify.Providers.DeploymentTasks.CertificateStore",
                 Title = "Certificate Store (Local Machine)",
                 DefaultTitle = "Store Certificate",
-                IsExperimental = true,
+                IsExperimental = false,
                 UsageType = DeploymentProviderUsage.PostRequest,
                 Description = "Store certificate in the local Certificate Store",
                 EnableRemoteOptions = false,

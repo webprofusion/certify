@@ -12,6 +12,7 @@
     d:DesignHeight="480"
     mc:Ignorable="d">
     <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
         <DataTemplate x:Key="ProviderStringParameter">
             <StackPanel
                 Margin="0,8,0,0"
@@ -116,10 +117,30 @@
                                 </Button>
                                 <StackPanel Margin="16,0,0,0" DockPanel.Dock="Left">
                                     <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
-                                    <TextBlock
-                                        DockPanel.Dock="Left"
-                                        Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
-                                        Text="{Binding Description}" />
+
+
+                                    <StackPanel HorizontalAlignment="Stretch" Orientation="Horizontal">
+                                        <TextBlock
+                                            DockPanel.Dock="Left"
+                                            Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                                            Text="{Binding Description}" />
+
+                                        <StackPanel
+                                            HorizontalAlignment="Right"
+                                            Orientation="Horizontal"
+                                            Visibility="{Binding IsExperimental, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                                            <fa:ImageAwesome
+                                                Height="16"
+                                                Margin="8,-8"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource ValidationSummaryColor5}"
+                                                Icon="Flask"
+                                                ToolTip="Experimental" />
+
+                                        </StackPanel>
+                                    </StackPanel>
+
                                 </StackPanel>
                             </DockPanel>
 

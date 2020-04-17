@@ -20,7 +20,7 @@ namespace Certify.Providers.DeploymentTasks.Core
             {
                 Id = "Certify.Providers.DeploymentTasks.Script",
                 Title = "Run Powershell Script",
-                IsExperimental = true,
+                IsExperimental = false,
                 UsageType = DeploymentProviderUsage.Any,
                 Description = "Run a Powershell script",
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>

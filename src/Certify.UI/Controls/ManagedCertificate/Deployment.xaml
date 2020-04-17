@@ -226,6 +226,7 @@
                 </DockPanel>
             </ScrollViewer>
         </TabItem>
+
         <TabItem
             MinWidth="100"
             Controls:ControlsHelper.HeaderFontSize="12"

@@ -256,7 +256,7 @@ namespace Certify.Management
                     // hack/workaround - importing cert from system account causes private key to be
                     // transient. Re-import the same cert fixes it. re -try apply .net dev on why
                     // re-import helps with private key: https://stackoverflow.com/questions/40892512/add-a-generated-certificate-to-the-store-and-update-an-iis-site-binding
-                    return await StoreCertificate(host, pfxFile, isRetry: true, storeName: storeName);
+                    return await StoreCertificate(host, pfxFile, isRetry: true, storeName: storeName, customFriendlyName: customFriendlyName);
                 }
             }
 
