@@ -51,6 +51,13 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 ItemViewModel.RaiseSelectedItemChanges();
 
+                if (ItemViewModel.SelectedItem?.Id == null)
+                {
+                    // show name in edit mode when starting a new item
+                    ItemViewModel.IsNameEditMode = true;
+                    EditName.Focus();
+                }
+                    
                 AppViewModel.IsChanged = false;
 
             }
