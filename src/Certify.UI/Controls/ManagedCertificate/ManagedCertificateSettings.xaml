@@ -41,27 +41,80 @@
 
         <!--  managed item summary title and close button  -->
 
-        <DockPanel Grid.Row="0" LastChildFill="False">
+        <DockPanel Grid.Row="0">
 
-            <TextBlock
-                Margin="16,0,0,4"
-                VerticalAlignment="Top"
-                AutomationProperties.Name="{Binding SelectedItem.Name}"
+            <!--  Managed Item display name  -->
+            <StackPanel
+                Margin="0,0,0,0"
                 DockPanel.Dock="Left"
-                FontSize="20"
-                Foreground="#FF494949"
-                Text="{Binding SelectedItem.Name}" />
+                Orientation="Horizontal"
+                Visibility="{Binding IsNameEditMode, Converter={StaticResource ResourceKey=BoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
+
+                <TextBox
+                    Height="24"
+                    MinWidth="400"
+                    Margin="16,0,0,0"
+                    Controls:TextBoxHelper.Watermark="Display Name"
+                    DockPanel.Dock="Left"
+                    KeyDown="DisplayName_KeyDown"
+                    Text="{Binding SelectedItem.Name, UpdateSourceTrigger=PropertyChanged}"
+                    ToolTip="Enter a display name for this managed certificate. This is for your own use and is not included in the certificate." />
+
+                <Button
+                    x:Name="FinishedEditName"
+                    Margin="0,4,8,4"
+                    VerticalAlignment="Top"
+                    AutomationProperties.Name="Finish Edit"
+                    Background="{DynamicResource ControlBackgroundBrush}"
+                    BorderThickness="0"
+                    Click="FinishedEditName_Click"
+                    DockPanel.Dock="Left"
+                    ToolTip="Finish Edit">
+                    <fa:ImageAwesome Foreground="{DynamicResource AccentColorBrush3}" Icon="CheckCircleOutline" />
+                </Button>
+            </StackPanel>
+            <StackPanel
+                Margin="0,0,0,0"
+                DockPanel.Dock="Left"
+                Orientation="Horizontal"
+                Visibility="{Binding IsNameEditMode, Converter={StaticResource ResourceKey=InvBoolVisConverter}, UpdateSourceTrigger=PropertyChanged}">
+                <TextBlock
+                    Margin="16,0,0,4"
+                    VerticalAlignment="Top"
+                    AutomationProperties.Name="{Binding SelectedItem.Name}"
+                    DockPanel.Dock="Left"
+                    FontSize="20"
+                    Foreground="#FF494949"
+                    Text="{Binding SelectedItem.Name}" />
+                <Button
+                    x:Name="EditName"
+                    Margin="16,4,8,4"
+                    VerticalAlignment="Top"
+                    AutomationProperties.Name="Edit Name"
+                    Background="{DynamicResource ControlBackgroundBrush}"
+                    BorderThickness="0"
+                    Click="EditName_Click"
+                    DockPanel.Dock="Left"
+                    ToolTip="Edit Name">
+                    <fa:ImageAwesome Foreground="{DynamicResource AccentColorBrush3}" Icon="Edit" />
+                </Button>
+
+
+            </StackPanel>
             <Button
                 x:Name="Dismiss"
                 Margin="0,4,8,4"
+                HorizontalAlignment="Right"
                 VerticalAlignment="Top"
                 AutomationProperties.Name="Dismiss"
+                Background="{DynamicResource ControlBackgroundBrush}"
                 BorderThickness="0"
                 Click="Dismiss_Click"
                 DockPanel.Dock="Right"
-                ToolTip="Dismiss">
+                ToolTip="Dismiss"
+                Visibility="{Binding IsNameEditMode, Converter={StaticResource ResourceKey=InvBoolVisConverter}, UpdateSourceTrigger=PropertyChanged}">
 
-                <fa:ImageAwesome Foreground="{DynamicResource AccentColorBrush3}" Icon="Close" />
+                <fa:ImageAwesome Foreground="{DynamicResource AccentColorBrush3}" Icon="AngleDoubleDown" />
 
             </Button>
         </DockPanel>
@@ -167,20 +220,7 @@
             Margin="8,0,8,0"
             Background="{DynamicResource ControlBackgroundBrush}"
             Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
-            <!--  Managed Item display name  -->
-            <DockPanel
-                Margin="8,8,8,8"
-                DockPanel.Dock="Top"
-                LastChildFill="False">
-                <TextBox
-                    MinWidth="400"
-                    Controls:TextBoxHelper.Watermark="Display Name"
-                    DockPanel.Dock="Left"
-                    Text="{Binding SelectedItem.Name, UpdateSourceTrigger=PropertyChanged}"
-                    ToolTip="Enter a display name for this managed certificate. This is for your own use and is not included in the certificate." />
 
-
-            </DockPanel>
 
             <Controls:MetroTabControl
                 x:Name="SettingsTab"

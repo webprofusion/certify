@@ -62,6 +62,7 @@ namespace Certify.UI.Controls.ManagedCertificate
         }
         private async Task<bool> ValidateAndSave(Models.ManagedCertificate item)
         {
+            
 
             if (item.RequestConfig.Challenges == null)
             {
@@ -76,8 +77,12 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             if (string.IsNullOrEmpty(item.Name))
             {
+                ItemViewModel.IsNameEditMode = true;
                 ShowValidationError(SR.ManagedCertificateSettings_NameRequired);
                 return false;
+            } else
+            {
+                ItemViewModel.IsNameEditMode = false;
             }
 
             // check primary domain is also checked
@@ -369,5 +374,23 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void Dismiss_Click(object sender, RoutedEventArgs e) => AppViewModel.SelectedItem = null;
 
+        private void EditName_Click(object sender, RoutedEventArgs e)
+        {
+            ItemViewModel.IsNameEditMode = true;
+            EditName.Focus();
+        }
+
+        private void FinishedEditName_Click(object sender, RoutedEventArgs e)
+        {
+            ItemViewModel.IsNameEditMode = false;
+        }
+
+        private void DisplayName_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Return)
+            {
+                ItemViewModel.IsNameEditMode = false;
+            }
+        }
     }
 }

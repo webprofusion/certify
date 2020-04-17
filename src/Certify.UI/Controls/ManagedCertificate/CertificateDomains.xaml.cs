@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -32,6 +32,8 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             if (e.PropertyName == "SelectedItem")
             {
+                ItemViewModel.IsNameEditMode = false;
+
                 //get list of sites from local server if we don't already have it
                 if (ItemViewModel.WebSiteList.Count == 0)
                 {

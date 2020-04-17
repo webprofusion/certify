@@ -129,6 +129,7 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        public bool IsNameEditMode { get; set; }
         public bool IsTestInProgress { get; set; }
         public bool IsSiteListQueryProgress { get; set; }
 

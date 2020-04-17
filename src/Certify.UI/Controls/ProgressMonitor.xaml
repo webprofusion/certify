@@ -44,6 +44,11 @@
             ItemsSource="{Binding ProgressResults}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             SelectionMode="Single">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="Background" Value="{StaticResource ControlBackgroundBrush}" />
+                </Style>
+            </ListView.ItemContainerStyle>
 
             <ListView.ItemTemplate>
                 <DataTemplate>
@@ -62,7 +67,7 @@
                                 Margin="0,0,8,0"
                                 DockPanel.Dock="Left"
                                 FontWeight="Bold"
-                                Foreground="{DynamicResource AccentColorBrush3}"
+                                Foreground="{Binding CurrentState, Converter={StaticResource StateToColorConverter}}"
                                 Text="{Binding ManagedCertificate.Name}" />
                         </DockPanel>
                         <DockPanel

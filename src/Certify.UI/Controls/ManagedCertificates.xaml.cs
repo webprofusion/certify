@@ -150,11 +150,13 @@ namespace Certify.UI.Controls
         {
             
             var managedCert = obj as Models.ManagedCertificate;
-            
+
+            lvManagedCertificates.Items.Refresh();
 
             if (lvManagedCertificates.Items.Count > 0 && lvManagedCertificates.Items.Contains(managedCert))
             {
-                lvManagedCertificates.UpdateLayout(); // ensure containers exist
+               
+               // lvManagedCertificates.UpdateLayout(); // ensure containers exist
 
                 if (lvManagedCertificates.ItemContainerGenerator.ContainerFromItem(managedCert) is ListViewItem item)
                 {
