@@ -23,6 +23,12 @@ namespace Certify.Core.Management
                 "::",
                 "*"
             };
+        
+        private static string[] nonSpecificHostnames = new string[] {
+                null,
+                "",
+                "*"
+            };
 
         /// <summary>
         /// Creates or updates the https bindings associated with the dns names in the current
@@ -196,7 +202,7 @@ namespace Certify.Core.Management
                         if (updateBinding == false)
                         {
                             // TODO: add wildcard match
-                            if (string.IsNullOrEmpty(hostname) && requestConfig.DeploymentBindingBlankHostname)
+                            if (nonSpecificHostnames.Contains(hostname) && requestConfig.DeploymentBindingBlankHostname)
                             {
                                 updateBinding = true;
                             }
@@ -367,8 +373,8 @@ namespace Certify.Core.Management
                 useSNI = false;
             }
 
-            // can't use SNI is hostname is blank
-            if (useSNI && string.IsNullOrEmpty(internationalHost))
+            // can't use SNI is hostname is blank or wildcard
+            if (useSNI && nonSpecificHostnames.Contains(internationalHost))
             {
                 useSNI = false;
             }
