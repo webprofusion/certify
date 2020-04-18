@@ -334,7 +334,7 @@ namespace Certify.Management
                         else
                         {
                             deploymentDescription.AppendLine(" Action | Site | Binding ");
-                            deploymentDescription.AppendLine(" ------ | ---- | ------- ");
+                            deploymentDescription.Append(" ------ | ---- | ------- ");
                         }
                     }
                     else
