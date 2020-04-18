@@ -90,7 +90,16 @@ namespace Certify.UI.Controls.ManagedCertificate
                 {
                     foreach (var sub in s.Substeps)
                     {
-                        sb.AppendLine(" - "+sub.Description);
+                        if (sub.Description.Contains("|"))
+                        {
+                            // table items
+                            sb.AppendLine(sub.Description);
+                        }
+                        else
+                        {
+                            // list items
+                            sb.AppendLine(" - " + sub.Description);
+                        }
                     }
                 }
             }
