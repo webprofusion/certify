@@ -351,6 +351,7 @@ namespace Certify.UI.ViewModel
             if (SelectedItem != null)
             {
                 var opts = await GetDomainOptionsFromSite(SelectedItem.GroupId);
+
                 if (opts != null && opts.Any())
                 {
                     //reselect options
@@ -581,7 +582,12 @@ namespace Certify.UI.ViewModel
                 return new List<DomainOption>();
             }
 
-            return await _appViewModel.GetServerSiteDomains(StandardServerTypes.IIS, siteId);
+            var list = await _appViewModel.GetServerSiteDomains(StandardServerTypes.IIS, siteId);
+
+            // discard no-specific host wildcards for cert domain options
+            list.RemoveAll(d => d.Domain?.Trim() == "*");
+
+            return list;
         }
 
         public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly) => await _appViewModel.ReapplyCertificateBindings(managedItemId, isPreviewOnly);
