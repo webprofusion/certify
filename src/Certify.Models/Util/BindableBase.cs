@@ -21,8 +21,26 @@ namespace Certify.Models
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
+
+        private bool _isChangeDetectionPaused = false;
+
+        public void PauseChangeEvents()
+        {
+            _isChangeDetectionPaused = true;
+        }
+
+        public void ResumeChangeEvents()
+        {
+            _isChangeDetectionPaused = false;
+        }
+
         public void OnPropertyChanged(string prop, object before, object after)
         {
+            if (_isChangeDetectionPaused)
+            {
+                return;
+            }
+
             if (prop != nameof(IsChanged))
             {
                 // auto-update the IsChanged property for standard properties
@@ -73,7 +91,13 @@ namespace Certify.Models
 
         private void HandleChangeEvent(object src, EventArgs args)
         {
+            if (_isChangeDetectionPaused)
+            {
+                return;
+            }
+
             IsChanged = true;
+
             if (args is NotifyCollectionChangedEventArgs ccArgs)
             {
                 if (ccArgs.Action == NotifyCollectionChangedAction.Remove)

@@ -78,8 +78,7 @@
                 x:Name="ChallengeTypeList"
                 Width="270"
                 ItemsSource="{Binding ChallengeTypes}"
-                SelectedItem="{Binding SelectedItem.ChallengeType}"
-                SelectionChanged="ChallengeTypeList_SelectionChanged" />
+                SelectedItem="{Binding SelectedItem.ChallengeType}" />
         </StackPanel>
 
         <!--  http-01 Challenge Config UI  -->
