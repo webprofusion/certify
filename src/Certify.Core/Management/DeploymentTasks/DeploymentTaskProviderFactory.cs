@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Certify.Config;
 using Certify.Models;
@@ -14,20 +15,33 @@ namespace Certify.Core.Management.DeploymentTasks
     {
         public async static Task<List<DeploymentProviderDefinition>> GetDeploymentTaskProviders(List<IDeploymentTaskProviderPlugin> providerPlugins)
         {
+            var list = new List<DeploymentProviderDefinition>();
+
+            var baseAssembly = typeof(DeploymentTaskProviderFactory).Assembly;
+
+            // we filter the defined classes according to the interfaces they implement
+            var typeList = baseAssembly.GetTypes().Where(type => type.GetInterfaces().Any(inter => inter == typeof(IDeploymentTaskProvider))).ToList();
+
+            foreach (var t in typeList)
+            {
+                var def = (DeploymentProviderDefinition)t.GetProperty("Definition").GetValue(null);
+
+                if (def.Id == Providers.DeploymentTasks.Core.MockTask.Definition.Id)
+                {
+#if DEBUG
+                    list.Add(def);
+#endif
+                }
+                else
+                {
+                    list.Add(def);
+                }
+
+            }
 
             var definitions = new List<DeploymentProviderDefinition>();
 
-            // add core providers
-            definitions.Add(Providers.DeploymentTasks.Core.Webhook.Definition);
-            definitions.Add(Providers.DeploymentTasks.Core.IIS.Definition);
-            definitions.Add(Providers.DeploymentTasks.Core.CertificateStore.Definition);
-            definitions.Add(Providers.DeploymentTasks.Core.PowershellScript.Definition);
-
-#if DEBUG
-            definitions.Add(Providers.DeploymentTasks.Core.MockTask.Definition);
-#endif
-
-            // add providers from plugins
+            // add providers from plugins (if any)
             if (providerPlugins == null)
             {
                 return definitions;
@@ -53,34 +67,26 @@ namespace Certify.Core.Management.DeploymentTasks
 
             taskTypeId = taskTypeId.ToLower();
 
-            if (taskTypeId == Providers.DeploymentTasks.Core.Webhook.Definition.Id.ToLower())
+            // find the provider in our current assembly
+
+            var baseAssembly = typeof(DeploymentTaskProviderFactory).Assembly;
+            var typeList = baseAssembly.GetTypes().Where(type => type.GetInterfaces().Any(inter => inter == typeof(IDeploymentTaskProvider))).ToList();
+
+            foreach (var t in typeList)
             {
-                return new Certify.Providers.DeploymentTasks.Core.Webhook();
+                var def = (DeploymentProviderDefinition)t.GetProperty("Definition").GetValue(null);
+                if (def.Id.ToLower() == taskTypeId)
+                {
+                    return (IDeploymentTaskProvider)Activator.CreateInstance(t);
+                }
             }
-            else if (taskTypeId == Providers.DeploymentTasks.Core.IIS.Definition.Id.ToLower())
-            {
-                return new Certify.Providers.DeploymentTasks.Core.IIS();
-            }
-            else if (taskTypeId == Providers.DeploymentTasks.Core.CertificateStore.Definition.Id.ToLower())
-            {
-                return new Certify.Providers.DeploymentTasks.Core.CertificateStore();
-            }
-            else if (taskTypeId == Providers.DeploymentTasks.Core.PowershellScript.Definition.Id.ToLower())
-            {
-                return new Certify.Providers.DeploymentTasks.Core.PowershellScript();
-            }
-#if DEBUG
-            else if (taskTypeId == Providers.DeploymentTasks.Core.MockTask.Definition.Id.ToLower())
-            {
-                return new Certify.Providers.DeploymentTasks.Core.MockTask();
-            }
-#endif
+
             if (providerPlugins == null)
             {
                 return null;
             }
 
-            // Find provider for this type id
+            // Find provider in our plugins for this type id
             foreach (var p in providerPlugins)
             {
                 var provider = p.GetProvider(taskTypeId);
