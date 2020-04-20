@@ -312,8 +312,7 @@ namespace Certify.UI
                     var gotoDownload = MessageBox.Show(Application.Current.MainWindow, updateCheck.Message.Body + "\r\nVisit download page now?", ConfigResources.AppName, MessageBoxButton.YesNo);
                     if (gotoDownload == MessageBoxResult.Yes)
                     {
-                        var sInfo = new System.Diagnostics.ProcessStartInfo(ConfigResources.AppWebsiteURL);
-                        System.Diagnostics.Process.Start(sInfo);
+                        Utils.Helpers.LaunchBrowser(ConfigResources.AppWebsiteURL);
                     }
                     else
                     {

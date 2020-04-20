@@ -60,7 +60,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             Id = "DNS01.API.DnsMadeEasy",
             Title = "DnsMadeEasy DNS API",
             Description = "Validates via DnsMadeEasy APIs using credentials found in your DnsMadeEasy control panel under Config - Account Settings",
-            HelpUrl = "http://docs.certifytheweb.com/docs/dns-dnsmadeeasy.html",
+            HelpUrl = "http://docs.certifytheweb.com/docs/dns-dnsmadeeasy",
                     PropagationDelaySeconds = 120,
             ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{Key="apikey", Name="API Key", IsRequired=true },

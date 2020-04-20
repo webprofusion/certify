@@ -12,6 +12,18 @@ namespace Certify.UI.Windows
         public ObservableCollection<ProviderParameter> CredentialSet { get; set; }
         public StoredCredential Item { get; set; }
         public List<ChallengeProviderDefinition> ChallengeProviders { get; set; }
+
+        public ChallengeProviderDefinition SelectedChallengeProvider
+        {
+            get
+            {
+                if (Item != null && !string.IsNullOrEmpty(Item.ProviderType))
+                {
+                    return ChallengeProviders.FirstOrDefault(i => i.Id == Item.ProviderType);
+                }
+                else { return null; }
+            }
+        }
     }
 
     /// <summary>
@@ -143,9 +155,18 @@ namespace Certify.UI.Windows
             if (selectedType != null)
             {
                 EditViewModel.CredentialSet = new ObservableCollection<ProviderParameter>(selectedType.ProviderParameters.Where(p => p.IsCredential));
+
+                EditViewModel.RaisePropertyChangedEvent(nameof(EditViewModel.SelectedChallengeProvider));
             }
         }
 
         private void Cancel_Click(object sender, System.Windows.RoutedEventArgs e) => Close();
+
+        private void HelpUrl_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        {
+            e.Handled = true;
+
+            Utils.Helpers.LaunchBrowser(e.Uri.AbsoluteUri);
+        }
     }
 }

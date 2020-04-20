@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -45,7 +45,7 @@ namespace Certify.Providers.DNS.TransIP
                     Id = "DNS01.API.TransIP",
                     Title = "TransIP DNS API",
                     Description = "Validates via TransIP DNS APIs using credentials",
-                    HelpUrl = "https://docs.certifytheweb.com/docs/dns-transip.html",
+                    HelpUrl = "https://api.transip.eu/rest/docs.html",
                     PropagationDelaySeconds = 300,
                     ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{ Key="login", Name="User Name", IsRequired=true, IsCredential=true },

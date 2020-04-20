@@ -237,7 +237,7 @@ namespace Certify.Core.Management.Challenges
                     ProviderParameters= new List<ProviderParameter>
                     {
                        new ProviderParameter{ Key="username",Name="Username", IsRequired=true, IsPassword=false, IsCredential=true },
-                       new ProviderParameter{ Key="password",Name="password", IsRequired=false, IsPassword=true, IsCredential=true, Description="Optional password" },
+                       new ProviderParameter{ Key="password",Name="Password", IsRequired=false, IsPassword=true, IsCredential=true, Description="Optional password" },
                        new ProviderParameter{ Key="privatekey",Name="Private Key File Path", IsRequired=false, IsPassword=false, IsCredential=true, Description="Optional path private key file" },
                        new ProviderParameter{ Key="key_passphrase",Name="Private Key Passphrase", IsRequired=false, IsPassword=true, IsCredential=true , Description="Optional key passphrase"},
                     }

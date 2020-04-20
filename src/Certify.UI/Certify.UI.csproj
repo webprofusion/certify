@@ -163,6 +163,7 @@
     <Compile Include="Utils\ExpiryDateConverter.cs" />
     <Compile Include="Utils\ManagedCertificateHealthVisibilityConverter.cs" />
     <Compile Include="Utils\ManagedCertificateHealthColourConverter.cs" />
+    <Compile Include="Utils\Helpers.cs" />
     <Compile Include="Utils\UpdateCheckUtils.cs" />
     <Compile Include="ViewModel\DeploymentTaskConfigViewModel.cs" />
     <Compile Include="ViewModel\Design\ManagedCertificateDesignViewModel.cs" />

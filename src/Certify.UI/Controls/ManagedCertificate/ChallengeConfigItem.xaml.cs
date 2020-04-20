@@ -184,5 +184,12 @@ namespace Certify.UI.Controls.ManagedCertificate
             EditModel.ShowZoneLookup = true;
             await RefreshDnsZoneLookup();
         }
+
+        private void HelpUrl_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        {
+            e.Handled = true;
+
+            Utils.Helpers.LaunchBrowser(e.Uri.AbsoluteUri);
+        }
     }
 }

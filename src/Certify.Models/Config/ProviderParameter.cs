@@ -62,16 +62,20 @@ namespace Certify.Models.Config
                 {
                     foreach (var o in OptionsList.Split(';'))
                     {
-                        var keyValuePair = o.Split('=');
-                        if (keyValuePair.Length == 1)
+                        if (!string.IsNullOrEmpty(o))
                         {
-                            // item has a key only
-                            options.Add(keyValuePair[0].Trim(), keyValuePair[0].Trim());
-                        }
-                        else
-                        {
-                            // item has a key and description value
-                            options.Add(keyValuePair[0].Trim(), keyValuePair[1].Trim());
+                            var keyValuePair = o.Split('=');
+
+                            if (keyValuePair.Length == 1)
+                            {
+                                // item has a key only
+                                options.Add(keyValuePair[0].Trim(), keyValuePair[0].Trim());
+                            }
+                            else
+                            {
+                                // item has a key and description value
+                                options.Add(keyValuePair[0].Trim(), keyValuePair[1].Trim());
+                            }
                         }
                     }
                 }

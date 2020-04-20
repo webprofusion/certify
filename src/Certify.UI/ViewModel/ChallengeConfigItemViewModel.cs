@@ -42,6 +42,18 @@ namespace Certify.UI.ViewModel
         public bool ShowZoneLookup { get; set; }
         public bool IsZoneLookupInProgress { get; set; }
 
+        public ChallengeProviderDefinition SelectedChallengeProvider
+        {
+            get
+            {
+                if (SelectedItem != null && !string.IsNullOrEmpty(SelectedItem.ChallengeProvider))
+                {
+                    return ChallengeProviders.FirstOrDefault(i => i.Id == SelectedItem.ChallengeProvider);
+                }
+                else { return null; }
+            }
+        }
+
         public ObservableCollection<ChallengeProviderDefinition> ChallengeProviders => new ObservableCollection<ChallengeProviderDefinition>(
                     _appViewModel.ChallengeAPIProviders
                     .Where(p => p.ProviderParameters.Any() && p.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
@@ -81,6 +93,8 @@ namespace Certify.UI.ViewModel
                 SelectedItem.ChallengeRootPath = config.WebsiteRootPath;
                 config.WebsiteRootPath = null;
             }
+
+            RaisePropertyChangedEvent(nameof(SelectedChallengeProvider));
         }
 
         public async Task RefreshCredentialOptions(ComboBox storedCredentialsList)

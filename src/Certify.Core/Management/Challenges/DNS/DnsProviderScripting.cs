@@ -35,7 +35,7 @@ namespace Certify.Core.Management.Challenges.DNS
             Id = "DNS01.Scripting",
             Title = "(Use Custom Script)",
             Description = "Validates DNS challenges via a user provided custom script",
-            HelpUrl = "http://docs.certifytheweb.com/",
+            HelpUrl = "https://docs.certifytheweb.com/docs/dns-scripting",
             PropagationDelaySeconds = 60,
             ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{ Key="createscriptpath", Name="Create Script Path", IsRequired=true , IsCredential=false},

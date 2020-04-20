@@ -51,9 +51,12 @@
                 <Label Width="160" Content="{Binding Name}" />
                 <ComboBox
                     Width="250"
+                    DisplayMemberPath="Value"
                     ItemsSource="{Binding Options}"
-                    SelectedValue="{Binding Value}" />
+                    SelectedValue="{Binding Value}"
+                    SelectedValuePath="Key" />
             </StackPanel>
+
         </DataTemplate>
         <DataTemplate x:Key="ProviderPasswordParameter">
             <StackPanel
@@ -146,7 +149,26 @@
                         SelectionChanged="ChallengeAPIProviderList_SelectionChanged" />
                 </StackPanel>
 
+                <StackPanel
+                    Margin="160,8,8,0"
+                    DockPanel.Dock="Top"
+                    Orientation="Vertical">
+                    <TextBlock Style="{StaticResource Instructions}">
+                        <Span>
+                            <Run Text="{Binding SelectedChallengeProvider.Description}" />
+                            <LineBreak />
+                            <Hyperlink
+                                x:Name="HelpUrl"
+                                NavigateUri="{Binding SelectedChallengeProvider.HelpUrl}"
+                                RequestNavigate="HelpUrl_RequestNavigate"
+                                ToolTip="{Binding SelectedChallengeProvider.HelpUrl}">
+                                Browse Documentation
+                            </Hyperlink>
+                        </Span>
 
+                    </TextBlock>
+
+                </StackPanel>
 
                 <StackPanel x:Name="ProviderCredentials" Orientation="Vertical">
                     <StackPanel.Style>
