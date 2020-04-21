@@ -110,49 +110,58 @@ namespace Certify.Management
 
             foreach (var task in deploymentTasks)
             {
-                if (task.TaskConfig.TaskTrigger == TaskTriggerType.ANY_STATUS)
-                {
-                    shouldRunCurrentTask = true;
-                    taskTriggerReason = "Task will run for any status";
-                }
-                else if (task.TaskConfig.TaskTrigger == TaskTriggerType.NOT_ENABLED)
+                if (previousActionStep != null && (previousActionStep.HasError && !task.TaskConfig.RunIfLastStepFailed))
                 {
                     shouldRunCurrentTask = false;
-                    taskTriggerReason = "Task is not enabled and will be skipped.";
+                    taskTriggerReason = "Task will not run because previous task failed.";
                 }
-                else if (task.TaskConfig.TaskTrigger == TaskTriggerType.ON_SUCCESS)
+                else
                 {
-                    if (previousActionStep == null || previousActionStep.HasError == false)
+
+                    if (task.TaskConfig.TaskTrigger == TaskTriggerType.ANY_STATUS)
                     {
                         shouldRunCurrentTask = true;
-                        taskTriggerReason = "Task is enabled and previous step was successful.";
+                        taskTriggerReason = "Task will run for any status";
                     }
-                    else if (previousActionStep.HasError == true)
+                    else if (task.TaskConfig.TaskTrigger == TaskTriggerType.NOT_ENABLED)
                     {
                         shouldRunCurrentTask = false;
-                        taskTriggerReason = "Task is enabled but will not run because previous step was unsuccessful.";
+                        taskTriggerReason = "Task is not enabled and will be skipped.";
+                    }
+                    else if (task.TaskConfig.TaskTrigger == TaskTriggerType.ON_SUCCESS)
+                    {
+                        if (result != null && (!result.Abort && result.IsSuccess))
+                        {
+                            shouldRunCurrentTask = true;
+                            taskTriggerReason = "Task is enabled and primary request was successful.";
+                        }
+                        else
+                        {
+                            shouldRunCurrentTask = false;
+                            taskTriggerReason = "Task is enabled but will not run because primary request unsuccessful.";
+                        }
+
+                    }
+                    else if (task.TaskConfig.TaskTrigger == TaskTriggerType.ON_ERROR)
+                    {
+                        if (result != null && (!result.Abort && result.IsSuccess))
+                        {
+                            shouldRunCurrentTask = false;
+                            taskTriggerReason = "Task is enabled but will not run because primary request was successful.";
+                        }
+                        else
+                        {
+                            shouldRunCurrentTask = true;
+                            taskTriggerReason = "Task is enabled and will run because primary request was unsuccessful.";
+                        }
+
                     }
 
-                }
-                else if (task.TaskConfig.TaskTrigger == TaskTriggerType.ON_ERROR)
-                {
-                    if (previousActionStep == null || previousActionStep.HasError == false)
+                    if (task.TaskConfig.IsDeferred && skipDeferredTasks)
                     {
                         shouldRunCurrentTask = false;
-                        taskTriggerReason = "Task is enabled but will not run because previous step was successful.";
+                        taskTriggerReason = "Task is enabled but will not run because execution is deferred.";
                     }
-                    else if (previousActionStep.HasError == true)
-                    {
-                        shouldRunCurrentTask = true;
-                        taskTriggerReason = "Task is enabled and will run because previous step was unsuccessful.";
-                    }
-
-                }
-
-                if (task.TaskConfig.IsDeferred && skipDeferredTasks)
-                {
-                    shouldRunCurrentTask = false;
-                    taskTriggerReason = "Task is enabled but will not run because execution is deferred.";
                 }
 
 

@@ -288,8 +288,11 @@ namespace Certify.Management
         /// <param name="progress">  </param>
         /// <returns>  </returns>
         public async Task<CertificateRequestResult> PerformCertificateRequest(
-            ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null,
-            bool resumePaused = false, bool skipRequest = false
+            ILog log, ManagedCertificate managedCertificate,
+            IProgress<RequestProgressState> progress = null,
+            bool resumePaused = false,
+            bool skipRequest = false,
+            bool failOnSkip = false
             )
         {
             _serviceLog?.Information($"Performing Certificate Request: {managedCertificate.Name} [{managedCertificate.Id}]");
@@ -390,8 +393,16 @@ namespace Certify.Management
                     else
                     {
                         // caller asked to skip the actual certicate request (e.g. unit testing)
-                        LogMessage(managedCertificate.Id, $"Certificate Request Skipped (on demand): {managedCertificate.Name}");
-                        certRequestResult.IsSuccess = true;
+                        if (failOnSkip)
+                        {
+                            LogMessage(managedCertificate.Id, $"Certificate Request Skipped (on demand, marked as failed): {managedCertificate.Name}");
+                            certRequestResult.IsSuccess = false;
+                        }
+                        else
+                        {
+                            LogMessage(managedCertificate.Id, $"Certificate Request Skipped (on demand): {managedCertificate.Name}");
+                            certRequestResult.IsSuccess = true;
+                        }
 
                         ReportProgress(progress, new RequestProgressState(RequestState.Success, certRequestResult.Message, managedCertificate));
                     }

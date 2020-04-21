@@ -26,36 +26,36 @@ namespace Certify.Core.Management.DeploymentTasks
             {
                 var def = (DeploymentProviderDefinition)t.GetProperty("Definition").GetValue(null);
 
+#if DEBUG
+                // conditionally include mock task
                 if (def.Id == Providers.DeploymentTasks.Core.MockTask.Definition.Id)
                 {
-#if DEBUG
                     list.Add(def);
-#endif
                 }
                 else
                 {
                     list.Add(def);
                 }
-
+#else
+                list.Add(def);
+#endif
             }
-
-            var definitions = new List<DeploymentProviderDefinition>();
 
             // add providers from plugins (if any)
             if (providerPlugins == null)
             {
-                return definitions;
+                return list;
             }
 
             foreach (var p in providerPlugins)
             {
                 if (p != null)
                 {
-                    definitions.AddRange(p.GetProviders());
+                    list.AddRange(p.GetProviders());
                 }
             }
 
-            return await Task.FromResult(definitions);
+            return await Task.FromResult(list);
         }
 
         public static IDeploymentTaskProvider Create(string taskTypeId, List<IDeploymentTaskProviderPlugin> providerPlugins)
