@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -231,8 +231,8 @@ namespace Certify.Client
         public async Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter)
         {
             var response = await PostAsync("managedcertificates/search/", filter);
-            var sites = await response.Content.ReadAsStringAsync();
             var serializer = new JsonSerializer();
+
             using (var sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
             using (var reader = new JsonTextReader(sr))
             {
