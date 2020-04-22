@@ -215,7 +215,7 @@ namespace Certify.Core.Management.Challenges
                 },
                   new ChallengeProviderDefinition
                 {
-                    Id = StandardAuthTypes.STANDARD_AUTH_LOCAL,
+                    Id = StandardAuthTypes.STANDARD_AUTH_LOCAL_AS_USER,
                     ChallengeType = "",
                     Title = "Windows Credentials (Local)",
                     Description = "Windows username and password credentials",
