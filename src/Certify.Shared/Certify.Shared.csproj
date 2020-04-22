@@ -81,6 +81,7 @@
     <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
     <PackageReference Include="ARSoft.Tools.Net" Version="2.2.9" />
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.13.1" />
+    <PackageReference Include="SimpleImpersonation" Version="3.0.0" />
     <PackageReference Include="System.Management.Automation.dll" Version="10.0.10586" />
     <PackageReference Include="TaskScheduler" Version="2.8.18" /> 
   </ItemGroup>

@@ -275,7 +275,7 @@ namespace Certify.Management
                 var task = new DeploymentTaskConfig
                 {
                     Id = Guid.NewGuid().ToString(),
-                    TaskTypeId = Certify.Providers.DeploymentTasks.Core.PowershellScript.Definition.Id,
+                    TaskTypeId = StandardTaskTypes.POWERSHELL,
                     ChallengeProvider = StandardAuthTypes.STANDARD_AUTH_LOCAL,
                     TaskName = "[Pre-Request Script]",
                     IsFatalOnError = true,
@@ -306,7 +306,7 @@ namespace Certify.Management
                 var task = new DeploymentTaskConfig
                 {
                     Id = Guid.NewGuid().ToString(),
-                    TaskTypeId = Certify.Providers.DeploymentTasks.Core.PowershellScript.Definition.Id,
+                    TaskTypeId = StandardTaskTypes.POWERSHELL,
                     ChallengeProvider = StandardAuthTypes.STANDARD_AUTH_LOCAL,
                     TaskName = "[Post-Request Script]",
                     IsFatalOnError = true,
@@ -357,11 +357,11 @@ namespace Certify.Management
                 var task = new DeploymentTaskConfig
                 {
                     Id = Guid.NewGuid().ToString(),
-                    ChallengeProvider = Certify.Providers.DeploymentTasks.Core.Webhook.Definition.Id,
+                    ChallengeProvider = StandardAuthTypes.STANDARD_AUTH_LOCAL,
                     TaskName = "[Post-Request Webhook]",
                     IsFatalOnError = false,
                     TaskTrigger = triggerType,
-                    TaskTypeId = Certify.Providers.DeploymentTasks.Core.Webhook.Definition.Id,
+                    TaskTypeId = StandardTaskTypes.WEBHOOK,
                     Parameters = new List<ProviderParameterSetting> {
                             new ProviderParameterSetting("url", managedCertificate.RequestConfig.WebhookUrl),
                             new ProviderParameterSetting("method", managedCertificate.RequestConfig.WebhookMethod),
