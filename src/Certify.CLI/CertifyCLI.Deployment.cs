@@ -8,20 +8,20 @@ namespace Certify.CLI
 {
     public partial class CertifyCLI
     {
-        public async Task<bool> PerformDeployment(string managedCertName, string taskName)
+        public async Task<bool> PerformDeployment(string managedCertId, string taskId)
         {
 
-            var managedCertificates = await _certifyClient.GetManagedCertificates(new ManagedCertificateFilter { Name = managedCertName });
+            var managedCert = await _certifyClient.GetManagedCertificate(managedCertId);
 
-            if (managedCertificates.Count == 1)
-            {
-                var managedCert = managedCertificates.Single();
-
-                if (!string.IsNullOrEmpty(taskName))
+            if (managedCert!=null)
+            { 
+                if (!string.IsNullOrEmpty(taskId))
                 {
                     // identify specific task
-                    Console.WriteLine("Performing deployment task '" + taskName + "'..");
-                    var task = managedCert.PostRequestTasks.FirstOrDefault(t => t.TaskName.ToLowerInvariant().Trim() == taskName.ToLowerInvariant().Trim());
+                    
+                    var task = managedCert.PostRequestTasks.FirstOrDefault(t => t.Id.ToLowerInvariant().Trim() == taskId.ToLowerInvariant().Trim());
+
+                    Console.WriteLine($"Performing deployment task [{task.TaskName}] for managed certificate [{managedCert.Name}]..");
 
                     if (task != null)
                     {
@@ -41,14 +41,14 @@ namespace Certify.CLI
                     }
                     else
                     {
-                        Console.WriteLine("Task '" + taskName + "' not found. Deployment failed.");
+                        Console.WriteLine("Task '" + taskId + "' not found. Deployment failed.");
                         return false;
                     }
                 }
                 else
                 {
                     // perform all deployment tasks
-                    Console.WriteLine("Performing all deployment tasks for managed certificate '" + managedCertName + "'..");
+                    Console.WriteLine($"Performing all deployment tasks for managed certificate [{managedCert.Name}]..");
 
                     var results = await _certifyClient.PerformDeployment(managedCert.Id, null, isPreviewOnly: false);
 
@@ -67,18 +67,9 @@ namespace Certify.CLI
             }
             else
             {
-                if (managedCertificates.Count > 1)
-                {
-                    // too many matches
-                    Console.WriteLine("Managed Certificate name matched more than one item. Deployment failed.");
-                    return false;
-                }
-                else
-                {
-                    // no matches
-                    Console.WriteLine("Managed Certificate name has no matches. Deployment failed.");
-                    return false;
-                }
+                // no matches
+                Console.WriteLine("Managed Certificate Id has no matches. Deployment failed.");
+                return false;   
             }
      
         }

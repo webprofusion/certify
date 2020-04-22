@@ -61,19 +61,19 @@ namespace Certify.CLI
 
                 if (command == "deploy")
                 {
-                    string managedCertName = null;
-                    string taskName = null;
+                    string managedCertId = null;
+                    string taskId = null;
 
                     if (args.Length >= 3)
                     {
                         // got command, cert and task name
-                        managedCertName = args[1].Trim();
-                        taskName = args[2].Trim();
+                        managedCertId = args[1].Trim();
+                        taskId = args[2].Trim();
                     }
                     else if (args.Length == 2)
                     {
-                        // got command and cert name, run all deployment tasks
-                        managedCertName = args[1].Trim();
+                        // got command and cert id, run all deployment tasks
+                        managedCertId = args[1].Trim();
                     }
                     else
                     {
@@ -85,9 +85,9 @@ namespace Certify.CLI
                         p.ShowHelp();
                     }
 
-                    if (managedCertName != null)
+                    if (managedCertId != null)
                     {
-                        var result = await p.PerformDeployment(managedCertName, taskName);
+                        var result = await p.PerformDeployment(managedCertId, taskId);
                     }
 
                 }
