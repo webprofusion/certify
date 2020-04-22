@@ -50,14 +50,15 @@ namespace Certify.Service
             var serviceConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
             serviceConfig.ServiceFaultMsg = "";
-           
+
             if (serviceConfig.UseHTTPS)
             {
                 // ensure self signed cert available on required port
                 if (InstallSelfSignedCert(serviceConfig.Host, serviceConfig.Port))
                 {
                     Program.LogEvent(null, $"Local service certificate installed ok", false);
-                } else
+                }
+                else
                 {
                     Program.LogEvent(null, $"Local service certificate installed failed", false);
                 }
@@ -106,7 +107,10 @@ namespace Certify.Service
             }
             finally
             {
-                SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(serviceConfig);
+                if (serviceConfig.ConfigStatus == Shared.ConfigStatus.Updated || serviceConfig.ConfigStatus == Shared.ConfigStatus.New)
+                {
+                    SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(serviceConfig);
+                }
             }
 
         }
@@ -138,7 +142,7 @@ namespace Certify.Service
             {
                 // create and install new cert
                 var newCert = CertificateManager.GenerateSelfSignedCertificate(certSubject, DateTime.Now, DateTime.Now.AddYears(3), "[Certify Background API]");
-                currentCert = CertificateManager.StoreCertificate(newCert, storeName:certStore);
+                currentCert = CertificateManager.StoreCertificate(newCert, storeName: certStore);
 
                 certUpdated = true;
             }
@@ -148,7 +152,7 @@ namespace Certify.Service
             if (currentCert != null && certUpdated)
             {
                 var deleteCertBinding = "http delete sslcert ipport=0.0.0.0:" + port;
-                var addCertBinding = "http add sslcert ipport=0.0.0.0:" + port + " certhash=" + currentCert.GetCertHashString()+ " appid={af3a0c50-73eb-4159-a36f-82c7c77a2766}";
+                var addCertBinding = "http add sslcert ipport=0.0.0.0:" + port + " certhash=" + currentCert.GetCertHashString() + " appid={af3a0c50-73eb-4159-a36f-82c7c77a2766}";
 
                 var procStartInfo = new ProcessStartInfo("netsh", deleteCertBinding)
                 {

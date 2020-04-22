@@ -39,7 +39,10 @@ namespace Certify.SharedUtils
         /// <returns>  </returns>
         public static ServiceConfig GetAppServiceConfig()
         {
-            var serviceConfig = new ServiceConfig();
+            var serviceConfig = new ServiceConfig
+            {
+                ConfigStatus = ConfigStatus.DefaultFailed
+            };
 
             var appDataPath = GetAppDataFolder();
             var serviceConfigFile = appDataPath + "\\serviceconfig.json";
@@ -55,14 +58,29 @@ namespace Certify.SharedUtils
                     {
                         serviceConfig = JsonConvert.DeserializeObject<ServiceConfig>(config);
                     }
+
+                    serviceConfig.ConfigStatus = ConfigStatus.NotModified;
+                }
+                else
+                {
+                    serviceConfig.ConfigStatus = ConfigStatus.New;
                 }
             }
-            catch { }
+            catch (Exception exp) {
+                if (serviceConfig != null)
+                {
+                    serviceConfig.ConfigStatus = ConfigStatus.DefaultFailed;
+                    serviceConfig.ServiceFaultMsg = $"There was a problem loading the service configuration from {serviceConfigFile} {exp.Message}";
+                }
+            }
 
             // if something went wrong, default to standard config
             if (serviceConfig == null)
             {
-                serviceConfig = new ServiceConfig();
+                serviceConfig = new ServiceConfig()
+                {
+                    ConfigStatus = ConfigStatus.DefaultFailed
+                };
             }
 
             return serviceConfig;
@@ -92,20 +110,5 @@ namespace Certify.SharedUtils
             }
             catch { }
         }
-
-        /// <summary>
-        /// Stored updated config for app service
-        /// </summary>
-        /// <param name="port">  </param>
-        /// <returns>  </returns>
-        public static bool SetAppServicePort(int port)
-        {
-            var config = GetAppServiceConfig();
-            config.Port = port;
-            StoreUpdatedAppServiceConfig(config);
-
-            return true;
-        }
-
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace Certify.Shared
+﻿using Newtonsoft.Json;
+
+namespace Certify.Shared
 {
     public class ServiceConfig
     {
@@ -17,5 +19,16 @@
         public string ServiceFaultMsg { get; set; }
 
         public string PowershellExecutionPolicy { get; set; } = "Unrestricted";
+
+        [JsonIgnore]
+        public ConfigStatus ConfigStatus { get; set; }
+    }
+
+    public enum ConfigStatus
+    {
+        New = 0,
+        NotModified = 1,
+        Updated = 2,
+        DefaultFailed = 4
     }
 }
