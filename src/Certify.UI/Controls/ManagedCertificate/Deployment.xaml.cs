@@ -145,12 +145,78 @@ namespace Certify.UI.Controls.ManagedCertificate
         private void DeleteDeploymentTask_Click(object sender, RoutedEventArgs e)
         {
             var task = (sender as Button).DataContext as DeploymentTaskConfig;
-            
+
             if (MessageBox.Show("Are you sure you wish to delete task '" + task.TaskName + "'?", "Delete Task?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 ItemViewModel.SelectedItem.PreRequestTasks.Remove(task);
                 ItemViewModel.SelectedItem.PostRequestTasks.Remove(task);
             }
+        }
+
+
+        private void TaskStartDrop(object sender, MouseButtonEventArgs e)
+        {
+            var task = (sender as DockPanel).DataContext as DeploymentTaskConfig;
+
+            // Package the data.
+            DataObject data = new DataObject();
+            data.SetData(DataFormats.StringFormat, task.Id);
+
+            // Inititate the drag-and-drop operation.
+            DragDrop.DoDragDrop(this, data, DragDropEffects.Move);
+        }
+
+        private void TaskCompleteDrop(object sender, DragEventArgs e)
+        {
+            DeploymentTaskConfig targetTask = null;
+
+            if (e.OriginalSource is TextBlock)
+            {
+                targetTask = (e.OriginalSource as TextBlock).DataContext as DeploymentTaskConfig;
+            }
+
+            if (e.Data.GetDataPresent(DataFormats.StringFormat))
+            {
+                string context = "PostRequest";
+
+                var droppedTaskId = (string)e.Data.GetData(DataFormats.StringFormat);
+
+                var droppedTask = ItemViewModel.SelectedItem.PostRequestTasks.FirstOrDefault(t => t.Id == droppedTaskId);
+
+                if (droppedTask == null)
+                {
+                    context = "PreRequest";
+                    droppedTask = ItemViewModel.SelectedItem.PreRequestTasks.FirstOrDefault(t => t.Id == droppedTaskId);
+                }
+
+                if (targetTask!=null && droppedTask!=null)
+                {
+                    //get index of target task and insert at that position
+                    if (context == "PostRequest")
+                    {
+                        var targetIndex = ItemViewModel.SelectedItem.PostRequestTasks.IndexOf(targetTask);
+                        if (targetIndex >= 0)
+                        {
+                            ItemViewModel.SelectedItem.PostRequestTasks.Remove(droppedTask);
+                            ItemViewModel.SelectedItem.PostRequestTasks.Insert(targetIndex, droppedTask);
+                        }
+                    } else
+                    {
+                        var targetIndex = ItemViewModel.SelectedItem.PreRequestTasks.IndexOf(targetTask);
+                        if (targetIndex >= 0)
+                        {
+                            ItemViewModel.SelectedItem.PreRequestTasks.Remove(droppedTask);
+                            ItemViewModel.SelectedItem.PreRequestTasks.Insert(targetIndex, droppedTask);
+                        }
+                    }
+                }
+                // re-order task list
+
+                e.Effects = DragDropEffects.Move;
+
+
+            }
+            e.Handled = true;
         }
     }
 }

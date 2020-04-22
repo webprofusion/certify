@@ -17,6 +17,7 @@
     mc:Ignorable="d">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+        <utils:TaskTriggerConverter x:Key="TaskTriggerConverter" />
         <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
         <utils:OptionalBooleanToVisibilityConverter
             x:Key="InvBoolVisConverter"
@@ -268,10 +269,15 @@
                         <ItemsControl
                             x:Name="PostRequestTasks"
                             Margin="0,16,0,0"
+                            AllowDrop="True"
+                            Drop="TaskCompleteDrop"
                             ItemsSource="{Binding SelectedItem.PostRequestTasks}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <DockPanel Margin="4">
+                                    <DockPanel
+                                        Margin="4"
+                                        MouseLeftButtonDown="TaskStartDrop"
+                                        Tag="PostRequest">
                                         <Button
                                             x:Name="RunDeploymentTask"
                                             Height="28"
@@ -327,10 +333,14 @@
 
                                         <StackPanel Margin="0,0,0,0" DockPanel.Dock="Left">
                                             <TextBlock FontWeight="SemiBold" Text="{Binding TaskName}" />
+                                            <TextBlock DockPanel.Dock="Left" Text="{Binding TaskTrigger, Converter={StaticResource TaskTriggerConverter}}" />
                                             <TextBlock
                                                 DockPanel.Dock="Left"
                                                 Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
-                                                Text="{Binding Description}" />
+                                                Text="{Binding Description}"
+                                                TextWrapping="WrapWithOverflow"
+                                                Visibility="Collapsed" />
+
                                         </StackPanel>
                                     </DockPanel>
                                 </DataTemplate>
@@ -362,10 +372,15 @@
                         <ItemsControl
                             x:Name="PreRequestTasks"
                             Margin="0,16,0,0"
+                            AllowDrop="True"
+                            Drop="TaskCompleteDrop"
                             ItemsSource="{Binding SelectedItem.PreRequestTasks}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <DockPanel Margin="4">
+                                    <DockPanel
+                                        Margin="4"
+                                        MouseLeftButtonDown="TaskStartDrop"
+                                        Tag="PreRequest">
                                         <Button
                                             x:Name="RunDeploymentTask"
                                             Height="28"
@@ -406,7 +421,6 @@
                                             Height="28"
                                             Margin="8,0,0,0"
                                             VerticalAlignment="Top"
-                                            AutomationProperties.HelpText="Edit Task"
                                             Click="EditDeploymentTask_Click"
                                             CommandParameter="{Binding}"
                                             DockPanel.Dock="Right">
@@ -422,10 +436,14 @@
 
                                         <StackPanel Margin="0,0,0,0" DockPanel.Dock="Left">
                                             <TextBlock FontWeight="SemiBold" Text="{Binding TaskName}" />
+                                            <TextBlock DockPanel.Dock="Left" Text="{Binding TaskTrigger, Converter={StaticResource TaskTriggerConverter}}" />
                                             <TextBlock
                                                 DockPanel.Dock="Left"
                                                 Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
-                                                Text="{Binding Description}" />
+                                                Text="{Binding Description}"
+                                                TextWrapping="WrapWithOverflow"
+                                                Visibility="Collapsed" />
+
                                         </StackPanel>
                                     </DockPanel>
                                 </DataTemplate>
