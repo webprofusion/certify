@@ -9,7 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="Edit Deployment Task"
     Width="480"
-    Height="440"
+    Height="460"
     BorderThickness="1"
     GlowBrush="{DynamicResource AccentColorBrush}"
     ResizeMode="CanResize"

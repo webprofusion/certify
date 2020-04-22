@@ -29,9 +29,9 @@ namespace Certify.Providers.DeploymentTasks.Core
                 Id = "Certify.Providers.DeploymentTasks.IIS",
                 Title = "Deploy to IIS (Local Machine)",
                 Description = "Deploy certificate to one or more local IIS sites",
-                UsageType = DeploymentProviderUsage.PostRequest,
+                UsageType = DeploymentProviderUsage.Disabled,
                 IsExperimental = true,
-                EnableRemoteOptions = false,
+                SupportedContexts = DeploymentContextType.LocalAsService | DeploymentContextType.LocalAsUser,
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
                 {
 

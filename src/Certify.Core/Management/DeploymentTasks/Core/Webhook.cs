@@ -81,7 +81,7 @@ namespace Certify.Providers.DeploymentTasks.Core
                 Title = "Webhook",
                 IsExperimental = true,
                 Description = "Call a custom webhook on renewal success or failure",
-                EnableRemoteOptions = false,
+                SupportedContexts = DeploymentContextType.LocalAsService,
                 UsageType = DeploymentProviderUsage.Any,
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
                 {

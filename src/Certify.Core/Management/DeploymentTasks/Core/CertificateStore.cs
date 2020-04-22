@@ -108,8 +108,7 @@ namespace Certify.Providers.DeploymentTasks.Core
                 IsExperimental = false,
                 UsageType = DeploymentProviderUsage.PostRequest,
                 Description = "Store certificate in the local Certificate Store",
-                EnableRemoteOptions = false,
-                RequiresCredentials = false,
+                SupportedContexts = DeploymentContextType.LocalAsService | DeploymentContextType.LocalAsUser,
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
                 {
                      new ProviderParameter{ Key="storetype", Name="Store", IsRequired=true, IsCredential=false, OptionsList="default=Default; My=Personal (My); WebHosting=Web Hosting", Value="default"  },

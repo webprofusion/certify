@@ -4,6 +4,7 @@
     {
         public const string STANDARD_ACME_ACCOUNT = "Certify.StandardChallenges.ACME";
         public const string STANDARD_AUTH_LOCAL = "Certify.StandardChallenges.Local";
+        public const string STANDARD_AUTH_LOCAL_AS_USER = "Certify.StandardChallenges.LocalAsUser";
         public const string STANDARD_AUTH_SSH = "Certify.StandardChallenges.SSH";
         public const string STANDARD_AUTH_WINDOWS = "Certify.StandardChallenges.Windows";
         public const string STANDARD_AUTH_GENERIC = "Certify.StandardChallenges.Generic";

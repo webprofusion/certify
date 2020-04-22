@@ -8,6 +8,7 @@ using System.Windows.Data;
 using Certify.Config;
 using Certify.Models;
 using Certify.Models.Config;
+using PropertyChanged;
 
 namespace Certify.UI.ViewModel
 {
@@ -43,12 +44,43 @@ namespace Certify.UI.ViewModel
 
         public ManagedCertificate ParentManagedCertificate => _appViewModel.SelectedItem;
 
-        public Dictionary<string, string> TargetTypes { get; set; } = new Dictionary<string, string>
+        public Dictionary<string, string> TargetTypes
         {
-            { StandardAuthTypes.STANDARD_AUTH_LOCAL,"Local"},
-            { StandardAuthTypes.STANDARD_AUTH_WINDOWS,"Windows (Network)"},
-            { StandardAuthTypes.STANDARD_AUTH_SSH,"SSH (Remote)"}
-        };
+            get
+            {
+
+
+                Dictionary<string, string> list = new Dictionary<string, string>();
+                if (this.DeploymentProvider != null)
+                {
+                    foreach (var t in DeploymentTaskTypes.TargetTypes)
+                    {
+                        if (t.Key == StandardAuthTypes.STANDARD_AUTH_LOCAL && (DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.LocalAsService)))
+                        {
+                            list.Add(t.Key, t.Value);
+                        }
+
+                        if (t.Key == StandardAuthTypes.STANDARD_AUTH_LOCAL_AS_USER && (DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.LocalAsUser)))
+                        {
+                            list.Add(t.Key, t.Value);
+                        }
+
+                        if (t.Key == StandardAuthTypes.STANDARD_AUTH_WINDOWS && (DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.WindowsNetwork)))
+                        {
+                            list.Add(t.Key, t.Value);
+                        }
+
+                        if (t.Key == StandardAuthTypes.STANDARD_AUTH_SSH && (DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.SSH)))
+                        {
+                            list.Add(t.Key, t.Value);
+                        }
+                    }
+                }
+                return list;
+            }
+        }
+
+        public static Dictionary<TaskTriggerType, string> TriggerTypes => DeploymentTaskTypes.TriggerTypes;
 
         public DeploymentTaskConfigViewModel(DeploymentTaskConfig item, bool editAsPostRequestTask)
         {
@@ -67,9 +99,56 @@ namespace Certify.UI.ViewModel
 
         }
 
-        public bool UsesCredentials { get; set; }
+        [DependsOn(nameof(DeploymentProvider))]
+        public bool UsesCredentials
+        {
+            get
+            {
+                if (DeploymentProvider == null)
+                {
+                    return false;
+                }
+                else
+                {
+                    if (SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_LOCAL)
+                    {
+                        return DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.LocalAsUser)
+                         || DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.SSH)
+                         || DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.WindowsNetwork);
 
-        public ObservableCollection<DeploymentProviderDefinition> DeploymentProviders => 
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+
+
+        public bool UsesRemoteOptions
+        {
+            get
+            {
+                if (DeploymentProvider == null)
+                {
+                    return false;
+                }
+                else
+                {
+                    if (SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_LOCAL && SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_LOCAL_AS_USER)
+                    {
+                        return DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.SSH) || DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.WindowsNetwork);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        public ObservableCollection<DeploymentProviderDefinition> DeploymentProviders =>
             new ObservableCollection<DeploymentProviderDefinition>(
                     _appViewModel.DeploymentTaskProviders.Where(p =>
                     p.UsageType == DeploymentProviderUsage.Any
@@ -100,29 +179,27 @@ namespace Certify.UI.ViewModel
             {
                 DeploymentProvider = _appViewModel.DeploymentTaskProviders.First(d => d.Id == SelectedItem.TaskTypeId);
 
-                /*if (resetDefaults)
+                if (resetDefaults)
                 {
                     SelectedItem.TaskName = "";
-                    SelectedItem.Description = "";
-                    SelectedItem.IsDeferred = false;
-                }*/
+                    SelectedItem.TaskTrigger = TaskTriggerType.ANY_STATUS;
+                }
 
                 RefreshParameters();
                 await RefreshCredentialOptions();
 
+
+                // pre-populate task title with a default
                 if (string.IsNullOrEmpty(SelectedItem.TaskName))
                 {
                     SelectedItem.TaskName = DeploymentProvider.DefaultTitle ?? DeploymentProvider.Title;
                 }
 
-                if (string.IsNullOrEmpty(SelectedItem.Description))
-                {
-                    SelectedItem.Description = DeploymentProvider.Description;
-                }
-
                 RaisePropertyChangedEvent(nameof(SelectedItem));
                 RaisePropertyChangedEvent(nameof(EditableParameters));
                 RaisePropertyChangedEvent(nameof(SelectedCredentialItem));
+                RaisePropertyChangedEvent(nameof(UsesCredentials));
+                RaisePropertyChangedEvent(nameof(UsesRemoteOptions));
             }
 
         }
@@ -161,8 +238,15 @@ namespace Certify.UI.ViewModel
         {
             get
             {
-                var cmd = "certify deploy \"" + _appViewModel.SelectedItem.Name + "\" \"" + SelectedItem?.TaskName + "\"";
-                return cmd;
+                if (SelectedItem?.Id != null)
+                {
+                    var cmd = "certify deploy \"" + _appViewModel.SelectedItem.Id + "\" \"" + SelectedItem?.Id + "\"";
+                    return cmd;
+                }
+                else
+                {
+                    return "[Save this task to generate the deployment command]";
+                }
             }
         }
 
@@ -174,15 +258,6 @@ namespace Certify.UI.ViewModel
 
             if (definition != null)
             {
-                if (definition.ProviderParameters.Any(p => p.IsCredential))
-                {
-                    UsesCredentials = true;
-                }
-                else
-                {
-                    UsesCredentials = false;
-                }
-
                 // our provider parameters are stored in config as a key value pair, but edited as an intermediate provider parameter with full metadata
 
                 var providerParams = definition.ProviderParameters.Where(p => p.IsCredential == false).ToList();
@@ -253,11 +328,19 @@ namespace Certify.UI.ViewModel
             // if remote target, check target specified. TODO: Could also check host resolves.
             if (!string.IsNullOrEmpty(SelectedItem.ChallengeProvider)
                 && SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_LOCAL
+                && SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_LOCAL_AS_USER
                 && string.IsNullOrEmpty(SelectedItem.TargetHost)
                 )
             {
                 // check task name populated
                 return new ActionResult("Target Host name or IP is required if deployment target is not Local.", false);
+            }
+
+            // if target type requires a credential selection check that's been provided
+
+            if (UsesCredentials && string.IsNullOrEmpty(SelectedItem.ChallengeCredentialKey))
+            {
+                return new ActionResult("The selected target type requires specific credentials.", false);
             }
 
             // validate task provider specific config

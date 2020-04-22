@@ -76,7 +76,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             // user has selected a task type from the list view of different task providers
             EditModel.SelectedItem.TaskTypeId = ((sender as Button).DataContext as DeploymentProviderDefinition).Id;
 
-            await RefreshEditModelOptions(true);
+            await RefreshEditModelOptions();
 
             EditModel.RaisePropertyChangedEvent("SelectedItem");
         }
@@ -129,7 +129,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private async void TargetType_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            await RefreshEditModelOptions(true);
+            await RefreshEditModelOptions();
         }
 
 
@@ -183,11 +183,11 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 if (copiedOK)
                 {
-                    MessageBox.Show("Deployment Task command has been copied to the clipboard.");
+                    (App.Current as App).ShowNotification("Deployment Task command has been copied to the clipboard.");
                 }
                 else
                 {
-                    MessageBox.Show("Another process is preventing access to the clipboard. Please try again.");
+                    (App.Current as App).ShowNotification("Deployment Task command has been copied to the clipboard.", App.NotificationType.Warning);
                 }
             }
         }

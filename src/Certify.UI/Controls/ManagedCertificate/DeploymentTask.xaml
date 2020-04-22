@@ -196,6 +196,8 @@
                             </Style>
                         </DockPanel.Style>
 
+
+                        <!--  Task Type Selection  -->
                         <StackPanel
                             Margin="0,8,0,0"
                             DockPanel.Dock="Top"
@@ -214,6 +216,7 @@
 
                         </StackPanel>
 
+                        <!--  Task Type Info  -->
                         <TextBlock
                             x:Name="ProviderDescription"
                             Margin="8,8,8,0"
@@ -237,7 +240,7 @@
                                 Text="{Binding SelectedItem.TaskName, UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
 
-
+                        <!--  Task Description  -->
 
                         <StackPanel
                             Margin="0,8,0,0"
@@ -257,38 +260,62 @@
                                 VerticalScrollBarVisibility="Auto" />
                         </StackPanel>
 
+                        <!--  Task Trigger  -->
                         <StackPanel
                             Margin="0,8,0,0"
                             DockPanel.Dock="Top"
-                            Orientation="Vertical">
+                            Orientation="Horizontal">
+                            <Label Width="100" Content="Trigger" />
+                            <ComboBox
+                                x:Name="TaskTrigger"
+                                Width="225"
+                                Margin="0,0,8,0"
+                                DisplayMemberPath="Value"
+                                ItemsSource="{Binding TriggerTypes}"
+                                SelectedValue="{Binding SelectedItem.TaskTrigger}"
+                                SelectedValuePath="Key" />
+
+                        </StackPanel>
+                        <StackPanel Margin="100,8,0,0" DockPanel.Dock="Top">
+                            <CheckBox Content="Run task even if previous task step failed" IsChecked="{Binding SelectedItem.RunIfLastStepFailed}" />
+                        </StackPanel>
+
+                        <!--  Deferred/Manual Task  -->
+
+                        <StackPanel
+                            x:Name="DeferredInstructionsContainer"
+                            Margin="0,8"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            MouseUp="DeferredInstructions1_MouseUp"
+                            Orientation="Vertical"
+                            ToolTip="Click to copy to clipboard">
+                            <StackPanel.Style>
+                                <Style>
+                                    <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedItem.TaskTrigger}" Value="8">
+                                            <Setter Property="UIElement.Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+
+                            <TextBlock Style="{StaticResource Instructions}" TextWrapping="WrapWithOverflow">
+                                Manually triggered tasks only run when you tell them to using the Deployment UI or via the command line (e.g. in a custom scheduled task). This is useful for tasks which should only happen during a maintenance window.
+                            </TextBlock>
+
                             <StackPanel Orientation="Horizontal">
-                                <Label Width="100" Content="Defer Task" />
-                                <CheckBox IsChecked="{Binding SelectedItem.IsDeferred}" />
-                            </StackPanel>
 
-                            <StackPanel
-                                x:Name="DeferredInstructions1"
-                                HorizontalAlignment="Left"
-                                VerticalAlignment="Top"
-                                MouseUp="DeferredInstructions1_MouseUp"
-                                Orientation="Vertical"
-                                ToolTip="Click to copy to clipboard">
-                                <StackPanel.Style>
-                                    <Style>
-                                        <Setter Property="UIElement.Visibility" Value="Collapsed" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SelectedItem.IsDeferred}" Value="True">
-                                                <Setter Property="UIElement.Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
 
-                                <Label
+                                <TextBox
+                                    x:Name="DeferredInstructions"
+                                    Width="380"
+                                    Margin="0,0,0,0"
                                     HorizontalAlignment="Left"
-                                    Content="Deployment Task CLI Command:"
-                                    FontWeight="Bold" />
-
+                                    IsReadOnly="True"
+                                    Text="{Binding CLICommand, Mode=OneWay}"
+                                    TextWrapping="Wrap" />
                                 <fa:FontAwesome
                                     Width="16"
                                     Height="16"
@@ -296,19 +323,8 @@
                                     HorizontalAlignment="Left"
                                     Icon="Copy" />
 
-                                <TextBlock
-                                    x:Name="DeferredInstructions"
-                                    Margin="16,0,0,0"
-                                    HorizontalAlignment="Left"
-                                    Style="{StaticResource Instructions}"
-                                    Text="{Binding CLICommand}"
-                                    TextWrapping="Wrap" />
-
-
                             </StackPanel>
                         </StackPanel>
-
-
                     </DockPanel>
                 </TabItem>
                 <TabItem
@@ -318,71 +334,48 @@
 
                     <DockPanel Margin="8,0,0,0" LastChildFill="False">
 
+                        <!--  target type  -->
+                        <StackPanel
+                            Margin="0,8,0,0"
+                            DockPanel.Dock="Top"
+                            Orientation="Horizontal">
+                            <Label Width="160" Content="Target Type" />
 
-                        <!--  Options related to Remote Config  -->
-                        <StackPanel DockPanel.Dock="Top">
-                            <StackPanel.Style>
-                                <Style>
-                                    <Setter Property="UIElement.Visibility" Value="Visible" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding DeploymentProvider.EnableRemoteOptions}" Value="False">
-                                            <Setter Property="UIElement.Visibility" Value="Collapsed" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </StackPanel.Style>
-                            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
-                                <Label Width="160" Content="Target Type" />
-
-                                <ComboBox
-                                    x:Name="TargetType"
-                                    Width="225"
-                                    Margin="0,0,8,0"
-                                    DisplayMemberPath="Value"
-                                    ItemsSource="{Binding TargetTypes}"
-                                    SelectedValue="{Binding SelectedItem.ChallengeProvider}"
-                                    SelectedValuePath="Key"
-                                    SelectionChanged="TargetType_SelectionChanged" />
-                            </StackPanel>
-
-                            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
-                                <StackPanel.Style>
-                                    <Style>
-                                        <Setter Property="UIElement.Visibility" Value="Visible" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SelectedItem.ChallengeProvider}" Value="Certify.StandardChallenges.Local">
-                                                <Setter Property="UIElement.Visibility" Value="Collapsed" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
-                                <Label Width="160" Content="Target Host or IP" />
-
-                                <TextBox
-                                    x:Name="TargetHost"
-                                    Width="225"
-                                    Margin="0,0,8,0"
-                                    Controls:TextBoxHelper.Watermark="IP or hostname to connect to"
-                                    Text="{Binding SelectedItem.TargetHost, UpdateSourceTrigger=PropertyChanged}" />
-                            </StackPanel>
+                            <ComboBox
+                                x:Name="TargetType"
+                                Width="225"
+                                Margin="0,0,8,0"
+                                DisplayMemberPath="Value"
+                                ItemsSource="{Binding TargetTypes}"
+                                SelectedValue="{Binding SelectedItem.ChallengeProvider}"
+                                SelectedValuePath="Key"
+                                SelectionChanged="TargetType_SelectionChanged" />
                         </StackPanel>
 
+
+                        <!--  remote host  -->
+                        <StackPanel
+                            Margin="0,8,0,0"
+                            DockPanel.Dock="Top"
+                            Orientation="Horizontal"
+                            Visibility="{Binding UsesRemoteOptions, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+
+                            <Label Width="160" Content="Target Host or IP" />
+
+                            <TextBox
+                                x:Name="TargetHost"
+                                Width="225"
+                                Margin="0,0,8,0"
+                                Controls:TextBoxHelper.Watermark="IP or hostname to connect to"
+                                Text="{Binding SelectedItem.TargetHost, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
 
 
                         <StackPanel
                             x:Name="ProviderCredentials"
                             DockPanel.Dock="Top"
-                            Orientation="Vertical">
-                            <StackPanel.Style>
-                                <Style>
-                                    <Setter Property="UIElement.Visibility" Value="Collapsed" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding UsesCredentials}" Value="True">
-                                            <Setter Property="UIElement.Visibility" Value="Visible" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </StackPanel.Style>
+                            Orientation="Vertical"
+                            Visibility="{Binding UsesCredentials, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
 
                             <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
                                 <Label Width="160" Content="Credentials" />

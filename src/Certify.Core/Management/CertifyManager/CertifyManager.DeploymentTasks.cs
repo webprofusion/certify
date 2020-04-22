@@ -54,7 +54,7 @@ namespace Certify.Management
                 return new List<ActionStep> { new ActionStep { HasError = false, Description = "No matching tasks to perform." } };
             }
 
-            return await PerformTaskList(log, isPreviewOnly, skipDeferredTasks, new CertificateRequestResult { ManagedItem= managedCert, IsSuccess=true }, taskList);
+            return await PerformTaskList(log, isPreviewOnly, skipDeferredTasks, new CertificateRequestResult { ManagedItem = managedCert, IsSuccess = true }, taskList);
         }
 
         private async Task<List<ActionStep>> PerformTaskList(ILog log, bool isPreviewOnly, bool skipDeferredTasks, CertificateRequestResult result, IEnumerable<DeploymentTaskConfig> taskList)
@@ -77,9 +77,9 @@ namespace Certify.Management
 
             foreach (var taskConfig in taskList)
             {
-                // add task to execution list unless the task is deferred and we are currently skipping deferred tasks
+                // add task to execution list unless the task is deferred/manual and we are currently skipping deferred tasks
 
-                if (!taskConfig.IsDeferred || (taskConfig.IsDeferred && !skipDeferredTasks))
+                if (taskConfig.TaskTrigger != TaskTriggerType.MANUAL || (taskConfig.TaskTrigger == TaskTriggerType.MANUAL && !skipDeferredTasks))
                 {
                     try
                     {
@@ -156,16 +156,23 @@ namespace Certify.Management
                         }
 
                     }
-
-                    if (task.TaskConfig.IsDeferred && skipDeferredTasks)
+                    else if (task.TaskConfig.TaskTrigger == TaskTriggerType.MANUAL)
                     {
-                        shouldRunCurrentTask = false;
-                        taskTriggerReason = "Task is enabled but will not run because execution is deferred.";
+
+                        if (!skipDeferredTasks)
+                        {
+                            shouldRunCurrentTask = false;
+                            taskTriggerReason = "Task is enabled but will not run because execution is deferred/manual.";
+                        }
+                        else
+                        {
+                            shouldRunCurrentTask = true;
+                            taskTriggerReason = "Task is enabled and will run because deferred/manual tasks are not being skipped.";
+                        }
                     }
                 }
 
-
-                List<ActionResult> taskResults = new List<ActionResult>();
+                var taskResults = new List<ActionResult>();
 
                 if (shouldRunCurrentTask)
                 {

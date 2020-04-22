@@ -21,6 +21,7 @@ namespace Certify.Providers.DeploymentTasks.Core
                 Title = "Mock Task",
                 IsExperimental = true,
                 UsageType = DeploymentProviderUsage.Any,
+                SupportedContexts = DeploymentContextType.LocalAsService,
                 Description = "Used to test task execution success, failure and logging",
                 ProviderParameters = new List<ProviderParameter>
                 {

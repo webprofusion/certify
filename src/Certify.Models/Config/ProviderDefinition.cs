@@ -13,13 +13,6 @@ namespace Certify.Models.Config
         POWERSHELL = 6
     }
 
-    public enum TaskPreconditionType
-    {
-        None = 0, // run task whether step was success or failure
-        OnSuccess = 1, // run task only if last step was success
-        OnFailure = 2, // run task only if last step was failure
-    }
-
     public class ProviderDefinition
     {
         public string Id { get; set; }
@@ -53,36 +46,34 @@ namespace Certify.Models.Config
     {
         Any = 0,
         PreRequest = 1,
-        PostRequest = 2
+        PostRequest = 2,
+        Disabled = 8
+    }
+
+    [Flags]
+    public enum DeploymentContextType
+    {
+        LocalAsService = 0,
+        LocalAsUser = 2,
+        WindowsNetwork = 4,
+        SSH = 8
     }
 
     public class DeploymentProviderDefinition : ProviderDefinition
     {
-
-        /// <summary>
-        /// If true, task requires either windows or SSH credentials depending on whether deployment target is local, remote windows or ssh
-        /// </summary>
-        public bool RequiresCredentials { get; set; }
-
-        /// <summary>
-        /// If true, deployment task supports remote target (scripts, commands, file copies etc)
-        /// </summary>
-        public bool EnableRemoteOptions { get; set; } = true;
-
         /// <summary>
         /// Default title for a new task of this type
         /// </summary>
         public string DefaultTitle { get; set; }
-
-        /// <summary>
-        /// Defines whether task will condition based on preconditions
-        /// </summary>
-        public TaskPreconditionType PreconditionType { get; set; } = TaskPreconditionType.OnSuccess;
         
         /// <summary>
         /// Flags for allowed usage types
         /// </summary>
         public DeploymentProviderUsage UsageType {get;set;} = DeploymentProviderUsage.Any;
 
+        /// <summary>
+        /// Flags for supported execution context (local, local as user, windows network, remote ssh)
+        /// </summary>
+        public DeploymentContextType SupportedContexts { get; set; } = DeploymentContextType.LocalAsService;
     }
 }
