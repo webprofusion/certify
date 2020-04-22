@@ -10,6 +10,9 @@ namespace Certify.Service.Controllers
     {
         protected override bool IsAuthorized(HttpActionContext actionContext)
         {
+#if DEBUG_NO_AUTH
+    return true;
+#endif
             var user = actionContext.RequestContext.Principal as System.Security.Principal.WindowsPrincipal;
             if (user.IsInRole(WindowsBuiltInRole.Administrator))
             {
