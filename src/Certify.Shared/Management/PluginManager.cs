@@ -42,28 +42,36 @@ namespace Certify.Management
             {
                 var pluginPath = GetPluginFolderPath() + "\\" + dllFileName;
 
-                // https://stackoverflow.com/questions/10732933/can-i-use-activator-createinstance-with-an-interface
-                var loadedType = (from t in Assembly.LoadFrom(pluginPath).GetExportedTypes()
-                                  where !t.IsInterface && !t.IsAbstract
-                                  where interfaceType.IsAssignableFrom(t)
-                                  select t)
-                                     .FirstOrDefault();
+                if (File.Exists(pluginPath))
+                {
+                    // https://stackoverflow.com/questions/10732933/can-i-use-activator-createinstance-with-an-interface
+                    var loadedType = (from t in Assembly.LoadFrom(pluginPath).GetExportedTypes()
+                                      where !t.IsInterface && !t.IsAbstract
+                                      where interfaceType.IsAssignableFrom(t)
+                                      select t)
+                                         .FirstOrDefault();
 
-                var obj = (T)Activator.CreateInstance(loadedType);
+                    var obj = (T)Activator.CreateInstance(loadedType);
 
-                return obj;
+                    return obj;
+                }
+                else
+                {
+                    _log?.Warning($"Plugin Load Failed [{interfaceType}] File does not exist: {dllFileName}");
+                }
             }
             catch (Exception exp)
             {
                 _log?.Error(exp.ToString());
             }
+
             return default(T);
         }
 
         public void LoadPlugins(List<string> includeSet)
         {
             var s = Stopwatch.StartNew();
-            
+
             if (includeSet.Contains("Licensing"))
             {
                 LicensingManager = LoadPlugin<ILicensingManager>("Licensing.dll", typeof(ILicensingManager)) as ILicensingManager;
