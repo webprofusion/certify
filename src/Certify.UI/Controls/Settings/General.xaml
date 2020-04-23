@@ -56,7 +56,7 @@
                         Margin="4,0,0,0"
                         Content="{x:Static res:SR.Settings_AutoRenewalInterval}" />
                 </StackPanel>
-                <StackPanel Margin="0,8,0,8" Orientation="Horizontal">
+                <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
                     <Controls:NumericUpDown
                         x:Name="RenewalMaxRequests"
                         Width="100"
@@ -161,7 +161,7 @@
 
             </StackPanel>
 
-            <StackPanel Margin="0,16" DockPanel.Dock="Top">
+            <StackPanel Margin="8,16" DockPanel.Dock="Top">
                 <TextBlock Style="{StaticResource Subheading}">UI Settings</TextBlock>
                 <StackPanel Margin="0,8">
                     <CheckBox

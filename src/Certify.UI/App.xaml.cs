@@ -119,6 +119,8 @@ namespace Certify.UI
         {
             var opts = new ToastNotifications.Core.MessageOptions { ShowCloseButton = false };
 
+            opts.FontSize = 12 * MainViewModel.UIScaleFactor;
+
             if (type == NotificationType.Error)
             {
                 _notifier.ShowError(msg, opts);
