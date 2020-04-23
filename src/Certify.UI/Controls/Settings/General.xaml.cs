@@ -22,6 +22,7 @@ namespace Certify.UI.Controls.Settings
         public General()
         {
             InitializeComponent();
+
         }
 
         private void LoadCurrentSettings()
@@ -69,6 +70,8 @@ namespace Certify.UI.Controls.Settings
 
             RenewalIntervalDays.Value = _prefs.RenewalIntervalDays;
             RenewalMaxRequests.Value = _prefs.MaxRenewalRequests;
+
+            this.ThemeSelector.SelectedValue = MainViewModel.UISettings?.UITheme ?? "Light";
 
             DataContext = MainViewModel;
 
@@ -159,24 +162,23 @@ namespace Certify.UI.Controls.Settings
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e) => LoadCurrentSettings();
 
-        private void ToggleTheme_Click(object sender, RoutedEventArgs e)
+        private void ThemeSelector_Selected(object sender, RoutedEventArgs e)
         {
+            var theme = (sender as ComboBox).SelectedValue?.ToString();
 
-            var uiTheme = ((Certify.UI.App)App.Current).ToggleTheme();
-
-            var uiSettings = UI.Settings.UISettings.Load();
-
-            if (uiSettings == null)
+            if (theme!=null)
             {
-                uiSettings = new UI.Settings.UISettings();
+                ((Certify.UI.App)App.Current).ToggleTheme(theme);
+
+                if (MainViewModel.UISettings == null)
+                {
+                    MainViewModel.UISettings = new UI.Settings.UISettings();
+                }
+
+                MainViewModel.UISettings.UITheme = theme;
+                UI.Settings.UISettings.Save(MainViewModel.UISettings);
             }
-
-            uiSettings.UITheme = uiTheme;
-            UI.Settings.UISettings.Save(uiSettings);
-
+         
         }
-
-
-
     }
 }

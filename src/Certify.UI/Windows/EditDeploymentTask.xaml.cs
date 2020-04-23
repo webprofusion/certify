@@ -20,10 +20,17 @@ namespace Certify.UI.Windows
     /// </summary>
     public partial class EditDeploymentTask
     {
-  
+
+        protected Certify.UI.ViewModel.AppViewModel AppViewModel => UI.ViewModel.AppViewModel.Current;
+
         public EditDeploymentTask(DeploymentTaskConfig config, bool editAsPostRequestTask)
         {
             InitializeComponent();
+
+            this.DataContext = AppViewModel;
+
+            this.Width *= AppViewModel.UIScaleFactor;
+            this.Height *= AppViewModel.UIScaleFactor;
 
             DeploymentTaskEditor.SetEditItem(config, editAsPostRequestTask); 
         }

@@ -9,6 +9,9 @@ namespace Certify.UI.Windows
 {
     public class EditCredentialViewModel : Models.BindableBase
     {
+
+        public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
+
         public ObservableCollection<ProviderParameter> CredentialSet { get; set; }
         public StoredCredential Item { get; set; }
         public List<ChallengeProviderDefinition> ChallengeProviders { get; set; }
@@ -44,6 +47,9 @@ namespace Certify.UI.Windows
         public EditCredential(StoredCredential editItem = null)
         {
             InitializeComponent();
+            this.Width *= MainViewModel.UIScaleFactor;
+            this.Height *= MainViewModel.UIScaleFactor;
+
 
             DataContext = EditViewModel;
 

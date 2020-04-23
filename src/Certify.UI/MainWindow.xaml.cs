@@ -147,17 +147,23 @@ namespace Certify.UI
 
             if (uiSettings != null)
             {
-                Width = uiSettings.Width;
-                Height = uiSettings.Height;
-                Left = uiSettings.Left;
-                Top = uiSettings.Top;
-
+                Width = uiSettings.Width ?? Width;
+                Height = uiSettings.Height ?? Height;
+                Left = uiSettings.Left ?? Left;
+                Top = uiSettings.Top ?? Top;
 
                 // set theme based on pref
                 if (uiSettings.UITheme != null)
                 {
                     ((Certify.UI.App)App.Current).ToggleTheme(uiSettings.UITheme);
                 }
+
+                if (uiSettings.Scaling > 0.5 && uiSettings.Scaling < 2)
+                {
+                    _appViewModel.UIScaleFactor = uiSettings.Scaling ?? 1;
+                }
+
+                _appViewModel.UISettings = uiSettings;
             }
 
             await PerformAppStartupChecks();
@@ -362,19 +368,18 @@ namespace Certify.UI
                 e.Cancel = true;
             }
 
-            var uiSettings = UISettings.Load();
-
-            if (uiSettings == null)
+            if (_appViewModel.UISettings == null)
             {
-                uiSettings = new UISettings();
+                _appViewModel.UISettings = new UISettings();
             }
 
-            uiSettings.Width = Width;
-            uiSettings.Height = Height;
-            uiSettings.Left = Left;
-            uiSettings.Top = Top;
+            _appViewModel.UISettings.Width = Width;
+            _appViewModel.UISettings.Height = Height;
+            _appViewModel.UISettings.Left = Left;
+            _appViewModel.UISettings.Top = Top;
+            _appViewModel.UISettings.Scaling = _appViewModel.UIScaleFactor;
 
-            UISettings.Save(uiSettings);
+            UISettings.Save(_appViewModel.UISettings);
         }
     }
 }

@@ -36,6 +36,7 @@
 
 
         <StackPanel Margin="8,8,10,0" Orientation="Vertical">
+            <TextBlock Style="{StaticResource Subheading}">Renewal Settings</TextBlock>
             <StackPanel Margin="0,8" Orientation="Horizontal">
                 <Controls:NumericUpDown
                     x:Name="RenewalIntervalDays"
@@ -65,12 +66,6 @@
             <DockPanel>
                 <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
 
-                    <CheckBox
-                        x:Name="EnableTelematicsCheckbox"
-                        Margin="0,4,0,0"
-                        Checked="SettingsUpdated"
-                        Content="{x:Static res:SR.Settings_EnableTelemetry}"
-                        Unchecked="SettingsUpdated" />
 
                     <CheckBox
                         x:Name="EnableProxyAPICheckbox"
@@ -159,15 +154,43 @@
             </DockPanel>
 
         </StackPanel>
-        <StackPanel Orientation="Horizontal">
-            <Button
-                x:Name="ToggleTheme"
-                Height="32"
-                Margin="8,8,0,5"
-                Click="ToggleTheme_Click">
-                Switch UI Theme
-            </Button>
+
+        <StackPanel Margin="0,16">
+            <TextBlock Style="{StaticResource Subheading}">UI Settings</TextBlock>
+            <StackPanel Margin="0,8">
+                <CheckBox
+                    x:Name="EnableTelematicsCheckbox"
+                    Checked="SettingsUpdated"
+                    Content="{x:Static res:SR.Settings_EnableTelemetry}"
+                    Unchecked="SettingsUpdated" />
+
+            </StackPanel>
+            <StackPanel Margin="0,8" Orientation="Horizontal">
+                <Label Width="100" Content="UI Theme" />
+                <ComboBox
+                    x:Name="ThemeSelector"
+                    DisplayMemberPath="Value"
+                    ItemsSource="{Binding UIThemes}"
+                    SelectedValuePath="Key"
+                    SelectionChanged="ThemeSelector_Selected" />
+
+            </StackPanel>
+
+            <StackPanel Margin="0,4" Orientation="Horizontal">
+                <Label Width="100" Content="Text/UI Size" />
+                <Controls:NumericUpDown
+                    x:Name="UIScaling"
+                    Width="100"
+                    HasDecimals="True"
+                    Interval="0.1"
+                    Maximum="2"
+                    Minimum="1"
+                    Value="{Binding UIScaleFactor}" />
+
+            </StackPanel>
         </StackPanel>
+
+
 
     </StackPanel>
 

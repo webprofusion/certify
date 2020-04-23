@@ -38,13 +38,9 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!--<Grid.LayoutTransform>
-            <ScaleTransform x:Name="ApplicationScaleTransform"
-                        CenterX="0"
-                        CenterY="0"
-                        ScaleX="1.6"
-                        ScaleY="1.6" />
-        </Grid.LayoutTransform>-->
+        <Grid.LayoutTransform>
+            <ScaleTransform x:Name="ApplicationScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding UIScaleFactor}" ScaleY="{Binding UIScaleFactor}" />
+        </Grid.LayoutTransform>
 
         <StackPanel
             Grid.Row="0"

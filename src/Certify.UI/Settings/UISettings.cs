@@ -2,17 +2,19 @@
 
 namespace Certify.UI.Settings
 {
-    internal class UISettings
+    public class UISettings
     {
         private const string SETTINGS_FILE = "ui.json";
 
-        public double Width { get; set; }
-        public double Height { get; set; }
+        public double? Width { get; set; }
+        public double? Height { get; set; }
 
-        public double Left { get; set; }
-        public double Top { get; set; }
+        public double? Left { get; set; }
+        public double? Top { get; set; }
 
         public string UITheme { get; set; }
+
+        public double? Scaling { get; set; } = 1;
 
         public static UISettings Load()
         {

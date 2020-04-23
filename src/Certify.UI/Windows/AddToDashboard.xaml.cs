@@ -9,9 +9,16 @@ namespace Certify.UI.Windows
     /// </summary>
     public partial class AddToDashboard
     {
+        protected Certify.UI.ViewModel.AppViewModel AppViewModel => UI.ViewModel.AppViewModel.Current;
+
         public AddToDashboard()
         {
             InitializeComponent();
+
+            this.DataContext = AppViewModel;
+
+            this.Width *= AppViewModel.UIScaleFactor;
+            this.Height *= AppViewModel.UIScaleFactor;
         }
 
         private async void ValidateKey_Click(object sender, RoutedEventArgs e)

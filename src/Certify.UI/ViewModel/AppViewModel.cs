@@ -15,6 +15,7 @@ using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Models.Utils;
 using Certify.Shared;
+using Certify.UI.Settings;
 using PropertyChanged;
 using Serilog;
 
@@ -80,6 +81,16 @@ namespace Certify.UI.ViewModel
         public bool IsServiceAvailable { get; set; } = false;
         public bool IsLoading { get; set; } = true;
         public bool IsUpdateInProgress { get; set; } = false;
+
+        public double UIScaleFactor { get; set; } = 1;
+
+        public Dictionary<string, string> UIThemes { get; } = new Dictionary<string, string>
+        {
+              {"Light","Light Theme"},
+              {"Dark","Dark Theme" }
+        };
+
+        public UISettings UISettings { get; set; }
 
         public void RaiseError(Exception exp)
         {

@@ -16,7 +16,7 @@ namespace Certify.UI.Windows
     {
         public ContactRegistration Item { get; set; }
 
-        protected Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
+        public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
 
         public IEnumerable<CertificateAuthority> CertificateAuthorities => MainViewModel.CertificateAuthorities;
 
@@ -27,6 +27,9 @@ namespace Certify.UI.Windows
             Item = new ContactRegistration();
 
             DataContext = this;
+
+            this.Width *= MainViewModel.UIScaleFactor;
+            this.Height *= MainViewModel.UIScaleFactor;
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
