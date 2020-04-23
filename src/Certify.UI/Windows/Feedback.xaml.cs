@@ -13,11 +13,16 @@ namespace Certify.UI.Windows
         public string FeedbackMessage { get; set; }
         public bool IsException { get; set; }
 
-        protected Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
+        public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
 
         public Feedback(string feedbackMsg, bool isException)
         {
             InitializeComponent();
+
+            this.DataContext = MainViewModel;
+
+            this.Width *= MainViewModel.UIScaleFactor;
+            this.Height *= MainViewModel.UIScaleFactor;
 
             if (feedbackMsg != null)
             {

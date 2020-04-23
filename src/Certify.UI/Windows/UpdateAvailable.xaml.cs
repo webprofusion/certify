@@ -14,6 +14,11 @@ namespace Certify.UI.Windows
         {
             InitializeComponent();
 
+            this.DataContext = MainViewModel;
+
+            this.Width *= MainViewModel.UIScaleFactor;
+            this.Height *= MainViewModel.UIScaleFactor;
+
             var _markdownPipelineBuilder = new Markdig.MarkdownPipelineBuilder();
             _markdownPipelineBuilder.Extensions.Add(new Markdig.Extensions.Tables.PipeTableExtension());
             _markdownPipeline = _markdownPipelineBuilder.Build();

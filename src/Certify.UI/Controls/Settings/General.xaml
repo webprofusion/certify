@@ -15,184 +15,190 @@
     Loaded="UserControl_Loaded"
     mc:Ignorable="d">
 
-    <StackPanel Margin="0,8,0,8" Orientation="Vertical">
-        <Button
-            Name="ConfigureAutoRenew"
-            Width="160"
-            Height="32"
-            Margin="8,0,0,5"
-            HorizontalAlignment="Left"
-            Click="Button_ScheduledTaskConfig">
-            <StackPanel Orientation="Horizontal">
-                <fa:ImageAwesome
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Foreground="{DynamicResource AccentColorBrush3}"
-                    Icon="Calendar" />
-                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Configure_Auto_Renew}" /></TextBlock>
-            </StackPanel>
-        </Button>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <DockPanel Margin="0,8,0,8">
 
 
+            <StackPanel
+                Margin="8,8,10,0"
+                DockPanel.Dock="Top"
+                Orientation="Vertical">
+                <TextBlock Style="{StaticResource Subheading}">Renewal Settings</TextBlock>
 
-        <StackPanel Margin="8,8,10,0" Orientation="Vertical">
-            <TextBlock Style="{StaticResource Subheading}">Renewal Settings</TextBlock>
-            <StackPanel Margin="0,8" Orientation="Horizontal">
-                <Controls:NumericUpDown
-                    x:Name="RenewalIntervalDays"
-                    Width="100"
-                    Interval="1"
-                    Maximum="60"
-                    Minimum="1"
-                    ValueChanged="RenewalIntervalDays_ValueChanged" />
-                <Label
-                    Width="340"
-                    Margin="4,0,0,0"
-                    Content="{x:Static res:SR.Settings_AutoRenewalInterval}" />
-            </StackPanel>
-            <StackPanel Margin="0,8,0,8" Orientation="Horizontal">
-                <Controls:NumericUpDown
-                    x:Name="RenewalMaxRequests"
-                    Width="100"
-                    Interval="1"
-                    Maximum="100"
-                    Minimum="0"
-                    ValueChanged="RenewalMaxRequests_ValueChanged" />
-                <Label
-                    Width="340"
-                    Margin="4,0,0,0"
-                    Content="{x:Static res:SR.Settings_AutoRenewalRequestLimit}" />
-            </StackPanel>
-            <DockPanel>
-                <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
+                <Button
+                    Name="ConfigureAutoRenew"
+                    Width="160"
+                    Height="32"
+                    Margin="8,0,0,5"
+                    HorizontalAlignment="Left"
+                    Click="Button_ScheduledTaskConfig">
+                    <StackPanel Orientation="Horizontal">
+                        <fa:ImageAwesome
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource AccentColorBrush3}"
+                            Icon="Calendar" />
+                        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Configure_Auto_Renew}" /></TextBlock>
+                    </StackPanel>
+                </Button>
 
 
-                    <CheckBox
-                        x:Name="EnableProxyAPICheckbox"
-                        Margin="0,4,0,0"
-                        Checked="SettingsUpdated"
-                        Content="{x:Static res:SR.Settings_EnableProxyApiForDomainConfig}"
-                        Unchecked="SettingsUpdated" />
-
-                    <CheckBox
-                        x:Name="EnableEFS"
-                        Margin="0,4,0,0"
-                        Checked="SettingsUpdated"
-                        Content="{x:Static res:SR.Settings_EnableEFS}"
-                        Unchecked="SettingsUpdated"
-                        Visibility="Collapsed" />
-
-                    <CheckBox
-                        x:Name="IgnoreStoppedSites"
-                        Margin="0,4,0,0"
-                        Checked="SettingsUpdated"
-                        Content="{x:Static res:SR.Settings_IgnoreStoppedSites}"
-                        Unchecked="SettingsUpdated" />
-
-                    <CheckBox
-                        x:Name="EnableDNSValidationChecks"
-                        Margin="0,4,0,0"
-                        Checked="SettingsUpdated"
-                        Content="{x:Static res:SR.Settings_EnableDnsValidation}"
-                        Unchecked="SettingsUpdated" />
-
-                    <CheckBox
-                        x:Name="EnableHttpChallengeServer"
-                        Margin="0,4,0,0"
-                        Checked="SettingsUpdated"
-                        Content="{x:Static res:SR.Settings_EnableHttpChallengeServer}"
-                        Unchecked="SettingsUpdated" />
-
-                    <CheckBox
-                        x:Name="EnableStatusReporting"
-                        Margin="0,4,0,0"
-                        Checked="SettingsUpdated"
-                        Content="{x:Static res:SR.Settings_EnableStatusReporting}"
-                        Unchecked="SettingsUpdated" />
-
+                <StackPanel Margin="0,8" Orientation="Horizontal">
+                    <Controls:NumericUpDown
+                        x:Name="RenewalIntervalDays"
+                        Width="100"
+                        Interval="1"
+                        Maximum="60"
+                        Minimum="1"
+                        ValueChanged="RenewalIntervalDays_ValueChanged" />
+                    <Label
+                        Width="340"
+                        Margin="4,0,0,0"
+                        Content="{x:Static res:SR.Settings_AutoRenewalInterval}" />
                 </StackPanel>
+                <StackPanel Margin="0,8,0,8" Orientation="Horizontal">
+                    <Controls:NumericUpDown
+                        x:Name="RenewalMaxRequests"
+                        Width="100"
+                        Interval="1"
+                        Maximum="100"
+                        Minimum="0"
+                        ValueChanged="RenewalMaxRequests_ValueChanged" />
+                    <Label
+                        Width="340"
+                        Margin="4,0,0,0"
+                        Content="{x:Static res:SR.Settings_AutoRenewalRequestLimit}" />
+                </StackPanel>
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
 
-                <!--  Cert Cleanup Options  -->
-                <StackPanel
-                    Margin="32,0,0,0"
-                    DockPanel.Dock="Right"
-                    Orientation="Vertical">
-                    <Label Content="Certificate Store Cleanup:" />
-                    <StackPanel Margin="16,0,0,0">
-                        <RadioButton
-                            x:Name="CertCleanup_None"
-                            Margin="8,0,0,4"
+
+                        <CheckBox
+                            x:Name="EnableProxyAPICheckbox"
+                            Margin="0,4,0,0"
                             Checked="SettingsUpdated"
-                            Content="None"
-                            GroupName="CertCleanupMode"
-                            Unchecked="SettingsUpdated" />
-                        <RadioButton
-                            x:Name="CertCleanup_AfterExpiry"
-                            Margin="8,0,0,4"
-                            Checked="SettingsUpdated"
-                            Content="After Expiry"
-                            GroupName="CertCleanupMode"
-                            Unchecked="SettingsUpdated" />
-                        <RadioButton
-                            x:Name="CertCleanup_AfterRenewal"
-                            Margin="8,0,0,4"
-                            Checked="SettingsUpdated"
-                            Content="After Renewal"
-                            GroupName="CertCleanupMode"
+                            Content="{x:Static res:SR.Settings_EnableProxyApiForDomainConfig}"
                             Unchecked="SettingsUpdated" />
 
-                        <RadioButton
-                            x:Name="CertCleanup_FullCleanup"
-                            Margin="8,0,0,4"
+                        <CheckBox
+                            x:Name="EnableEFS"
+                            Margin="0,4,0,0"
                             Checked="SettingsUpdated"
-                            Content="Daily Full Cleanup"
-                            GroupName="CertCleanupMode"
+                            Content="{x:Static res:SR.Settings_EnableEFS}"
+                            Unchecked="SettingsUpdated"
+                            Visibility="Collapsed" />
+
+                        <CheckBox
+                            x:Name="IgnoreStoppedSites"
+                            Margin="0,4,0,0"
+                            Checked="SettingsUpdated"
+                            Content="{x:Static res:SR.Settings_IgnoreStoppedSites}"
+                            Unchecked="SettingsUpdated" />
+
+                        <CheckBox
+                            x:Name="EnableDNSValidationChecks"
+                            Margin="0,4,0,0"
+                            Checked="SettingsUpdated"
+                            Content="{x:Static res:SR.Settings_EnableDnsValidation}"
+                            Unchecked="SettingsUpdated" />
+
+                        <CheckBox
+                            x:Name="EnableHttpChallengeServer"
+                            Margin="0,4,0,0"
+                            Checked="SettingsUpdated"
+                            Content="{x:Static res:SR.Settings_EnableHttpChallengeServer}"
+                            Unchecked="SettingsUpdated" />
+
+                        <CheckBox
+                            x:Name="EnableStatusReporting"
+                            Margin="0,4,0,0"
+                            Checked="SettingsUpdated"
+                            Content="{x:Static res:SR.Settings_EnableStatusReporting}"
                             Unchecked="SettingsUpdated" />
 
                     </StackPanel>
+
+                    <!--  Cert Cleanup Options  -->
+                    <StackPanel
+                        Margin="32,0,0,0"
+                        DockPanel.Dock="Right"
+                        Orientation="Vertical">
+                        <Label Content="Certificate Store Cleanup:" />
+                        <StackPanel Margin="16,0,0,0">
+                            <RadioButton
+                                x:Name="CertCleanup_None"
+                                Margin="8,0,0,4"
+                                Checked="SettingsUpdated"
+                                Content="None"
+                                GroupName="CertCleanupMode"
+                                Unchecked="SettingsUpdated" />
+                            <RadioButton
+                                x:Name="CertCleanup_AfterExpiry"
+                                Margin="8,0,0,4"
+                                Checked="SettingsUpdated"
+                                Content="After Expiry"
+                                GroupName="CertCleanupMode"
+                                Unchecked="SettingsUpdated" />
+                            <RadioButton
+                                x:Name="CertCleanup_AfterRenewal"
+                                Margin="8,0,0,4"
+                                Checked="SettingsUpdated"
+                                Content="After Renewal"
+                                GroupName="CertCleanupMode"
+                                Unchecked="SettingsUpdated" />
+
+                            <RadioButton
+                                x:Name="CertCleanup_FullCleanup"
+                                Margin="8,0,0,4"
+                                Checked="SettingsUpdated"
+                                Content="Daily Full Cleanup"
+                                GroupName="CertCleanupMode"
+                                Unchecked="SettingsUpdated" />
+
+                        </StackPanel>
+                    </StackPanel>
+                </DockPanel>
+
+            </StackPanel>
+
+            <StackPanel Margin="0,16" DockPanel.Dock="Top">
+                <TextBlock Style="{StaticResource Subheading}">UI Settings</TextBlock>
+                <StackPanel Margin="0,8">
+                    <CheckBox
+                        x:Name="EnableTelematicsCheckbox"
+                        Checked="SettingsUpdated"
+                        Content="{x:Static res:SR.Settings_EnableTelemetry}"
+                        Unchecked="SettingsUpdated" />
+
                 </StackPanel>
-            </DockPanel>
+                <StackPanel Margin="0,8" Orientation="Horizontal">
+                    <Label Width="100" Content="UI Theme" />
+                    <ComboBox
+                        x:Name="ThemeSelector"
+                        DisplayMemberPath="Value"
+                        ItemsSource="{Binding UIThemes}"
+                        SelectedValuePath="Key"
+                        SelectionChanged="ThemeSelector_Selected" />
 
-        </StackPanel>
+                </StackPanel>
 
-        <StackPanel Margin="0,16">
-            <TextBlock Style="{StaticResource Subheading}">UI Settings</TextBlock>
-            <StackPanel Margin="0,8">
-                <CheckBox
-                    x:Name="EnableTelematicsCheckbox"
-                    Checked="SettingsUpdated"
-                    Content="{x:Static res:SR.Settings_EnableTelemetry}"
-                    Unchecked="SettingsUpdated" />
+                <StackPanel Margin="0,4" Orientation="Horizontal">
+                    <Label Width="100" Content="Text/UI Size" />
+                    <Controls:NumericUpDown
+                        x:Name="UIScaling"
+                        Width="100"
+                        HasDecimals="True"
+                        Interval="0.1"
+                        Maximum="2"
+                        Minimum="1"
+                        Value="{Binding UIScaleFactor}" />
 
+                </StackPanel>
             </StackPanel>
-            <StackPanel Margin="0,8" Orientation="Horizontal">
-                <Label Width="100" Content="UI Theme" />
-                <ComboBox
-                    x:Name="ThemeSelector"
-                    DisplayMemberPath="Value"
-                    ItemsSource="{Binding UIThemes}"
-                    SelectedValuePath="Key"
-                    SelectionChanged="ThemeSelector_Selected" />
-
-            </StackPanel>
-
-            <StackPanel Margin="0,4" Orientation="Horizontal">
-                <Label Width="100" Content="Text/UI Size" />
-                <Controls:NumericUpDown
-                    x:Name="UIScaling"
-                    Width="100"
-                    HasDecimals="True"
-                    Interval="0.1"
-                    Maximum="2"
-                    Minimum="1"
-                    Value="{Binding UIScaleFactor}" />
-
-            </StackPanel>
-        </StackPanel>
 
 
 
-    </StackPanel>
-
+        </DockPanel>
+    </ScrollViewer>
 
 </UserControl>

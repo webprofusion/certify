@@ -17,6 +17,9 @@
     WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False"
     mc:Ignorable="d">
+    <Controls:MetroWindow.LayoutTransform>
+        <ScaleTransform x:Name="ApplicationScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding UIScaleFactor}" ScaleY="{Binding UIScaleFactor}" />
+    </Controls:MetroWindow.LayoutTransform>
     <Grid Margin="0,0,0,-19">
         <TextBlock Margin="10,10,-10,-11" TextWrapping="WrapWithOverflow"><Run>You can purchase a license key by registering at:</Run><LineBreak /> <Hyperlink NavigateUri="https://certifytheweb.com/register?src=app.enterkey" RequestNavigate="Hyperlink_RequestNavigate">https://certifytheweb.com/register</Hyperlink></TextBlock>
         <Button

@@ -12,9 +12,17 @@ namespace Certify.UI.Windows
     {
         protected Models.Providers.ILog Log => ViewModel.AppViewModel.Current.Log;
 
+        public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
+
         public Registration()
         {
             InitializeComponent();
+
+
+            this.DataContext = MainViewModel;
+
+            this.Width *= MainViewModel.UIScaleFactor;
+            this.Height *= MainViewModel.UIScaleFactor;
         }
 
         private async void ValidateKey_Click(object sender, RoutedEventArgs e)
