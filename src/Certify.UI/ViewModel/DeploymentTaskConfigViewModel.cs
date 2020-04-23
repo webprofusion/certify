@@ -177,7 +177,7 @@ namespace Certify.UI.ViewModel
         {
             if (SelectedItem.TaskTypeId != null)
             {
-                DeploymentProvider = _appViewModel.DeploymentTaskProviders.First(d => d.Id == SelectedItem.TaskTypeId);
+                DeploymentProvider = _appViewModel.DeploymentTaskProviders.FirstOrDefault(d => d.Id == SelectedItem.TaskTypeId);
 
                 if (resetDefaults)
                 {
