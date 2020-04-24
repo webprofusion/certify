@@ -167,7 +167,11 @@
         </TabControl>
     </Grid>
     <Controls:MetroWindow.Flyouts>
+
         <Controls:FlyoutsControl>
+            <Controls:FlyoutsControl.LayoutTransform>
+                <ScaleTransform x:Name="FlyoutScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding UIScaleFactor}" ScaleY="{Binding UIScaleFactor}" />
+            </Controls:FlyoutsControl.LayoutTransform>
             <Controls:Flyout
                 Name="MainFlyout"
                 Width="300"
