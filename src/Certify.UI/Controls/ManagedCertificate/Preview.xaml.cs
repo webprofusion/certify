@@ -90,7 +90,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 {
                     foreach (var sub in s.Substeps)
                     {
-                        if (sub.Description != null)
+                        if (!string.IsNullOrEmpty(sub.Description))
                         {
                             if (sub.Description.Contains("|"))
                             {
@@ -102,6 +102,10 @@ namespace Certify.UI.Controls.ManagedCertificate
                                 // list items
                                 sb.AppendLine(" - " + sub.Description);
                             }
+                        }
+                        else
+                        {
+                            sb.AppendLine(" - " + sub.Title);
                         }
                     }
                 }
