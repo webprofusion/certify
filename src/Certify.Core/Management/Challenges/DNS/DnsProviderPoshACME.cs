@@ -20,32 +20,32 @@ namespace Certify.Core.Management.Challenges.DNS
 
         /*
             Implemented providers (Posh-ACME: https://github.com/rmbolger/Posh-ACME)
-            Akamai https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Akamai-Readme.md
-            AutoDNS https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/AutoDNS-Readme.md
-            ClouDNS https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/ClouDNS-Readme.md
-            DNSPod https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DNSPod-Readme.md
-            DNSimple https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DNSimple-Readme.md
-            deSEC https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DeSEC-Readme.md
-            DigitalOcean https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DOcean-Readme.md
-            Dreamhost https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Dreamhost-Readme.md
-            Dynu https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Dynu-Readme.md
-            EasyDNS https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/EasyDNS-Readme.md
-            Gandi https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Gandi-Readme.md
-            Google Cloud https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/GCloud-Readme.md
-            Hetzner https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Hetzner-Readme.md
-            Hurricane Electric https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/HurricaneElectric-Readme.md
-            IBM Cloud/SoftLayer https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/IBMSoftLayer-Readme.md
-            Linode https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Linode-Readme.md
-            Loopia https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Loopia-Readme.md
-            LuaDns https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/LuaDns-Readme.md
-            name.com https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/NameCom-Readme.md
-            NS1 https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/NS1-Readme.md
-            PointDNS https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/PointDNS-Readme.md
-            Rackspace https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Rackspace-Readme.md
-            Selectel https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Selectel-Readme.md
-            UnoEuro https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/UnoEuro-Readme.md
-            Yandex https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Yandex-Readme.md
-            Zonomi https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Zonomi-Readme.md
+            [Akamai](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Akamai-Readme.md),
+            [AutoDNS](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/AutoDNS-Readme.md),
+            [ClouDNS](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/ClouDNS-Readme.md),
+            [DNSPod](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DNSPod-Readme.md),
+            [DNSimple](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DNSimple-Readme.md),
+            [deSEC](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DeSEC-Readme.md),
+            [DigitalOcean](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DOcean-Readme.md),
+            [Dreamhost](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Dreamhost-Readme.md),
+            [Dynu](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Dynu-Readme.md),
+            [EasyDNS](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/EasyDNS-Readme.md),
+            [Gandi](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Gandi-Readme.md),
+            [Google Cloud](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/GCloud-Readme.md),
+            [Hetzner](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Hetzner-Readme.md),
+            [Hurricane Electric](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/HurricaneElectric-Readme.md),
+            [IBM Cloud/SoftLayer](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/IBMSoftLayer-Readme.md),
+            [Linode](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Linode-Readme.md),
+            [Loopia](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Loopia-Readme.md),
+            [LuaDns](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/LuaDns-Readme.md),
+            [name.com](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/NameCom-Readme.md),
+            [NS1](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/NS1-Readme.md),
+            [PointDNS](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/PointDNS-Readme.md),
+            [Rackspace](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Rackspace-Readme.md),
+            [Selectel](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Selectel-Readme.md),
+            [UnoEuro](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/UnoEuro-Readme.md),
+            [Yandex](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Yandex-Readme.md),
+            [Zonomi](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Zonomi-Readme.md)
         */
 
         private const int DefaultPropagationDelay = 90;
