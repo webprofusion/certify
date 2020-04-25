@@ -17,6 +17,7 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             InitializeComponent();
 
+            AppViewModel.PropertyChanged -= AppViewModel_PropertyChanged;
             AppViewModel.PropertyChanged += AppViewModel_PropertyChanged;
         }
 

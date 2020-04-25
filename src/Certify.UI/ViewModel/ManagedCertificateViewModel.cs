@@ -57,7 +57,12 @@ namespace Certify.UI.ViewModel
             {
                 if (SelectedItem != null)
                 {
-                    var ca = CertificateAuthorities.FirstOrDefault(c => c.Id == (SelectedItem.CertificateAuthorityId ?? ""));
+                    if (SelectedItem.CertificateAuthorityId == "")
+                    {
+                        SelectedItem.CertificateAuthorityId = null;
+                    }
+
+                    var ca = CertificateAuthorities.FirstOrDefault(c => c.Id == SelectedItem.CertificateAuthorityId);
                     return ca.Description;
                 }
                 else
@@ -66,6 +71,7 @@ namespace Certify.UI.ViewModel
                 }
             }
         }
+
         internal async Task RefreshWebsiteList()
         {
             var selectedWebsiteId = SelectedWebSite?.SiteId;
@@ -180,7 +186,7 @@ namespace Certify.UI.ViewModel
                 var list = _appViewModel.CertificateAuthorities.Where(c => c.IsEnabled == true).ToList();
                 list.Insert(0, new CertificateAuthority
                 {
-                    Id = "",
+                    Id = null,
                     Title = "Auto",
                     Description = "The Certificate Authority will be automatically selected based on compatibility and the configured ACME accounts."
                 });

@@ -23,6 +23,7 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             InitializeComponent();
 
+            DataContextChanged -= ChallengeConfigItem_DataContextChanged;
             DataContextChanged += ChallengeConfigItem_DataContextChanged;
         }
 
@@ -85,19 +86,24 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             if (challengeProviderType != null)
             {
-                EditModel.SelectedItem.ChallengeProvider = challengeProviderType;
+                await SetChallengeProvider(challengeProviderType);
+            }
+        }
 
-                EditModel.SelectedItem.ChallengeCredentialKey = null;
+        private async Task SetChallengeProvider(string challengeProviderType)
+        {
+            EditModel.SelectedItem.ChallengeProvider = challengeProviderType;
 
-                await EditModel.RefreshAllOptions(StoredCredentialList);
+            EditModel.SelectedItem.ChallengeCredentialKey = null;
 
-                if (challengeProviderType== "DNS01.Manual")
-                {
-                    MessageBox.Show(
-                        "You have selected the Manual DNS method. This option is provided for testing and is often the most difficult to get working. Do not rely on Manual DNS for normal certificate renewal as the manual process must be repeated for every renewal. Consider other automated options such as acme-dns: https://docs.certifytheweb.com/docs/dns-validation",
-                        "Warning", MessageBoxButton.OK, MessageBoxImage.Exclamation
-                        );
-                }
+            await EditModel.RefreshAllOptions(StoredCredentialList);
+
+            if (challengeProviderType == "DNS01.Manual")
+            {
+                MessageBox.Show(
+                    "You have selected the Manual DNS method. This option is provided for testing and is often the most difficult to get working. Do not rely on Manual DNS for normal certificate renewal as the manual process must be repeated for every renewal. Consider other automated options such as acme-dns: https://docs.certifytheweb.com/docs/dns-validation",
+                    "Warning", MessageBoxButton.OK, MessageBoxImage.Exclamation
+                    );
             }
         }
 
@@ -190,6 +196,19 @@ namespace Certify.UI.Controls.ManagedCertificate
             e.Handled = true;
 
             Utils.Helpers.LaunchBrowser(e.Uri.AbsoluteUri);
+        }
+
+        private async void ChallengeTypeList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (ChallengeTypeList.SelectedValue=="dns-01")
+            {
+                if (string.IsNullOrEmpty(EditModel.SelectedItem.ChallengeProvider))
+                {
+                    // default dns challenges to acme-dns
+                    SetChallengeProvider("DNS01.API.AcmeDns");
+
+                }
+            }
         }
     }
 }

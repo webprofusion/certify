@@ -18,6 +18,8 @@ namespace Certify.UI.Controls.ManagedCertificate
         public CertificateDomains()
         {
             InitializeComponent();
+
+            AppViewModel.PropertyChanged -= MainViewModel_PropertyChanged;
             AppViewModel.PropertyChanged += MainViewModel_PropertyChanged;
         }
 

@@ -27,7 +27,6 @@ namespace Certify.Management
             UseBackgroundServiceAutoRenewal = true;
             EnableCertificateCleanup = true;
             EnableStatusReporting = true;
-            VaultPath = @"C:\ProgramData\ACMESharp";
             InstanceId = null;
             CertificateAuthorityFallback = null;
             DefaultCertificateAuthority = "letsencrypt.org";
@@ -88,8 +87,6 @@ namespace Certify.Management
         /// If true, this instance has been added to server dashboard
         /// </summary>
         public bool IsInstanceRegistered { get; set; }
-
-        public string VaultPath { get; set; }
 
         /// <summary>
         /// If user opts for renewal failure reporting, generated instance id is used to group results
@@ -157,7 +154,6 @@ namespace Certify.Management
             CoreAppSettings.Current.EnableEFS = prefs.EnableEFS;
             CoreAppSettings.Current.IsInstanceRegistered = prefs.IsInstanceRegistered;
             CoreAppSettings.Current.Language = prefs.Language;
-            CoreAppSettings.Current.UseBackgroundServiceAutoRenewal = prefs.UseBackgroundServiceAutoRenewal;
             CoreAppSettings.Current.EnableHttpChallengeServer = prefs.EnableHttpChallengeServer;
             CoreAppSettings.Current.EnableCertificateCleanup = prefs.EnableCertificateCleanup;
 
@@ -194,7 +190,6 @@ namespace Certify.Management
                 InstanceId = CoreAppSettings.Current.InstanceId,
                 IsInstanceRegistered = CoreAppSettings.Current.IsInstanceRegistered,
                 Language = CoreAppSettings.Current.Language,
-                UseBackgroundServiceAutoRenewal = CoreAppSettings.Current.UseBackgroundServiceAutoRenewal,
                 EnableHttpChallengeServer = CoreAppSettings.Current.EnableHttpChallengeServer,
                 EnableCertificateCleanup = CoreAppSettings.Current.EnableCertificateCleanup,
                 EnableStatusReporting = CoreAppSettings.Current.EnableStatusReporting,

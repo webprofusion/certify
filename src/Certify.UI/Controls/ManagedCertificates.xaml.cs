@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -25,16 +26,20 @@ namespace Certify.UI.Controls
 
             SetFilter(); // start listening
 
-            _appViewModel.PropertyChanged += (obj, args) =>
-            {
-                if (args.PropertyName == "ManagedCertificates" || (args.PropertyName == "SelectedItem" &&
+            _appViewModel.PropertyChanged -= AppViewModel_PropertyChanged;
+            _appViewModel.PropertyChanged += AppViewModel_PropertyChanged;
+
+        }
+
+        private void AppViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "ManagedCertificates" || (e.PropertyName == "SelectedItem" &&
                     _appViewModel.ManagedCertificates != null))
-                {
-                    SetFilter(); // reset listeners when ManagedCertificates are reset
-                    _itemViewModel.RaisePropertyChangedEvent("SelectedItem");
-                    _itemViewModel.RaisePropertyChangedEvent("IsSelectedItemValid");
-                }
-            };
+            {
+                SetFilter(); // reset listeners when ManagedCertificates are reset
+                _itemViewModel.RaisePropertyChangedEvent("SelectedItem");
+                _itemViewModel.RaisePropertyChangedEvent("IsSelectedItemValid");
+            }
         }
 
         private void SetFilter()
@@ -280,14 +285,17 @@ namespace Certify.UI.Controls
 
             if (window != null) // null in XAML designer
             {
-                window.KeyDown += (obj, args) =>
-                {
-                    if (args.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
-                    {
-                        txtFilter.Focus();
-                        txtFilter.SelectAll();
-                    }
-                };
+                KeyEventHandler p = (obj, args) =>
+                                   {
+                                       if (args.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
+                                       {
+                                           txtFilter.Focus();
+                                           txtFilter.SelectAll();
+                                       }
+                                   };
+
+                window.KeyDown -= p;
+                window.KeyDown += p;
             }
         }
 
