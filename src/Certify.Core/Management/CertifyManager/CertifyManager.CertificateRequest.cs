@@ -471,7 +471,7 @@ namespace Certify.Management
                 }
                 else
                 {
-                    ReportProgress(progress, new RequestProgressState(RequestState.Success, certRequestResult.Message, managedCertificate));
+                    ReportProgress(progress, new RequestProgressState(certRequestResult.IsSuccess ? RequestState.Success : RequestState.Error, certRequestResult.Message, managedCertificate));
                 }
             }
 
@@ -982,13 +982,14 @@ namespace Certify.Management
             }
             else
             {
+
                 //failed to validate all identifiers
-                result.Message = string.Format(CoreSR.CertifyManager_ValidationForChallengeNotSuccess,
-                    (failureSummaryMessage ?? ""));
+                result.Message = string.Format(CoreSR.CertifyManager_ValidationForChallengeNotSuccess, (failureSummaryMessage ?? ""));
 
                 await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
 
                 LogMessage(managedCertificate.Id, result.Message, LogItemType.CertficateRequestFailed);
+
                 ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate));
             }
 

@@ -831,10 +831,15 @@ namespace Certify.Providers.ACME.Certes
 
                     var attempts = 10;
 
-                    while (attempts > 0 && result.Status == ChallengeStatus.Pending || result.Status == ChallengeStatus.Processing)
+                    while (attempts > 0 && (result.Status == ChallengeStatus.Pending || result.Status == ChallengeStatus.Processing) && result.Error?.Detail == null)
                     {
-                        result = await challenge.Resource();
+                        log?.Warning($"Challenge response validation still pending. Re-checking [{attempts}]..");
+
                         await Task.Delay(500);
+
+                        result = await challenge.Resource();
+
+                        attempts--;
                     }
 
                     if (result.Status == ChallengeStatus.Valid)
@@ -847,11 +852,21 @@ namespace Certify.Providers.ACME.Certes
                     }
                     else
                     {
-                        var challengeError = await challenge.Resource();
+                        var msg = result.Error?.Detail ?? "Validation failed - unknown failure reason";
+
+                        if (result.Error?.Subproblems?.Any() == true)
+                        {
+                            var subproblems = string.Join(", ", result.Error.Subproblems
+                                .GroupBy(s => $"{s.Detail}:{s.Identifier}")
+                                .Select(e => $"{e.FirstOrDefault().Identifier} : {e.FirstOrDefault().Detail}"));
+
+                            msg = $"{result.Error?.Detail} :: {subproblems}";
+                        }
+
                         return new StatusMessage
                         {
                             IsOK = false,
-                            Message = challengeError.Error?.Detail
+                            Message = msg
                         };
                     }
                 }
