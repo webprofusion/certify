@@ -52,7 +52,7 @@ namespace Certify.Management
                     {
                         shell.Runspace = runspace;
 
-                        if (credentials.Any())
+                        if (credentials!=null && credentials.Any())
                         {
                             // run as windows user
                             UserCredentials windowsCredentials = null;
