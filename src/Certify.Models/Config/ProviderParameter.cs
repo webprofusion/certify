@@ -10,8 +10,7 @@ namespace Certify.Models.Config
         Boolean = 3,
         Select = 4,
         MultiSelect = 5,
-        RadioButton = 6,
-        Checkbox = 7
+        RadioButton = 6
     }
 
     /// <summary>
