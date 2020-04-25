@@ -205,7 +205,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 if (string.IsNullOrEmpty(EditModel.SelectedItem.ChallengeProvider))
                 {
                     // default dns challenges to acme-dns
-                    SetChallengeProvider("DNS01.API.AcmeDns");
+                    await SetChallengeProvider("DNS01.API.AcmeDns");
 
                 }
             }

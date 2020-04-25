@@ -9,9 +9,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DataContext="{d:DesignInstance Type=certifyui:AppDesignViewModel,
                                      IsDesignTimeCreatable=True}"
-    d:DesignHeight="420.042"
     d:DesignWidth="885.537"
-    mc:Ignorable="d">
+    mc:Ignorable="d" Height="450">
 
     <StackPanel Margin="0,8,0,16" Orientation="Vertical">
         <TabControl

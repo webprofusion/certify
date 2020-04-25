@@ -50,7 +50,7 @@
                         Interval="1"
                         Maximum="60"
                         Minimum="1"
-                        ValueChanged="RenewalIntervalDays_ValueChanged" />
+                        Value="{Binding Prefs.RenewalIntervalDays}" />
                     <Label
                         Width="340"
                         Margin="4,0,0,0"
@@ -63,7 +63,7 @@
                         Interval="1"
                         Maximum="100"
                         Minimum="0"
-                        ValueChanged="RenewalMaxRequests_ValueChanged" />
+                        Value="{Binding Prefs.MaxRenewalRequests}" />
                     <Label
                         Width="340"
                         Margin="4,0,0,0"
@@ -72,49 +72,35 @@
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
 
-
                         <CheckBox
                             x:Name="EnableProxyAPICheckbox"
                             Margin="0,4,0,0"
-                            Checked="SettingsUpdated"
                             Content="{x:Static res:SR.Settings_EnableProxyApiForDomainConfig}"
-                            Unchecked="SettingsUpdated" />
-
-                        <CheckBox
-                            x:Name="EnableEFS"
-                            Margin="0,4,0,0"
-                            Checked="SettingsUpdated"
-                            Content="{x:Static res:SR.Settings_EnableEFS}"
-                            Unchecked="SettingsUpdated"
-                            Visibility="Collapsed" />
+                            IsChecked="{Binding Prefs.EnableValidationProxyAPI}" />
 
                         <CheckBox
                             x:Name="IgnoreStoppedSites"
                             Margin="0,4,0,0"
-                            Checked="SettingsUpdated"
                             Content="{x:Static res:SR.Settings_IgnoreStoppedSites}"
-                            Unchecked="SettingsUpdated" />
+                            IsChecked="{Binding Prefs.IgnoreStoppedSites}" />
 
                         <CheckBox
                             x:Name="EnableDNSValidationChecks"
                             Margin="0,4,0,0"
-                            Checked="SettingsUpdated"
                             Content="{x:Static res:SR.Settings_EnableDnsValidation}"
-                            Unchecked="SettingsUpdated" />
+                            IsChecked="{Binding Prefs.EnableDNSValidationChecks}" />
 
                         <CheckBox
                             x:Name="EnableHttpChallengeServer"
                             Margin="0,4,0,0"
-                            Checked="SettingsUpdated"
                             Content="{x:Static res:SR.Settings_EnableHttpChallengeServer}"
-                            Unchecked="SettingsUpdated" />
+                            IsChecked="{Binding Prefs.EnableHttpChallengeServer}" />
 
                         <CheckBox
                             x:Name="EnableStatusReporting"
                             Margin="0,4,0,0"
-                            Checked="SettingsUpdated"
                             Content="{x:Static res:SR.Settings_EnableStatusReporting}"
-                            Unchecked="SettingsUpdated" />
+                            IsChecked="{Binding Prefs.EnableStatusReporting}" />
 
                     </StackPanel>
 
@@ -166,9 +152,8 @@
                 <StackPanel Margin="0,8">
                     <CheckBox
                         x:Name="EnableTelematicsCheckbox"
-                        Checked="SettingsUpdated"
                         Content="{x:Static res:SR.Settings_EnableTelemetry}"
-                        Unchecked="SettingsUpdated" />
+                        IsChecked="{Binding Prefs.EnableAppTelematics}" />
 
                 </StackPanel>
                 <StackPanel Margin="0,8" Orientation="Horizontal">
@@ -176,7 +161,7 @@
                     <ComboBox
                         x:Name="ThemeSelector"
                         DisplayMemberPath="Value"
-                        ItemsSource="{Binding UIThemes}"
+                        ItemsSource="{Binding MainViewModel.UIThemes}"
                         SelectedValuePath="Key"
                         SelectionChanged="ThemeSelector_Selected" />
 
@@ -191,7 +176,7 @@
                         Interval="0.1"
                         Maximum="2"
                         Minimum="1"
-                        Value="{Binding UIScaleFactor}" />
+                        Value="{Binding MainViewModel.UIScaleFactor}" />
 
                 </StackPanel>
             </StackPanel>

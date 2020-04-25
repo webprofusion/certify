@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,15 +14,23 @@ namespace Certify.UI.Controls.Settings
     /// </summary>
     public partial class General : UserControl
     {
-        protected Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
+        public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
+        public Models.Preferences Prefs => MainViewModel.Preferences;
 
         private bool settingsInitialised = false;
-        private Models.Preferences _prefs => MainViewModel.Preferences;
 
         public General()
         {
             InitializeComponent();
 
+        }
+
+        private void Prefs_AfterPropertyChanged(object sender, EventArgs e)
+        {
+            if (settingsInitialised)
+            {
+                MainViewModel.SavePreferences();
+            }
         }
 
         private void LoadCurrentSettings()
@@ -33,51 +41,40 @@ namespace Certify.UI.Controls.Settings
                 return;
             }
 
-            if (_prefs.UseBackgroundServiceAutoRenewal)
+            if (Prefs.UseBackgroundServiceAutoRenewal)
             {
                 // if scheduled task not in use, remove legacy option to modify
                 ConfigureAutoRenew.Visibility = Visibility.Collapsed;
             }
 
-            EnableTelematicsCheckbox.IsChecked = _prefs.EnableAppTelematics;
-            EnableProxyAPICheckbox.IsChecked = _prefs.EnableValidationProxyAPI;
-
-            //if true, EFS will be used for sensitive files such as private key file, does not work in all versions of windows.
-            EnableEFS.IsChecked = _prefs.EnableEFS;
-            IgnoreStoppedSites.IsChecked = _prefs.IgnoreStoppedSites;
-
-            EnableDNSValidationChecks.IsChecked = _prefs.EnableDNSValidationChecks;
-            EnableHttpChallengeServer.IsChecked = _prefs.EnableHttpChallengeServer;
-
-            if (_prefs.CertificateCleanupMode == Models.CertificateCleanupMode.None)
+            if (Prefs.CertificateCleanupMode == Models.CertificateCleanupMode.None)
             {
                 CertCleanup_None.IsChecked = true;
             }
-            else if (_prefs.CertificateCleanupMode == Models.CertificateCleanupMode.AfterExpiry)
+            else if (Prefs.CertificateCleanupMode == Models.CertificateCleanupMode.AfterExpiry)
             {
                 CertCleanup_AfterExpiry.IsChecked = true;
             }
-            else if (_prefs.CertificateCleanupMode == Models.CertificateCleanupMode.AfterRenewal)
+            else if (Prefs.CertificateCleanupMode == Models.CertificateCleanupMode.AfterRenewal)
             {
                 CertCleanup_AfterRenewal.IsChecked = true;
             }
-            else if (_prefs.CertificateCleanupMode == Models.CertificateCleanupMode.FullCleanup)
+            else if (Prefs.CertificateCleanupMode == Models.CertificateCleanupMode.FullCleanup)
             {
                 CertCleanup_FullCleanup.IsChecked = true;
             }
 
-            EnableStatusReporting.IsChecked = _prefs.EnableStatusReporting;
+            ThemeSelector.SelectedValue = MainViewModel.UISettings?.UITheme ?? "Light";
 
-            RenewalIntervalDays.Value = _prefs.RenewalIntervalDays;
-            RenewalMaxRequests.Value = _prefs.MaxRenewalRequests;
+            DataContext = this;
 
-            this.ThemeSelector.SelectedValue = MainViewModel.UISettings?.UITheme ?? "Light";
+            // re-add property changed tracking for save
+            Prefs.AfterPropertyChanged -= Prefs_AfterPropertyChanged;
+            Prefs.AfterPropertyChanged += Prefs_AfterPropertyChanged;
 
-            DataContext = MainViewModel;
 
             settingsInitialised = true;
         }
-
 
         private void Button_ScheduledTaskConfig(object sender, RoutedEventArgs e)
         {
@@ -86,68 +83,31 @@ namespace Certify.UI.Controls.Settings
 
             d.ShowDialog();
         }
-
         private async void SettingsUpdated(object sender, RoutedEventArgs e)
         {
             if (settingsInitialised)
             {
-                ///capture settings
-                _prefs.EnableAppTelematics = (EnableTelematicsCheckbox.IsChecked == true);
-                _prefs.EnableValidationProxyAPI = (EnableProxyAPICheckbox.IsChecked == true);
-                _prefs.EnableDNSValidationChecks = (EnableDNSValidationChecks.IsChecked == true);
-                _prefs.EnableHttpChallengeServer = (EnableHttpChallengeServer.IsChecked == true);
-
-                _prefs.EnableStatusReporting = (EnableStatusReporting.IsChecked == true);
-
-                _prefs.EnableEFS = (EnableEFS.IsChecked == true);
-                _prefs.IgnoreStoppedSites = (IgnoreStoppedSites.IsChecked == true);
-
-                // force renewal interval days to be between 1 and 60 days
-                if (RenewalIntervalDays.Value == null)
-                {
-                    RenewalIntervalDays.Value = 30;
-                }
-
-                if (RenewalIntervalDays.Value > 60)
-                {
-                    RenewalIntervalDays.Value = 60;
-                }
-
-                _prefs.RenewalIntervalDays = (int)RenewalIntervalDays.Value;
-
-                // force max renewal requests to be between 0 and 100 ( 0 = unlimited)
-                if (RenewalMaxRequests.Value == null)
-                {
-                    RenewalMaxRequests.Value = 0;
-                }
-
-                if (RenewalMaxRequests.Value > 100)
-                {
-                    RenewalMaxRequests.Value = 100;
-                }
-
-                _prefs.MaxRenewalRequests = (int)RenewalMaxRequests.Value;
 
                 // cert cleanup mode
                 if (CertCleanup_None.IsChecked == true)
                 {
-                    _prefs.CertificateCleanupMode = Models.CertificateCleanupMode.None;
-                    _prefs.EnableCertificateCleanup = false;
+                    Prefs.CertificateCleanupMode = Models.CertificateCleanupMode.None;
+                    Prefs.EnableCertificateCleanup = false;
                 }
                 else if (CertCleanup_AfterExpiry.IsChecked == true)
                 {
-                    _prefs.CertificateCleanupMode = Models.CertificateCleanupMode.AfterExpiry;
-                    _prefs.EnableCertificateCleanup = true;
+                    Prefs.CertificateCleanupMode = Models.CertificateCleanupMode.AfterExpiry;
+                    Prefs.EnableCertificateCleanup = true;
                 }
                 else if (CertCleanup_AfterRenewal.IsChecked == true)
                 {
-                    _prefs.CertificateCleanupMode = Models.CertificateCleanupMode.AfterRenewal;
-                    _prefs.EnableCertificateCleanup = true;
+                    Prefs.CertificateCleanupMode = Models.CertificateCleanupMode.AfterRenewal;
+                    Prefs.EnableCertificateCleanup = true;
                 }
                 else if (CertCleanup_FullCleanup.IsChecked == true)
                 {
-                    _prefs.CertificateCleanupMode = Models.CertificateCleanupMode.FullCleanup;
-                    _prefs.EnableCertificateCleanup = true;
+                    Prefs.CertificateCleanupMode = Models.CertificateCleanupMode.FullCleanup;
+                    Prefs.EnableCertificateCleanup = true;
                 }
 
                 // save settings
@@ -156,17 +116,13 @@ namespace Certify.UI.Controls.Settings
             }
         }
 
-        private void RenewalIntervalDays_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double?> e) => SettingsUpdated(sender, e);
-
-        private void RenewalMaxRequests_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double?> e) => SettingsUpdated(sender, e);
-
         private void UserControl_Loaded(object sender, RoutedEventArgs e) => LoadCurrentSettings();
 
         private void ThemeSelector_Selected(object sender, RoutedEventArgs e)
         {
             var theme = (sender as ComboBox).SelectedValue?.ToString();
 
-            if (theme!=null)
+            if (theme != null)
             {
                 ((Certify.UI.App)App.Current).ToggleTheme(theme);
 
@@ -178,7 +134,7 @@ namespace Certify.UI.Controls.Settings
                 MainViewModel.UISettings.UITheme = theme;
                 UI.Settings.UISettings.Save(MainViewModel.UISettings);
             }
-         
+
         }
     }
 }

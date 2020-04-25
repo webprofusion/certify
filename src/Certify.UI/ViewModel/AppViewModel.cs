@@ -411,12 +411,16 @@ namespace Certify.UI.ViewModel
         public virtual async Task SavePreferences()
         {
             // we use a semaphore to lock the save to preferences to stop multiple callers saves prefs at the same time (unlikely)
-            await _prefLock.WaitAsync();
+            await _prefLock.WaitAsync(500);
             try
             {
                 await this.CertifyClient.SetPreferences(Preferences);
             }
             catch
+            {
+                System.Diagnostics.Debug.WriteLine("Pref wait lock exceeded");
+            }
+            finally
             {
                 _prefLock.Release();
             }
