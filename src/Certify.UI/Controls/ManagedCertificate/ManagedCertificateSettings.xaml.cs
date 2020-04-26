@@ -285,7 +285,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                 }
 
                 //begin request
-                AppViewModel.MainUITabIndex = (int)MainWindow.PrimaryUITabs.CurrentProgress;
 
                 var result = await AppViewModel.BeginCertificateRequest(ItemViewModel.SelectedItem.Id);
                 if (result != null)
