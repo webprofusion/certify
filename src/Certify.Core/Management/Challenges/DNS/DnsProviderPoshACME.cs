@@ -650,7 +650,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 .Where(p => p.Key != "propagationdelay")
                 .Select(s => _parameters.Keys.Contains(s.Key) ? _parameters.FirstOrDefault(p => p.Key == s.Key) : _credentials.FirstOrDefault(c => c.Key == s.Key));
 
-            var args = string.Join(",",
+            var args = string.Join("; ",
                             set.Select(p =>
                                 DelegateProviderDefinition
                                 .ProviderParameters
