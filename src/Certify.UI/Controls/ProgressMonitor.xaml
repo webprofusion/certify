@@ -27,7 +27,7 @@
                 False="Hidden"
                 True="Visible" />
             <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
-            <local:StateToColorConverter x:Key="StateToColorConverter" />
+            <utils:StateToColorConverter x:Key="StateToColorConverter" />
         </DockPanel.Resources>
         <Label
             Margin="25,20,0,0"

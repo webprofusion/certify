@@ -134,6 +134,9 @@ namespace Certify.Management
                 }
             }
 
+
+            var errors = new List<string>();
+
             // accumulate output
             var output = new StringBuilder();
 
@@ -142,7 +145,10 @@ namespace Certify.Management
             {
                 var error = shell.Streams.Error[args.Index];
                 var src = error.InvocationInfo.MyCommand?.ToString() ?? error.InvocationInfo.InvocationName;
-                output.AppendLine($"{src}: {error}\n{error.InvocationInfo.PositionMessage}");
+                var msg = $"{src}: {error}\n{error.InvocationInfo.PositionMessage}";
+                output.AppendLine(msg);
+
+                errors.Add(msg);
             };
 
             // capture write-* methods (except write-host)
@@ -168,7 +174,7 @@ namespace Certify.Management
                 var async = shell.BeginInvoke<PSObject, PSObject>(null, outputData);
                 shell.EndInvoke(async);
 
-                return new ActionResult(output.ToString().TrimEnd('\n'), true);
+                return new ActionResult(output.ToString().TrimEnd('\n'), !errors.Any());
             }
             catch (ParseException ex)
             {

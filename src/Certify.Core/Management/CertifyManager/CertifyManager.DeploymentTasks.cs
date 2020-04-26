@@ -54,7 +54,20 @@ namespace Certify.Management
                 return new List<ActionStep> { new ActionStep { HasError = false, Description = "No matching tasks to perform." } };
             }
 
-            return await PerformTaskList(log, isPreviewOnly, skipDeferredTasks, new CertificateRequestResult { ManagedItem = managedCert, IsSuccess = true }, taskList);
+            var msg = "[Multiple Tasks]";
+
+            if (taskList.Count() == 1)
+            {
+                msg = taskList.First().TaskName;
+            }
+
+            LogMessage(managedCert.Id, $"---- Performing Task [On-Demand or Manual Execution] :: {msg} ----");
+
+            var result = await PerformTaskList(log, isPreviewOnly, skipDeferredTasks, new CertificateRequestResult { ManagedItem = managedCert, IsSuccess = managedCert.LastRenewalStatus == RequestState.Success ? true : false }, taskList);
+
+            await UpdateManagedCertificate(managedCert);
+
+            return result;
         }
 
         private async Task<List<ActionStep>> PerformTaskList(ILog log, bool isPreviewOnly, bool skipDeferredTasks, CertificateRequestResult result, IEnumerable<DeploymentTaskConfig> taskList)
@@ -158,8 +171,7 @@ namespace Certify.Management
                     }
                     else if (task.TaskConfig.TaskTrigger == TaskTriggerType.MANUAL)
                     {
-
-                        if (!skipDeferredTasks)
+                        if (skipDeferredTasks)
                         {
                             shouldRunCurrentTask = false;
                             taskTriggerReason = "Task is enabled but will not run because execution is deferred/manual.";
@@ -176,11 +188,14 @@ namespace Certify.Management
 
                 if (shouldRunCurrentTask)
                 {
+                    log.Information($"Task [{task.TaskConfig.TaskName}] :: {taskTriggerReason}");
+                    task.TaskConfig.DateLastExecuted = DateTime.Now;
                     taskResults = await task.Execute(log, result, isPreviewOnly: isPreviewOnly);
                 }
                 else
                 {
-                    taskResults.Add(new ActionResult(taskTriggerReason, true));
+                    taskResults.Add(new ActionResult($"Task [{task.TaskConfig.TaskName}] :: {taskTriggerReason}", true));
+
                 }
 
                 var subSteps = new List<ActionStep>();
@@ -211,18 +226,48 @@ namespace Certify.Management
                     stepIndex++;
                 }
 
-                var overallTaskResult = (taskResults != null && taskResults.Any(t => t.IsSuccess == false) ? taskResults.First(t => t.IsSuccess == false).Message : taskTriggerReason);
+
+                var overallTaskResult = "Unknown";
+
+                if (taskResults != null && taskResults.Any(t => t.IsSuccess == false))
+                {
+                    overallTaskResult = taskResults.First(t => t.IsSuccess == false).Message;
+                }
+                else
+                {
+                    if (isPreviewOnly)
+                    {
+                        overallTaskResult = taskTriggerReason;
+                    }
+                    else
+                    {
+                        if (shouldRunCurrentTask)
+                        {
+                            overallTaskResult = "Task Completed OK";
+                        }
+                        else
+                        {
+                            overallTaskResult = taskTriggerReason;
+                        }
+                    }
+                }
+
+                var hasError = (taskResults != null && taskResults.Any(t => t.IsSuccess == false) ? true : false);
 
                 var currentStep = new ActionStep
                 {
                     Key = task.TaskConfig.Id,
                     Title = task.TaskConfig.TaskName,
                     Category = "Task",
-                    HasError = (taskResults != null && taskResults.Any(t => t.IsSuccess == false) ? true : false),
+                    HasError = hasError,
                     Description = overallTaskResult,
                     HasWarning = !shouldRunCurrentTask,
                     Substeps = subSteps
                 };
+
+
+                task.TaskConfig.LastRunStatus = hasError ? RequestState.Error : RequestState.Success;
+                task.TaskConfig.LastResult = overallTaskResult;
 
                 steps.Add(currentStep);
 

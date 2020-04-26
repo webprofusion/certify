@@ -115,6 +115,9 @@
     <Compile Include="Controls\ManagedCertificate\ChallengeConfigItem.xaml.cs">
       <DependentUpon>ChallengeConfigItem.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ManagedCertificate\TaskList.xaml.cs">
+      <DependentUpon>TaskList.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\ManagedCertificate\DeploymentTask.xaml.cs">
       <DependentUpon>DeploymentTask.xaml</DependentUpon>
     </Compile>
@@ -208,6 +211,10 @@
     </Page>
     <Page Include="Controls\ManagedCertificate\ChallengeConfigItem.xaml">
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ManagedCertificate\TaskList.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Controls\ManagedCertificate\DeploymentTask.xaml">
       <SubType>Designer</SubType>

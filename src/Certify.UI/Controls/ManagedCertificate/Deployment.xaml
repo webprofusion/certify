@@ -28,6 +28,7 @@
             x:Key="NullVisibleConverter"
             NotNull="Collapsed"
             Null="Visible" />
+        <utils:StateToColorConverter x:Key="StateToColorConverter" />
     </UserControl.Resources>
 
     <TabControl
@@ -266,86 +267,8 @@
                                 </StackPanel>
                             </Button>
                         </StackPanel>
-                        <ItemsControl
-                            x:Name="PostRequestTasks"
-                            Margin="0,16,0,0"
-                            AllowDrop="True"
-                            Drop="TaskCompleteDrop"
-                            ItemsSource="{Binding SelectedItem.PostRequestTasks}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <DockPanel
-                                        Margin="4"
-                                        MouseLeftButtonDown="TaskStartDrop"
-                                        Tag="PostRequest">
-                                        <Button
-                                            x:Name="RunDeploymentTask"
-                                            Height="28"
-                                            Margin="0,0,8,0"
-                                            VerticalAlignment="Center"
-                                            Click="RunDeploymentTask_Click"
-                                            CommandParameter="{Binding}"
-                                            DockPanel.Dock="Left"
-                                            ToolTip="Run Task">
-                                            <StackPanel Orientation="Horizontal">
-                                                <fa:ImageAwesome
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    Foreground="{DynamicResource AccentColorBrush}"
-                                                    Icon="Play" />
 
-                                            </StackPanel>
-                                        </Button>
-
-                                        <Button
-                                            x:Name="DeleteDeploymentTask"
-                                            Height="28"
-                                            Margin="8,0,0,0"
-                                            VerticalAlignment="Top"
-                                            Click="DeleteDeploymentTask_Click"
-                                            CommandParameter="{Binding}"
-                                            DockPanel.Dock="Right">
-                                            <StackPanel Orientation="Horizontal">
-                                                <fa:ImageAwesome
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    Foreground="{DynamicResource AccentColorBrush}"
-                                                    Icon="Trash" />
-
-                                            </StackPanel>
-                                        </Button>
-                                        <Button
-                                            Height="28"
-                                            Margin="8,0,0,0"
-                                            VerticalAlignment="Top"
-                                            Click="EditDeploymentTask_Click"
-                                            CommandParameter="{Binding}"
-                                            DockPanel.Dock="Right">
-                                            <StackPanel Orientation="Horizontal">
-                                                <fa:ImageAwesome
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    Foreground="{DynamicResource AccentColorBrush}"
-                                                    Icon="Edit" />
-
-                                            </StackPanel>
-                                        </Button>
-
-                                        <StackPanel Margin="0,0,0,0" DockPanel.Dock="Left">
-                                            <TextBlock FontWeight="SemiBold" Text="{Binding TaskName}" />
-                                            <TextBlock DockPanel.Dock="Left" Text="{Binding TaskTrigger, Converter={StaticResource TaskTriggerConverter}}" />
-                                            <TextBlock
-                                                DockPanel.Dock="Left"
-                                                Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
-                                                Text="{Binding Description}"
-                                                TextWrapping="WrapWithOverflow"
-                                                Visibility="Collapsed" />
-
-                                        </StackPanel>
-                                    </DockPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                        <local:TaskList DataContext="{Binding SelectedItem.PostRequestTasks}" />
 
                     </StackPanel>
                     <StackPanel DockPanel.Dock="Top">
@@ -369,86 +292,9 @@
                                 </StackPanel>
                             </Button>
                         </StackPanel>
-                        <ItemsControl
-                            x:Name="PreRequestTasks"
-                            Margin="0,16,0,0"
-                            AllowDrop="True"
-                            Drop="TaskCompleteDrop"
-                            ItemsSource="{Binding SelectedItem.PreRequestTasks}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <DockPanel
-                                        Margin="4"
-                                        MouseLeftButtonDown="TaskStartDrop"
-                                        Tag="PreRequest">
-                                        <Button
-                                            x:Name="RunDeploymentTask"
-                                            Height="28"
-                                            Margin="0,0,8,0"
-                                            VerticalAlignment="Center"
-                                            Click="RunDeploymentTask_Click"
-                                            CommandParameter="{Binding}"
-                                            DockPanel.Dock="Left"
-                                            ToolTip="Run Task">
-                                            <StackPanel Orientation="Horizontal">
-                                                <fa:ImageAwesome
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    Foreground="{DynamicResource AccentColorBrush}"
-                                                    Icon="Play" />
+                        
+                        <local:TaskList DataContext="{Binding SelectedItem.PreRequestTasks}" />
 
-                                            </StackPanel>
-                                        </Button>
-
-                                        <Button
-                                            x:Name="DeleteDeploymentTask"
-                                            Height="28"
-                                            Margin="8,0,0,0"
-                                            VerticalAlignment="Top"
-                                            Click="DeleteDeploymentTask_Click"
-                                            CommandParameter="{Binding}"
-                                            DockPanel.Dock="Right">
-                                            <StackPanel Orientation="Horizontal">
-                                                <fa:ImageAwesome
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    Foreground="{DynamicResource AccentColorBrush}"
-                                                    Icon="Trash" />
-
-                                            </StackPanel>
-                                        </Button>
-                                        <Button
-                                            Height="28"
-                                            Margin="8,0,0,0"
-                                            VerticalAlignment="Top"
-                                            Click="EditDeploymentTask_Click"
-                                            CommandParameter="{Binding}"
-                                            DockPanel.Dock="Right">
-                                            <StackPanel Orientation="Horizontal">
-                                                <fa:ImageAwesome
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    Foreground="{DynamicResource AccentColorBrush}"
-                                                    Icon="Edit" />
-
-                                            </StackPanel>
-                                        </Button>
-
-                                        <StackPanel Margin="0,0,0,0" DockPanel.Dock="Left">
-                                            <TextBlock FontWeight="SemiBold" Text="{Binding TaskName}" />
-                                            <TextBlock DockPanel.Dock="Left" Text="{Binding TaskTrigger, Converter={StaticResource TaskTriggerConverter}}" />
-                                            <TextBlock
-                                                DockPanel.Dock="Left"
-                                                Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
-                                                Text="{Binding Description}"
-                                                TextWrapping="WrapWithOverflow"
-                                                Visibility="Collapsed" />
-
-                                        </StackPanel>
-                                    </DockPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
 
                     </StackPanel>
                 </DockPanel>

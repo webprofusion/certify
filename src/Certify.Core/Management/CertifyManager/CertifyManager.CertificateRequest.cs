@@ -304,6 +304,8 @@ namespace Certify.Management
                 log = ManagedCertificateLog.GetLogger(managedCertificate.Id, _loggingLevelSwitch);
             }
 
+            LogMessage(managedCertificate.Id, $"---- Beginning Request [{managedCertificate.Name}] ----");
+
             // start with a failure result, set to success when succeeding
             var certRequestResult = new CertificateRequestResult { ManagedItem = managedCertificate, IsSuccess = false, Message = "", Actions = new List<ActionStep>() };
 
@@ -393,14 +395,17 @@ namespace Certify.Management
                     else
                     {
                         // caller asked to skip the actual certicate request (e.g. unit testing)
+
                         if (failOnSkip)
                         {
-                            LogMessage(managedCertificate.Id, $"Certificate Request Skipped (on demand, marked as failed): {managedCertificate.Name}");
+                            certRequestResult.Message = $"Certificate Request Skipped (on demand, marked as failed): {managedCertificate.Name}";
+                            // LogMessage(managedCertificate.Id, msg);
                             certRequestResult.IsSuccess = false;
                         }
                         else
                         {
-                            LogMessage(managedCertificate.Id, $"Certificate Request Skipped (on demand): {managedCertificate.Name}");
+                            certRequestResult.Message = $"Certificate Request Skipped (on demand): {managedCertificate.Name}";
+                            // LogMessage(managedCertificate.Id, msg);
                             certRequestResult.IsSuccess = true;
                         }
 
@@ -436,6 +441,8 @@ namespace Certify.Management
                 certRequestResult.ManagedItem = managedCertificate;
 
                 // run applicable deployment tasks (whether success or failed), powershell
+                LogMessage(managedCertificate.Id, $"Performing Post-Request (Deployment) Tasks..");
+
                 var results = await PerformTaskList(log, isPreviewOnly: false, false, certRequestResult, managedCertificate.PostRequestTasks);
 
                 // log results
@@ -465,14 +472,13 @@ namespace Certify.Management
 
                     var msg = $"Deployment Tasks did not complete successfully.";
                     certRequestResult.Message = msg;
-
-                    ReportProgress(progress, new RequestProgressState(RequestState.Error, certRequestResult.Message, managedCertificate));
-
                 }
-                else
-                {
-                    ReportProgress(progress, new RequestProgressState(certRequestResult.IsSuccess ? RequestState.Success : RequestState.Error, certRequestResult.Message, managedCertificate));
-                }
+
+                var finalState = certRequestResult.IsSuccess ? RequestState.Success : RequestState.Error;
+
+                ReportProgress(progress, new RequestProgressState(finalState, certRequestResult.Message, managedCertificate));
+
+                await UpdateManagedCertificateStatus(managedCertificate, finalState, certRequestResult.Message);
             }
 
             return certRequestResult;
