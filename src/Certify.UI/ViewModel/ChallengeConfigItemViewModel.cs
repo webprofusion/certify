@@ -128,6 +128,8 @@ namespace Certify.UI.ViewModel
                 }
             }
 
+            storedCredentialsList.SelectedValue = SelectedItem.ChallengeCredentialKey;
+
             ResumeChangeEvents();
             SelectedItem.ResumeChangeEvents();
 
