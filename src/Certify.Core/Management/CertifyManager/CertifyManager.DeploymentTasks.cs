@@ -309,13 +309,19 @@ namespace Certify.Management
         {
             bool requiredMigration = false;
 
+            if (managedCertificate.PreRequestTasks == null)
+            {
+                managedCertificate.PreRequestTasks = new System.Collections.ObjectModel.ObservableCollection<DeploymentTaskConfig>();
+            }
+
+            if (managedCertificate.PostRequestTasks == null)
+            {
+                managedCertificate.PostRequestTasks = new System.Collections.ObjectModel.ObservableCollection<DeploymentTaskConfig>();
+            }
+
             if (!string.IsNullOrEmpty(managedCertificate.RequestConfig.PreRequestPowerShellScript))
             {
-                if (managedCertificate.PreRequestTasks == null)
-                {
-                    managedCertificate.PreRequestTasks = new System.Collections.ObjectModel.ObservableCollection<DeploymentTaskConfig>();
-                }
-
+               
                 //add pre-request script task
                 var task = new DeploymentTaskConfig
                 {
@@ -342,10 +348,6 @@ namespace Certify.Management
 
             if (!string.IsNullOrEmpty(managedCertificate.RequestConfig.PostRequestPowerShellScript))
             {
-                if (managedCertificate.PostRequestTasks == null)
-                {
-                    managedCertificate.PostRequestTasks = new System.Collections.ObjectModel.ObservableCollection<DeploymentTaskConfig>();
-                }
 
                 //add post-request script task
                 var task = new DeploymentTaskConfig
@@ -373,11 +375,6 @@ namespace Certify.Management
 
             if (!string.IsNullOrEmpty(managedCertificate.RequestConfig.WebhookUrl))
             {
-                if (managedCertificate.PostRequestTasks == null)
-                {
-                    managedCertificate.PostRequestTasks = new System.Collections.ObjectModel.ObservableCollection<DeploymentTaskConfig>();
-                }
-
                 //add post-request script task for webhook, migrate trigger type to task trigger type
 
                 var triggerType = TaskTriggerType.ANY_STATUS;
