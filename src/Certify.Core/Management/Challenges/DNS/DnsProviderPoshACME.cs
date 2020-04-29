@@ -639,7 +639,7 @@ namespace Certify.Core.Management.Challenges.DNS
 
             var scriptFile = System.IO.Path.Combine(_poshAcmeScriptPath, script);
 
-            var scriptContent = ". " + scriptFile + ".ps1 \r\n";
+            var scriptContent = ". \"" + scriptFile + ".ps1\" \r\n";
 
             scriptContent += " $script:UseBasic = @{} \r\n";
             scriptContent += " if ('UseBasicParsing' -in (Get-Command Invoke-WebRequest).Parameters.Keys) {  $script:UseBasic.UseBasicParsing = $true } \r\n";
