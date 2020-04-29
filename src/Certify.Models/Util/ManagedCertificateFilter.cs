@@ -34,5 +34,7 @@
         /// Optional page size for paging results
         /// </summary>
         public int? PageSize { get; set; }
+
+        public bool IncludeExternal { get; set; }
     }
 }

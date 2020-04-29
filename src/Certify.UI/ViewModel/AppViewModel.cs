@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -530,7 +530,7 @@ namespace Certify.UI.ViewModel
             var itemTrackers = new Dictionary<string, Progress<RequestProgressState>>();
             foreach (var s in ManagedCertificates)
             {
-                if ((settings.Mode == RenewalMode.Auto && s.IncludeInAutoRenew) || !settings.Mode != RenewalMode.Auto)
+                if ((settings.Mode == RenewalMode.Auto && s.IncludeInAutoRenew) || settings.Mode != RenewalMode.Auto)
                 {
                     var progressState = new RequestProgressState(RequestState.Running, "Starting..", s);
                     if (!itemTrackers.ContainsKey(s.Id))

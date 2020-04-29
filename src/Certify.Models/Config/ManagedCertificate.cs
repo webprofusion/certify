@@ -10,7 +10,8 @@ namespace Certify.Models
     public enum ManagedCertificateType
     {
         SSL_LetsEncrypt_LocalIIS = 1,
-        SSL_LetsEncrypt_Manual = 2
+        SSL_LetsEncrypt_Manual = 2,
+        SSL_ExternallyManaged = 2
     }
 
     public enum RequiredActionType
@@ -48,6 +49,12 @@ namespace Certify.Models
             UseStagingMode = false;
 #endif
         }
+
+        /// <summary>
+        /// If set, managed item is from an external source
+        /// </summary>
+        public string SourceId { get; set; }
+        public string SourceName { get; set; }
 
         /// <summary>
         /// Default CA to use for this request
@@ -460,3 +467,4 @@ namespace Certify.Models
 
   
 }
+

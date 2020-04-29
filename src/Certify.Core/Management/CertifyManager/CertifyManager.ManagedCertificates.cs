@@ -20,7 +20,30 @@ namespace Certify.Management
 
         public async Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter = null)
         {
-            return await _itemManager.GetManagedCertificates(filter);
+            var list = await _itemManager.GetManagedCertificates(filter);
+
+
+            if (filter?.IncludeExternal == true)
+            {
+                if (_pluginManager?.CertificateManagerProviders?.Any() == true)
+                {
+                    // TODO: cache providers/results
+                    // check if we have any external sources of managed certificates
+                    foreach (var p in _pluginManager.CertificateManagerProviders)
+                    {
+                        var providers = p.GetProviders();
+                        foreach (var cp in providers)
+                        {
+                            var certManager = p.GetProvider(cp.Id);
+                            var certs = await certManager.GetManagedCertificates(filter);
+
+                            list.AddRange(certs);
+                        }
+                    }
+                }
+            }
+
+            return list;
         }
 
         public async Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate site)
@@ -208,7 +231,7 @@ namespace Certify.Management
                     {
                         try
                         {
-                            if (_httpChallengeProcess !=null && !_httpChallengeProcess.HasExited)
+                            if (_httpChallengeProcess != null && !_httpChallengeProcess.HasExited)
                             {
                                 _httpChallengeProcess.CloseMainWindow();
                             }

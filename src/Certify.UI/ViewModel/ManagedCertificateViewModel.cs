@@ -317,6 +317,12 @@ namespace Certify.UI.ViewModel
         {
             if (SelectedItem?.IsChanged ?? false)
             {
+                if (SelectedItem.SourceId != null)
+                {
+                    // changes to external items are auto discarded
+                    return true;
+                }
+
                 //user needs to save or discard changes before changing selection
                 if (MessageBox.Show(SR.ManagedCertificates_UnsavedWarning, SR.Alert, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
                 {

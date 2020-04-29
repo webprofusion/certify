@@ -15,6 +15,7 @@ namespace Certify.Management
         public ILicensingManager LicensingManager { get; set; }
         public IDashboardClient DashboardClient { get; set; }
         public List<IDeploymentTaskProviderPlugin> DeploymentTaskProviders { get; set; }
+        public List<ICertificateManagerProviderPlugin> CertificateManagerProviders { get; set; }
 
         private Models.Providers.ILog _log = null;
 
@@ -74,21 +75,30 @@ namespace Certify.Management
 
             if (includeSet.Contains("Licensing"))
             {
-                LicensingManager = LoadPlugin<ILicensingManager>("Licensing.dll", typeof(ILicensingManager)) as ILicensingManager;
+                LicensingManager = LoadPlugin<ILicensingManager>("Plugin.Licensing.dll", typeof(ILicensingManager)) as ILicensingManager;
 
             }
 
             if (includeSet.Contains("DashboardClient"))
             {
-                DashboardClient = LoadPlugin<IDashboardClient>("DashboardClient.dll", typeof(IDashboardClient)) as IDashboardClient;
+                DashboardClient = LoadPlugin<IDashboardClient>("Plugin.DashboardClient.dll", typeof(IDashboardClient)) as IDashboardClient;
             }
 
             if (includeSet.Contains("DeploymentTasks"))
             {
-                var deploymentTaskPlugin = LoadPlugin<IDeploymentTaskProviderPlugin>("DeploymentTasks.dll", typeof(IDeploymentTaskProviderPlugin)) as IDeploymentTaskProviderPlugin;
+                var deploymentTaskPlugin = LoadPlugin<IDeploymentTaskProviderPlugin>("Plugin.DeploymentTasks.dll", typeof(IDeploymentTaskProviderPlugin)) as IDeploymentTaskProviderPlugin;
                 DeploymentTaskProviders = new List<IDeploymentTaskProviderPlugin>
                 {
                     deploymentTaskPlugin
+                };
+            }
+
+            if (includeSet.Contains("CertificateManagers"))
+            {
+                var certManagerProviders = LoadPlugin<ICertificateManagerProviderPlugin>("Plugin.CertificateManagers.dll", typeof(ICertificateManagerProviderPlugin)) as ICertificateManagerProviderPlugin;
+                CertificateManagerProviders = new List<ICertificateManagerProviderPlugin>
+                {
+                    certManagerProviders
                 };
             }
 

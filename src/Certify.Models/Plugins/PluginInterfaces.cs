@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Certify.Models.Config;
 using Certify.Models.Shared;
+using Certify.Providers.CertificateManagers;
 using Certify.Providers.DeploymentTasks;
 using Registration.Core.Models.Shared;
 
@@ -43,5 +44,11 @@ namespace Certify.Models.Plugins
     {
         List<DeploymentProviderDefinition> GetProviders();
         IDeploymentTaskProvider GetProvider(string id);
+    }
+
+    public interface ICertificateManagerProviderPlugin
+    {
+        List<ProviderDefinition> GetProviders();
+        ICertificateManager GetProvider(string id);
     }
 }

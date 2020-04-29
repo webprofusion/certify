@@ -80,6 +80,9 @@ namespace Certify.UI
                 ManagedCertificates.Add(site);
             }
 
+            ManagedCertificates.Last().SourceId = "Certbot.org";
+            ManagedCertificates.Last().SourceName = "Certbot";
+
             MockDataStore = JsonConvert.SerializeObject(ManagedCertificates);
             foreach (var site in ManagedCertificates)
             {
