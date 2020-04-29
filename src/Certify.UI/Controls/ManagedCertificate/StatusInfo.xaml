@@ -217,20 +217,7 @@
                         </StackPanel>
                     </Button>
                 </StackPanel>
-                <ScrollViewer VerticalScrollBarVisibility="Visible" Visibility="Collapsed">
-                    <DockPanel>
-
-                        <DataGrid
-                            x:Name="LogViewer"
-                            DockPanel.Dock="Top"
-                            ItemsSource="{Binding SelectedItemLogEntries}"
-                            LoadingRow="LogViewer_LoadingRow">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Binding="{Binding Path=.}" Header="Recent Log Items" />
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </DockPanel>
-                </ScrollViewer>
+                
             </StackPanel>
         </StackPanel>
     </ScrollViewer>

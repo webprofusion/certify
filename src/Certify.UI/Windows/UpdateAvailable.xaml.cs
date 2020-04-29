@@ -50,7 +50,7 @@ namespace Certify.UI.Windows
                 foreach (var note in _update.Message.ReleaseNotes)
                 {
                     sb.AppendLine($"{note.Version}: {note.ReleaseDate}");
-                    sb.AppendLine($"{note.Body}");
+                    sb.AppendLine($"{note.Body}\n");
                 }
             }
 

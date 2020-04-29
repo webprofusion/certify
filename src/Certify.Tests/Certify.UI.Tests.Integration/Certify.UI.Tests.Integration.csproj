@@ -94,4 +94,7 @@
   <ItemGroup>
     <None Include="app.config" />
   </ItemGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="REM -- If present, copy plugin build artifacts for use by service, ui, tests&#xD;&#xA;&#xD;&#xA;REM remove stale refs to certify specific items and common libraries&#xD;&#xA;DEL C:\Work\Builds\CertifyPlugins\Certify.*.dll&#xD;&#xA;DEL C:\Work\Builds\CertifyPlugins\Serilog.*.dll&#xD;&#xA;DEL C:\Work\Builds\CertifyPlugins\Newtonsoft.*.dll&#xD;&#xA;DEL C:\Work\Builds\CertifyPlugins\Microsoft.*.dll&#xD;&#xA;DEL C:\Work\Builds\CertifyPlugins\BouncyCastle.*.dll&#xD;&#xA;DEL C:\Work\Builds\CertifyPlugins\ARSoft.*.dll&#xD;&#xA;&#xD;&#xA;xcopy /i /Y C:\Work\Builds\CertifyPlugins\*.dll C:\Work\GIT\certify\src\Certify.Service\bin\Debug\net462\Plugins&#xD;&#xA;xcopy /i /Y C:\Work\Builds\CertifyPlugins\*.dll C:\Work\GIT\certify\src\Certify.Service\bin\Release\net462\Plugins&#xD;&#xA;&#xD;&#xA;xcopy /i /Y C:\Work\Builds\CertifyPlugins\*.dll C:\Work\GIT\certify\src\Certify.UI\bin\Debug\Plugins&#xD;&#xA;xcopy /i /Y C:\Work\Builds\CertifyPlugins\*.dll C:\Work\GIT\certify\src\Certify.UI\bin\Release\Plugins&#xD;&#xA;xcopy /i /Y C:\Work\Builds\CertifyPlugins\*.dll C:\Work\GIT\certify\src\Certify.UI\bin\x64\Debug\Plugins" />
+  </Target>
 </Project>

@@ -114,7 +114,7 @@ namespace Certify.Management
 
             IEnumerable<ManagedCertificate> list = await GetManagedCertificates();
 
-            list = list.Where(i => i.RequestConfig.WebhookUrl != null || i.RequestConfig.PreRequestPowerShellScript != null || i.RequestConfig.PostRequestPowerShellScript != null);
+            list = list.Where(i => !string.IsNullOrEmpty(i.RequestConfig.WebhookUrl) || !string.IsNullOrEmpty(i.RequestConfig.PreRequestPowerShellScript) || !string.IsNullOrEmpty(i.RequestConfig.PostRequestPowerShellScript));
 
             foreach (var i in list)
             {

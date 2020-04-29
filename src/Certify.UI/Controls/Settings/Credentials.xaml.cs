@@ -17,11 +17,12 @@ namespace Certify.UI.Controls.Settings
     {
         protected Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
 
-        private Models.Config.StoredCredential _selectedStoredCredential = null;
+        public Models.Config.StoredCredential _selectedStoredCredential = null;
 
         public Credentials()
         {
             InitializeComponent();
+            this.DataContext = MainViewModel;
 
         }
 

@@ -8,8 +8,7 @@
     xmlns:fa="http://schemas.fontawesome.io/icons/"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-    d:DataContext="{d:DesignInstance Type=Certify.UI.AppDesignViewModel,
-                                     IsDesignTimeCreatable=True}"
+
     d:DesignHeight="420.042"
     d:DesignWidth="885.537"
     Loaded="UserControl_Loaded"

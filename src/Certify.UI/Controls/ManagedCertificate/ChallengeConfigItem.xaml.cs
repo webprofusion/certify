@@ -44,7 +44,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             //refresh credentials list on complete
 
             await EditModel.RefreshCredentialOptions(StoredCredentialList);
-          
+
             var credential = cred.Item;
 
             if (cred.Item != null && cred.Item.StorageKey != null)
@@ -147,7 +147,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 // fetch dns zone list from api 
                 var zones = await AppViewModel.GetDnsProviderZones(EditModel.SelectedItem.ChallengeProvider, EditModel.SelectedItem.ChallengeCredentialKey);
-          
+
                 // populate dropdown, default to no selection
                 zones.Insert(0, new Models.Providers.DnsZone { ZoneId = "", Name = "(Select Zone)" });
                 EditModel.DnsZones = new ObservableCollection<Models.Providers.DnsZone>(zones);
@@ -200,7 +200,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private async void ChallengeTypeList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (ChallengeTypeList.SelectedValue=="dns-01")
+            if ((string)ChallengeTypeList.SelectedValue == "dns-01")
             {
                 if (string.IsNullOrEmpty(EditModel.SelectedItem.ChallengeProvider))
                 {
