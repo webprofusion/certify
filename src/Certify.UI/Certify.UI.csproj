@@ -481,7 +481,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>REM copy latest plugin builds to target output before creating other build output
-xcopy /i /Y C:\Work\Builds\CertifyPlugins\*.dll $(TargetDir)\Plugins</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
 </Project>

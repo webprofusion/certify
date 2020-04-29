@@ -17,6 +17,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
+    <DefineConstants>TRACE;DEBUG_NO_AUTH</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -69,8 +70,5 @@
     <PackageReference Include="System.ValueTuple" Version="4.5.0" /> 
     <PackageReference Include="Topshelf" Version="4.2.1" /> 
     <PackageReference Include="Topshelf.Serilog" Version="4.2.1" /> 
-  </ItemGroup>
- <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-   <Exec Command="REM copy latest plugin builds to target output before creating other build output&#xD;&#xA;REM xcopy /i /Y C:\Work\Builds\CertifyPlugins\*.dll $(TargetDir)Plugins" />
- </Target> 
+  </ItemGroup> 
 </Project>

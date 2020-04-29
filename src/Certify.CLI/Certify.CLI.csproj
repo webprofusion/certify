@@ -76,8 +76,4 @@
     <None Include="App.config" />
     <None Include="app.manifest" />
   </ItemGroup>
-
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="REM copy latest plugin builds to target output before creating other build output&#xD;&#xA;xcopy /i /Y C:\Work\Builds\CertifyPlugins\*.dll $(TargetDir)\Plugins" />
-  </Target>
 </Project>
