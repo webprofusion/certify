@@ -40,20 +40,33 @@ namespace Certify.Management
 
             // we can perform request in parallel but if processing many requests this can cause issues committing IIS bindings etc
             var performRequestsInParallel = false;
+
             var testModeOnly = false;
 
             IEnumerable<ManagedCertificate> managedCertificates = await _itemManager.GetManagedCertificates(
                     new ManagedCertificateFilter
                     {
-                        IncludeOnlyNextAutoRenew = !settings.ForceRenewal
+                        IncludeOnlyNextAutoRenew = (settings.Mode == RenewalMode.Auto)
                     }
                 );
 
-            if (settings.AutoRenewalsOnly)
+            if (settings.Mode == RenewalMode.Auto || settings.Mode == RenewalMode.RenewalsDue)
             {
-                // auto renew enabled sites in order of oldest date renewed first
+                // auto renew enabled sites in order of oldest date renewed (or earliest attempted), items not yet attempted are first.
                 managedCertificates = managedCertificates.Where(s => s.IncludeInAutoRenew == true)
-                             .OrderBy(s => s.DateRenewed ?? DateTime.MinValue);
+                             .OrderBy(s => s.DateRenewed ?? s.DateLastRenewalAttempt ?? DateTime.MinValue);
+            }
+            else if (settings.Mode == RenewalMode.NewItems)
+            {
+                // new items not yet completed in order of oldest renewal attempt first
+                managedCertificates = managedCertificates.Where(s => s.DateRenewed == null)
+                              .OrderBy(s => s.DateLastRenewalAttempt ?? DateTime.Now.AddHours(-48));
+            }
+            else if (settings.Mode == RenewalMode.RenewalsWithErrors)
+            {
+                // items with current errors in order of oldest renewal attempt first
+                managedCertificates = managedCertificates.Where(s => s.LastRenewalStatus == RequestState.Error)
+                              .OrderBy(s => s.DateLastRenewalAttempt ?? DateTime.Now.AddHours(-1));
             }
 
             // check site list and examine current certificates. If certificate is less than n days
@@ -71,7 +84,7 @@ namespace Certify.Management
                 progressTrackers = new Dictionary<string, Progress<RequestProgressState>>();
             }
 
-            foreach (var managedCertificate in managedCertificates.Where(s => s.IncludeInAutoRenew == true))
+            foreach (var managedCertificate in managedCertificates)
             {
                 var progressState = new RequestProgressState(RequestState.Running, "Starting..", managedCertificate);
                 var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
@@ -79,10 +92,12 @@ namespace Certify.Management
 
                 BeginTrackingProgress(progressState);
 
-                // determine if this site requires renewal
-                var isRenewalRequired = settings.ForceRenewal || IsRenewalRequired(managedCertificate, renewalIntervalDays);
+                // determine if this site requires renewal for auto mode
+                var isRenewalRequired = settings.Mode != RenewalMode.Auto || IsRenewalRequired(managedCertificate, renewalIntervalDays);
+
                 var isRenewalOnHold = false;
-                if (isRenewalRequired && !settings.ForceRenewal)
+
+                if (isRenewalRequired && settings.Mode == RenewalMode.Auto)
                 {
                     //check if we have renewal failures, if so wait a bit longer
                     isRenewalOnHold = !IsRenewalRequired(managedCertificate, renewalIntervalDays, checkFailureStatus: true);
@@ -93,7 +108,7 @@ namespace Certify.Management
                     }
                 }
 
-                //if we care about stopped sites being stopped, check for that if a specifc site is selected
+                //if we care about stopped sites being stopped, check for that if a specific site is selected
                 var isSiteRunning = true;
                 if (!CoreAppSettings.Current.IgnoreStoppedSites && !string.IsNullOrEmpty(managedCertificate.ServerSiteId))
                 {
@@ -128,7 +143,7 @@ namespace Certify.Management
                         {
                             renewalTasks.Add(
                                new Task<CertificateRequestResult>(
-                               () => PerformCertificateRequest(null, managedCertificate, tracker).Result,
+                               () => PerformCertificateRequest(null, managedCertificate, tracker, skipRequest: settings.IsPreviewMode).Result,
                                TaskCreationOptions.LongRunning
                            ));
                         }
@@ -406,7 +421,7 @@ namespace Certify.Management
                         {
                             certRequestResult.Message = $"Certificate Request Skipped (on demand): {managedCertificate.Name}";
                             // LogMessage(managedCertificate.Id, msg);
-                            certRequestResult.IsSuccess = true;
+                            certRequestResult.IsSuccess = managedCertificate.LastRenewalStatus == RequestState.Success;
                         }
 
                         ReportProgress(progress, new RequestProgressState(RequestState.Success, certRequestResult.Message, managedCertificate));

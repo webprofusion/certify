@@ -118,7 +118,7 @@ namespace Certify.UI
             // if ctrl is pressed, force renewal
             if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
             {
-                settings.ForceRenewal = true;
+                settings.Mode =  Models.RenewalMode.All;
             }
 
             // save or discard site changes before creating a new site/certificate

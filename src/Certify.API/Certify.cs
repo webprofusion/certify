@@ -139,7 +139,7 @@ namespace Certify.API
         {
             try
             {
-                _ = await _client.BeginAutoRenewal(new RenewalSettings { AutoRenewalsOnly = true });
+                _ = await _client.BeginAutoRenewal(new RenewalSettings { Mode = RenewalMode.Auto });
 
                 return new ActionResult("In Progress", true);
             }

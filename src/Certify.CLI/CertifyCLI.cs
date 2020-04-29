@@ -98,7 +98,7 @@ namespace Certify.CLI
         internal void ShowVersion()
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
-            System.Console.WriteLine("Certify SSL Manager - CLI v5.0.0. Certify.Core v" + GetAppVersion().Result.Replace("\"",""));
+            System.Console.WriteLine("Certify SSL Manager - CLI v5.0.0. Certify.Core v" + GetAppVersion().Result.Replace("\"", ""));
             Console.ForegroundColor = ConsoleColor.White;
             System.Console.WriteLine("For more information see " + GetAppWebsiteURL());
             System.Console.WriteLine("");
@@ -137,9 +137,31 @@ namespace Certify.CLI
         {
             var forceRenewal = false;
 
-            if (args.Contains("--force-renewal"))
+            var renewalMode = Models.RenewalMode.Auto;
+
+
+            if (args.Contains("--force-renew-all"))
             {
-                forceRenewal = true;
+                renewalMode = RenewalMode.All;
+            }
+
+            if (args.Contains("--renew-witherrors"))
+            {
+                // renew errored items
+                renewalMode = RenewalMode.RenewalsWithErrors;
+            }
+
+            if (args.Contains("--renew-newitems"))
+            {
+                // renew only new items
+                renewalMode = RenewalMode.NewItems;
+            }
+
+            var isPreviewMode = false;
+            if (args.Contains("--preview"))
+            {
+                // don't perform real requests
+                isPreviewMode = true;
             }
 
             if (_tc == null)
@@ -160,7 +182,7 @@ namespace Certify.CLI
             }
 
             //go through list of items configured for auto renew, perform renewal and report the result
-            var results = await _certifyClient.BeginAutoRenewal(new RenewalSettings { ForceRenewal = forceRenewal });
+            var results = await _certifyClient.BeginAutoRenewal(new RenewalSettings { Mode = renewalMode, IsPreviewMode = isPreviewMode });
             Console.ForegroundColor = ConsoleColor.White;
 
             foreach (var r in results)
