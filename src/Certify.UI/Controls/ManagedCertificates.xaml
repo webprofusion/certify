@@ -115,9 +115,13 @@
                                 Foreground="{Binding Path=DateExpiry, Converter={StaticResource ExpiryDateColourConverter}}"
                                 Text="{Binding Path=DateExpiry, Converter={StaticResource ExpiryDateConverter}}" />
 
-                            <StackPanel Visibility="{Binding SourceId, Converter={StaticResource NullCollapsedConverter}}">
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding SourceId, Converter={StaticResource NullCollapsedConverter}}">
                                 <TextBlock
                                     Margin="16,0,0,0"
+                                    FontWeight="Normal"
+                                    Text="Managed by " />
+                                <TextBlock
+                                    Margin="0,0,0,0"
                                     FontWeight="DemiBold"
                                     Text="{Binding Path=SourceName}" />
                             </StackPanel>

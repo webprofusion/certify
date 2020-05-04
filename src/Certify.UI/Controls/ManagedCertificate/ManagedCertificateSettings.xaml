@@ -126,11 +126,14 @@
             Margin="8,8,8,0"
             LastChildFill="False">
 
+
+
             <Button
                 Margin="8,0,0,0"
                 Click="Button_Save"
                 DockPanel.Dock="Left"
-                IsEnabled="{Binding SelectedItem.IsChanged}">
+                IsEnabled="{Binding SelectedItem.IsChanged}"
+                Visibility="{Binding IsEditable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
@@ -145,7 +148,8 @@
                 Margin="8,0,0,0"
                 Click="Button_DiscardChanges"
                 DockPanel.Dock="Left"
-                IsEnabled="{Binding SelectedItem.IsChanged}">
+                IsEnabled="{Binding SelectedItem.IsChanged}"
+                Visibility="{Binding IsEditable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
@@ -159,7 +163,8 @@
             <Button
                 Margin="8,0,0,0"
                 Click="Button_Delete"
-                DockPanel.Dock="Left">
+                DockPanel.Dock="Left"
+                Visibility="{Binding IsEditable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
@@ -173,7 +178,8 @@
             <Button
                 Margin="8,0,0,0"
                 Click="Button_RequestCertificate"
-                DockPanel.Dock="Right">
+                DockPanel.Dock="Right"
+                Visibility="{Binding IsEditable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
@@ -191,7 +197,8 @@
                 Margin="4,0,0,0"
                 VerticalAlignment="Top"
                 Click="TestChallenge_Click"
-                DockPanel.Dock="Right">
+                DockPanel.Dock="Right"
+                Visibility="{Binding IsEditable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
                         Height="16"
@@ -263,6 +270,7 @@
                 </TabItem>
 
                 <TabItem
+                    x:Name="TabAuthorization"
                     MinWidth="100"
                     Controls:ControlsHelper.HeaderFontSize="12"
                     AutomationProperties.Name="Authorization">

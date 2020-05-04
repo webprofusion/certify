@@ -25,6 +25,7 @@
             False="Visible"
             True="Collapsed" />
         <utils:EnumConverter x:Key="EnumConverter" />
+        <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
         <utils:NullVisibilityConverter
             x:Key="NullVisibleConverter"
             NotNull="Collapsed"
@@ -33,6 +34,21 @@
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="8,0,8,8">
+
+            <StackPanel Margin="0,0,0,16" Visibility="{Binding SelectedItem.SourceId, Converter={StaticResource NullCollapsedConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource Subheading}" Text="Managed by " />
+                    <TextBlock
+                        Foreground="{StaticResource WarningColorBrush}"
+                        Style="{StaticResource Subheading}"
+                        Text="{Binding Path=SelectedItem.SourceName}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource Instructions}" Text="This certificate is externally managed by another certificate management tool. For more information see the documentation for that tool. " />
+                </StackPanel>
+            </StackPanel>
+
+
             <StackPanel x:Name="RenewalFailed" Visibility="Collapsed">
 
                 <StackPanel Orientation="Horizontal">
@@ -217,7 +233,7 @@
                         </StackPanel>
                     </Button>
                 </StackPanel>
-                
+
             </StackPanel>
         </StackPanel>
     </ScrollViewer>

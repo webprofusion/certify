@@ -25,10 +25,8 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             InitializeComponent();
 
-
             AppViewModel.PropertyChanged -= MainViewModel_PropertyChanged;
             AppViewModel.PropertyChanged += MainViewModel_PropertyChanged;
-
         }
 
         private void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -59,7 +57,25 @@ namespace Certify.UI.Controls.ManagedCertificate
                     ItemViewModel.IsNameEditMode = true;
                     EditName.Focus();
                 }
-                    
+                else
+                {
+                    if (!ItemViewModel.IsEditable)
+                    {
+                        this.TabDeployment.Visibility = Visibility.Collapsed;
+                        this.TabDomains.Visibility = Visibility.Collapsed;
+                        this.TabAuthorization.Visibility = Visibility.Collapsed;
+                        this.TabPreview.Visibility = Visibility.Collapsed;
+
+                    }
+                    else
+                    {
+                        this.TabDeployment.Visibility = Visibility.Visible;
+                        this.TabDomains.Visibility = Visibility.Visible;
+                        this.TabAuthorization.Visibility = Visibility.Visible;
+                        this.TabPreview.Visibility = Visibility.Visible;
+                    }
+                }
+
                 AppViewModel.IsChanged = false;
 
             }
@@ -71,7 +87,7 @@ namespace Certify.UI.Controls.ManagedCertificate
         }
         private async Task<bool> ValidateAndSave(Models.ManagedCertificate item)
         {
-            
+
 
             if (item.RequestConfig.Challenges == null)
             {
@@ -89,7 +105,8 @@ namespace Certify.UI.Controls.ManagedCertificate
                 ItemViewModel.IsNameEditMode = true;
                 ShowValidationError(SR.ManagedCertificateSettings_NameRequired);
                 return false;
-            } else
+            }
+            else
             {
                 ItemViewModel.IsNameEditMode = false;
             }
