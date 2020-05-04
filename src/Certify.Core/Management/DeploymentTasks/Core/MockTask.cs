@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Certify.Models;
 using Certify.Config;
 using Certify.Models.Config;
 using Certify.Models.Providers;
@@ -11,7 +10,7 @@ namespace Certify.Providers.DeploymentTasks.Core
     public class MockTask : IDeploymentTaskProvider
     {
         public static DeploymentProviderDefinition Definition { get; }
-        public DeploymentProviderDefinition GetDefinition(DeploymentProviderDefinition currentDefinition) => (currentDefinition ?? Definition);
+        public DeploymentProviderDefinition GetDefinition(DeploymentProviderDefinition currentDefinition = null) => (currentDefinition ?? Definition);
 
         static MockTask()
         {
@@ -46,11 +45,9 @@ namespace Certify.Providers.DeploymentTasks.Core
           DeploymentTaskConfig settings,
           Dictionary<string, string> credentials,
           bool isPreviewOnly,
-          DeploymentProviderDefinition definition = null
+          DeploymentProviderDefinition definition
           )
         {
-
-            definition = GetDefinition(definition);
 
             var msg = settings.Parameters.FirstOrDefault(c => c.Key == "message")?.Value;
 

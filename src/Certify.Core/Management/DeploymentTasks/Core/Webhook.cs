@@ -16,7 +16,28 @@ namespace Certify.Providers.DeploymentTasks.Core
     public class Webhook : IDeploymentTaskProvider
     {
         public static DeploymentProviderDefinition Definition { get; }
-        public DeploymentProviderDefinition GetDefinition(DeploymentProviderDefinition currentDefinition) => (currentDefinition ?? Definition);
+        public DeploymentProviderDefinition GetDefinition(DeploymentProviderDefinition currentDefinition = null) => (currentDefinition ?? Definition);
+
+        static Webhook()
+        {
+            Definition = new DeploymentProviderDefinition
+            {
+                Id = "Certify.Providers.DeploymentTasks.Webhook",
+                Title = "Webhook",
+                IsExperimental = true,
+                Description = "Call a custom webhook on renewal success or failure",
+                SupportedContexts = DeploymentContextType.LocalAsService,
+                UsageType = DeploymentProviderUsage.Any,
+                ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
+                {
+                     new ProviderParameter{ Key="url", Name="Webhook URL", IsRequired=true, IsCredential=false , Description="The url for the webhook request" },
+                     new ProviderParameter{ Key="trigger", Name="Webhook Trigger", IsRequired=true, IsCredential=false , Description="The trigger for the webhook (None, Success, Error)", OptionsList="None;Success;Error", Value="None" },
+                     new ProviderParameter{ Key="method", Name="Http Method", IsRequired=true, IsCredential=false , Description="The http method for the webhook request", OptionsList="GET;POST;", Value="POST" },
+                     new ProviderParameter{ Key="contenttype", Name="Content Type", IsRequired=true, IsCredential=false , Description="The http content type header for the webhook request", Value="application/json" },
+                     new ProviderParameter{ Key="contentbody", Name="Content Body", IsRequired=true, IsCredential=false , Description="The http body template for the webhook request" },
+                }
+            };
+        }
 
         public async Task<List<ActionResult>> Execute(ILog log, object subject, DeploymentTaskConfig settings, Dictionary<string, string> credentials, bool isPreviewOnly, DeploymentProviderDefinition definition)
         {
@@ -73,25 +94,5 @@ namespace Certify.Providers.DeploymentTasks.Core
             return results;
         }
 
-        static Webhook()
-        {
-            Definition = new DeploymentProviderDefinition
-            {
-                Id = "Certify.Providers.DeploymentTasks.Webhook",
-                Title = "Webhook",
-                IsExperimental = true,
-                Description = "Call a custom webhook on renewal success or failure",
-                SupportedContexts = DeploymentContextType.LocalAsService,
-                UsageType = DeploymentProviderUsage.Any,
-                ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
-                {
-                     new ProviderParameter{ Key="url", Name="Webhook URL", IsRequired=true, IsCredential=false , Description="The url for the webhook request" },
-                     new ProviderParameter{ Key="trigger", Name="Webhook Trigger", IsRequired=true, IsCredential=false , Description="The trigger for the webhook (None, Success, Error)", OptionsList="None;Success;Error", Value="None" },
-                     new ProviderParameter{ Key="method", Name="Http Method", IsRequired=true, IsCredential=false , Description="The http method for the webhook request", OptionsList="GET;POST;", Value="POST" },
-                     new ProviderParameter{ Key="contenttype", Name="Content Type", IsRequired=true, IsCredential=false , Description="The http content type header for the webhook request", Value="application/json" },
-                     new ProviderParameter{ Key="contentbody", Name="Content Body", IsRequired=true, IsCredential=false , Description="The http body template for the webhook request" },
-                }
-            };
-        }
     }
 }

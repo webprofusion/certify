@@ -15,7 +15,26 @@ namespace Certify.Providers.DeploymentTasks.Core
     public class CertificateStore : IDeploymentTaskProvider
     {
         public static DeploymentProviderDefinition Definition { get; }
-        public DeploymentProviderDefinition GetDefinition(DeploymentProviderDefinition currentDefinition) => (currentDefinition ?? Definition);
+        public DeploymentProviderDefinition GetDefinition(DeploymentProviderDefinition currentDefinition = null) => (currentDefinition ?? Definition);
+
+        static CertificateStore()
+        {
+            Definition = new DeploymentProviderDefinition
+            {
+                Id = "Certify.Providers.DeploymentTasks.CertificateStore",
+                Title = "Certificate Store (Local Machine)",
+                DefaultTitle = "Store Certificate",
+                IsExperimental = false,
+                UsageType = DeploymentProviderUsage.PostRequest,
+                Description = "Store certificate in the local Certificate Store",
+                SupportedContexts = DeploymentContextType.LocalAsService | DeploymentContextType.LocalAsUser,
+                ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
+                {
+                     new ProviderParameter{ Key="storetype", Name="Store", IsRequired=true, IsCredential=false, OptionsList="default=Default; My=Personal (My); WebHosting=Web Hosting", Value="default"  },
+                     new ProviderParameter{ Key="friendlyname", Name="Custom Friendly Name", IsRequired=false, IsCredential=false,  Type= OptionType.String,  Description="(optional) custom friendly name for certificate in store."  },
+                }
+            };
+        }
 
         private bool _enableCertDoubleImportBehaviour { get; set; } = true;
 
@@ -98,23 +117,5 @@ namespace Certify.Providers.DeploymentTasks.Core
             return results;
         }
 
-        static CertificateStore()
-        {
-            Definition = new DeploymentProviderDefinition
-            {
-                Id = "Certify.Providers.DeploymentTasks.CertificateStore",
-                Title = "Certificate Store (Local Machine)",
-                DefaultTitle = "Store Certificate",
-                IsExperimental = false,
-                UsageType = DeploymentProviderUsage.PostRequest,
-                Description = "Store certificate in the local Certificate Store",
-                SupportedContexts = DeploymentContextType.LocalAsService | DeploymentContextType.LocalAsUser,
-                ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
-                {
-                     new ProviderParameter{ Key="storetype", Name="Store", IsRequired=true, IsCredential=false, OptionsList="default=Default; My=Personal (My); WebHosting=Web Hosting", Value="default"  },
-                     new ProviderParameter{ Key="friendlyname", Name="Custom Friendly Name", IsRequired=false, IsCredential=false,  Type= OptionType.String,  Description="(optional) custom friendly name for certificate in store."  },
-                }
-            };
-        }
     }
 }

@@ -27,9 +27,7 @@ namespace Certify.UI.ViewModel
         /// Provide single static instance of model for all consumers 
         /// </summary>
         //public static AppModel AppViewModel = new DesignViewModel(); // for UI testing
-        public static AppViewModel Current = AppViewModel.GetModel();
-
-        Models.Providers.ILog _uiLog = null;
+        public static AppViewModel Current = GetModel();
 
         public AppViewModel()
         {
@@ -47,7 +45,7 @@ namespace Certify.UI.ViewModel
 
         private void Init()
         {
-            _uiLog = new Models.Loggy(
+            Log = new Loggy(
                 new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .WriteTo.Debug()
@@ -62,7 +60,7 @@ namespace Certify.UI.ViewModel
 
         }
 
-        public Models.Providers.ILog Log => _uiLog;
+        public ILog Log { get; private set; } = null;
 
         internal async Task<Preferences> GetPreferences()
         {
@@ -255,7 +253,7 @@ namespace Certify.UI.ViewModel
 
         public static AppViewModel GetModel()
         {
-            var stack = new System.Diagnostics.StackTrace();
+            var stack = new StackTrace();
             if (stack.GetFrames().Last().GetMethod().Name == "Main")
             {
                 return new AppViewModel();
@@ -359,7 +357,7 @@ namespace Certify.UI.ViewModel
             return await CertifyClient.GetDnsProviderZones(challengeProvider, challengeCredentialKey);
         }
 
-        private async void CertifyClient_OnManagedCertificateUpdated(ManagedCertificate obj) => await App.Current.Dispatcher.InvokeAsync(async () =>
+        private async void CertifyClient_OnManagedCertificateUpdated(ManagedCertificate obj) => await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
                                                                                                 {
                                                                                                     // a managed site has been updated, update it in our view
                                                                                                     await UpdatedCachedManagedCertificate(obj);
@@ -390,7 +388,7 @@ namespace Certify.UI.ViewModel
                 // ensure service is correct version
                 var v = Version.Parse(version.Replace("\"", ""));
 
-                var assemblyVersion = typeof(Shared.ServiceConfig).Assembly.GetName().Version;
+                var assemblyVersion = typeof(ServiceConfig).Assembly.GetName().Version;
 
                 if (v.Major != assemblyVersion.Major)
                 {
@@ -418,7 +416,7 @@ namespace Certify.UI.ViewModel
             }
             catch
             {
-                System.Diagnostics.Debug.WriteLine("Pref wait lock exceeded");
+                Debug.WriteLine("Pref wait lock exceeded");
             }
             finally
             {
@@ -434,7 +432,7 @@ namespace Certify.UI.ViewModel
         {
             Preferences = await CertifyClient.GetPreferences();
 
-            var list = await CertifyClient.GetManagedCertificates(new Models.ManagedCertificateFilter());
+            var list = await CertifyClient.GetManagedCertificates(new ManagedCertificateFilter());
 
             foreach (var i in list)
             {
@@ -446,7 +444,7 @@ namespace Certify.UI.ViewModel
                 }
             }
 
-            ManagedCertificates = new System.Collections.ObjectModel.ObservableCollection<Models.ManagedCertificate>(list);
+            ManagedCertificates = new ObservableCollection<ManagedCertificate>(list);
 
             await RefreshCertificateAuthorityList();
 
@@ -550,7 +548,7 @@ namespace Certify.UI.ViewModel
             catch (TaskCanceledException exp)
             {
                 // very long running renewal may time out on task await
-                _uiLog?.Warning("Auto Renewal UI task cancelled (timeout) " + exp.ToString());
+                Log?.Warning("Auto Renewal UI task cancelled (timeout) " + exp.ToString());
             }
 
             // now continue to poll status of current request. should this just be a query for all
@@ -589,7 +587,7 @@ namespace Certify.UI.ViewModel
 
         private void UpdateRequestTrackingProgress(RequestProgressState state)
         {
-            App.Current.Dispatcher.Invoke((Action)delegate
+            System.Windows.Application.Current.Dispatcher.Invoke((Action)delegate
                                         {
                                             var existing = ProgressResults.FirstOrDefault(p => p.ManagedCertificate.Id == state.ManagedCertificate.Id);
 
@@ -699,9 +697,9 @@ namespace Certify.UI.ViewModel
         public async Task RefreshChallengeAPIList()
         {
             var list = await CertifyClient.GetChallengeAPIList();
-            App.Current.Dispatcher.Invoke((Action)delegate
+            System.Windows.Application.Current.Dispatcher.Invoke((Action)delegate
             {
-                ChallengeAPIProviders = new System.Collections.ObjectModel.ObservableCollection<Models.Config.ChallengeProviderDefinition>(list);
+                ChallengeAPIProviders = new ObservableCollection<ChallengeProviderDefinition>(list);
             });
         }
 
@@ -711,9 +709,9 @@ namespace Certify.UI.ViewModel
         public async Task RefreshDeploymentTaskProviderList()
         {
             var list = await CertifyClient.GetDeploymentProviderList();
-            App.Current.Dispatcher.Invoke((Action)delegate
+            System.Windows.Application.Current.Dispatcher.Invoke((Action)delegate
             {
-                DeploymentTaskProviders = new System.Collections.ObjectModel.ObservableCollection<Models.Config.DeploymentProviderDefinition>(list.OrderBy(l => l.Title));
+                DeploymentTaskProviders = new ObservableCollection<DeploymentProviderDefinition>(list.OrderBy(l => l.Title));
             });
         }
     }
