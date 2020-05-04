@@ -91,7 +91,8 @@ namespace Certify.UI.ViewModel
                 item = new DeploymentTaskConfig
                 {
                     ChallengeProvider = StandardAuthTypes.STANDARD_AUTH_LOCAL,
-                    Parameters = new List<ProviderParameterSetting>()
+                    Parameters = new List<ProviderParameterSetting>(),
+                    TaskTrigger = editAsPostRequestTask ? TaskTriggerType.ON_SUCCESS : TaskTriggerType.ANY_STATUS
                 };
             }
             SelectedItem = item;
