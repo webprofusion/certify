@@ -336,19 +336,20 @@ namespace Certify.Management
                 {
                     var excludedCertThumprints = new List<string>();
 
+                    // excluded thumbprints are all certs currently tracked as managed certs
+                    var managedCerts = await GetManagedCertificates();
+
+                    foreach (var c in managedCerts)
+                    {
+                        if (!string.IsNullOrEmpty(c.CertificateThumbprintHash))
+                        {
+                            excludedCertThumprints.Add(c.CertificateThumbprintHash.ToLower());
+                        }
+                    }
+
                     if (mode == CertificateCleanupMode.FullCleanup)
                     {
-                        // excluded thumbprints are all certs currently tracked as managed certs
-                        var managedCerts = await GetManagedCertificates();
-
-                        foreach (var c in managedCerts)
-                        {
-                            if (!string.IsNullOrEmpty(c.CertificateThumbprintHash))
-                            {
-                                excludedCertThumprints.Add(c.CertificateThumbprintHash.ToLower());
-                            }
-                        }
-
+                       
                         // cleanup old pfx files in asset store(s), if any
                         var assetPath = Path.Combine(Util.GetAppDataFolder(), "certes", "assets");
                         if (Directory.Exists(assetPath))
@@ -386,6 +387,8 @@ namespace Certify.Management
 
         private static void DeleteOldCertificateFiles(string assetPath, List<string> ext)
         {
+            // performs a simple delete of certificate files under the assets path where the file creation time is more than 1 year ago
+
             var allFiles = Directory.GetFiles(assetPath, "*.*", SearchOption.AllDirectories)
                  .Where(s => ext.Contains(Path.GetExtension(s)));
 
@@ -394,7 +397,7 @@ namespace Certify.Management
                 try
                 {
                     var createdAt = System.IO.File.GetCreationTime(f);
-                    if (createdAt < DateTime.Now.AddMonths(12))
+                    if (createdAt < DateTime.Now.AddMonths(-12))
                     {
                         //remove old file
                         System.IO.File.Delete(f);
