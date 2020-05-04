@@ -48,7 +48,8 @@ namespace Certify.UI.ViewModel
             RaisePropertyChangedEvent(nameof(SelectedItem));
             RaisePropertyChangedEvent(nameof(HasSelectedItemDomainOptions));
             RaisePropertyChangedEvent(nameof(HasSelectedItemWebsiteSelection));
-            RaisePropertyChangedEvent(nameof(CertificateAuthorities));
+            RaisePropertyChangedEvent(nameof(CertificateAuthorities)); 
+            RaisePropertyChangedEvent(nameof(IsEditable));
         }
 
         public string CertificateAuthorityDescription
@@ -139,6 +140,22 @@ namespace Certify.UI.ViewModel
         public bool IsTestInProgress { get; set; }
         public bool IsSiteListQueryProgress { get; set; }
 
+        [DependsOn(nameof(SelectedItem))]
+        public bool IsEditable
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(SelectedItem?.SourceId))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+        }
         public ManagedCertificate SelectedItem
         {
             get => _appViewModel.SelectedItem;
@@ -308,7 +325,6 @@ namespace Certify.UI.ViewModel
             }
             else
             {
-                //TODO: design view model
                 return new ManagedCertificateDesignViewModel();
             }
         }
@@ -423,7 +439,7 @@ namespace Certify.UI.ViewModel
 
             //apply remaining selected domains as subject alternative names
             var sanList =
-                item.DomainOptions.Where(dm => dm.IsSelected == true)
+                item.DomainOptions.Where(dm => dm.IsSelected)
                 .Select(i => i.Domain)
                 .ToArray();
 

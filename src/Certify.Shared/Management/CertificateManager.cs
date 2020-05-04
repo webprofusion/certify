@@ -286,8 +286,8 @@ namespace Certify.Management
 
         public static List<X509Certificate2> GetCertificatesFromStore(string issuerName = null, string storeName = DEFAULT_STORE_NAME)
         {
-            var list = new List<X509Certificate2>(); 
-            
+            var list = new List<X509Certificate2>();
+
             using (var store = GetStore(storeName))
             {
                 store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
@@ -505,9 +505,6 @@ namespace Certify.Management
                             (excludedThumbprints.Any() && !excludedThumbprints.Any(e => e.ToLower() == c.Thumbprint.ToLower()))
                             )
                         {
-                            //bool isBound = false;
-                            //if (checkBindings) isBound = allCertBindings.Any(b => b.CertificateHash == c.Thumbprint);
-
                             if (cleanupMode == Models.CertificateCleanupMode.AfterExpiry)
                             {
                                 // queue removal of existing expired cert with [Certify] text in friendly name.

@@ -4,11 +4,9 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Certify.Config;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Utils;
-using Microsoft.AspNet.SignalR.Client;
 using Newtonsoft.Json;
 
 namespace Certify.Client
@@ -33,8 +31,8 @@ namespace Certify.Client
     // This version of the client communicates with the Certify.Service instance on the local machine
     public class CertifyApiClient
     {
-        private HttpClient _client;
-        private string _baseUri = "/api/";
+        private readonly HttpClient _client;
+        private readonly string _baseUri = "/api/";
         internal Shared.ServiceConfig _serviceConfig;
 
         public CertifyApiClient(bool useDefaultCredentials = true, Shared.ServiceConfig config = null)
@@ -60,6 +58,7 @@ namespace Certify.Client
                 //alternative auth
                 _client = new HttpClient();
             }
+
             _client.DefaultRequestHeaders.Add("User-Agent", "Certify/App");
             _client.Timeout = new TimeSpan(0, 20, 0); // 20 min timeout on service api calls
         }

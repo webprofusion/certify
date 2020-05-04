@@ -432,13 +432,18 @@ namespace Certify.UI.ViewModel
         {
             Preferences = await CertifyClient.GetPreferences();
 
-            var list = await CertifyClient.GetManagedCertificates(new ManagedCertificateFilter());
+            var filter = new ManagedCertificateFilter();
+
+            // include external managed certs
+            filter.IncludeExternal = true;
+
+            var list = await CertifyClient.GetManagedCertificates(filter);
 
             foreach (var i in list)
             {
                 i.IsChanged = false;
 
-                if (HasDeprecatedChallengeTypes == false && i.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
+                if (!HasDeprecatedChallengeTypes && i.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
                 {
                     HasDeprecatedChallengeTypes = true;
                 }

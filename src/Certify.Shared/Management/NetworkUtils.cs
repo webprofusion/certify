@@ -140,11 +140,13 @@ namespace Certify.Management
 
                 request.Timeout = 5000;
 
+#pragma warning disable SCS0004 // Certificate Validation has been disabled
                 ServicePointManager.ServerCertificateValidationCallback = (obj, cert, chain, errors) =>
                 {
                     // ignore all cert errors when validating URL response
                     return true;
                 };
+#pragma warning restore SCS0004 // Certificate Validation has been disabled
 
                 log.Information($"Checking URL is accessible: {url} [proxyAPI: {useProxy}, timeout: {request.Timeout}ms]");
 
