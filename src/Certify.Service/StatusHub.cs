@@ -27,26 +27,26 @@ namespace Certify.Service
 
         public override Task OnConnected()
         {
-            Debug.WriteLine("Client connected to status stream..");
+            Debug.WriteLine("StatusHub: Client connected to status stream..");
 
             return base.OnConnected();
         }
 
         public override Task OnDisconnected(bool stopCalled)
         {
-            Debug.WriteLine("Client disconnected from status stream..");
+            Debug.WriteLine("StatusHub: Client disconnected from status stream..");
             return base.OnDisconnected(stopCalled);
         }
 
         public static void SendRequestProgressState(RequestProgressState state)
         {
-            Debug.WriteLine("Sending progress state..");
+            Debug.WriteLine("StatusHub: Sending progress state to UI..");
             HubContext.Clients.All.RequestProgressStateUpdated(state);
         }
 
         public static void SendManagedCertificateUpdate(ManagedCertificate site)
         {
-            Debug.WriteLine("Sending updated managed site..");
+            Debug.WriteLine("StatusHub: Sending managed site update to UI..");
             HubContext.Clients.All.ManagedCertificateUpdated(site);
         }
     }

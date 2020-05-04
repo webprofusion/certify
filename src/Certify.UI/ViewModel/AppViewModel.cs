@@ -390,7 +390,7 @@ namespace Certify.UI.ViewModel
                 // ensure service is correct version
                 var v = Version.Parse(version.Replace("\"", ""));
 
-                var assemblyVersion = typeof(AppViewModel).Assembly.GetName().Version;
+                var assemblyVersion = typeof(Shared.ServiceConfig).Assembly.GetName().Version;
 
                 if (v.Major != assemblyVersion.Major)
                 {
