@@ -18,35 +18,29 @@
     d:DesignHeight="600"
     d:DesignWidth="697.442"
     mc:Ignorable="d">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="32" />
-            <RowDefinition Height="42" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <Grid.Resources>
-            <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
-            <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
-            <utils:OptionalBooleanToVisibilityConverter
-                x:Key="InvBoolVisConverter"
-                False="Visible"
-                True="Collapsed" />
-            <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
-            <utils:ManagedCertificateHealthColourConverter x:Key="HealthColourConverter" />
-            <utils:NullVisibilityConverter
-                x:Key="NullVisibleConverter"
-                NotNull="Collapsed"
-                Null="Visible" />
-        </Grid.Resources>
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+        <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
+        <utils:OptionalBooleanToVisibilityConverter
+            x:Key="InvBoolVisConverter"
+            False="Visible"
+            True="Collapsed" />
+        <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
+        <utils:ManagedCertificateHealthColourConverter x:Key="HealthColourConverter" />
+        <utils:NullVisibilityConverter
+            x:Key="NullVisibleConverter"
+            NotNull="Collapsed"
+            Null="Visible" />
+    </UserControl.Resources>
 
+    <DockPanel LastChildFill="False">
         <!--  managed item summary title and close button  -->
 
-        <DockPanel Grid.Row="0">
+        <DockPanel Height="32" DockPanel.Dock="Top">
 
             <!--  Managed Item display name  -->
             <StackPanel
                 Margin="0,0,0,0"
-                DockPanel.Dock="Left"
                 Orientation="Horizontal"
                 Visibility="{Binding IsNameEditMode, Converter={StaticResource ResourceKey=BoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
 
@@ -118,12 +112,18 @@
 
             </Button>
         </DockPanel>
+        <Rectangle
+            Height="1"
+            Margin="16,8"
+            HorizontalAlignment="Stretch"
+            DockPanel.Dock="Top"
+            Fill="{StaticResource ControlBorderBrush}" />
 
         <!--  save/request buttons  -->
         <DockPanel
-            Grid.Row="1"
             Height="32"
             Margin="8,8,8,0"
+            DockPanel.Dock="Top"
             LastChildFill="False"
             Visibility="{Binding IsEditable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
 
@@ -223,10 +223,11 @@
             </Button>
         </DockPanel>
 
+        <!--  managed cert detail tabs  -->
         <DockPanel
-            Grid.Row="2"
             Margin="8,0,8,0"
             Background="{DynamicResource ControlBackgroundBrush}"
+            DockPanel.Dock="Top"
             Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
 
 
@@ -325,5 +326,5 @@
                 </TabItem>
             </Controls:MetroTabControl>
         </DockPanel>
-    </Grid>
+    </DockPanel>
 </UserControl>

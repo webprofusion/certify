@@ -6,31 +6,29 @@
     xmlns:local="clr-namespace:Certify.UI.Controls.ManagedCertificate"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:wpf="clr-namespace:Markdig.Wpf;assembly=Markdig.Wpf"
-    d:DesignHeight="300"
-    d:DesignWidth="300"
     IsVisibleChanged="UserControl_IsVisibleChanged"
     mc:Ignorable="d">
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <DockPanel Margin="8,0,8,8">
 
-            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Preview</TextBlock>
-                <ProgressBar
-                    x:Name="LoadingProgess"
-                    MinWidth="160"
-                    MaxHeight="16"
-                    Margin="16,0,0,0"
-                    IsIndeterminate="True" />
-            </StackPanel>
+    <DockPanel Margin="8,0,8,8" LastChildFill="True">
 
-            <DockPanel Margin="0">
-                <TextBlock
-                    DockPanel.Dock="Top"
-                    Style="{StaticResource Instructions}"
-                    Text="The following is a preview of the actions which will be performed based on these settings:" />
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Preview</TextBlock>
+            <ProgressBar
+                x:Name="LoadingProgess"
+                MinWidth="160"
+                MaxHeight="16"
+                Margin="16,0,0,0"
+                IsIndeterminate="True" />
+        </StackPanel>
 
-                <WebBrowser x:Name="MarkdownView" DockPanel.Dock="Top" />
-            </DockPanel>
+        <DockPanel Margin="0" DockPanel.Dock="Top">
+            <TextBlock
+                DockPanel.Dock="Top"
+                Style="{StaticResource Instructions}"
+                Text="The following is a preview of the actions which will be performed based on these settings:" />
+
+            <WebBrowser x:Name="MarkdownView" DockPanel.Dock="Top" />
         </DockPanel>
-    </ScrollViewer>
+    </DockPanel>
+
 </UserControl>
