@@ -533,15 +533,18 @@ namespace Certify.UI.ViewModel
             var itemTrackers = new Dictionary<string, Progress<RequestProgressState>>();
             foreach (var s in ManagedCertificates)
             {
-                if ((settings.Mode == RenewalMode.Auto && s.IncludeInAutoRenew) || settings.Mode != RenewalMode.Auto)
+                if (string.IsNullOrEmpty(s.SourceId))
                 {
-                    var progressState = new RequestProgressState(RequestState.Running, "Starting..", s);
-                    if (!itemTrackers.ContainsKey(s.Id))
+                    if ((settings.Mode == RenewalMode.Auto && s.IncludeInAutoRenew) || settings.Mode != RenewalMode.Auto)
                     {
-                        itemTrackers.Add(s.Id, new Progress<RequestProgressState>(progressState.ProgressReport));
+                        var progressState = new RequestProgressState(RequestState.Running, "Starting..", s);
+                        if (!itemTrackers.ContainsKey(s.Id))
+                        {
+                            itemTrackers.Add(s.Id, new Progress<RequestProgressState>(progressState.ProgressReport));
 
-                        //begin monitoring progress
-                        UpdateRequestTrackingProgress(progressState);
+                            //begin monitoring progress
+                            UpdateRequestTrackingProgress(progressState);
+                        }
                     }
                 }
             }
