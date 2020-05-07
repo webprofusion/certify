@@ -704,55 +704,86 @@ namespace Certify.Providers.ACME.Certes
 
                     var challenges = new List<AuthorizationChallengeItem>();
 
-                    // add http challenge (if any)
-                    var httpChallenge = await authz.Http();
-                    if (httpChallenge != null)
+                    // determine if we are interested in each challenge type before fetching the challenge details
+                    var includeHttp01 = true;
+                    var includeDns01 = true;
+
+                    if (config.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP) != true)
                     {
-                        var httpChallengeStatus = await httpChallenge.Resource();
+                        includeHttp01 = false;
+                    }
 
-                        log.Information($"Got http-01 challenge {httpChallengeStatus.Url}");
+                    if (config.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS) != true)
+                    {
+                        includeDns01 = false;
+                    }
 
-                        if (httpChallengeStatus.Status == ChallengeStatus.Invalid)
+                    // add http challenge (if any)
+                    if (includeHttp01)
+                    {
+                        var httpChallenge = await authz.Http();
+                        if (httpChallenge != null)
                         {
-                            log.Error($"HTTP challenge has an invalid status");
+                            try
+                            {
+                                var httpChallengeStatus = await httpChallenge.Resource();
+
+                                log.Information($"Got http-01 challenge {httpChallengeStatus.Url}");
+
+                                if (httpChallengeStatus.Status == ChallengeStatus.Invalid)
+                                {
+                                    log.Error($"HTTP challenge has an invalid status");
+                                }
+
+                                challenges.Add(new AuthorizationChallengeItem
+                                {
+                                    ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
+                                    Key = httpChallenge.Token,
+                                    Value = httpChallenge.KeyAuthz,
+                                    ChallengeData = httpChallenge,
+                                    ResourceUri = $"http://{authzDomain.Replace("*.", "")}/.well-known/acme-challenge/{httpChallenge.Token}",
+                                    ResourcePath = $".well-known\\acme-challenge\\{httpChallenge.Token}",
+                                    IsValidated = (httpChallengeStatus.Status == ChallengeStatus.Valid)
+                                });
+                            }
+                            catch (Exception exp)
+                            {
+                                var msg = $"Could fetch http-01 challenge details from ACME server (timeout) : {exp.Message}";
+
+                                log.Error(msg);
+
+                                return new PendingOrder(msg);
+                            }
                         }
-
-                        challenges.Add(new AuthorizationChallengeItem
-                        {
-                            ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
-                            Key = httpChallenge.Token,
-                            Value = httpChallenge.KeyAuthz,
-                            ChallengeData = httpChallenge,
-                            ResourceUri = $"http://{authzDomain.Replace("*.", "")}/.well-known/acme-challenge/{httpChallenge.Token}",
-                            ResourcePath = $".well-known\\acme-challenge\\{httpChallenge.Token}",
-                            IsValidated = (httpChallengeStatus.Status == ChallengeStatus.Valid)
-                        });
                     }
 
                     // add dns challenge (if any)
-                    var dnsChallenge = await authz.Dns();
-                    if (dnsChallenge != null)
+                    if (includeDns01)
                     {
-                        var dnsChallengeStatus = await dnsChallenge.Resource();
-
-                        log.Information($"Got dns-01 challenge {dnsChallengeStatus.Url}");
-
-                        if (dnsChallengeStatus.Status == ChallengeStatus.Invalid)
+                        var dnsChallenge = await authz.Dns();
+                        if (dnsChallenge != null)
                         {
-                            log.Error($"DNS challenge has an invalid status");
+                            var dnsChallengeStatus = await dnsChallenge.Resource();
+
+                            log.Information($"Got dns-01 challenge {dnsChallengeStatus.Url}");
+
+                            if (dnsChallengeStatus.Status == ChallengeStatus.Invalid)
+                            {
+                                log.Error($"DNS challenge has an invalid status");
+                            }
+
+                            var dnsValue = _acme.AccountKey.DnsTxt(dnsChallenge.Token); //ComputeDnsValue(dnsChallenge, _acme.AccountKey);
+                            var dnsKey = $"_acme-challenge.{authzDomain}".Replace("*.", "");
+
+                            challenges.Add(new AuthorizationChallengeItem
+                            {
+                                ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                Key = dnsKey,
+                                Value = dnsValue,
+                                ChallengeData = dnsChallenge,
+                                IsValidated = (dnsChallengeStatus.Status == ChallengeStatus.Valid)
+                            });
                         }
-
-                        var dnsValue = _acme.AccountKey.DnsTxt(dnsChallenge.Token); //ComputeDnsValue(dnsChallenge, _acme.AccountKey);
-                        var dnsKey = $"_acme-challenge.{authzDomain}".Replace("*.", "");
-
-                        challenges.Add(new AuthorizationChallengeItem
-                        {
-                            ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                            Key = dnsKey,
-                            Value = dnsValue,
-                            ChallengeData = dnsChallenge,
-                            IsValidated = (dnsChallengeStatus.Status == ChallengeStatus.Valid)
-                        });
                     }
 
                     // report back on the challenges we now may need to attempt
@@ -1076,7 +1107,7 @@ namespace Certify.Providers.ACME.Certes
             // derived from PR idea by @pkiguy https://github.com/webprofusion/certify/pull/340
 
             var store = new System.Security.Cryptography.X509Certificates.X509Store(
-                System.Security.Cryptography.X509Certificates.StoreName.Root,
+                System.Security.Cryptography.X509Certificates.StoreName.CertificateAuthority,
                 System.Security.Cryptography.X509Certificates.StoreLocation.LocalMachine);
 
             store.Open(System.Security.Cryptography.X509Certificates.OpenFlags.ReadOnly);
@@ -1112,10 +1143,19 @@ namespace Certify.Providers.ACME.Certes
 
             var pfx = certificateChain.ToPfx(csrKey);
             pfx.AddIssuers(GetCACertsFromStore());
-            var pfxBytes = pfx.Build(certFriendlyName, "");
 
-            System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
+            byte[] pfxBytes;
+            try
+            {
+                pfxBytes = pfx.Build(certFriendlyName, "");
+                System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
+            }
+            catch (Exception exp)
+            {
+                throw new Exception("Failed to build certificate as PFX. Check system date/time is correct and that the issuing CA is a trusted root CA on this machine. :" + exp.Message);
+            }
             return pfxPath;
+
         }
 
         private string ExportFullCertPEM(IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
