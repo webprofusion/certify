@@ -119,10 +119,12 @@
                                 <TextBlock
                                     Margin="16,0,0,0"
                                     FontWeight="Normal"
+                                    Foreground="DarkGray"
                                     Text="Managed by " />
                                 <TextBlock
                                     Margin="0,0,0,0"
                                     FontWeight="DemiBold"
+                                    Foreground="DarkGray"
                                     Text="{Binding Path=SourceName}" />
                             </StackPanel>
 

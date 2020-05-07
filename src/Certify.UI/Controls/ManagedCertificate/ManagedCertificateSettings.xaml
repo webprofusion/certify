@@ -124,7 +124,8 @@
             Grid.Row="1"
             Height="32"
             Margin="8,8,8,0"
-            LastChildFill="False">
+            LastChildFill="False"
+            Visibility="{Binding IsEditable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
 
 
 

@@ -33,7 +33,7 @@
         <utils:ExpiryDateColourConverter x:Key="ExpiryDateColourConverter" />
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="8,0,8,8">
+        <StackPanel Margin="0,0,8,8">
 
             <StackPanel Margin="0,0,0,16" Visibility="{Binding SelectedItem.SourceId, Converter={StaticResource NullCollapsedConverter}}">
                 <StackPanel Orientation="Horizontal">
@@ -53,19 +53,19 @@
 
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
-                        Height="16"
-                        Margin="4"
+                        Height="32"
                         Foreground="{StaticResource ValidationSummaryColor1}"
                         Icon="ExclamationTriangle" />
 
                     <TextBlock
-                        DockPanel.Dock="Top"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
                         Foreground="{StaticResource ResourceKey=ValidationSummaryColor1}"
                         Style="{StaticResource Subheading}"
                         Text="Renewal Failure" />
                 </StackPanel>
                 <!--  Renewal warning messages  -->
-                <StackPanel MinHeight="80">
+                <StackPanel MinHeight="80" Margin="0,16">
                     <StackPanel Orientation="Horizontal">
                         <Label
                             Width="160"
@@ -111,7 +111,7 @@
                         Text="If you do not require this certificate anymore you can delete it from the app or uncheck 'Enable Auto Renewal' in General Options to prevent further renewal error messages." />
                 </StackPanel>
                 <Border
-                    Margin="8,16,8,8"
+                    Margin="0,16,8,8"
                     Background="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
                     DockPanel.Dock="Top">
                     <TextBlock
@@ -126,20 +126,20 @@
 
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
-                        Height="16"
-                        Margin="4"
+                        Height="32"
                         Foreground="{StaticResource AccentBaseColorBrush}"
                         Icon="CheckCircle" />
 
                     <TextBlock
-                        DockPanel.Dock="Top"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
                         Foreground="{StaticResource AccentBaseColorBrush}"
                         Style="{StaticResource Subheading}">
                         Certificate Active
                     </TextBlock>
                 </StackPanel>
                 <!--  Renewal success messages  -->
-                <StackPanel MinHeight="80">
+                <StackPanel MinHeight="80" Margin="0,16">
                     <StackPanel Orientation="Horizontal">
                         <Label
                             Width="160"
@@ -180,19 +180,19 @@
 
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
-                        Height="16"
-                        Margin="4"
+                        Height="32"
                         Foreground="{StaticResource ValidationSummaryColor1}"
                         Icon="PauseCircle" />
 
                     <TextBlock
-                        DockPanel.Dock="Top"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
                         Foreground="{StaticResource ResourceKey=ValidationSummaryColor1}"
                         Style="{StaticResource Subheading}"
                         Text="Waiting for User Action" />
                 </StackPanel>
                 <!--  Renewal warning messages  -->
-                <StackPanel>
+                <StackPanel Margin="0,16">
 
                     <TextBlock
                         Margin="0,0,0,0"
