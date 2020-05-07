@@ -41,11 +41,16 @@ namespace Certify.Client
 
             _baseUri = $"{(_serviceConfig.UseHTTPS ? "https" : "http")}://{_serviceConfig.Host}:{_serviceConfig.Port}" + _baseUri;
 
-            ServicePointManager.ServerCertificateValidationCallback += (obj, cert, chain, errors) =>
+#pragma warning disable SCS0004 // Certificate Validation has been disabled
+            if (_serviceConfig.UseHTTPS)
             {
-                // ignore all cert errors when validating URL response
-                return true;
-            };
+                ServicePointManager.ServerCertificateValidationCallback += (obj, cert, chain, errors) =>
+                {
+                    // ignore all cert errors when validating URL response
+                    return true;
+                };
+            }
+#pragma warning restore SCS0004 // Certificate Validation has been disabled
 
 
             if (useDefaultCredentials)

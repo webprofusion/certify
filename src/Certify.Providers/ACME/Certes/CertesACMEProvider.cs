@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 
 using System.Text;
@@ -110,7 +111,8 @@ namespace Certify.Providers.ACME.Certes
         private readonly string _userAgentName = "Certify SSL Manager";
         private ILog _log = null;
 
-        public CertesACMEProvider(string acmeBaseUri, string settingsPath, string userAgentName)
+
+        public CertesACMEProvider(string acmeBaseUri, string settingsPath, string userAgentName, bool allowInvalidTls = false)
         {
             _settingsFolder = settingsPath;
 
@@ -119,6 +121,20 @@ namespace Certify.Providers.ACME.Certes
             _userAgentName = $"{userAgentName} {certesAssembly.Name}/{certesAssembly.Version}";
 
             _serviceUri = new Uri(acmeBaseUri);
+
+
+#pragma warning disable SCS0004 // Certificate Validation has been disabled
+            if (allowInvalidTls)
+            {
+                ServicePointManager.ServerCertificateValidationCallback += (obj, cert, chain, errors) =>
+                {
+                    // ignore all cert errors when validating URL response
+                    return true;
+                };
+            }
+#pragma warning restore SCS0004 // Certificate Validation has been disabled
+
+
         }
 
         public string GetProviderName() => "Certes";

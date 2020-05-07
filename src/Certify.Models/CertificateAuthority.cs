@@ -79,5 +79,6 @@ namespace Certify.Models
         public bool IsEnabled { get; set; }
         public int SANLimit { get; set; }
         public bool RequiresEmailAddress { get; set; }
+        public bool AllowUntrustedTls { get; set; } = false;
     }
 }

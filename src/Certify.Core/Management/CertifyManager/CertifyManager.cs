@@ -140,7 +140,7 @@ namespace Certify.Management
                 {
                     var acmeBaseUrl = managedItem.UseStagingMode ? ca.StagingAPIEndpoint : ca.ProductionAPIEndpoint;
 
-                    return await GetACMEProvider(acc, acmeBaseUrl);
+                    return await GetACMEProvider(acc.StorageKey, acmeBaseUrl, acc);
                 }
                 else
                 {
@@ -154,7 +154,7 @@ namespace Certify.Management
             }
         }
 
-        private async Task<IACMEClientProvider> GetACMEProvider(string storageKey, string acmeApiEndpoint = null)
+        private async Task<IACMEClientProvider> GetACMEProvider(string storageKey, string acmeApiEndpoint = null, AccountDetails account = null)
         {
             // get or init acme provider required for the given account
             if (_acmeClientProviders.TryGetValue(storageKey, out var provider))
@@ -167,30 +167,9 @@ namespace Certify.Management
 
                 var newProvider = new CertesACMEProvider(acmeApiEndpoint, Management.Util.GetAppDataFolder() + "\\certes_" + storageKey, userAgent);
 
-                await newProvider.InitProvider(_serviceLog);
-
-                _acmeClientProviders.TryAdd(storageKey, newProvider);
-
-                return newProvider;
-            }
-        }
-
-        private async Task<IACMEClientProvider> GetACMEProvider(AccountDetails account, string acmeApiEndpoint = null)
-        {
-            // get or init acme provider required for the given account
-            if (_acmeClientProviders.TryGetValue(account.StorageKey, out var provider))
-            {
-                return provider;
-            }
-            else
-            {
-                var userAgent = Util.GetUserAgent();
-
-                var newProvider = new CertesACMEProvider(acmeApiEndpoint, Management.Util.GetAppDataFolder() + "\\certes_" + account.StorageKey, userAgent);
-
                 await newProvider.InitProvider(_serviceLog, account);
 
-                _acmeClientProviders.TryAdd(account.StorageKey, newProvider);
+                _acmeClientProviders.TryAdd(storageKey, newProvider);
 
                 return newProvider;
             }
