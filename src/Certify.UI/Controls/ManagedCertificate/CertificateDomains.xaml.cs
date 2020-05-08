@@ -56,6 +56,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                     WebsiteDropdown.Text = "(No IIS Sites Found)";
                 }
 
+                this.CertificateAuthorityList.ItemsSource = ItemViewModel.CertificateAuthorities;
 
 
                 if (ItemViewModel.SelectedItem != null)
@@ -75,6 +76,8 @@ namespace Certify.UI.Controls.ManagedCertificate
                     {
                         ItemViewModel.SelectedWebSite = null;
                     }
+
+                    
                 }
             }
         }

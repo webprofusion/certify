@@ -45,10 +45,13 @@ namespace Certify.UI.ViewModel
             RaisePropertyChangedEvent(nameof(DateNextRenewalDue));
 
             RaisePropertyChangedEvent(nameof(IsSelectedItemValid));
+
+           
+
             RaisePropertyChangedEvent(nameof(SelectedItem));
             RaisePropertyChangedEvent(nameof(HasSelectedItemDomainOptions));
             RaisePropertyChangedEvent(nameof(HasSelectedItemWebsiteSelection));
-            RaisePropertyChangedEvent(nameof(CertificateAuthorities)); 
+            RaisePropertyChangedEvent(nameof(CertificateAuthorityDescription));
             RaisePropertyChangedEvent(nameof(IsEditable));
         }
 
