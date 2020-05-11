@@ -50,7 +50,7 @@ namespace Certify.Core.Tests
             {
                 await iisManager.DeleteSite(testSiteName);
             }
-            var site = iisManager.CreateSite(testSiteName, testSiteDomain, PrimaryIISRoot, "DefaultAppPool");
+            var site = await iisManager.CreateSite(testSiteName, testSiteDomain, PrimaryIISRoot, "DefaultAppPool");
             _siteId = site.Id.ToString();
             Assert.IsTrue(await iisManager.SiteExists(testSiteName));
         }
@@ -139,6 +139,7 @@ namespace Certify.Core.Tests
         }
 
         [TestMethod]
+        [Ignore]
         public async Task TestManySiteBindingUpdates()
         {
             var numSites = 100;
@@ -240,6 +241,7 @@ namespace Certify.Core.Tests
         }
 
         [TestMethod]
+        [Ignore]
         public async Task TestTooManyBindings()
         {
             //delete test if it exists

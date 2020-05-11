@@ -12,8 +12,6 @@ namespace Certify.Core.Management
 {
     public class BindingDeploymentManager
     {
-        private readonly IdnMapping _idnMapping = new IdnMapping();
-
         private bool _enableCertDoubleImportBehaviour { get; set; } = true;
 
         private static string[] unassignedIPs = new string[] {
@@ -171,6 +169,9 @@ namespace Certify.Core.Management
 
                     existingBindings = existingBindings.OrderBy(b => b.Protocol).ThenBy(b => b.Host).ToList();
 
+                    // copy existing bindings so we can add/remove
+                    var updatedBindings = existingBindings.ToList();
+
                     // for each binding create or update an https binding
                     foreach (var b in existingBindings)
                     {
@@ -269,7 +270,7 @@ namespace Certify.Core.Management
                                 var stepActions = await UpdateBinding(
                                    deploymentTarget,
                                    site,
-                                   existingBindings,
+                                   updatedBindings,
                                    certStoreName,
                                    certHash,
                                    hostname,
@@ -288,7 +289,7 @@ namespace Certify.Core.Management
                                 var stepActions = await UpdateFtpBinding(
                                    deploymentTarget,
                                    site,
-                                   existingBindings,
+                                   updatedBindings,
                                    certStoreName,
                                    managedCertificate.CertificateThumbprintHash,
                                    sslPort,

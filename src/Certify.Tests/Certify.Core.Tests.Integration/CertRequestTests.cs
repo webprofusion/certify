@@ -304,7 +304,7 @@ namespace Certify.Core.Tests
                 await iisManager.DeleteSite("TestBazillionDomains");
             }
 
-            var site = iisManager.CreateSite("TestBazillionDomains", domainList[0], testSitePath, "DefaultAppPool", port: testSiteHttpPort);
+            var site = await iisManager.CreateSite("TestBazillionDomains", domainList[0], testSitePath, "DefaultAppPool", port: testSiteHttpPort);
 
             // add bindings
             await iisManager.AddSiteBindings(site.Id.ToString(), domainList, testSiteHttpPort);
@@ -430,7 +430,7 @@ namespace Certify.Core.Tests
                 await iisManager.DeleteSite(testWildcardSiteName);
             }
 
-            var site = iisManager.CreateSite(testWildcardSiteName, "test" + testStr + "." + PrimaryTestDomain, PrimaryIISRoot, "DefaultAppPool", port: testSiteHttpPort);
+            var site = await iisManager.CreateSite(testWildcardSiteName, "test" + testStr + "." + PrimaryTestDomain, PrimaryIISRoot, "DefaultAppPool", port: testSiteHttpPort);
 
             ManagedCertificate managedCertificate = null;
             X509Certificate2 certInfo = null;

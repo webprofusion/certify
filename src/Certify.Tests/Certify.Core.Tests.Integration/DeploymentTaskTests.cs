@@ -70,6 +70,7 @@ namespace Certify.Core.Tests
         {
 
             var managedCertificate = GetMockManagedCertificate("PreDeploymentTask1", testSiteDomain);
+            managedCertificate.LastRenewalStatus = RequestState.Success;
 
             managedCertificate.PreRequestTasks = new ObservableCollection<DeploymentTaskConfig> {
                                                                             GetMockTaskConfig("Pre Task 1"),
