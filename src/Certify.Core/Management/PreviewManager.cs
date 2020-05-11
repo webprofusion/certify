@@ -319,11 +319,6 @@ namespace Certify.Management
                         // add deployment sub-steps (if any)
                         var bindingRequest = await certifyManager.DeployCertificate(item, null, true);
 
-                        if (bindingRequest.Actions != null)
-                        {
-                            deploymentStep.Substeps = bindingRequest.Actions;
-                        }
-
                         if (bindingRequest.Actions == null || !bindingRequest.Actions.Any())
                         {
                             deploymentStep.Substeps = new List<ActionStep>
@@ -333,6 +328,8 @@ namespace Certify.Management
                         }
                         else
                         {
+                            deploymentStep.Substeps = bindingRequest.Actions;
+
                             deploymentDescription.AppendLine(" Action | Site | Binding ");
                             deploymentDescription.Append(" ------ | ---- | ------- ");
                         }

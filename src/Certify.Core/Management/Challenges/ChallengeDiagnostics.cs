@@ -418,7 +418,7 @@ namespace Certify.Core.Management.Challenges
                 }
             }
 
-            log.Information("Using website path {path}", websiteRootPath);
+            log.Information("Using website path {path}", websiteRootPath ?? "[Auto]");
 
             if (string.IsNullOrEmpty(websiteRootPath) || !Directory.Exists(websiteRootPath))
             {
