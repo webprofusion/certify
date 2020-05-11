@@ -30,11 +30,18 @@ namespace Certify.Management
 
         }
 
-        private string GetPluginFolderPath()
+        private string GetPluginFolderPath(bool usePluginSubfolder = true)
         {
             var executableLocation = Assembly.GetExecutingAssembly().Location;
-            var path = Path.Combine(Path.GetDirectoryName(executableLocation), "Plugins");
-            return path;
+            if (usePluginSubfolder)
+            {
+                var path = Path.Combine(Path.GetDirectoryName(executableLocation), "Plugins");
+                return path;
+            }
+            else
+            {
+                return Path.GetDirectoryName(executableLocation);
+            }
         }
 
         private T LoadPlugin<T>(string dllFileName, Type interfaceType)
@@ -42,6 +49,11 @@ namespace Certify.Management
             try
             {
                 var pluginPath = GetPluginFolderPath() + "\\" + dllFileName;
+
+                if (!File.Exists(pluginPath))
+                {
+                    pluginPath = GetPluginFolderPath(usePluginSubfolder: false) + "\\" + dllFileName;
+                }
 
                 if (File.Exists(pluginPath))
                 {
