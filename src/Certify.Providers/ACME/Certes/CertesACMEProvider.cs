@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -876,13 +876,16 @@ namespace Certify.Providers.ACME.Certes
                 {
                     var result = await challenge.Validate();
 
-                    var attempts = 10;
+                    var maxAttempts = 10;
+                    var attempts = maxAttempts;
 
                     while (attempts > 0 && (result.Status == ChallengeStatus.Pending || result.Status == ChallengeStatus.Processing) && result.Error?.Detail == null)
                     {
                         log?.Warning($"Challenge response validation still pending. Re-checking [{attempts}]..");
 
-                        await Task.Delay(500);
+                        // wait an increasing amount of time before checking again
+                        var waitMs = 1000 + (((maxAttempts + 1) - attempts) * 500);
+                        await Task.Delay(waitMs);
 
                         result = await challenge.Resource();
 
@@ -899,7 +902,14 @@ namespace Certify.Providers.ACME.Certes
                     }
                     else
                     {
-                        var msg = result.Error?.Detail ?? "Validation failed - unknown failure reason";
+                        var defaultError = "Validation failed - unknown failure reason";
+
+                        if (result.Status == ChallengeStatus.Pending)
+                        {
+                            defaultError = "Validation failed to complete within the time allowed.";
+                        }
+
+                        var msg = result.Error?.Detail ?? defaultError;
 
                         if (result.Error?.Subproblems?.Any() == true)
                         {
