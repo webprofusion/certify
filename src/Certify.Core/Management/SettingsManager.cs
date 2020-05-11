@@ -238,46 +238,61 @@ namespace Certify.Management
         }
         public static void LoadAppSettings()
         {
-            var appDataPath = Util.GetAppDataFolder();
-            var path = appDataPath + "\\" + COREAPPSETTINGSFILE;
-
-            if (System.IO.File.Exists(path))
+            try
             {
-                //ensure permissions
+                var appDataPath = Util.GetAppDataFolder();
+                var path = appDataPath + "\\" + COREAPPSETTINGSFILE;
 
-                //load content
-                lock (COREAPPSETTINGSFILE)
+                if (System.IO.File.Exists(path))
                 {
-                    var configData = System.IO.File.ReadAllText(path);
-                    CoreAppSettings.Current = Newtonsoft.Json.JsonConvert.DeserializeObject<CoreAppSettings>(configData);
+                    //ensure permissions
 
-                    // init new settings if not set
-                    if (CoreAppSettings.Current.CertificateCleanupMode == null)
+                    //load content
+                    lock (COREAPPSETTINGSFILE)
                     {
-                        CoreAppSettings.Current.CertificateCleanupMode = CertificateCleanupMode.AfterExpiry;
-                    }
+                        var configData = System.IO.File.ReadAllText(path);
+                        CoreAppSettings.Current = Newtonsoft.Json.JsonConvert.DeserializeObject<CoreAppSettings>(configData);
 
+                        // init new settings if not set
+                        if (CoreAppSettings.Current.CertificateCleanupMode == null)
+                        {
+                            CoreAppSettings.Current.CertificateCleanupMode = CertificateCleanupMode.AfterExpiry;
+                        }
+
+                    }
+                }
+                else
+                {
+                    // no core app settings yet
+
+                    ApplyDefaults();
+                    SaveAppSettings();
+                }
+
+                // if instance id not yet set, create it now and save
+                if (string.IsNullOrEmpty(CoreAppSettings.Current.InstanceId))
+                {
+                    CoreAppSettings.Current.InstanceId = Guid.NewGuid().ToString();
+                    SaveAppSettings();
                 }
             }
-            else
+            catch (Exception)
             {
-                // no core app settings yet
+                // failed to load app settings, settings may be corrupt or user may not have permission to read or write
+                // use defaults, but don't save
 
-                CoreAppSettings.Current.LegacySettingsUpgraded = true;
-                CoreAppSettings.Current.IsInstanceRegistered = false;
-                CoreAppSettings.Current.Language = null;
-                CoreAppSettings.Current.CertificateCleanupMode = CertificateCleanupMode.AfterExpiry;
-
-                CoreAppSettings.Current.InstanceId = Guid.NewGuid().ToString();
-                SaveAppSettings();
+                ApplyDefaults();
             }
+        }
 
-            // if instance id not yet set, create it now and save
-            if (string.IsNullOrEmpty(CoreAppSettings.Current.InstanceId))
-            {
-                CoreAppSettings.Current.InstanceId = Guid.NewGuid().ToString();
-                SaveAppSettings();
-            }
+        private static void ApplyDefaults()
+        {
+            CoreAppSettings.Current.LegacySettingsUpgraded = true;
+            CoreAppSettings.Current.IsInstanceRegistered = false;
+            CoreAppSettings.Current.Language = null;
+            CoreAppSettings.Current.CertificateCleanupMode = CertificateCleanupMode.AfterExpiry;
+
+            CoreAppSettings.Current.InstanceId = Guid.NewGuid().ToString();
         }
     }
 }

@@ -257,9 +257,16 @@ namespace Certify.Management
                     db.Close();
                 }
             }
-
-            return Unprotect(protectedString, PROTECTIONENTROPY, DataProtectionScope.CurrentUser);
+            try
+            {
+                return Unprotect(protectedString, PROTECTIONENTROPY, DataProtectionScope.CurrentUser);
+            }
+            catch (Exception exp)
+            {
+                throw new AggregateException($"Failed to decrypt Credential [{storageKey}] - it was most likely created by a different user account.", exp);
+            }
         }
+
 
         public async Task<Dictionary<string, string>> GetUnlockedCredentialsDictionary(string storageKey)
         {

@@ -73,11 +73,19 @@ namespace Certify.Management
                 // got stored acme accounts
                 foreach (var c in acmeCredentials)
                 {
-                    var acc = await GetAccountDetailsFromCredential(c);
-                    if (acc != null)
+                    try
                     {
-                        list.Add(acc);
+                        var acc = await GetAccountDetailsFromCredential(c);
+                        if (acc != null)
+                        {
+                            list.Add(acc);
+                        }
                     }
+                    catch (Exception exp)
+                    {
+                        _serviceLog.Error($"Failed to decrypt Account Credentials [{c.Title}] {exp.Message}");
+                    }
+
                 }
 
             }
