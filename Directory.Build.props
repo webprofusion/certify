@@ -1,14 +1,14 @@
 <Project>
-
   <PropertyGroup>
-    <Version>5.0.4-beta</Version>
-    <AssemblyVersion>5.0.4</AssemblyVersion>
+    <Version>5.0.5</Version>
+    <AssemblyVersion>5.0.5</AssemblyVersion>
     <Authors>Webprofusion Pty Ltd</Authors>
     <Company>Webprofusion Pty Ltd</Company>
     <Product>Certify The Web - Certify SSL Manager</Product>
     <PackageProjectUrl>https://certifytheweb.com</PackageProjectUrl>
     <RepositoryUrl>https://github.com/webprofusion/certify</RepositoryUrl>
     <Deterministic>true</Deterministic>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
-
 </Project>
