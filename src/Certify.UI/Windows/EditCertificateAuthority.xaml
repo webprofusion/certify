@@ -1,0 +1,100 @@
+<Controls:MetroWindow
+    x:Class="Certify.UI.Windows.EditCertificateAuthority"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:Models="clr-namespace:Certify.Models;assembly=Certify.Core"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Certify.UI.Windows"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+    Title="Edit Certificate Authority"
+    Width="514"
+    Height="366"
+    BorderThickness="1"
+    GlowBrush="{DynamicResource AccentColorBrush}"
+    ResizeMode="NoResize"
+    TitleCaps="False"
+    WindowStartupLocation="CenterOwner"
+    WindowTransitionsEnabled="False"
+    mc:Ignorable="d">
+    <Controls:MetroWindow.LayoutTransform>
+        <ScaleTransform x:Name="ApplicationScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding MainViewModel.UIScaleFactor}" ScaleY="{Binding MainViewModel.UIScaleFactor}" />
+    </Controls:MetroWindow.LayoutTransform>
+    <DockPanel LastChildFill="False">
+        <!--  Certificate Authority Preference  -->
+        <StackPanel
+            Margin="0,8"
+            DockPanel.Dock="Top"
+            Orientation="Horizontal">
+            <Label Margin="12,4,4,4" Content="Certificate Authority" />
+            <ComboBox
+                x:Name="CertificateAuthorityList"
+                Width="300"
+                DisplayMemberPath="Title"
+                ItemsSource="{Binding CertificateAuthorities}"
+                SelectedValue="{Binding Item.CertificateAuthorityId}"
+                SelectedValuePath="Id"
+                SelectionChanged="CertificateAuthorityList_SelectionChanged" />
+        </StackPanel>
+        <!--  Certificate Authority Preference  -->
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+
+            <CheckBox
+                Width="297"
+                Margin="132,4,0,4"
+                Content="Use Staging (Test) Mode"
+                IsChecked="{Binding Item.IsStaging}" />
+        </StackPanel>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+            <Label
+                Width="120"
+                Margin="12,0,0,0"
+                VerticalAlignment="Top"
+                Content="{x:Static res:SR.Email_Address}" />
+            <TextBox
+                Width="300"
+                Height="23"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Text="{Binding Item.EmailAddress}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+        <TextBlock
+            Width="490"
+            Margin="12,8,8,0"
+            DockPanel.Dock="Top"
+            Style="{StaticResource Instructions}"
+            TextWrapping="Wrap"><Run Text="{x:Static res:SR.New_Contact_Tip2}" /></TextBlock>
+        <TextBlock
+            Margin="12,0,0,0"
+            VerticalAlignment="Top"
+            DockPanel.Dock="Top"
+            FontWeight="Bold"
+            Style="{StaticResource Instructions}"
+            Text="{x:Static res:SR.New_Contact_NeedAgree}"
+            TextWrapping="Wrap" />
+
+        <CheckBox
+            Margin="12,12,12,12"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Content="{x:Static res:SR.Yes_I_Agree}"
+            DockPanel.Dock="Top"
+            IsChecked="{Binding Item.AgreedToTermsAndConditions}" />
+
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+            <Button
+                x:Name="Save"
+                Margin="12,0,0,0"
+                Click="Save_Click"
+                Content="{x:Static res:SR.Register_Contact}" />
+            <Button
+                x:Name="Cancel"
+                Width="100"
+                Margin="280,0,0,0"
+                Click="Cancel_Click"
+                Content="{x:Static res:SR.Cancel}" />
+        </StackPanel>
+    </DockPanel>
+</Controls:MetroWindow>
