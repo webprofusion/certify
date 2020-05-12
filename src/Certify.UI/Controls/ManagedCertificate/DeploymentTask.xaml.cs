@@ -129,7 +129,10 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private async void TargetType_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            await RefreshEditModelOptions();
+            if (TargetType.SelectedValue != null)
+            {
+                await RefreshEditModelOptions();
+            }
         }
 
 

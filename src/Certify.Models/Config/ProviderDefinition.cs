@@ -23,6 +23,8 @@ namespace Certify.Models.Config
         public string Config { get; set; }
         public bool IsExperimental { get; set; }
         public bool IsTestModeSupported { get; set; } = true;
+        public bool HasDynamicParameters { get; set; } = false;
+
         public ProviderDefinition()
         {
             ProviderParameters = new List<ProviderParameter>();

@@ -75,5 +75,7 @@ namespace Certify.Management
         Task<List<DeploymentProviderDefinition>> GetDeploymentProviders();
 
         Task<List<ActionResult>> ValidateDeploymentTask(ManagedCertificate managedCertificate, DeploymentTaskConfig taskConfig);
+
+        Task<DeploymentProviderDefinition> GetDeploymentProviderDefinition(string id, DeploymentTaskConfig config);
     }
 }

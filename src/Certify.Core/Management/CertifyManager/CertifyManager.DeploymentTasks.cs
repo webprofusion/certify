@@ -20,6 +20,17 @@ namespace Certify.Management
         {
             return await Core.Management.DeploymentTasks.DeploymentTaskProviderFactory.GetDeploymentTaskProviders(_pluginManager.DeploymentTaskProviders);
         }
+        /// <summary>
+        /// Get the current defintion for a provider including dynamic elements affected by the given config
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public async Task<DeploymentProviderDefinition> GetDeploymentProviderDefinition(string id, DeploymentTaskConfig config = null)
+        {
+            var provider = DeploymentTaskProviderFactory.Create(id, _pluginManager.DeploymentTaskProviders);
+            return provider.GetDefinition();            
+        }
 
         public async Task<List<ActionStep>> PerformDeploymentTask(ILog log, string managedCertificateId, string taskId, bool isPreviewOnly, bool skipDeferredTasks)
         {

@@ -722,5 +722,33 @@ namespace Certify.UI.ViewModel
                 DeploymentTaskProviders = new ObservableCollection<DeploymentProviderDefinition>(list.OrderBy(l => l.Title));
             });
         }
+
+        /// <summary>
+        /// Get a specific deployment task provider definition dynamically
+        /// </summary>
+        /// <returns></returns>
+        public async Task<DeploymentProviderDefinition> GetDeploymentTaskProviderDefinition(string id, Config.DeploymentTaskConfig config = null)
+        {
+            var definition = await CertifyClient.GetDeploymentProviderDefinition(id, config);
+            if (definition != null)
+            {
+                System.Windows.Application.Current.Dispatcher.Invoke((Action)delegate
+                {
+
+                    var orig = DeploymentTaskProviders.FirstOrDefault(i => i.Id == definition.Id);
+                    var index = DeploymentTaskProviders.IndexOf(orig);
+
+                    if (orig != null)
+                    {
+                        DeploymentTaskProviders.Remove(orig);
+                    }
+
+                    // replace definition in list
+                    DeploymentTaskProviders.Insert(index >= 0 ? index : 0, definition);
+                });
+            }
+
+            return definition;
+        }
     }
 }

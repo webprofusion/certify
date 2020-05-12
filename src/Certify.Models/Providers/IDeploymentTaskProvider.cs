@@ -26,4 +26,5 @@ namespace Certify.Providers.DeploymentTasks
             Dictionary<string, string> credentials,
             DeploymentProviderDefinition definition);
     }
+
 }

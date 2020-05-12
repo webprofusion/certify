@@ -21,6 +21,7 @@ namespace Certify.UI.ViewModel
 
         public bool EditAsPostRequestTask { get; set; } = false;
 
+        private string _lastCachedDynamicProvider = null;
 
         public StoredCredential SelectedCredentialItem
         {
@@ -178,6 +179,7 @@ namespace Certify.UI.ViewModel
         {
             if (SelectedItem.TaskTypeId != null)
             {
+           
                 DeploymentProvider = _appViewModel.DeploymentTaskProviders.FirstOrDefault(d => d.Id == SelectedItem.TaskTypeId);
 
                 if (resetDefaults)
@@ -187,6 +189,22 @@ namespace Certify.UI.ViewModel
                 }
 
                 RefreshParameters();
+
+                // TODO: improve binding logic - caching is used because there is currently some repeated work
+                if (DeploymentProvider.HasDynamicParameters && _lastCachedDynamicProvider!=DeploymentProvider.Id)
+                {
+                    _lastCachedDynamicProvider = DeploymentProvider.Id;
+
+                    // refresh dynamic parameters
+                    var def = await _appViewModel.GetDeploymentTaskProviderDefinition(DeploymentProvider.Id, SelectedItem);
+                    if (def != null)
+                    {
+                        DeploymentProvider = def;
+                      
+                        RefreshParameters();
+                    }
+                }
+
                 await RefreshCredentialOptions();
 
 

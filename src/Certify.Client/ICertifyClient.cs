@@ -85,6 +85,7 @@ namespace Certify.Client
         Task<List<CertificateRequestResult>> BeginAutoRenewal(RenewalSettings settings);
 
         Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly);
+
         Task<CertificateRequestResult> RefetchCertificate(string managedItemId);
 
         Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused);
@@ -100,6 +101,8 @@ namespace Certify.Client
         Task<List<ChallengeProviderDefinition>> GetChallengeAPIList();
 
         Task<List<DeploymentProviderDefinition>> GetDeploymentProviderList();
+
+        Task<DeploymentProviderDefinition> GetDeploymentProviderDefinition(string id, Config.DeploymentTaskConfig config);
 
         Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly);
 

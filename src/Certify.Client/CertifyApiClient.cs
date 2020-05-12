@@ -331,6 +331,12 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<List<DeploymentProviderDefinition>>(response);
         }
 
+        public async Task<DeploymentProviderDefinition> GetDeploymentProviderDefinition(string id, Config.DeploymentTaskConfig config)
+        {
+            var response = await PostAsync($"managedcertificates/deploymentprovider/{id}", config);
+            return JsonConvert.DeserializeObject<DeploymentProviderDefinition>(await response.Content.ReadAsStringAsync());
+        }
+
         public async Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly)
         {
             if (string.IsNullOrEmpty(taskId))
