@@ -242,7 +242,7 @@ namespace Certify.Core.Management.Challenges
                         var dnsResult =
                              await PerformChallengeResponse_Dns01(
                                 log,
-                                domain.Replace("*.", ""),
+                                domain,
                                 managedCertificate,
                                 simulatedAuthorization,
                                 isTestMode: true
