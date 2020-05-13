@@ -21,7 +21,7 @@ namespace Certify.Core.Management
                 "::",
                 "*"
             };
-        
+
         private static string[] nonSpecificHostnames = new string[] {
                 null,
                 "",
@@ -54,7 +54,7 @@ namespace Certify.Core.Management
             var certStoreName = CertificateManager.GetStore().Name;
             X509Certificate2 storedCert = null;
             byte[] certHash = null;
-
+  
             // unless user has opted not to store cert, store it now
             if (requestConfig.DeploymentSiteOption != DeploymentOption.NoDeployment)
             {
@@ -66,6 +66,10 @@ namespace Certify.Core.Management
                         if (storedCert != null)
                         {
                             certHash = storedCert.GetCertHash();
+                           
+
+                            // TODO: move setting friendly name to cert request manager
+                            managedCertificate.CertificateFriendlyName = storedCert.FriendlyName;
 
                             actions.Add(new ActionStep { HasError = false, Title = "Certificate Stored", Category = "Certificate Storage", Description = "Certificate stored OK" });
                         }
@@ -81,6 +85,7 @@ namespace Certify.Core.Management
                     //fake cert for preview only
                     storedCert = new X509Certificate2();
                     certHash = new byte[] { 0x00, 0x01, 0x02 };
+     
                 }
             }
 

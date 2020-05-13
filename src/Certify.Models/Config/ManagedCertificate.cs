@@ -166,6 +166,7 @@ namespace Certify.Models
 
         public string CertificateId { get; set; }
         public string CertificatePath { get; set; }
+        public string CertificateFriendlyName { get; set; }
         public string CertificateThumbprintHash { get; set; }
         public string CertificatePreviousThumbprintHash { get; set; }
         public bool CertificateRevoked { get; set; }
