@@ -334,7 +334,7 @@ namespace Certify.Management
 
                     LogMessage(managedCertificate.Id, $"Performing Pre-Request Tasks..");
 
-                    var results = await PerformTaskList(log, isPreviewOnly: false, false, certRequestResult, managedCertificate.PreRequestTasks);
+                    var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, certRequestResult, managedCertificate.PreRequestTasks);
 
                     // log results
                     var preRequestTasks = new ActionStep
@@ -458,7 +458,7 @@ namespace Certify.Management
                 // run applicable deployment tasks (whether success or failed), powershell
                 LogMessage(managedCertificate.Id, $"Performing Post-Request (Deployment) Tasks..");
 
-                var results = await PerformTaskList(log, isPreviewOnly: false, false, certRequestResult, managedCertificate.PostRequestTasks);
+                var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, certRequestResult, managedCertificate.PostRequestTasks);
 
                 // log results
                 var postRequestTasks = new ActionStep
@@ -993,7 +993,7 @@ namespace Certify.Management
                 else
                 {
                     // certificate request failed
-
+                    result.IsSuccess = false;
                     result.Message = string.Format(CoreSR.CertifyManager_LetsEncryptServiceTimeout,
                         certRequestResult.ErrorMessage ?? "");
                     await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
@@ -1005,6 +1005,7 @@ namespace Certify.Management
             {
 
                 //failed to validate all identifiers
+                result.IsSuccess = false;
                 result.Message = string.Format(CoreSR.CertifyManager_ValidationForChallengeNotSuccess, (failureSummaryMessage ?? ""));
 
                 await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
