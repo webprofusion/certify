@@ -139,6 +139,11 @@ namespace Certify.UI.Controls.ManagedCertificate
         private void CertificateAuthorityList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             ItemViewModel.RaisePropertyChangedEvent(nameof(ItemViewModel.CertificateAuthorityDescription));
+
+            if (ItemViewModel.SelectedItem!=null && string.IsNullOrEmpty(ItemViewModel.SelectedItem.CertificateAuthorityId) && ItemViewModel.SelectedItem.UseStagingMode==true)
+            {
+                ItemViewModel.SelectedItem.UseStagingMode = false;
+            }
         }
     }
 }

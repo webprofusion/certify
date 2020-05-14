@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -635,7 +635,7 @@ namespace Certify.Providers.ACME.Certes
                     return new PendingOrder(msg);
                 }
 
-                if (order == null)
+                if (order == null || order.Location == null)
                 {
 
                     var msg = "Failed to begin certificate order.";

@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
-    <Version>5.0.5</Version>
-    <AssemblyVersion>5.0.5</AssemblyVersion>
+    <Version>5.0.6</Version>
+    <AssemblyVersion>5.0.6</AssemblyVersion>
     <Authors>Webprofusion Pty Ltd</Authors>
     <Company>Webprofusion Pty Ltd</Company>
     <Product>Certify The Web - Certify SSL Manager</Product>
