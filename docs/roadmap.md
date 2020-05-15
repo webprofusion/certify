@@ -1,8 +1,8 @@
-# Current Project Roadmap (Mid 2019- Mid 2020)
+# Current Project Roadmap (Mid 2020 - Mid 2021)
 
 The below items are general topics which may or may not include current GitHub issues.
 
-# v4.x:
+# v5.x:
 
 ## Deployment:
 * Deployment Tasks: configurable, deferrable deployment for exports, ccs, ssh/sftp, apache, nginx, exchange etc
