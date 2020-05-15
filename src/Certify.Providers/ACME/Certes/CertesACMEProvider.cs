@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -171,7 +171,7 @@ namespace Certify.Providers.ACME.Certes
             customHttpClient.DefaultRequestHeaders.Add("User-Agent", _userAgentName);
 
 #if DEBUG
-            customHttpClient.Timeout = TimeSpan.FromSeconds(10);
+            //  customHttpClient.Timeout = TimeSpan.FromSeconds(10);
 #endif
 
             _httpClient = new AcmeHttpClient(_serviceUri, customHttpClient);
@@ -678,131 +678,135 @@ namespace Certify.Providers.ACME.Certes
 
                 // handle order status 'Ready' if all authorizations are already valid
                 var orderDetails = await order.Resource();
-                if (orderDetails.Status == OrderStatus.Ready)
+                if (orderDetails.Status == OrderStatus.Ready || orderDetails.Status == OrderStatus.Valid)
                 {
                     pendingOrder.IsPendingAuthorizations = false;
                 }
 
-                // get all required pending (or already valid) authorizations for this order
 
-                log.Information($"Fetching Authorizations.");
-
-                var orderAuthorizations = await order.Authorizations();
-
-                // get the challenges for each authorization
-                foreach (var authz in orderAuthorizations)
+                if (pendingOrder.IsPendingAuthorizations)
                 {
-                    log.Debug($"Fetching Authz Challenges.");
+                    // get all required pending (or already valid) authorizations for this order
 
-                    var allChallenges = await authz.Challenges();
-                    var res = await authz.Resource();
-                    var authzDomain = res.Identifier.Value;
-                    if (res.Wildcard == true)
+                    log.Information($"Fetching Authorizations.");
+
+                    var orderAuthorizations = await order.Authorizations();
+
+                    // get the challenges for each authorization
+                    foreach (var authz in orderAuthorizations)
                     {
-                        authzDomain = "*." + authzDomain;
-                    }
+                        log.Debug($"Fetching Authz Challenges.");
 
-                    var challenges = new List<AuthorizationChallengeItem>();
-
-                    // determine if we are interested in each challenge type before fetching the challenge details
-                    var includeHttp01 = true;
-                    var includeDns01 = true;
-
-                    if (config.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP) != true)
-                    {
-                        includeHttp01 = false;
-                    }
-
-                    if (config.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS) != true)
-                    {
-                        includeDns01 = false;
-                    }
-
-                    // add http challenge (if any)
-                    if (includeHttp01)
-                    {
-                        var httpChallenge = await authz.Http();
-                        if (httpChallenge != null)
+                        var allChallenges = await authz.Challenges();
+                        var res = await authz.Resource();
+                        var authzDomain = res.Identifier.Value;
+                        if (res.Wildcard == true)
                         {
-                            try
+                            authzDomain = "*." + authzDomain;
+                        }
+
+                        var challenges = new List<AuthorizationChallengeItem>();
+
+                        // determine if we are interested in each challenge type before fetching the challenge details
+                        var includeHttp01 = true;
+                        var includeDns01 = true;
+
+                        if (config.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP) != true)
+                        {
+                            includeHttp01 = false;
+                        }
+
+                        if (config.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS) != true)
+                        {
+                            includeDns01 = false;
+                        }
+
+                        // add http challenge (if any)
+                        if (includeHttp01)
+                        {
+                            var httpChallenge = await authz.Http();
+                            if (httpChallenge != null)
                             {
-                                var httpChallengeStatus = await httpChallenge.Resource();
-
-                                log.Information($"Got http-01 challenge {httpChallengeStatus.Url}");
-
-                                if (httpChallengeStatus.Status == ChallengeStatus.Invalid)
+                                try
                                 {
-                                    log.Error($"HTTP challenge has an invalid status");
+                                    var httpChallengeStatus = await httpChallenge.Resource();
+
+                                    log.Information($"Got http-01 challenge {httpChallengeStatus.Url}");
+
+                                    if (httpChallengeStatus.Status == ChallengeStatus.Invalid)
+                                    {
+                                        log.Error($"HTTP challenge has an invalid status");
+                                    }
+
+                                    challenges.Add(new AuthorizationChallengeItem
+                                    {
+                                        ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
+                                        Key = httpChallenge.Token,
+                                        Value = httpChallenge.KeyAuthz,
+                                        ChallengeData = httpChallenge,
+                                        ResourceUri = $"http://{authzDomain.Replace("*.", "")}/.well-known/acme-challenge/{httpChallenge.Token}",
+                                        ResourcePath = $".well-known\\acme-challenge\\{httpChallenge.Token}",
+                                        IsValidated = (httpChallengeStatus.Status == ChallengeStatus.Valid)
+                                    });
                                 }
+                                catch (Exception exp)
+                                {
+                                    var msg = $"Could fetch http-01 challenge details from ACME server (timeout) : {exp.Message}";
+
+                                    log.Error(msg);
+
+                                    return new PendingOrder(msg);
+                                }
+                            }
+                        }
+
+                        // add dns challenge (if any)
+                        if (includeDns01)
+                        {
+                            var dnsChallenge = await authz.Dns();
+                            if (dnsChallenge != null)
+                            {
+                                var dnsChallengeStatus = await dnsChallenge.Resource();
+
+                                log.Information($"Got dns-01 challenge {dnsChallengeStatus.Url}");
+
+                                if (dnsChallengeStatus.Status == ChallengeStatus.Invalid)
+                                {
+                                    log.Error($"DNS challenge has an invalid status");
+                                }
+
+                                var dnsValue = _acme.AccountKey.DnsTxt(dnsChallenge.Token); //ComputeDnsValue(dnsChallenge, _acme.AccountKey);
+                                var dnsKey = $"_acme-challenge.{authzDomain}".Replace("*.", "");
 
                                 challenges.Add(new AuthorizationChallengeItem
                                 {
-                                    ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
-                                    Key = httpChallenge.Token,
-                                    Value = httpChallenge.KeyAuthz,
-                                    ChallengeData = httpChallenge,
-                                    ResourceUri = $"http://{authzDomain.Replace("*.", "")}/.well-known/acme-challenge/{httpChallenge.Token}",
-                                    ResourcePath = $".well-known\\acme-challenge\\{httpChallenge.Token}",
-                                    IsValidated = (httpChallengeStatus.Status == ChallengeStatus.Valid)
+                                    ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                    Key = dnsKey,
+                                    Value = dnsValue,
+                                    ChallengeData = dnsChallenge,
+                                    IsValidated = (dnsChallengeStatus.Status == ChallengeStatus.Valid)
                                 });
                             }
-                            catch (Exception exp)
-                            {
-                                var msg = $"Could fetch http-01 challenge details from ACME server (timeout) : {exp.Message}";
-
-                                log.Error(msg);
-
-                                return new PendingOrder(msg);
-                            }
                         }
-                    }
 
-                    // add dns challenge (if any)
-                    if (includeDns01)
-                    {
-                        var dnsChallenge = await authz.Dns();
-                        if (dnsChallenge != null)
-                        {
-                            var dnsChallengeStatus = await dnsChallenge.Resource();
-
-                            log.Information($"Got dns-01 challenge {dnsChallengeStatus.Url}");
-
-                            if (dnsChallengeStatus.Status == ChallengeStatus.Invalid)
-                            {
-                                log.Error($"DNS challenge has an invalid status");
-                            }
-
-                            var dnsValue = _acme.AccountKey.DnsTxt(dnsChallenge.Token); //ComputeDnsValue(dnsChallenge, _acme.AccountKey);
-                            var dnsKey = $"_acme-challenge.{authzDomain}".Replace("*.", "");
-
-                            challenges.Add(new AuthorizationChallengeItem
-                            {
-                                ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                                Key = dnsKey,
-                                Value = dnsValue,
-                                ChallengeData = dnsChallenge,
-                                IsValidated = (dnsChallengeStatus.Status == ChallengeStatus.Valid)
-                            });
-                        }
-                    }
-
-                    // report back on the challenges we now may need to attempt
-                    authzList.Add(
-                     new PendingAuthorization
-                     {
-                         Challenges = challenges,
-                         Identifier = new IdentifierItem
+                        // report back on the challenges we now may need to attempt
+                        authzList.Add(
+                         new PendingAuthorization
                          {
-                             Dns = authzDomain,
-                             IsAuthorizationPending = !challenges.Any(c => c.IsValidated) //auth is pending if we have no challenges already validated
-                         },
-                         AuthorizationContext = authz,
-                         IsValidated = challenges.Any(c => c.IsValidated),
-                         OrderUri = orderUri
-                     });
-                }
+                             Challenges = challenges,
+                             Identifier = new IdentifierItem
+                             {
+                                 Dns = authzDomain,
+                                 IsAuthorizationPending = !challenges.Any(c => c.IsValidated) //auth is pending if we have no challenges already validated
+                             },
+                             AuthorizationContext = authz,
+                             IsValidated = challenges.Any(c => c.IsValidated),
+                             OrderUri = orderUri
+                         });
+                    }
 
-                pendingOrder.Authorizations = authzList;
+                    pendingOrder.Authorizations = authzList;
+                }
 
                 return pendingOrder;
             }
