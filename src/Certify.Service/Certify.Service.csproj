@@ -30,7 +30,7 @@
     <Content Include="icon.ico" />
   </ItemGroup>
  <ItemGroup> 
-    <PackageReference Include="LightInject" Version="6.3.2" /> 
+    <PackageReference Include="LightInject" Version="6.3.3" /> 
     <PackageReference Include="LightInject.WebApi" Version="2.0.0" /> 
     <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.1" /> 
     <PackageReference Include="Microsoft.AspNet.SignalR.Core" Version="2.4.1" /> 
