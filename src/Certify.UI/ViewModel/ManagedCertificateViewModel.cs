@@ -462,11 +462,11 @@ namespace Certify.UI.ViewModel
                 {
                     item.Id += ":" + SelectedWebSite.SiteId;
                     item.GroupId = SelectedWebSite.SiteId;
-                    item.ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS;
+                    item.ItemType = ManagedCertificateType.SSL_ACME;
                 }
                 else
                 {
-                    item.ItemType = ManagedCertificateType.SSL_LetsEncrypt_Manual;
+                    item.ItemType = ManagedCertificateType.SSL_Manual;
                 }
             }
         }

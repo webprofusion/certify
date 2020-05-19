@@ -888,7 +888,7 @@ namespace Certify.Management
                         LogMessage(managedCertificate.Id, "Failed to parse certificate dates", LogItemType.GeneralError);
                     }
 
-                    if (managedCertificate.ItemType == ManagedCertificateType.SSL_LetsEncrypt_LocalIIS)
+                    if (managedCertificate.ItemType == ManagedCertificateType.SSL_ACME)
                     {
                         ReportProgress(progress,
                             new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding,
@@ -1213,7 +1213,7 @@ namespace Certify.Management
             var config = managedCertificate.RequestConfig;
             var pfxPath = managedCertificate.CertificatePath;
 
-            if (managedCertificate.ItemType == ManagedCertificateType.SSL_LetsEncrypt_LocalIIS)
+            if (managedCertificate.ItemType == ManagedCertificateType.SSL_ACME)
             {
                 if (!isPreviewOnly)
                 {

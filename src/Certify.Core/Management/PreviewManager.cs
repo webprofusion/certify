@@ -267,7 +267,7 @@ namespace Certify.Management
                 )
                 {
                     // deploying to single or multiple Site
-                    if (item.ItemType == ManagedCertificateType.SSL_LetsEncrypt_LocalIIS)
+                    if (item.ItemType == ManagedCertificateType.SSL_ACME)
                     {
                         if (item.RequestConfig.DeploymentBindingMatchHostname)
                         {
@@ -409,7 +409,7 @@ namespace Certify.Management
                     foreach (var s in siteIds)
                     {
                         var managedCertificate = new ManagedCertificate { Id = s.Key };
-                        managedCertificate.ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS;
+                        managedCertificate.ItemType = ManagedCertificateType.SSL_ACME;
                         managedCertificate.TargetHost = "localhost";
                         managedCertificate.Name = iisSites.First(i => i.SiteId == s.Key).SiteName;
 

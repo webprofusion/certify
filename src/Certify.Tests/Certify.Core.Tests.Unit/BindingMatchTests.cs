@@ -84,7 +84,7 @@ namespace Certify.Core.Tests.Unit
                     WebsiteRootPath = "c:\\inetpub\\wwwroot",
                     DeploymentSiteOption = DeploymentOption.SingleSite
                 },
-                ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
+                ItemType = ManagedCertificateType.SSL_ACME
             };
 
             var bindingManager = new BindingDeploymentManager();
@@ -287,7 +287,7 @@ namespace Certify.Core.Tests.Unit
                             }
                         }
                 },
-                ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
+                ItemType = ManagedCertificateType.SSL_ACME
             };
 
             var mockTarget = new MockBindingDeploymentTarget();

@@ -107,7 +107,7 @@ namespace Certify.Core.Tests
                     PerformExtensionlessConfigChecks = true,
                     WebsiteRootPath = testSitePath
                 },
-                ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
+                ItemType = ManagedCertificateType.SSL_ACME
             };
 
             var result = await certifyManager.PerformCertificateRequest(null, dummyManagedCertificate);
@@ -189,7 +189,7 @@ namespace Certify.Core.Tests
                         PerformExtensionlessConfigChecks = true,
                         WebsiteRootPath = testSitePath
                     },
-                    ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
+                    ItemType = ManagedCertificateType.SSL_ACME
                 };
 
                 var result = await certifyManager.PerformCertificateRequest(_log, dummyManagedCertificate);
@@ -268,7 +268,7 @@ namespace Certify.Core.Tests
                         PerformExtensionlessConfigChecks = false,
                         WebsiteRootPath = testSitePath
                     },
-                    ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS,
+                    ItemType = ManagedCertificateType.SSL_ACME,
                 };
 
                 //ensure cert request was successful
@@ -332,7 +332,7 @@ namespace Certify.Core.Tests
                     PerformExtensionlessConfigChecks = false,
                     WebsiteRootPath = testSitePath
                 },
-                ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS,
+                ItemType = ManagedCertificateType.SSL_ACME,
             };
 
             //ensure cert request was successful
@@ -379,7 +379,7 @@ namespace Certify.Core.Tests
                     },
                     DeploymentSiteOption = DeploymentOption.SingleSite
                 },
-                ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
+                ItemType = ManagedCertificateType.SSL_ACME
             };
 
             var result = await certifyManager.PerformCertificateRequest(_log, dummyManagedCertificate);
@@ -461,7 +461,7 @@ namespace Certify.Core.Tests
                             }
                         }
                     },
-                    ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
+                    ItemType = ManagedCertificateType.SSL_ACME
                 };
 
                 var result = await certifyManager.PerformCertificateRequest(_log, dummyManagedCertificate);

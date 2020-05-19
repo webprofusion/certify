@@ -52,7 +52,7 @@ namespace Certify.Core.Tests.Unit
                     PerformExtensionlessConfigChecks = true,
                     WebsiteRootPath = "c:\\inetpub\\wwwroot"
                 },
-                ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
+                ItemType = ManagedCertificateType.SSL_ACME
             };
             return testSite;
         }
@@ -103,7 +103,7 @@ namespace Certify.Core.Tests.Unit
                     PerformExtensionlessConfigChecks = true,
                     WebsiteRootPath = "c:\\inetpub\\wwwroot"
                 },
-                ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
+                ItemType = ManagedCertificateType.SSL_ACME
             };
 
             var managedCertificate = await itemManager.UpdatedManagedCertificate(testSite);
@@ -147,7 +147,7 @@ namespace Certify.Core.Tests.Unit
                     PerformChallengeFileCopy = true,
                     PerformExtensionlessConfigChecks = true
                 },
-                ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
+                ItemType = ManagedCertificateType.SSL_ACME
             };
 
             // create competing sets of tasks to create managed items

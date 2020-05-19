@@ -67,7 +67,7 @@ namespace Certify.API
                 Id = Guid.NewGuid().ToString(),
                 Name = item.Title,
                 IncludeInAutoRenew = true,
-                ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS,
+                ItemType = ManagedCertificateType.SSL_ACME,
                 UseStagingMode = true,
                 RequestConfig = new CertRequestConfig
                 {

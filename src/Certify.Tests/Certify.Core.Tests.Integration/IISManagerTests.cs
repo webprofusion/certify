@@ -376,7 +376,7 @@ namespace Certify.Core.Tests
                     DeploymentBindingReplacePrevious = true,
                     SubjectAlternativeNames = new string[] { testSiteDomain, "label1." + testSiteDomain }
                 },
-                ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS,
+                ItemType = ManagedCertificateType.SSL_ACME,
                 CertificatePath = dummyCertPath
             };
 

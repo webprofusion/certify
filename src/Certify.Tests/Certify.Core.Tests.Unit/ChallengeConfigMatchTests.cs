@@ -66,7 +66,7 @@ namespace Certify.Core.Tests.Unit
                     WebsiteRootPath = "c:\\inetpub\\wwwroot",
                     DeploymentSiteOption = DeploymentOption.SingleSite
                 },
-                ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
+                ItemType = ManagedCertificateType.SSL_ACME
             };
 
             // Assert

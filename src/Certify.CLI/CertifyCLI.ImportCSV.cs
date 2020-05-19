@@ -296,7 +296,7 @@ namespace Certify.CLI
                             ServerSiteId = siteId,
                             Name = siteName,
                             IncludeInAutoRenew = IncludeInAutoRenew,
-                            ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
+                            ItemType = ManagedCertificateType.SSL_ACME
                         };
 
                         newManagedCertificate.RequestConfig.Challenges = new System.Collections.ObjectModel.ObservableCollection<CertRequestChallengeConfig>(

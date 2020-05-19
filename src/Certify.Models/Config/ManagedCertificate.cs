@@ -9,8 +9,8 @@ namespace Certify.Models
 {
     public enum ManagedCertificateType
     {
-        SSL_LetsEncrypt_LocalIIS = 1,
-        SSL_LetsEncrypt_Manual = 2,
+        SSL_ACME = 1,
+        SSL_Manual = 2,
         SSL_ExternallyManaged = 2
     }
 

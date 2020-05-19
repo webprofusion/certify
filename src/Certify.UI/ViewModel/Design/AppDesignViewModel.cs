@@ -40,7 +40,7 @@ namespace Certify.UI
                 {
                     Id = Guid.NewGuid().ToString(),
                     Name = $"test{i}.example.org",
-                    ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS,
+                    ItemType = ManagedCertificateType.SSL_ACME,
                     DateExpiry = DateTime.Now.AddDays(60 - 5 * i),
                     DateRenewed = DateTime.Now.AddDays(-15),
                     DateLastRenewalAttempt = DateTime.Now,

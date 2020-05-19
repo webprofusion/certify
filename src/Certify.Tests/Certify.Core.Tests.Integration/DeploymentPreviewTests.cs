@@ -118,7 +118,7 @@ namespace Certify.Core.Tests
                             }
                         }
                     },
-                    ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
+                    ItemType = ManagedCertificateType.SSL_ACME
                 };
 
                 var preview = await certifyManager.GeneratePreview(dummyManagedCertificate);
@@ -197,7 +197,7 @@ namespace Certify.Core.Tests
                             }
                         }
                     },
-                    ItemType = ManagedCertificateType.SSL_LetsEncrypt_LocalIIS
+                    ItemType = ManagedCertificateType.SSL_ACME
                 };
 
                 // Deployment Mode = Auto
