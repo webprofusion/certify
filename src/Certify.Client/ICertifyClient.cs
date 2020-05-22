@@ -8,25 +8,14 @@ using Certify.Models.Utils;
 
 namespace Certify.Client
 {
+
     /// <summary>
-    /// Client to talk to the core Certify Service 
+    /// Base API
     /// </summary>
-    public interface ICertifyClient
+    public interface ICertifyInternalApiClient
     {
 
         Shared.ServiceConfig GetAppServiceConfig();
-
-        #region Status
-
-        event Action<string, string> OnMessageFromService;
-
-        event Action<RequestProgressState> OnRequestProgressStateUpdated;
-
-        event Action<ManagedCertificate> OnManagedCertificateUpdated;
-
-        Task ConnectStatusStreamAsync();
-
-        #endregion Status
 
         #region System
 
@@ -118,5 +107,21 @@ namespace Certify.Client
         Task<ActionResult> RemoveAccount(string storageKey);
 
         #endregion Accounts
+    }
+
+    /// <summary>
+    /// Client to talk to the core Certify Service 
+    /// </summary>
+    public interface ICertifyClient: ICertifyInternalApiClient
+    {
+
+        event Action<string, string> OnMessageFromService;
+
+        event Action<RequestProgressState> OnRequestProgressStateUpdated;
+
+        event Action<ManagedCertificate> OnManagedCertificateUpdated;
+
+        Task ConnectStatusStreamAsync();
+
     }
 }

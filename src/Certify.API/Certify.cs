@@ -30,12 +30,12 @@ namespace Certify.API
         }
     }
 
-    public class Certify
+    public class CertifyServerClient
     {
-        ICertifyClient _client;
-        public Certify()
+        ICertifyInternalApiClient _client;
+        public CertifyServerClient()
         {
-            _client = new global::Certify.Client.CertifyServiceClient();
+            _client = new global::Certify.Client.CertifyApiClient(false, new Shared.ServiceConfig());
         }
 
         /// <summary>

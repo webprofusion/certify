@@ -29,7 +29,7 @@ namespace Certify.Client
     }
 
     // This version of the client communicates with the Certify.Service instance on the local machine
-    public class CertifyApiClient
+    public class CertifyApiClient: ICertifyInternalApiClient
     {
         private readonly HttpClient _client;
         private readonly string _baseUri = "/api/";
