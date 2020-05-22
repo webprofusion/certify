@@ -19,12 +19,12 @@ namespace Certify.API.Tests
     public class APITests
     {
         Process _apiService;
-        Certify _client;
+        CertifyServerClient _client;
 
         [TestInitialize]
         public async Task InitTests()
         {
-            _client = new Certify();
+            _client = new CertifyServerClient();
 
             // TODO : create API server instance instead of invoking directly
             if (_apiService == null)
