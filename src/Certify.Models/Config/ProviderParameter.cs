@@ -10,7 +10,8 @@ namespace Certify.Models.Config
         Boolean = 3,
         Select = 4,
         MultiSelect = 5,
-        RadioButton = 6
+        RadioButton = 6,
+        StoredCredential = 8
     }
 
     /// <summary>
@@ -47,6 +48,11 @@ namespace Certify.Models.Config
         public string OptionsList { get; set; }
 
         public OptionType? Type { get; set; }
+
+        /// <summary>
+        /// used to store metadata such as a credential type for credential option selection
+        /// </summary>
+        public string ExtendedConfig { get; set; }
 
         /// <summary>
         /// Returns a parsed version of OptionsList converted into a key/value dictionary

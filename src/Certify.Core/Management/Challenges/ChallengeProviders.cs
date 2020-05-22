@@ -20,7 +20,6 @@ using Certify.Providers.DNS.NameCheap;
 using Certify.Providers.DNS.OVH;
 using Certify.Providers.DNS.SimpleDNSPlus;
 using Certify.Providers.DNS.TransIP;
-using Newtonsoft.Json;
 
 namespace Certify.Core.Management.Challenges
 {
@@ -242,8 +241,23 @@ namespace Certify.Core.Management.Challenges
                        new ProviderParameter{ Key="key_passphrase",Name="Private Key Passphrase", IsRequired=false, IsPassword=true, IsCredential=true , Description="Optional key passphrase"},
                     }
                 },
-                // DNS
-                DnsProviderManual.Definition,
+                new ChallengeProviderDefinition
+                {
+                    Id = "Auth.Azure.ClientSecret",
+                    Title = "Azure AD Application Client Secret",
+                    Description = "Azure AD Application user and client secret",
+
+                    ProviderParameters = new List<ProviderParameter>{
+                        new ProviderParameter{Key="tenantid", Name="Directory (tenant) Id", IsRequired=true, IsCredential=true },
+                        new ProviderParameter{Key="clientid", Name="Application (client) Id", IsRequired=true, IsCredential=true },
+                        new ProviderParameter{Key="secret",Name="Client Secret", IsRequired=true , IsPassword=true}
+                    },
+                    ChallengeType = "",
+                    HandlerType = ChallengeHandlerType.INTERNAL
+                },
+
+        // DNS
+        DnsProviderManual.Definition,
                 DnsProviderScripting.Definition,
                 Providers.DNS.AWSRoute53.DnsProviderAWSRoute53.Definition,
                 Providers.DNS.Azure.DnsProviderAzure.Definition,
