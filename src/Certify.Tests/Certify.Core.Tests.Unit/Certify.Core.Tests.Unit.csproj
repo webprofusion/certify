@@ -80,7 +80,7 @@
     <ProjectReference Include="..\..\Certify.Providers\ACME\ACMESharpCore\Certify.Providers.ACME.ACMESharpCore.csproj" />
     <ProjectReference Include="..\..\Certify.Providers\ACME\Certes\Certify.Providers.ACME.Certes.csproj" />
     <ProjectReference Include="..\..\Certify.Service\Certify.Service.csproj" />
-    <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.csproj" />
+    <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Moq" Version="4.14.1" />

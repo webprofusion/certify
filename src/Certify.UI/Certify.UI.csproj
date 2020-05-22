@@ -127,9 +127,6 @@
     <Compile Include="Controls\ManagedCertificate\Preview.xaml.cs">
       <DependentUpon>Preview.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ManagedCertificate\ScriptHooks.xaml.cs">
-      <DependentUpon>ScriptHooks.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Controls\ManagedCertificate\DomainAuthorization.xaml.cs">
       <DependentUpon>DomainAuthorization.xaml</DependentUpon>
     </Compile>
@@ -192,9 +189,6 @@
     <Compile Include="Windows\Registration.xaml.cs">
       <DependentUpon>Registration.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Windows\ScheduledTaskConfig.xaml.cs">
-      <DependentUpon>ScheduledTaskConfig.xaml</DependentUpon>
-    </Compile>
     <Resource Include="Assets\Images\QuickStart\PreviewDeployment.PNG" />
     <Page Include="Controls\AboutControl.xaml">
       <SubType>Designer</SubType>
@@ -234,10 +228,6 @@
     <Page Include="Controls\ManagedCertificate\Preview.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controls\ManagedCertificate\ScriptHooks.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
     <Page Include="Controls\ManagedCertificate\DomainAuthorization.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -345,10 +335,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Windows\ScheduledTaskConfig.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Utils\EnumConverter.cs" />
@@ -387,9 +373,9 @@
       <Project>{baaa9b8c-e44b-43f6-ac9c-b5666e69ee27}</Project>
       <Name>Certify.Models</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Certify.Shared\Certify.Shared.csproj">
-      <Project>{ED48B479-B619-4C16-AFA3-83DD3CD89338}</Project>
-      <Name>Certify.Shared</Name>
+    <ProjectReference Include="..\Certify.Shared\Certify.Shared.Core.csproj">
+      <Project>{fb52bf0a-ac16-40d7-988e-b75a2868871b}</Project>
+      <Name>Certify.Shared.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

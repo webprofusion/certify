@@ -68,7 +68,7 @@
     <ProjectReference Include="..\..\Certify.Providers\DNS\Azure\Azure.csproj" />
     <ProjectReference Include="..\..\Certify.Providers\DNS\Cloudflare\Cloudflare.csproj" />
     <ProjectReference Include="..\..\Certify.Service\Certify.Service.csproj" />
-    <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.csproj" />
+    <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
@@ -119,7 +119,6 @@
     <PackageReference Include="System.Security.Cryptography.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="4.3.2" />
     <PackageReference Include="System.Security.Principal.Windows" Version="4.7.0" />
-    <PackageReference Include="System.ServiceProcess.ServiceController" Version="4.7.0" />
     <PackageReference Include="System.Text.Encoding" Version="4.3.0" />
     <PackageReference Include="System.Text.Encoding.Extensions" Version="4.3.0" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
