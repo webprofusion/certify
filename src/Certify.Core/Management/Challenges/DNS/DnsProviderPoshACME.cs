@@ -72,6 +72,7 @@ namespace Certify.Core.Management.Challenges.DNS
         private Dictionary<string, string> _credentials;
 
         private string _poshAcmeScriptPath = @"Scripts\DNS\PoshACME";
+        private string _scriptExecutionPolicy = "Unrestricted";
 
         private static ProviderParameter _defaultPropagationDelayParam = new ProviderParameter
         {
@@ -620,10 +621,11 @@ namespace Certify.Core.Management.Challenges.DNS
             }
         };
 
-        public DnsProviderPoshACME(Dictionary<string, string> parameters, Dictionary<string, string> credentials, string scriptPath)
+        public DnsProviderPoshACME(Dictionary<string, string> parameters, Dictionary<string, string> credentials, string scriptPath, string scriptExecutionPolicy)
         {
             _parameters = parameters;
             _credentials = credentials;
+            _scriptExecutionPolicy = scriptExecutionPolicy;
 
             if (scriptPath != null)
             {
@@ -672,7 +674,7 @@ namespace Certify.Core.Management.Challenges.DNS
 
             var objParams = _parameters.ToDictionary(p => p.Key, p => p.Value as object);
 
-            return await PowerShellManager.RunScript(null, null, objParams, scriptContent);
+            return await PowerShellManager.RunScript(null, null, objParams, scriptContent, null, _scriptExecutionPolicy);
         }
 
         public async Task<ActionResult> DeleteRecord(DnsRecord request)
@@ -681,7 +683,7 @@ namespace Certify.Core.Management.Challenges.DNS
 
             var objParams = _parameters.ToDictionary(p => p.Key, p => p.Value as object);
 
-            return await PowerShellManager.RunScript(null, null, objParams, scriptContent);
+            return await PowerShellManager.RunScript(null, null, objParams, scriptContent, null, _scriptExecutionPolicy);
         }
 
         Task<List<DnsZone>> IDnsProvider.GetZones() => Task.FromResult(new List<DnsZone>());

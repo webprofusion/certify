@@ -102,15 +102,16 @@ namespace Certify.Management
 
             if (includeSet.Contains("DeploymentTasks"))
             {
+                // TODO: wildcard filename match
                 var deploymentTaskPlugin = LoadPlugin<IDeploymentTaskProviderPlugin>("Plugin.DeploymentTasks.Core.dll", typeof(IDeploymentTaskProviderPlugin)) as IDeploymentTaskProviderPlugin;
                 DeploymentTaskProviders = new List<IDeploymentTaskProviderPlugin>
                 {
                     deploymentTaskPlugin
                 };
-#if DEBUG
+
                 var azure = LoadPlugin<IDeploymentTaskProviderPlugin>("Plugin.DeploymentTasks.Azure.dll", typeof(IDeploymentTaskProviderPlugin)) as IDeploymentTaskProviderPlugin;
                 DeploymentTaskProviders.Add(azure);
-#endif
+
             }
 
             if (includeSet.Contains("CertificateManagers"))

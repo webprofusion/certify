@@ -146,7 +146,7 @@ namespace Certify.CLI
             var challengeServer = new Core.Management.Challenges.HttpChallengeServer();
             var config = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
-            if (!challengeServer.Start(config.HttpChallengeServerPort, controlKey: keys[0], checkKey: keys[1]))
+            if (!challengeServer.Start(config, controlKey: keys[0], checkKey: keys[1]))
             {
                 // failed to start http challenge server
                 return -1;

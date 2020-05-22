@@ -15,10 +15,16 @@ namespace Certify.Management
 {
     public class PowerShellManager
     {
-        public static async Task<ActionResult> RunScript(CertificateRequestResult result, string scriptFile = null, Dictionary<string, object> parameters = null, string scriptContent = null, Dictionary<string, string> credentials = null)
+        public static async Task<ActionResult> RunScript(
+            CertificateRequestResult result,
+            string scriptFile = null,
+            Dictionary<string, object> parameters = null,
+            string scriptContent = null,
+            Dictionary<string, string> credentials = null,
+            string powershellExecutionPolicy = "Unrestricted"
+            )
         {
 
-            var config = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
             // argument check for script file existence and .ps1 extension
             FileInfo scriptInfo = null;
@@ -52,7 +58,7 @@ namespace Certify.Management
                     {
                         shell.Runspace = runspace;
 
-                        if (credentials!=null && credentials.Any())
+                        if (credentials != null && credentials.Any())
                         {
                             // run as windows user
                             UserCredentials windowsCredentials = null;
@@ -76,13 +82,13 @@ namespace Certify.Management
                             return await Impersonation.RunAsUser(windowsCredentials, _defaultLogonType, async () =>
                             {
                                 // run as current user
-                                return InvokePowershell(result, config.PowershellExecutionPolicy, scriptFile, parameters, scriptContent, shell);
+                                return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell);
                             });
                         }
                         else
                         {
                             // run as current user
-                            return InvokePowershell(result, config.PowershellExecutionPolicy, scriptFile, parameters, scriptContent, shell);
+                            return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell);
                         }
 
 
