@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
+using Certify.Shared;
 
 namespace Certify.Core.Management.Challenges
 {
@@ -60,7 +61,7 @@ namespace Certify.Core.Management.Challenges
         /// <param name="controlKey"> Control key to command process to quit </param>
         /// <param name="checkKey"> Check key to test server response </param>
         /// <returns>  </returns>
-        public bool Start(int port = 80, string controlKey = null, string checkKey = null)
+        public bool Start(ServiceConfig serverConfig, string controlKey = null, string checkKey = null)
         {
 #if DEBUG
             _debugMode = true;
@@ -80,14 +81,13 @@ namespace Certify.Core.Management.Challenges
 
                 _httpListener = new HttpListener();
 
-                var serverConfig = Certify.SharedUtils.ServiceConfigManager.GetAppServiceConfig();
                 _baseUri = $"http://{serverConfig.Host}:{serverConfig.Port}/api/";
 
                 _apiClient = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true });
                 _apiClient.DefaultRequestHeaders.Add("User-Agent", "Certify/HttpChallengeServer");
                 _apiClient.Timeout = new TimeSpan(0, 0, 20);
 
-                var uriPrefix = $"http://+:{port}{_challengePrefix}";
+                var uriPrefix = $"http://+:{serverConfig.HttpChallengeServerPort}{_challengePrefix}";
                 _httpListener.Prefixes.Add(uriPrefix);
 
                 _challengeResponses = new Dictionary<string, string>();

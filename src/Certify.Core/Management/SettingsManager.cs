@@ -24,7 +24,6 @@ namespace Certify.Management
             MaxRenewalRequests = 0;
             EnableHttpChallengeServer = true;
             LegacySettingsUpgraded = false;
-            UseBackgroundServiceAutoRenewal = true;
             EnableCertificateCleanup = true;
             EnableStatusReporting = true;
             InstanceId = null;
@@ -97,12 +96,6 @@ namespace Certify.Management
         /// If set, specifies the UI language preference
         /// </summary>
         public string Language { get; set; }
-
-        /// <summary>
-        /// If true the background service will periodically perform auto renewals, otherwise auto
-        /// renewal requires a scheduled task
-        /// </summary>
-        public bool UseBackgroundServiceAutoRenewal { get; set; }
 
         /// <summary>
         /// If true, daily task performs cleanup of expired certificates created by the app

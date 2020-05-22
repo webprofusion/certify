@@ -104,7 +104,30 @@ namespace Certify.Management
 
         public static void SetSupportedTLSVersions() => ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
-        public static string GetAppDataFolder(string subFolder = null) => SharedUtils.ServiceConfigManager.GetAppDataFolder(subFolder);
+
+        public static string GetAppDataFolder(string subFolder = null)
+        {
+            var parts = new List<string>()
+            {
+                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                APPDATASUBFOLDER
+            };
+
+            if (subFolder != null)
+            {
+                parts.Add(subFolder);
+            }
+
+            var path = Path.Combine(parts.ToArray());
+
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+
+            return path;
+        }
+
 
         public TelemetryClient InitTelemetry()
         {
@@ -208,8 +231,8 @@ namespace Certify.Management
                 }
                 catch (System.InvalidOperationException)
                 {
-                    // if creating managed SHA256 fails may be FIPS validation, try SHA256Cng
-                    sha = (SHA256)new System.Security.Cryptography.SHA256Cng();
+                    // system probably has FIPS enabled and doesn't support standard SHA256
+                    return null;
                 }
 
                 var checksum = sha.ComputeHash(bufferedStream);
@@ -232,7 +255,7 @@ namespace Certify.Management
 
                 //get verified signed file cert
                 var cert = CertificateManager.GetFileCertificate(tempFile);
-                
+
                 //ensure cert subject
                 if (!(cert != null && wintrustSignatureVerified && cert.SubjectName.Name.StartsWith("CN=Webprofusion Pty Ltd, O=Webprofusion Pty Ltd")))
                 {

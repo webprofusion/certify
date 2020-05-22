@@ -351,6 +351,7 @@ namespace Certify.Management
 
         public async Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId)
         {
+            
             var dnsHelper = new Core.Management.Challenges.DnsChallengeHelper(_credentialsManager);
             var result = await dnsHelper.GetDnsProvider(providerTypeId, credentialsId, null);
 

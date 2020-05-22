@@ -269,11 +269,8 @@ namespace Certify.Management
 
             SettingsManager.LoadAppSettings();
 
-            if (CoreAppSettings.Current.UseBackgroundServiceAutoRenewal)
-            {
-                await PerformRenewalAllManagedCertificates(new RenewalSettings { }, null);
-            }
-
+            await PerformRenewalAllManagedCertificates(new RenewalSettings { }, null);
+            
             return await Task.FromResult(true);
         }
 

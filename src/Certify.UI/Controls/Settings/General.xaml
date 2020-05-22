@@ -8,7 +8,6 @@
     xmlns:fa="http://schemas.fontawesome.io/icons/"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-
     d:DesignHeight="420.042"
     d:DesignWidth="885.537"
     Loaded="UserControl_Loaded"
@@ -23,23 +22,6 @@
                 DockPanel.Dock="Top"
                 Orientation="Vertical">
                 <TextBlock Style="{StaticResource Subheading}">Renewal Settings</TextBlock>
-
-                <Button
-                    Name="ConfigureAutoRenew"
-                    Width="160"
-                    Height="32"
-                    Margin="8,0,0,5"
-                    HorizontalAlignment="Left"
-                    Click="Button_ScheduledTaskConfig">
-                    <StackPanel Orientation="Horizontal">
-                        <fa:ImageAwesome
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            Foreground="{DynamicResource AccentColorBrush3}"
-                            Icon="Calendar" />
-                        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Configure_Auto_Renew}" /></TextBlock>
-                    </StackPanel>
-                </Button>
 
 
                 <StackPanel Margin="0,8" Orientation="Horizontal">

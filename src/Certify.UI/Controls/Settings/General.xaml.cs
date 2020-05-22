@@ -41,12 +41,6 @@ namespace Certify.UI.Controls.Settings
                 return;
             }
 
-            if (Prefs.UseBackgroundServiceAutoRenewal)
-            {
-                // if scheduled task not in use, remove legacy option to modify
-                ConfigureAutoRenew.Visibility = Visibility.Collapsed;
-            }
-
             if (Prefs.CertificateCleanupMode == Models.CertificateCleanupMode.None)
             {
                 CertCleanup_None.IsChecked = true;
@@ -76,13 +70,6 @@ namespace Certify.UI.Controls.Settings
             settingsInitialised = true;
         }
 
-        private void Button_ScheduledTaskConfig(object sender, RoutedEventArgs e)
-        {
-            //show UI to update auto renewal task
-            var d = new Windows.ScheduledTaskConfig { Owner = App.Current.MainWindow };
-
-            d.ShowDialog();
-        }
         private async void SettingsUpdated(object sender, RoutedEventArgs e)
         {
             if (settingsInitialised)

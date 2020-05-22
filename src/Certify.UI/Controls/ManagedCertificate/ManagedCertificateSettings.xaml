@@ -298,19 +298,6 @@
                     <managedcertificate:Deployment Margin="0,8,0,0" />
                 </TabItem>
 
-                <TabItem
-                    x:Name="TabScripting"
-                    MinWidth="100"
-                    Controls:ControlsHelper.HeaderFontSize="12"
-                    AutomationProperties.Name="Scripting"
-                    Visibility="Collapsed">
-                    <TabItem.HeaderTemplate>
-                        <DataTemplate>
-                            <managedcertificate:TabHeader HeaderText="Scripting" IconName="Code" />
-                        </DataTemplate>
-                    </TabItem.HeaderTemplate>
-                    <managedcertificate:ScriptHooks Margin="0,8,0,0" />
-                </TabItem>
 
                 <TabItem
                     x:Name="TabPreview"
