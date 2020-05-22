@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.Remoting.Metadata.W3cXsd2001;
+using System.Threading;
 using System.Threading.Tasks;
 using Certify.Config;
 using Certify.Core.Management.DeploymentTasks;
@@ -201,7 +200,7 @@ namespace Certify.Management
                 {
                     log.Information($"Task [{task.TaskConfig.TaskName}] :: {taskTriggerReason}");
                     task.TaskConfig.DateLastExecuted = DateTime.Now;
-                    taskResults = await task.Execute(log, result, isPreviewOnly: isPreviewOnly);
+                    taskResults = await task.Execute(log, result, CancellationToken.None, isPreviewOnly: isPreviewOnly);
                 }
                 else
                 {

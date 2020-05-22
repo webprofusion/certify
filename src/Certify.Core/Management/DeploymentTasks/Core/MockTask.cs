@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Certify.Config;
 using Certify.Models.Config;
@@ -45,7 +46,8 @@ namespace Certify.Providers.DeploymentTasks.Core
           DeploymentTaskConfig settings,
           Dictionary<string, string> credentials,
           bool isPreviewOnly,
-          DeploymentProviderDefinition definition
+          DeploymentProviderDefinition definition,
+          CancellationToken cancellationToken
           )
         {
 

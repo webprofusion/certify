@@ -7,6 +7,7 @@ using Certify.Models.Providers;
 using Certify.Models.Config;
 using System;
 using System.Linq;
+using System.Threading;
 
 namespace Certify.Providers.DeploymentTasks.Core
 {
@@ -39,7 +40,7 @@ namespace Certify.Providers.DeploymentTasks.Core
             };
         }
 
-        public async Task<List<ActionResult>> Execute(ILog log, object subject, DeploymentTaskConfig settings, Dictionary<string, string> credentials, bool isPreviewOnly, DeploymentProviderDefinition definition)
+        public async Task<List<ActionResult>> Execute(ILog log, object subject, DeploymentTaskConfig settings, Dictionary<string, string> credentials, bool isPreviewOnly, DeploymentProviderDefinition definition, CancellationToken cancellationToken)
         {
             var managedCert = ManagedCertificate.GetManagedCertificate(subject);
 

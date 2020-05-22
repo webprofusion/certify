@@ -9,6 +9,7 @@ using Certify.Management;
 using System.Security.Cryptography.X509Certificates;
 using System;
 using System.Linq;
+using System.Threading;
 
 namespace Certify.Providers.DeploymentTasks.Core
 {
@@ -38,7 +39,7 @@ namespace Certify.Providers.DeploymentTasks.Core
 
         private bool _enableCertDoubleImportBehaviour { get; set; } = true;
 
-        public async Task<List<ActionResult>> Execute(ILog log, object subject, DeploymentTaskConfig settings, Dictionary<string, string> credentials, bool isPreviewOnly, DeploymentProviderDefinition definition)
+        public async Task<List<ActionResult>> Execute(ILog log, object subject, DeploymentTaskConfig settings, Dictionary<string, string> credentials, bool isPreviewOnly, DeploymentProviderDefinition definition, CancellationToken cancellationToken)
         {
             var results = new List<ActionResult>();
 

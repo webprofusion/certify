@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Certify.Config;
-using Certify.Models;
-using Certify.Models.Providers;
 using Certify.Models.Config;
+using Certify.Models.Providers;
 
 namespace Certify.Providers.DeploymentTasks.Core
 {
@@ -12,7 +12,7 @@ namespace Certify.Providers.DeploymentTasks.Core
         public static DeploymentProviderDefinition Definition { get; }
         public DeploymentProviderDefinition GetDefinition(DeploymentProviderDefinition currentDefinition) => (currentDefinition ?? Definition);
 
-        public Task<List<ActionResult>> Execute(ILog log, object subject, DeploymentTaskConfig settings, Dictionary<string, string> credentials, bool isPreviewOnly, DeploymentProviderDefinition definition)
+        public Task<List<ActionResult>> Execute(ILog log, object subject, DeploymentTaskConfig settings, Dictionary<string, string> credentials, bool isPreviewOnly, DeploymentProviderDefinition definition, CancellationToken cancellationToken)
         {
             throw new System.NotImplementedException();
         }
