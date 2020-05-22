@@ -131,7 +131,12 @@ namespace Certify.Core.Management.Challenges
                 if (providerDefinition.Config.Contains("Provider=Certify.Providers.DNS.PoshACME"))
                 {
                     var scriptPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Scripts\DNS\PoshACME\Plugins");
-                    var ps = new DNS.DnsProviderPoshACME(parameters, credentials, scriptPath);
+                    
+                    // TODO : move this out, shared config should be injected
+                    var config = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
+
+                    var ps = new DNS.DnsProviderPoshACME(parameters, credentials, scriptPath, config.PowershellExecutionPolicy);
+
                     ps.DelegateProviderDefinition = providerDefinition;
 
                     dnsAPIProvider = ps;
@@ -243,7 +248,7 @@ namespace Certify.Core.Management.Challenges
                 },
                 new ChallengeProviderDefinition
                 {
-                    Id = "Auth.Azure.ClientSecret",
+                    Id = "ExternalAuth.Azure.ClientSecret",
                     Title = "Azure AD Application Client Secret",
                     Description = "Azure AD Application user and client secret",
 
