@@ -54,28 +54,39 @@ namespace Certify.UI.ViewModel
                 Dictionary<string, string> list = new Dictionary<string, string>();
                 if (this.DeploymentProvider != null)
                 {
-                    foreach (var t in DeploymentTaskTypes.TargetTypes)
+
+                    if (DeploymentProvider.ExternalCredentialType != null)
                     {
-                        if (t.Key == StandardAuthTypes.STANDARD_AUTH_LOCAL && (DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.LocalAsService)))
+                        list.Add(DeploymentProvider.ExternalCredentialType, _appViewModel.ChallengeAPIProviders.FirstOrDefault(k => k.Id == DeploymentProvider.ExternalCredentialType).Title);
+                    }
+                    else
+                    {
+                        foreach (var t in DeploymentTaskTypes.TargetTypes)
                         {
-                            list.Add(t.Key, t.Value);
-                        }
+                            if (t.Key == StandardAuthTypes.STANDARD_AUTH_LOCAL && (DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.LocalAsService)))
+                            {
+                                list.Add(t.Key, t.Value);
+                            }
 
-                        if (t.Key == StandardAuthTypes.STANDARD_AUTH_LOCAL_AS_USER && (DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.LocalAsUser)))
-                        {
-                            list.Add(t.Key, t.Value);
-                        }
+                            if (t.Key == StandardAuthTypes.STANDARD_AUTH_LOCAL_AS_USER && (DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.LocalAsUser)))
+                            {
+                                list.Add(t.Key, t.Value);
+                            }
 
-                        if (t.Key == StandardAuthTypes.STANDARD_AUTH_WINDOWS && (DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.WindowsNetwork)))
-                        {
-                            list.Add(t.Key, t.Value);
-                        }
+                            if (t.Key == StandardAuthTypes.STANDARD_AUTH_WINDOWS && (DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.WindowsNetwork)))
+                            {
+                                list.Add(t.Key, t.Value);
+                            }
 
-                        if (t.Key == StandardAuthTypes.STANDARD_AUTH_SSH && (DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.SSH)))
-                        {
-                            list.Add(t.Key, t.Value);
+                            if (t.Key == StandardAuthTypes.STANDARD_AUTH_SSH && (DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.SSH)))
+                            {
+                                list.Add(t.Key, t.Value);
+                            }
+
                         }
                     }
+
+
                 }
                 return list;
             }
@@ -116,7 +127,8 @@ namespace Certify.UI.ViewModel
                     {
                         return DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.LocalAsUser)
                          || DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.SSH)
-                         || DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.WindowsNetwork);
+                         || DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.WindowsNetwork)
+                         || DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.ExternalCredential);
 
                     }
                     else
@@ -179,7 +191,7 @@ namespace Certify.UI.ViewModel
         {
             if (SelectedItem.TaskTypeId != null)
             {
-           
+
                 DeploymentProvider = _appViewModel.DeploymentTaskProviders.FirstOrDefault(d => d.Id == SelectedItem.TaskTypeId);
 
                 if (resetDefaults)
@@ -191,7 +203,7 @@ namespace Certify.UI.ViewModel
                 RefreshParameters();
 
                 // TODO: improve binding logic - caching is used because there is currently some repeated work
-                if (DeploymentProvider.HasDynamicParameters && _lastCachedDynamicProvider!=DeploymentProvider.Id)
+                if (DeploymentProvider.HasDynamicParameters && _lastCachedDynamicProvider != DeploymentProvider.Id)
                 {
                     _lastCachedDynamicProvider = DeploymentProvider.Id;
 
@@ -200,7 +212,7 @@ namespace Certify.UI.ViewModel
                     if (def != null)
                     {
                         DeploymentProvider = def;
-                      
+
                         RefreshParameters();
                     }
                 }
@@ -344,15 +356,19 @@ namespace Certify.UI.ViewModel
             }
 
 
-            // if remote target, check target specified. TODO: Could also check host resolves.
-            if (!string.IsNullOrEmpty(SelectedItem.ChallengeProvider)
-                && SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_LOCAL
-                && SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_LOCAL_AS_USER
-                && string.IsNullOrEmpty(SelectedItem.TargetHost)
-                )
+            if (DeploymentProvider?.ExternalCredentialType == null)
             {
-                // check task name populated
-                return new ActionResult("Target Host name or IP is required if deployment target is not Local.", false);
+                // if remote target, check target specified. TODO: Could also check host resolves.
+                if (!string.IsNullOrEmpty(SelectedItem.ChallengeProvider)
+                    && SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_LOCAL
+                    && SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_LOCAL_AS_USER
+                    && SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_PROVIDER_SPECIFIED
+                    && string.IsNullOrEmpty(SelectedItem.TargetHost)
+                    )
+                {
+                    // check task name populated
+                    return new ActionResult("Target Host name or IP is required if deployment target is not Local.", false);
+                }
             }
 
             // if target type requires a credential selection check that's been provided

@@ -58,7 +58,8 @@ namespace Certify.Models.Config
         LocalAsService = 0,
         LocalAsUser = 2,
         WindowsNetwork = 4,
-        SSH = 8
+        SSH = 8,
+        ExternalCredential = 16
     }
 
     public class DeploymentProviderDefinition : ProviderDefinition
@@ -77,5 +78,10 @@ namespace Certify.Models.Config
         /// Flags for supported execution context (local, local as user, windows network, remote ssh)
         /// </summary>
         public DeploymentContextType SupportedContexts { get; set; } = DeploymentContextType.LocalAsService;
+
+        /// <summary>
+        /// If set, challenge type of external credential required
+        /// </summary>
+        public string ExternalCredentialType { get; set; }
     }
 }
