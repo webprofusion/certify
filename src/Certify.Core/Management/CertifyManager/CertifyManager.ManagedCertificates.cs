@@ -31,10 +31,11 @@ namespace Certify.Management
                     // check if we have any external sources of managed certificates
                     foreach (var p in _pluginManager.CertificateManagerProviders)
                     {
-                        var providers = p.GetProviders();
+                        var pluginType = p.GetType();
+                        var providers = p.GetProviders(pluginType);
                         foreach (var cp in providers)
                         {
-                            var certManager = p.GetProvider(cp.Id);
+                            var certManager = p.GetProvider(pluginType, cp.Id);
                             var certs = await certManager.GetManagedCertificates(filter);
 
                             list.AddRange(certs);

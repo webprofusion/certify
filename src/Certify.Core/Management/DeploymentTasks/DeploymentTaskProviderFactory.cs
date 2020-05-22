@@ -51,7 +51,7 @@ namespace Certify.Core.Management.DeploymentTasks
             {
                 if (p != null)
                 {
-                    list.AddRange(p.GetProviders());
+                    list.AddRange(p.GetProviders(p.GetType()));
                 }
             }
 
@@ -89,7 +89,8 @@ namespace Certify.Core.Management.DeploymentTasks
             // Find provider in our plugins for this type id
             foreach (var p in providerPlugins)
             {
-                var provider = p.GetProvider(taskTypeId);
+                var pluginType = p.GetType();
+                var provider = p.GetProvider(pluginType, taskTypeId);
                 if (provider != null)
                 {
                     return provider;

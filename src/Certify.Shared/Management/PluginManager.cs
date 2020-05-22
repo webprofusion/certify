@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Providers.DeploymentTasks;
 using Serilog;
@@ -58,13 +59,16 @@ namespace Certify.Management
                 if (File.Exists(pluginPath))
                 {
                     // https://stackoverflow.com/questions/10732933/can-i-use-activator-createinstance-with-an-interface
-                    var loadedType = (from t in Assembly.LoadFrom(pluginPath).GetExportedTypes()
-                                      where !t.IsInterface && !t.IsAbstract
-                                      where interfaceType.IsAssignableFrom(t)
-                                      select t)
-                                         .FirstOrDefault();
+                    var pluginAssembly = Assembly.LoadFrom(pluginPath);
 
-                    var obj = (T)Activator.CreateInstance(loadedType);
+                    var exportedTypes = pluginAssembly.GetExportedTypes();
+
+                    var pluginType = pluginAssembly.GetTypes()
+                        .Where(type => type.GetInterfaces()
+                        .Any(inter => inter.IsAssignableFrom(interfaceType)))
+                        .FirstOrDefault();
+
+                    var obj = (T)Activator.CreateInstance(pluginType);
 
                     return obj;
                 }
@@ -98,11 +102,15 @@ namespace Certify.Management
 
             if (includeSet.Contains("DeploymentTasks"))
             {
-                var deploymentTaskPlugin = LoadPlugin<IDeploymentTaskProviderPlugin>("Plugin.DeploymentTasks.dll", typeof(IDeploymentTaskProviderPlugin)) as IDeploymentTaskProviderPlugin;
+                var deploymentTaskPlugin = LoadPlugin<IDeploymentTaskProviderPlugin>("Plugin.DeploymentTasks.Core.dll", typeof(IDeploymentTaskProviderPlugin)) as IDeploymentTaskProviderPlugin;
                 DeploymentTaskProviders = new List<IDeploymentTaskProviderPlugin>
                 {
                     deploymentTaskPlugin
                 };
+#if DEBUG
+                var azure = LoadPlugin<IDeploymentTaskProviderPlugin>("Plugin.DeploymentTasks.Azure.dll", typeof(IDeploymentTaskProviderPlugin)) as IDeploymentTaskProviderPlugin;
+                DeploymentTaskProviders.Add(azure);
+#endif
             }
 
             if (includeSet.Contains("CertificateManagers"))

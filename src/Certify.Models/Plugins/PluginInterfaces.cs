@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Models.Config;
 using Certify.Models.Shared;
@@ -40,15 +41,23 @@ namespace Certify.Models.Plugins
         Task<bool> ReportUserActionRequiredAsync(ItemActionRequired actionRequired);
     }
 
-    public interface IDeploymentTaskProviderPlugin
+    public interface IProviderPlugin<TProviderInterface,TProviderDefinition>
     {
-        List<DeploymentProviderDefinition> GetProviders();
-        IDeploymentTaskProvider GetProvider(string id);
+        List<TProviderDefinition> GetProviders(Type pluginType);
+        TProviderInterface GetProvider(Type pluginType, string id);
     }
 
-    public interface ICertificateManagerProviderPlugin
+    /// <summary>
+    /// Plugins which implement on or more deployment tasks implement this interface for dynamic plugin loading
+    /// </summary>
+    public interface IDeploymentTaskProviderPlugin: IProviderPlugin<IDeploymentTaskProvider, DeploymentProviderDefinition>
     {
-        List<ProviderDefinition> GetProviders();
-        ICertificateManager GetProvider(string id);
+    }
+
+    /// <summary>
+    /// Plugins which implement certificate managers implement this interface for dynamic login loading
+    /// </summary>
+    public interface ICertificateManagerProviderPlugin: IProviderPlugin<ICertificateManager, ProviderDefinition>
+    {
     }
 }
