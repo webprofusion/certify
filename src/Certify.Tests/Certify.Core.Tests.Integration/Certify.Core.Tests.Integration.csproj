@@ -71,7 +71,6 @@
     <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Asmodat.Standard.SSH.NET" Version="1.0.0.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
     <PackageReference Include="Microsoft.Web.Administration" Version="11.1.0" />
     <PackageReference Include="Microsoft.Win32.Primitives" Version="4.3.0" />
