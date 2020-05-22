@@ -49,6 +49,8 @@ namespace Certify.UI
         {
             InitializeComponent();
             DataContext = _appViewModel;
+
+            this.Activate();
         }
 
         private async void Button_NewCertificate(object sender, RoutedEventArgs e)
