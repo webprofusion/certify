@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Certify.API\Certify.API.csproj" />
+    <ProjectReference Include="..\..\Certify.API\Certify.Api.Public.csproj" />
     <ProjectReference Include="..\..\Certify.Models\Certify.Models.csproj" />
   </ItemGroup>
 
