@@ -99,6 +99,19 @@ namespace Certify.Management
                 results.Add(new ActionResult { IsSuccess = false, Message = $"Note: Could not confirm system time sync using a public NTP server. Ensure system time is correct to avoid certificate request errors." });
             }
 
+
+            // check if FIPS is enabled
+            try
+            {
+                _ = System.Security.Cryptography.SHA256.Create();
+            }
+            catch (Exception)
+            {
+                // if creating managed SHA256 fails may be FIPS validation
+                results.Add(new ActionResult { IsSuccess = false, Message = $"Your system cannot create a SHA256 Cryptography instance. You may have inadvertently have FIPS enabled, which prevents the use of some standard cryptographic functions in .Net - features such as verifying app updates will not work. " });
+            }
+
+       
             return results;
         }
 
