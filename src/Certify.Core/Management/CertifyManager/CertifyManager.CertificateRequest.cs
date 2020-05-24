@@ -328,7 +328,7 @@ namespace Certify.Management
             try
             {
 
-                if (managedCertificate.PreRequestTasks?.Any() == true)
+                if (managedCertificate.PreRequestTasks?.Any() == true && managedCertificate.Health != ManagedCertificateHealth.AwaitingUser)
                 {
                     // run pre-request tasks, currently if any of these fail the request will abort
 
@@ -455,43 +455,57 @@ namespace Certify.Management
             {
                 certRequestResult.ManagedItem = managedCertificate;
 
-                // run applicable deployment tasks (whether success or failed), powershell
-                LogMessage(managedCertificate.Id, $"Performing Post-Request (Deployment) Tasks..");
-
-                var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, certRequestResult, managedCertificate.PostRequestTasks);
-
-                // log results
-                var postRequestTasks = new ActionStep
+                // if request is not awaiting user and there are any post requests tasks, run them now
+                if (managedCertificate.PostRequestTasks?.Any() == true && managedCertificate.Health != ManagedCertificateHealth.AwaitingUser)
                 {
-                    Category = "Post-Request Tasks",
-                    Key = "PostRequestTasks",
-                    Substeps = new List<ActionStep>(),
-                    HasError = results.Any(r => r.HasError),
-                    HasWarning = results.Any(r => r.HasWarning),
-                };
 
-                foreach (var r in results)
-                {
-                    LogMessage(managedCertificate.Id, $"{r.Title} :: {r.Description}", (r.HasError || r.HasWarning) ? LogItemType.CertficateRequestAttentionRequired : LogItemType.GeneralInfo);
+                    // run applicable deployment tasks (whether success or failed), powershell
+                    LogMessage(managedCertificate.Id, $"Performing Post-Request (Deployment) Tasks..");
 
-                    r.Category = "Post-Request Tasks";
-                    postRequestTasks.Substeps.Add(r);
+                    var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, certRequestResult, managedCertificate.PostRequestTasks);
+
+                    // log results
+                    var postRequestTasks = new ActionStep
+                    {
+                        Category = "Post-Request Tasks",
+                        Key = "PostRequestTasks",
+                        Substeps = new List<ActionStep>(),
+                        HasError = results.Any(r => r.HasError),
+                        HasWarning = results.Any(r => r.HasWarning),
+                    };
+
+                    foreach (var r in results)
+                    {
+                        LogMessage(managedCertificate.Id, $"{r.Title} :: {r.Description}", (r.HasError || r.HasWarning) ? LogItemType.CertficateRequestAttentionRequired : LogItemType.GeneralInfo);
+
+                        r.Category = "Post-Request Tasks";
+                        postRequestTasks.Substeps.Add(r);
+
+                    }
+                    certRequestResult.Actions.Add(postRequestTasks);
+
+                    // certificate may already be deployed to some extent so this counts a completed with warnings
+                    if (results.Any(r => r.HasError))
+                    {
+                        certRequestResult.IsSuccess = false;
+
+                        var msg = $"Deployment Tasks did not complete successfully.";
+                        certRequestResult.Message = msg;
+                    }
 
                 }
-                certRequestResult.Actions.Add(postRequestTasks);
 
-                // certificate may already be deployed to some extent so this counts a completed with warnings
-                if (results.Any(r => r.HasError))
-                {
-                    certRequestResult.IsSuccess = false;
-
-                    var msg = $"Deployment Tasks did not complete successfully.";
-                    certRequestResult.Message = msg;
-                }
-
-                var finalState = certRequestResult.IsSuccess ? RequestState.Success : RequestState.Error;
+                // final state is either paused, success or error
+                var finalState = managedCertificate.Health == ManagedCertificateHealth.AwaitingUser ?
+                     RequestState.Paused :
+                     (certRequestResult.IsSuccess ? RequestState.Success : RequestState.Error);
 
                 ReportProgress(progress, new RequestProgressState(finalState, certRequestResult.Message, managedCertificate));
+
+                if (string.IsNullOrEmpty(certRequestResult.Message) && !string.IsNullOrEmpty(managedCertificate.RenewalFailureMessage))
+                {
+                    certRequestResult.Message = managedCertificate.RenewalFailureMessage;
+                }
 
                 await UpdateManagedCertificateStatus(managedCertificate, finalState, certRequestResult.Message);
             }
