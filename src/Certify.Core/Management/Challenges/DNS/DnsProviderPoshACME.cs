@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -34,6 +34,7 @@ namespace Certify.Core.Management.Challenges.DNS
             [Google Cloud](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/GCloud-Readme.md),
             [Hetzner](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Hetzner-Readme.md),
             [Hurricane Electric](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/HurricaneElectric-Readme.md),
+            [Infoblox](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Infoblox-Readme.md),
             [IBM Cloud/SoftLayer](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/IBMSoftLayer-Readme.md),
             [Linode](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Linode-Readme.md),
             [Loopia](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Loopia-Readme.md),
@@ -330,7 +331,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 {
                     new ProviderParameter { Key = "EDToken", Name = "Token", IsRequired = true, IsCredential = true },
                     new ProviderParameter { Key = "EDKey", Name = "Key", IsRequired = true, IsCredential = true },
-                    new ProviderParameter { Key = "EDUseSandbox", Name = "Use Sandbox", Type= OptionType.Boolean,  Value="0", IsHidden=true },
+                    new ProviderParameter { Key = "EDUseSandbox", Name = "Use EasyDNS Sandbox API", Type= OptionType.Boolean,  Value="false", IsCredential=false, IsHidden=false },
                     _defaultPropagationDelayParam
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
@@ -416,6 +417,28 @@ namespace Certify.Core.Management.Challenges.DNS
             },
              new ChallengeProviderDefinition
             {
+                Id = "DNS01.API.PoshACME.Infoblox",
+                Title = "Infoblox DDI DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Infoblox-Readme.md",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters = new List<ProviderParameter>
+                {
+
+                    new ProviderParameter { Key = "IBServer", Name = "Server", IsRequired = true, IsCredential = false, Description="e.g. gridmaster.example.com"  },
+                    new ProviderParameter { Key = "IBUsername", Name = "Username", IsRequired = true, IsCredential = true },
+                    new ProviderParameter { Key = "IBPassword", Name = "Password", IsRequired = true, IsCredential = true, IsPassword=true },
+                    new ProviderParameter { Key = "IBView", Name = "DNS View", IsRequired = true, IsCredential = false, Description="e.g. default", Value="default"  }
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Infoblox",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
+             new ChallengeProviderDefinition
+            {
                 Id = "DNS01.API.PoshACME.Linode",
                 Title = "Linode DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
@@ -481,7 +504,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 {
                     new ProviderParameter { Key = "NameComUserName", Name = "APU Username", IsRequired = true, IsCredential = true },
                     new ProviderParameter { Key = "NameComToken", Name = "API Token", IsRequired = true, IsCredential = true },
-                    new ProviderParameter { Key = "NameComUseTestEnv", Name = "Use Test Environment", IsRequired = true, Value="0", Type= OptionType.Boolean, IsHidden=true },
+                    new ProviderParameter { Key = "NameComUseTestEnv", Name = "Use Test Environment", IsRequired = true, Value="false", Type= OptionType.Boolean, IsHidden=true, IsCredential=false },
                     _defaultPropagationDelayParam
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
@@ -657,7 +680,7 @@ namespace Certify.Core.Management.Challenges.DNS
                                 DelegateProviderDefinition
                                 .ProviderParameters
                                 .FirstOrDefault(a => a.Key == p.Key)?.Type == OptionType.Boolean ?
-                                    p.Key + "=" + (bool.Parse(p.Value) == true ? "1" : "0") : // bool param
+                                    p.Key + "=" + (bool.Parse(p.Value) == true ? "$true" : "$false") : // bool param
                                     p.Key + "='" + p.Value + "'" // string param
                             )
                         );

@@ -71,6 +71,16 @@
             </StackPanel>
         </DataTemplate>
         <DataTemplate x:Key="ProviderHiddenParameter" />
+
+        <DataTemplate x:Key="ProviderBooleanParameter">
+            <StackPanel
+                Margin="0,8,0,0"
+                DockPanel.Dock="Left"
+                Orientation="Horizontal">
+                <Label Width="160" Content="{Binding Name}" />
+                <CheckBox IsChecked="{Binding Value, Mode=TwoWay}" />
+            </StackPanel>
+        </DataTemplate>
     </UserControl.Resources>
     <DockPanel>
 
