@@ -30,7 +30,7 @@ namespace Certify.Models.Plugins
 
         Task<PendingAuthorization> CheckValidationCompleted(ILog log, string challengeType, PendingAuthorization pendingAuthorization);
 
-        Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId);
+        Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId, string pwd);
 
         Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate);
 

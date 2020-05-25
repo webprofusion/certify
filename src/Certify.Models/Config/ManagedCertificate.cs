@@ -170,8 +170,13 @@ namespace Certify.Models
         public string CertificateThumbprintHash { get; set; }
         public string CertificatePreviousThumbprintHash { get; set; }
         public bool CertificateRevoked { get; set; }
+
+        /// <summary>
+        /// Optional stored credential ID for preferred PFX password (pwd is blank otherwise)
+        /// </summary>
+        public string CertificatePasswordCredentialId { get; set; }
+
         public string CurrentOrderUri { get; set; }
-        public string CertificatePassword { get;set;}
 
         /// <summary>
         /// If true, pre/post request tasks will run for renewal but the certificate order won't be performed (used for testing).

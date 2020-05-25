@@ -36,7 +36,7 @@ namespace Certify.Core.Management
         /// <param name="pfxPath">  </param>
         /// <param name="cleanupCertStore">  </param>
         /// <returns>  </returns>
-        public async Task<List<ActionStep>> StoreAndDeployManagedCertificate(IBindingDeploymentTarget deploymentTarget, ManagedCertificate managedCertificate, string pfxPath, bool isPreviewOnly)
+        public async Task<List<ActionStep>> StoreAndDeployManagedCertificate(IBindingDeploymentTarget deploymentTarget, ManagedCertificate managedCertificate, string pfxPath, string pfxPwd, bool isPreviewOnly)
         {
             var actions = new List<ActionStep>();
 
@@ -62,7 +62,7 @@ namespace Certify.Core.Management
                 {
                     try
                     {
-                        storedCert = await CertificateManager.StoreCertificate(requestConfig.PrimaryDomain, pfxPath, isRetry: false, enableRetryBehaviour: _enableCertDoubleImportBehaviour);
+                        storedCert = await CertificateManager.StoreCertificate(requestConfig.PrimaryDomain, pfxPath, isRetry: false, enableRetryBehaviour: _enableCertDoubleImportBehaviour, pwd: pfxPwd);
                         if (storedCert != null)
                         {
                             certHash = storedCert.GetCertHash();

@@ -167,7 +167,7 @@ namespace Certfy.Providers.ACME.ACMESharpCore
             throw new System.NotImplementedException();
         }
 
-        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId)
+        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId, string pwd)
         {
             var order = await _client.GetOrderDetailsAsync("");
             _ = await _client.GetOrderCertificateAsync(order);

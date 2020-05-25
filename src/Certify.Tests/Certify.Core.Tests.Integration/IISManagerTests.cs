@@ -382,7 +382,7 @@ namespace Certify.Core.Tests
 
             var actions = await new BindingDeploymentManager().StoreAndDeployManagedCertificate(
                 iisManager.GetDeploymentTarget(),
-                managedCertificate, dummyCertPath,
+                managedCertificate, dummyCertPath,"",
                 false);
 
             foreach (var a in actions)

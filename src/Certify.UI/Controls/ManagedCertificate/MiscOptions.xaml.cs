@@ -27,9 +27,10 @@ namespace Certify.UI.Controls.ManagedCertificate
             //check file exists, if not inform user
             if (!string.IsNullOrEmpty(certPath) && System.IO.File.Exists(certPath))
             {
-                //open file, can fail if file is in use
+                //open file, can fail if file is in use TODO: will fail if cert has a pwd
                 try
                 {
+                    
                     var cert = CertificateManager.LoadCertificate(certPath);
 
                     if (cert != null)

@@ -863,9 +863,9 @@ namespace Certify.Management
                     new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RequestCertificate,
                         managedCertificate));
 
-                // Perform CSR request and generate certificate
+                var pfxPwd = await GetPfxPassword(managedCertificate);
 
-                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, managedCertificate.RequestConfig, pendingOrder.OrderUri);
+                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, managedCertificate.RequestConfig, pendingOrder.OrderUri, pfxPwd);
 
                 if (certRequestResult.IsSuccess)
                 {
@@ -880,7 +880,7 @@ namespace Certify.Management
                     // update managed site summary
                     try
                     {
-                        var certInfo = CertificateManager.LoadCertificate(pfxPath);
+                        var certInfo = CertificateManager.LoadCertificate(pfxPath, pfxPwd);
 
                         certCleanupName = certInfo.FriendlyName.Substring(0, certInfo.FriendlyName.IndexOf("]") + 1);
                         managedCertificate.DateStart = certInfo.NotBefore;
@@ -915,6 +915,7 @@ namespace Certify.Management
                                 _serverProvider.GetDeploymentTarget(),
                                 managedCertificate,
                                 pfxPath,
+                                pfxPwd,
                                 isPreviewOnly: false
                             );
 
@@ -1030,6 +1031,24 @@ namespace Certify.Management
             }
 
             return result;
+        }
+
+        private async Task<string> GetPfxPassword(ManagedCertificate managedCertificate)
+        {
+            var pfxPwd = "";
+            var pwdCredentialId = managedCertificate.CertificatePasswordCredentialId ?? CoreAppSettings.Current.DefaultKeyCredentials ?? null;
+
+            // if pwd specified for pfx (a default or specific to this managed cert), fetch from credentials store
+            if (!string.IsNullOrEmpty(pwdCredentialId))
+            {
+                var cred = await _credentialsManager.GetUnlockedCredentialsDictionary(pwdCredentialId);
+                if (cred != null)
+                {
+                    pfxPwd = cred["password"];
+                }
+            }
+
+            return pfxPwd;
         }
 
         private async Task PerformAutomatedChallengeResponses(ILog log, ManagedCertificate managedCertificate, IEnumerable<string> distinctDomains, List<PendingAuthorization> authorizations, CertificateRequestResult result, CertRequestConfig config, IProgress<RequestProgressState> progress)
@@ -1234,6 +1253,8 @@ namespace Certify.Management
                     ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding, managedCertificate));
                 }
 
+                var pfxPwd = await GetPfxPassword(managedCertificate);
+
                 // Install certificate into certificate store and bind to IIS site
                 var deploymentManager = new BindingDeploymentManager();
 
@@ -1241,6 +1262,7 @@ namespace Certify.Management
                         _serverProvider.GetDeploymentTarget(),
                         managedCertificate,
                         pfxPath,
+                        pfxPwd,
                         isPreviewOnly: isPreviewOnly
                     );
 

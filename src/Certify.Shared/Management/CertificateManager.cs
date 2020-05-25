@@ -205,12 +205,12 @@ namespace Certify.Management
             }
         }
 
-        public static X509Certificate2 LoadCertificate(string filename)
+        public static X509Certificate2 LoadCertificate(string filename, string pwd = "")
         {
             try
             {
                 var cert = new X509Certificate2();
-                cert.Import(filename);
+                cert.Import(filename, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
                 return cert;
             }
             catch (Exception exp)
@@ -226,21 +226,35 @@ namespace Certify.Management
             bool isRetry = false,
             bool enableRetryBehaviour = true,
             string storeName = DEFAULT_STORE_NAME,
-            string customFriendlyName = null)
+            string customFriendlyName = null,
+            string pwd = "")
         {
             // https://support.microsoft.com/en-gb/help/950090/installing-a-pfx-file-using-x509certificate-from-a-standard--net-appli
-            var certificate = new X509Certificate2(pfxFile, "", X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+            X509Certificate2 certificate;
+            try
+            {
+                certificate = new X509Certificate2(pfxFile, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+            }
+            catch (CryptographicException)
+            {
+                // retry  with blank pwd, may be transitional
+                certificate = new X509Certificate2(pfxFile, "", X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+                
+                // success using blank pwd, continue with blank pwd
+                pwd = "";
+            }
+
 
             if (!string.IsNullOrEmpty(customFriendlyName))
-            {
-                certificate.FriendlyName = customFriendlyName;
-            }
-            else
-            {
-                certificate.GetExpirationDateString();
-                certificate.FriendlyName = host + " [Certify] - " + certificate.GetEffectiveDateString() + " to " + certificate.GetExpirationDateString();
-            }
-
+                {
+                    certificate.FriendlyName = customFriendlyName;
+                }
+                else
+                {
+                    certificate.GetExpirationDateString();
+                    certificate.FriendlyName = host + " [Certify] - " + certificate.GetEffectiveDateString() + " to " + certificate.GetExpirationDateString();
+                }
+            
             var cert = StoreCertificate(certificate, storeName);
 
             await Task.Delay(500);
@@ -256,7 +270,7 @@ namespace Certify.Management
                     // hack/workaround - importing cert from system account causes private key to be
                     // transient. Re-import the same cert fixes it. re -try apply .net dev on why
                     // re-import helps with private key: https://stackoverflow.com/questions/40892512/add-a-generated-certificate-to-the-store-and-update-an-iis-site-binding
-                    return await StoreCertificate(host, pfxFile, isRetry: true, storeName: storeName, customFriendlyName: customFriendlyName);
+                    return await StoreCertificate(host, pfxFile, isRetry: true, storeName: storeName, customFriendlyName: customFriendlyName,pwd: pwd);
                 }
             }
 
