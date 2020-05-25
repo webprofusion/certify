@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Certes;
 using Certes.Acme;
 using Certes.Acme.Resource;
+using Certes.Pkcs;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
@@ -88,6 +89,7 @@ namespace Certify.Providers.ACME.Certes
         }
     }
 
+
     /// <summary>
     /// ACME Provider using certes https://github.com/fszlin/certes
     /// </summary>
@@ -111,6 +113,7 @@ namespace Certify.Providers.ACME.Certes
         private readonly string _userAgentName = "Certify SSL Manager";
         private ILog _log = null;
 
+        private List<byte[]> _issuerCertCache = new List<byte[]>();
 
         public CertesACMEProvider(string acmeBaseUri, string settingsPath, string userAgentName, bool allowInvalidTls = false)
         {
@@ -134,7 +137,7 @@ namespace Certify.Providers.ACME.Certes
             }
 #pragma warning restore SCS0004 // Certificate Validation has been disabled
 
-
+            this.RefreshIssuerCertCache();
         }
 
         public string GetProviderName() => "Certes";
@@ -1014,6 +1017,7 @@ namespace Certify.Providers.ACME.Certes
             return pendingAuthorization;
         }
 
+
         /// <summary>
         /// Once validation has completed for our requested domains we can complete the certificate
         /// request by submitting a Certificate Signing Request (CSR) to the CA
@@ -1023,7 +1027,7 @@ namespace Certify.Providers.ACME.Certes
         /// <param name="alternativeDnsIdentifiers">  </param>
         /// <param name="config">  </param>
         /// <returns>  </returns>
-        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId)
+        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId, string pwd)
         {
             var orderContext = _currentOrders[orderId];
 
@@ -1110,18 +1114,18 @@ namespace Certify.Providers.ACME.Certes
 
             var domainAsPath = config.PrimaryDomain.Replace("*", "_");
 
-            var pfxPath = ExportFullCertPFX(certFriendlyName, csrKey, certificateChain, certId, domainAsPath);
+            var pfxPath = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath);
 
             return new ProcessStepResult { IsSuccess = true, Result = pfxPath };
         }
 
-        private byte[] GetCACertsFromStore()
+        private byte[] GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName storeName)
         {
             // get list of known CAs as Issuer certs from cert store
             // derived from PR idea by @pkiguy https://github.com/webprofusion/certify/pull/340
 
             var store = new System.Security.Cryptography.X509Certificates.X509Store(
-                System.Security.Cryptography.X509Certificates.StoreName.CertificateAuthority,
+                storeName,
                 System.Security.Cryptography.X509Certificates.StoreLocation.LocalMachine);
 
             store.Open(System.Security.Cryptography.X509Certificates.OpenFlags.ReadOnly);
@@ -1143,7 +1147,15 @@ namespace Certify.Providers.ACME.Certes
             }
         }
 
-        private string ExportFullCertPFX(string certFriendlyName, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
+        private void RefreshIssuerCertCache()
+        {
+            _issuerCertCache = new List<byte[]>();
+            _issuerCertCache.Add(GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName.Root));
+            _issuerCertCache.Add(GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName.CertificateAuthority));
+
+        }
+
+        private string ExportFullCertPFX(string certFriendlyName, string pwd, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
         {
             var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..\\assets", primaryDomainPath }));
 
@@ -1156,20 +1168,38 @@ namespace Certify.Providers.ACME.Certes
             var pfxPath = Path.Combine(storePath, pfxFile);
 
             var pfx = certificateChain.ToPfx(csrKey);
-            pfx.AddIssuers(GetCACertsFromStore());
+
+            if (_issuerCertCache.Any())
+            {
+                foreach (var c in _issuerCertCache)
+                {
+                    pfx.AddIssuers(c);
+                }
+            }
 
             byte[] pfxBytes;
             try
             {
-                pfxBytes = pfx.Build(certFriendlyName, "");
+                pfxBytes = pfx.Build(certFriendlyName, pwd);
                 System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
             }
-            catch (Exception exp)
+            catch (Exception)
             {
-                throw new Exception("Failed to build certificate as PFX. Check system date/time is correct and that the issuing CA is a trusted root CA on this machine. :" + exp.Message);
-            }
-            return pfxPath;
+                // if build failed, try refreshing issuer certs
+                RefreshIssuerCertCache();
 
+                try
+                {
+                    pfxBytes = pfx.Build(certFriendlyName, pwd);
+                    System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Failed to build certificate as PFX. Check system date/time is correct and that the issuing CA is a trusted root CA on this machine. :" + ex.Message);
+                }
+            }
+
+            return pfxPath;
         }
 
         private string ExportFullCertPEM(IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
