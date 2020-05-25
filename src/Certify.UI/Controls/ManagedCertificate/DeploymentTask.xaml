@@ -48,7 +48,7 @@
                 DockPanel.Dock="Left"
                 Orientation="Horizontal">
                 <Label Width="160" Content="{Binding Name}" />
-                <CheckBox IsChecked="{Binding Value, Mode=TwoWay}"></CheckBox>
+                <CheckBox IsChecked="{Binding Value, Mode=TwoWay}" />
             </StackPanel>
         </DataTemplate>
         <DataTemplate x:Key="ProviderDropDownParameter">
