@@ -81,7 +81,7 @@
     <ProjectReference Include="..\Certify.Providers\DNS\SimpleDNSPlus\SimpleDNSPlus.csproj" />
     <ProjectReference Include="..\Certify.Providers\DNS\NameCheap\NameCheap.csproj" />
     <ProjectReference Include="..\Certify.Providers\DNS\TransIP\TransIP.csproj" />
-    <ProjectReference Include="..\Certify.SharedUtils\Certify.Shared.Utils.csproj" />
+    <ProjectReference Include="..\Certify.Shared.Compat\Certify.Shared.Compat.csproj" />
     <ProjectReference Include="..\Certify.Shared\Certify.Shared.Core.csproj" />
   </ItemGroup>
   

@@ -24,6 +24,7 @@
     <ProjectReference Include="..\Certify.Core\Certify.Core.csproj" />
     <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />
     <ProjectReference Include="..\Certify.Models\Certify.Models.csproj" />
+    <ProjectReference Include="..\Certify.Shared.Compat\Certify.Shared.Compat.csproj" />
     <ProjectReference Include="..\Certify.Shared\Certify.Shared.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
@@ -53,10 +54,8 @@
     <PackageReference Include="Owin" Version="1.0.0" /> 
     <PackageReference Include="Serilog" Version="2.9.0" /> 
     <PackageReference Include="Serilog.Sinks.ListOfString" Version="4.1.4.3" /> 
-    <PackageReference Include="SimpleImpersonation" Version="3.0.0" /> 
     <PackageReference Include="Swashbuckle.Core" Version="5.6.0" /> 
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="4.7.0" /> 
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" /> 
     <PackageReference Include="System.ValueTuple" Version="4.5.0" /> 
     <PackageReference Include="Topshelf" Version="4.2.1" /> 
     <PackageReference Include="Topshelf.Serilog" Version="4.2.1" /> 

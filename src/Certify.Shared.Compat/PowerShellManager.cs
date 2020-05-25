@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
-using Certify.Shared;
 using SimpleImpersonation;
 
 namespace Certify.Management

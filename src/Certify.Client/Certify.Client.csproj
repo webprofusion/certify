@@ -22,7 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />
     <ProjectReference Include="..\Certify.Models\Certify.Models.csproj" />
-    <ProjectReference Include="..\Certify.SharedUtils\Certify.Shared.Utils.csproj" />
+    <ProjectReference Include="..\Certify.Shared.Compat\Certify.Shared.Compat.csproj" />
 
   </ItemGroup>
 

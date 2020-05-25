@@ -373,6 +373,10 @@
       <Project>{baaa9b8c-e44b-43f6-ac9c-b5666e69ee27}</Project>
       <Name>Certify.Models</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Certify.Shared.Compat\Certify.Shared.Compat.csproj">
+      <Project>{fc739dd0-2073-40f0-923a-8a4875a79379}</Project>
+      <Name>Certify.Shared.Compat</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Certify.Shared\Certify.Shared.Core.csproj">
       <Project>{fb52bf0a-ac16-40d7-988e-b75a2868871b}</Project>
       <Name>Certify.Shared.Core</Name>
