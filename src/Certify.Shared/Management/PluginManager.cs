@@ -13,6 +13,8 @@ namespace Certify.Management
 {
     public class PluginManager
     {
+        public const string APPDATASUBFOLDER = "Certify";
+
         public ILicensingManager LicensingManager { get; set; }
         public IDashboardClient DashboardClient { get; set; }
         public List<IDeploymentTaskProviderPlugin> DeploymentTaskProviders { get; set; }
@@ -25,11 +27,35 @@ namespace Certify.Management
             _log = new Models.Loggy(
                     new LoggerConfiguration()
                         .MinimumLevel.Information()
-                        .WriteTo.File(Management.Util.GetAppDataFolder("logs") + "\\plugins.log", shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
+                        .WriteTo.File(GetAppDataFolder("logs") + "\\plugins.log", shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
                         .CreateLogger()
                 );
 
         }
+
+        public static string GetAppDataFolder(string subFolder = null)
+        {
+            var parts = new List<string>()
+            {
+                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                APPDATASUBFOLDER
+            };
+
+            if (subFolder != null)
+            {
+                parts.Add(subFolder);
+            }
+
+            var path = Path.Combine(parts.ToArray());
+
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+
+            return path;
+        }
+
 
         private string GetPluginFolderPath(bool usePluginSubfolder = true)
         {
@@ -75,6 +101,17 @@ namespace Certify.Management
                 else
                 {
                     _log?.Warning($"Plugin Load Failed [{interfaceType}] File does not exist: {dllFileName}");
+                }
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+
+                _log?.Warning($"Plugin Load Failed [{interfaceType}] :: {dllFileName} [Reflection or Loader Error]");
+
+                _log.Error(ex.ToString());
+                foreach (var loaderEx in ex.LoaderExceptions)
+                {
+                    _log.Error(loaderEx.ToString());
                 }
             }
             catch (Exception exp)

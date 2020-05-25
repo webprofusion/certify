@@ -24,21 +24,22 @@ namespace Certify.Core.Management.DeploymentTasks
 
             foreach (var t in typeList)
             {
+
                 var def = (DeploymentProviderDefinition)t.GetProperty("Definition").GetValue(null);
 
-#if DEBUG
                 // conditionally include mock task
                 if (def.Id == Providers.DeploymentTasks.Core.MockTask.Definition.Id)
                 {
+
+#if DEBUG
                     list.Add(def);
+#endif
                 }
                 else
                 {
                     list.Add(def);
                 }
-#else
-                list.Add(def);
-#endif
+
             }
 
             // add providers from plugins (if any)
