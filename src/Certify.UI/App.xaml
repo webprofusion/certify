@@ -49,12 +49,14 @@
 
             <Style TargetType="Controls:NumericUpDown">
                 <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseLow}" />
-
             </Style>
 
             <Style BasedOn="{StaticResource MahApps.Styles.ComboBox}" TargetType="ComboBox">
                 <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseLow}" />
+            </Style>
 
+            <Style BasedOn="{StaticResource MahApps.Styles.TextBox}" TargetType="TextBox">
+                <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseLow}" />
             </Style>
 
             <Style BasedOn="{StaticResource MahApps.Styles.Button}" TargetType="Button">
