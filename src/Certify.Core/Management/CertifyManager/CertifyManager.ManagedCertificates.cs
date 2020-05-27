@@ -31,14 +31,20 @@ namespace Certify.Management
                     // check if we have any external sources of managed certificates
                     foreach (var p in _pluginManager.CertificateManagerProviders)
                     {
-                        var pluginType = p.GetType();
-                        var providers = p.GetProviders(pluginType);
-                        foreach (var cp in providers)
+                        if (p != null)
                         {
-                            var certManager = p.GetProvider(pluginType, cp.Id);
-                            var certs = await certManager.GetManagedCertificates(filter);
+                            var pluginType = p.GetType();
+                            var providers = p.GetProviders(pluginType);
+                            foreach (var cp in providers)
+                            {
+                                var certManager = p.GetProvider(pluginType, cp.Id);
+                                var certs = await certManager.GetManagedCertificates(filter);
 
-                            list.AddRange(certs);
+                                list.AddRange(certs);
+                            }
+                        } else
+                        {
+                            System.Diagnostics.Debug.WriteLine("Failed to create provider from plugin [Certificate Manager] ");
                         }
                     }
                 }
