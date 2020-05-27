@@ -15,10 +15,12 @@
     MinWidth="300"
     MinHeight="300"
     BorderThickness="1"
-    GlowBrush="{DynamicResource AccentColorBrush}"
+    GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
     IsVisibleChanged="UserControl_IsVisibleChanged"
-    TitleCaps="False"
-    WindowStartupLocation="CenterOwner" ShowMinButton="False" ShowMaxRestoreButton="False"
+    ShowMaxRestoreButton="False"
+    ShowMinButton="False"
+    TitleCharacterCasing="Normal"
+    WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False"
     mc:Ignorable="d">
     <Controls:MetroWindow.LayoutTransform>
@@ -51,7 +53,7 @@
                     <fa:ImageAwesome
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource AccentColorBrush}"
+                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
                         Icon="Download" />
                     <TextBlock Margin="8,0,0,0">Download</TextBlock>
                 </StackPanel>
@@ -65,7 +67,7 @@
                     <fa:ImageAwesome
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource AccentColorBrush}"
+                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
                         Icon="ArrowCircleLeft" />
                     <TextBlock Margin="8,0,0,0">Later</TextBlock>
                 </StackPanel>

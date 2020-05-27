@@ -49,13 +49,13 @@ namespace Certify.UI.Tests.Integration
             // 6 days to go, should be red
             color = ExpiryDateColourConverter.GetColour(DateTime.Now.AddDays(6.1));
 
-            Assert.AreEqual(System.Windows.Media.Brushes.Red, color);
+            Assert.AreEqual(System.Windows.Media.Brushes.IndianRed, color);
 
 
             // 0 days to go (less than 1), should be red
             color = ExpiryDateColourConverter.GetColour(DateTime.Now.AddDays(1.1));
 
-            Assert.AreEqual(System.Windows.Media.Brushes.Red, color);
+            Assert.AreEqual(System.Windows.Media.Brushes.IndianRed, color);
 
             // expired, more than 0 days past expiry, should be dark red
             color = ExpiryDateColourConverter.GetColour(DateTime.Now.AddDays(-1));

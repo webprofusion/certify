@@ -11,9 +11,9 @@
     Width="480"
     Height="460"
     BorderThickness="1"
-    GlowBrush="{DynamicResource AccentColorBrush}"
+    GlowBrush="{StaticResource MahApps.Brushes.Accent}"
     ResizeMode="CanResize"
-    TitleCaps="False"
+    TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False"
     mc:Ignorable="d">

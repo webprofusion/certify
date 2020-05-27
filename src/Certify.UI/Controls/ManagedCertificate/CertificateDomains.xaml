@@ -34,10 +34,11 @@
             Margin="0,0,0,0"
             HorizontalContentAlignment="Left"
             VerticalContentAlignment="Stretch"
+            Controls:TabControlHelper.UnderlineBrush="{DynamicResource MahApps.Brushes.Accent4}"
             Controls:TabControlHelper.Underlined="TabPanel">
             <TabItem
                 MinWidth="100"
-                Controls:ControlsHelper.HeaderFontSize="12"
+                Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="Domains"
                 IsSelected="False">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -72,7 +73,7 @@
                                 ToolTip="Refresh Site List">
                                 <fa:ImageAwesome
                                     Height="12"
-                                    Foreground="{DynamicResource AccentColorBrush}"
+                                    Foreground="{DynamicResource MahApps.Brushes.Accent}"
                                     Icon="Refresh"
                                     Spin="{Binding IsSiteListQueryProgress}" />
 
@@ -105,7 +106,7 @@
                                     ToolTip="Add Domains">
                                     <fa:ImageAwesome
                                         Height="12"
-                                        Foreground="{DynamicResource AccentColorBrush}"
+                                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
                                         Icon="Plus" />
 
                                 </Button>
@@ -149,7 +150,7 @@
                                     ToolTip="{x:Static Resources:SR.SelectAll}">
                                     <fa:ImageAwesome
                                         Height="12"
-                                        Foreground="{DynamicResource AccentColorBrush}"
+                                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
                                         Icon="CheckSquare" />
 
                                 </Button>
@@ -163,7 +164,7 @@
                                     ToolTip="{x:Static Resources:SR.ManagedCertificateSettings_SelectNone}">
                                     <fa:ImageAwesome
                                         Height="12"
-                                        Foreground="{DynamicResource AccentColorBrush}"
+                                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
                                         Icon="SquareOutline" />
 
                                 </Button>
@@ -178,7 +179,7 @@
                                     ToolTip="{x:Static Resources:SR.ManagedCertificatesSettings_RefreshDomains}">
                                     <fa:ImageAwesome
                                         Height="12"
-                                        Foreground="{DynamicResource AccentColorBrush}"
+                                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
                                         Icon="Refresh" />
 
                                 </Button>
@@ -232,7 +233,7 @@
                                                     <fa:ImageAwesome
                                                         Height="12"
                                                         Margin="0,0,0,0"
-                                                        Foreground="{DynamicResource AccentColorBrush3}"
+                                                        Foreground="{DynamicResource MahApps.Brushes.Accent3}"
                                                         Icon="Trash" />
 
                                                 </Button>
@@ -247,7 +248,7 @@
             </TabItem>
             <TabItem
                 MinWidth="140"
-                Controls:ControlsHelper.HeaderFontSize="12"
+                Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="Certificate Authority"
                 IsSelected="False">
                 <!--  Certificate Authority Preference  -->
@@ -286,7 +287,7 @@
             </TabItem>
             <TabItem
                 MinWidth="100"
-                Controls:ControlsHelper.HeaderFontSize="12"
+                Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="Advanced"
                 IsSelected="False">
                 <managedcertificate:MiscOptions />

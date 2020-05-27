@@ -307,6 +307,7 @@ namespace Certify.UI
             {
                 _appViewModel.IsUpdateInProgress = true;
                 UpdateIcon.Spin = true;
+                UpdateIcon.Icon = FontAwesome.WPF.FontAwesomeIcon.Superpowers;
                 UpdateIcon.SpinDuration = 1;
 
                 _appViewModel.UpdateCheckResult = await new Utils.UpdateCheckUtils().UpdateWithDownload();

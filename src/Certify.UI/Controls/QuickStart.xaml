@@ -18,8 +18,7 @@
         <controls:FlipView
             x:Name="QuickStartFlipView"
             Margin="16"
-            IsBannerEnabled="False"
-            MouseOverGlowEnabled="False">
+            IsBannerEnabled="False">
 
             <controls:FlipViewItem>
                 <DockPanel>

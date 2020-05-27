@@ -27,11 +27,11 @@ namespace Certify.UI.Utils
             }
             else if (health == ManagedCertificateHealth.Error)
             {
-                return System.Windows.Media.Brushes.Red;
+                return System.Windows.Media.Brushes.IndianRed;
             }
             else if (health == ManagedCertificateHealth.Warning)
             {
-                return System.Windows.Media.Brushes.OrangeRed;
+                return System.Windows.Media.Brushes.DarkOrange;
             }
             else if (health == ManagedCertificateHealth.AwaitingUser)
             {

@@ -63,10 +63,11 @@
                                 Visibility="{Binding HasWarning, Converter={StaticResource BooleanToVisibilityConverter}}" />
                             <TextBlock
                                 DockPanel.Dock="Left"
+                                MouseUp="TextBlock_MouseUp"
                                 Style="{StaticResource Instructions}"
-                                Text="{Binding Path=Message}" ToolTip="Click to copy to clipboard"
-                                
-                                TextWrapping="WrapWithOverflow" MouseUp="TextBlock_MouseUp" />
+                                Text="{Binding Path=Message}"
+                                TextWrapping="WrapWithOverflow"
+                                ToolTip="Click to copy to clipboard" />
                         </DockPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
