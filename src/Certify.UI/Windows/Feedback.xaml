@@ -13,8 +13,8 @@
     MinWidth="300"
     MinHeight="300"
     BorderThickness="1"
-    GlowBrush="{DynamicResource AccentColorBrush}"
-    TitleCaps="False"
+    GlowBrush="{StaticResource MahApps.Brushes.Accent}"
+    TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False"
     mc:Ignorable="d">

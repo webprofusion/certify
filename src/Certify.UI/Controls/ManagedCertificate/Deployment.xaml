@@ -36,10 +36,11 @@
         Height="auto"
         HorizontalContentAlignment="Left"
         VerticalContentAlignment="Stretch"
+        Controls:TabControlHelper.UnderlineBrush="{DynamicResource MahApps.Brushes.Accent4}"
         Controls:TabControlHelper.Underlined="TabPanel">
         <TabItem
             MinWidth="140"
-            Controls:ControlsHelper.HeaderFontSize="12"
+            Controls:HeaderedControlHelper.HeaderFontSize="12"
             Header="Deployment Mode"
             IsSelected="True">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -231,7 +232,7 @@
 
         <TabItem
             MinWidth="100"
-            Controls:ControlsHelper.HeaderFontSize="12"
+            Controls:HeaderedControlHelper.HeaderFontSize="12"
             Header="Deployment Tasks"
             IsSelected="False">
 
@@ -261,7 +262,7 @@
                                     <fa:ImageAwesome
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
-                                        Foreground="{DynamicResource AccentColorBrush}"
+                                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
                                         Icon="PlusCircle" />
                                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center">Add</TextBlock>
                                 </StackPanel>
@@ -286,13 +287,13 @@
                                     <fa:ImageAwesome
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
-                                        Foreground="{DynamicResource AccentColorBrush}"
+                                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
                                         Icon="PlusCircle" />
                                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center">Add</TextBlock>
                                 </StackPanel>
                             </Button>
                         </StackPanel>
-                        
+
                         <local:TaskList DataContext="{Binding SelectedItem.PreRequestTasks}" />
 
 

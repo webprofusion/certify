@@ -109,7 +109,7 @@
             Margin="0,0,29.6,10.2"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
-            Foreground="{DynamicResource AccentColorBrush3}"
+            Foreground="{DynamicResource MahApps.Brushes.Accent}"
             Icon="Chain"
             RenderTransformOrigin="0.453,2.187"
             ToolTip="Service Status" />

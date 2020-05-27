@@ -56,7 +56,7 @@
                                     Style="{StaticResource Subheading}"
                                     Text="{Binding SelectedItem.DomainMatch}" />
                             </StackPanel>
-                            <Border Padding="8,8,8,8" Background="{DynamicResource ControlBackgroundBrush}">
+                            <Border Padding="8,8,8,8" Background="{DynamicResource MahApps.Brushes.Control.Background}">
                                 <managedcertificate:ChallengeConfigItem DataContext="{Binding}" />
                             </Border>
                         </StackPanel>

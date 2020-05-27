@@ -7,10 +7,11 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Certify.UI.Controls.Settings"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Height="450"
     d:DataContext="{d:DesignInstance Type=certifyui:AppDesignViewModel,
                                      IsDesignTimeCreatable=True}"
     d:DesignWidth="885.537"
-    mc:Ignorable="d" Height="450">
+    mc:Ignorable="d">
 
     <StackPanel Margin="0,8,0,16" Orientation="Vertical">
         <TabControl
@@ -19,19 +20,20 @@
             Margin="8,8,8,8"
             HorizontalContentAlignment="Left"
             VerticalContentAlignment="Stretch"
+            Controls:TabControlHelper.UnderlineBrush="{DynamicResource MahApps.Brushes.Accent2}"
             Controls:TabControlHelper.Underlined="TabPanel">
             <TabItem
                 MinWidth="100"
-                Controls:ControlsHelper.HeaderFontSize="12"
+                Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="General"
                 IsSelected="True">
                 <local:General />
             </TabItem>
-            <TabItem Controls:ControlsHelper.HeaderFontSize="12" Header="Certificate Authorities">
+            <TabItem Controls:HeaderedControlHelper.HeaderFontSize="12" Header="Certificate Authorities">
                 <local:CertificateAuthorities />
 
             </TabItem>
-            <TabItem Controls:ControlsHelper.HeaderFontSize="12" Header="Stored Credentials">
+            <TabItem Controls:HeaderedControlHelper.HeaderFontSize="12" Header="Stored Credentials">
                 <local:Credentials />
 
             </TabItem>

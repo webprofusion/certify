@@ -149,6 +149,16 @@
                 </StackPanel>
 
                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                    <Button
+                        x:Name="RefetchCertificate"
+                        Width="220"
+                        Margin="0,4,0,0"
+                        Click="RefetchCertificate_Click">
+                        Re-fetch Latest Certificate
+                    </Button>
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
                     <Border Grid.Row="4" Grid.Column="1">
                         <Border.Style>
                             <Style>
@@ -165,7 +175,7 @@
                             Width="220"
                             Margin="0,4,0,0"
                             HorizontalAlignment="Left"
-                            Background="#FFFFC7C7"
+                            Background="{DynamicResource ErrorColorBrush}"
                             Click="RevokeCertificateBtn_Click"
                             Content="{x:Static Resources:SR.ManagedCertificateSettings_RevokeCertificate}" />
                     </Border>
@@ -184,15 +194,7 @@
                     </Border>
                 </StackPanel>
 
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                    <Button
-                        x:Name="RefetchCertificate"
-                        Width="220"
-                        Margin="0,4,0,0"
-                        Click="RefetchCertificate_Click">
-                        Re-fetch Latest Certificate
-                    </Button>
-                </StackPanel>
+               
 
             </DockPanel>
         </DockPanel>

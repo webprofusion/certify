@@ -9,9 +9,8 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Colors.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Accents/BaseLight.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Accents/Green.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Green.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Dark.Green.xaml" />
 
                 <ResourceDictionary Source="pack://application:,,,/ToastNotifications.Messages;component/Themes/Default.xaml" />
             </ResourceDictionary.MergedDictionaries>
@@ -39,67 +38,35 @@
                 <Setter Property="FontSize" Value="12" />
                 <Setter Property="Padding" Value="0,4,0,4" />
                 <Setter Property="HorizontalAlignment" Value="Stretch" />
-                <Setter Property="Foreground" Value="#606060" />
+                <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMediumHigh}" />
                 <Setter Property="TextWrapping" Value="WrapWithOverflow" />
 
             </Style>
 
-            <Style BasedOn="{StaticResource MahApps.Metro.Styles.MetroButton}" TargetType="Button">
+            <!--  brush color overrides (tab items and disabled buttons)  -->
+            <SolidColorBrush x:Key="MahApps.Brushes.Gray" Color="{DynamicResource MahApps.Colors.SystemChromeHigh}" />
+            <SolidColorBrush x:Key="MahApps.Brushes.Control.Disabled" Color="{DynamicResource MahApps.Colors.SystemAltLow}" />
+
+            <Style TargetType="Controls:NumericUpDown">
+                <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseLow}" />
+
+            </Style>
+
+            <Style BasedOn="{StaticResource MahApps.Styles.ComboBox}" TargetType="ComboBox">
+                <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseLow}" />
+
+            </Style>
+
+            <Style BasedOn="{StaticResource MahApps.Styles.Button}" TargetType="Button">
                 <Setter Property="FontSize" Value="12" />
                 <Setter Property="FontWeight" Value="Normal" />
                 <Setter Property="BorderThickness" Value="1" />
 
-
-                <Setter Property="Controls:ButtonHelper.PreserveTextCase" Value="True" />
-                <Setter Property="Controls:ButtonHelper.CornerRadius" Value="0" />
+                <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseLow}" />
+                <Setter Property="Controls:ControlsHelper.ContentCharacterCasing" Value="Normal" />
+                <Setter Property="Controls:ControlsHelper.CornerRadius" Value="0" />
             </Style>
 
-            <!--  Style for the Individual Tab Item  -->
-            <Style x:Key="TabHeaderWithImage" TargetType="{x:Type TabItem}">
-                <Setter Property="Foreground" Value="White" />
-                <Setter Property="Height" Value="25" />
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="{x:Type Controls:MetroTabItem}">
-                            <Grid>
-                                <Border
-                                    Name="Border"
-                                    Background="LightBlue"
-                                    BorderThickness="0"
-                                    CornerRadius="6,6,0,0">
-                                    <ContentPresenter
-                                        x:Name="ContentSite"
-                                        Margin="12,2,12,2"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        ContentSource="Header" />
-                                </Border>
-                            </Grid>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter TargetName="Border" Property="Background" Value="#550000" />
-                                </Trigger>
-                                <Trigger Property="IsSelected" Value="False">
-                                    <Setter TargetName="Border" Property="Background">
-                                        <Setter.Value>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                <GradientStop Offset="0" Color="#ffffff" />
-                                                <GradientStop Offset="1" Color="#000000" />
-                                            </LinearGradientBrush>
-                                        </Setter.Value>
-                                    </Setter>
-                                    <Setter TargetName="Border" Property="BorderBrush" Value="#164A7C" />
-                                    <Setter TargetName="Border" Property="BorderThickness" Value="1,1,1,0" />
-                                    <Setter Property="Foreground" Value="Black" />
-                                </Trigger>
-                                <Trigger Property="Background" Value="Transparent">
-                                    <Setter TargetName="Border" Property="Background" Value="Transparent" />
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
 
             <!--  control templates  -->
             <DataTemplate x:Key="ProviderHiddenParameter" />

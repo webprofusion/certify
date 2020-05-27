@@ -59,12 +59,12 @@
                     Margin="0,4,8,4"
                     VerticalAlignment="Top"
                     AutomationProperties.Name="Finish Edit"
-                    Background="{DynamicResource ControlBackgroundBrush}"
+                    Background="{DynamicResource MahApps.Brushes.Control.Background}"
                     BorderThickness="0"
                     Click="FinishedEditName_Click"
                     DockPanel.Dock="Left"
                     ToolTip="Finish Edit">
-                    <fa:ImageAwesome Foreground="{DynamicResource AccentColorBrush3}" Icon="CheckCircleOutline" />
+                    <fa:ImageAwesome Foreground="{DynamicResource MahApps.Brushes.Accent3}" Icon="CheckCircleOutline" />
                 </Button>
             </StackPanel>
             <StackPanel
@@ -78,19 +78,19 @@
                     AutomationProperties.Name="{Binding SelectedItem.Name}"
                     DockPanel.Dock="Left"
                     FontSize="20"
-                    Foreground="#FF494949"
+                    Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMediumHigh}"
                     Text="{Binding SelectedItem.Name}" />
                 <Button
                     x:Name="EditName"
                     Margin="16,4,8,4"
                     VerticalAlignment="Top"
                     AutomationProperties.Name="Edit Name"
-                    Background="{DynamicResource ControlBackgroundBrush}"
+                    Background="{DynamicResource MahApps.Brushes.Control.Background}"
                     BorderThickness="0"
                     Click="EditName_Click"
                     DockPanel.Dock="Left"
                     ToolTip="Edit Name">
-                    <fa:ImageAwesome Foreground="{DynamicResource AccentColorBrush3}" Icon="Edit" />
+                    <fa:ImageAwesome Foreground="{DynamicResource MahApps.Brushes.Accent2}" Icon="Edit" />
                 </Button>
 
 
@@ -101,14 +101,14 @@
                 HorizontalAlignment="Right"
                 VerticalAlignment="Top"
                 AutomationProperties.Name="Dismiss"
-                Background="{DynamicResource ControlBackgroundBrush}"
+                Background="{DynamicResource MahApps.Brushes.Control.Background}"
                 BorderThickness="0"
                 Click="Dismiss_Click"
                 DockPanel.Dock="Right"
                 ToolTip="Dismiss"
                 Visibility="{Binding IsNameEditMode, Converter={StaticResource ResourceKey=InvBoolVisConverter}, UpdateSourceTrigger=PropertyChanged}">
 
-                <fa:ImageAwesome Foreground="{DynamicResource AccentColorBrush3}" Icon="AngleDoubleDown" />
+                <fa:ImageAwesome Foreground="{DynamicResource MahApps.Brushes.Accent3}" Icon="AngleDoubleDown" />
 
             </Button>
         </DockPanel>
@@ -117,7 +117,7 @@
             Margin="16,8"
             HorizontalAlignment="Stretch"
             DockPanel.Dock="Top"
-            Fill="{StaticResource ControlBorderBrush}" />
+            Fill="{DynamicResource MahApps.Brushes.Accent4}" />
 
         <!--  save/request buttons  -->
         <DockPanel
@@ -126,8 +126,6 @@
             DockPanel.Dock="Top"
             LastChildFill="False"
             Visibility="{Binding IsEditable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
-
-
 
             <Button
                 Margin="8,0,0,0"
@@ -139,7 +137,7 @@
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource AccentColorBrush}"
+                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
                         Icon="Save" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.Save}" /></TextBlock>
                 </StackPanel>
@@ -155,7 +153,7 @@
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource AccentColorBrush}"
+                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
                         Icon="Undo" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.DiscardChanges}" /></TextBlock>
                 </StackPanel>
@@ -170,7 +168,7 @@
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource AccentColorBrush}"
+                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
                         Icon="Trash" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.Delete}" /></TextBlock>
                 </StackPanel>
@@ -185,7 +183,7 @@
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource AccentColorBrush}"
+                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
                         Icon="Play" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.ManagedCertificateSettings_RequestCertificate}" /></TextBlock>
                 </StackPanel>
@@ -205,7 +203,7 @@
                         Height="16"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource AccentColorBrush}"
+                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
                         Icon="Refresh"
                         Spin="True"
                         SpinDuration="1"
@@ -214,7 +212,7 @@
                         Height="16"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource AccentColorBrush}"
+                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
                         Icon="CheckCircle"
                         Spin="False"
                         Visibility="{Binding IsTestInProgress, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" />
@@ -226,7 +224,7 @@
         <!--  managed cert detail tabs  -->
         <DockPanel
             Margin="8,0,8,0"
-            Background="{DynamicResource ControlBackgroundBrush}"
+            Background="{DynamicResource MahApps.Brushes.Control.Background}"
             DockPanel.Dock="Top"
             Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
 
@@ -237,7 +235,7 @@
                 HorizontalContentAlignment="Stretch"
                 VerticalContentAlignment="Stretch"
                 Controls:ScrollViewerHelper.IsHorizontalScrollWheelEnabled="True"
-                Controls:TabControlHelper.IsUnderlined="True"
+                Controls:TabControlHelper.UnderlineBrush="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseLow}"
                 Controls:TabControlHelper.Underlined="TabPanel"
                 DockPanel.Dock="Top"
                 TabStripPlacement="Right">
@@ -245,7 +243,7 @@
                 <TabItem
                     x:Name="TabStatusInfo"
                     MinWidth="100"
-                    Controls:ControlsHelper.HeaderFontSize="12"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Controls:TabControlHelper.UnderlineBrush="White"
                     AutomationProperties.Name="Status">
                     <TabItem.HeaderTemplate>
@@ -260,7 +258,7 @@
                     x:Name="TabDomains"
                     MinWidth="130"
                     Margin="0"
-                    Controls:ControlsHelper.HeaderFontSize="12"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     AutomationProperties.Name="Certificate"
                     IsSelected="True">
                     <TabItem.HeaderTemplate>
@@ -274,7 +272,7 @@
                 <TabItem
                     x:Name="TabAuthorization"
                     MinWidth="100"
-                    Controls:ControlsHelper.HeaderFontSize="12"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     AutomationProperties.Name="Authorization">
                     <TabItem.HeaderTemplate>
                         <DataTemplate>
@@ -288,7 +286,7 @@
                 <TabItem
                     x:Name="TabDeployment"
                     MinWidth="100"
-                    Controls:ControlsHelper.HeaderFontSize="12"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     AutomationProperties.Name="Deployment">
                     <TabItem.HeaderTemplate>
                         <DataTemplate>
@@ -302,7 +300,7 @@
                 <TabItem
                     x:Name="TabPreview"
                     MinWidth="100"
-                    Controls:ControlsHelper.HeaderFontSize="12"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     AutomationProperties.Name="Preview">
                     <TabItem.HeaderTemplate>
                         <DataTemplate>

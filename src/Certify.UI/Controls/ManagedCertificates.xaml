@@ -60,7 +60,7 @@
                 Name="lvManagedCertificates"
                 Grid.Row="1"
                 AutomationProperties.Name="Managed Certificates List"
-                Background="{DynamicResource ControlBackgroundBrush}"
+                Background="{DynamicResource MahApps.Brushes.Control.Background}"
                 ItemsSource="{Binding ManagedCertificates}"
                 ScrollViewer.CanContentScroll="True"
                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
@@ -95,40 +95,53 @@
                 </ListView.ItemContainerStyle>
                 <ListView.ItemTemplate>
                     <DataTemplate>
+
                         <StackPanel
-                            Margin="0,8,0,0"
+                            Margin="0,4,0,0"
                             AutomationProperties.Name="{Binding Name}"
                             Orientation="Vertical">
 
                             <StackPanel Orientation="Horizontal">
-                                <fa:FontAwesome Margin="0,0,8,0" Icon="Globe" />
-                                <TextBlock
-                                    Margin="0,0,8,0"
-                                    FontWeight="Bold"
-                                    Foreground="{Binding Path=Health, Converter={StaticResource HealthColourConverter}}"
-                                    Text="{Binding Name}" />
+                                <fa:FontAwesome
+                                    Margin="0,4,8,0"
+                                    VerticalAlignment="top"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource MahApps.Brushes.Accent2}"
+                                    Icon="IdCardOutline" />
+
+                                <StackPanel Orientation="Vertical">
+
+                                    <TextBlock
+                                        Margin="0,0,8,0"
+                                        FontWeight="Bold"
+                                        Foreground="{Binding Path=Health, Converter={StaticResource HealthColourConverter}}"
+                                        Text="{Binding Name}" />
+
+
+                                    <TextBlock
+                                        Margin="0,0,0,0"
+                                        FontSize="10"
+                                        Foreground="{Binding Path=DateExpiry, Converter={StaticResource ExpiryDateColourConverter}}"
+                                        Text="{Binding Path=DateExpiry, Converter={StaticResource ExpiryDateConverter}}" />
+
+                                    <StackPanel Orientation="Horizontal" Visibility="{Binding SourceId, Converter={StaticResource NullCollapsedConverter}}">
+                                        <TextBlock
+                                            Margin="0,0,0,0"
+                                            FontSize="10"
+                                            FontWeight="Normal"
+                                            Foreground="DarkGray"
+                                            Text="Managed by " />
+                                        <TextBlock
+                                            Margin="0,0,0,0"
+                                            FontSize="10"
+                                            FontWeight="DemiBold"
+                                            Foreground="DarkGray"
+                                            Text="{Binding Path=SourceName}" />
+                                    </StackPanel>
+                                </StackPanel>
                             </StackPanel>
-
-                            <TextBlock
-                                Margin="16,0,0,0"
-                                FontSize="10"
-                                Foreground="{Binding Path=DateExpiry, Converter={StaticResource ExpiryDateColourConverter}}"
-                                Text="{Binding Path=DateExpiry, Converter={StaticResource ExpiryDateConverter}}" />
-
-                            <StackPanel Orientation="Horizontal" Visibility="{Binding SourceId, Converter={StaticResource NullCollapsedConverter}}">
-                                <TextBlock
-                                    Margin="16,0,0,0"
-                                    FontWeight="Normal"
-                                    Foreground="DarkGray"
-                                    Text="Managed by " />
-                                <TextBlock
-                                    Margin="0,0,0,0"
-                                    FontWeight="DemiBold"
-                                    Foreground="DarkGray"
-                                    Text="{Binding Path=SourceName}" />
-                            </StackPanel>
-
                         </StackPanel>
+
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
@@ -138,7 +151,7 @@
             Width="2"
             Margin="8,0,0,0"
             HorizontalAlignment="Stretch"
-            Background="{DynamicResource AccentColorBrush4}" />
+            Background="{StaticResource MahApps.Brushes.Accent4}" />
         <Grid x:Name="MainItemView" Grid.Column="2">
 
             <managedcertificate:ManagedCertificateSettings

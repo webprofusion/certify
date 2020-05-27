@@ -55,7 +55,7 @@
                                 <fa:ImageAwesome
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
-                                    Foreground="{DynamicResource AccentColorBrush}"
+                                    Foreground="{StaticResource MahApps.Brushes.Accent}"
                                     Icon="Play" />
 
                             </StackPanel>
@@ -73,7 +73,7 @@
                                 <fa:ImageAwesome
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
-                                    Foreground="{DynamicResource AccentColorBrush}"
+                                    Foreground="{StaticResource MahApps.Brushes.Accent}"
                                     Icon="Trash" />
 
                             </StackPanel>
@@ -89,7 +89,7 @@
                                 <fa:ImageAwesome
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
-                                    Foreground="{DynamicResource AccentColorBrush}"
+                                    Foreground="{StaticResource MahApps.Brushes.Accent}"
                                     Icon="Edit" />
 
                             </StackPanel>

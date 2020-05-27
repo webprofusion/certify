@@ -119,7 +119,7 @@
                                         <fa:ImageAwesome
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Center"
-                                            Foreground="{DynamicResource AccentColorBrush}"
+                                            Foreground="{DynamicResource MahApps.Brushes.Accent}"
                                             Icon="PlayCircleOutline" />
                                         <TextBlock Margin="8,0,0,0" VerticalAlignment="Center">Select</TextBlock>
                                     </StackPanel>
@@ -185,7 +185,7 @@
 
                 <TabItem
                     MinWidth="100"
-                    Controls:ControlsHelper.HeaderFontSize="12"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="General Settings"
                     IsSelected="True">
 
@@ -338,7 +338,7 @@
                 </TabItem>
                 <TabItem
                     Width="auto"
-                    Controls:ControlsHelper.HeaderFontSize="12"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="Task Parameters">
 
                     <DockPanel Margin="8,0,0,0" LastChildFill="False">

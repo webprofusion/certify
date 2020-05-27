@@ -153,7 +153,7 @@
                     <Controls:NumericUpDown
                         x:Name="UIScaling"
                         Width="100"
-                        HasDecimals="True"
+                        NumericInputMode="Decimal"
                         Interval="0.1"
                         Maximum="2"
                         Minimum="1"

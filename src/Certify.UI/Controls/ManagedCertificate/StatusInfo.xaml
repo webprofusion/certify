@@ -54,13 +54,13 @@
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
                         Height="32"
-                        Foreground="{StaticResource ValidationSummaryColor1}"
+                        Foreground="{StaticResource MahApps.Brushes.ValidationSummary1}"
                         Icon="ExclamationTriangle" />
 
                     <TextBlock
                         Margin="8,0,0,0"
                         VerticalAlignment="Center"
-                        Foreground="{StaticResource ResourceKey=ValidationSummaryColor1}"
+                        Foreground="{StaticResource MahApps.Brushes.ValidationSummary1}"
                         Style="{StaticResource Subheading}"
                         Text="Renewal Failure" />
                 </StackPanel>
@@ -127,13 +127,13 @@
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
                         Height="32"
-                        Foreground="{StaticResource AccentBaseColorBrush}"
+                        Foreground="{StaticResource MahApps.Brushes.Accent}"
                         Icon="CheckCircle" />
 
                     <TextBlock
                         Margin="8,0,0,0"
                         VerticalAlignment="Center"
-                        Foreground="{StaticResource AccentBaseColorBrush}"
+                        Foreground="{StaticResource MahApps.Brushes.AccentBase}"
                         Style="{StaticResource Subheading}">
                         Certificate Active
                     </TextBlock>
@@ -181,13 +181,13 @@
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
                         Height="32"
-                        Foreground="{StaticResource ValidationSummaryColor1}"
+                        Foreground="{StaticResource MahApps.Brushes.ValidationSummary1}"
                         Icon="PauseCircle" />
 
                     <TextBlock
                         Margin="8,0,0,0"
                         VerticalAlignment="Center"
-                        Foreground="{StaticResource ResourceKey=ValidationSummaryColor1}"
+                        Foreground="{StaticResource MahApps.Brushes.ValidationSummary1}"
                         Style="{StaticResource Subheading}"
                         Text="Waiting for User Action" />
                 </StackPanel>
@@ -199,12 +199,15 @@
                         Style="{StaticResource Instructions}"
                         Text="Your action is required to complete this certificate request. Once completed, select 'Request Certificate' to resume." />
                 </StackPanel>
-                <Border Margin="0,0,0,0" Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
+                <Border
+                    Margin="0,0,0,0"
+                    Background="{DynamicResource {x:Static SystemColors.ControlBrush}}"
+                    BorderThickness="1">
 
                     <TextBox
-                        Margin="8,8,8,8"
+                        Margin="0,8,0,8"
                         Padding="8,8,8,8"
-                        Foreground="Black"
+                        Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseHigh}"
                         IsReadOnly="True"
                         Text="{Binding SelectedItem.RenewalFailureMessage}"
                         TextWrapping="WrapWithOverflow" />

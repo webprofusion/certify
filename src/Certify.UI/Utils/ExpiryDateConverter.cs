@@ -65,7 +65,7 @@ namespace Certify.UI.Utils
             }
             else if (days < 7)
             {
-                return System.Windows.Media.Brushes.Red;
+                return  System.Windows.Media.Brushes.IndianRed;
             }
             else if (days < 30)
             {

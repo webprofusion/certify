@@ -46,7 +46,7 @@
             SelectionMode="Single">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
-                    <Setter Property="Background" Value="{StaticResource ControlBackgroundBrush}" />
+                    <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.Control.Background}" />
                 </Style>
             </ListView.ItemContainerStyle>
 
@@ -92,7 +92,7 @@
                             HorizontalAlignment="Stretch"
                             DockPanel.Dock="Top"
                             FontSize="10"
-                            Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                            Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundChromeGray}"
                             Text="{Binding Message}"
                             TextWrapping="WrapWithOverflow" />
                     </StackPanel>

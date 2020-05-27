@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Windows;
-using Serilog;
 using ToastNotifications;
 using ToastNotifications.Lifetime;
 using ToastNotifications.Position;
 using ToastNotifications.Messages;
+using ControlzEx.Theming;
 
 namespace Certify.UI
 {
@@ -34,32 +34,38 @@ namespace Certify.UI
 
         public string ToggleTheme(string initialTheme = null)
         {
-            var appStyle = MahApps.Metro.ThemeManager.DetectAppStyle(Application.Current);
 
-            if ((appStyle.Item1.Name == "BaseLight" && initialTheme == null) || initialTheme == "Dark")
+            if (initialTheme != null)
             {
-                var darkTheme = MahApps.Metro.ThemeManager.GetAppTheme("BaseDark");
-
-                darkTheme.Resources["TextBoxBorderBrush"] = "#FFC0C0C0";
-
-                MahApps.Metro.ThemeManager.ChangeAppStyle(Application.Current,
-                                     MahApps.Metro.ThemeManager.GetAccent("Green"),
-                                     darkTheme);
-                return "Dark";
-
+                if (initialTheme == "Dark")
+                {
+                    ThemeManager.Current.ChangeTheme(Application.Current, "Dark.Green");
+                }
+                else
+                {
+                    ThemeManager.Current.ChangeTheme(Application.Current, "Light.Green");
+                }
+               
+                return initialTheme;
             }
             else
             {
-                MahApps.Metro.ThemeManager.ChangeAppStyle(Application.Current,
-                                     MahApps.Metro.ThemeManager.GetAccent("Green"),
-                                     MahApps.Metro.ThemeManager.GetAppTheme("BaseLight"));
-                return "Light";
+                var theme = ThemeManager.Current.DetectTheme();
+                if (theme.BaseColorScheme == "Light")
+                {
+                    ThemeManager.Current.ChangeTheme(Application.Current, "Dark.Green");
+                    return "Dark";
+                }
+                else
+                {
+                    ThemeManager.Current.ChangeTheme(Application.Current, "Light.Green");
+                    return "Light";
+                }
             }
         }
+
         protected override void OnStartup(StartupEventArgs e)
         {
-
-
 
             // Test translations
             //System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("zh-HANS");
