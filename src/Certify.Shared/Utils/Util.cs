@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
@@ -111,7 +112,37 @@ namespace Certify.Management
                 results.Add(new ActionResult { IsSuccess = false, Message = $"Your system cannot create a SHA256 Cryptography instance. You may have inadvertently have FIPS enabled, which prevents the use of some standard cryptographic functions in .Net - features such as verifying app updates will not work. " });
             }
 
-       
+
+            // check powershell version
+            string subkey = @"SOFTWARE\Microsoft\PowerShell\3\PowerShellEngine";
+            bool isPSAvailable = true;
+            try
+            {
+                using (var ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey(subkey))
+                {
+
+                    string[] vals = (ndpKey.GetValue("PSCompatibleVersion") as string).Split(',');
+                    if (!vals.Any(v => v.Trim() == "5.0"))
+                    {
+                        isPSAvailable = false;
+                    }
+                }
+            }
+            catch
+            {
+                isPSAvailable = false;
+            }
+
+            if (!isPSAvailable)
+            {
+                results.Add(new ActionResult { IsSuccess = false, Message = $"PowerShell 5.0 or higher is required for some functionality and does not appear to be available on this system. See https://docs.microsoft.com/en-us/powershell/scripting/windows-powershell/install/windows-powershell-system-requirements" });
+            }
+            else
+            {
+                results.Add(new ActionResult { IsSuccess = true, Message = $"PowerShell 5.0 or higher is available." });
+            }
+
+
             return results;
         }
 
