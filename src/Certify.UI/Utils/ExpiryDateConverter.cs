@@ -69,11 +69,12 @@ namespace Certify.UI.Utils
             }
             else if (days < 30)
             {
-                return System.Windows.Media.Brushes.Orange;
+                return System.Windows.Media.Brushes.Chocolate;
             }
             else
             {
-                return System.Windows.Media.Brushes.Green;
+                return (System.Windows.Media.Brush)App.Current.Resources["MahApps.Brushes.SystemControlForegroundBaseMediumHigh"];
+                //return System.Windows.Media.Brushes.Green;
             }
         }
     }

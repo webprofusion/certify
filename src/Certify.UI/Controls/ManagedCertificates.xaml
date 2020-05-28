@@ -31,6 +31,7 @@
             <utils:ExpiryDateConverter x:Key="ExpiryDateConverter" />
             <utils:ExpiryDateColourConverter x:Key="ExpiryDateColourConverter" />
             <utils:ManagedCertificateHealthColourConverter x:Key="HealthColourConverter" />
+            <utils:ManagedCertificateHealthColourConverterEx x:Key="HealthColourConverterEx" />
         </Grid.Resources>
         <Grid.ColumnDefinitions>
             <ColumnDefinition
@@ -106,14 +107,14 @@
                                     Margin="0,4,8,0"
                                     VerticalAlignment="top"
                                     FontSize="12"
-                                    Foreground="{DynamicResource MahApps.Brushes.Accent2}"
+                                    Foreground="{Binding Path=Health, Converter={StaticResource HealthColourConverterEx}}"
                                     Icon="IdCardOutline" />
 
                                 <StackPanel Orientation="Vertical">
 
                                     <TextBlock
                                         Margin="0,0,8,0"
-                                        FontWeight="Bold"
+                                        FontWeight="SemiBold"
                                         Foreground="{Binding Path=Health, Converter={StaticResource HealthColourConverter}}"
                                         Text="{Binding Name}" />
 

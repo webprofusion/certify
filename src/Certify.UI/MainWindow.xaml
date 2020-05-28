@@ -58,7 +58,7 @@
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         Foreground="{StaticResource MahApps.Brushes.Accent}"
-                        Icon="Globe" />
+                        Icon="PlusCircle" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.New_Certificate}" /></TextBlock>
                 </StackPanel>
             </Button>

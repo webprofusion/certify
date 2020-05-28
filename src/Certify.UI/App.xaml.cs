@@ -45,22 +45,28 @@ namespace Certify.UI
                 {
                     ThemeManager.Current.ChangeTheme(Application.Current, "Light.Green");
                 }
-               
+
+                // refresh bindings to force dynamic resources to redraw
+                MainViewModel.RaisePropertyChangedEvent(nameof(MainViewModel.ManagedCertificates));
                 return initialTheme;
             }
             else
             {
                 var theme = ThemeManager.Current.DetectTheme();
+                var themeSelection = "Light";
                 if (theme.BaseColorScheme == "Light")
                 {
                     ThemeManager.Current.ChangeTheme(Application.Current, "Dark.Green");
-                    return "Dark";
+                    themeSelection = "Dark";
                 }
                 else
                 {
                     ThemeManager.Current.ChangeTheme(Application.Current, "Light.Green");
-                    return "Light";
+                    themeSelection = "Light";
                 }
+
+                MainViewModel.RaisePropertyChangedEvent(nameof(MainViewModel.ManagedCertificates));
+                return themeSelection;
             }
         }
 

@@ -7,7 +7,7 @@ namespace Certify.UI.Utils
 {
     public class ManagedCertificateHealthColourConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public virtual object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (value == null)
             {
@@ -19,7 +19,7 @@ namespace Certify.UI.Utils
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) => null;
 
-        public static System.Windows.Media.Brush GetColour(ManagedCertificateHealth health)
+        public static System.Windows.Media.Brush GetColour(ManagedCertificateHealth health, string mode = "standard")
         {
             if (health == ManagedCertificateHealth.Unknown)
             {
@@ -39,8 +39,29 @@ namespace Certify.UI.Utils
             }
             else
             {
-                return System.Windows.Media.Brushes.Green;
+                if (mode == "standard")
+                {
+                    return (System.Windows.Media.Brush)App.Current.Resources["MahApps.Brushes.SystemControlForegroundBaseHigh"];
+                }
+                else
+                {
+                    return System.Windows.Media.Brushes.Green;
+                }
             }
         }
     }
+
+    public class ManagedCertificateHealthColourConverterEx : ManagedCertificateHealthColourConverter
+    {
+        public override object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            if (value == null)
+            {
+                return DependencyProperty.UnsetValue;
+            }
+
+            return GetColour((ManagedCertificateHealth)value, "ex");
+        }
+    }
+
 }
