@@ -65,5 +65,10 @@
         /// The preferred provider will be chosen first, with fallback to any other supported (and configured) providers if a failure occurs.
         /// </summary>
         public bool EnableAutomaticCAFailover { get; set; }
+
+        /// <summary>
+        /// if true, will load plugins for external cert managers
+        /// </summary>
+        public bool IncludeExternalCertManagers { get; set; }
     }
 }
