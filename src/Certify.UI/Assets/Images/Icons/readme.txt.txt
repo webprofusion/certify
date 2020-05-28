@@ -1,1 +1,0 @@
-Icons are font-awesome, extracted as PNG using http://fa2png.io/

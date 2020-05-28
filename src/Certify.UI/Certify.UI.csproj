@@ -189,7 +189,7 @@
     <Compile Include="Windows\Registration.xaml.cs">
       <DependentUpon>Registration.xaml</DependentUpon>
     </Compile>
-    <Resource Include="Assets\Images\QuickStart\PreviewDeployment.PNG" />
+    <Resource Include="Assets\Images\QuickStart\PreviewDeployment.png" />
     <Page Include="Controls\AboutControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -354,11 +354,6 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\Images\icon.ico" />
-    <Resource Include="Assets\Images\Icons\font-awesome_4-7-0_globe_24_0_2c3e50_none.png" />
-    <Resource Include="Assets\Images\Icons\font-awesome_4-7-0_globe_32_0_000000_none.png" />
-    <Resource Include="Assets\Images\Icons\font-awesome_4-7-0_refresh_32_0_000000_none.png" />
-    <Resource Include="Assets\Images\Icons\font-awesome_4-7-0_user-plus_32_0_000000_none.png" />
-    <Resource Include="Assets\Images\Icons\readme.txt.txt" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Certify.Client\Certify.Client.csproj">
@@ -443,9 +438,8 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Assets\Images\QuickStart\ChooseAuth.PNG" />
-    <Resource Include="Assets\Images\QuickStart\ChooseDomains.PNG" />
-    <Resource Include="Assets\Images\QuickStart\RequestCertificate.PNG" />
+    <Resource Include="Assets\Images\QuickStart\ChooseAuth.png" />
+    <Resource Include="Assets\Images\QuickStart\ChooseDomains.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

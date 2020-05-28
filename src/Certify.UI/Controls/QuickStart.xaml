@@ -8,20 +8,15 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
     <DockPanel MinHeight="300">
-        <DockPanel.Background>
-            <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
-                <GradientStop Offset="1" Color="White" />
-                <GradientStop Color="White" />
-                <GradientStop Offset="0.511" Color="#FFF0F0F0" />
-            </LinearGradientBrush>
-        </DockPanel.Background>
+        
         <controls:FlipView
             x:Name="QuickStartFlipView"
             Margin="16"
+            MouseHoverBorderEnabled="False"
             IsBannerEnabled="False">
 
             <controls:FlipViewItem>
-                <DockPanel>
+                <DockPanel Margin="16">
                     <TextBlock
                         DockPanel.Dock="Top"
                         FontFamily="Segoe UI Light"
@@ -30,22 +25,22 @@
                     <TextBlock
                         DockPanel.Dock="Top"
                         FontFamily="Segoe UI Light"
-                        FontSize="16"
+                        FontSize="14"
                         Text="Choose the domains you want to include on your certificate by selecting from an existing IIS website or by manually entering domains for websites hosted on this server."
                         TextWrapping="WrapWithOverflow" />
+                
                     <Image
-                        Height="300"
-                        Margin="0,16,0,0"
+                        Height="500"
+                        Margin="14"
                         DockPanel.Dock="Top"
-                        Source="/Certify.UI;component/Assets/Images/QuickStart/ChooseDomains.PNG">
-                        <Image.Effect>
-                            <DropShadowEffect Color="#FFE0E0E0" />
-                        </Image.Effect>
+                        Source="/Certify.UI;component/Assets/Images/QuickStart/ChooseDomains.png">
+                        
                     </Image>
+                   
                 </DockPanel>
             </controls:FlipViewItem>
             <controls:FlipViewItem>
-                <DockPanel>
+                <DockPanel Margin="16">
                     <TextBlock
                         DockPanel.Dock="Top"
                         FontFamily="Segoe UI Light"
@@ -54,22 +49,20 @@
                     <TextBlock
                         DockPanel.Dock="Top"
                         FontFamily="Segoe UI Light"
-                        FontSize="16"
+                        FontSize="14"
                         Text="Choose how you want to prove your control of the domains on your certificate. This can be via http requests to your website or using your DNS providers API (required for wildcard domains)."
                         TextWrapping="WrapWithOverflow" />
                     <Image
-                        Height="300"
+                        Height="500"
                         Margin="0,16,0,0"
                         DockPanel.Dock="Top"
-                        Source="/Certify.UI;component/Assets/Images/QuickStart/ChooseAuth.PNG">
-                        <Image.Effect>
-                            <DropShadowEffect Color="#FFE0E0E0" />
-                        </Image.Effect>
+                        Source="/Certify.UI;component/Assets/Images/QuickStart/ChooseAuth.png">
+                    
                     </Image>
                 </DockPanel>
             </controls:FlipViewItem>
             <controls:FlipViewItem>
-                <DockPanel>
+                <DockPanel Margin="16">
                     <TextBlock
                         DockPanel.Dock="Top"
                         FontFamily="Segoe UI Light"
@@ -78,42 +71,19 @@
                     <TextBlock
                         DockPanel.Dock="Top"
                         FontFamily="Segoe UI Light"
-                        FontSize="16"
-                        Text="Preview the steps which will be performed to request your certificate. You can optionally use the Test option to check if your configuration is OK (recommended). You can also Show Advanced Options to refine your settings."
+                        FontSize="14"
+                        Text="Preview the steps which will be performed to request your certificate. You can optionally use the Test option to check if your configuration is OK (recommended). You can then click Request Certificate and when validation completes successfully the Certificate Authority will issue your certificate and it will be automatically applied. Renewals will be performed automatically. "
                         TextWrapping="WrapWithOverflow" />
                     <Image
-                        Height="300"
+                        Height="500"
                         Margin="0,16,0,0"
                         DockPanel.Dock="Top"
-                        Source="/Certify.UI;component/Assets/Images/QuickStart/PreviewDeployment.PNG">
-                        <Image.Effect>
-                            <DropShadowEffect Color="#FFE0E0E0" />
-                        </Image.Effect>
+                        Source="/Certify.UI;component/Assets/Images/QuickStart/PreviewDeployment.png">
+                    
                     </Image>
                 </DockPanel>
             </controls:FlipViewItem>
-            <controls:FlipViewItem>
-                <StackPanel>
-                    <TextBlock
-                        FontFamily="Segoe UI Light"
-                        FontSize="24"
-                        Text="Step 4. There is no step 4." />
-                    <TextBlock
-                        FontFamily="Segoe UI Light"
-                        FontSize="16"
-                        Text="That's it! You're ready to request your new certificate. The app will auto renew the certificate when it needs to."
-                        TextWrapping="WrapWithOverflow" />
-                    <Image
-                        Height="300"
-                        Margin="0,16,0,0"
-                        DockPanel.Dock="Top"
-                        Source="/Certify.UI;component/Assets/Images/QuickStart/RequestCertificate.PNG">
-                        <Image.Effect>
-                            <DropShadowEffect Color="#FFE0E0E0" />
-                        </Image.Effect>
-                    </Image>
-                </StackPanel>
-            </controls:FlipViewItem>
+
         </controls:FlipView>
     </DockPanel>
 </UserControl>
