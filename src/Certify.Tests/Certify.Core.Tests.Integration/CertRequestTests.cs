@@ -374,6 +374,7 @@ namespace Certify.Core.Tests
                             ChallengeType="dns-01",
                             ChallengeProvider= "DNS01.API.Cloudflare",
                             ChallengeCredentialKey=_testCredStorageKey,
+                            Parameters= new ObservableCollection<Models.Config.ProviderParameter>{ new Models.Config.ProviderParameter{ Key="propagationdelay", Value="10" } },
                             ZoneId =  ConfigSettings["Cloudflare_ZoneId"]
         }
                     },
@@ -409,6 +410,93 @@ namespace Certify.Core.Tests
 
             var expiresInFuture = (certInfo.NotAfter - DateTime.UtcNow).TotalDays >= 89;
             Assert.IsTrue(expiresInFuture);
+
+            // remove managed site
+            await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
+
+            // cleanup certificate
+            CertificateManager.RemoveCertificate(certInfo);
+        }
+
+
+        [TestMethod, TestCategory("MegaTest")]
+        public async Task TestRequestWithRenewal()
+        {
+            var site = await iisManager.GetIISSiteById(_siteId);
+            Assert.AreEqual(site.Name, testSiteName);
+
+            var testDomain = Guid.NewGuid().ToString().Substring(0, 6) + "." + PrimaryTestDomain;
+            var newManagedCert = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = testSiteName,
+                GroupId = site.Id.ToString(),
+                UseStagingMode = true,
+                IncludeInAutoRenew = true,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = testDomain,
+                    PerformAutoConfig = true,
+                    PerformAutomatedCertBinding = true,
+                    PerformChallengeFileCopy = true,
+                    PerformExtensionlessConfigChecks = true,
+                    WebsiteRootPath = testSitePath,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig> {
+                        new CertRequestChallengeConfig{
+                            ChallengeType="dns-01",
+                            ChallengeProvider= "DNS01.API.Cloudflare",
+                            ChallengeCredentialKey=_testCredStorageKey,
+                            ZoneId =  ConfigSettings["Cloudflare_ZoneId"]
+        }
+                    },
+                    DeploymentSiteOption = DeploymentOption.NoDeployment
+                },
+                ItemType = ManagedCertificateType.SSL_ACME
+            };
+
+            var result = await certifyManager.PerformCertificateRequest(_log, newManagedCert);
+
+            //ensure cert request was successful
+            Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");
+
+            //check details of cert, subject alternative name should include domain and expiry must be great than 89 days in the future
+            var managedCertificate = await certifyManager.GetManagedCertificate(newManagedCert.Id);
+
+            //emsure we have a new managed site
+            Assert.IsNotNull(managedCertificate);
+
+            //have cert file details
+            Assert.IsNotNull(managedCertificate.CertificatePath);
+
+            var fileExists = System.IO.File.Exists(managedCertificate.CertificatePath);
+            Assert.IsTrue(fileExists);
+
+            //check cert is correct
+            var certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
+            Assert.IsNotNull(certInfo);
+
+            var isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
+            Assert.IsTrue(isRecentlyCreated);
+
+            var expiresInFuture = (certInfo.NotAfter - DateTime.UtcNow).TotalDays >= 89;
+            Assert.IsTrue(expiresInFuture);
+
+
+            // test a renewal for this managed cert
+
+            var targets = new List<string> { managedCertificate.Id };
+
+            var results = await certifyManager.PerformRenewalAllManagedCertificates(
+                new RenewalSettings
+                {
+                    TargetManagedCertificates = targets,
+                    Mode = RenewalMode.All
+                }
+                , null);
+
+            Assert.AreEqual(1, results.Count);
+
+            Assert.IsTrue(results.All(r => r.IsSuccess), "All results should be success");
 
             // remove managed site
             await certifyManager.DeleteManagedCertificate(managedCertificate.Id);

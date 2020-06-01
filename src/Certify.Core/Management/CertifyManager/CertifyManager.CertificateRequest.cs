@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -43,12 +43,27 @@ namespace Certify.Management
 
             var testModeOnly = false;
 
-            IEnumerable<ManagedCertificate> managedCertificates = await _itemManager.GetManagedCertificates(
+            IEnumerable<ManagedCertificate> managedCertificates;
+
+            if (settings.TargetManagedCertificates?.Any() == true)
+            {
+                var targetCerts = new List<ManagedCertificate>();
+                foreach (var id in settings.TargetManagedCertificates)
+                {
+                    targetCerts.Add(await _itemManager.GetManagedCertificate(id));
+                }
+                managedCertificates = targetCerts;
+
+            }
+            else
+            {
+                managedCertificates = await _itemManager.GetManagedCertificates(
                     new ManagedCertificateFilter
                     {
                         IncludeOnlyNextAutoRenew = (settings.Mode == RenewalMode.Auto)
                     }
                 );
+            }
 
             if (settings.Mode == RenewalMode.Auto || settings.Mode == RenewalMode.RenewalsDue)
             {
@@ -542,7 +557,6 @@ namespace Certify.Management
 
             LogMessage(managedCertificate.Id, $"Beginning Certificate Request Process: {managedCertificate.Name} using ACME Provider:{_acmeClientProvider.GetProviderName()}");
 
-
             LogMessage(managedCertificate.Id, $"Requested domains to include on certificate: {string.Join(";", managedCertificate.GetCertificateDomains())}");
 
             ReportProgress(progress,
@@ -933,7 +947,7 @@ namespace Certify.Management
                             // string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
                             result.Message = "Request completed";
                             ReportProgress(progress,
-                                new RequestProgressState(RequestState.Success, result.Message, managedCertificate));
+                                new RequestProgressState(RequestState.Success, result.Message, managedCertificate, false));
 
                             // perform cert cleanup (if enabled)
                             if (CoreAppSettings.Current.EnableCertificateCleanup && !string.IsNullOrEmpty(managedCertificate.CertificateThumbprintHash))

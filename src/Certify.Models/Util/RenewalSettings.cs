@@ -36,5 +36,7 @@ namespace Certify.Models
         public RenewalMode Mode { get; set; }
 
         public bool IsPreviewMode { get; set; } = false;
+
+        public List<string> TargetManagedCertificates { get; set; }
     }
 }
