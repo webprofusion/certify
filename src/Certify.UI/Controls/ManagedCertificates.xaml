@@ -108,7 +108,7 @@
                                     VerticalAlignment="top"
                                     FontSize="12"
                                     Foreground="{Binding Path=Health, Converter={StaticResource HealthColourConverterEx}}"
-                                    Icon="IdCardOutline" />
+                                    Icon="Circle" />
 
                                 <StackPanel Orientation="Vertical">
 

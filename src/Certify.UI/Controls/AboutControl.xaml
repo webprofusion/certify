@@ -17,7 +17,11 @@
             <ColumnDefinition Width="190" />
         </Grid.ColumnDefinitions>
 
-        <DockPanel Grid.Row="0" Grid.Column="0">
+        <DockPanel
+            Grid.Row="0"
+            Grid.Column="0"
+            Margin="16">
+
             <TextBlock
                 x:Name="lblAppTitle"
                 DockPanel.Dock="Top"
