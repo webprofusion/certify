@@ -639,7 +639,19 @@ namespace Certify.UI.ViewModel
 
         internal async Task<StatusMessage> RevokeManageSiteCertificate(string id)
         {
-            return await CertifyClient.RevokeManageSiteCertificate(id);
+            var result = await CertifyClient.RevokeManageSiteCertificate(id);
+
+            if (result.IsOK)
+            {
+                // refresh managed cert in UI
+                var updatedManagedCertificate = await CertifyClient.GetManagedCertificate(id);
+                updatedManagedCertificate.IsChanged = false;
+
+                // add/update site in our local cache
+                await UpdatedCachedManagedCertificate(updatedManagedCertificate);
+            }
+
+            return result;
         }
 
         internal async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly)

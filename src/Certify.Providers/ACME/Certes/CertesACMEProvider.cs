@@ -575,10 +575,12 @@ namespace Certify.Providers.ACME.Certes
                             log.Error(exp.ToString());
 
                             orderErrorMsg = exp.Message;
+
                             if (exp is TaskCanceledException)
                             {
                                 log.Warning($"BeginCertificateOrder: timeout while communicating with the ACME API");
                             }
+
                             if (exp is AcmeRequestException)
                             {
                                 var err = (exp as AcmeRequestException).Error;
@@ -1234,7 +1236,7 @@ namespace Certify.Providers.ACME.Certes
             // get current PFX, extract DER bytes
             try
             {
-                var pkcs = new Org.BouncyCastle.Pkcs.Pkcs12Store(File.Open(managedCertificate.CertificatePath, FileMode.Open), "".ToCharArray());
+                var pkcs = new Org.BouncyCastle.Pkcs.Pkcs12Store(File.Open(managedCertificate.CertificatePath, FileMode.Open, FileAccess.Read), "".ToCharArray());
 
                 var certAliases = pkcs.Aliases.GetEnumerator();
                 certAliases.MoveNext();

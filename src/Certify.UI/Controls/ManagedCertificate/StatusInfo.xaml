@@ -214,6 +214,21 @@
                 </Border>
             </StackPanel>
 
+
+            <StackPanel Background="{DynamicResource WarningColorBrush}">
+                <StackPanel.Style>
+                    <Style>
+                        <Setter Property="StackPanel.Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedItem.CertificateRevoked}" Value="True">
+                                <Setter Property="StackPanel.Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <Label Margin="8" Content="{x:Static Resources:SR.ManagedCertificateSettings_CertificateRevokeWarning}" />
+            </StackPanel>
+
             <StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Button

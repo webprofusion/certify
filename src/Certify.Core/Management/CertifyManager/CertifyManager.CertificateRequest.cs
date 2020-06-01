@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -1336,12 +1336,28 @@ namespace Certify.Management
             {
                 _tc.TrackEvent("RevokeCertificate");
             }
+
+            log?.Warning($"Revoking certificate: {managedCertificate.Name}");
+
             var _acmeClientProvider = await GetACMEProvider(managedCertificate);
+            if (_acmeClientProvider == null)
+            {
+                log?.Error($"Could not revoke certificate as no matching valid ACME account could be found.");
+                return new StatusMessage { IsOK = false, Message = "Could not revoke certificate. No matching valid ACME account could be found" };
+            }
+
             var result = await _acmeClientProvider.RevokeCertificate(log, managedCertificate);
 
             if (result.IsOK)
             {
+                log?.Information($"Certificate revocation completed: {managedCertificate.Name}");
                 managedCertificate.CertificateRevoked = true;
+
+                await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error);
+            }
+            else
+            {
+                log?.Warning(result.Message);
             }
 
             return result;

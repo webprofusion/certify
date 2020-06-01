@@ -179,7 +179,10 @@
                             Click="RevokeCertificateBtn_Click"
                             Content="{x:Static Resources:SR.ManagedCertificateSettings_RevokeCertificate}" />
                     </Border>
-                    <Border Grid.Row="4" Grid.Column="1">
+                    <Border
+                        Grid.Row="4"
+                        Grid.Column="1"
+                    >
                         <Border.Style>
                             <Style>
                                 <Setter Property="Border.Visibility" Value="Collapsed" />
@@ -190,11 +193,11 @@
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
-                        <Label Background="#FFFFC7C7" Content="{x:Static Resources:SR.ManagedCertificateSettings_CertificateRevokeWarning}" />
+                        <Label Background="{DynamicResource WarningColorBrush}" Content="{x:Static Resources:SR.ManagedCertificateSettings_CertificateRevokeWarning}" />
                     </Border>
                 </StackPanel>
 
-               
+
 
             </DockPanel>
         </DockPanel>

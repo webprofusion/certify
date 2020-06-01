@@ -214,7 +214,14 @@ namespace Certify.Models
                         }
                         else
                         {
-                            return ManagedCertificateHealth.OK;
+                            if (CertificateRevoked)
+                            {
+                                return ManagedCertificateHealth.Error;
+                            }
+                            else
+                            {
+                                return ManagedCertificateHealth.OK;
+                            }
                         }
                     }
                     else
