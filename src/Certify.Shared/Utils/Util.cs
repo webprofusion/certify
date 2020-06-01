@@ -120,8 +120,7 @@ namespace Certify.Management
             {
                 using (var ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey(subkey))
                 {
-
-                    string[] vals = (ndpKey.GetValue("PSCompatibleVersion") as string).Split(',');
+                    var vals = (ndpKey.GetValue("PSCompatibleVersion") as string).Split(',');
                     if (!vals.Any(v => v.Trim() == "5.0"))
                     {
                         isPSAvailable = false;
