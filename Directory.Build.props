@@ -9,6 +9,6 @@
     <RepositoryUrl>https://github.com/webprofusion/certify</RepositoryUrl>
     <Deterministic>true</Deterministic>
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>embedded</DebugType>
+    <DebugType>full</DebugType>
   </PropertyGroup>
 </Project>
