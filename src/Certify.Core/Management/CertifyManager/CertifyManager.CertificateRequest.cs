@@ -390,7 +390,20 @@ namespace Certify.Management
                         if (resumePaused && managedCertificate.Health == ManagedCertificateHealth.AwaitingUser)
                         {
                             // resume a previously paused request
-                            var r = await CompleteCertificateRequestProcessing(log, managedCertificate, progress, null);
+                            CertificateRequestResult r;
+
+                            // If mixing manual dns with acme-dns, manual challenges need to be checked without re-challenging
+                            if (managedCertificate.RequestConfig.Challenges?.Any(c => c.ChallengeProvider == "DNS01.Manual") == true)
+                            {
+                                // resume manual dns requests etc
+                                r = await CompleteCertificateRequestProcessing(log, managedCertificate, progress, null);
+
+                            }
+                            else
+                            {
+                                // perform normal certificate challenge/response/renewal (acme-dns etc)
+                                r = await PerformCertificateRequestProcessing(log, managedCertificate, progress, certRequestResult, config);
+                            }
 
                             // copy result from sub-request, preserve existing logged actions
                             certRequestResult.Message = r.Message;

@@ -205,11 +205,18 @@ namespace Certify.Core.Management.Challenges
 
                     result.Message = $"{dnsAPIProvider.ProviderTitle} :: {result.Message}";
 
+                    bool isAwaitingUser = false;
+
+                    if (challengeConfig.ChallengeProvider.Contains(".Manual") || result.Message.Contains("[Action Required]"))
+                    {
+                        isAwaitingUser = true;
+                    }
+
                     return new DnsChallengeHelperResult
                     {
                         Result = result,
                         PropagationSeconds = dnsAPIProvider.PropagationDelaySeconds,
-                        IsAwaitingUser = challengeConfig.ChallengeProvider.Contains(".Manual")
+                        IsAwaitingUser = isAwaitingUser
                     };
                 }
                 catch (Exception exp)
@@ -270,7 +277,7 @@ namespace Certify.Core.Management.Challenges
         {
             // for a given managed site configuration, attempt to delete the TXT record created for
             // the challenge
-         
+
             var credentials = new Dictionary<string, string>();
 
             IDnsProvider dnsAPIProvider = null;

@@ -180,7 +180,7 @@ namespace Certify.Providers.DNS.AcmeDns
 
             if (isNewRegistration)
             {
-                return new ActionResult { IsSuccess = false, Message = $"To complete setup, add a CNAME record in your DNS pointing {request.RecordName} to {registration.fulldomain} " };
+                return new ActionResult { IsSuccess = false, Message = $"[Action Required] To complete setup, add a CNAME record in your DNS pointing {request.RecordName} to {registration.fulldomain} " };
             }
 
             var req = new HttpRequestMessage(HttpMethod.Post, "/update");

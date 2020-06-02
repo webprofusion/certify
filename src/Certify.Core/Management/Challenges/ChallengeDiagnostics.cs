@@ -618,7 +618,7 @@ namespace Certify.Core.Management.Challenges
 
             if (dnsChallenge == null)
             {
-                var msg = $"No dns-01 challenge to complete for {managedCertificate.Name}. Request cannot continue.";
+                var msg = $"No dns-01 challenge to completed for {managedCertificate.Name}. Request cannot continue.";
 
                 log.Warning(msg);
 
