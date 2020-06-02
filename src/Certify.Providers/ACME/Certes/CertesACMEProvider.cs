@@ -115,6 +115,8 @@ namespace Certify.Providers.ACME.Certes
 
         private List<byte[]> _issuerCertCache = new List<byte[]>();
 
+        private ACMECompatibilityMode _compatibilityMode = ACMECompatibilityMode.LetsEncrypt;
+
         public CertesACMEProvider(string acmeBaseUri, string settingsPath, string userAgentName, bool allowInvalidTls = false)
         {
             _settingsFolder = settingsPath;
@@ -509,8 +511,7 @@ namespace Certify.Providers.ACME.Certes
         {
             if (DateTime.Now.Subtract(_lastInitDateTime).TotalMinutes > 30)
             {
-                // our acme context nonce may have expired (which returns "JWS has an invalid
-                // anti-replay nonce") so start a new one
+                // our acme context is stale, start a new one
                 await InitProvider(_log);
             }
 
@@ -682,14 +683,25 @@ namespace Certify.Providers.ACME.Certes
                 _currentOrders.Add(orderUri, order);
 
                 // handle order status 'Ready' if all authorizations are already valid
+                bool requireAuthzFetch = true;
                 var orderDetails = await order.Resource();
-                if (orderDetails.Status == OrderStatus.Ready || orderDetails.Status == OrderStatus.Valid)
+
+                if (orderDetails.Status == OrderStatus.Ready)
                 {
                     pendingOrder.IsPendingAuthorizations = false;
+                    requireAuthzFetch = true;
                 }
 
+                if (_compatibilityMode== ACMECompatibilityMode.LetsEncrypt)
+                {
+                    if (orderDetails.Status == OrderStatus.Valid)
+                    {
+                        pendingOrder.IsPendingAuthorizations = false;
+                        requireAuthzFetch = true;
+                    }
+                }
 
-                if (pendingOrder.IsPendingAuthorizations)
+                if (requireAuthzFetch)
                 {
                     // get all required pending (or already valid) authorizations for this order
 
@@ -712,18 +724,28 @@ namespace Certify.Providers.ACME.Certes
 
                         var challenges = new List<AuthorizationChallengeItem>();
 
-                        // determine if we are interested in each challenge type before fetching the challenge details
+                        // determine if we are interested in each challenge type before fetching the challenge details, some APIs hang when you fetch a validated auth
                         var includeHttp01 = true;
                         var includeDns01 = true;
 
-                        if (config.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP) != true)
+                        if (_compatibilityMode == ACMECompatibilityMode.AltProvider1)
                         {
-                            includeHttp01 = false;
-                        }
+                            if (config.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP) != true)
+                            {
+                                includeHttp01 = false;
+                            }
 
-                        if (config.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS) != true)
-                        {
-                            includeDns01 = false;
+                            if (config.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS) != true)
+                            {
+                                includeDns01 = false;
+                            }
+
+                            if (includeDns01 == false && includeHttp01 == false)
+                            {
+                                // if neither challenge is enabled, use both
+                                includeHttp01 = true;
+                                includeDns01 = true;
+                            }
                         }
 
                         // add http challenge (if any)
@@ -1246,6 +1268,20 @@ namespace Certify.Providers.ACME.Certes
 
                 // revoke certificate
                 var der = certificate.GetEncoded();
+
+                try
+                {
+                    await _acme.HttpClient.ConsumeNonce();
+                }
+                catch (Exception)
+                {
+                    return new StatusMessage
+                    {
+                        IsOK = false,
+                        Message = "Failed to resume communication with Certificate Authority API. Try again later."
+                    };
+                }
+
                 await _acme.RevokeCertificate(der, RevocationReason.Unspecified, null);
             }
             catch (Exception exp)

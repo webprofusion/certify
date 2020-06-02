@@ -6,6 +6,19 @@ using Certify.Models.Providers;
 
 namespace Certify.Models.Plugins
 {
+
+    public enum ACMECompatibilityMode
+    {
+        /// <summary>
+        /// ACME provider should follow compatibility requirements for current Let's Encrypt service
+        /// </summary>
+        LetsEncrypt = 1,
+        /// <summary>
+        /// ACME provider follows compatibility requirements for alternative ACME APIs which may include deviations from spec or different behaviours
+        /// </summary>
+        AltProvider1 = 2
+    }
+
     public interface IACMEClientProvider
     {
         string GetProviderName();
