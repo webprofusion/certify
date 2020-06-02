@@ -67,6 +67,7 @@ namespace Certify.Management
                     {
                         await cmd.ExecuteNonQueryAsync();
                     }
+                    db.Close();
                 }
             }
             catch { }
