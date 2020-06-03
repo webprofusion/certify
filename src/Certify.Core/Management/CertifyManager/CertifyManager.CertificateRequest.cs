@@ -963,7 +963,7 @@ namespace Certify.Management
                                 new RequestProgressState(RequestState.Success, result.Message, managedCertificate, false));
 
                             // perform cert cleanup (if enabled)
-                            if (CoreAppSettings.Current.EnableCertificateCleanup && !string.IsNullOrEmpty(managedCertificate.CertificateThumbprintHash))
+                            if (_useWindowsNativeFeatures && CoreAppSettings.Current.EnableCertificateCleanup && !string.IsNullOrEmpty(managedCertificate.CertificateThumbprintHash))
                             {
                                 try
                                 {
@@ -1178,7 +1178,7 @@ namespace Certify.Management
                         // tls-sni-01), LE will then attempt to fetch our answer, if all accessible
                         // and correct (authorized) LE will then allow us to request a certificate
                         authorization = await _challengeDiagnostics.PerformAutomatedChallengeResponse(log,
-                            _serverProvider, managedCertificate, authorization);
+                            _serverProvider, managedCertificate, authorization, _credentialsManager);
 
                         // if we had automated checks configured and they failed more than twice in a
                         // row, fail and report error here

@@ -289,14 +289,14 @@ namespace Certify.Management
 
         public async Task<List<ActionResult>> ValidateDeploymentTask(ManagedCertificate managedCertificate, DeploymentTaskConfig taskConfig)
         {
-            var credentialsManager = new CredentialsManager();
+           
             var provider = DeploymentTaskProviderFactory.Create(taskConfig.TaskTypeId.ToLower(), _pluginManager.DeploymentTaskProviders);
 
             Dictionary<string, string> credentials = null;
 
             if (!string.IsNullOrEmpty(taskConfig.ChallengeCredentialKey))
             {
-                credentials = await credentialsManager.GetUnlockedCredentialsDictionary(taskConfig.ChallengeCredentialKey);
+                credentials = await _credentialsManager.GetUnlockedCredentialsDictionary(taskConfig.ChallengeCredentialKey);
             }
 
             try

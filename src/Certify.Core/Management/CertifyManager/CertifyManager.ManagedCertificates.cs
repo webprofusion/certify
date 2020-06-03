@@ -297,7 +297,9 @@ namespace Certify.Management
                     _serverProvider,
                     managedCertificate,
                     isPreviewMode,
-                    CoreAppSettings.Current.EnableDNSValidationChecks, progress
+                    CoreAppSettings.Current.EnableDNSValidationChecks, 
+                    _credentialsManager,
+                    progress
                 )
              );
 
@@ -359,7 +361,7 @@ namespace Certify.Management
         {
             
             var dnsHelper = new Core.Management.Challenges.DnsChallengeHelper(_credentialsManager);
-            var result = await dnsHelper.GetDnsProvider(providerTypeId, credentialsId, null);
+            var result = await dnsHelper.GetDnsProvider(providerTypeId, credentialsId, null, _credentialsManager);
 
             if (result.Provider != null)
             {

@@ -42,6 +42,7 @@ namespace Certify.Core.Management.Challenges
             ManagedCertificate managedCertificate,
             bool isPreviewMode,
             bool enableDnsChecks,
+            ICredentialsManager credentialsManager,
             IProgress<RequestProgressState> progress = null
             )
         {
@@ -245,7 +246,8 @@ namespace Certify.Core.Management.Challenges
                                 domain,
                                 managedCertificate,
                                 simulatedAuthorization,
-                                isTestMode: true
+                                isTestMode: true,
+                                credentialsManager
                             );
 
                         result.Message = dnsResult.Result.Message;
@@ -312,7 +314,7 @@ namespace Certify.Core.Management.Challenges
             return $"{hash}";
         }
 
-        public async Task<PendingAuthorization> PerformAutomatedChallengeResponse(ILog log, ICertifiedServer iisManager, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
+        public async Task<PendingAuthorization> PerformAutomatedChallengeResponse(ILog log, ICertifiedServer iisManager, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, ICredentialsManager credentialsManager)
         {
             var requestConfig = managedCertificate.RequestConfig;
             var domain = pendingAuth.Identifier.Dns;
@@ -350,7 +352,7 @@ namespace Certify.Core.Management.Challenges
                     if (requiredChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                     {
                         // perform dns-01 challenge response
-                        var check = await PerformChallengeResponse_Dns01(log, domain, managedCertificate, pendingAuth, isTestMode: false);
+                        var check = await PerformChallengeResponse_Dns01(log, domain, managedCertificate, pendingAuth, isTestMode: false, credentialsManager);
                         pendingAuth.AttemptedChallenge.ConfigCheckedOK = check.Result.IsSuccess;
                         pendingAuth.AttemptedChallenge.ChallengeResultMsg = check.Result.Message;
                         pendingAuth.AttemptedChallenge.IsAwaitingUser = check.IsAwaitingUser;
@@ -612,7 +614,7 @@ namespace Certify.Core.Management.Challenges
             return () => checkQueue.All(check => check());
         }
 
-        private async Task<DnsChallengeHelperResult> PerformChallengeResponse_Dns01(ILog log, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, bool isTestMode)
+        private async Task<DnsChallengeHelperResult> PerformChallengeResponse_Dns01(ILog log, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, bool isTestMode, ICredentialsManager credentialsManager)
         {
             var dnsChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
 
@@ -635,7 +637,7 @@ namespace Certify.Core.Management.Challenges
             }
 
             // create DNS records (manually or via automation)
-            var dnsHelper = new DnsChallengeHelper(new CredentialsManager());
+            var dnsHelper = new DnsChallengeHelper(credentialsManager);
 
             var dnsResult = await dnsHelper.CompleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value, isTestMode);
 

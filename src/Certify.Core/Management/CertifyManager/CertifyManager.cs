@@ -43,9 +43,12 @@ namespace Certify.Management
         public event Action<RequestProgressState> OnRequestProgressStateUpdated;
 
         private ConcurrentDictionary<string, CertificateAuthority> _certificateAuthorities = new ConcurrentDictionary<string, CertificateAuthority>();
+        private bool _useWindowsNativeFeatures = true;
 
-        public CertifyManager()
+        public CertifyManager(bool useWindowsNativeFeatures = true)
         {
+            _useWindowsNativeFeatures = useWindowsNativeFeatures;
+
             var serverConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
             SettingsManager.LoadAppSettings();
@@ -62,7 +65,7 @@ namespace Certify.Management
                 _serviceLog.Error($"Failed to open or upgrade the managed items database. Check service has required file access permissions. :: {exp}");
             }
 
-            _credentialsManager = new CredentialsManager();
+            _credentialsManager = new CredentialsManager(useWindowsNativeFeatures);
             _serverProvider = (ICertifiedServer)new ServerProviderIIS();
 
             _progressResults = new ObservableCollection<RequestProgressState>();

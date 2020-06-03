@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Certify.Core.Management.Challenges.DNS;
 using Certify.Models;
@@ -294,7 +295,10 @@ namespace Certify.Core.Management.Challenges
             // some providers may fail to add due to platform dependencies/restrictions
             try
             {
-                providers.Add(Providers.DNS.MSDNS.DnsProviderMSDNS.Definition);
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    providers.Add(Providers.DNS.MSDNS.DnsProviderMSDNS.Definition);
+                }
             }
             catch { }
 

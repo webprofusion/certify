@@ -29,7 +29,12 @@ namespace Certify.Management
 
         public string StorageSubfolder = "credentials"; //if specified will be appended to AppData path as subfolder to load/save to
         private const string PROTECTIONENTROPY = "Certify.Credentials";
+        private bool _useWindowsNativeFeatures = true;
 
+        public CredentialsManager(bool useWindowsNativeFeatures = true)
+        {
+            _useWindowsNativeFeatures = useWindowsNativeFeatures;
+        }
         private string GetDbPath()
         {
             var appDataPath = Util.GetAppDataFolder(StorageSubfolder);
@@ -151,12 +156,21 @@ namespace Certify.Management
                 return null;
             }
 
-            var clearBytes = Encoding.UTF8.GetBytes(clearText);
-            var entropyBytes = string.IsNullOrEmpty(optionalEntropy)
-                ? null
-                : Encoding.UTF8.GetBytes(optionalEntropy);
-            var encryptedBytes = ProtectedData.Protect(clearBytes, entropyBytes, scope);
-            return Convert.ToBase64String(encryptedBytes);
+            if (_useWindowsNativeFeatures)
+            {
+
+                var clearBytes = Encoding.UTF8.GetBytes(clearText);
+                var entropyBytes = string.IsNullOrEmpty(optionalEntropy)
+                    ? null
+                    : Encoding.UTF8.GetBytes(optionalEntropy);
+                var encryptedBytes = ProtectedData.Protect(clearBytes, entropyBytes, scope);
+                return Convert.ToBase64String(encryptedBytes);
+            }
+            else
+            {
+                // TODO: dummy implementation, require alternative implementation for non-windows
+               return  Convert.ToBase64String(Encoding.UTF8.GetBytes(clearText).Reverse().ToArray());
+            }
         }
 
         /// <summary>
@@ -178,12 +192,21 @@ namespace Certify.Management
                 throw new ArgumentNullException("encryptedText");
             }
 
-            var encryptedBytes = Convert.FromBase64String(encryptedText);
-            var entropyBytes = string.IsNullOrEmpty(optionalEntropy)
-                ? null
-                : Encoding.UTF8.GetBytes(optionalEntropy);
-            var clearBytes = ProtectedData.Unprotect(encryptedBytes, entropyBytes, scope);
-            return Encoding.UTF8.GetString(clearBytes);
+            if (_useWindowsNativeFeatures)
+            {
+                var encryptedBytes = Convert.FromBase64String(encryptedText);
+                var entropyBytes = string.IsNullOrEmpty(optionalEntropy)
+                    ? null
+                    : Encoding.UTF8.GetBytes(optionalEntropy);
+                var clearBytes = ProtectedData.Unprotect(encryptedBytes, entropyBytes, scope);
+                return Encoding.UTF8.GetString(clearBytes);
+            } else
+            {
+
+                // TODO: dummy implementation, implement alternative implementation for non-windows
+                var bytes = Convert.FromBase64String(encryptedText);
+                return Encoding.UTF8.GetString(bytes.Reverse().ToArray());
+            }
         }
 
         /// <summary>

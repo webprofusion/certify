@@ -209,8 +209,7 @@ namespace Certify.Management
         {
             try
             {
-                var cert = new X509Certificate2();
-                cert.Import(filename, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+                var cert = new X509Certificate2(filename, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
                 return cert;
             }
             catch (Exception exp)
@@ -239,22 +238,31 @@ namespace Certify.Management
             {
                 // retry  with blank pwd, may be transitional
                 certificate = new X509Certificate2(pfxFile, "", X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
-                
+
                 // success using blank pwd, continue with blank pwd
                 pwd = "";
             }
 
-
-            if (!string.IsNullOrEmpty(customFriendlyName))
+            try
+            {
+                if (!string.IsNullOrEmpty(customFriendlyName))
                 {
                     certificate.FriendlyName = customFriendlyName;
                 }
                 else
                 {
                     certificate.GetExpirationDateString();
+
+
                     certificate.FriendlyName = host + " [Certify] - " + certificate.GetEffectiveDateString() + " to " + certificate.GetExpirationDateString();
+
                 }
-            
+            }
+            catch (System.PlatformNotSupportedException)
+            {
+                // friendly name not supported on unix
+            }
+
             var cert = StoreCertificate(certificate, storeName);
 
             await Task.Delay(500);
@@ -270,7 +278,7 @@ namespace Certify.Management
                     // hack/workaround - importing cert from system account causes private key to be
                     // transient. Re-import the same cert fixes it. re -try apply .net dev on why
                     // re-import helps with private key: https://stackoverflow.com/questions/40892512/add-a-generated-certificate-to-the-store-and-update-an-iis-site-binding
-                    return await StoreCertificate(host, pfxFile, isRetry: true, storeName: storeName, customFriendlyName: customFriendlyName,pwd: pwd);
+                    return await StoreCertificate(host, pfxFile, isRetry: true, storeName: storeName, customFriendlyName: customFriendlyName, pwd: pwd);
                 }
             }
 

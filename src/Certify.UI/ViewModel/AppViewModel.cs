@@ -349,7 +349,15 @@ namespace Certify.UI.ViewModel
             CertifyClient.OnManagedCertificateUpdated += CertifyClient_OnManagedCertificateUpdated;
 
             // connect to status api stream & handle events
-            await CertifyClient.ConnectStatusStreamAsync();
+            try
+            {
+                await CertifyClient.ConnectStatusStreamAsync();
+            }
+            catch (Exception exp)
+            {
+                // failed to connect to status signalr hub
+                Log?.Error($"Failed to connect to status hub: {exp}");
+            }
         }
 
         public async Task<List<DnsZone>> GetDnsProviderZones(string challengeProvider, string challengeCredentialKey)

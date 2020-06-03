@@ -25,9 +25,8 @@ namespace Certify.Core.Management.Challenges
         {
             _credentialsManager = credentialsManager;
         }
-        public async Task<DnsChallengeHelperResult> GetDnsProvider(string providerTypeId, string credentialsId, Dictionary<string, string> parameters)
+        public async Task<DnsChallengeHelperResult> GetDnsProvider(string providerTypeId, string credentialsId, Dictionary<string, string> parameters, ICredentialsManager credentialsManager)
         {
-            var credentialsManager = new CredentialsManager();
             var credentials = new Dictionary<string, string>();
 
             IDnsProvider dnsAPIProvider = null;
