@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -115,7 +115,7 @@ namespace Certify.Providers.ACME.Certes
 
         private List<byte[]> _issuerCertCache = new List<byte[]>();
 
-        private ACMECompatibilityMode _compatibilityMode = ACMECompatibilityMode.LetsEncrypt;
+        private ACMECompatibilityMode _compatibilityMode = ACMECompatibilityMode.Standard;
 
         public CertesACMEProvider(string acmeBaseUri, string settingsPath, string userAgentName, bool allowInvalidTls = false)
         {
@@ -692,7 +692,7 @@ namespace Certify.Providers.ACME.Certes
                     requireAuthzFetch = true;
                 }
 
-                if (_compatibilityMode== ACMECompatibilityMode.LetsEncrypt)
+                if (_compatibilityMode == ACMECompatibilityMode.Standard)
                 {
                     if (orderDetails.Status == OrderStatus.Valid)
                     {

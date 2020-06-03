@@ -12,7 +12,7 @@ namespace Certify.Models.Plugins
         /// <summary>
         /// ACME provider should follow compatibility requirements for current Let's Encrypt service
         /// </summary>
-        LetsEncrypt = 1,
+        Standard = 1,
         /// <summary>
         /// ACME provider follows compatibility requirements for alternative ACME APIs which may include deviations from spec or different behaviours
         /// </summary>
