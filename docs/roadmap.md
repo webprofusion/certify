@@ -2,7 +2,18 @@
 
 The below items are general topics which may or may not include current GitHub issues.
 
-# v5.x:
+# Planned (5.x timeline):
+
+* New Client API for custom development against the Certify The Web server API (accessible in .net, dotnet core, PowerShell etc)
+* CA fallback. If communication or renewal with the primary CA fails repeatedly, fallback to compatible alternatives (if available)
+* Import/Export to migrate configuration between installations
+
+# Mid-Term/Future
+
+* Easy setup for an acme-dns server on windows
+* Operate a central ACME server and cert API for authorized client apps to pull latest certs
+
+# v5.x onwards:
 
 ## Deployment:
 * Deployment Tasks: configurable, deferrable deployment for exports, ccs, ssh/sftp, apache, nginx, exchange etc
