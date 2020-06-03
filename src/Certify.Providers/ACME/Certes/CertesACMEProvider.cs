@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -1148,35 +1148,73 @@ namespace Certify.Providers.ACME.Certes
             // get list of known CAs as Issuer certs from cert store
             // derived from PR idea by @pkiguy https://github.com/webprofusion/certify/pull/340
 
-            var store = new System.Security.Cryptography.X509Certificates.X509Store(
-                storeName,
-                System.Security.Cryptography.X509Certificates.StoreLocation.LocalMachine);
-
-            store.Open(System.Security.Cryptography.X509Certificates.OpenFlags.ReadOnly);
-            var allCACerts = store.Certificates;
-
-            using (var writer = new StringWriter())
+            try
             {
-                var pemWriter = new PemWriter(writer);
-                var certParser = new X509CertificateParser();
+                var store = new System.Security.Cryptography.X509Certificates.X509Store(
+                    storeName,
+                    System.Security.Cryptography.X509Certificates.StoreLocation.LocalMachine);
 
-                foreach (var c in allCACerts)
+                store.Open(System.Security.Cryptography.X509Certificates.OpenFlags.ReadOnly);
+                var allCACerts = store.Certificates;
+
+                using (var writer = new StringWriter())
                 {
-                    Org.BouncyCastle.X509.X509Certificate parsedCert = certParser.ReadCertificate(c.GetRawCertData());
-                    pemWriter.WriteObject(parsedCert);
-                }
+                    var pemWriter = new PemWriter(writer);
+                    var certParser = new X509CertificateParser();
 
-                writer.Flush();
-                return System.Text.ASCIIEncoding.ASCII.GetBytes(writer.ToString());
+                    var certAdded = false;
+                    foreach (var c in allCACerts)
+                    {
+                        try
+                        {
+                            Org.BouncyCastle.X509.X509Certificate parsedCert = certParser.ReadCertificate(c.GetRawCertData());
+                            pemWriter.WriteObject(parsedCert);
+                            certAdded = true;
+                        }
+                        catch (Exception exp)
+                        {
+                            // failed to parse a cert
+                            _log?.Error($"Failed to parse CA or intermediate cert: {c.FriendlyName} :: {exp}");
+                        }
+                    }
+
+                    writer.Flush();
+
+                    if (certAdded)
+                    {
+                        return System.Text.ASCIIEncoding.ASCII.GetBytes(writer.ToString());
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                _log?.Error($"CertesACMEProvider: failed to prepare CA issuer cache: {exp}");
+                return null;
             }
         }
 
+        /// <summary>
+        /// Compile cache of root and intermediate CAs which may be in use to sign certs
+        /// </summary>
         private void RefreshIssuerCertCache()
         {
             _issuerCertCache = new List<byte[]>();
-            _issuerCertCache.Add(GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName.Root));
-            _issuerCertCache.Add(GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName.CertificateAuthority));
 
+            var rootCAs = GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName.Root);
+            if (rootCAs != null)
+            {
+                _issuerCertCache.Add(rootCAs);
+            }
+
+            var intermediates = GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName.CertificateAuthority);
+            if (intermediates != null)
+            {
+                _issuerCertCache.Add(intermediates);
+            }
         }
 
         private string ExportFullCertPFX(string certFriendlyName, string pwd, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
