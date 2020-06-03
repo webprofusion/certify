@@ -26,7 +26,7 @@ This is a nuspec. It mostly adheres to https://docs.nuget.org/create/Nuspec-Refe
     <!-- version should MATCH as closely as possible with the underlying software -->
     <!-- Is the version a prerelease of a version? https://docs.nuget.org/create/versioning#creating-prerelease-packages -->
     <!-- Note that unstable versions like 0.0.1 can be considered a released version, but it's possible that one can release a 0.0.1-beta before you release a 0.0.1 version. If the version number is final, that is considered a released version and not a prerelease. -->
-    <version>4.1.8</version>
+    <version>5.0.10</version>
     <packageSourceUrl>https://github.com/webprofusion/certify/blob/development/scripts/chocolatey/</packageSourceUrl>
     <!-- owners is a poor name for maintainers of the package. It sticks around by this name for compatibility reasons. It basically means you. -->
     <owners>Webprofusion</owners>
@@ -47,7 +47,7 @@ This is a nuspec. It mostly adheres to https://docs.nuget.org/create/Nuspec-Refe
     <bugTrackerUrl>https://github.com/webprofusion/certify/issues</bugTrackerUrl>
     <tags>certifytheweb certify letsencrypt ssl iis win https certificate acme windows simple</tags>
     <summary>The GUI to manage free letsencrypt.org https certificates for Windows</summary>
-    <description>The GUI to easily request, install, managed and auto-renew free SSL/TLS certificates from ACME CAs such as letsencrypt.org for your IIS/Windows servers. Setting up https has never been easier. </description>
+    <description>The GUI to easily request, install, manage and auto-renew free SSL/TLS certificates from ACME CAs such as letsencrypt.org for your IIS/Windows servers. Setting up https has never been easier. </description>
     <releaseNotes>https://certifytheweb.com/home/changelog</releaseNotes>
     <!-- =============================== -->      
 
