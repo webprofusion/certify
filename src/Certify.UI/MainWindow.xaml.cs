@@ -121,7 +121,7 @@ namespace Certify.UI
             // if ctrl is pressed, force renewal
             if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
             {
-                settings.Mode =  Models.RenewalMode.All;
+                settings.Mode = Models.RenewalMode.All;
             }
 
             // save or discard site changes before creating a new site/certificate
@@ -153,8 +153,15 @@ namespace Certify.UI
             {
                 Width = uiSettings.Width ?? Width;
                 Height = uiSettings.Height ?? Height;
-                Left = uiSettings.Left ?? Left;
+
                 Top = uiSettings.Top ?? Top;
+
+                // only apply saved left pos if it's not off-screen
+                double virtScreenWidth = System.Windows.SystemParameters.VirtualScreenWidth;
+                if (uiSettings.Left < virtScreenWidth)
+                {
+                    Left = uiSettings.Left ?? Left;
+                }
 
                 // set theme based on pref
                 if (uiSettings.UITheme != null)
