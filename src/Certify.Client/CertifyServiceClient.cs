@@ -8,7 +8,8 @@ using Certify.Config;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Utils;
-using Microsoft.AspNet.SignalR.Client;
+using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
 namespace Certify.Client
@@ -30,36 +31,55 @@ namespace Certify.Client
 
         public event Action OnConnectionClosed;
 
-        private IHubProxy hubProxy;
+
 
         private HubConnection connection;
 
         private string _statusHubUri = "/api/status";
 
-        public CertifyServiceClient() : base()
+        public CertifyServiceClient(bool useDefaultCredentials = true) : base(useDefaultCredentials)
         {
-
             _statusHubUri = $"{(_serviceConfig.UseHTTPS ? "https" : "http")}://{_serviceConfig.Host}:{_serviceConfig.Port}" + _statusHubUri;
-
         }
 
         public async Task ConnectStatusStreamAsync()
         {
-            connection = new HubConnection(_statusHubUri)
+            connection = new HubConnectionBuilder()
+               
+              .WithUrl(_statusHubUri)
+              .WithAutomaticReconnect()
+              .AddMessagePackProtocol()
+              .Build();
+
+            connection.Closed += async (error) =>
             {
-                Credentials = System.Net.CredentialCache.DefaultCredentials
+                await Task.Delay(new Random().Next(0, 5) * 1000);
+                await connection.StartAsync();
             };
-            hubProxy = connection.CreateHubProxy("StatusHub");
 
-            hubProxy.On<ManagedCertificate>("ManagedCertificateUpdated", (u) => OnManagedCertificateUpdated?.Invoke(u));
-            hubProxy.On<RequestProgressState>("RequestProgressStateUpdated", (s) => OnRequestProgressStateUpdated?.Invoke(s));
-            hubProxy.On<string, string>("SendMessage", (a, b) => OnMessageFromService?.Invoke(a, b));
+            // TODO: auth: https://docs.microsoft.com/en-us/aspnet/core/signalr/authn-and-authz?view=aspnetcore-3.1
 
-            connection.Reconnecting += OnConnectionReconnecting;
-            connection.Reconnected += OnConnectionReconnected;
-            connection.Closed += OnConnectionClosed;
+            /* connection = new HubConnection(_statusHubUri)
+             {
+                 Credentials = System.Net.CredentialCache.DefaultCredentials
+             };*/
 
-            await connection.Start();
+            connection.On<RequestProgressState>("SendProgressState", (s) =>
+            {
+                OnRequestProgressStateUpdated?.Invoke(s);
+            });
+
+            connection.On<ManagedCertificate>("SendManagedCertificateUpdate", (u) =>
+            {
+                OnManagedCertificateUpdated?.Invoke(u);
+            });
+
+            connection.On<string, string>("SendMessage", (a, b) =>
+             {
+                 OnMessageFromService?.Invoke(a, b);
+             });
+
+            await connection.StartAsync();
         }
     }
 }

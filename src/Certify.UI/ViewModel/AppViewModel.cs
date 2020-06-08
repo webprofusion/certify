@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -49,7 +50,7 @@ namespace Certify.UI.ViewModel
                 new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .WriteTo.Debug()
-                .WriteTo.File(Management.Util.GetAppDataFolder("logs") + "\\ui.log", shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
+                .WriteTo.File(Path.Combine(Management.Util.GetAppDataFolder("logs"), "ui.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
                 .CreateLogger()
                 );
 
@@ -324,12 +325,14 @@ namespace Certify.UI.ViewModel
             //check service connection
             IsServiceAvailable = await CheckServiceAvailable();
 
-            if (!IsServiceAvailable)
+            var attemptsRemaining = 5;
+            while (!IsServiceAvailable && attemptsRemaining > 0)
             {
                 Debug.WriteLine("Service not yet available. Waiting a few seconds..");
 
                 // the service could still be starting up or port may be reallocated
-                await Task.Delay(5000);
+                var waitMS = (6 - attemptsRemaining) * 1000;
+                await Task.Delay(waitMS);
 
                 // restart client in case port has reallocated
                 CertifyClient = new CertifyServiceClient();
@@ -338,8 +341,13 @@ namespace Certify.UI.ViewModel
 
                 if (!IsServiceAvailable)
                 {
+                    attemptsRemaining--;
+
                     // give up
-                    return;
+                    if (attemptsRemaining == 0)
+                    {
+                        return;
+                    }
                 }
             }
 

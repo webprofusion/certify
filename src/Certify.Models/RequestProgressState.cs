@@ -33,6 +33,12 @@
         public bool IsPreviewMode { get; set; }
         public ManagedCertificate ManagedCertificate { get; set; }
 
+        public RequestProgressState()
+        {
+            CurrentState = RequestState.NotRunning;
+            Message = "";
+        }
+
         public RequestProgressState(RequestState currentState, string msg, ManagedCertificate item, bool isPreviewMode = false)
         {
             CurrentState = currentState;
