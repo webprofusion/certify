@@ -14,8 +14,6 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
-        public event Action<ManagedCertificate> OnManagedCertificateUpdated;
-
         public async Task<ManagedCertificate> GetManagedCertificate(string id) => await _itemManager.GetManagedCertificate(id);
 
         public async Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter = null)
@@ -42,7 +40,8 @@ namespace Certify.Management
 
                                 list.AddRange(certs);
                             }
-                        } else
+                        }
+                        else
                         {
                             System.Diagnostics.Debug.WriteLine("Failed to create provider from plugin [Certificate Manager] ");
                         }
@@ -58,7 +57,8 @@ namespace Certify.Management
             site = await _itemManager.UpdatedManagedCertificate(site);
 
             // report request state to status hub clients
-            OnManagedCertificateUpdated?.Invoke(site);
+            _statusReporting?.ReportManagedCertificateUpdated(site);
+
             return site;
         }
 
@@ -89,9 +89,9 @@ namespace Certify.Management
             managedCertificate = await _itemManager.UpdatedManagedCertificate(managedCertificate);
 
             // report request state to status hub clients
-            OnManagedCertificateUpdated?.Invoke(managedCertificate);
+            _statusReporting?.ReportManagedCertificateUpdated(managedCertificate);
 
-            //if reporting enabled, send report
+            // if reporting api enabled, send report
 
             if (managedCertificate.RequestConfig?.EnableFailureNotifications == true)
             {
@@ -297,7 +297,7 @@ namespace Certify.Management
                     _serverProvider,
                     managedCertificate,
                     isPreviewMode,
-                    CoreAppSettings.Current.EnableDNSValidationChecks, 
+                    CoreAppSettings.Current.EnableDNSValidationChecks,
                     _credentialsManager,
                     progress
                 )
@@ -359,7 +359,7 @@ namespace Certify.Management
 
         public async Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId)
         {
-            
+
             var dnsHelper = new Core.Management.Challenges.DnsChallengeHelper(_credentialsManager);
             var result = await dnsHelper.GetDnsProvider(providerTypeId, credentialsId, null, _credentialsManager);
 

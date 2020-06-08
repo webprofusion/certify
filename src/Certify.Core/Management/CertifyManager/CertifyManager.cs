@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -13,6 +13,7 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
+using Certify.Providers;
 using Certify.Providers.ACME.Certes;
 using Microsoft.ApplicationInsights;
 using Serilog;
@@ -39,8 +40,7 @@ namespace Certify.Management
         private ConcurrentDictionary<string, IACMEClientProvider> _acmeClientProviders = new ConcurrentDictionary<string, IACMEClientProvider>();
         private ConcurrentDictionary<string, SimpleAuthorizationChallengeItem> _currentChallenges = new ConcurrentDictionary<string, SimpleAuthorizationChallengeItem>();
         private ObservableCollection<RequestProgressState> _progressResults { get; set; }
-
-        public event Action<RequestProgressState> OnRequestProgressStateUpdated;
+        private IStatusReporting _statusReporting { get; set; }
 
         private ConcurrentDictionary<string, CertificateAuthority> _certificateAuthorities = new ConcurrentDictionary<string, CertificateAuthority>();
         private bool _useWindowsNativeFeatures = true;
@@ -124,6 +124,11 @@ namespace Certify.Management
             }
 
             PerformManagedCertificateMigrations().Wait();
+        }
+
+        public void SetStatusReporting(IStatusReporting statusReporting)
+        {
+            _statusReporting = statusReporting;
         }
 
         private async Task PerformManagedCertificateMigrations()
@@ -248,7 +253,10 @@ namespace Certify.Management
             }
 
             // report request state to staus hub clients
-            OnRequestProgressStateUpdated?.Invoke(state);
+
+            _statusReporting?.ReportRequestProgress(state);
+
+
 
             if (state.ManagedCertificate != null && logThisEvent)
             {
