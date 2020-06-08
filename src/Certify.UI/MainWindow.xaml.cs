@@ -167,6 +167,10 @@ namespace Certify.UI
                 if (uiSettings.UITheme != null)
                 {
                     ((Certify.UI.App)App.Current).ToggleTheme(uiSettings.UITheme);
+                } else
+                {
+                    // default to light theme
+                    ((Certify.UI.App)App.Current).ToggleTheme("Light");
                 }
 
                 if (uiSettings.Scaling > 0.5 && uiSettings.Scaling < 2)
@@ -175,6 +179,10 @@ namespace Certify.UI
                 }
 
                 _appViewModel.UISettings = uiSettings;
+            } else
+            {
+                // default to light theme
+                ((Certify.UI.App)App.Current).ToggleTheme("Light");
             }
 
             await PerformAppStartupChecks();
