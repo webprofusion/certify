@@ -104,7 +104,7 @@ namespace Certify.Providers.DNS.AcmeDns
                 apiPrefix = ToUrlSafeBase64String(_client.BaseAddress.Host);
             }
             
-            var registrationSettingsPath = settingsPath + "\\acmedns\\";
+            var registrationSettingsPath = Path.Combine(settingsPath, "acmedns");
 
             if (!System.IO.Directory.Exists(registrationSettingsPath))
             {
@@ -120,7 +120,7 @@ namespace Certify.Providers.DNS.AcmeDns
 
             domainConfigFile = filenameRegex.Replace(domainConfigFile, "_");
 
-            registrationSettingsPath += apiPrefix +"_"+ domainConfigFile;
+            registrationSettingsPath = Path.Combine(registrationSettingsPath, apiPrefix +"_"+ domainConfigFile);
 
             if (System.IO.File.Exists(registrationSettingsPath))
             {

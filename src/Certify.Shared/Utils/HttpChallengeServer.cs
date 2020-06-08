@@ -39,13 +39,14 @@ namespace Certify.Core.Management.Challenges
 
             try
             {
+                var logPath = Path.Combine(Util.GetAppDataFolder(), "logs", "httpChallengeServer.log");
                 if (clearLog)
                 {
-                    System.IO.File.WriteAllText(Util.GetAppDataFolder() + "\\logs\\httpChallengeServer.log", msg);
+                    System.IO.File.WriteAllText(logPath, msg);
                 }
                 else
                 {
-                    System.IO.File.AppendAllText(Util.GetAppDataFolder() + "\\logs\\httpChallengeServer.log", msg);
+                    System.IO.File.AppendAllText(logPath, msg);
                 }
             }
             catch

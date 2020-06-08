@@ -146,7 +146,7 @@ namespace Certify.Core.Management.Challenges
                                     new AuthorizationChallengeItem
                                 {
                                         ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
-                                        ResourcePath =  ".well-known\\acme-challenge\\configcheck",
+                                        ResourcePath = Path.Combine(".well-known","acme-challenge","configcheck"),
                                         ResourceUri = challengeFileUrl,
                                         Value = "Extensionless File Config Test - OK"
                                     }
@@ -508,7 +508,7 @@ namespace Certify.Core.Management.Challenges
                     // Or include preset key in our config, or make behaviour configurable
                     LogAction($"Pre-config check failed: Auto-config will overwrite existing config: {destPath}\\web.config");
 
-                    var configOptions = Directory.EnumerateFiles(Environment.CurrentDirectory + "\\Scripts\\Web.config\\", "*.config");
+                    var configOptions = Directory.EnumerateFiles(Path.Combine(Environment.CurrentDirectory, "Scripts","Web.config"), "*.config");
 
                     foreach (var configFile in configOptions)
                     {
@@ -522,7 +522,7 @@ namespace Certify.Core.Management.Challenges
 
                         try
                         {
-                            System.IO.File.WriteAllText(destPath + "\\web.config", webConfigContent);
+                            System.IO.File.WriteAllText(Path.Combine(destPath, "web.config"), webConfigContent);
                         }
                         catch (Exception exp)
                         {

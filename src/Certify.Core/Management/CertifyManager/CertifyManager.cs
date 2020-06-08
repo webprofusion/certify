@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -186,8 +186,9 @@ namespace Certify.Management
             else
             {
                 var userAgent = Util.GetUserAgent();
+                var providerPath = Path.Combine(Management.Util.GetAppDataFolder(), "certes_" + storageKey);
 
-                var newProvider = new CertesACMEProvider(acmeApiEndpoint, Management.Util.GetAppDataFolder() + "\\certes_" + storageKey, userAgent);
+                var newProvider = new CertesACMEProvider(acmeApiEndpoint, providerPath, userAgent);
 
                 await newProvider.InitProvider(_serviceLog, account);
 
@@ -207,7 +208,7 @@ namespace Certify.Management
                 new LoggerConfiguration()
                .MinimumLevel.ControlledBy(_loggingLevelSwitch)
                .WriteTo.Debug()
-               .WriteTo.File(Util.GetAppDataFolder("logs") + "\\session.log", shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
+               .WriteTo.File(Path.Combine(Util.GetAppDataFolder("logs"), "session.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
                .CreateLogger()
                );
 

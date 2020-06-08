@@ -45,9 +45,9 @@ namespace Certify.SharedUtils
             };
 
             var appDataPath = GetAppDataFolder();
-            var serviceConfigFile = appDataPath + "\\serviceconfig.json";
+            var serviceConfigFile = Path.Combine(appDataPath, "serviceconfig.json");
 #if DEBUG
-            serviceConfigFile = appDataPath + "\\serviceconfig.debug.json";
+            serviceConfigFile = Path.Combine(appDataPath, "serviceconfig.debug.json");
 #endif
             try
             {
@@ -66,7 +66,8 @@ namespace Certify.SharedUtils
                     serviceConfig.ConfigStatus = ConfigStatus.New;
                 }
             }
-            catch (Exception exp) {
+            catch (Exception exp)
+            {
                 if (serviceConfig != null)
                 {
                     serviceConfig.ConfigStatus = ConfigStatus.DefaultFailed;
@@ -100,9 +101,9 @@ namespace Certify.SharedUtils
             }
 
             var appDataPath = GetAppDataFolder();
-            var serviceConfigFile = appDataPath + "\\serviceconfig.json";
+            var serviceConfigFile = Path.Combine(appDataPath, "serviceconfig.json");
 #if DEBUG
-            serviceConfigFile = appDataPath + "\\serviceconfig.debug.json";
+            serviceConfigFile = Path.Combine(appDataPath, "serviceconfig.debug.json");
 #endif
             try
             {

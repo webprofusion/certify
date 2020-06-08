@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
@@ -32,7 +33,8 @@ namespace Certify.UI.Controls.ManagedCertificate
             _markdownPipeline = _markdownPipelineBuilder.Build();
             try
             {
-                _css = System.IO.File.ReadAllText(System.AppDomain.CurrentDomain.BaseDirectory + "\\Assets\\CSS\\markdown.css");
+                var cssPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "CSS", "markdown.css");
+                _css = System.IO.File.ReadAllText(cssPath);
             }
             catch
             {

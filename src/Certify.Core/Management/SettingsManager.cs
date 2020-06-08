@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using Certify.Models;
 
 namespace Certify.Management
@@ -212,7 +213,7 @@ namespace Certify.Management
 
             lock (COREAPPSETTINGSFILE)
             {
-                System.IO.File.WriteAllText(appDataPath + "\\" + COREAPPSETTINGSFILE, json);
+                System.IO.File.WriteAllText(Path.Combine(appDataPath, COREAPPSETTINGSFILE), json);
             }
         }
 
@@ -220,7 +221,7 @@ namespace Certify.Management
         {
             var caList = new List<CertificateAuthority>();
             var appDataPath = Util.GetAppDataFolder();
-            var path = appDataPath + "\\ca.json";
+            var path = Path.Combine(appDataPath, "ca.json");
 
             if (System.IO.File.Exists(path))
             {
@@ -244,7 +245,7 @@ namespace Certify.Management
             try
             {
                 var appDataPath = Util.GetAppDataFolder();
-                var path = appDataPath + "\\" + COREAPPSETTINGSFILE;
+                var path = Path.Combine(appDataPath, COREAPPSETTINGSFILE);
 
                 if (System.IO.File.Exists(path))
                 {

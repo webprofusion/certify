@@ -279,7 +279,7 @@ namespace Certify.Core.Management.Challenges
             };
 
             // TODO : load config from file
-            providers.AddRange(Certify.Core.Management.Challenges.DNS.DnsProviderPoshACME.ExtendedProviders);
+
 
             try
             {
@@ -297,6 +297,8 @@ namespace Certify.Core.Management.Challenges
             {
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
+                    providers.AddRange(Certify.Core.Management.Challenges.DNS.DnsProviderPoshACME.ExtendedProviders);
+
                     providers.Add(Providers.DNS.MSDNS.DnsProviderMSDNS.Definition);
                 }
             }

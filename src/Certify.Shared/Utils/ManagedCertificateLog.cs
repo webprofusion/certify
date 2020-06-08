@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.IO;
 using Certify.Models.Providers;
 using Serilog;
 
@@ -29,7 +30,7 @@ namespace Certify.Models
 
         public static string GetAppDataFolder()
         {
-            var path = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\" + APPDATASUBFOLDER;
+            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), APPDATASUBFOLDER);
             if (!System.IO.Directory.Exists(path))
             {
                 System.IO.Directory.CreateDirectory(path);
@@ -42,7 +43,7 @@ namespace Certify.Models
     {
         private static ConcurrentDictionary<string, Serilog.Core.Logger> _managedItemLoggers { get; set; }
 
-        public static string GetLogPath(string managedItemId) => Util.GetAppDataFolder() + "\\logs\\log_" + managedItemId.Replace(':', '_') + ".txt";
+        public static string GetLogPath(string managedItemId) => Path.Combine(Util.GetAppDataFolder(), "logs", "log_" + managedItemId.Replace(':', '_') + ".txt");
 
         public static ILog GetLogger(string managedItemId, Serilog.Core.LoggingLevelSwitch logLevelSwitch)
         {
