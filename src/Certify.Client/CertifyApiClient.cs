@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -330,6 +330,12 @@ namespace Certify.Client
         {
             var response = await FetchAsync($"managedcertificates/challengeapis/");
             return JsonConvert.DeserializeObject<List<ChallengeProviderDefinition>>(response);
+        }
+
+        public async Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallenges(string type, string key)
+        {
+            var result = await FetchAsync($"managedcertificates/currentchallenges/{type}/{key}");
+            return JsonConvert.DeserializeObject<List<SimpleAuthorizationChallengeItem>>(result);
         }
 
         public async Task<List<DeploymentProviderDefinition>> GetDeploymentProviderList()

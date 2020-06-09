@@ -27,7 +27,7 @@ namespace Certify.Management
 
         Task DeleteManagedCertificate(string id);
 
-        Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallengeResponses(string challengeType);
+        Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallengeResponses(string challengeType, string key = null);
 
         Task<List<AccountDetails>> GetAccountRegistrations();
 

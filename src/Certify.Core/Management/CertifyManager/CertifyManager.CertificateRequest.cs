@@ -541,10 +541,10 @@ namespace Certify.Management
             return certRequestResult;
         }
 
-        public Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallengeResponses(string challengeType)
+        public Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallengeResponses(string challengeType, string key = null)
         {
             var challengeResponses = _currentChallenges
-                .Where(c => c.Value.ChallengeType == challengeType)
+                .Where(c => c.Value.ChallengeType == challengeType && (key == null || (key != null && c.Value.Key == key)))
                 .Select(a => a.Value).ToList();
 
             return Task.FromResult(challengeResponses);
