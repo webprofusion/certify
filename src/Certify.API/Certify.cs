@@ -35,7 +35,7 @@ namespace Certify.API
         ICertifyInternalApiClient _client;
         public CertifyServerClient()
         {
-            _client = new global::Certify.Client.CertifyApiClient(false, new Shared.ServiceConfig());
+            _client = new Certify.Client.CertifyApiClient();
         }
 
         /// <summary>

@@ -32,7 +32,7 @@ namespace Certify.UI.ViewModel
 
         public AppViewModel()
         {
-            CertifyClient = new CertifyServiceClient();
+            CertifyClient = new CertifyServiceClient(GetDefaultServerConnection());
 
             Init();
         }
@@ -319,8 +319,23 @@ namespace Certify.UI.ViewModel
             return await CertifyClient.ValidateDeploymentTask(deploymentTaskValidationInfo);
         }
 
+        public Shared.ServerConnection GetDefaultServerConnection()
+        {
+            var defaultConfig = new ServerConnection(SharedUtils.ServiceConfigManager.GetAppServiceConfig());
+
+            var connections = Shared.Core.Management.ServerConnectionManager.GetServerConnections(Log, defaultConfig);
+
+            if (connections.Any() && connections.Count() == 1)
+            {
+                Shared.Core.Management.ServerConnectionManager.Save(Log, connections);
+            }
+
+            return connections.FirstOrDefault(c => c.IsDefault = true);
+        }
+
         public async Task InitServiceConnections()
         {
+            var connectionConfig = GetDefaultServerConnection();
 
             //check service connection
             IsServiceAvailable = await CheckServiceAvailable();
@@ -335,7 +350,7 @@ namespace Certify.UI.ViewModel
                 await Task.Delay(waitMS);
 
                 // restart client in case port has reallocated
-                CertifyClient = new CertifyServiceClient();
+                CertifyClient = new CertifyServiceClient(connectionConfig);
 
                 IsServiceAvailable = await CheckServiceAvailable();
 
@@ -360,6 +375,7 @@ namespace Certify.UI.ViewModel
             try
             {
                 await CertifyClient.ConnectStatusStreamAsync();
+
             }
             catch (Exception exp)
             {

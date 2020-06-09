@@ -45,6 +45,10 @@ namespace Certify.Management
         private ConcurrentDictionary<string, CertificateAuthority> _certificateAuthorities = new ConcurrentDictionary<string, CertificateAuthority>();
         private bool _useWindowsNativeFeatures = true;
 
+        public CertifyManager() : this(true)
+        {
+
+        }
         public CertifyManager(bool useWindowsNativeFeatures = true)
         {
             _useWindowsNativeFeatures = useWindowsNativeFeatures;

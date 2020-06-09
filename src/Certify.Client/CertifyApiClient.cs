@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Utils;
+using Certify.Shared;
 using Newtonsoft.Json;
 
 namespace Certify.Client
@@ -29,20 +30,20 @@ namespace Certify.Client
     }
 
     // This version of the client communicates with the Certify.Service instance on the local machine
-    public class CertifyApiClient: ICertifyInternalApiClient
+    public class CertifyApiClient : ICertifyInternalApiClient
     {
         private readonly HttpClient _client;
         private readonly string _baseUri = "/api/";
-        internal Shared.ServiceConfig _serviceConfig;
+        internal Shared.ServerConnection _connectionConfig;
 
-        public CertifyApiClient(bool useDefaultCredentials = true, Shared.ServiceConfig config = null)
+        public CertifyApiClient(Shared.ServerConnection config = null)
         {
-            _serviceConfig = config ?? Certify.SharedUtils.ServiceConfigManager.GetAppServiceConfig();
+            _connectionConfig = config ?? GetDefaultServerConnection();
 
-            _baseUri = $"{(_serviceConfig.UseHTTPS ? "https" : "http")}://{_serviceConfig.Host}:{_serviceConfig.Port}" + _baseUri;
+            _baseUri = $"{(_connectionConfig.UseHTTPS ? "https" : "http")}://{_connectionConfig.Host}:{_connectionConfig.Port}" + _baseUri;
 
 #pragma warning disable SCS0004 // Certificate Validation has been disabled
-            if (_serviceConfig.UseHTTPS)
+            if (_connectionConfig.UseHTTPS)
             {
                 ServicePointManager.ServerCertificateValidationCallback += (obj, cert, chain, errors) =>
                 {
@@ -53,7 +54,7 @@ namespace Certify.Client
 #pragma warning restore SCS0004 // Certificate Validation has been disabled
 
 
-            if (useDefaultCredentials)
+            if (_connectionConfig.Authentication == "default")
             {
                 // use windows authentication
                 _client = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true });
@@ -66,6 +67,12 @@ namespace Certify.Client
 
             _client.DefaultRequestHeaders.Add("User-Agent", "Certify/App");
             _client.Timeout = new TimeSpan(0, 20, 0); // 20 min timeout on service api calls
+        }
+
+        public ServerConnection GetDefaultServerConnection()
+        {
+            var serviceCfg = GetAppServiceConfig();
+            return new ServerConnection(serviceCfg);
         }
 
         public Shared.ServiceConfig GetAppServiceConfig() => Certify.SharedUtils.ServiceConfigManager.GetAppServiceConfig();
@@ -414,6 +421,6 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
 
-        #endregion 
+        #endregion
     }
 }

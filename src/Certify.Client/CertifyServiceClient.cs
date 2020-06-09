@@ -37,9 +37,9 @@ namespace Certify.Client
 
         private string _statusHubUri = "/api/status";
 
-        public CertifyServiceClient(bool useDefaultCredentials = true) : base(useDefaultCredentials)
+        public CertifyServiceClient(Shared.ServerConnection config = null) : base(config)
         {
-            _statusHubUri = $"{(_serviceConfig.UseHTTPS ? "https" : "http")}://{_serviceConfig.Host}:{_serviceConfig.Port}" + _statusHubUri;
+            _statusHubUri = $"{(_connectionConfig.UseHTTPS ? "https" : "http")}://{_connectionConfig.Host}:{_connectionConfig.Port}" + _statusHubUri;
         }
 
         public async Task ConnectStatusStreamAsync()
