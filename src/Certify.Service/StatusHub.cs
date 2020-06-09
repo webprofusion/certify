@@ -1,10 +1,33 @@
-﻿using Certify.Models;
+using Certify.Models;
 using Microsoft.AspNet.SignalR;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Certify.Service
 {
+
+    public class StatusHubReporting : Providers.IStatusReporting
+    {
+
+        public StatusHubReporting()
+        {
+
+        }
+
+        public async Task ReportRequestProgress(RequestProgressState state)
+        {
+            System.Diagnostics.Debug.WriteLine($"Sending progress update message to UI: {state.Message}");
+            StatusHub.SendRequestProgressState(state);
+        }
+
+        public async Task ReportManagedCertificateUpdated(ManagedCertificate item)
+        {
+            System.Diagnostics.Debug.WriteLine($"Sending updated managed cert message to UI: {item.Name}");
+            StatusHub.SendManagedCertificateUpdate(item);
+        }
+    }
+
+
     public class StatusHub : Hub
     {
         /// <summary>
