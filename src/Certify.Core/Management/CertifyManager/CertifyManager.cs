@@ -53,8 +53,15 @@ namespace Certify.Management
             InitLogging(serverConfig);
 
             Util.SetSupportedTLSVersions();
+            try
+            {
+                _itemManager = new ItemManager();
+            }
+            catch (Exception exp)
+            {
+                _serviceLog.Error($"Failed to open or upgrade the managed items database. Check service has required file access permissions. :: {exp}");
+            }
 
-            _itemManager = new ItemManager();
             _credentialsManager = new CredentialsManager();
             _serverProvider = (ICertifiedServer)new ServerProviderIIS();
 
@@ -74,7 +81,7 @@ namespace Certify.Management
             {
                 var customCAs = SettingsManager.GetCustomCertificateAuthorities();
 
-                foreach(var ca in customCAs)
+                foreach (var ca in customCAs)
                 {
                     _certificateAuthorities.TryAdd(ca.Id, ca);
                 }
@@ -104,7 +111,14 @@ namespace Certify.Management
 
             _serviceLog?.Information("Certify Manager Started");
 
-            PerformAccountUpgrades().Wait();
+            try
+            {
+                PerformAccountUpgrades().Wait();
+            }
+            catch (Exception exp)
+            {
+                _serviceLog.Error($"Failed to perform ACME account upgrades. :: {exp}");
+            }
 
             PerformManagedCertificateMigrations().Wait();
         }
@@ -270,7 +284,7 @@ namespace Certify.Management
             SettingsManager.LoadAppSettings();
 
             await PerformRenewalAllManagedCertificates(new RenewalSettings { }, null);
-            
+
             return await Task.FromResult(true);
         }
 
@@ -325,7 +339,7 @@ namespace Certify.Management
 
                     if (mode == CertificateCleanupMode.FullCleanup)
                     {
-                       
+
                         // cleanup old pfx files in asset store(s), if any
                         var assetPath = Path.Combine(Util.GetAppDataFolder(), "certes", "assets");
                         if (Directory.Exists(assetPath))

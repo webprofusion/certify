@@ -1202,18 +1202,26 @@ namespace Certify.Providers.ACME.Certes
         /// </summary>
         private void RefreshIssuerCertCache()
         {
-            _issuerCertCache = new List<byte[]>();
-
-            var rootCAs = GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName.Root);
-            if (rootCAs != null)
+            try
             {
-                _issuerCertCache.Add(rootCAs);
+                _issuerCertCache = new List<byte[]>();
+
+                var rootCAs = GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName.Root);
+                if (rootCAs != null)
+                {
+                    _issuerCertCache.Add(rootCAs);
+                }
+
+                var intermediates = GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName.CertificateAuthority);
+                if (intermediates != null)
+                {
+                    _issuerCertCache.Add(intermediates);
+                }
             }
-
-            var intermediates = GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName.CertificateAuthority);
-            if (intermediates != null)
+            catch (Exception exp)
             {
-                _issuerCertCache.Add(intermediates);
+                //TODO: log
+                System.Diagnostics.Debug.WriteLine("Failed to properly cache issuer certs.");
             }
         }
 
