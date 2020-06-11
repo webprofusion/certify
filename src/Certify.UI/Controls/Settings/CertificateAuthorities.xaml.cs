@@ -25,14 +25,14 @@ namespace Certify.UI.Controls.Settings
 
         private bool _settingsInitialised = false;
         private Models.Preferences _prefs => MainViewModel.Preferences;
-          
+
         public CertificateAuthorities()
         {
             InitializeComponent();
             this.DataContext = MainViewModel;
         }
 
-        private void UserControl_Loaded(object sender, RoutedEventArgs e) =>  LoadSettings();
+        private void UserControl_Loaded(object sender, RoutedEventArgs e) => LoadSettings();
 
         public void LoadSettings()
         {
@@ -68,7 +68,7 @@ namespace Certify.UI.Controls.Settings
             {
                 _prefs.EnableAutomaticCAFailover = (EnableAutomaticCAFailover.IsChecked == true);
 
-                _prefs.DefaultCertificateAuthority = CertificateAuthorityList.SelectedValue.ToString();
+                _prefs.DefaultCertificateAuthority = CertificateAuthorityList.SelectedValue?.ToString() ?? _prefs.DefaultCertificateAuthority;
 
                 await MainViewModel.SavePreferences();
             }
@@ -78,15 +78,15 @@ namespace Certify.UI.Controls.Settings
 
         private async void Button_Delete(object sender, RoutedEventArgs e)
         {
-            if (sender!=null)
+            if (sender != null)
             {
                 var button = sender as Button;
                 var account = button.DataContext as AccountDetails;
 
-                if (MessageBox.Show($"Remove this account? {account.AccountURI}", "Confirm Account Removal", MessageBoxButton.YesNoCancel)== MessageBoxResult.Yes)
+                if (MessageBox.Show($"Remove this account? {account.AccountURI}", "Confirm Account Removal", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
                 {
-                    await MainViewModel.RemoveAccount(account.StorageKey??account.ID);
-                }    
+                    await MainViewModel.RemoveAccount(account.StorageKey ?? account.ID);
+                }
             }
         }
     }
