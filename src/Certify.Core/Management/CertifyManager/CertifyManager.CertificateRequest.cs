@@ -50,14 +50,14 @@ namespace Certify.Management
                 var targetCerts = new List<ManagedCertificate>();
                 foreach (var id in settings.TargetManagedCertificates)
                 {
-                    targetCerts.Add(await _itemManager.GetManagedCertificate(id));
+                    targetCerts.Add(await _itemManager.GetById(id));
                 }
                 managedCertificates = targetCerts;
 
             }
             else
             {
-                managedCertificates = await _itemManager.GetManagedCertificates(
+                managedCertificates = await _itemManager.GetAll(
                     new ManagedCertificateFilter
                     {
                         IncludeOnlyNextAutoRenew = (settings.Mode == RenewalMode.Auto)
@@ -938,7 +938,7 @@ namespace Certify.Management
                         // Install certificate into certificate store and bind to matching sites on server
                         var deploymentManager = new BindingDeploymentManager();
 
-                        var actions = await deploymentManager.StoreAndDeployManagedCertificate(
+                        var actions = await deploymentManager.StoreAndDeploy(
                                 _serverProvider.GetDeploymentTarget(),
                                 managedCertificate,
                                 pfxPath,
@@ -1285,7 +1285,7 @@ namespace Certify.Management
                 // Install certificate into certificate store and bind to IIS site
                 var deploymentManager = new BindingDeploymentManager();
 
-                var actions = await deploymentManager.StoreAndDeployManagedCertificate(
+                var actions = await deploymentManager.StoreAndDeploy(
                         _serverProvider.GetDeploymentTarget(),
                         managedCertificate,
                         pfxPath,

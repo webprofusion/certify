@@ -14,11 +14,11 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
-        public async Task<ManagedCertificate> GetManagedCertificate(string id) => await _itemManager.GetManagedCertificate(id);
+        public async Task<ManagedCertificate> GetManagedCertificate(string id) => await _itemManager.GetById(id);
 
         public async Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter = null)
         {
-            var list = await _itemManager.GetManagedCertificates(filter);
+            var list = await _itemManager.GetAll(filter);
 
 
             if (filter?.IncludeExternal == true)
@@ -54,7 +54,7 @@ namespace Certify.Management
 
         public async Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate site)
         {
-            site = await _itemManager.UpdatedManagedCertificate(site);
+            site = await _itemManager.Update(site);
 
             // report request state to status hub clients
             _statusReporting?.ReportManagedCertificateUpdated(site);
@@ -86,7 +86,7 @@ namespace Certify.Management
                 managedCertificate.LastRenewalStatus = RequestState.Error;
             }
 
-            managedCertificate = await _itemManager.UpdatedManagedCertificate(managedCertificate);
+            managedCertificate = await _itemManager.Update(managedCertificate);
 
             // report request state to status hub clients
             _statusReporting?.ReportManagedCertificateUpdated(managedCertificate);
@@ -134,10 +134,10 @@ namespace Certify.Management
 
         public async Task DeleteManagedCertificate(string id)
         {
-            var site = await _itemManager.GetManagedCertificate(id);
+            var site = await _itemManager.GetById(id);
             if (site != null)
             {
-                await _itemManager.DeleteManagedCertificate(site);
+                await _itemManager.Delete(site);
             }
         }
 
@@ -329,7 +329,7 @@ namespace Certify.Management
 
         private async Task<bool> IsManagedCertificateRunning(string id, ICertifiedServer iis = null)
         {
-            var managedCertificate = await _itemManager.GetManagedCertificate(id);
+            var managedCertificate = await _itemManager.GetById(id);
             if (managedCertificate != null)
             {
                 if (iis == null)

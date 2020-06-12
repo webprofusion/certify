@@ -94,39 +94,39 @@ namespace Certify.Core.Tests.Unit
             deploymentTarget.AllBindings = _allSites;
 
             managedCertificate.ServerSiteId = "ShouldNotMatch";
-            var preview = await bindingManager.StoreAndDeployManagedCertificate(deploymentTarget, managedCertificate, null, pfxPwd:"", isPreviewOnly: true);
+            var preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd:"", isPreviewOnly: true);
             Assert.IsFalse(preview.Any(), " Should not match any bindings");
 
             managedCertificate.ServerSiteId = "1.1";
-            preview = await bindingManager.StoreAndDeployManagedCertificate(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true);
+            preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true);
             Assert.IsFalse(preview.Any(), "Should not match any bindings (same domain, different sudomains no wildcard)");
 
             managedCertificate.ServerSiteId = "1";
-            preview = await bindingManager.StoreAndDeployManagedCertificate(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true);
+            preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true);
             Assert.IsTrue(preview.Count == 1, "Should match one binding");
 
             managedCertificate.ServerSiteId = "1";
             managedCertificate.RequestConfig.PrimaryDomain = "*.test.com";
-            preview = await bindingManager.StoreAndDeployManagedCertificate(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true);
+            preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true);
             Assert.IsTrue(preview.Count == 1, "Should match 1 binding (root level domain should be ignored using wildcard)");
 
             managedCertificate.ServerSiteId = "1";
             managedCertificate.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
             managedCertificate.RequestConfig.PrimaryDomain = "test.com";
-            preview = await bindingManager.StoreAndDeployManagedCertificate(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true);
+            preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true);
             Assert.IsTrue(preview.Count == 1, "Should match 1 binding");
 
             managedCertificate.ServerSiteId = "1";
             managedCertificate.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
             managedCertificate.RequestConfig.PrimaryDomain = "*.test.com";
-            preview = await bindingManager.StoreAndDeployManagedCertificate(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true);
+            preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true);
             Assert.IsTrue(preview.Count == 3, "Should match 3 bindings across all sites");
 
             managedCertificate.ServerSiteId = "5";
             managedCertificate.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
             managedCertificate.RequestConfig.PrimaryDomain = "altport.com";
 
-            preview = await bindingManager.StoreAndDeployManagedCertificate(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true);
+            preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true);
             Assert.IsTrue(preview.Count == 2, "Should match 2 bindings across all sites");
             Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9000")) == 1, "Should have 1 port 9000 binding");
             Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9001")) == 1, "Should have 1 port 9001 binding");
@@ -294,7 +294,7 @@ namespace Certify.Core.Tests.Unit
             mockTarget.AllBindings = bindings;
 
 
-            var results = await deployment.StoreAndDeployManagedCertificate(mockTarget, testManagedCert, "test.pfx", pfxPwd: "", true);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, "test.pfx", pfxPwd: "", true);
         
             Assert.IsTrue(results.Any());
         }

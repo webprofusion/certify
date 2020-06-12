@@ -10,7 +10,7 @@ using Certify.Models.Providers;
 
 namespace Certify.Core.Management
 {
-    public class BindingDeploymentManager
+    public class BindingDeploymentManager : IBindingDeploymentManager
     {
         private bool _enableCertDoubleImportBehaviour { get; set; } = true;
 
@@ -36,7 +36,7 @@ namespace Certify.Core.Management
         /// <param name="pfxPath">  </param>
         /// <param name="cleanupCertStore">  </param>
         /// <returns>  </returns>
-        public async Task<List<ActionStep>> StoreAndDeployManagedCertificate(IBindingDeploymentTarget deploymentTarget, ManagedCertificate managedCertificate, string pfxPath, string pfxPwd, bool isPreviewOnly)
+        public async Task<List<ActionStep>> StoreAndDeploy(IBindingDeploymentTarget deploymentTarget, ManagedCertificate managedCertificate, string pfxPath, string pfxPwd, bool isPreviewOnly)
         {
             var actions = new List<ActionStep>();
 
@@ -54,7 +54,7 @@ namespace Certify.Core.Management
             var certStoreName = CertificateManager.GetStore().Name;
             X509Certificate2 storedCert = null;
             byte[] certHash = null;
-  
+
             // unless user has opted not to store cert, store it now
             if (requestConfig.DeploymentSiteOption != DeploymentOption.NoDeployment)
             {
@@ -66,7 +66,7 @@ namespace Certify.Core.Management
                         if (storedCert != null)
                         {
                             certHash = storedCert.GetCertHash();
-                           
+
 
                             // TODO: move setting friendly name to cert request manager
                             managedCertificate.CertificateFriendlyName = storedCert.FriendlyName;
@@ -85,7 +85,7 @@ namespace Certify.Core.Management
                     //fake cert for preview only
                     storedCert = new X509Certificate2();
                     certHash = new byte[] { 0x00, 0x01, 0x02 };
-     
+
                 }
             }
 
@@ -272,7 +272,7 @@ namespace Certify.Core.Management
                             //if any binding elements configured, use those, otherwise auto bind using defaults and SNI
                             if (!b.IsFtpSite)
                             {
-                                var stepActions = await UpdateBinding(
+                                var stepActions = await UpdateWebBinding(
                                    deploymentTarget,
                                    site,
                                    updatedBindings,
@@ -350,7 +350,7 @@ namespace Certify.Core.Management
         /// <param name="sslPort">  </param>
         /// <param name="useSNI">  </param>
         /// <param name="ipAddress">  </param>
-        public async Task<List<ActionStep>> UpdateBinding(
+        public async Task<List<ActionStep>> UpdateWebBinding(
                                                                 IBindingDeploymentTarget deploymentTarget,
                                                                 IBindingDeploymentTargetItem site,
                                                                 List<BindingInfo> existingBindings,

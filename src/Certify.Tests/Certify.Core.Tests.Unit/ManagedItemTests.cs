@@ -23,7 +23,7 @@ namespace Certify.Core.Tests.Unit
 #if DEBUG
             Task.Run(async () =>
             {
-                await itemManager.DeleteAllManagedCertificates();
+                await itemManager.DeleteAll();
             });
 #endif
         }
@@ -64,14 +64,14 @@ namespace Certify.Core.Tests.Unit
             var testCert = BuildTestManagedCertificate();
             try
             {
-                var managedCertificate = await managedCertificateSettings.UpdatedManagedCertificate(testCert);
+                var managedCertificate = await managedCertificateSettings.Update(testCert);
 
-                var managedCertificates = await managedCertificateSettings.GetManagedCertificates();
+                var managedCertificates = await managedCertificateSettings.GetAll();
                 Assert.IsTrue(managedCertificates.Count > 0);
             }
             finally
             {
-                await managedCertificateSettings.DeleteManagedCertificate(testCert);
+                await managedCertificateSettings.Delete(testCert);
             }
         }
 
@@ -106,16 +106,16 @@ namespace Certify.Core.Tests.Unit
                 ItemType = ManagedCertificateType.SSL_ACME
             };
 
-            var managedCertificate = await itemManager.UpdatedManagedCertificate(testSite);
+            var managedCertificate = await itemManager.Update(testSite);
 
             Assert.IsNotNull(managedCertificate, "Create/store managed site");
 
             //check site now exists
-            managedCertificate = await itemManager.GetManagedCertificate(testSite.Id);
+            managedCertificate = await itemManager.GetById(testSite.Id);
             Assert.IsNotNull(managedCertificate, "Retrieve managed site");
 
-            await itemManager.DeleteManagedCertificate(managedCertificate);
-            managedCertificate = await itemManager.GetManagedCertificate(testSite.Id);
+            await itemManager.Delete(managedCertificate);
+            managedCertificate = await itemManager.GetById(testSite.Id);
 
             // now check site has been delete
             Assert.IsNull(managedCertificate, "Managed site deleted");
@@ -164,7 +164,7 @@ namespace Certify.Core.Tests.Unit
                 testItem.Name = "MultiTest_" + i;
                 testItem.Id = Guid.NewGuid().ToString();
 
-                taskSet[i] =  itemManager.UpdatedManagedCertificate(testItem);
+                taskSet[i] =  itemManager.Update(testItem);
             }
 
             // create a large number of managed items, to see if we encounter isses saving/loading from DB async       
@@ -186,7 +186,7 @@ namespace Certify.Core.Tests.Unit
 
                 // now clean up
 #if DEBUG
-                await itemManager.DeleteManagedCertificatesByName("MultiTest_");
+                await itemManager.DeleteByName("MultiTest_");
 #endif
 
             }

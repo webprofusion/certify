@@ -24,11 +24,11 @@ namespace Certify.Core.Tests.Unit
             };
             var credentialsManager = new CredentialsManager();
             credentialsManager.StorageSubfolder = "Tests\\credentials";
-            var result = await credentialsManager.UpdateCredential(test);
+            var result = await credentialsManager.Update(test);
 
             Assert.IsNotNull(result, "Credential stored OK");
 
-            var list = await credentialsManager.GetStoredCredentials();
+            var list = await credentialsManager.GetCredentials();
 
             Assert.IsTrue(list.Any(l => l.StorageKey == test.StorageKey), "Credential retrieved");
 
@@ -54,11 +54,11 @@ namespace Certify.Core.Tests.Unit
 
             var credentialsManager = new CredentialsManager();
             credentialsManager.StorageSubfolder = "Tests\\credentials";
-            var result = await credentialsManager.UpdateCredential(test);
+            var result = await credentialsManager.Update(test);
 
             Assert.IsNotNull(result, "Credential stored OK");
 
-            var list = await credentialsManager.GetStoredCredentials();
+            var list = await credentialsManager.GetCredentials();
 
             Assert.IsTrue(list.Any(l => l.StorageKey == test.StorageKey), "Credential retrieved");
 

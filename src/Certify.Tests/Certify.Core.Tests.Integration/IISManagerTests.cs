@@ -380,7 +380,7 @@ namespace Certify.Core.Tests
                 CertificatePath = dummyCertPath
             };
 
-            var actions = await new BindingDeploymentManager().StoreAndDeployManagedCertificate(
+            var actions = await new BindingDeploymentManager().StoreAndDeploy(
                 iisManager.GetDeploymentTarget(),
                 managedCertificate, dummyCertPath,"",
                 false);

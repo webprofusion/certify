@@ -66,7 +66,7 @@ namespace Certify.Management
         {
             var list = new List<AccountDetails>();
 
-            var acmeCredentials = await _credentialsManager.GetStoredCredentials(StandardAuthTypes.STANDARD_ACME_ACCOUNT);
+            var acmeCredentials = await _credentialsManager.GetCredentials(StandardAuthTypes.STANDARD_ACME_ACCOUNT);
             if (acmeCredentials.Any())
             {
 
@@ -143,7 +143,7 @@ namespace Certify.Management
 
         private async Task StoreAccountAsCredential(AccountDetails account)
         {
-            await _credentialsManager.UpdateCredential(new Models.Config.StoredCredential
+            await _credentialsManager.Update(new Models.Config.StoredCredential
             {
                 StorageKey = account.ID ?? Guid.NewGuid().ToString(),
                 ProviderType = StandardAuthTypes.STANDARD_ACME_ACCOUNT,
@@ -161,7 +161,7 @@ namespace Certify.Management
             {
                 _serviceLog?.Information($"Deleting account {storageKey}: " + account.AccountURI);
 
-                var resultOk = await _credentialsManager.DeleteCredential(storageKey);
+                var resultOk = await _credentialsManager.Delete(storageKey);
                 return new ActionResult("RemoveAccount", resultOk);
             }
             else

@@ -12,15 +12,6 @@ using Newtonsoft.Json;
 
 namespace Certify.Management
 {
-    public interface ICredentialsManager
-    {
-        Task<bool> DeleteCredential(string storageKey);
-        Task<List<StoredCredential>> GetStoredCredentials(string type = null);
-        Task<StoredCredential> GetStoredCredential(string storageKey);
-        Task<string> GetUnlockedCredential(string storageKey);
-        Task<Dictionary<string, string>> GetUnlockedCredentialsDictionary(string storageKey);
-        Task<StoredCredential> UpdateCredential(StoredCredential credentialInfo);
-    }
 
 
     public class CredentialsManager : ICredentialsManager
@@ -46,7 +37,7 @@ namespace Certify.Management
         /// </summary>
         /// <param name="storageKey"></param>
         /// <returns></returns>
-        public async Task<bool> DeleteCredential(string storageKey)
+        public async Task<bool> Delete(string storageKey)
         {
             var inUse = await IsCredentialInUse(storageKey);
 
@@ -85,7 +76,7 @@ namespace Certify.Management
         public async Task<ActionResult> TestCredentials(string storageKey)
         {
             // create instance of provider type then test credentials
-            var storedCredential = await GetStoredCredential(storageKey);
+            var storedCredential = await GetCredential(storageKey);
 
             if (storedCredential == null)
             {
@@ -125,7 +116,7 @@ namespace Certify.Management
 
         public async Task<bool> IsCredentialInUse(string storageKey)
         {
-            var managedCertificates = await new ItemManager().GetManagedCertificates(new Models.ManagedCertificateFilter { StoredCredentialKey = storageKey });
+            var managedCertificates = await new ItemManager().GetAll(new Models.ManagedCertificateFilter { StoredCredentialKey = storageKey });
             if (managedCertificates.Any())
             {
                 // credential is in use
@@ -214,7 +205,7 @@ namespace Certify.Management
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public async Task<List<StoredCredential>> GetStoredCredentials(string type = null)
+        public async Task<List<StoredCredential>> GetCredentials(string type = null)
         {
             var path = GetDbPath();
 
@@ -248,9 +239,9 @@ namespace Certify.Management
             }
         }
 
-        public async Task<StoredCredential> GetStoredCredential(string storageKey)
+        public async Task<StoredCredential> GetCredential(string storageKey)
         {
-            var credentials = await GetStoredCredentials();
+            var credentials = await GetCredentials();
             return credentials.FirstOrDefault(c => c.StorageKey == storageKey);
         }
 
@@ -306,7 +297,7 @@ namespace Certify.Management
             }
         }
 
-        public async Task<StoredCredential> UpdateCredential(StoredCredential credentialInfo)
+        public async Task<StoredCredential> Update(StoredCredential credentialInfo)
         {
             if (credentialInfo.Secret == null)
             {

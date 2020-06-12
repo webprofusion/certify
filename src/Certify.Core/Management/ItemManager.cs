@@ -11,12 +11,14 @@ using Newtonsoft.Json;
 
 namespace Certify.Management
 {
+
+
     /// <summary>
     /// SiteManager encapsulates settings and operations on the list of Sites we manage certificates
     /// for using Certify and is additional to the ACMESharp Vault. These could be Local IIS,
     /// Manually Configured, DNS driven etc
     /// </summary>
-    public class ItemManager
+    public class ItemManager : IItemManager
     {
         public const string ITEMMANAGERCONFIG = "manageditems";
 
@@ -76,7 +78,7 @@ namespace Certify.Management
         /// <summary>
         /// Perform a full backup and save of the current set of managed sites
         /// </summary>
-        public async Task StoreAllManagedItems(IEnumerable<ManagedCertificate> list)
+        public async Task StoreAll(IEnumerable<ManagedCertificate> list)
         {
             var watch = Stopwatch.StartNew();
 
@@ -155,12 +157,12 @@ namespace Certify.Management
         }
 
 #if DEBUG
-        public async Task DeleteAllManagedCertificates()
+        public async Task DeleteAll()
         {
-            var items = await GetManagedCertificates();
+            var items = await GetAll();
             foreach (var item in items)
             {
-                await DeleteManagedCertificate(item);
+                await Delete(item);
             }
 
         }
@@ -258,7 +260,7 @@ namespace Certify.Management
                     }
                 }
 
-                await StoreAllManagedItems(managedCertificateList); // upgrade to SQLite db storage
+                await StoreAll(managedCertificateList); // upgrade to SQLite db storage
                 File.Delete($"{json}.bak");
                 File.Move(json, $"{json}.bak");
                 Debug.WriteLine($"UpgradeSettings[Json->SQLite] took {watch.ElapsedMilliseconds}ms for {managedCertificateList.Count} records");
@@ -268,7 +270,7 @@ namespace Certify.Management
                 if (!File.Exists(db))
                 {
                     // no setting to upgrade, create the empty database
-                    await StoreAllManagedItems(managedCertificateList);
+                    await StoreAll(managedCertificateList);
                 }
             }
 
@@ -299,12 +301,12 @@ namespace Certify.Management
             return managedCertificate;
         }
 
-        public async Task<ManagedCertificate> GetManagedCertificate(string siteId)
+        public async Task<ManagedCertificate> GetById(string siteId)
         {
             return await LoadManagedCertificate(siteId);
         }
 
-        public async Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter = null)
+        public async Task<List<ManagedCertificate>> GetAll(ManagedCertificateFilter filter = null)
         {
 
 #if DEBUG
@@ -356,7 +358,7 @@ namespace Certify.Management
             return items.ToList();
         }
 
-        public async Task<ManagedCertificate> UpdatedManagedCertificate(ManagedCertificate managedCertificate)
+        public async Task<ManagedCertificate> Update(ManagedCertificate managedCertificate)
         {
             if (managedCertificate == null)
             {
@@ -386,7 +388,7 @@ namespace Certify.Management
             return managedCertificate;
         }
 
-        public async Task DeleteManagedCertificate(ManagedCertificate site)
+        public async Task Delete(ManagedCertificate site)
         {
             // save modified items into settings database
             using (var db = new SQLiteConnection(_connectionString))
@@ -405,7 +407,7 @@ namespace Certify.Management
         }
 
 #if DEBUG
-        public async Task DeleteManagedCertificatesByName(string nameStartsWith)
+        public async Task DeleteByName(string nameStartsWith)
         {
             var items = await LoadAllManagedCertificates(new ManagedCertificateFilter { Name = nameStartsWith });
 
@@ -413,7 +415,7 @@ namespace Certify.Management
 
             foreach (var item in items)
             {
-                await DeleteManagedCertificate(item);
+                await Delete(item);
             }
         }
 #endif
