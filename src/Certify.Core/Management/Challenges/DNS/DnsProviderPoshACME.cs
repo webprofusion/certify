@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,6 +26,7 @@ namespace Certify.Core.Management.Challenges.DNS
             [ClouDNS](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/ClouDNS-Readme.md),
             [DNSPod](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DNSPod-Readme.md),
             [DNSimple](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DNSimple-Readme.md),
+            [DomainOffensive](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DomainOffensive-Readme.md),
             [deSEC](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DeSEC-Readme.md),
             [DigitalOcean](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DOcean-Readme.md),
             [Dreamhost](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Dreamhost-Readme.md),
@@ -261,6 +263,24 @@ namespace Certify.Core.Management.Challenges.DNS
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=DNSimple",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
+             new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.DomainOffensive",
+                Title = "DomainOffensive DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DomainOffensive-Readme.md",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters = new List<ProviderParameter>
+                {
+                    new ProviderParameter { Key = "DomOffTokenInsecure ", Name = "Token", IsRequired = true, IsCredential = true },
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=DomainOffensive",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = true,
                 IsExperimental = true
@@ -661,12 +681,12 @@ namespace Certify.Core.Management.Challenges.DNS
 
             var script = config.FirstOrDefault(c => c.StartsWith("Script="))?.Split('=')[1];
 
-            var scriptFile = System.IO.Path.Combine(_poshAcmeScriptPath, script);
+            var scriptFile = Path.Combine(_poshAcmeScriptPath, "DnsPlugins", script);
 
-            var scriptContent = ". \"" + scriptFile + ".ps1\" \r\n";
+            var wrapper = $" $PoshACMERoot = \"{_poshAcmeScriptPath}\" \r\n";
+            wrapper += File.ReadAllText(Path.Combine(_poshAcmeScriptPath, "Posh-ACME-Wrapper.ps1"));
 
-            scriptContent += " $script:UseBasic = @{} \r\n";
-            scriptContent += " if ('UseBasicParsing' -in (Get-Command Invoke-WebRequest).Parameters.Keys) {  $script:UseBasic.UseBasicParsing = $true } \r\n";
+            var scriptContent = wrapper + "\r\n. \"" + scriptFile + ".ps1\" \r\n";
 
             // arrange params and credentials into one ordered set of arguments
             var set = DelegateProviderDefinition

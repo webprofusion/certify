@@ -131,7 +131,7 @@ namespace Certify.Core.Management.Challenges
             {
                 if (providerDefinition.Config.Contains("Provider=Certify.Providers.DNS.PoshACME"))
                 {
-                    var scriptPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Scripts\DNS\PoshACME\Plugins");
+                    var scriptPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Scripts\DNS\PoshACME");
                     
                     // TODO : move this out, shared config should be injected
                     var config = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
