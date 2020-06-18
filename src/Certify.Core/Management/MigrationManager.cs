@@ -55,10 +55,10 @@ namespace Certify.Core.Management
     /// </summary>
     public class MigrationManager
     {
-        private ItemManager _itemManager;
-        private CredentialsManager _credentialsManager;
+        private IItemManager _itemManager;
+        private ICredentialsManager _credentialsManager;
 
-        public MigrationManager(ItemManager itemManager, CredentialsManager credentialsManager)
+        public MigrationManager(IItemManager itemManager, ICredentialsManager credentialsManager)
         {
             _itemManager = itemManager;
             _credentialsManager = credentialsManager;
@@ -81,7 +81,7 @@ namespace Certify.Core.Management
 
             // deployment tasks with local script or path references will need to copy the scripts separately. Need a summary of items to copy.
 
-            var managedCerts = await new ItemManager().GetManagedCertificates(filter);
+            var managedCerts = await _itemManager.GetAll(filter);
 
             export.Content = new ImportExportContent
             {
@@ -108,27 +108,100 @@ namespace Certify.Core.Management
 
 
             // for each managed cert, check used stored credentials (DNS challenges or deployment tasks)
+            var allCredentials = await _credentialsManager.GetCredentials();
+            var usedCredentials = new List<StoredCredential>();
+
+            if (settings.ExportAllStoredCredentials)
+            {
+                usedCredentials.AddRange(allCredentials);
+            }
+            else
+            {
+                foreach (var c in managedCerts)
+                {
+                    // gather credentials used by cert 
+                    if (c.CertificatePasswordCredentialId != null)
+                    {
+                        if (!usedCredentials.Any(u => u.StorageKey == c.CertificatePasswordCredentialId))
+                        {
+                            usedCredentials.Add(allCredentials.Find(a => a.StorageKey == c.CertificatePasswordCredentialId));
+                        }
+                    }
+
+                    // gather credentials used by tasks
+                    var allTasks = new List<Config.DeploymentTaskConfig>();
+
+                    if (c.PreRequestTasks != null)
+                    {
+                        allTasks.AddRange(c.PreRequestTasks);
+                    }
+
+                    if (c.PostRequestTasks != null)
+                    {
+                        allTasks.AddRange(c.PostRequestTasks);
+                    }
+
+                    if (allTasks.Any())
+                    {
+
+                        /*var usedTaskCredentials = allTasks
+                            .SelectMany(t => t.Parameters?.Select(p => p.Value))
+                            .Distinct()
+                            .Where(t => allCredentials.Any(ac => ac.StorageKey == t))
+                            .ToList();*/
+                        var usedTaskCredentials = allTasks
+                            .Select(t => t.ChallengeCredentialKey)
+                            .Distinct()
+                            .Where(t => allCredentials.Any(ac => ac.StorageKey == t));
+
+                        foreach (var used in usedTaskCredentials)
+                        {
+                            if (!usedCredentials.Any(u => u.StorageKey == used))
+                            {
+                                usedCredentials.Add(allCredentials.FirstOrDefault(u => u.StorageKey == used));
+                            }
+                        }
+                    }
+                }
+            }
+
+            // decrypt each used stored credential, re-encrypt and base64 encode secret
+            foreach (var c in usedCredentials)
+            {
+                var decrypted = await _credentialsManager.GetUnlockedCredential(c.StorageKey);
+                if (decrypted != null)
+                {
+                    var encBytes = EncryptBytes(Encoding.UTF8.GetBytes(decrypted), settings.EncryptionSecret);
+                    c.Secret = Convert.ToBase64String(encBytes);
+                }
+            }
+
+            export.Content.StoredCredentials = usedCredentials;
 
             // for each managed cert, check and summarise used local scripts
+
+            // copy acme-dns settings
+
+            // export acme accounts?
             return export;
         }
 
         private byte[] EncryptBytes(byte[] source, string secret)
         {
-            RijndaelManaged rmCrypto = new RijndaelManaged();
+            var rmCrypto = new RijndaelManaged();
 
             byte[] key = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16 };
             byte[] iv = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16 };
 
             rmCrypto.Padding = PaddingMode.PKCS7;
-            using (MemoryStream mstream = new MemoryStream())
-            using (CryptoStream cryptoStream = new CryptoStream(mstream, rmCrypto.CreateEncryptor(key, iv), CryptoStreamMode.Write))
+            using (var memoryStream = new MemoryStream())
+            using (var cryptoStream = new CryptoStream(memoryStream, rmCrypto.CreateEncryptor(key, iv), CryptoStreamMode.Write))
             {
-                
+
                 cryptoStream.Write(source, 0, source.Length);
                 cryptoStream.FlushFinalBlock();
                 cryptoStream.Close();
-                return mstream.ToArray();
+                return memoryStream.ToArray();
             }
         }
 
@@ -141,7 +214,7 @@ namespace Certify.Core.Management
                 byte[] iv = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16 };
 
                 rmCrypto.Padding = PaddingMode.PKCS7;
-   
+
 
                 using (var decryptor = rmCrypto.CreateDecryptor(key, iv))
                 {
@@ -174,6 +247,25 @@ namespace Certify.Core.Management
             var steps = new List<ActionStep>();
 
             // import managed certs, certificate files, stored credentials, CAs
+
+            // stored credentials
+            var credentialImportSteps = new List<ActionStep>();
+            foreach (var c in package.Content.StoredCredentials)
+            {
+                var decodedBytes =   Convert.FromBase64String(c.Secret);
+                var decryptedBytes = DecryptBytes(decodedBytes, settings.EncryptionSecret);
+
+                // convert decrypted bytes to UTF8 string and trim NUL 
+                c.Secret = UTF8Encoding.UTF8.GetString(decryptedBytes).Trim('\0');
+
+                if (!isPreviewMode)
+                {
+                    // perform actual import
+                }
+
+                credentialImportSteps.Add(new ActionStep { Title = c.Title, Key = c.StorageKey });
+            }
+            steps.Add(new ActionStep { Title = "Import Stored Credentials", Category = "Import", Substeps = credentialImportSteps, Key = "StoredCredentials" });
 
 
             // managed certs
