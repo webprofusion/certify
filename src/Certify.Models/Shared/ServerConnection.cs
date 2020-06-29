@@ -22,7 +22,7 @@ namespace Certify.Shared
 
         public string Mode { get; set; } = "direct";
         public string Authentication { get; set; } = "default";
-
+        public string ServerMode { get; set; } = "v1";
         public bool IsDefault { get; set; } = false;
 
         public ServerConnection()

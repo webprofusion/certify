@@ -8,6 +8,7 @@ using Certify.Config;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Utils;
+using Microsoft.AspNet.SignalR.Client;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -31,11 +32,12 @@ namespace Certify.Client
 
         public event Action OnConnectionClosed;
 
+        private Microsoft.AspNetCore.SignalR.Client.HubConnection connection;
 
-
-        private HubConnection connection;
+        private Microsoft.AspNet.SignalR.Client.HubConnection _legacyConnection;
 
         private string _statusHubUri = "/api/status";
+
 
         public CertifyServiceClient(Shared.ServerConnection config = null) : base(config)
         {
@@ -44,42 +46,60 @@ namespace Certify.Client
 
         public async Task ConnectStatusStreamAsync()
         {
-            connection = new HubConnectionBuilder()
-               
-              .WithUrl(_statusHubUri)
-              .WithAutomaticReconnect()
-              .AddMessagePackProtocol()
-              .Build();
-
-            connection.Closed += async (error) =>
+            if (_connectionConfig.ServerMode == "v1")
             {
-                await Task.Delay(new Random().Next(0, 5) * 1000);
+                // older signalr client/server
+                _legacyConnection = new Microsoft.AspNet.SignalR.Client.HubConnection(_statusHubUri);
+                _legacyConnection.Credentials = System.Net.CredentialCache.DefaultCredentials;
+
+                var hubProxy = _legacyConnection.CreateHubProxy("StatusHub");
+
+                hubProxy.On<ManagedCertificate>(Providers.StatusHubMessages.SendManagedCertificateUpdateMsg, (u) => OnManagedCertificateUpdated?.Invoke(u));
+                hubProxy.On<RequestProgressState>(Providers.StatusHubMessages.SendProgressStateMsg, (s) => OnRequestProgressStateUpdated?.Invoke(s));
+                hubProxy.On<string, string>(Providers.StatusHubMessages.SendMsg, (a, b) => OnMessageFromService?.Invoke(a, b));
+
+                _legacyConnection.Reconnecting += OnConnectionReconnecting;
+                _legacyConnection.Reconnected += OnConnectionReconnected;
+                _legacyConnection.Closed += OnConnectionClosed;
+
+                await _legacyConnection.Start();
+
+            }
+            else
+            {
+                // newer signalr client/server
+
+                // TODO: auth: https://docs.microsoft.com/en-us/aspnet/core/signalr/authn-and-authz?view=aspnetcore-3.1
+
+                connection = new HubConnectionBuilder()
+                .WithUrl(_statusHubUri)
+                .WithAutomaticReconnect()
+                .AddMessagePackProtocol()
+                .Build();
+
+                connection.Closed += async (error) =>
+                {
+                    await Task.Delay(new Random().Next(0, 5) * 1000);
+                    await connection.StartAsync();
+                };
+
+                connection.On<RequestProgressState>(Providers.StatusHubMessages.SendProgressStateMsg, (s) =>
+                {
+                    OnRequestProgressStateUpdated?.Invoke(s);
+                });
+
+                connection.On<ManagedCertificate>(Providers.StatusHubMessages.SendManagedCertificateUpdateMsg, (u) =>
+                {
+                    OnManagedCertificateUpdated?.Invoke(u);
+                });
+
+                connection.On<string, string>(Providers.StatusHubMessages.SendMsg, (a, b) =>
+                {
+                    OnMessageFromService?.Invoke(a, b);
+                });
+
                 await connection.StartAsync();
-            };
-
-            // TODO: auth: https://docs.microsoft.com/en-us/aspnet/core/signalr/authn-and-authz?view=aspnetcore-3.1
-
-            /* connection = new HubConnection(_statusHubUri)
-             {
-                 Credentials = System.Net.CredentialCache.DefaultCredentials
-             };*/
-
-            connection.On<RequestProgressState>("SendProgressState", (s) =>
-            {
-                OnRequestProgressStateUpdated?.Invoke(s);
-            });
-
-            connection.On<ManagedCertificate>("SendManagedCertificateUpdate", (u) =>
-            {
-                OnManagedCertificateUpdated?.Invoke(u);
-            });
-
-            connection.On<string, string>("SendMessage", (a, b) =>
-             {
-                 OnMessageFromService?.Invoke(a, b);
-             });
-
-            await connection.StartAsync();
+            }
         }
     }
 }
