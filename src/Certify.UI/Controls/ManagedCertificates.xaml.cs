@@ -309,5 +309,10 @@ namespace Certify.UI.Controls
                 SetFilter();
             }
         }
+
+        private async void Refresh_Click(object sender, RoutedEventArgs e)
+        {
+            await _appViewModel.RefreshManagedCertificates();
+        }
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -466,6 +466,22 @@ namespace Certify.UI.ViewModel
         {
             Preferences = await CertifyClient.GetPreferences();
 
+            await RefreshManagedCertificates();
+
+            await RefreshCertificateAuthorityList();
+
+            await RefreshAccountsList();
+
+            await RefreshChallengeAPIList();
+
+            await RefreshStoredCredentialsList();
+
+            await RefreshDeploymentTaskProviderList();
+
+        }
+
+        public virtual async Task RefreshManagedCertificates()
+        {
             var filter = new ManagedCertificateFilter();
 
             // include external managed certs
@@ -484,17 +500,6 @@ namespace Certify.UI.ViewModel
             }
 
             ManagedCertificates = new ObservableCollection<ManagedCertificate>(list);
-
-            await RefreshCertificateAuthorityList();
-
-            await RefreshAccountsList();
-
-            await RefreshChallengeAPIList();
-
-            await RefreshStoredCredentialsList();
-
-            await RefreshDeploymentTaskProviderList();
-
         }
 
         private void CertifyClient_SendMessage(string arg1, string arg2) => MessageBox.Show($"Received: {arg1} {arg2}");

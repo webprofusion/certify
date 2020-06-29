@@ -80,6 +80,10 @@
                             Click="SetListSortOrder_Click"
                             Header="Sort By Expiry Date"
                             Tag="ExpiryDateAsc" />
+                        <MenuItem
+                            Click="Refresh_Click"
+                            Header="Refresh"
+                            Tag="Refresh" />
                     </ContextMenu>
                 </ListView.ContextMenu>
                 <ListView.ItemContainerStyle>
