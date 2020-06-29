@@ -2,15 +2,21 @@
 
 Please refer to each project website for full license details:
 
-Let's Encrypt:
-	https://letsencrypt.org
-ACMESharp:
-	MPL 2.0
-	https://pkisharp.github.io/ACMESharp-docs/
 Certes: 
 	MIT License
 	Copyright (c) 2018 Certes Project 
 	https://github.com/fszlin/certes 
+Fody: 
+	MIT License
+	Copyright (c) Simon Cropp and contributors
+	https://github.com/Fody/Fody 
+MahApps.Metro: 
+	MIT License
+	Copyright (c) 2016 MahApps 
+	http://mahapps.com/
+ACMESharp:
+	MPL 2.0
+	https://pkisharp.github.io/ACMESharp-docs/
 Newtonsoft Json.Net: 
 	MIT License
 	Copyright (c) 2007 James Newton-King 
@@ -19,26 +25,14 @@ Fontawesome.WPF:
 	MIT License
 	Copyright (c) 2014-2016 charri
 	https://github.com/charri/Font-Awesome-WPF
-MahApps.Metro: 
-	MIT License
-	Copyright (c) 2016 MahApps 
-	http://mahapps.com/
 ARSoft.Tools.Net: 
 	Apache License 2.0
 	Copyright (c) 2010-2017 Alexander Reinert
 	https://github.com/alexreinert/ARSoft.Tools.Net
-Fody: 
-	MIT License
-	Copyright (c) Simon Cropp and contributors
-	https://github.com/Fody/Fody 
 LightInject: 
 	MIT License
 	Copyright (c) 2017 Bernhard Richter
 	https://github.com/seesharper/LightInject
-TaskScheduler: 
-	MIT License
-	Copyright (c) 2003-2010 David Hall
-	https://github.com/dahall/TaskScheduler
 BouncyCastle: 
 	MIT License
 	Copyright (c) 2000 - 2017 The Legion of the Bouncy Castle Inc.
