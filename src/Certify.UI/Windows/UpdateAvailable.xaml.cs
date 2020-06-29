@@ -27,6 +27,12 @@ namespace Certify.UI.Windows
             {
                 var cssPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "CSS", "markdown.css");
                 _css = System.IO.File.ReadAllText(cssPath);
+
+                if (MainViewModel.UISettings?.UITheme?.ToLower()=="dark")
+                {
+                    cssPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "CSS", "dark-mode.css");
+                    _css += System.IO.File.ReadAllText(cssPath);
+                }
             }
             catch
             {
