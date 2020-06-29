@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -88,6 +88,8 @@ namespace Certify.UI.ViewModel
               {"Light","Light Theme"},
               {"Dark","Dark Theme" }
         };
+
+        public string DefaultUITheme = "Dark";
 
         public UISettings UISettings { get; set; }
 

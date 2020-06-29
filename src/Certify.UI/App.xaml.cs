@@ -53,7 +53,8 @@ namespace Certify.UI
             else
             {
                 var theme = ThemeManager.Current.DetectTheme();
-                var themeSelection = "Light";
+                string themeSelection;
+
                 if (theme.BaseColorScheme == "Light")
                 {
                     ThemeManager.Current.ChangeTheme(Application.Current, "Dark.Green");
