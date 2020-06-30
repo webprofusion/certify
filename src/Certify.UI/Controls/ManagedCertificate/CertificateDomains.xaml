@@ -211,14 +211,20 @@
                                                 <RadioButton
                                                     HorizontalAlignment="Center"
                                                     GroupName="PrimaryDomainGroup"
-                                                    IsChecked="{Binding IsPrimaryDomain, UpdateSourceTrigger=PropertyChanged}" />
+                                                    IsChecked="{Binding IsPrimaryDomain, UpdateSourceTrigger=PropertyChanged}"
+                                                    Style="{DynamicResource MahApps.Styles.RadioButton}" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridCheckBoxColumn Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Header="{x:Static Resources:SR.ManagedCertificateSettings_Include}" />
+                                    <DataGridCheckBoxColumn
+                                        Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}"
+                                        EditingElementStyle="{DynamicResource MahApps.Styles.CheckBox.DataGrid}"
+                                        ElementStyle="{DynamicResource MahApps.Styles.CheckBox.DataGrid}"
+                                        Header="{x:Static Resources:SR.ManagedCertificateSettings_Include}" />
                                     <DataGridTextColumn
                                         MinWidth="200"
                                         Binding="{Binding Domain, UpdateSourceTrigger=PropertyChanged}"
+                                        EditingElementStyle="{StaticResource MahApps.Styles.TextBox.DataGrid.Editing}"
                                         Header="{x:Static Resources:SR.ManagedCertificateSettings_Domain}"
                                         IsReadOnly="True" />
                                     <DataGridTemplateColumn>

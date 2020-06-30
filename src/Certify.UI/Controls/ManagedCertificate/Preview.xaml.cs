@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
@@ -30,14 +31,6 @@ namespace Certify.UI.Controls.ManagedCertificate
             var _markdownPipelineBuilder = new Markdig.MarkdownPipelineBuilder();
             _markdownPipelineBuilder.Extensions.Add(new Markdig.Extensions.Tables.PipeTableExtension());
             _markdownPipeline = _markdownPipelineBuilder.Build();
-            try
-            {
-                _css = System.IO.File.ReadAllText(System.AppDomain.CurrentDomain.BaseDirectory + "\\Assets\\CSS\\markdown.css");
-            }
-            catch
-            {
-                // will fail in design mode
-            }
 
         }
 
@@ -46,6 +39,22 @@ namespace Certify.UI.Controls.ManagedCertificate
             // generate preview
             if (ItemViewModel.SelectedItem != null)
             {
+                try
+                {
+                    var cssPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "CSS", "markdown.css");
+                    _css = System.IO.File.ReadAllText(cssPath);
+
+                    if (AppViewModel.UISettings?.UITheme?.ToLower() == "dark")
+                    {
+                        cssPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "CSS", "dark-mode.css");
+                        _css += System.IO.File.ReadAllText(cssPath);
+                    }
+                }
+                catch
+                {
+                    // will fail in design mode
+                }
+
 
                 var steps = new List<ActionStep>();
                 try
@@ -95,6 +104,10 @@ namespace Certify.UI.Controls.ManagedCertificate
                             if (sub.Description.Contains("|"))
                             {
                                 // table items
+                                sb.AppendLine(sub.Description);
+                            }
+                            else if (sub.Description.StartsWith("\r\n"))
+                            {
                                 sb.AppendLine(sub.Description);
                             }
                             else

@@ -37,6 +37,8 @@ namespace Certify.Client
 
         Task<List<ActionStep>> RunConfigurationDiagnostics(StandardServerTypes serverType, string serverSiteId);
 
+        Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallenges(string type, string key);
+
         #endregion Server
 
         #region Preferences

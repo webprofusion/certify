@@ -13,6 +13,7 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
+using Certify.Providers;
 using Certify.Providers.ACME.Certes;
 using Microsoft.ApplicationInsights;
 using Serilog;
@@ -39,13 +40,19 @@ namespace Certify.Management
         private ConcurrentDictionary<string, IACMEClientProvider> _acmeClientProviders = new ConcurrentDictionary<string, IACMEClientProvider>();
         private ConcurrentDictionary<string, SimpleAuthorizationChallengeItem> _currentChallenges = new ConcurrentDictionary<string, SimpleAuthorizationChallengeItem>();
         private ObservableCollection<RequestProgressState> _progressResults { get; set; }
-
-        public event Action<RequestProgressState> OnRequestProgressStateUpdated;
+        private IStatusReporting _statusReporting { get; set; }
 
         private ConcurrentDictionary<string, CertificateAuthority> _certificateAuthorities = new ConcurrentDictionary<string, CertificateAuthority>();
+        private bool _useWindowsNativeFeatures = true;
 
-        public CertifyManager()
+        public CertifyManager() : this(true)
         {
+
+        }
+        public CertifyManager(bool useWindowsNativeFeatures = true)
+        {
+            _useWindowsNativeFeatures = useWindowsNativeFeatures;
+
             var serverConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
             SettingsManager.LoadAppSettings();
@@ -53,9 +60,16 @@ namespace Certify.Management
             InitLogging(serverConfig);
 
             Util.SetSupportedTLSVersions();
+            try
+            {
+                _itemManager = new ItemManager();
+            }
+            catch (Exception exp)
+            {
+                _serviceLog.Error($"Failed to open or upgrade the managed items database. Check service has required file access permissions. :: {exp}");
+            }
 
-            _itemManager = new ItemManager();
-            _credentialsManager = new CredentialsManager();
+            _credentialsManager = new CredentialsManager(useWindowsNativeFeatures);
             _serverProvider = (ICertifiedServer)new ServerProviderIIS();
 
             _progressResults = new ObservableCollection<RequestProgressState>();
@@ -74,7 +88,7 @@ namespace Certify.Management
             {
                 var customCAs = SettingsManager.GetCustomCertificateAuthorities();
 
-                foreach(var ca in customCAs)
+                foreach (var ca in customCAs)
                 {
                     _certificateAuthorities.TryAdd(ca.Id, ca);
                 }
@@ -104,9 +118,21 @@ namespace Certify.Management
 
             _serviceLog?.Information("Certify Manager Started");
 
-            PerformAccountUpgrades().Wait();
+            try
+            {
+                PerformAccountUpgrades().Wait();
+            }
+            catch (Exception exp)
+            {
+                _serviceLog.Error($"Failed to perform ACME account upgrades. :: {exp}");
+            }
 
             PerformManagedCertificateMigrations().Wait();
+        }
+
+        public void SetStatusReporting(IStatusReporting statusReporting)
+        {
+            _statusReporting = statusReporting;
         }
 
         private async Task PerformManagedCertificateMigrations()
@@ -164,8 +190,9 @@ namespace Certify.Management
             else
             {
                 var userAgent = Util.GetUserAgent();
+                var providerPath = Path.Combine(Management.Util.GetAppDataFolder(), "certes_" + storageKey);
 
-                var newProvider = new CertesACMEProvider(acmeApiEndpoint, Management.Util.GetAppDataFolder() + "\\certes_" + storageKey, userAgent);
+                var newProvider = new CertesACMEProvider(acmeApiEndpoint, providerPath, userAgent);
 
                 await newProvider.InitProvider(_serviceLog, account);
 
@@ -185,7 +212,7 @@ namespace Certify.Management
                 new LoggerConfiguration()
                .MinimumLevel.ControlledBy(_loggingLevelSwitch)
                .WriteTo.Debug()
-               .WriteTo.File(Util.GetAppDataFolder("logs") + "\\session.log", shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
+               .WriteTo.File(Path.Combine(Util.GetAppDataFolder("logs"), "session.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
                .CreateLogger()
                );
 
@@ -231,7 +258,10 @@ namespace Certify.Management
             }
 
             // report request state to staus hub clients
-            OnRequestProgressStateUpdated?.Invoke(state);
+
+            _statusReporting?.ReportRequestProgress(state);
+
+
 
             if (state.ManagedCertificate != null && logThisEvent)
             {
@@ -270,7 +300,7 @@ namespace Certify.Management
             SettingsManager.LoadAppSettings();
 
             await PerformRenewalAllManagedCertificates(new RenewalSettings { }, null);
-            
+
             return await Task.FromResult(true);
         }
 
@@ -325,7 +355,7 @@ namespace Certify.Management
 
                     if (mode == CertificateCleanupMode.FullCleanup)
                     {
-                       
+
                         // cleanup old pfx files in asset store(s), if any
                         var assetPath = Path.Combine(Util.GetAppDataFolder(), "certes", "assets");
                         if (Directory.Exists(assetPath))

@@ -1,11 +1,13 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Scripts\DNS\PoshACME\" />
+    <Content Include="Scripts\DNS\PoshACME\Posh-ACME-Wrapper.ps1">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -25,6 +27,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />
     <ProjectReference Include="..\Certify.Models\Certify.Models.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Scripts\DNS\Powershell\Posh-ACME-Wrapper.ps1" />
   </ItemGroup>
 
   <ItemGroup>

@@ -14,13 +14,11 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
-        public event Action<ManagedCertificate> OnManagedCertificateUpdated;
-
-        public async Task<ManagedCertificate> GetManagedCertificate(string id) => await _itemManager.GetManagedCertificate(id);
+        public async Task<ManagedCertificate> GetManagedCertificate(string id) => await _itemManager.GetById(id);
 
         public async Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter = null)
         {
-            var list = await _itemManager.GetManagedCertificates(filter);
+            var list = await _itemManager.GetAll(filter);
 
 
             if (filter?.IncludeExternal == true)
@@ -42,7 +40,8 @@ namespace Certify.Management
 
                                 list.AddRange(certs);
                             }
-                        } else
+                        }
+                        else
                         {
                             System.Diagnostics.Debug.WriteLine("Failed to create provider from plugin [Certificate Manager] ");
                         }
@@ -55,10 +54,11 @@ namespace Certify.Management
 
         public async Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate site)
         {
-            site = await _itemManager.UpdatedManagedCertificate(site);
+            site = await _itemManager.Update(site);
 
             // report request state to status hub clients
-            OnManagedCertificateUpdated?.Invoke(site);
+            _statusReporting?.ReportManagedCertificateUpdated(site);
+
             return site;
         }
 
@@ -86,12 +86,12 @@ namespace Certify.Management
                 managedCertificate.LastRenewalStatus = RequestState.Error;
             }
 
-            managedCertificate = await _itemManager.UpdatedManagedCertificate(managedCertificate);
+            managedCertificate = await _itemManager.Update(managedCertificate);
 
             // report request state to status hub clients
-            OnManagedCertificateUpdated?.Invoke(managedCertificate);
+            _statusReporting?.ReportManagedCertificateUpdated(managedCertificate);
 
-            //if reporting enabled, send report
+            // if reporting api enabled, send report
 
             if (managedCertificate.RequestConfig?.EnableFailureNotifications == true)
             {
@@ -134,10 +134,10 @@ namespace Certify.Management
 
         public async Task DeleteManagedCertificate(string id)
         {
-            var site = await _itemManager.GetManagedCertificate(id);
+            var site = await _itemManager.GetById(id);
             if (site != null)
             {
-                await _itemManager.DeleteManagedCertificate(site);
+                await _itemManager.Delete(site);
             }
         }
 
@@ -297,7 +297,9 @@ namespace Certify.Management
                     _serverProvider,
                     managedCertificate,
                     isPreviewMode,
-                    CoreAppSettings.Current.EnableDNSValidationChecks, progress
+                    CoreAppSettings.Current.EnableDNSValidationChecks,
+                    _credentialsManager,
+                    progress
                 )
              );
 
@@ -327,7 +329,7 @@ namespace Certify.Management
 
         private async Task<bool> IsManagedCertificateRunning(string id, ICertifiedServer iis = null)
         {
-            var managedCertificate = await _itemManager.GetManagedCertificate(id);
+            var managedCertificate = await _itemManager.GetById(id);
             if (managedCertificate != null)
             {
                 if (iis == null)
@@ -357,9 +359,9 @@ namespace Certify.Management
 
         public async Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId)
         {
-            
+
             var dnsHelper = new Core.Management.Challenges.DnsChallengeHelper(_credentialsManager);
-            var result = await dnsHelper.GetDnsProvider(providerTypeId, credentialsId, null);
+            var result = await dnsHelper.GetDnsProvider(providerTypeId, credentialsId, null, _credentialsManager);
 
             if (result.Provider != null)
             {

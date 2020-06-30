@@ -58,7 +58,7 @@ namespace Certify.UI.Controls.Settings
                 CertCleanup_FullCleanup.IsChecked = true;
             }
 
-            ThemeSelector.SelectedValue = MainViewModel.UISettings?.UITheme ?? "Light";
+            ThemeSelector.SelectedValue = MainViewModel.UISettings?.UITheme ?? MainViewModel.DefaultUITheme;
 
             DataContext = this;
 

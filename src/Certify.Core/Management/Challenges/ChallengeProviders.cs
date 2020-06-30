@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Certify.Core.Management.Challenges.DNS;
 using Certify.Models;
@@ -130,7 +131,7 @@ namespace Certify.Core.Management.Challenges
             {
                 if (providerDefinition.Config.Contains("Provider=Certify.Providers.DNS.PoshACME"))
                 {
-                    var scriptPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Scripts\DNS\PoshACME\Plugins");
+                    var scriptPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Scripts\DNS\PoshACME");
                     
                     // TODO : move this out, shared config should be injected
                     var config = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
@@ -278,7 +279,7 @@ namespace Certify.Core.Management.Challenges
             };
 
             // TODO : load config from file
-            providers.AddRange(Certify.Core.Management.Challenges.DNS.DnsProviderPoshACME.ExtendedProviders);
+
 
             try
             {
@@ -294,7 +295,12 @@ namespace Certify.Core.Management.Challenges
             // some providers may fail to add due to platform dependencies/restrictions
             try
             {
-                providers.Add(Providers.DNS.MSDNS.DnsProviderMSDNS.Definition);
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    providers.AddRange(Certify.Core.Management.Challenges.DNS.DnsProviderPoshACME.ExtendedProviders);
+
+                    providers.Add(Providers.DNS.MSDNS.DnsProviderMSDNS.Definition);
+                }
             }
             catch { }
 

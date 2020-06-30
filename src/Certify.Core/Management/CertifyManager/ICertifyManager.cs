@@ -5,11 +5,14 @@ using Certify.Config;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
+using Certify.Providers;
 
 namespace Certify.Management
 {
     public interface ICertifyManager
     {
+        void SetStatusReporting(IStatusReporting statusReporting);
+
         Task<bool> IsServerTypeAvailable(StandardServerTypes serverType);
 
         Task<Version> GetServerTypeVersion(StandardServerTypes serverType);
@@ -24,7 +27,7 @@ namespace Certify.Management
 
         Task DeleteManagedCertificate(string id);
 
-        Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallengeResponses(string challengeType);
+        Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallengeResponses(string challengeType, string key = null);
 
         Task<List<AccountDetails>> GetAccountRegistrations();
 
@@ -63,10 +66,6 @@ namespace Certify.Management
         Task PerformCertificateCleanup();
 
         Task<List<ActionStep>> GeneratePreview(ManagedCertificate item);
-
-        event Action<RequestProgressState> OnRequestProgressStateUpdated;
-
-        event Action<ManagedCertificate> OnManagedCertificateUpdated;
 
         void ReportProgress(IProgress<RequestProgressState> progress, RequestProgressState state, bool logThisEvent = true);
 

@@ -14,7 +14,7 @@ namespace Certify.Service
         [HttpGet, Route("")]
         public async Task<List<StoredCredential>> GetCredentials()
         {
-            return await credentialsManager.GetStoredCredentials();
+            return await credentialsManager.GetCredentials();
         }
 
         [HttpPost, Route("")]
@@ -22,7 +22,7 @@ namespace Certify.Service
         {
             DebugLog();
 
-            return await credentialsManager.UpdateCredential(credential);
+            return await credentialsManager.Update(credential);
         }
 
         [HttpDelete, Route("{storageKey}")]
@@ -30,7 +30,7 @@ namespace Certify.Service
         {
             DebugLog();
 
-            return await credentialsManager.DeleteCredential(storageKey);
+            return await credentialsManager.Delete(storageKey);
         }
 
         [HttpPost, Route("{storageKey}/test")]

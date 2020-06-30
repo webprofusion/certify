@@ -354,7 +354,7 @@ namespace Certify.Management
 
         public static string GetUserLocalAppDataFolder()
         {
-            var path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\" + APPDATASUBFOLDER;
+            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), APPDATASUBFOLDER);
             if (!System.IO.Directory.Exists(path))
             {
                 System.IO.Directory.CreateDirectory(path);

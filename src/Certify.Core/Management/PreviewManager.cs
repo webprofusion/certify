@@ -46,7 +46,7 @@ namespace Certify.Management
 
             if (hasDomains)
             {
-                var allCredentials = await credentialsManager.GetStoredCredentials();
+                var allCredentials = await credentialsManager.GetCredentials();
 
                 var allDomains = new List<string> { item.RequestConfig.PrimaryDomain };
 

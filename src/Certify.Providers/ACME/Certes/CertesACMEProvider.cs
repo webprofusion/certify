@@ -198,10 +198,11 @@ namespace Certify.Providers.ACME.Certes
             {
                 if (account == null)
                 {
-                    // if initalising without a known account, attempt to load details form storage
-                    if (System.IO.File.Exists(_settingsFolder + "\\c-settings.json"))
+                    // if initalising without a known account, attempt to load details from storage
+                    var settingsFilePath = Path.Combine(_settingsFolder, "c-settings.json");
+                    if (File.Exists(settingsFilePath))
                     {
-                        var json = System.IO.File.ReadAllText(_settingsFolder + "\\c-settings.json");
+                        var json = System.IO.File.ReadAllText(settingsFilePath);
                         _settings = Newtonsoft.Json.JsonConvert.DeserializeObject<CertesSettings>(json);
                     }
                     else
@@ -211,19 +212,19 @@ namespace Certify.Providers.ACME.Certes
 
                     if (!string.IsNullOrEmpty(_settings.AccountKey))
                     {
-                        if (System.IO.File.Exists(_settingsFolder + "\\c-acc.key"))
+                        if (System.IO.File.Exists(Path.Combine(_settingsFolder, "c-acc.key")))
                         {
                             //remove legacy key info
-                            System.IO.File.Delete(_settingsFolder + "\\c-acc.key");
+                            System.IO.File.Delete(Path.Combine(_settingsFolder, "c-acc.key"));
                         }
                         SetAcmeContextAccountKey(_settings.AccountKey);
                     }
                     else
                     {
                         // no account key in settings, check .key (legacy key file)
-                        if (System.IO.File.Exists(_settingsFolder + "\\c-acc.key"))
+                        if (System.IO.File.Exists(Path.Combine(_settingsFolder, "c-acc.key")))
                         {
-                            var pem = System.IO.File.ReadAllText(_settingsFolder + "\\c-acc.key");
+                            var pem = System.IO.File.ReadAllText(Path.Combine(_settingsFolder, "c-acc.key"));
                             SetAcmeContextAccountKey(pem);
                         }
                     }
@@ -1202,24 +1203,32 @@ namespace Certify.Providers.ACME.Certes
         /// </summary>
         private void RefreshIssuerCertCache()
         {
-            _issuerCertCache = new List<byte[]>();
-
-            var rootCAs = GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName.Root);
-            if (rootCAs != null)
+            try
             {
-                _issuerCertCache.Add(rootCAs);
+                _issuerCertCache = new List<byte[]>();
+
+                var rootCAs = GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName.Root);
+                if (rootCAs != null)
+                {
+                    _issuerCertCache.Add(rootCAs);
+                }
+
+                var intermediates = GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName.CertificateAuthority);
+                if (intermediates != null)
+                {
+                    _issuerCertCache.Add(intermediates);
+                }
             }
-
-            var intermediates = GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName.CertificateAuthority);
-            if (intermediates != null)
+            catch (Exception exp)
             {
-                _issuerCertCache.Add(intermediates);
+                //TODO: log
+                System.Diagnostics.Debug.WriteLine("Failed to properly cache issuer certs.");
             }
         }
 
         private string ExportFullCertPFX(string certFriendlyName, string pwd, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
         {
-            var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..\\assets", primaryDomainPath }));
+            var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..", "assets", primaryDomainPath }));
 
             if (!System.IO.Directory.Exists(storePath))
             {
@@ -1266,7 +1275,7 @@ namespace Certify.Providers.ACME.Certes
 
         private string ExportFullCertPEM(IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
         {
-            var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..\\assets", primaryDomainPath }));
+            var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..", "assets", primaryDomainPath }));
 
             if (!System.IO.Directory.Exists(storePath))
             {

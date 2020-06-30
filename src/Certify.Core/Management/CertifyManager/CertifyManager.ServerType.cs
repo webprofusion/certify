@@ -82,7 +82,15 @@ namespace Certify.Management
         {
             if (serverType == StandardServerTypes.IIS)
             {
-                return await _serverProvider.IsAvailable();
+                if (_useWindowsNativeFeatures)
+                {
+                    return await _serverProvider.IsAvailable();
+                }
+                else
+                {
+                    // non-windows platform
+                    return false;
+                }
             }
 
             return false;

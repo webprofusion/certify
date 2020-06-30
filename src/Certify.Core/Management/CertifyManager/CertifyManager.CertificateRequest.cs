@@ -50,14 +50,14 @@ namespace Certify.Management
                 var targetCerts = new List<ManagedCertificate>();
                 foreach (var id in settings.TargetManagedCertificates)
                 {
-                    targetCerts.Add(await _itemManager.GetManagedCertificate(id));
+                    targetCerts.Add(await _itemManager.GetById(id));
                 }
                 managedCertificates = targetCerts;
 
             }
             else
             {
-                managedCertificates = await _itemManager.GetManagedCertificates(
+                managedCertificates = await _itemManager.GetAll(
                     new ManagedCertificateFilter
                     {
                         IncludeOnlyNextAutoRenew = (settings.Mode == RenewalMode.Auto)
@@ -541,10 +541,10 @@ namespace Certify.Management
             return certRequestResult;
         }
 
-        public Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallengeResponses(string challengeType)
+        public Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallengeResponses(string challengeType, string key = null)
         {
             var challengeResponses = _currentChallenges
-                .Where(c => c.Value.ChallengeType == challengeType)
+                .Where(c => c.Value.ChallengeType == challengeType && (key == null || (key != null && c.Value.Key == key)))
                 .Select(a => a.Value).ToList();
 
             return Task.FromResult(challengeResponses);
@@ -938,7 +938,7 @@ namespace Certify.Management
                         // Install certificate into certificate store and bind to matching sites on server
                         var deploymentManager = new BindingDeploymentManager();
 
-                        var actions = await deploymentManager.StoreAndDeployManagedCertificate(
+                        var actions = await deploymentManager.StoreAndDeploy(
                                 _serverProvider.GetDeploymentTarget(),
                                 managedCertificate,
                                 pfxPath,
@@ -963,7 +963,7 @@ namespace Certify.Management
                                 new RequestProgressState(RequestState.Success, result.Message, managedCertificate, false));
 
                             // perform cert cleanup (if enabled)
-                            if (CoreAppSettings.Current.EnableCertificateCleanup && !string.IsNullOrEmpty(managedCertificate.CertificateThumbprintHash))
+                            if (_useWindowsNativeFeatures && CoreAppSettings.Current.EnableCertificateCleanup && !string.IsNullOrEmpty(managedCertificate.CertificateThumbprintHash))
                             {
                                 try
                                 {
@@ -1178,7 +1178,7 @@ namespace Certify.Management
                         // tls-sni-01), LE will then attempt to fetch our answer, if all accessible
                         // and correct (authorized) LE will then allow us to request a certificate
                         authorization = await _challengeDiagnostics.PerformAutomatedChallengeResponse(log,
-                            _serverProvider, managedCertificate, authorization);
+                            _serverProvider, managedCertificate, authorization, _credentialsManager);
 
                         // if we had automated checks configured and they failed more than twice in a
                         // row, fail and report error here
@@ -1285,7 +1285,7 @@ namespace Certify.Management
                 // Install certificate into certificate store and bind to IIS site
                 var deploymentManager = new BindingDeploymentManager();
 
-                var actions = await deploymentManager.StoreAndDeployManagedCertificate(
+                var actions = await deploymentManager.StoreAndDeploy(
                         _serverProvider.GetDeploymentTarget(),
                         managedCertificate,
                         pfxPath,

@@ -56,18 +56,9 @@ namespace Certify.Service
             var currentCertifyManager = _container.GetInstance<Management.ICertifyManager>();
 
             // attached handlers for SignalR hub updates
-            currentCertifyManager.OnRequestProgressStateUpdated += (Models.RequestProgressState obj) =>
-            {
-                // notify client(s) of status updates
-                StatusHub.SendRequestProgressState(obj);
-            };
+            currentCertifyManager.SetStatusReporting(new StatusHubReporting());
 
-            currentCertifyManager.OnManagedCertificateUpdated += (Models.ManagedCertificate obj) =>
-            {
-                // notify client(s) of update to a managed site
-                StatusHub.SendManagedCertificateUpdate(obj);
-            };
-
+           
             // hourly jobs timer (renewal etc)
             _timer = new System.Timers.Timer(60 * 60 * 1000); // every 60 minutes
             _timer.Elapsed += _timer_Elapsed;

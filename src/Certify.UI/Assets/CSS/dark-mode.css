@@ -1,0 +1,88 @@
+﻿@media only screen {
+
+    body {
+        color: #eeeeee;
+        background: #262424;
+    }
+
+    a {
+        color: #2e6ed8;
+    }
+
+        a:visited {
+            color: #2e6ed8;
+        }
+
+        a:hover {
+            color: #5185dc;
+        }
+
+        a:active {
+            color: #2e6ed8;
+        }
+
+    ::-moz-selection {
+        color: rgba(255, 255, 0, 0.3);
+        background: #000;
+    }
+
+    ::selection {
+        color: rgba(255, 255, 0, 0.3);
+        background: #000;
+    }
+
+    a::-moz-selection {
+        color: rgba(255, 255, 0, 0.3);
+        background: #0645ad;
+    }
+
+    a::selection {
+        color: rgba(255, 255, 0, 0.3);
+        background: #0645ad;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        color: #eeeeee;
+    }
+
+
+    blockquote {
+        color: gainsboro;
+        border-left: 0.5em #e0e0e0 solid;
+    }
+
+    hr {
+        border-top: 1px solid #aaa;
+        border-bottom: 1px solid #eee;
+    }
+
+    pre,
+    code,
+    kbd,
+    samp {
+        color: #000;
+        background-color: gainsboro;
+    }
+
+    table {
+        border: 1px solid gainsboro;
+    }
+
+    tr {
+        border-bottom: 1px solid gainsboro;
+    }
+
+        tr:nth-child(even) {
+            background: #5b5b5b;
+            
+        }
+
+        tr:nth-child(odd) {
+            background: #2b2b2b;
+        }
+}

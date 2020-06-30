@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,7 +32,7 @@ namespace Certify.UI.ViewModel
 
         public AppViewModel()
         {
-            CertifyClient = new CertifyServiceClient();
+            CertifyClient = new CertifyServiceClient(GetDefaultServerConnection());
 
             Init();
         }
@@ -49,7 +50,7 @@ namespace Certify.UI.ViewModel
                 new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .WriteTo.Debug()
-                .WriteTo.File(Management.Util.GetAppDataFolder("logs") + "\\ui.log", shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
+                .WriteTo.File(Path.Combine(Management.Util.GetAppDataFolder("logs"), "ui.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
                 .CreateLogger()
                 );
 
@@ -87,6 +88,8 @@ namespace Certify.UI.ViewModel
               {"Light","Light Theme"},
               {"Dark","Dark Theme" }
         };
+
+        public string DefaultUITheme = "Dark";
 
         public UISettings UISettings { get; set; }
 
@@ -318,28 +321,50 @@ namespace Certify.UI.ViewModel
             return await CertifyClient.ValidateDeploymentTask(deploymentTaskValidationInfo);
         }
 
+        public Shared.ServerConnection GetDefaultServerConnection()
+        {
+            var defaultConfig = new ServerConnection(SharedUtils.ServiceConfigManager.GetAppServiceConfig());
+
+            var connections = Shared.Core.Management.ServerConnectionManager.GetServerConnections(Log, defaultConfig);
+
+            if (connections.Any() && connections.Count() == 1)
+            {
+                Shared.Core.Management.ServerConnectionManager.Save(Log, connections);
+            }
+
+            return connections.FirstOrDefault(c => c.IsDefault = true);
+        }
+
         public async Task InitServiceConnections()
         {
+            var connectionConfig = GetDefaultServerConnection();
 
             //check service connection
             IsServiceAvailable = await CheckServiceAvailable();
 
-            if (!IsServiceAvailable)
+            var attemptsRemaining = 5;
+            while (!IsServiceAvailable && attemptsRemaining > 0)
             {
                 Debug.WriteLine("Service not yet available. Waiting a few seconds..");
 
                 // the service could still be starting up or port may be reallocated
-                await Task.Delay(5000);
+                var waitMS = (6 - attemptsRemaining) * 1000;
+                await Task.Delay(waitMS);
 
                 // restart client in case port has reallocated
-                CertifyClient = new CertifyServiceClient();
+                CertifyClient = new CertifyServiceClient(connectionConfig);
 
                 IsServiceAvailable = await CheckServiceAvailable();
 
                 if (!IsServiceAvailable)
                 {
+                    attemptsRemaining--;
+
                     // give up
-                    return;
+                    if (attemptsRemaining == 0)
+                    {
+                        return;
+                    }
                 }
             }
 
@@ -349,7 +374,16 @@ namespace Certify.UI.ViewModel
             CertifyClient.OnManagedCertificateUpdated += CertifyClient_OnManagedCertificateUpdated;
 
             // connect to status api stream & handle events
-            await CertifyClient.ConnectStatusStreamAsync();
+            try
+            {
+                await CertifyClient.ConnectStatusStreamAsync();
+
+            }
+            catch (Exception exp)
+            {
+                // failed to connect to status signalr hub
+                Log?.Error($"Failed to connect to status hub: {exp}");
+            }
         }
 
         public async Task<List<DnsZone>> GetDnsProviderZones(string challengeProvider, string challengeCredentialKey)
@@ -432,6 +466,22 @@ namespace Certify.UI.ViewModel
         {
             Preferences = await CertifyClient.GetPreferences();
 
+            await RefreshManagedCertificates();
+
+            await RefreshCertificateAuthorityList();
+
+            await RefreshAccountsList();
+
+            await RefreshChallengeAPIList();
+
+            await RefreshStoredCredentialsList();
+
+            await RefreshDeploymentTaskProviderList();
+
+        }
+
+        public virtual async Task RefreshManagedCertificates()
+        {
             var filter = new ManagedCertificateFilter();
 
             // include external managed certs
@@ -450,17 +500,6 @@ namespace Certify.UI.ViewModel
             }
 
             ManagedCertificates = new ObservableCollection<ManagedCertificate>(list);
-
-            await RefreshCertificateAuthorityList();
-
-            await RefreshAccountsList();
-
-            await RefreshChallengeAPIList();
-
-            await RefreshStoredCredentialsList();
-
-            await RefreshDeploymentTaskProviderList();
-
         }
 
         private void CertifyClient_SendMessage(string arg1, string arg2) => MessageBox.Show($"Received: {arg1} {arg2}");

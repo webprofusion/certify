@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Windows;
 
 // Setting ComVisible to false makes the types in this assembly not visible 
@@ -24,3 +25,4 @@ using System.Windows;
                                               //(used if a resource is not found in the page,
                                               // app, or any theme specific resource dictionaries)
 )]
+[assembly: AssemblyTitle("Certify The Web (UI)")]

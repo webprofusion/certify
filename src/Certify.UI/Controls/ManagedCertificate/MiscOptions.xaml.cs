@@ -30,7 +30,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 //open file, can fail if file is in use TODO: will fail if cert has a pwd
                 try
                 {
-                    
+
                     var cert = CertificateManager.LoadCertificate(certPath);
 
                     if (cert != null)
@@ -101,9 +101,17 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private async void RefetchCertificate_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageBox.Show("Re-fetch certificate from Certificate Authority?", "Confirm Re-Fetch?", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
+            if (!string.IsNullOrEmpty(ItemViewModel.SelectedItem.CurrentOrderUri))
             {
-                await ItemViewModel.RefetchCertificate(ItemViewModel.SelectedItem.Id);
+                if (MessageBox.Show("Re-fetch certificate from Certificate Authority?", "Confirm Re-Fetch?", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
+                {
+
+                    await ItemViewModel.RefetchCertificate(ItemViewModel.SelectedItem.Id);
+                }
+            }
+            else
+            {
+                MessageBox.Show("You have not requested this certificate yet so it cannot be downloaded again. Use Request Certificate to perform the certificate order.");
             }
         }
 
