@@ -71,15 +71,16 @@ namespace Certify.Management
             }
         }
 
-        private T LoadPlugin<T>(string dllFileName, Type interfaceType)
+        private T LoadPlugin<T>(string dllFileName)
         {
+            Type interfaceType = typeof(T);
             try
             {
-                var pluginPath = GetPluginFolderPath() + "\\" + dllFileName;
+                var pluginPath = Path.Combine(GetPluginFolderPath(), dllFileName);
 
                 if (!File.Exists(pluginPath))
                 {
-                    pluginPath = GetPluginFolderPath(usePluginSubfolder: false) + "\\" + dllFileName;
+                    pluginPath = Path.Combine(GetPluginFolderPath(usePluginSubfolder: false), dllFileName);
                 }
 
                 if (File.Exists(pluginPath))
@@ -128,32 +129,34 @@ namespace Certify.Management
 
             if (includeSet.Contains("Licensing"))
             {
-                LicensingManager = LoadPlugin<ILicensingManager>("Plugin.Licensing.dll", typeof(ILicensingManager)) as ILicensingManager;
+                LicensingManager = LoadPlugin<ILicensingManager>("Plugin.Licensing.dll");
 
             }
 
             if (includeSet.Contains("DashboardClient"))
             {
-                DashboardClient = LoadPlugin<IDashboardClient>("Plugin.DashboardClient.dll", typeof(IDashboardClient)) as IDashboardClient;
+                DashboardClient = LoadPlugin<IDashboardClient>("Plugin.DashboardClient.dll");
             }
 
             if (includeSet.Contains("DeploymentTasks"))
             {
-                // TODO: wildcard filename match
-                var deploymentTaskPlugin = LoadPlugin<IDeploymentTaskProviderPlugin>("Plugin.DeploymentTasks.Core.dll", typeof(IDeploymentTaskProviderPlugin)) as IDeploymentTaskProviderPlugin;
-                DeploymentTaskProviders = new List<IDeploymentTaskProviderPlugin>
-                {
-                    deploymentTaskPlugin
-                };
-
-                var azure = LoadPlugin<IDeploymentTaskProviderPlugin>("Plugin.DeploymentTasks.Azure.dll", typeof(IDeploymentTaskProviderPlugin)) as IDeploymentTaskProviderPlugin;
-                DeploymentTaskProviders.Add(azure);
-
+                var deploymentTaskProviders = new List<IDeploymentTaskProviderPlugin>();
+                DeploymentTaskProviders = deploymentTaskProviders;
+                var core = LoadPlugin<IDeploymentTaskProviderPlugin>("Plugin.DeploymentTasks.Core.dll");
+                var azure = LoadPlugin<IDeploymentTaskProviderPlugin>("Plugin.DeploymentTasks.Azure.dll");
+                deploymentTaskProviders.Add(core);
+                deploymentTaskProviders.Add(azure);
+                var otherAssemblies = new DirectoryInfo(GetPluginFolderPath()).GetFiles("Plugin.DeploymentTasks.*.dll")
+                    .Where(f => 
+                        f.Name.ToUpperInvariant() != "PLUGIN.DEPLOYMENTTASKS.CORE.DLL" && 
+                        f.Name.ToUpperInvariant() != "PLUGIN.DEPLOYMENTTASKS.AZURE.DLL");
+                var others = otherAssemblies.Select(assem => LoadPlugin<IDeploymentTaskProviderPlugin>(assem.Name)).ToList();
+                deploymentTaskProviders.AddRange(others);
             }
 
             if (includeSet.Contains("CertificateManagers"))
             {
-                var certManagerProviders = LoadPlugin<ICertificateManagerProviderPlugin>("Plugin.CertificateManagers.dll", typeof(ICertificateManagerProviderPlugin)) as ICertificateManagerProviderPlugin;
+                var certManagerProviders = LoadPlugin<ICertificateManagerProviderPlugin>("Plugin.CertificateManagers.dll");
                 CertificateManagerProviders = new List<ICertificateManagerProviderPlugin>
                 {
                     certManagerProviders

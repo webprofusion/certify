@@ -48,7 +48,7 @@ namespace Certify.Models.Plugins
     }
 
     /// <summary>
-    /// Plugins which implement on or more deployment tasks implement this interface for dynamic plugin loading
+    /// Plugins which implement one or more deployment tasks implement this interface for dynamic plugin loading
     /// </summary>
     public interface IDeploymentTaskProviderPlugin: IProviderPlugin<IDeploymentTaskProvider, DeploymentProviderDefinition>
     {
