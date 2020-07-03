@@ -4,24 +4,35 @@ using System.Linq;
 using System.Security;
 using System.Threading.Tasks;
 using Certify.Models.Config;
+using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Microsoft.Management.Infrastructure;
 using Microsoft.Management.Infrastructure.Options;
 
 namespace Certify.Providers.DNS.MSDNS
 {
+    public class DnsProviderMSDNSProvider : PluginProviderBase<IDnsProvider, ChallengeProviderDefinition>, IDnsProviderProviderPlugin
+    {
+        // Make sure M.M.I is loaded or explode here.
+        public static readonly PasswordAuthenticationMechanism _sentinel;
+        static DnsProviderMSDNSProvider()
+        {
+            _sentinel = PasswordAuthenticationMechanism.Kerberos;
+        }
+    }
+
     public class DnsProviderMSDNS : IDnsProvider
     {
-        private readonly string _serverip;
+        private string _serverip;
         private int? _customPropagationDelay = null;
-        private readonly string _username;
-        private readonly string _domain;
+        private string _username;
+        private string _domain;
         private SecureString _password;
-        private readonly string _server;
-        private readonly string _serverConnectionName;
+        private string _server;
+        private string _serverConnectionName;
         private ILog _log;
-        private readonly PasswordAuthenticationMechanism _authMechanism = PasswordAuthenticationMechanism.Default;
-        private readonly WindowsRemotingProtocol _protocol = WindowsRemotingProtocol.DCOM;
+        private PasswordAuthenticationMechanism _authMechanism = PasswordAuthenticationMechanism.Default;
+        private WindowsRemotingProtocol _protocol = WindowsRemotingProtocol.DCOM;
 
         private enum WindowsRemotingProtocol
         {
@@ -29,56 +40,8 @@ namespace Certify.Providers.DNS.MSDNS
             WinRM
         }
 
-        public DnsProviderMSDNS(Dictionary<string, string> credentials, Dictionary<string, string> parameters)
+        public DnsProviderMSDNS()
         {
-            _server = parameters.ContainsKey("dnsservername") ? parameters["dnsservername"] : Environment.MachineName;
-            _serverip = parameters.ContainsKey("ipaddress") ? parameters["ipaddress"] : null;
-            _serverConnectionName = string.IsNullOrEmpty(_serverip) ? _server : _serverip;
-            _username = credentials.ContainsKey("username") ? credentials["username"] : null;
-            if (credentials.ContainsKey("password"))
-            {
-                _password = new SecureString();
-                credentials["password"].ToList().ForEach(o => _password.AppendChar(o));
-                _password.MakeReadOnly();
-            }
-            else
-            {
-                _password = null;
-            }
-            _domain = credentials.ContainsKey("domain") ? credentials["domain"] : null;
-            _customPropagationDelay = parameters.ContainsKey("propagationdelay") ? Convert.ToInt32(parameters["propagationdelay"]) : (int?)null;
-            if (credentials.ContainsKey("protocol") && credentials["protocol"].ToLowerInvariant() == "winrm")
-            {
-                _protocol = WindowsRemotingProtocol.WinRM;
-            }
-
-            if (credentials.ContainsKey("authentication"))
-            {
-                switch (credentials["authentication"].ToLowerInvariant())
-                {
-                    case "basic":
-                        _authMechanism = PasswordAuthenticationMechanism.Basic;
-                        break;
-                    case "credssp":
-                        _authMechanism = PasswordAuthenticationMechanism.CredSsp;
-                        break;
-                    case "default":
-                        _authMechanism = PasswordAuthenticationMechanism.Default;
-                        break;
-                    case "digest":
-                        _authMechanism = PasswordAuthenticationMechanism.Digest;
-                        break;
-                    case "kerberos":
-                        _authMechanism = PasswordAuthenticationMechanism.Kerberos;
-                        break;
-                    case "negotiate":
-                        _authMechanism = PasswordAuthenticationMechanism.Negotiate;
-                        break;
-                    default:
-                        _authMechanism = PasswordAuthenticationMechanism.NtlmDomain;
-                        break;
-                }
-            }
         }
 
         public static ChallengeProviderDefinition Definition => new ChallengeProviderDefinition
@@ -155,13 +118,62 @@ namespace Certify.Providers.DNS.MSDNS
             var zones = new List<DnsZone>();
 
             GetZones(session).ForEach(o => zones.Add(new DnsZone() { Name = o, ZoneId = o }));
-            
+
             return await Task.FromResult(zones);
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+
+            _server = parameters.ContainsKey("dnsservername") ? parameters["dnsservername"] : Environment.MachineName;
+            _serverip = parameters.ContainsKey("ipaddress") ? parameters["ipaddress"] : null;
+            _serverConnectionName = string.IsNullOrEmpty(_serverip) ? _server : _serverip;
+            _username = credentials.ContainsKey("username") ? credentials["username"] : null;
+            if (credentials.ContainsKey("password"))
+            {
+                _password = new SecureString();
+                credentials["password"].ToList().ForEach(o => _password.AppendChar(o));
+                _password.MakeReadOnly();
+            }
+            else
+            {
+                _password = null;
+            }
+            _domain = credentials.ContainsKey("domain") ? credentials["domain"] : null;
+            _customPropagationDelay = parameters.ContainsKey("propagationdelay") ? Convert.ToInt32(parameters["propagationdelay"]) : (int?)null;
+            if (credentials.ContainsKey("protocol") && credentials["protocol"].ToLowerInvariant() == "winrm")
+            {
+                _protocol = WindowsRemotingProtocol.WinRM;
+            }
+
+            if (credentials.ContainsKey("authentication"))
+            {
+                switch (credentials["authentication"].ToLowerInvariant())
+                {
+                    case "basic":
+                        _authMechanism = PasswordAuthenticationMechanism.Basic;
+                        break;
+                    case "credssp":
+                        _authMechanism = PasswordAuthenticationMechanism.CredSsp;
+                        break;
+                    case "default":
+                        _authMechanism = PasswordAuthenticationMechanism.Default;
+                        break;
+                    case "digest":
+                        _authMechanism = PasswordAuthenticationMechanism.Digest;
+                        break;
+                    case "kerberos":
+                        _authMechanism = PasswordAuthenticationMechanism.Kerberos;
+                        break;
+                    case "negotiate":
+                        _authMechanism = PasswordAuthenticationMechanism.Negotiate;
+                        break;
+                    default:
+                        _authMechanism = PasswordAuthenticationMechanism.NtlmDomain;
+                        break;
+                }
+            }
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {

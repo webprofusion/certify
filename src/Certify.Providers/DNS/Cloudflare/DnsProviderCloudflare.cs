@@ -4,16 +4,17 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Certify.Models.Config;
+using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Newtonsoft.Json;
 
 namespace Certify.Providers.DNS.Cloudflare
 {
-    /// <summary>
+    public class DnsProviderCloudflareProvider : PluginProviderBase<IDnsProvider, ChallengeProviderDefinition>, IDnsProviderProviderPlugin { }
+
     /// Adapted from
     /// https://github.com/ebekker/ACMESharp/tree/master/ACMESharp/ACMESharp.Providers.CloudFlare By
     /// janpieterz and ebekker, used with permission under MIT license
-    /// </summary>
     internal class ZoneResult
     {
         public Zone[] Result { get; set; }
@@ -72,9 +73,9 @@ namespace Certify.Providers.DNS.Cloudflare
 
         private HttpClient _client = new HttpClient();
 
-        private readonly string _authKey;
-        private readonly string _apiToken;
-        private readonly string _emailAddress;
+        private string _authKey;
+        private string _apiToken;
+        private string _emailAddress;
 
         private const string _baseUri = "https://api.cloudflare.com/client/v4/";
         private const string _listZonesUri = _baseUri + "zones";
@@ -118,16 +119,8 @@ namespace Certify.Providers.DNS.Cloudflare
             HandlerType = ChallengeHandlerType.INTERNAL
         };
 
-        public DnsProviderCloudflare(Dictionary<string, string> credentials)
+        public DnsProviderCloudflare()
         {
-            _authKey = credentials.ContainsKey("authkey") ? credentials["authkey"] : null;
-            _apiToken = credentials.ContainsKey("apitoken") ? credentials["apitoken"] : null;
-            _emailAddress = credentials.ContainsKey("emailaddress") ? credentials["emailaddress"] : null;
-
-            if (string.IsNullOrEmpty(_apiToken) && (string.IsNullOrEmpty(_emailAddress) || string.IsNullOrEmpty(_authKey)))
-            {
-                throw new ArgumentException($"{ProviderTitle} requires either an API Token or an Email Address + AuthKey");
-            }
         }
 
         public async Task<ActionResult> Test()
@@ -356,9 +349,18 @@ namespace Certify.Providers.DNS.Cloudflare
             return zones;
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+
+            _authKey = credentials.ContainsKey("authkey") ? credentials["authkey"] : null;
+            _apiToken = credentials.ContainsKey("apitoken") ? credentials["apitoken"] : null;
+            _emailAddress = credentials.ContainsKey("emailaddress") ? credentials["emailaddress"] : null;
+
+            if (string.IsNullOrEmpty(_apiToken) && (string.IsNullOrEmpty(_emailAddress) || string.IsNullOrEmpty(_authKey)))
+            {
+                throw new ArgumentException($"{ProviderTitle} requires either an API Token or an Email Address + AuthKey");
+            }
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {

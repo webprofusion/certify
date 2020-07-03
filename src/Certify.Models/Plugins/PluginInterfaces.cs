@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Models.Config;
+using Certify.Models.Providers;
 using Certify.Models.Shared;
 using Certify.Providers.CertificateManagers;
 using Certify.Providers.DeploymentTasks;
@@ -59,5 +60,12 @@ namespace Certify.Models.Plugins
     /// </summary>
     public interface ICertificateManagerProviderPlugin: IProviderPlugin<ICertificateManager, ProviderDefinition>
     {
+    }
+
+    /// <summary>
+    /// Plugins which implement one or more DNS providers implement this interface for dynamic plugin loading
+    /// </summary>
+    public interface IDnsProviderProviderPlugin: IProviderPlugin<IDnsProvider, ChallengeProviderDefinition>
+    { 
     }
 }

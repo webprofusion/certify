@@ -5,14 +5,14 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Certify.Models.Config;
+using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Newtonsoft.Json;
 
 namespace Certify.Providers.DNS.SimpleDNSPlus
 {
-    /// <summary>
-    /// SimpleDNSPlus DNS API Provider contributed by https://github.com/alphaz18
-    /// </summary>
+    public class DnsProviderSimpleDNSPlusProvider : PluginProviderBase<IDnsProvider, ChallengeProviderDefinition>, IDnsProviderProviderPlugin { }
+
     internal class Zone
     {
         public string Domain { get; set; }
@@ -33,13 +33,16 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
         public DnsRecord[] Result { get; set; }
     }
 
+    /// <summary>
+    /// SimpleDNSPlus DNS API Provider contributed by https://github.com/alphaz18
+    /// </summary>
     public class DnsProviderSimpleDNSPlus : DnsProviderBase, IDnsProvider
     {
         private ILog _log;
         private HttpClient _client = new HttpClient();
-        private readonly string _authKey;
-        private readonly string _authSecret;
-        private readonly string _authServer;
+        private string _authKey;
+        private string _authSecret;
+        private string _authServer;
         private string _baseUri;
         private string _listZonesUri;
         private string _createRecordUri;
@@ -88,12 +91,6 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
 
         public DnsProviderSimpleDNSPlus(Dictionary<string, string> credentials)
         {
-            _authKey = credentials["authkey"];
-            _authSecret = credentials["authsecret"];
-            _authServer = credentials["authserver"];
-            _baseUri = "https://" + _authServer + "/v2/";
-            _listZonesUri = _baseUri + "zones";
-            _createRecordUri = _baseUri + "zones/{0}/records";
         }
 
         public async Task<ActionResult> Test()
@@ -265,9 +262,16 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
             return zones;
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+
+            _authKey = credentials["authkey"];
+            _authSecret = credentials["authsecret"];
+            _authServer = credentials["authserver"];
+            _baseUri = "https://" + _authServer + "/v2/";
+            _listZonesUri = _baseUri + "zones";
+            _createRecordUri = _baseUri + "zones/{0}/records";
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {

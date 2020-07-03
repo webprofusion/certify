@@ -6,11 +6,14 @@ using Amazon.Route53;
 using Amazon.Route53.Model;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Newtonsoft.Json;
 
 namespace Certify.Providers.DNS.AWSRoute53
 {
+    public class DnsProviderAWSRoute53Provider : PluginProviderBase<IDnsProvider, ChallengeProviderDefinition>, IDnsProviderProviderPlugin { }
+
     public class DnsProviderAWSRoute53 : IDnsProvider
     {
         private AmazonRoute53Client _route53Client;
@@ -49,9 +52,8 @@ namespace Certify.Providers.DNS.AWSRoute53
             HandlerType = ChallengeHandlerType.INTERNAL
         };
 
-        public DnsProviderAWSRoute53(Dictionary<string, string> credentials)
+        public DnsProviderAWSRoute53()
         {
-            _route53Client = new AmazonRoute53Client(credentials["accesskey"], credentials["secretaccesskey"], Amazon.RegionEndpoint.USEast1);
         }
 
         public async Task<ActionResult> Test()
@@ -266,9 +268,11 @@ namespace Certify.Providers.DNS.AWSRoute53
             return results;
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+
+            _route53Client = new AmazonRoute53Client(credentials["accesskey"], credentials["secretaccesskey"], Amazon.RegionEndpoint.USEast1);
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {

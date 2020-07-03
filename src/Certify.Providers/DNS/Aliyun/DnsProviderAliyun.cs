@@ -5,20 +5,25 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Newtonsoft.Json;
 
 namespace Certify.Providers.DNS.Aliyun
 {
+
+    public class DnsProviderAliyunProvider : PluginProviderBase<IDnsProvider, ChallengeProviderDefinition>, IDnsProviderProviderPlugin { }
+
     /// <summary>
     /// Alibaba Cloud DNS API Provider contributed by https://github.com/TkYu
     /// </summary>
+    /// 
     public class DnsProviderAliyun : DnsProviderBase, IDnsProvider
     {
         private ILog _log;
 
-        private readonly string _accessKeyId;
-        private readonly string _accessKeySecret;
+        private string _accessKeyId;
+        private string _accessKeySecret;
 
         private int? _customPropagationDelay = null;
         public int PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
@@ -79,11 +84,8 @@ namespace Certify.Providers.DNS.Aliyun
             HandlerType = ChallengeHandlerType.INTERNAL
         };
 
-        public DnsProviderAliyun(Dictionary<string, string> credentials)
-        {
-            _accessKeyId = credentials["accesskeyid"];
-            _accessKeySecret = credentials["accesskeysecret"];
-        }
+        public DnsProviderAliyun()
+        {}
 
         public async Task<ActionResult> Test()
         {
@@ -252,9 +254,11 @@ namespace Certify.Providers.DNS.Aliyun
             return zones;
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+            _accessKeyId = credentials["accesskeyid"];
+            _accessKeySecret = credentials["accesskeysecret"];
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {

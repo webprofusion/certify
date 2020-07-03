@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models.Config;
+using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Microsoft.ApplicationInsights.DataContracts;
 
@@ -50,6 +52,37 @@ namespace Certify.Core.Management.Challenges.DNS
             [Yandex](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Yandex-Readme.md),
             [Zonomi](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Zonomi-Readme.md)
         */
+
+        public class PoshACMEDnsProviderProvider : IDnsProviderProviderPlugin
+        {
+            public IDnsProvider GetProvider(Type pluginType, string id)
+            {
+                foreach (var provider in ExtendedProviders)
+                {
+                    if (provider.Id == id)
+                    {
+                        var scriptPath = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), @"Scripts\DNS\PoshACME");
+                        // TODO : move this out, shared config should be injected
+                        var config = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
+                        return new DnsProviderPoshACME(scriptPath, config.PowershellExecutionPolicy) { DelegateProviderDefinition = provider };
+                    }
+                }
+                return null;
+            }
+
+            public List<ChallengeProviderDefinition> GetProviders(Type pluginType)
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    return ExtendedProviders.ToList();
+                }
+                else
+                {
+                    return new List<ChallengeProviderDefinition>();
+                }
+            }
+        }
+
 
         private const int DefaultPropagationDelay = 90;
 
@@ -663,10 +696,8 @@ namespace Certify.Core.Management.Challenges.DNS
             }
         };
 
-        public DnsProviderPoshACME(Dictionary<string, string> parameters, Dictionary<string, string> credentials, string scriptPath, string scriptExecutionPolicy)
+        public DnsProviderPoshACME(string scriptPath, string scriptExecutionPolicy)
         {
-            _parameters = parameters;
-            _credentials = credentials;
             _scriptExecutionPolicy = scriptExecutionPolicy;
 
             if (scriptPath != null)
@@ -730,9 +761,12 @@ namespace Certify.Core.Management.Challenges.DNS
 
         Task<List<DnsZone>> IDnsProvider.GetZones() => Task.FromResult(new List<DnsZone>());
 
-        Task<bool> IDnsProvider.InitProvider(Dictionary<string, string> parameters, ILog log)
+        Task<bool> IDnsProvider.InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log)
         {
             _log = log;
+
+            _credentials = credentials;
+            _parameters = parameters;
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
