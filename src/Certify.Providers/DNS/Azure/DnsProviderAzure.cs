@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models.Config;
+using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Microsoft.Azure.Management.Dns;
 using Microsoft.Azure.Management.Dns.Models;
@@ -10,6 +11,8 @@ using Microsoft.Rest.Azure.Authentication;
 
 namespace Certify.Providers.DNS.Azure
 {
+    public class DnsProviderAzureProvider : PluginProviderBase<IDnsProvider,ChallengeProviderDefinition>, IDnsProviderProviderPlugin { }
+
     public class DnsProviderAzure : DnsProviderBase, IDnsProvider
     {
         private ILog _log;
@@ -51,9 +54,8 @@ namespace Certify.Providers.DNS.Azure
             HandlerType = ChallengeHandlerType.INTERNAL
         };
 
-        public DnsProviderAzure(Dictionary<string, string> credentials)
+        public DnsProviderAzure()
         {
-            _credentials = credentials;
         }
 
         public async Task<ActionResult> Test()
@@ -78,9 +80,11 @@ namespace Certify.Providers.DNS.Azure
             }
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+
+            _credentials = credentials;
 
             // https://docs.microsoft.com/en-us/dotnet/api/overview/azure/dns?view=azure-dotnet
 

@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\Certify.Models\Certify.Models.csproj" />
+    <ProjectReference Include="..\..\..\..\Certify.Shared\Certify.Shared.Core.csproj" />
   </ItemGroup>
 
 </Project>

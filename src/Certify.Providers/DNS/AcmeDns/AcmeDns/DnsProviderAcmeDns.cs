@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Newtonsoft.Json;
 
@@ -22,6 +23,8 @@ namespace Certify.Providers.DNS.AcmeDns
         public string username { get; set; }
 #pragma warning restore IDE1006 // Naming Styles
     }
+
+    public class DnsProviderAcmeDnsProvider : PluginProviderBase<IDnsProvider, ChallengeProviderDefinition>, IDnsProviderProviderPlugin { }
 
     public class DnsProviderAcmeDns : IDnsProvider
     {
@@ -73,10 +76,9 @@ namespace Certify.Providers.DNS.AcmeDns
 
         private string _settingsPath { get; set; }
 
-        public DnsProviderAcmeDns(Dictionary<string, string> credentials, Dictionary<string, string> parameters, string settingsPath)
+        public DnsProviderAcmeDns()
         {
-            _parameters = parameters;
-            _settingsPath = settingsPath;
+            _settingsPath = Util.GetAppDataFolder();
 
             _client = new HttpClient();
             _client.DefaultRequestHeaders.Add("User-Agent", "Certify/DnsProviderAcmeDns");
@@ -229,9 +231,10 @@ namespace Certify.Providers.DNS.AcmeDns
             return await Task.FromResult(results);
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+            _parameters = parameters;
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {

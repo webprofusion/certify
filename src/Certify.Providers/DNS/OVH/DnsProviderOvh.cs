@@ -3,17 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models.Config;
+using Certify.Models.Plugins;
 using Certify.Models.Providers;
 
 namespace Certify.Providers.DNS.OVH
 {
+    public class DnsProviderOvhProvider : PluginProviderBase<IDnsProvider, ChallengeProviderDefinition>, IDnsProviderProviderPlugin { }
+
     /// <summary>
     /// OVH DNS API Provider contributed by contributed by https://github.com/laugel
     /// </summary>
     public class DnsProviderOvh : DnsProviderBase, IDnsProvider
     {
         private ILog _log;
-        private readonly Dictionary<string, string> credentials;
+        private Dictionary<string, string> credentials;
 
         private int? _customPropagationDelay = null;
         public int PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
@@ -139,14 +142,15 @@ namespace Certify.Providers.DNS.OVH
             return new OvhClient(OvhApplicationEndpoint ?? DefaultOvhEndpoint, OvhApplicationKey, OvhApplicationSecret, OvhConsumerKey);
         }
 
-        public DnsProviderOvh(Dictionary<string, string> credentials)
+        public DnsProviderOvh()
         {
-            this.credentials = credentials;
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+
+            this.credentials = credentials;
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {

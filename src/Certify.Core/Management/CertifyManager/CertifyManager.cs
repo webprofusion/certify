@@ -68,7 +68,7 @@ namespace Certify.Management
             _progressResults = new ObservableCollection<RequestProgressState>();
 
             _pluginManager = new PluginManager();
-            _pluginManager.LoadPlugins(new List<string> { "Licensing", "DashboardClient", "DeploymentTasks", "CertificateManagers" });
+            _pluginManager.LoadPlugins(new List<string> { "Licensing", "DashboardClient", "DeploymentTasks", "CertificateManagers", "ChallengeProviders" });
 
 
             // load core CAs and custom CAs

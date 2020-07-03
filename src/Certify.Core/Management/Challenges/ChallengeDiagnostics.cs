@@ -220,7 +220,8 @@ namespace Certify.Core.Management.Challenges
                     {
                         var recordName = $"_acme-challenge-test.{domain}".Replace("*.", "");
 
-                        if (challengeConfig.ChallengeProvider == Certify.Providers.DNS.AcmeDns.DnsProviderAcmeDns.Definition.Id)
+                        // ISSUE: dependency on changing behavior for a specific plugin
+                        if (challengeConfig.ChallengeProvider == "DNS01.API.AcmeDns")
                         {
                             // use real cname to avoid having to setup different records
                             recordName = $"_acme-challenge.{domain}".Replace("*.", "");
