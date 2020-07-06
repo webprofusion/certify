@@ -69,18 +69,6 @@
     <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />
     <ProjectReference Include="..\Certify.Models\Certify.Models.csproj" />
     <ProjectReference Include="..\Certify.Providers\ACME\Certes\Certify.Providers.ACME.Certes.csproj" />
-    <ProjectReference Include="..\Certify.Providers\DNS\AcmeDns\AcmeDns\AcmeDns.csproj" />
-    <ProjectReference Include="..\Certify.Providers\DNS\Aliyun\Aliyun.csproj" />
-    <ProjectReference Include="..\Certify.Providers\DNS\AWSRoute53\AWSRoute53.csproj" />
-    <ProjectReference Include="..\Certify.Providers\DNS\Azure\Azure.csproj" />
-    <ProjectReference Include="..\Certify.Providers\DNS\Cloudflare\Cloudflare.csproj" />
-    <ProjectReference Include="..\Certify.Providers\DNS\DnsMadeEasy\DnsMadeEasy.csproj" />
-    <ProjectReference Include="..\Certify.Providers\DNS\GoDaddy\GoDaddy.csproj" />
-    <ProjectReference Include="..\Certify.Providers\DNS\MSDNS\MSDNS.csproj" />
-    <ProjectReference Include="..\Certify.Providers\DNS\OVH\OVH.csproj" />
-    <ProjectReference Include="..\Certify.Providers\DNS\SimpleDNSPlus\SimpleDNSPlus.csproj" />
-    <ProjectReference Include="..\Certify.Providers\DNS\NameCheap\NameCheap.csproj" />
-    <ProjectReference Include="..\Certify.Providers\DNS\TransIP\TransIP.csproj" />
     <ProjectReference Include="..\Certify.Shared.Compat\Certify.Shared.Compat.csproj" />
     <ProjectReference Include="..\Certify.Shared\Certify.Shared.Core.csproj" />
   </ItemGroup>

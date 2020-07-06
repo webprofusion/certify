@@ -6,11 +6,15 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Certify.Models.Config;
+using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Newtonsoft.Json;
 
 namespace Certify.Providers.DNS.DnsMadeEasy
 {
+
+    public class DnsProviderDnsMadeEasyProvider : PluginProviderBase<IDnsProvider, ChallengeProviderDefinition>, IDnsProviderProviderPlugin { }
+
     /// <summary>
     /// API calls based on https://api-docs.dnsmadeeasy.com/
     /// </summary>
@@ -73,10 +77,8 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             HandlerType = ChallengeHandlerType.INTERNAL
         };
 
-        public DnsProviderDnsMadeEasy(Dictionary<string, string> credentials)
+        public DnsProviderDnsMadeEasy()
         {
-            _apiKey = credentials["apikey"];
-            _apiSecret = credentials["apisecret"];
             _httpClient = new HttpClient();
         }
 
@@ -273,9 +275,11 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             }
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+            _apiKey = credentials["apikey"];
+            _apiSecret = credentials["apisecret"];
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {

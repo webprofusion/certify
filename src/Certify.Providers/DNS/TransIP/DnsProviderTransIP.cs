@@ -4,12 +4,15 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Certify.Models.Config;
+using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Certify.Providers.DNS.TransIP.Authentication;
 using Newtonsoft.Json;
 
 namespace Certify.Providers.DNS.TransIP
 {
+    public class DnsProviderTransIPProvider : PluginProviderBase<IDnsProvider, ChallengeProviderDefinition>, IDnsProviderProviderPlugin { }
+
     public class DnsProviderTransIP : DnsProviderBase, IDnsProvider
     {
         internal const string BASE_URI = "https://api.transip.nl/v6/";
@@ -18,8 +21,8 @@ namespace Certify.Providers.DNS.TransIP
 
         private ILog _log;
         private DnsClient _dnsClient;
-        private readonly string _login;
-        private readonly string _privateKey;
+        private string _login;
+        private string _privateKey;
 
         private int? _customPropagationDelay = null;
         public int PropagationDelaySeconds => _customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds;
@@ -59,10 +62,8 @@ namespace Certify.Providers.DNS.TransIP
             }
         }
 
-        public DnsProviderTransIP(Dictionary<string, string> credentials)
+        public DnsProviderTransIP()
         {
-            _login = credentials["login"];
-            _privateKey = credentials["privatekey"];
         }
 
         public async Task<ActionResult> Test()
@@ -130,9 +131,12 @@ namespace Certify.Providers.DNS.TransIP
             return await _dnsClient.Remove(root.RootDomain, entry);
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+
+            _login = credentials["login"];
+            _privateKey = credentials["privatekey"];
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {

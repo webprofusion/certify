@@ -26,8 +26,8 @@ namespace Certify.Core.Management.Challenges.DNS
 
         List<ProviderParameter> IDnsProvider.ProviderParameters => Definition.ProviderParameters;
 
-        private readonly string _createScriptPath = "";
-        private readonly string _deleteScriptPath = "";
+        private string _createScriptPath = "";
+        private string _deleteScriptPath = "";
         private int? _customPropagationDelay = null;
 
         public static ChallengeProviderDefinition Definition => new ChallengeProviderDefinition
@@ -48,17 +48,8 @@ namespace Certify.Core.Management.Challenges.DNS
             HandlerType = ChallengeHandlerType.CUSTOM_SCRIPT
         };
 
-        public DnsProviderScripting(Dictionary<string, string> parameters)
+        public DnsProviderScripting()
         {
-            if (parameters.ContainsKey("createscriptpath"))
-            {
-                _createScriptPath = parameters["createscriptpath"];
-            }
-
-            if (parameters.ContainsKey("deletescriptpath"))
-            {
-                _deleteScriptPath = parameters["deletescriptpath"];
-            }
         }
 
         public async Task<ActionResult> CreateRecord(DnsRecord request)
@@ -93,10 +84,20 @@ namespace Certify.Core.Management.Challenges.DNS
 
         Task<List<DnsZone>> IDnsProvider.GetZones() => Task.FromResult(new List<DnsZone>());
 
-        Task<bool> IDnsProvider.InitProvider(Dictionary<string, string> parameters, ILog log)
+        Task<bool> IDnsProvider.InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log)
         {
             _log = log;
-            
+
+            if (parameters?.ContainsKey("createscriptpath") == true)
+            {
+                _createScriptPath = parameters["createscriptpath"];
+            }
+
+            if (parameters?.ContainsKey("deletescriptpath") == true)
+            {
+                _deleteScriptPath = parameters["deletescriptpath"];
+            }
+
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
                 if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))

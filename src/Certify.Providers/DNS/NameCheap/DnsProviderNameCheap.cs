@@ -7,27 +7,25 @@ using System.Web;
 using System.Xml.Linq;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Plugins;
 using Certify.Models.Providers;
 
 // ReSharper disable once CheckNamespace
 namespace Certify.Providers.DNS.NameCheap
 {
+    public class DnsProviderNameCheapProvider : PluginProviderBase<IDnsProvider, ChallengeProviderDefinition>, IDnsProviderProviderPlugin { }
+
     public class DnsProviderNameCheap : IDnsProvider
     {
-        public DnsProviderNameCheap(Dictionary<string, string> credentials)
+        public DnsProviderNameCheap()
         {
-            _apiUser = credentials[PARAM_API_USER];
-            _apiKey = credentials[PARAM_API_KEY];
-            _ip = credentials[PARAM_IP];
-
-            _http = new HttpClient();
         }
 
-        private readonly string _apiUser;
-        private readonly string _apiKey;
-        private readonly string _ip;
+        private string _apiUser;
+        private string _apiKey;
+        private string _ip;
 
-        private readonly HttpClient _http;
+        private HttpClient _http;
 
         private ILog _log;
 
@@ -87,9 +85,15 @@ namespace Certify.Providers.DNS.NameCheap
         /// <summary>
         /// Initializes the provider.
         /// </summary>
-        public Task<bool> InitProvider(Dictionary<string, string> parameters, ILog log = null)
+        public Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+
+            _apiUser = credentials[PARAM_API_USER];
+            _apiKey = credentials[PARAM_API_KEY];
+            _ip = credentials[PARAM_IP];
+
+            _http = new HttpClient();
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {

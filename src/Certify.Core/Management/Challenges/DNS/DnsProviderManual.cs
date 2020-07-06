@@ -59,7 +59,7 @@ namespace Certify.Core.Management.Challenges.DNS
 
         Task<List<DnsZone>> IDnsProvider.GetZones() => Task.FromResult(new List<DnsZone>());
 
-        Task<bool> IDnsProvider.InitProvider(Dictionary<string, string> parameters, ILog log)
+        Task<bool> IDnsProvider.InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log)
         {
             _log = log;
 
