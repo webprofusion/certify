@@ -70,4 +70,8 @@
     <None Include="App.config" />
     <None Include="app.manifest" />
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy /i /s /Y $(SolutionDir)..\build\plugins\$(ConfigurationName)\Plugin.*.dll $(TargetDir)\Plugins\" />
+  </Target>
 </Project>

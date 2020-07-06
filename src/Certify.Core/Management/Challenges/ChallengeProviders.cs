@@ -168,23 +168,18 @@ namespace Certify.Core.Management.Challenges
         {
             IDnsProvider dnsAPIProvider = null;
 
-            if (providerType == "DNS01.API.MSDNS" && PluginManager._instance.DnsMSDNSFailedToLoad)
-            {
-                // We saved earlier that the MSDNS provider failed to load. It's now explicitly being requested, so log that failure.
-                log?.Error("Failed to create MS DNS API Provider. Check Microsoft.Management.Infrastructure is available and install latest compatible Windows Management Framework: https://docs.microsoft.com/en-us/powershell/wmf/overview");
-                return null;
-            }
+
 
             if (!string.IsNullOrEmpty(providerType))
             {
-                List<IDnsProviderProviderPlugin> providerPlugins = PluginManager._instance.DnsProviderProviders;
+                List<IDnsProviderProviderPlugin> providerPlugins = PluginManager.CurrentInstance.DnsProviderProviders;
                 foreach (IDnsProviderProviderPlugin providerPlugin in providerPlugins)
                 {
                     dnsAPIProvider = providerPlugin.GetProvider(providerPlugin.GetType(), providerType);
                     if (dnsAPIProvider != null)
                     {
                         break;
-                    }    
+                    }
                 }
             }
             else
@@ -192,7 +187,22 @@ namespace Certify.Core.Management.Challenges
                 return null;
             }
 
-            if (dnsAPIProvider != null)
+            if (dnsAPIProvider == null)
+            {
+                // we don't have the requested provider available, plugin probably didn't load or ID is wrong
+                if (providerType == "DNS01.API.MSDNS")
+                {
+                    // We saved earlier that the MSDNS provider failed to load. It's now explicitly being requested, so log that failure.
+                    log?.Error("Failed to create MS DNS API Provider. Check Microsoft.Management.Infrastructure is available and install latest compatible Windows Management Framework: https://docs.microsoft.com/en-us/powershell/wmf/overview");
+                    return null;
+                }
+                else
+                {
+                    log?.Error($"Cannot create requested DNS API Provider. Plugin did not load or provider ID is invalid: {providerType}");
+                    return null;
+                }
+            }
+            else
             {
                 await dnsAPIProvider.InitProvider(credentials, parameters, log);
             }
@@ -202,7 +212,7 @@ namespace Certify.Core.Management.Challenges
 
         public static async Task<List<ChallengeProviderDefinition>> GetChallengeAPIProviders()
         {
-            return PluginManager._instance.DnsProviderProviders.SelectMany(pp => pp.GetProviders(pp.GetType())).ToList();
+            return PluginManager.CurrentInstance.DnsProviderProviders.SelectMany(pp => pp.GetProviders(pp.GetType())).ToList();
         }
     }
 }

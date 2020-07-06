@@ -11,6 +11,17 @@ using Serilog;
 
 namespace Certify.Management
 {
+    public class PluginLoadResult : ActionResult
+    {
+        public string PluginName { get; set; }
+
+        public PluginLoadResult(string name, string msg, bool isSuccess)
+        {
+            PluginName = name;
+            Message = msg;
+            IsSuccess = isSuccess;
+        }
+    }
     public class PluginManager
     {
         public const string APPDATASUBFOLDER = "Certify";
@@ -20,11 +31,9 @@ namespace Certify.Management
         public List<IDeploymentTaskProviderPlugin> DeploymentTaskProviders { get; set; }
         public List<ICertificateManagerProviderPlugin> CertificateManagerProviders { get; set; }
         public List<IDnsProviderProviderPlugin> DnsProviderProviders { get; set; }
-        public bool DnsMSDNSFailedToLoad { get; private set; }
+        public List<PluginLoadResult> PluginLoadResults { get; private set; } = new List<PluginLoadResult>();
 
-        // ISSUE: Difficult to plumb PluginManager all the way through to ChallengeProviders, as that's about 7-8 layers deep on the call stack from where this is accessible.
-        // Since there's no injection container, making a cubbyhole for it here.
-        public static PluginManager _instance { get; private set; }
+        public static PluginManager CurrentInstance { get; private set; }
 
         private Models.Providers.ILog _log = null;
 
@@ -37,9 +46,9 @@ namespace Certify.Management
                         .CreateLogger()
                 );
 
-            if (_instance == null)
+            if (CurrentInstance == null)
             {
-                _instance = this;
+                CurrentInstance = this;
             }
         }
 
@@ -157,8 +166,8 @@ namespace Certify.Management
                 deploymentTaskProviders.Add(core);
                 deploymentTaskProviders.Add(azure);
                 var otherAssemblies = new DirectoryInfo(GetPluginFolderPath()).GetFiles("Plugin.DeploymentTasks.*.dll")
-                    .Where(f => 
-                        f.Name.ToUpperInvariant() != "PLUGIN.DEPLOYMENTTASKS.CORE.DLL" && 
+                    .Where(f =>
+                        f.Name.ToUpperInvariant() != "PLUGIN.DEPLOYMENTTASKS.CORE.DLL" &&
                         f.Name.ToUpperInvariant() != "PLUGIN.DEPLOYMENTTASKS.AZURE.DLL");
                 var others = otherAssemblies.Select(assem => LoadPlugin<IDeploymentTaskProviderPlugin>(assem.Name)).ToList();
                 deploymentTaskProviders.AddRange(others);
@@ -173,53 +182,48 @@ namespace Certify.Management
                 };
             }
 
-            if (includeSet.Contains("ChallengeProviders"))
+            if (includeSet.Contains("DnsProviders"))
             {
                 var dnsProviderProviders = new List<IDnsProviderProviderPlugin>();
                 DnsProviderProviders = dnsProviderProviders;
 
-                // ISSUE: hidden dependency from Shared Core to Core, breaks layering
+                // TODO: convert core providers to plugins
                 var builtInProvider = (IDnsProviderProviderPlugin)Activator.CreateInstance(Type.GetType("Certify.Core.Management.Challenges.ChallengeProviders+BuiltinDnsProviderProvider, Certify.Core"));
                 dnsProviderProviders.Add(builtInProvider);
-                var poshProvider = (IDnsProviderProviderPlugin)Activator.CreateInstance(Type.GetType("Certify.Core.Management.Challenges.DNS.DnsProviderPoshACME+PoshACMEDnsProviderProvider, Certify.Core"));
-                dnsProviderProviders.Add(poshProvider);
 
-                var inBoxProviders = new string[]
-                {
-                    "Certify.DNS.AcmeDns.dll",
-                    "Certify.DNS.Aliyun.dll",
-                    "Certify.DNS.AWSRoute53.dll",
-                    "Certify.DNS.Azure.dll",
-                    "Certify.DNS.Cloudflare.dll",
-                    "Certify.DNS.DnsMadeEasy.dll",
-                    "Certify.DNS.GoDaddy.dll",
-                    // MSDNS intentionally skipped due to special handling characteristics
-                    "Certify.DNS.NameCheap.dll",
-                    "Certify.DNS.OVH.dll",
-                    "Certify.DNS.SimpleDNSPlus.dll",
-                    "Certify.DNS.TransIP.dll"
-                };
-                foreach (var name in inBoxProviders)
-                {
-                    var plugin = LoadPlugin<IDnsProviderProviderPlugin>(name);
-                    dnsProviderProviders.Add(plugin);
-                }
-                
-                try
-                {
-                    var msdnsProvider = LoadPlugin<IDnsProviderProviderPlugin>("Certify.DNS.MicrosoftDns.dll");
-                    dnsProviderProviders.Add(msdnsProvider);
-                }
-                catch(Exception)
-                {
-                    // Microsoft.Management.Infrastructure is not available or Windows Management Framework for Powershell is not installed.
-                    // Remember that this happened so it can be reported later if needed.
-                    DnsMSDNSFailedToLoad = true;
-                }
+                var poshAcmeProvider = (IDnsProviderProviderPlugin)Activator.CreateInstance(Type.GetType("Certify.Core.Management.Challenges.DNS.DnsProviderPoshACME+PoshACMEDnsProviderProvider, Certify.Core"));
+                dnsProviderProviders.Add(poshAcmeProvider);
 
-                var otherAssemblies = new DirectoryInfo(GetPluginFolderPath()).GetFiles("Plugin.DNS.*.dll");
-                var others = otherAssemblies.Select(assem => LoadPlugin<IDnsProviderProviderPlugin>(assem.Name)).ToList();
-                dnsProviderProviders.AddRange(others);
+                var dnsPluginAssemblyFiles = new DirectoryInfo(GetPluginFolderPath()).GetFiles("Plugin.DNS.*.dll");
+                var dnsPlugins = dnsPluginAssemblyFiles.Select(assem =>
+                {
+
+                    try
+                    {
+                        var result = LoadPlugin<IDnsProviderProviderPlugin>(assem.Name);
+
+                        if (result != null)
+                        {
+                            PluginLoadResults.Add(new PluginLoadResult(assem.Name, $"Loaded plugin: {assem.Name}", true));
+                        }
+                        else
+                        {
+                            PluginLoadResults.Add(new PluginLoadResult(assem.Name, $"Failed to load plugin: {assem.Name}", false));
+                        }
+                        return result;
+                    }
+                    catch (Exception exp)
+                    {
+                        // failed to load plugin
+                        PluginLoadResults.Add(new PluginLoadResult(assem.Name, $"Failed to load DNS plugin: {assem.Name} {exp}", false));
+                        return null;
+                    }
+
+                })
+                .Where(p => p != null)
+                .ToList();
+
+                dnsProviderProviders.AddRange(dnsPlugins);
             }
 
             s.Stop();

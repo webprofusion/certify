@@ -3,12 +3,16 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Platforms>x64</Platforms>
-    <AssemblyName>Certify.DNS.AcmeDns</AssemblyName>
+    <AssemblyName>Plugin.DNS.AcmeDns</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\Certify.Models\Certify.Models.csproj" />
     <ProjectReference Include="..\..\..\..\Certify.Shared\Certify.Shared.Core.csproj" />
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="REM Copy latest plugin build to plugins output folder&#xD;&#xA;xcopy /i /s /Y $(TargetPath) $(SolutionDir)\..\build\plugins\$(ConfigurationName)\" />
+  </Target>
 
 </Project>

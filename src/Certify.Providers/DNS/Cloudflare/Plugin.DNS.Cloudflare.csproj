@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Platforms>x64</Platforms>
-    <AssemblyName>Certify.DNS.OVH</AssemblyName>
+    <AssemblyName>Plugin.DNS.Cloudflare</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,5 +14,8 @@
     <ProjectReference Include="..\..\..\Certify.Models\Certify.Models.csproj" />
   </ItemGroup>
 
-</Project>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="REM Copy latest plugin build to plugins output folder&#xD;&#xA;xcopy /i /s /Y $(TargetPath) $(SolutionDir)\..\build\plugins\$(ConfigurationName)\" />
+  </Target>
 
+</Project>

@@ -51,8 +51,8 @@ namespace Certify.Core.Tests
             var credentialsManager = new CredentialsManager();
             _credentials = await credentialsManager.GetUnlockedCredentialsDictionary(_credStorageKey);
 
-            _provider = new Providers.DNS.Azure.DnsProviderAzure(_credentials);
-            await _provider.InitProvider(new Dictionary<string, string> { });
+            _provider = new Providers.DNS.Azure.DnsProviderAzure();
+            await _provider.InitProvider(_credentials, new Dictionary<string, string> { });
         }
 
         [TestMethod, TestCategory("DNS")]

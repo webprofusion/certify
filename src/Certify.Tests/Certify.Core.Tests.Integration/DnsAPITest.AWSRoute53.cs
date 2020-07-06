@@ -50,8 +50,8 @@ namespace Certify.Core.Tests
             var credentialsManager = new CredentialsManager();
             _credentials = await credentialsManager.GetUnlockedCredentialsDictionary(_credStorageKey);
 
-            _provider = new Providers.DNS.AWSRoute53.DnsProviderAWSRoute53(_credentials);
-            await _provider.InitProvider(new Dictionary<string, string> { });
+            _provider = new Providers.DNS.AWSRoute53.DnsProviderAWSRoute53();
+            await _provider.InitProvider(_credentials, new Dictionary<string, string> { });
         }
 
         [TestMethod, TestCategory("DNS")]
@@ -87,7 +87,7 @@ namespace Certify.Core.Tests
         public async Task TestProvider()
         {
             var result = await _provider.Test();
-           
+
             Assert.IsTrue(result.IsSuccess);
 
         }

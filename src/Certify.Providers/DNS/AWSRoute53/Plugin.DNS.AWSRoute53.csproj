@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Platforms>x64</Platforms>
-    <AssemblyName>Certify.DNS.AWSRoute53</AssemblyName>
+    <AssemblyName>Plugin.DNS.AWSRoute53</AssemblyName>
   </PropertyGroup>
   
   <ItemGroup>
@@ -13,5 +13,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Certify.Models\Certify.Models.csproj" />
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="REM Copy latest plugin build to plugins output folder&#xD;&#xA;xcopy /i /s /Y $(TargetPath) $(SolutionDir)\..\build\plugins\$(ConfigurationName)\" />
+  </Target>
 
 </Project>

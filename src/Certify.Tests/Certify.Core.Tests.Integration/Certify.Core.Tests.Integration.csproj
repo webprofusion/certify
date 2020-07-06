@@ -64,9 +64,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Certify.Models\Certify.Models.csproj" />
-    <ProjectReference Include="..\..\Certify.Providers\DNS\AWSRoute53\AWSRoute53.csproj" />
-    <ProjectReference Include="..\..\Certify.Providers\DNS\Azure\Azure.csproj" />
-    <ProjectReference Include="..\..\Certify.Providers\DNS\Cloudflare\Cloudflare.csproj" />
+    <ProjectReference Include="..\..\Certify.Providers\DNS\AWSRoute53\Plugin.DNS.AWSRoute53.csproj" />
+    <ProjectReference Include="..\..\Certify.Providers\DNS\Azure\Plugin.DNS.Azure.csproj" />
+    <ProjectReference Include="..\..\Certify.Providers\DNS\Cloudflare\Plugin.DNS.Cloudflare.csproj" />
     <ProjectReference Include="..\..\Certify.Service\Certify.Service.csproj" />
     <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.Core.csproj" />
   </ItemGroup>
