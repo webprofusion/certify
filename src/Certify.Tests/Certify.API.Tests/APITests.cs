@@ -29,7 +29,7 @@ namespace Certify.API.Tests
             // TODO : create API server instance instead of invoking directly
             if (_apiService == null)
             {
-                _apiService = Process.Start(@"C:\Work\GIT\certify\src\Certify.Service\bin\Debug\net462\CertifySSLManager.Service.exe");
+                _apiService = Process.Start(@"..\..\..\..\..\src\Certify.Service\bin\Debug\net462\CertifySSLManager.Service.exe");
 
                 await Task.Delay(2000);
             }
