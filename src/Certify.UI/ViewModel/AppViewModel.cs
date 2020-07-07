@@ -520,6 +520,13 @@ namespace Certify.UI.ViewModel
             var existing = ManagedCertificates.FirstOrDefault(s => s.Id == selectedItem.Id);
             if (existing != null)
             {
+                if (existing.ItemType == ManagedCertificateType.SSL_ExternallyManaged)
+                {
+                    MessageBox.Show("This item is externally managed and cannot be deleted by this app.");
+
+                    return false;
+                }
+
                 if (MessageBox.Show(SR.ManagedCertificateSettings_ConfirmDelete, SR.ConfirmDelete, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
                 {
                     existing.Deleted = true;
