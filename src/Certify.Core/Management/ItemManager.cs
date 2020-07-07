@@ -155,8 +155,6 @@ namespace Certify.Management
 
             return true;
         }
-
-#if DEBUG
         public async Task DeleteAll()
         {
             var items = await GetAll();
@@ -166,7 +164,6 @@ namespace Certify.Management
             }
 
         }
-#endif
 
         private async Task<IQueryable<ManagedCertificate>> LoadAllManagedCertificates(ManagedCertificateFilter filter)
         {
@@ -309,11 +306,6 @@ namespace Certify.Management
         public async Task<List<ManagedCertificate>> GetAll(ManagedCertificateFilter filter = null)
         {
 
-#if DEBUG
-            // filter.PageIndex = 0;
-            // filter.PageSize = 100;
-#endif
-
             var items = await LoadAllManagedCertificates(filter);
 
             if (filter != null)
@@ -406,7 +398,6 @@ namespace Certify.Management
             }
         }
 
-#if DEBUG
         public async Task DeleteByName(string nameStartsWith)
         {
             var items = await LoadAllManagedCertificates(new ManagedCertificateFilter { Name = nameStartsWith });
@@ -418,6 +409,5 @@ namespace Certify.Management
                 await Delete(item);
             }
         }
-#endif
     }
 }
