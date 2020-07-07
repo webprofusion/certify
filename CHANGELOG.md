@@ -1,1 +1,0 @@
-See here for release notes: https://certifytheweb.com/home/changelog

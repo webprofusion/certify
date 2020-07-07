@@ -1,4 +1,4 @@
-# Certify The Web - SSL Manager UI for Windows
+# Certify The Web - Certificate Manager UI for Windows
 
 - Home page for downloads, info and support : [https://certifytheweb.com/](https://certifytheweb.com/)
 - Documentation can be found at: [https://docs.certifytheweb.com](https://docs.certifytheweb.com)
@@ -22,14 +22,14 @@ Features:
 - Preview mode to see which actions the app will perform (including which bindings will be added/updated)
 - SAN support (multi-domain certificates)
 - Support for v2 of the Let's Encrypt API including Wildcard Certificate support (*.example.com)
+- Support for BuyPass Go SSL.
 - Http or DNS challenge validation.
 	- Built-in Http Challenge Server for easier configuration of challenge responses
-	- DNS Validation via supported APIs (including Azure DNS, Alibaba Cloud, AWS Route53, Cloudflare, DnsMadeEasy, GoDaddy), OVH, SimpleDNSPlus
+	- DNS Validation via over 26 supported APIs (including Azure DNS, Alibaba Cloud, AWS Route53, Cloudflare, DnsMadeEasy, GoDaddy, OVH, SimpleDNSPlus)
 - Stored Credentials (API access keys etc. protected by the Windows Data Protection API)
-- Optional Pre/Post request powershell scripting for advanced deployment (Exchange, RDS, multi-server etc)
-- Web Hook support for custom reporting.
+- Optional Pre/Post request deployment tasks and scripting for advanced deployment (Exchange, RDS, multi-server, CCS, Apache, nginx, export, webhooks, Azure KeyVault etc)
 
-The Community edition is free, Professional and Enterprise license keys are available for commercial organisations or users who wish to help fund development.
+The Community edition is free, Professional and Enterprise license keys are available for commercial organisations, users who wish to help fund development or users who require support.
 
 ----------
 Quick Start (IIS users)
@@ -39,6 +39,8 @@ Quick Start (IIS users)
 3. All done! The certificate will renew automatically.
 
 Users with more complex requirements can explore the different validation modes, deployment modes and other advanced options.
+
+https://docs.certifytheweb.com
 
 Development & Bug Reporting
 -------------
