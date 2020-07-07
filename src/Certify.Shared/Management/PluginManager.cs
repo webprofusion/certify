@@ -149,7 +149,6 @@ namespace Certify.Management
             if (includeSet.Contains("Licensing"))
             {
                 LicensingManager = LoadPlugin<ILicensingManager>("Plugin.Licensing.dll");
-
             }
 
             if (includeSet.Contains("DashboardClient"))
@@ -160,17 +159,12 @@ namespace Certify.Management
             if (includeSet.Contains("DeploymentTasks"))
             {
                 var deploymentTaskProviders = new List<IDeploymentTaskProviderPlugin>();
+
                 DeploymentTaskProviders = deploymentTaskProviders;
-                var core = LoadPlugin<IDeploymentTaskProviderPlugin>("Plugin.DeploymentTasks.Core.dll");
-                var azure = LoadPlugin<IDeploymentTaskProviderPlugin>("Plugin.DeploymentTasks.Azure.dll");
-                deploymentTaskProviders.Add(core);
-                deploymentTaskProviders.Add(azure);
-                var otherAssemblies = new DirectoryInfo(GetPluginFolderPath()).GetFiles("Plugin.DeploymentTasks.*.dll")
-                    .Where(f =>
-                        f.Name.ToUpperInvariant() != "PLUGIN.DEPLOYMENTTASKS.CORE.DLL" &&
-                        f.Name.ToUpperInvariant() != "PLUGIN.DEPLOYMENTTASKS.AZURE.DLL");
-                var others = otherAssemblies.Select(assem => LoadPlugin<IDeploymentTaskProviderPlugin>(assem.Name)).ToList();
-                deploymentTaskProviders.AddRange(others);
+
+                var taskPlugins = LoadPlugins<IDeploymentTaskProviderPlugin>("Plugin.DeploymentTasks.*.dll");
+
+                deploymentTaskProviders.AddRange(taskPlugins);
             }
 
             if (includeSet.Contains("CertificateManagers"))
@@ -194,34 +188,7 @@ namespace Certify.Management
                 var poshAcmeProvider = (IDnsProviderProviderPlugin)Activator.CreateInstance(Type.GetType("Certify.Core.Management.Challenges.DNS.DnsProviderPoshACME+PoshACMEDnsProviderProvider, Certify.Core"));
                 dnsProviderProviders.Add(poshAcmeProvider);
 
-                var dnsPluginAssemblyFiles = new DirectoryInfo(GetPluginFolderPath()).GetFiles("Plugin.DNS.*.dll");
-                var dnsPlugins = dnsPluginAssemblyFiles.Select(assem =>
-                {
-
-                    try
-                    {
-                        var result = LoadPlugin<IDnsProviderProviderPlugin>(assem.Name);
-
-                        if (result != null)
-                        {
-                            PluginLoadResults.Add(new PluginLoadResult(assem.Name, $"Loaded plugin: {assem.Name}", true));
-                        }
-                        else
-                        {
-                            PluginLoadResults.Add(new PluginLoadResult(assem.Name, $"Failed to load plugin: {assem.Name}", false));
-                        }
-                        return result;
-                    }
-                    catch (Exception exp)
-                    {
-                        // failed to load plugin
-                        PluginLoadResults.Add(new PluginLoadResult(assem.Name, $"Failed to load DNS plugin: {assem.Name} {exp}", false));
-                        return null;
-                    }
-
-                })
-                .Where(p => p != null)
-                .ToList();
+                var dnsPlugins = LoadPlugins<IDnsProviderProviderPlugin>("Plugin.DNS.*.dll");
 
                 dnsProviderProviders.AddRange(dnsPlugins);
             }
@@ -229,6 +196,41 @@ namespace Certify.Management
             s.Stop();
 
             _log?.Debug($"Plugin load took {s.ElapsedMilliseconds}ms");
+        }
+
+        private List<T> LoadPlugins<T>(string fileMatch)
+        {
+            var pluginAssemblyFiles = new DirectoryInfo(GetPluginFolderPath()).GetFiles(fileMatch);
+
+            var plugins = pluginAssemblyFiles.Select(assem =>
+            {
+
+                try
+                {
+                    var result = LoadPlugin<T>(assem.Name);
+
+                    if (result != null)
+                    {
+                        PluginLoadResults.Add(new PluginLoadResult(assem.Name, $"Loaded plugin: {assem.Name}", true));
+                    }
+                    else
+                    {
+                        PluginLoadResults.Add(new PluginLoadResult(assem.Name, $"Failed to load plugin: {assem.Name}", false));
+                    }
+                    return result;
+                }
+                catch (Exception exp)
+                {
+                    // failed to load plugin
+                    PluginLoadResults.Add(new PluginLoadResult(assem.Name, $"Failed to load plugin: {assem.Name} {exp}", false));
+                    return default(T);
+                }
+
+            })
+            .Where(p => p != null)
+            .ToList();
+
+            return plugins;
         }
     }
 }
