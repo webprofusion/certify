@@ -33,7 +33,7 @@ namespace Certify.Utils
             return GetAlternativeName(extVal);
         }
 
-        private static ICollection GetAlternativeName(
+        public static ICollection GetAlternativeName(
             Asn1OctetString extVal)
         {
             IList temp = new ArrayList(); //Platform.CreateArrayList();

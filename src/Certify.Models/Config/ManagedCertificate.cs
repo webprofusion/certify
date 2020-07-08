@@ -181,7 +181,7 @@ namespace Certify.Models
         /// <summary>
         /// If true, pre/post request tasks will run for renewal but the certificate order won't be performed (used for testing).
         /// </summary>
-        public bool? SkipCertificateRequest { get; set; }
+        public bool? SkipCertificateRequest { get; set; } = false;
 
         public override string ToString() => $"[{Id ?? "null"}]: \"{Name}\"";
 

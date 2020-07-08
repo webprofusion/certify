@@ -198,6 +198,16 @@ namespace Certify.Models
         /// </summary>
         public ObservableCollection<CertRequestChallengeConfig> Challenges { get; set; }
 
+        /// <summary>
+        /// If set, this is a custom PEM encoded CSR to use for the certificate signing request to the CA
+        /// </summary>
+        public string CustomCSR { get; set; }
+
+        /// <summary>
+        /// If set, this is a custom Private Key to use for certificate signing
+        /// </summary>
+        public string CustomPrivateKey { get; set; }
+
         public void ApplyDeploymentOptionDefaults()
         {
             // if the selected mode is auto, discard settings which do not apply

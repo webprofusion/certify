@@ -35,6 +35,7 @@
                 DockPanel.Dock="Top">
 
                 <!--  General Options  -->
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">General</TextBlock>
                 <DockPanel
                     Margin="0,0,0,12"
                     DockPanel.Dock="Top"
@@ -75,34 +76,58 @@
                 </StackPanel>
 
 
+
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">CSR Options</TextBlock>
                 <!--  CSR Options  -->
                 <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
-                    <Label Content="CSR Signing Algorithm" />
-                    <StackPanel Margin="120,0,0,0">
-                        <RadioButton
-                            x:Name="CSROption_RS256"
-                            Margin="8,4,0,4"
-                            Content="RSASSA-PKCS1-v1_5 using SHA-256 (Default)"
-                            GroupName="CSRAlg"
-                            IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=RS256}" />
-                        <RadioButton
-                            x:Name="CSROption_ECDSA256"
-                            Margin="8,0,0,4"
-                            Content="ECDSA using P-256 and SHA-256"
-                            GroupName="CSRAlg"
-                            IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=ECDSA256}" />
-                        <RadioButton
-                            x:Name="CSROption_ECDSA384"
-                            Margin="8,0,0,4"
-                            Content="ECDSA using P-384 and SHA-384"
-                            GroupName="CSRAlg"
-                            IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=ECDSA384}" />
-                        <RadioButton
-                            x:Name="CSROption_ECDSA521"
-                            Margin="8,0,0,4"
-                            Content="ECDSA using P-521 and SHA-512"
-                            GroupName="CSRAlg"
-                            IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=ECDSA521}" />
+                    <StackPanel>
+
+                        <TextBlock Style="{StaticResource Instructions}">By default a CSR (Certificate Signing Request) will be generated every time certificate is requested or renewed. You can optionally supply a custom CSR</TextBlock>
+                        <Button
+                            x:Name="SelectCustomCSR"
+                            Width="160"
+                            HorizontalAlignment="Left"
+                            Click="SelectCustomCSR_Click"
+                            Content="Choose Custom CSR.." />
+                    </StackPanel>
+                    <StackPanel>
+
+                        <TextBlock Style="{StaticResource Instructions}">A new private key will normally be generated for each certificate request. You can optionally supply a custom key:</TextBlock>
+                        <Button
+                            x:Name="SelectPrivateKey"
+                            Width="160"
+                            HorizontalAlignment="Left"
+                            Click="SelectCustomPrivateKey_Click"
+                            Content="Choose Private Key.." />
+                    </StackPanel>
+                    <StackPanel>
+                        <Label Content="CSR Signing Algorithm" />
+                        <StackPanel Margin="120,0,0,0">
+                            <RadioButton
+                                x:Name="CSROption_RS256"
+                                Margin="8,4,0,4"
+                                Content="RSASSA-PKCS1-v1_5 using SHA-256 (Default)"
+                                GroupName="CSRAlg"
+                                IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=RS256}" />
+                            <RadioButton
+                                x:Name="CSROption_ECDSA256"
+                                Margin="8,0,0,4"
+                                Content="ECDSA using P-256 and SHA-256"
+                                GroupName="CSRAlg"
+                                IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=ECDSA256}" />
+                            <RadioButton
+                                x:Name="CSROption_ECDSA384"
+                                Margin="8,0,0,4"
+                                Content="ECDSA using P-384 and SHA-384"
+                                GroupName="CSRAlg"
+                                IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=ECDSA384}" />
+                            <RadioButton
+                                x:Name="CSROption_ECDSA521"
+                                Margin="8,0,0,4"
+                                Content="ECDSA using P-521 and SHA-512"
+                                GroupName="CSRAlg"
+                                IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=ECDSA521}" />
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
             </StackPanel>
@@ -179,10 +204,7 @@
                             Click="RevokeCertificateBtn_Click"
                             Content="{x:Static Resources:SR.ManagedCertificateSettings_RevokeCertificate}" />
                     </Border>
-                    <Border
-                        Grid.Row="4"
-                        Grid.Column="1"
-                    >
+                    <Border Grid.Row="4" Grid.Column="1">
                         <Border.Style>
                             <Style>
                                 <Setter Property="Border.Visibility" Value="Collapsed" />

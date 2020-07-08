@@ -44,7 +44,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <DockPanel Margin="8,0,8,8" Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
 
-                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}"><Run Text="Select domains from existing hostname bindings on an website or add the domains manually. You can then select " /><Run FontWeight="Bold" Text="Request Certificate " /><Run Text="above or modify options as required." /></TextBlock>
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}"><Run Text="Select domains from existing hostname bindings on an website or add the domains manually. You can then select " /><Run FontWeight="Bold" Text="Request Certificate " /><Run Text="above or modify options as required. To specify a custom CSR see the Advanced tab." /></TextBlock>
 
                         <StackPanel
                             Margin="0,8,0,0"

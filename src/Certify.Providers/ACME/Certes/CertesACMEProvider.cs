@@ -1100,6 +1100,11 @@ namespace Certify.Providers.ACME.Certes
 
             var csrKey = KeyFactory.NewKey(keyAlg);
 
+            if (!string.IsNullOrEmpty(config.CustomPrivateKey))
+            {
+                csrKey = KeyFactory.FromPem(config.CustomPrivateKey);
+            }
+
             var certFriendlyName = $"{config.PrimaryDomain} [Certify] ";
 
             // generate cert
@@ -1109,22 +1114,41 @@ namespace Certify.Providers.ACME.Certes
             {
                 if (order.Status == OrderStatus.Valid)
                 {
-                    // download existing cert, TODO: need to re-use key from time of last finalize 
+                    // download existing cert
                     certificateChain = await orderContext.Download();
                 }
                 else
                 {
-                    // finalise and download
-                    certificateChain = await orderContext.Generate(new CsrInfo
+                    if (!string.IsNullOrEmpty(config.CustomCSR))
                     {
-                        CommonName = _idnMapping.GetAscii(config.PrimaryDomain)
-                    }, csrKey);
-                }
 
+                        // read custom CSR as pem, convert to bytes/der
+                        var pemString = string.Join("",
+                                config.CustomCSR
+                                .Split(new string[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+                                .Where(s => !s.Contains("BEGIN ") && !s.Contains("END ")).ToArray()
+                                );
+
+                        byte[] csrBytes = Convert.FromBase64String(pemString);
+
+                        await orderContext.Finalize(csrBytes);
+
+                        certificateChain = await orderContext.Download();
+                    }
+                    else
+                    {
+                        // finalise and download
+
+                        certificateChain = await orderContext.Generate(new CsrInfo
+                        {
+                            CommonName = _idnMapping.GetAscii(config.PrimaryDomain)
+                        }, csrKey);
+                    }
+                }
 
                 var cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(certificateChain.Certificate.ToDer());
                 certExpiration = cert.NotAfter;
-                certFriendlyName += $"{cert.GetEffectiveDateString()} to {cert.GetExpirationDateString()}";
+                certFriendlyName += $"{ cert.GetEffectiveDateString()} to {cert.GetExpirationDateString()}";
             }
             catch (AcmeRequestException exp)
             {
@@ -1138,6 +1162,8 @@ namespace Certify.Providers.ACME.Certes
             var certId = certExpiration.Value.ToString("yyyyMMdd") + "_" + Guid.NewGuid().ToString().Substring(0, 8);
 
             var domainAsPath = config.PrimaryDomain.Replace("*", "_");
+
+            // var pemPath = ExportFullCertPEM(null, certificateChain, certId, domainAsPath);
 
             var pfxPath = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath);
 

@@ -1,10 +1,12 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Linq;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Certify.Locales;
 using Certify.Management;
+using Microsoft.Win32;
 
 namespace Certify.UI.Controls.ManagedCertificate
 {
@@ -115,6 +117,51 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
+        private void SelectCustomCSR_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            if (openFileDialog.ShowDialog() == true)
+            {
+                var csrContent = File.ReadAllText(openFileDialog.FileName);
+                if (csrContent.Contains("CERTIFICATE REQUEST"))
+                {
+                    // PEM encoded CSR
+
+                    // set CustomCSR field, read domain and SAN
+                    // user should not be able to add domains from UI or choose Alg etc as CSR already has that
+                    ItemViewModel.SelectedItem.RequestConfig.CustomCSR = csrContent;
+
+                    var domains = Certify.Shared.Core.Utils.PKI.CSRUtils.DecodeCsrSubjects(csrContent);
+
+                    var domainOptions = new System.Collections.ObjectModel.ObservableCollection<Models.DomainOption>();
+                    foreach (var d in domains)
+                    {
+                        domainOptions.Add(new Models.DomainOption { Domain = d, IsManualEntry = true, IsPrimaryDomain = (d == domains[0]), IsSelected = true });
+                    }
+                    ItemViewModel.SelectedItem.DomainOptions = domainOptions;
+                    ItemViewModel.SelectedItem.RequestConfig.PrimaryDomain = domainOptions.First(o => o.IsPrimaryDomain).Domain;
+                    ItemViewModel.SelectedItem.RequestConfig.SubjectAlternativeNames = domainOptions.Select(d => d.Domain).ToArray();
+
+                }
+            }
+        }
+
+        private void SelectCustomPrivateKey_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            if (openFileDialog.ShowDialog() == true)
+            {
+
+                var keyContent = File.ReadAllText(openFileDialog.FileName);
+
+                if (keyContent.Contains("PRIVATE KEY"))
+                {
+                    // PEM encoded key
+                    // TODO: custom key mean alg can't be selected, validate key is compatible
+                    ItemViewModel.SelectedItem.RequestConfig.CustomPrivateKey = keyContent;
+                }
+            }
+        }
 
     }
 }
