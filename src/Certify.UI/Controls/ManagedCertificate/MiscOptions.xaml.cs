@@ -117,31 +117,60 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
+        private void ClearCustomCSR_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show("Are you sure you wish to clear the custom CSR?", "Clear Custom CSR", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
+            {
+                ItemViewModel.SelectedItem.RequestConfig.CustomCSR = null;
+            }
+        }
+
         private void SelectCustomCSR_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
             if (openFileDialog.ShowDialog() == true)
             {
                 var csrContent = File.ReadAllText(openFileDialog.FileName);
+
+                bool isInvalid = false;
                 if (csrContent.Contains("CERTIFICATE REQUEST"))
                 {
                     // PEM encoded CSR
 
                     // set CustomCSR field, read domain and SAN
                     // user should not be able to add domains from UI or choose Alg etc as CSR already has that
-                    ItemViewModel.SelectedItem.RequestConfig.CustomCSR = csrContent;
 
-                    var domains = Certify.Shared.Core.Utils.PKI.CSRUtils.DecodeCsrSubjects(csrContent);
-
-                    var domainOptions = new System.Collections.ObjectModel.ObservableCollection<Models.DomainOption>();
-                    foreach (var d in domains)
+                    try
                     {
-                        domainOptions.Add(new Models.DomainOption { Domain = d, IsManualEntry = true, IsPrimaryDomain = (d == domains[0]), IsSelected = true });
-                    }
-                    ItemViewModel.SelectedItem.DomainOptions = domainOptions;
-                    ItemViewModel.SelectedItem.RequestConfig.PrimaryDomain = domainOptions.First(o => o.IsPrimaryDomain).Domain;
-                    ItemViewModel.SelectedItem.RequestConfig.SubjectAlternativeNames = domainOptions.Select(d => d.Domain).ToArray();
 
+                        var domains = Certify.Shared.Core.Utils.PKI.CSRUtils.DecodeCsrSubjects(csrContent);
+
+                        ItemViewModel.SelectedItem.RequestConfig.CustomCSR = csrContent;
+
+
+                        var domainOptions = new System.Collections.ObjectModel.ObservableCollection<Models.DomainOption>();
+                        foreach (var d in domains)
+                        {
+                            domainOptions.Add(new Models.DomainOption { Domain = d, IsManualEntry = true, IsPrimaryDomain = (d == domains[0]), IsSelected = true });
+                        }
+                        ItemViewModel.SelectedItem.DomainOptions = domainOptions;
+                        ItemViewModel.SelectedItem.RequestConfig.PrimaryDomain = domainOptions.First(o => o.IsPrimaryDomain).Domain;
+                        ItemViewModel.SelectedItem.RequestConfig.SubjectAlternativeNames = domainOptions.Select(d => d.Domain).ToArray();
+                    }
+                    catch (Exception exp)
+                    {
+                        isInvalid = true;
+                    }
+
+                }
+                else
+                {
+                    isInvalid = true;
+                }
+
+                if (isInvalid)
+                {
+                    MessageBox.Show("The certificate request could not be read. Check request is a PEM format (text) file with a Certificate Request header.");
                 }
             }
         }
@@ -152,14 +181,35 @@ namespace Certify.UI.Controls.ManagedCertificate
             if (openFileDialog.ShowDialog() == true)
             {
 
-                var keyContent = File.ReadAllText(openFileDialog.FileName);
 
-                if (keyContent.Contains("PRIVATE KEY"))
+                // PEM encoded key
+                // TODO: custom key mean alg can't be selected, validate key is compatible
+                try
                 {
-                    // PEM encoded key
-                    // TODO: custom key mean alg can't be selected, validate key is compatible
-                    ItemViewModel.SelectedItem.RequestConfig.CustomPrivateKey = keyContent;
+                    var keyContent = File.ReadAllText(openFileDialog.FileName);
+
+                    if (keyContent.Contains("PRIVATE KEY") && Certify.Shared.Core.Utils.PKI.CSRUtils.CanParsePrivateKey(keyContent))
+                    {
+                        ItemViewModel.SelectedItem.RequestConfig.CustomPrivateKey = keyContent;
+                    }
+                    else
+                    {
+                        throw new ArgumentException("Unsupported key format");
+                    }
                 }
+                catch
+                {
+                    MessageBox.Show("The private key could not be processed. Key should be unencrypted and in PEM format");
+                }
+
+            }
+        }
+
+        private void ClearCustomPrivateKey_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show("Are you sure you wish to clear the custom private key?", "Clear Custom Private Key", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
+            {
+                ItemViewModel.SelectedItem.RequestConfig.CustomPrivateKey = null;
             }
         }
 
