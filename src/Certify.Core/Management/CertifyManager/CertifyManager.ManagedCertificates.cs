@@ -110,12 +110,19 @@ namespace Certify.Management
             {
                 if (_pluginManager != null && _pluginManager.DashboardClient != null)
                 {
+                    var reportedCert = Newtonsoft.Json.JsonConvert.DeserializeObject<ManagedCertificate>(Newtonsoft.Json.JsonConvert.SerializeObject(managedCertificate));
+                    
+                    // remove anything we don't want to report to the dashboard
+                  
+                    reportedCert.RequestConfig.CustomCSR = null;
+                    reportedCert.RequestConfig.CustomPrivateKey = null;
+
                     var report = new Models.Shared.RenewalStatusReport
                     {
                         InstanceId = CoreAppSettings.Current.InstanceId,
                         MachineName = Environment.MachineName,
                         PrimaryContactEmail = (await GetAccountDetailsForManagedItem(managedCertificate))?.Email,
-                        ManagedSite = managedCertificate,
+                        ManagedSite = reportedCert,
                         AppVersion = Util.GetAppVersion().ToString()
                     };
                     try
