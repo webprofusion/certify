@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
 using Certify.Client;
+using Certify.Config.Migration;
 using Certify.Locales;
 using Certify.Management;
 using Certify.Models;
@@ -807,6 +808,19 @@ namespace Certify.UI.ViewModel
             }
 
             return definition;
+        }
+
+
+        public async Task<ImportExportPackage> GetSettingsExport(ManagedCertificateFilter filter, ExportSettings settings, bool isPreview)
+        {
+            var pkg = await CertifyClient.PerformExport(new ExportRequest { Filter = filter, Settings = settings, IsPreviewMode = isPreview });
+            return pkg;
+        }
+
+        public async Task<List<ActionStep>> PerformSettingsImport(ImportExportPackage package, ImportSettings settings, bool isPreviewMode)
+        {
+            var results = await CertifyClient.PerformImport(new ImportRequest { Package = package, Settings = settings, IsPreviewMode = isPreviewMode });
+            return results;
         }
     }
 }

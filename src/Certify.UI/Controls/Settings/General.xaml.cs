@@ -123,5 +123,15 @@ namespace Certify.UI.Controls.Settings
             }
 
         }
+
+        private void ImportExport_Click(object sender, RoutedEventArgs e)
+        {
+            //present dialog
+            var d = new Windows.ImportExport
+            {
+                Owner = Window.GetWindow(this)
+            };
+            d.ShowDialog();
+        }
     }
 }

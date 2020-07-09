@@ -8,12 +8,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
     <DockPanel MinHeight="300">
-        
+
         <controls:FlipView
             x:Name="QuickStartFlipView"
             Margin="16"
-            MouseHoverBorderEnabled="False"
-            IsBannerEnabled="False">
+            IsBannerEnabled="False"
+            MouseHoverBorderEnabled="False">
 
             <controls:FlipViewItem>
                 <DockPanel Margin="16">
@@ -28,15 +28,13 @@
                         FontSize="14"
                         Text="Choose the domains you want to include on your certificate by selecting from an existing IIS website or by manually entering domains for websites hosted on this server."
                         TextWrapping="WrapWithOverflow" />
-                
+
                     <Image
                         Height="500"
                         Margin="14"
                         DockPanel.Dock="Top"
-                        Source="/Certify.UI;component/Assets/Images/QuickStart/ChooseDomains.png">
-                        
-                    </Image>
-                   
+                        Source="/Certify.UI;component/Assets/Images/QuickStart/ChooseDomains.png" />
+
                 </DockPanel>
             </controls:FlipViewItem>
             <controls:FlipViewItem>
@@ -56,9 +54,7 @@
                         Height="500"
                         Margin="0,16,0,0"
                         DockPanel.Dock="Top"
-                        Source="/Certify.UI;component/Assets/Images/QuickStart/ChooseAuth.png">
-                    
-                    </Image>
+                        Source="/Certify.UI;component/Assets/Images/QuickStart/ChooseAuth.png" />
                 </DockPanel>
             </controls:FlipViewItem>
             <controls:FlipViewItem>
@@ -78,9 +74,7 @@
                         Height="500"
                         Margin="0,16,0,0"
                         DockPanel.Dock="Top"
-                        Source="/Certify.UI;component/Assets/Images/QuickStart/PreviewDeployment.png">
-                    
-                    </Image>
+                        Source="/Certify.UI;component/Assets/Images/QuickStart/PreviewDeployment.png" />
                 </DockPanel>
             </controls:FlipViewItem>
 

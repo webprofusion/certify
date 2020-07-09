@@ -127,6 +127,22 @@
                 </DockPanel>
 
             </StackPanel>
+            <StackPanel
+                Margin="8,16"
+                DockPanel.Dock="Top"
+                Orientation="Vertical">
+                <TextBlock Style="{StaticResource Subheading}">Import/Export</TextBlock>
+                <StackPanel Margin="0,8" Orientation="Vertical">
+                    <TextBlock Style="{StaticResource Instructions}">To move managed certificates and their related settings and credentials to or from another instance:</TextBlock>
+                    <Button
+                        x:Name="ImportExport"
+                        Width="120"
+                        HorizontalAlignment="Left"
+                        Click="ImportExport_Click">
+                        Import or Export..
+                    </Button>
+                </StackPanel>
+            </StackPanel>
 
             <StackPanel Margin="8,16" DockPanel.Dock="Top">
                 <TextBlock Style="{StaticResource Subheading}">UI Settings</TextBlock>
@@ -153,10 +169,10 @@
                     <Controls:NumericUpDown
                         x:Name="UIScaling"
                         Width="100"
-                        NumericInputMode="Decimal"
                         Interval="0.1"
                         Maximum="2"
                         Minimum="1"
+                        NumericInputMode="Decimal"
                         Value="{Binding MainViewModel.UIScaleFactor}" />
 
                 </StackPanel>

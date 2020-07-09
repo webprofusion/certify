@@ -7,6 +7,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Certify.Config.Migration;
+using Certify.Core.Management;
 using Certify.Core.Management.Challenges;
 using Certify.Management.Servers;
 using Certify.Models;
@@ -22,8 +24,8 @@ namespace Certify.Management
 {
     public partial class CertifyManager : ICertifyManager, IDisposable
     {
-        private ItemManager _itemManager = null;
-
+        private IItemManager _itemManager = null;
+        private MigrationManager _migrationManager = null;
         private ICertifiedServer _serverProvider = null;
         private ChallengeDiagnostics _challengeDiagnostics = null;
         private IdnMapping _idnMapping = new IdnMapping();
@@ -77,6 +79,7 @@ namespace Certify.Management
             _pluginManager = new PluginManager();
             _pluginManager.LoadPlugins(new List<string> { "Licensing", "DashboardClient", "DeploymentTasks", "CertificateManagers", "DnsProviders" });
 
+            _migrationManager = new MigrationManager(_itemManager, _credentialsManager);
 
             // load core CAs and custom CAs
             foreach (var ca in CertificateAuthority.CoreCertificateAuthorities)
@@ -413,5 +416,14 @@ namespace Certify.Management
             }
         }
 
+        public async Task<List<ActionStep>> PerformImport(ImportRequest importRequest)
+        {
+            return await _migrationManager.PerformImport(importRequest.Package, importRequest.Settings, importRequest.IsPreviewMode);
+        }
+
+        public async Task<ImportExportPackage> PerformExport(ExportRequest exportRequest)
+        {
+            return await _migrationManager.PerformExport(exportRequest.Filter, exportRequest.Settings, exportRequest.IsPreviewMode);
+        }
     }
 }

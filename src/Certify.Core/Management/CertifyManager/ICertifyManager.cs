@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Config;
+using Certify.Config.Migration;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
@@ -27,6 +28,9 @@ namespace Certify.Management
 
         Task DeleteManagedCertificate(string id);
 
+        Task<ImportExportPackage> PerformExport(ExportRequest exportRequest);
+        Task<List<ActionStep>> PerformImport(ImportRequest importRequest);
+
         Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallengeResponses(string challengeType, string key = null);
 
         Task<List<AccountDetails>> GetAccountRegistrations();
@@ -39,6 +43,7 @@ namespace Certify.Management
 
         Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId);
         Task<List<CertificateAuthority>> GetCertificateAuthorities();
+  
         Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate);
 
         Task<CertificateRequestResult> PerformDummyCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null);

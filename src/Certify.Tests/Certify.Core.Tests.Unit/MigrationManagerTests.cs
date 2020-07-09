@@ -1,4 +1,5 @@
-﻿using Certify.Core.Management;
+﻿using Certify.Config.Migration;
+using Certify.Core.Management;
 using Certify.Management;
 using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -20,7 +21,7 @@ namespace Certify.Core.Tests.Unit
             var migrationManager = new MigrationManager(new ItemManager(), new CredentialsManager());
 
             // export
-            var export = await migrationManager.GetExportPackage(new ManagedCertificateFilter { }, new ExportSettings { EncryptionSecret = "secret" }, isPreview: false);
+            var export = await migrationManager.PerformExport( new ManagedCertificateFilter { }, new ExportSettings { EncryptionSecret = "secret" }, isPreview: false);
 
             // assert
             Assert.AreEqual(1, export.FormatVersion);
@@ -42,7 +43,7 @@ namespace Certify.Core.Tests.Unit
             var migrationManager = new MigrationManager(new ItemManager(), new CredentialsManager());
 
             // export
-            var export = await migrationManager.GetExportPackage(new ManagedCertificateFilter { }, new ExportSettings { EncryptionSecret = "secret" }, isPreview: false);
+            var export = await migrationManager.PerformExport(new ManagedCertificateFilter { }, new ExportSettings { EncryptionSecret = "secret" }, isPreview: false);
 
             var import = await migrationManager.PerformImport(export, new ImportSettings { EncryptionSecret = "secret" }, isPreviewMode: true);
 

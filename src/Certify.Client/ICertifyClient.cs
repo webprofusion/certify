@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Config;
+using Certify.Config.Migration;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Utils;
@@ -22,6 +23,9 @@ namespace Certify.Client
         Task<string> GetAppVersion();
 
         Task<UpdateCheck> CheckForUpdates();
+
+        Task<ImportExportPackage> PerformExport(ExportRequest exportRequest);
+        Task<List<ActionStep>> PerformImport(ImportRequest importRequest);
 
         #endregion System
 
@@ -114,7 +118,7 @@ namespace Certify.Client
     /// <summary>
     /// Client to talk to the core Certify Service 
     /// </summary>
-    public interface ICertifyClient: ICertifyInternalApiClient
+    public interface ICertifyClient : ICertifyInternalApiClient
     {
 
         event Action<string, string> OnMessageFromService;

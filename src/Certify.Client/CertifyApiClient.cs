@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Certify.Config.Migration;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Utils;
@@ -153,6 +154,18 @@ namespace Certify.Client
                 //could not check for updates
                 return null;
             }
+        }
+
+        public async Task<ImportExportPackage> PerformExport(ExportRequest exportRequest)
+        {
+            var result = await PostAsync("system/migration/export", exportRequest );
+            return JsonConvert.DeserializeObject<ImportExportPackage>(await result.Content.ReadAsStringAsync());
+        }
+
+        public async Task<List<ActionStep>> PerformImport(ImportRequest importRequest)
+        {
+            var result = await PostAsync("system/migration/import", importRequest);
+            return JsonConvert.DeserializeObject<List<ActionStep>>(await result.Content.ReadAsStringAsync());
         }
 
         #endregion System
@@ -371,6 +384,7 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<List<ActionResult>>(await result.Content.ReadAsStringAsync());
         }
 
+
         #endregion Managed Certificates
 
         #region Accounts
@@ -426,6 +440,8 @@ namespace Certify.Client
             var result = await PostAsync($"credentials/{credentialKey}/test", new { });
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
+
+      
 
         #endregion
     }
