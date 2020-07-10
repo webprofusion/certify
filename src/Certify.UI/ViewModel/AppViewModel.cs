@@ -338,14 +338,14 @@ namespace Certify.UI.ViewModel
 
         public async Task InitServiceConnections()
         {
-            var connectionConfig = GetDefaultServerConnection();
-
+            
             //check service connection
             IsServiceAvailable = await CheckServiceAvailable();
 
             var attemptsRemaining = 5;
             while (!IsServiceAvailable && attemptsRemaining > 0)
             {
+                var connectionConfig = GetDefaultServerConnection();
                 Debug.WriteLine("Service not yet available. Waiting a few seconds..");
 
                 // the service could still be starting up or port may be reallocated
@@ -411,8 +411,10 @@ namespace Certify.UI.ViewModel
 
                 IsServiceAvailable = true;
             }
-            catch (Exception)
+            catch (Exception exp )
             {
+                System.Diagnostics.Debug.WriteLine(exp);
+
                 //service not available
                 IsServiceAvailable = false;
             }
