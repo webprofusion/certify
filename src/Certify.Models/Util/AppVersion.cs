@@ -21,6 +21,17 @@
             return current;
         }
 
+        public static AppVersion FromVersion(System.Version version)
+        {
+            var current = new AppVersion
+            {
+                Major = version.Major,
+                Minor = version.Minor,
+                Patch = version.Build
+            };
+            return current;
+        }
+
         public static bool IsOtherVersionNewer(AppVersion currentVersion, AppVersion otherVersion)
         {
             if (otherVersion.Major > currentVersion.Major)

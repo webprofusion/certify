@@ -113,7 +113,7 @@ namespace Certify.UI.Windows
             {
 
             }
-            var intro = $"Importing from source: {package.SourceName} exported {package.ExportDate.ToLongDateString()} \r\n______";
+            var intro = $"Importing from source: {package.SourceName}, exported {package.ExportDate.ToLongDateString()}, app version {package.SystemVersion?.ToString() ?? "(unknown)"}";
             var markdown = GetStepsAsMarkdown(steps, title, intro);
 
             var result = Markdig.Markdown.ToHtml(markdown, _markdownPipeline);
@@ -128,12 +128,14 @@ namespace Certify.UI.Windows
         {
             //TODO: deduplicate this vs. Preview version
             var newLine = "\r\n";
+            var warningSymbol = "⚠️";
+            var errorSymbol = "🛑";
 
             var sb = new StringBuilder();
 
             if (title != null)
             {
-                sb.AppendLine("# " + title + newLine + "_______");
+                sb.AppendLine("# " + title);
             }
 
             if (intro != null)
@@ -143,7 +145,21 @@ namespace Certify.UI.Windows
 
             foreach (var s in steps)
             {
-                sb.AppendLine(newLine + "## " + s.Title);
+                var statusSymbol = "";
+                if (s.Substeps?.Any(t => t.HasWarning) == true)
+                {
+                    statusSymbol = warningSymbol;
+                }
+
+                if (s.Substeps?.Any(t => t.HasError) == true)
+                {
+                    statusSymbol = errorSymbol;
+                }
+
+                sb.AppendLine("_____");
+
+                sb.AppendLine(newLine + "## " + s.Title + " " + statusSymbol);
+
                 if (!string.IsNullOrEmpty(s.Description))
                 {
                     sb.AppendLine(s.Description);
@@ -151,28 +167,45 @@ namespace Certify.UI.Windows
 
                 if (s.Substeps != null)
                 {
+
                     foreach (var sub in s.Substeps)
                     {
+                        var stepSymbol = "";
+                        if (sub.HasWarning)
+                        {
+                            stepSymbol = " " + warningSymbol;
+                        }
+
+                        if (sub.HasError)
+                        {
+                            stepSymbol = " " + errorSymbol;
+                        }
+
+                        if (!string.IsNullOrEmpty(sub.Title) && sub.Title != s.Title && sub.Title != sub.Description && sub.Description != null)
+                        {
+                            sb.AppendLine(newLine + "### " + sub.Title);
+                        }
+
                         if (!string.IsNullOrEmpty(sub.Description))
                         {
                             if (sub.Description.Contains("|"))
                             {
                                 // table items
-                                sb.AppendLine(sub.Description);
+                                sb.AppendLine(sub.Description + stepSymbol);
                             }
                             else if (sub.Description.StartsWith("\r\n"))
                             {
-                                sb.AppendLine(sub.Description);
+                                sb.AppendLine(sub.Description + stepSymbol);
                             }
                             else
                             {
                                 // list items
-                                sb.AppendLine(" - " + sub.Description);
+                                sb.AppendLine(" - " + sub.Description + stepSymbol);
                             }
                         }
                         else
                         {
-                            sb.AppendLine(" - " + sub.Title);
+                            sb.AppendLine(" - " + sub.Title + stepSymbol);
                         }
                     }
                 }

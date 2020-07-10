@@ -14,7 +14,7 @@ using Certify.Models.Config;
 
 namespace Certify.Core.Management
 {
-   
+
 
     /// <summary>
     /// Perform/preview import and export
@@ -40,7 +40,8 @@ namespace Certify.Core.Management
             var export = new ImportExportPackage
             {
                 SourceName = Environment.MachineName,
-                ExportDate = DateTime.Now
+                ExportDate = DateTime.Now,
+                SystemVersion = Certify.Management.Util.GetAppVersion()
             };
 
             // export managed certs, related certificate files, stored credentials
@@ -213,24 +214,63 @@ namespace Certify.Core.Management
             var steps = new List<ActionStep>();
 
             // import managed certs, certificate files, stored credentials, CAs
+            var currentAppVersion = Certify.Management.Util.GetAppVersion();
+
+            if (currentAppVersion != package.SystemVersion)
+            {
+                if (package.SystemVersion == null || AppVersion.IsOtherVersionNewer(AppVersion.FromVersion(package.SystemVersion), AppVersion.FromVersion(currentAppVersion)))
+                {
+                    steps.Add(new ActionStep { Title = "Version Check", Category = "Import", Key = "Version", HasWarning = true, Description = "Migration to an older app version is not supported. Results may be unreliable." });
+
+                }
+            }
+            else
+            {
+                steps.Add(new ActionStep { Title = "Version Check", Category = "Import", Key = "Version", Description = "Source is from the same version or a supported app version." });
+            }
+
 
             // stored credentials
             var credentialImportSteps = new List<ActionStep>();
             foreach (var c in package.Content.StoredCredentials)
             {
-                var decodedBytes =   Convert.FromBase64String(c.Secret);
+                var decodedBytes = Convert.FromBase64String(c.Secret);
                 var decryptedBytes = DecryptBytes(decodedBytes, settings.EncryptionSecret);
 
                 // convert decrypted bytes to UTF8 string and trim NUL 
                 c.Secret = UTF8Encoding.UTF8.GetString(decryptedBytes).Trim('\0');
 
-                if (!isPreviewMode)
+                var existing = await _credentialsManager.GetCredential(c.StorageKey);
+
+                if (existing == null)
                 {
-                    // perform actual import
+                    if (!isPreviewMode)
+                    {
+                        // perform import
+                        var result = await _credentialsManager.Update(c);
+                        if (result != null)
+                        {
+                            credentialImportSteps.Add(new ActionStep { Title = c.Title, Key = c.StorageKey });
+                        }
+                        else
+                        {
+                            credentialImportSteps.Add(new ActionStep { Title = c.Title, Key = c.StorageKey, HasWarning = true, Description = $"Failed to store this credential. Items which depend on it may not function." });
+                        }
+                    }
+                    else
+                    {
+                        // preview only
+                        credentialImportSteps.Add(new ActionStep { Title = c.Title, Key = c.StorageKey });
+                    }
+                }
+                else
+                {
+                    // credential already exists
+                    credentialImportSteps.Add(new ActionStep { Title = c.Title, Key = c.StorageKey, HasWarning = true, Description = $"Credential already exists, it will not be re-imported." });
                 }
 
-                credentialImportSteps.Add(new ActionStep { Title = c.Title, Key = c.StorageKey });
             }
+
             steps.Add(new ActionStep { Title = "Import Stored Credentials", Category = "Import", Substeps = credentialImportSteps, Key = "StoredCredentials" });
 
 
@@ -238,13 +278,49 @@ namespace Certify.Core.Management
             var managedCertImportSteps = new List<ActionStep>();
             foreach (var c in package.Content.ManagedCertificates)
             {
-                if (!isPreviewMode)
+
+
+                var existing = _itemManager.GetById(c.Id);
+                if (existing == null)
                 {
-                    // perform actual import
+                    if (!isPreviewMode)
+                    {
+                        // perform actual import
+                        try
+                        {
+                            // TODO : re-map certificate pfx path, could be a different location on this instance
+                            // warn if deployment task script paths don't match an existing file?
+
+                            // TODO : warn if Certificate Authority ID does not match one we have (cert renewal will fail)
+
+                            var result = await _itemManager.Update(c);
+                            if (result != null)
+                            {
+                                managedCertImportSteps.Add(new ActionStep { Title = c.Name, Key = c.Id });
+                            }
+                            else
+                            {
+                                managedCertImportSteps.Add(new ActionStep { Title = c.Name, Key = c.Id, HasError = true, Description = $"Failed to import item." });
+                            }
+                        }
+                        catch (Exception exp)
+                        {
+                            managedCertImportSteps.Add(new ActionStep { Title = c.Name, Key = c.Id, HasError = true, Description = $"Failed to import item: {exp.Message}" });
+                        }
+                    }
+                    else
+                    {
+                        // preview only
+                        managedCertImportSteps.Add(new ActionStep { Title = c.Name, Key = c.Id });
+                    }
+                }
+                else
+                {
+                    managedCertImportSteps.Add(new ActionStep { Title = c.Name, Key = c.Id, HasWarning = true, Description = "Item already exists, it will not be re-imported." });
                 }
 
-                managedCertImportSteps.Add(new ActionStep { Title = c.Name, Key = c.Id });
             }
+
             steps.Add(new ActionStep { Title = "Import Managed Certificates", Category = "Import", Substeps = managedCertImportSteps, Key = "ManagedCerts" });
 
             // certificate files
@@ -255,19 +331,35 @@ namespace Certify.Core.Management
 
                 var cert = new X509Certificate2(pfxBytes);
 
+                bool isVerified = cert.Verify();
 
-                if (!isPreviewMode)
+                if (!System.IO.File.Exists(c.Filename))
                 {
-                    // perform actual import
-                    cert.Verify();
+
+                    if (!isPreviewMode)
+                    {
+                        // perform actual import
+                        try
+                        {
+                            System.IO.File.WriteAllBytes(c.Filename, c.Content);
+                            certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = !isVerified, Description = isVerified ? null : "Certificate did not pass verify check." });
+                        }
+                        catch (Exception exp)
+                        {
+                            certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasError = true, Description = $"Failed to write certificate to destination: {c.Filename} [{exp.Message}]" });
+                        }
+                    }
+                    else
+                    {
+                        // preview only
+                        certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = !isVerified, Description = isVerified ? "Would import to " + c.Filename : "Certificate did not pass verify check." });
+                    }
                 }
                 else
                 {
-                    // verify cert decrypt
-                    cert.Verify();
+                    certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = true, Description = "Output file already exists, it will not be re-imported" });
                 }
 
-                certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename });
             }
 
             steps.Add(new ActionStep { Title = "Import Certificate Files", Category = "Import", Substeps = certFileImportSteps, Key = "CertFiles" });

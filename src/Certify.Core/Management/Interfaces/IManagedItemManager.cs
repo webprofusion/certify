@@ -12,7 +12,6 @@ namespace Certify.Management
         Task DeleteByName(string nameStartsWith);
         Task<ManagedCertificate> GetById(string siteId);
         Task<List<ManagedCertificate>> GetAll(ManagedCertificateFilter filter = null);
-
         Task<ManagedCertificate> Update(ManagedCertificate managedCertificate);
     }
 }

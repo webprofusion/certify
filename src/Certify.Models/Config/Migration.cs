@@ -17,11 +17,10 @@ namespace Certify.Config.Migration
     public class ImportExportPackage
     {
         public int FormatVersion { get; set; } = 1;
+        public Version SystemVersion { get; set; }
         public string Description { get; set; } = "Certify The Web - Exported App Settings";
         public string SourceName { get; set; }
-
         public DateTime ExportDate { get; set; }
-
         public ImportExportContent Content { get; set; }
     }
 
