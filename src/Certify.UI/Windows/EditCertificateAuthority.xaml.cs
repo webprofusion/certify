@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -14,17 +15,29 @@ namespace Certify.UI.Windows
     /// </summary>
     public partial class EditCertificateAuthority
     {
-        public CertificateAuthority Item { get; set; }
+        public class EditModel : BindableBase
+        {
+            public string SelectedCertificateAuthorityId { get; set; }
+            public CertificateAuthority Item { get; set; } = new CertificateAuthority();
+            public IEnumerable<CertificateAuthority> CertificateAuthorities
+            {
+                get
+                {
+                    var list = new List<CertificateAuthority>(ViewModel.AppViewModel.Current.CertificateAuthorities);
+                    list.Insert(0, new CertificateAuthority { Id = null, Title = "(New Certificate Authority)" });
+
+                    return list;
+                }
+            }
+        }
+
+        public EditModel Model { get; set; } = new EditModel();
 
         public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
-
-        public IEnumerable<CertificateAuthority> CertificateAuthorities => MainViewModel.CertificateAuthorities;
 
         public EditCertificateAuthority()
         {
             InitializeComponent();
-
-            Item = new CertificateAuthority();
 
             DataContext = this;
 
@@ -40,65 +53,51 @@ namespace Certify.UI.Windows
 
         private async void Save_Click(object sender, RoutedEventArgs e)
         {
-            //add/update contact
+            // add/update ca
+            var ca = MainViewModel.CertificateAuthorities.FirstOrDefault(a => a.Id == Model.Item.Id);
 
-          //  var ca = MainViewModel.CertificateAuthorities.FirstOrDefault(c => c.Id == Item.CertificateAuthorityId);
-
-            // if ca requires email address, check that first
-           /* if (ca.RequiresEmailAddress)
+            if (ca == null)
             {
-                var isValidEmail = true;
-                if (string.IsNullOrEmpty(Item.EmailAddress))
-                {
-                    isValidEmail = false;
-                }
-                else
-                {
-                    if (!Regex.IsMatch(Item.EmailAddress,
-                                @"^(?("")("".+?(?<!\\)""@)|(([0-9a-z]((\.(?!\.))|[-!#\$%&'\*\+/=\?\^`\{\}\|~\w])*)(?<=[0-9a-z])@))" +
-                                @"(?(\[)(\[(\d{1,3}\.){3}\d{1,3}\])|(([0-9a-z][-\w]*[0-9a-z]*\.)+[a-z0-9][\-a-z0-9]{0,22}[a-z0-9]))$",
-                                RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250)))
-                    {
-                        isValidEmail = false;
-                    }
-                }
-
-                if (!isValidEmail)
-                {
-                    MessageBox.Show(Certify.Locales.SR.New_Contact_EmailError);
-
-                    return;
-                }
-            }
-
-            if (Item.AgreedToTermsAndConditions)
-            {
-                Mouse.OverrideCursor = Cursors.Wait;
-
-                var result = await MainViewModel.AddContactRegistration(Item);
-
-                Mouse.OverrideCursor = Cursors.Arrow;
-
-                if (result.IsSuccess)
-                {
-                    await MainViewModel.RefreshAccountsList();
-
-                    Close();
-                }
-                else
-                {
-                    MessageBox.Show(result.Message);
-                }
+                //new item
             }
             else
             {
-                MessageBox.Show(Certify.Locales.SR.New_Contact_NeedAgree);
-            }*/
+                // edit
+
+            }
         }
 
         private void CertificateAuthorityList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
+            if (CertificateAuthorityList.SelectedItem != null)
+            {
+                if (((CertificateAuthority)CertificateAuthorityList.SelectedItem).Id != null)
+                {
+                    // edit existing
+                    var ca = MainViewModel.CertificateAuthorities.FirstOrDefault(a => a.Id == Model.SelectedCertificateAuthorityId);
+                    this.Model.Item = Newtonsoft.Json.JsonConvert.DeserializeObject<CertificateAuthority>(Newtonsoft.Json.JsonConvert.SerializeObject(ca));
+                } else
+                {
+                    // add new
+                    CertificateAuthority ca = new CertificateAuthority
+                    {
+                        Id = Guid.NewGuid().ToString().ToLower(),
+                        IsCustom = true,
+                        IsEnabled = true,
+                        APIType = CertAuthorityAPIType.ACME_V2.ToString(),
+                        SupportedFeatures = new List<string> {
+                    CertAuthoritySupportedRequests.DOMAIN_SINGLE.ToString()
+                }
+                    };
+                    this.Model.Item = ca;
+                }
 
+            }
+        }
+
+        private void AddNew_Click(object sender, RoutedEventArgs e)
+        {
+            
         }
     }
 }

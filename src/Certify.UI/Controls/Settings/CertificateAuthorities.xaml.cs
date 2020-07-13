@@ -62,6 +62,17 @@ namespace Certify.UI.Controls.Settings
             d.ShowDialog();
         }
 
+        private void Button_EditCertificateAuthority(object sender, RoutedEventArgs e)
+        {
+            //present new contact dialog
+            var d = new Windows.EditCertificateAuthority
+            {
+                Owner = Window.GetWindow(this)
+            };
+            d.ShowDialog();
+        }
+
+
         private async void SettingsUpdated(object sender, RoutedEventArgs e)
         {
             if (_settingsInitialised)

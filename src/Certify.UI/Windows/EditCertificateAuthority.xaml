@@ -9,11 +9,11 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     Title="Edit Certificate Authority"
-    Width="514"
-    Height="366"
+    Width="560"
+    Height="500"
     BorderThickness="1"
     GlowBrush="{StaticResource MahApps.Brushes.Accent}"
-    ResizeMode="NoResize"
+    ResizeMode="CanResize"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False"
@@ -32,67 +32,121 @@
                 x:Name="CertificateAuthorityList"
                 Width="300"
                 DisplayMemberPath="Title"
-                ItemsSource="{Binding CertificateAuthorities}"
-                SelectedValue="{Binding Item.CertificateAuthorityId}"
+                ItemsSource="{Binding Model.CertificateAuthorities}"
+                SelectedValue="{Binding Model.SelectedCertificateAuthorityId}"
                 SelectedValuePath="Id"
                 SelectionChanged="CertificateAuthorityList_SelectionChanged" />
         </StackPanel>
-        <!--  Certificate Authority Preference  -->
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+        <!--  Certificate Authority Definition  -->
 
-            <CheckBox
-                Width="297"
-                Margin="132,4,0,4"
-                Content="Use Staging (Test) Mode"
-                IsChecked="{Binding Item.IsStaging}" />
-        </StackPanel>
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+        <StackPanel
+            Margin="0,8,0,0"
+            DockPanel.Dock="Top"
+            Orientation="Horizontal">
             <Label
                 Width="120"
                 Margin="12,0,0,0"
                 VerticalAlignment="Top"
-                Content="{x:Static res:SR.Email_Address}" />
+                Content="Title" />
             <TextBox
                 Width="300"
                 Height="23"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Text="{Binding Item.EmailAddress}"
+                Controls:TextBoxHelper.Watermark="(Display Name for the Certificate Authority)"
+                Text="{Binding Model.Item.Title}"
                 TextWrapping="Wrap" />
         </StackPanel>
-        <TextBlock
-            Width="490"
-            Margin="12,8,8,0"
-            DockPanel.Dock="Top"
-            Style="{StaticResource Instructions}"
-            TextWrapping="Wrap"><Run Text="{x:Static res:SR.New_Contact_Tip2}" /></TextBlock>
-        <TextBlock
-            Margin="12,0,0,0"
-            VerticalAlignment="Top"
-            DockPanel.Dock="Top"
-            FontWeight="Bold"
-            Style="{StaticResource Instructions}"
-            Text="{x:Static res:SR.New_Contact_NeedAgree}"
-            TextWrapping="Wrap" />
 
-        <CheckBox
-            Margin="12,12,12,12"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top"
-            Content="{x:Static res:SR.Yes_I_Agree}"
+        <StackPanel
+            Margin="0,8,0,0"
             DockPanel.Dock="Top"
-            IsChecked="{Binding Item.AgreedToTermsAndConditions}" />
+            Orientation="Horizontal">
+            <Label
+                Width="120"
+                Margin="12,0,0,0"
+                VerticalAlignment="Top"
+                Content="Description" />
+            <TextBox
+                Width="300"
+                Height="48"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Controls:TextBoxHelper.Watermark="(Optional description)"
+                Text="{Binding Model.Item.Description}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel
+            Margin="0,8,0,0"
+            DockPanel.Dock="Top"
+            Orientation="Horizontal">
+            <Label
+                Width="120"
+                Margin="12,0,0,0"
+                VerticalAlignment="Top"
+                Content="Production API" />
+            <TextBox
+                Width="300"
+                Height="23"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Controls:TextBoxHelper.Watermark="(Url for the production directory endpoint)"
+                Text="{Binding Model.Item.ProductionAPIEndpoint}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel
+            Margin="0,8,0,0"
+            DockPanel.Dock="Top"
+            Orientation="Horizontal">
+            <Label
+                Width="120"
+                Margin="12,0,0,0"
+                VerticalAlignment="Top"
+                Content="Staging API" />
+            <TextBox
+                Width="300"
+                Height="23"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Controls:TextBoxHelper.Watermark="(Url for the staging/test directory endpoint)"
+                Text="{Binding Model.Item.StagingAPIEndpoint}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel
+            Margin="0,8,0,0"
+            DockPanel.Dock="Top"
+            Orientation="Horizontal">
+            <Label
+                Width="120"
+                Margin="12,0,0,0"
+                VerticalAlignment="Top"
+                Content="Features" />
+            <StackPanel Orientation="Vertical">
+                <Controls:ToggleSwitch Content="Enabled" IsOn="{Binding Model.Item.IsEnabled}" />
+                <Controls:ToggleSwitch Content="Email Address Required" IsOn="{Binding Model.Item.RequiresEmailAddress}" />
+                <Controls:ToggleSwitch Content="Single Domains (www.domain.com)" />
+                <Controls:ToggleSwitch Content="Single Domain + www (e.g. domain.com and www.domain.com)" />
+                <Controls:ToggleSwitch Content="Wildcards (*.domain.com)" />
+                <Controls:ToggleSwitch Content="Multiple SAN (www.domain.com, mail.domain.com etc.)" />
 
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel
+            Margin="8"
+            HorizontalAlignment="Right"
+            DockPanel.Dock="Bottom"
+            Orientation="Horizontal">
             <Button
                 x:Name="Save"
+                Width="100"
                 Margin="12,0,0,0"
                 Click="Save_Click"
-                Content="{x:Static res:SR.Register_Contact}" />
+                Content="Save" />
             <Button
                 x:Name="Cancel"
                 Width="100"
-                Margin="280,0,0,0"
+                Margin="16,0,0,0"
                 Click="Cancel_Click"
                 Content="{x:Static res:SR.Cancel}" />
         </StackPanel>

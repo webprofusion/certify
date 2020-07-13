@@ -51,6 +51,14 @@
                 Click="Button_NewContact">
                 New Account
             </Button>
+
+            <Button
+                Grid.Row="0"
+                Grid.Column="2"
+                Margin="8,8,8,8"
+                Click="Button_EditCertificateAuthority">
+                Edit Certificate Authorities
+            </Button>
         </StackPanel>
 
         <StackPanel Orientation="Horizontal" />
