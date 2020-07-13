@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -11,6 +10,7 @@ using Certify.Config.Migration;
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Providers;
 
 namespace Certify.Core.Management
 {
@@ -23,11 +23,13 @@ namespace Certify.Core.Management
     {
         private IItemManager _itemManager;
         private ICredentialsManager _credentialsManager;
+        private ICertifiedServer _targetServer;
 
-        public MigrationManager(IItemManager itemManager, ICredentialsManager credentialsManager)
+        public MigrationManager(IItemManager itemManager, ICredentialsManager credentialsManager, ICertifiedServer targetServer)
         {
             _itemManager = itemManager;
             _credentialsManager = credentialsManager;
+            _targetServer = targetServer;
         }
 
         /// <summary>
@@ -274,15 +276,63 @@ namespace Certify.Core.Management
             steps.Add(new ActionStep { Title = "Import Stored Credentials", Category = "Import", Substeps = credentialImportSteps, Key = "StoredCredentials" });
 
 
+            List<BindingInfo> targetSiteBindings = new List<BindingInfo>();
+            if (await _targetServer?.IsAvailable() == true)
+            {
+                targetSiteBindings = await _targetServer.GetSiteBindingList(false);
+            }
+
             // managed certs
             var managedCertImportSteps = new List<ActionStep>();
             foreach (var c in package.Content.ManagedCertificates)
             {
 
 
-                var existing = _itemManager.GetById(c.Id);
+                var existing = await _itemManager.GetById(c.Id);
                 if (existing == null)
                 {
+
+                    // check if item is auto deployment or single site, if single site warn if we don't have an exact match (convert to Auto)
+                    DeploymentOption deploymentMode = c.RequestConfig.DeploymentSiteOption;
+                    bool hasUnmatchedTargets = false;
+                    bool siteIdChanged = false;
+                    bool deploymentModeChanged = false;
+
+                    var warningMsg = "";
+                    if (deploymentMode == DeploymentOption.SingleSite)
+                    {
+                        var targets = targetSiteBindings.Where(t => t.SiteId == c.ServerSiteId);
+
+                        if (targets.Any())
+                        {
+                            //exact match on site id, check domains
+
+                            var unmatchedDomains = new List<string>();
+                            foreach (var d in c.GetCertificateDomains())
+                            {
+                                var t = targets.FirstOrDefault(ta => ta.Host == d);
+
+                                if (t == null)
+                                {
+                                    unmatchedDomains.Add(d);
+                                    hasUnmatchedTargets = true;
+                                    warningMsg += " " + d;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // no exact site id match, check if a different site is an exact match, if so migrate site id
+
+                            // if no exact match, change to auto 
+                        }
+                    }
+                    else
+                    {
+                        // auto deploy, site id only used for IIS site selection in UI
+
+                    }
+
                     if (!isPreviewMode)
                     {
                         // perform actual import
@@ -296,7 +346,7 @@ namespace Certify.Core.Management
                             var result = await _itemManager.Update(c);
                             if (result != null)
                             {
-                                managedCertImportSteps.Add(new ActionStep { Title = c.Name, Key = c.Id });
+                                managedCertImportSteps.Add(new ActionStep { Title = c.Name, Key = c.Id, HasWarning = (hasUnmatchedTargets || siteIdChanged) });
                             }
                             else
                             {

@@ -79,7 +79,7 @@ namespace Certify.Management
             _pluginManager = new PluginManager();
             _pluginManager.LoadPlugins(new List<string> { "Licensing", "DashboardClient", "DeploymentTasks", "CertificateManagers", "DnsProviders" });
 
-            _migrationManager = new MigrationManager(_itemManager, _credentialsManager);
+            _migrationManager = new MigrationManager(_itemManager, _credentialsManager, _serverProvider);
 
             // load core CAs and custom CAs
             foreach (var ca in CertificateAuthority.CoreCertificateAuthorities)
