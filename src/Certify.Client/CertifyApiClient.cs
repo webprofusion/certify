@@ -394,6 +394,17 @@ namespace Certify.Client
             var result = await FetchAsync("accounts/authorities");
             return JsonConvert.DeserializeObject<List<CertificateAuthority>>(result);
         }
+        public async Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority ca)
+        {
+            var result = await PostAsync("accounts/authorities", ca);
+            return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
+        }
+
+        public async Task<ActionResult> DeleteCertificateAuthority(string id)
+        {
+            var result = await DeleteAsync("accounts/authorities/"+id);
+            return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
+        }
 
         public async Task<List<AccountDetails>> GetAccounts()
         {
@@ -441,7 +452,8 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
 
-      
+
+
 
         #endregion
     }

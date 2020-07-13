@@ -9,8 +9,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     Title="Edit Certificate Authority"
-    Width="560"
-    Height="500"
+    Width="580"
+    Height="520"
     BorderThickness="1"
     GlowBrush="{StaticResource MahApps.Brushes.Accent}"
     ResizeMode="CanResize"
@@ -124,6 +124,7 @@
             <StackPanel Orientation="Vertical">
                 <Controls:ToggleSwitch Content="Enabled" IsOn="{Binding Model.Item.IsEnabled}" />
                 <Controls:ToggleSwitch Content="Email Address Required" IsOn="{Binding Model.Item.RequiresEmailAddress}" />
+                <Controls:ToggleSwitch Content="Allow Untrusted Tls" IsOn="{Binding Model.Item.AllowUntrustedTls}" />
                 <Controls:ToggleSwitch Content="Single Domains (www.domain.com)" />
                 <Controls:ToggleSwitch Content="Single Domain + www (e.g. domain.com and www.domain.com)" />
                 <Controls:ToggleSwitch Content="Wildcards (*.domain.com)" />
@@ -132,11 +133,18 @@
             </StackPanel>
         </StackPanel>
 
+
         <StackPanel
             Margin="8"
             HorizontalAlignment="Right"
             DockPanel.Dock="Bottom"
             Orientation="Horizontal">
+            <Button
+                x:Name="Delete"
+                Width="100"
+                Margin="0,0,200,0"
+                Click="Delete_Click"
+                Content="Delete" />
             <Button
                 x:Name="Save"
                 Width="100"
@@ -150,5 +158,6 @@
                 Click="Cancel_Click"
                 Content="{x:Static res:SR.Cancel}" />
         </StackPanel>
+
     </DockPanel>
 </Controls:MetroWindow>

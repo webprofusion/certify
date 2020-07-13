@@ -170,6 +170,28 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        public async Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority ca)
+        {
+            var result = await CertifyClient.UpdateCertificateAuthority(ca);
+
+            if (result.IsSuccess)
+            {
+                await this.RefreshCertificateAuthorityList();
+            }
+            return result;
+        }
+
+        public async Task<ActionResult> DeleteCertificateAuthority(string id)
+        {
+            var result = await CertifyClient.DeleteCertificateAuthority(id);
+
+            if (result.IsSuccess)
+            {
+                await this.RefreshCertificateAuthorityList();
+            }
+            return result;
+        }
+
         public async Task RefreshAccountsList()
         {
             var list = await CertifyClient.GetAccounts();

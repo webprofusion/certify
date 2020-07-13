@@ -115,7 +115,7 @@ namespace Certify.Management
                     return new ActionResult("Invalid Certificate Authority specified.", false);
                 }
 
-                var acmeProvider = await GetACMEProvider(storageKey, reg.IsStaging ? certAuthority.StagingAPIEndpoint : certAuthority.ProductionAPIEndpoint);
+                var acmeProvider = await GetACMEProvider(storageKey, reg.IsStaging ? certAuthority.StagingAPIEndpoint : certAuthority.ProductionAPIEndpoint, null, certAuthority.AllowUntrustedTls);
 
                 _serviceLog?.Information($"Registering account with ACME CA {acmeProvider.GetAcmeBaseURI()}]: {reg.EmailAddress}");
 
@@ -238,6 +238,73 @@ namespace Certify.Management
         public async Task<List<CertificateAuthority>> GetCertificateAuthorities()
         {
             return _certificateAuthorities.Values.ToList();
+        }
+
+        public async Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority certificateAuthority)
+        {
+
+            try
+            {
+                if (_certificateAuthorities.Any(c => c.Key == certificateAuthority.Id && c.Value.IsCustom == false))
+                {
+                    // can't modify built in CAs
+                    return new ActionResult("Default Certificate Authorities cannot be modified.", false);
+                }
+
+                var customCAs = SettingsManager.GetCustomCertificateAuthorities();
+
+                var customCa = customCAs.FirstOrDefault(c => c.Id == certificateAuthority.Id);
+
+                if (customCa != null)
+                {
+                    // replace
+                    customCAs.Remove(customCa);
+                    customCAs.Add(certificateAuthority);
+
+                    _certificateAuthorities.TryUpdate(certificateAuthority.Id, certificateAuthority, customCa);
+                }
+                else
+                {
+                    // add
+                    customCAs.Add(certificateAuthority);
+
+                    _certificateAuthorities.TryAdd(certificateAuthority.Id, certificateAuthority);
+                }
+
+                //store updated CAs
+                if (SettingsManager.SaveCustomCertificateAuthorities(customCAs))
+                {
+                    return new ActionResult("OK", true);
+                }
+
+            }
+            catch (Exception exp)
+            {
+                // failed to load custom CAs
+                _serviceLog.Error(exp.Message);
+            }
+
+            return new ActionResult("An error occurred saving the updated Certificate Authorities list.", false);
+
+        }
+
+        public async Task<ActionResult> RemoveCertificateAuthority(string id)
+        {
+            var customCAs = SettingsManager.GetCustomCertificateAuthorities();
+
+            var customCa = customCAs.FirstOrDefault(c => c.Id == id);
+
+            if (customCa != null)
+            {
+                customCAs.Remove(customCa);
+
+                if (SettingsManager.SaveCustomCertificateAuthorities(customCAs))
+                {
+                    return new ActionResult("OK", true);
+                }
+            }
+
+            return new ActionResult("An error occurred saving the updated Certificate Authorities list.", false);
         }
     }
 }

@@ -45,5 +45,19 @@ namespace Certify.Service
         {
             return await _certifyManager.GetCertificateAuthorities();
         }
+
+        [HttpPost, Route("authorities")]
+        public async Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority certificateAuthority)
+        {
+            DebugLog();
+            return await _certifyManager.UpdateCertificateAuthority(certificateAuthority);
+        }
+
+        [HttpDelete, Route("authorities/{id}")]
+        public async Task<ActionResult> RemoveCertificateAuthority(string id)
+        {
+            DebugLog();
+            return await _certifyManager.RemoveCertificateAuthority(id);
+        }
     }
 }

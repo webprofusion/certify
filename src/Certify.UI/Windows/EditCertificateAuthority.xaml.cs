@@ -54,17 +54,17 @@ namespace Certify.UI.Windows
         private async void Save_Click(object sender, RoutedEventArgs e)
         {
             // add/update ca
-            var ca = MainViewModel.CertificateAuthorities.FirstOrDefault(a => a.Id == Model.Item.Id);
+            var result = await MainViewModel.UpdateCertificateAuthority(Model.Item);
 
-            if (ca == null)
+            if (result.IsSuccess)
             {
-                //new item
+                this.Close();
             }
             else
             {
-                // edit
-
+                MessageBox.Show(result.Message);
             }
+
         }
 
         private void CertificateAuthorityList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -76,7 +76,8 @@ namespace Certify.UI.Windows
                     // edit existing
                     var ca = MainViewModel.CertificateAuthorities.FirstOrDefault(a => a.Id == Model.SelectedCertificateAuthorityId);
                     this.Model.Item = Newtonsoft.Json.JsonConvert.DeserializeObject<CertificateAuthority>(Newtonsoft.Json.JsonConvert.SerializeObject(ca));
-                } else
+                }
+                else
                 {
                     // add new
                     CertificateAuthority ca = new CertificateAuthority
@@ -95,9 +96,20 @@ namespace Certify.UI.Windows
             }
         }
 
-        private void AddNew_Click(object sender, RoutedEventArgs e)
+        private async void Delete_Click(object sender, RoutedEventArgs e)
         {
-            
+            if (MessageBox.Show("Are you sure you wish to delete this Certificate Authority?", "Confirm Delete?", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
+            {
+                var result = await MainViewModel.DeleteCertificateAuthority(Model.Item.Id);
+                if (result.IsSuccess)
+                {
+                    this.Close();
+                }
+                else
+                {
+                    MessageBox.Show(result.Message);
+                }
+            }
         }
     }
 }

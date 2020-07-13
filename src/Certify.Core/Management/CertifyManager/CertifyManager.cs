@@ -169,7 +169,7 @@ namespace Certify.Management
                 {
                     var acmeBaseUrl = managedItem.UseStagingMode ? ca.StagingAPIEndpoint : ca.ProductionAPIEndpoint;
 
-                    return await GetACMEProvider(acc.StorageKey, acmeBaseUrl, acc);
+                    return await GetACMEProvider(acc.StorageKey, acmeBaseUrl, acc, ca.AllowUntrustedTls);
                 }
                 else
                 {
@@ -183,7 +183,7 @@ namespace Certify.Management
             }
         }
 
-        private async Task<IACMEClientProvider> GetACMEProvider(string storageKey, string acmeApiEndpoint = null, AccountDetails account = null)
+        private async Task<IACMEClientProvider> GetACMEProvider(string storageKey, string acmeApiEndpoint = null, AccountDetails account = null, bool allowUntrustedTsl = false)
         {
             // get or init acme provider required for the given account
             if (_acmeClientProviders.TryGetValue(storageKey, out var provider))
@@ -195,7 +195,7 @@ namespace Certify.Management
                 var userAgent = Util.GetUserAgent();
                 var providerPath = Path.Combine(Management.Util.GetAppDataFolder(), "certes_" + storageKey);
 
-                var newProvider = new CertesACMEProvider(acmeApiEndpoint, providerPath, userAgent);
+                var newProvider = new CertesACMEProvider(acmeApiEndpoint, providerPath, userAgent, allowUntrustedTsl);
 
                 await newProvider.InitProvider(_serviceLog, account);
 

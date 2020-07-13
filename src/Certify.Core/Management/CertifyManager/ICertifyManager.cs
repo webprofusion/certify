@@ -42,12 +42,13 @@ namespace Certify.Management
         Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate, bool isPreviewMode, IProgress<RequestProgressState> progress = null);
 
         Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId);
+        Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority certificateAuthority);
         Task<List<CertificateAuthority>> GetCertificateAuthorities();
   
         Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate);
 
         Task<CertificateRequestResult> PerformDummyCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null);
-
+        Task<ActionResult> RemoveCertificateAuthority(string id);
         Task<List<BindingInfo>> GetPrimaryWebSites(bool ignoreStoppedSites);
 
         void BeginTrackingProgress(RequestProgressState state);

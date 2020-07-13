@@ -240,6 +240,26 @@ namespace Certify.Management
 
             return caList;
         }
+
+        public static bool SaveCustomCertificateAuthorities(List<CertificateAuthority> caList)
+        {
+
+            var appDataPath = Util.GetAppDataFolder();
+            var path = Path.Combine(appDataPath, "ca.json");
+
+            try
+            {
+                var json = Newtonsoft.Json.JsonConvert.SerializeObject(caList, Newtonsoft.Json.Formatting.Indented);
+                System.IO.File.WriteAllText(path, json);
+                return true;
+            }
+            catch (Exception exp)
+            {
+                // Failed to save custom certificate authorities
+                return false;
+            }
+        }
+
         public static void LoadAppSettings()
         {
             try

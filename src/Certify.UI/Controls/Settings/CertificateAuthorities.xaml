@@ -42,23 +42,30 @@
 
         </StackPanel>
 
-        <StackPanel Orientation="Horizontal">
-            <TextBlock Margin="8,8,0,0" Style="{StaticResource Subheading}">Certificate Authority Accounts</TextBlock>
-            <Button
-                Grid.Row="0"
-                Grid.Column="2"
-                Margin="8,8,8,8"
-                Click="Button_NewContact">
-                New Account
-            </Button>
+        <StackPanel>
+            <StackPanel>
+                <TextBlock Margin="8,8,0,0" Style="{StaticResource Subheading}">Certificate Authority Accounts</TextBlock>
+            </StackPanel>
+            <DockPanel>
+                <Button
+                    Grid.Row="0"
+                    Grid.Column="2"
+                    Margin="8,8,8,8"
+                    Click="Button_NewContact"
+                    DockPanel.Dock="Left">
+                    New Account
+                </Button>
 
-            <Button
-                Grid.Row="0"
-                Grid.Column="2"
-                Margin="8,8,8,8"
-                Click="Button_EditCertificateAuthority">
-                Edit Certificate Authorities
-            </Button>
+                <Button
+                    Grid.Row="0"
+                    Grid.Column="2"
+                    Margin="8,8,8,8"
+                    HorizontalAlignment="Right"
+                    Click="Button_EditCertificateAuthority"
+                    DockPanel.Dock="Right">
+                    Edit Certificate Authorities
+                </Button>
+            </DockPanel>
         </StackPanel>
 
         <StackPanel Orientation="Horizontal" />

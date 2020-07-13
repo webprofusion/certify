@@ -107,6 +107,8 @@ namespace Certify.Client
 
         #region Accounts
         Task<List<CertificateAuthority>> GetCertificateAuthorities();
+        Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority ca);
+        Task<ActionResult> DeleteCertificateAuthority(string id);
 
         Task<List<AccountDetails>> GetAccounts();
         Task<ActionResult> AddAccount(ContactRegistration contact);
@@ -128,6 +130,5 @@ namespace Certify.Client
         event Action<ManagedCertificate> OnManagedCertificateUpdated;
 
         Task ConnectStatusStreamAsync();
-
     }
 }
