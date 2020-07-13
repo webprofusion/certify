@@ -18,7 +18,7 @@ namespace Certify.Core.Tests.Unit
         public async Task TestPerformExport()
         {
             // setup
-            var migrationManager = new MigrationManager(new ItemManager(), new CredentialsManager());
+            var migrationManager = new MigrationManager(new ItemManager(), new CredentialsManager(), new ServerProviderMock());
 
             // export
             var export = await migrationManager.PerformExport( new ManagedCertificateFilter { }, new ExportSettings { EncryptionSecret = "secret" }, isPreview: false);
@@ -40,7 +40,7 @@ namespace Certify.Core.Tests.Unit
         public async Task TestDecryptExportedCerts()
         {
             // setup
-            var migrationManager = new MigrationManager(new ItemManager(), new CredentialsManager());
+            var migrationManager = new MigrationManager(new ItemManager(), new CredentialsManager(), new ServerProviderMock());
 
             // export
             var export = await migrationManager.PerformExport(new ManagedCertificateFilter { }, new ExportSettings { EncryptionSecret = "secret" }, isPreview: false);
