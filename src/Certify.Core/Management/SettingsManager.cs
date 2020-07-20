@@ -138,6 +138,9 @@ namespace Certify.Management
         /// if true, will load plugins for external cert managers
         /// </summary>
         public bool IncludeExternalCertManagers { get; set; }
+
+
+        public string[] FeatureFlags { get; set; }
     }
 
     public class SettingsManager
@@ -175,6 +178,9 @@ namespace Certify.Management
             CoreAppSettings.Current.EnableStatusReporting = prefs.EnableStatusReporting;
 
             CoreAppSettings.Current.IncludeExternalCertManagers = prefs.IncludeExternalCertManagers;
+            
+            CoreAppSettings.Current.FeatureFlags = prefs.FeatureFlags;
+
             return true;
         }
 
@@ -200,7 +206,8 @@ namespace Certify.Management
                 DefaultCertificateAuthority = CoreAppSettings.Current.DefaultCertificateAuthority,
                 DefaultKeyCredentials = CoreAppSettings.Current.DefaultKeyCredentials,
                 EnableAutomaticCAFailover = CoreAppSettings.Current.EnableAutomaticCAFailover,
-                IncludeExternalCertManagers = CoreAppSettings.Current.IncludeExternalCertManagers
+                IncludeExternalCertManagers = CoreAppSettings.Current.IncludeExternalCertManagers,
+                FeatureFlags = CoreAppSettings.Current.FeatureFlags
             };
 
             return prefs;

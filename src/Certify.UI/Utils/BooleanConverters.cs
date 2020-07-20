@@ -62,4 +62,36 @@ namespace Certify.UI.Utils
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
+
+
+    /// <summary>
+    /// If given feature (string) is enabled return the required Visibility
+    /// </summary>
+    public class FeatureVisibilityConverter : IValueConverter
+    {
+        public Visibility WhenEnabled { get; set; } = Visibility.Visible;
+        public Visibility WhenNotEnabled { get; set; } = Visibility.Collapsed;
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (parameter != null)
+            {
+                var featureFlag = parameter.ToString();
+                if (UI.ViewModel.AppViewModel.Current.IsFeatureEnabled(featureFlag))
+                {
+                    return WhenEnabled;
+                }
+                else
+                {
+                    return WhenNotEnabled;
+                }
+            }
+            else
+            {
+                return WhenNotEnabled;
+            }
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+    }
 }

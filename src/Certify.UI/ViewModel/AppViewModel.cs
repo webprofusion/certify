@@ -84,6 +84,12 @@ namespace Certify.UI.ViewModel
 
         public double UIScaleFactor { get; set; } = 1;
 
+
+        /// <summary>
+        /// Feature toggled items which no longer require a feature flag
+        /// </summary>
+        public string[] StandardFeatures = { FeatureFlags.CA_EDITOR };
+
         public Dictionary<string, string> UIThemes { get; } = new Dictionary<string, string>
         {
               {"Light","Light Theme"},
@@ -108,6 +114,23 @@ namespace Certify.UI.ViewModel
         {
             await CertifyClient.SetPreferences(prefs);
             Preferences = prefs;
+        }
+
+        internal bool IsFeatureEnabled(string featureFlag)
+        {
+            if (StandardFeatures.Any(f => f == featureFlag))
+            {
+                return true;
+            }
+
+            if (Preferences?.FeatureFlags?.Any(f => f == featureFlag) == true)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         internal async Task<List<BindingInfo>> GetServerSiteList(StandardServerTypes serverType)
@@ -360,7 +383,7 @@ namespace Certify.UI.ViewModel
 
         public async Task InitServiceConnections()
         {
-            
+
             //check service connection
             IsServiceAvailable = await CheckServiceAvailable();
 
@@ -433,7 +456,7 @@ namespace Certify.UI.ViewModel
 
                 IsServiceAvailable = true;
             }
-            catch (Exception exp )
+            catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp);
 

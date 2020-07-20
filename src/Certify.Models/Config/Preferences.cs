@@ -70,5 +70,26 @@
         /// if true, will load plugins for external cert managers
         /// </summary>
         public bool IncludeExternalCertManagers { get; set; }
+
+        public string[] FeatureFlags { get; set; }
+    }
+
+    public static class FeatureFlags
+    {
+        /// <summary>
+        /// Enable import/export UI
+        /// </summary>
+        public static string IMPORT_EXPORT = "IMPORT_EXPORT";
+
+        /// <summary>
+        /// Enable options for PFX pwd (global and per item credentials)
+        /// </summary>
+        public static string PRIVKEY_PWD = "PRIVKEY_PWD";
+
+        /// <summary>
+        /// Enable editor for custom Certificate Authorities
+        /// </summary>
+        public static string CA_EDITOR = "CA_EDITOR";
+
     }
 }

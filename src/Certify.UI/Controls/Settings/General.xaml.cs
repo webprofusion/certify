@@ -68,6 +68,8 @@ namespace Certify.UI.Controls.Settings
 
 
             settingsInitialised = true;
+
+            
         }
 
         private async void SettingsUpdated(object sender, RoutedEventArgs e)

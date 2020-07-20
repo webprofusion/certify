@@ -4,15 +4,20 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
     xmlns:certifyui="clr-namespace:Certify.UI"
+    xmlns:clr="clr-namespace:System;assembly=mscorlib"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fa="http://schemas.fontawesome.io/icons/"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+    xmlns:utils="clr-namespace:Certify.UI.Utils"
     d:DesignHeight="420.042"
     d:DesignWidth="885.537"
     Loaded="UserControl_Loaded"
     mc:Ignorable="d">
 
+    <UserControl.Resources>
+        <utils:FeatureVisibilityConverter x:Key="FeatureVisibilityConverter" />
+    </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <DockPanel Margin="0,8,0,8">
 
@@ -130,7 +135,8 @@
             <StackPanel
                 Margin="8,16"
                 DockPanel.Dock="Top"
-                Orientation="Vertical">
+                Orientation="Vertical"
+                Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='IMPORT_EXPORT'}">
                 <TextBlock Style="{StaticResource Subheading}">Import/Export</TextBlock>
                 <StackPanel Margin="0,8" Orientation="Vertical">
                     <TextBlock Style="{StaticResource Instructions}">To move managed certificates and their related settings and credentials to or from another instance:</TextBlock>
