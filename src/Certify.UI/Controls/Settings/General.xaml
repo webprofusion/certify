@@ -9,15 +9,12 @@
     xmlns:fa="http://schemas.fontawesome.io/icons/"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-    xmlns:utils="clr-namespace:Certify.UI.Utils"
     d:DesignHeight="420.042"
     d:DesignWidth="885.537"
     Loaded="UserControl_Loaded"
     mc:Ignorable="d">
 
-    <UserControl.Resources>
-        <utils:FeatureVisibilityConverter x:Key="FeatureVisibilityConverter" />
-    </UserControl.Resources>
+    <UserControl.Resources />
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <DockPanel Margin="0,8,0,8">
 

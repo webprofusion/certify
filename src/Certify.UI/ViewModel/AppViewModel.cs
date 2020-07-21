@@ -88,7 +88,7 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// Feature toggled items which no longer require a feature flag
         /// </summary>
-        public string[] StandardFeatures = { FeatureFlags.CA_EDITOR };
+        public string[] StandardFeatures = { }; //FeatureFlags.CA_EDITOR 
 
         public Dictionary<string, string> UIThemes { get; } = new Dictionary<string, string>
         {

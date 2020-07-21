@@ -62,7 +62,8 @@
                     Margin="8,8,8,8"
                     HorizontalAlignment="Right"
                     Click="Button_EditCertificateAuthority"
-                    DockPanel.Dock="Right">
+                    DockPanel.Dock="Right"
+                    Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='CA_EDITOR'}">
                     Edit Certificate Authorities
                 </Button>
             </DockPanel>
