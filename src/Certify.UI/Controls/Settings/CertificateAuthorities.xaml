@@ -15,11 +15,12 @@
     <!--  Certificate Authority Preference  -->
     <StackPanel Orientation="Vertical">
 
-        <TextBlock
-            Grid.Row="0"
-            Margin="8"
-            Style="{StaticResource Instructions}">
-            Certificate Authorities are the organisations who can issue trusted certificates. You need to register an account for each (ACME) Certificate Authority you wish to use. Accounts can either be Production (live, trusted certificates) or Staging (test, non-trusted). If you register with multiple authorities this may enable you to use automatic Certificate Authority Failover, so if your preferred Certificate Authority can't issue a new certificate an alternative compatible provider can be used automatically.
+        <TextBlock Style="{StaticResource Instructions}">
+            Certificate Authorities are the organisations who can issue trusted certificates. You need to register an account for each (ACME) Certificate Authority you wish to use. Accounts can either be Production (live, trusted certificates) or Staging (test, non-trusted).
+        </TextBlock>
+
+        <TextBlock Style="{StaticResource Instructions}" Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='CA_FAILOVER'}">
+            If you register with multiple authorities this may enable you to use automatic Certificate Authority Failover, so if your preferred Certificate Authority can't issue a new certificate an alternative compatible provider can be used automatically.
         </TextBlock>
 
         <StackPanel Orientation="Horizontal">
@@ -38,13 +39,14 @@
                 Checked="SettingsUpdated"
                 Content="Enable Automatic CA Failover"
                 ToolTip="If the preferred Certificate Authority fails to renew your certificate, attempt an alternative (if configured)"
-                Unchecked="SettingsUpdated" />
+                Unchecked="SettingsUpdated"
+                Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='CA_FAILOVER'}" />
 
         </StackPanel>
 
         <StackPanel>
             <StackPanel>
-                <TextBlock Margin="8,8,0,0" Style="{StaticResource Subheading}">Certificate Authority Accounts</TextBlock>
+                <TextBlock Margin="0,8,0,0" Style="{StaticResource Subheading}">Certificate Authority Accounts</TextBlock>
             </StackPanel>
             <DockPanel>
                 <Button
@@ -80,6 +82,7 @@
                     <DataTemplate>
 
                         <StackPanel Orientation="Horizontal">
+
                             <Button Margin="0,8,8,8" Click="Button_Delete">
                                 Delete
                             </Button>

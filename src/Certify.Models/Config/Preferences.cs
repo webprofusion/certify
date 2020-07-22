@@ -91,5 +91,9 @@
         /// </summary>
         public static string CA_EDITOR = "CA_EDITOR";
 
+        /// <summary>
+        /// Enable options for auto CA Failover
+        /// </summary>
+        public static string CA_FAILOVER = "CA_FAILOVER";
     }
 }
