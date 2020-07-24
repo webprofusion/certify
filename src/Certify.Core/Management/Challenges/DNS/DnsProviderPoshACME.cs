@@ -47,6 +47,7 @@ namespace Certify.Core.Management.Challenges.DNS
             [NS1](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/NS1-Readme.md),
             [PointDNS](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/PointDNS-Readme.md),
             [Rackspace](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Rackspace-Readme.md),
+            [RFC2136](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/RFC2136-Readme.md),
             [Selectel](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Selectel-Readme.md),
             [UnoEuro](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/UnoEuro-Readme.md),
             [Yandex](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Yandex-Readme.md),
@@ -617,6 +618,29 @@ namespace Certify.Core.Management.Challenges.DNS
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Rackspace",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
+            new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.RFC2136",
+                Title = "RFC2136 with nsupdate as DNS API (using Posh-ACME)",
+                Description = "Validates via nsupdate, using credentials",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/RFC2136-Readme.md",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters = new List<ProviderParameter>
+                {
+                    new ProviderParameter { Key = "DDNSNameserver", Name = "Nameserver", IsRequired = true, IsCredential = false, Description="e.g. ns.example.com" },
+                    new ProviderParameter { Key = "DDNSExePath", Name = "Path to nsupdate exe", IsRequired = true, IsCredential = false, Description="e.g. C:\\BIND\\nsupdate.exe" },
+                    new ProviderParameter { Key = "DDNSPort", Name = "DDNS Port", IsRequired = false, IsCredential = false, Description="e.g. 53 (optional)" },
+                    new ProviderParameter { Key = "DDNSKeyType", Name = "Key Type", IsRequired = true, IsCredential = false, Value="hmac-sha256", OptionsList="hmac-md5;hmac-sha1;hmac-sha224;hmac-sha256;hmac-sha384;hmac-sha512"},
+                    new ProviderParameter { Key = "DDNSKeyName", Name = "Key Name", IsRequired = true, IsCredential = true, Description="e.g. mykey" },
+                    new ProviderParameter { Key = "DDNSKeyValueInsecure", Name = "DDNS Key", IsRequired = true, IsCredential = true },
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=RFC2136",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = true,
                 IsExperimental = true
