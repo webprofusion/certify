@@ -10,16 +10,13 @@ using Certify.Models.Config;
 
 namespace Certify.UI.Controls.Settings
 {
-    /// <summary>
-    /// Interaction logic for Settings.xaml
-    /// </summary>
     public partial class Credentials : UserControl
     {
-        public class EditViewModel: BindableBase
+        public class EditViewModel : BindableBase
         {
             public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
 
-            public Models.Config.StoredCredential SelectedStoredCredential = null;
+            public Models.Config.StoredCredential SelectedStoredCredential { get; set; } = null;
         }
 
         public EditViewModel EditModel { get; set; } = new EditViewModel();

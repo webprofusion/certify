@@ -146,7 +146,7 @@
                 VerticalContentAlignment="Stretch"
                 Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="{x:Static res:SR.In_Progress}">
-                <CustomControls:ProgressMonitor Margin="0,0,0,0.4" />
+                <CustomControls:ProgressMonitor />
             </TabItem>
             <TabItem
                 MinWidth="60"
@@ -155,7 +155,7 @@
                 VerticalContentAlignment="Stretch"
                 Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="{x:Static res:SR.Settings}">
-                <SettingsControls:Settings Height="Auto" Margin="0,0,0,0.4" />
+                <SettingsControls:General Height="Auto" />
             </TabItem>
             <TabItem
                 MinWidth="80"
@@ -163,10 +163,7 @@
                 VerticalContentAlignment="Stretch"
                 Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="{x:Static res:SR.About}">
-                <CustomControls:AboutControl
-                    Width="Auto"
-                    Height="Auto"
-                    Margin="0,0,0,0.4" />
+                <CustomControls:AboutControl Width="Auto" Height="Auto" />
             </TabItem>
         </TabControl>
     </Grid>

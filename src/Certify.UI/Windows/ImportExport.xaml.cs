@@ -51,7 +51,15 @@ namespace Certify.UI.Windows
                 var filePath = dialog.FileName;
 
                 var json = System.IO.File.ReadAllText(filePath);
-                Model.Package = JsonConvert.DeserializeObject<ImportExportPackage>(json);
+                try
+                {
+                    Model.Package = JsonConvert.DeserializeObject<ImportExportPackage>(json);
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("The selected file could not be read as valid Import Package.");
+                    return;
+                }
 
                 var results = await MainViewModel.PerformSettingsImport(Model.Package, Model.ImportSettings, isPreview);
                 PrepareImportSummary(isPreview, results);

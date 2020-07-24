@@ -8,7 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     Title="{x:Static res:SR.GettingStarted_AddToDashboard}"
-    Width="430.4"
+    Width="430"
     Height="288"
     BorderThickness="1"
     GlowBrush="{StaticResource MahApps.Brushes.Accent}"

@@ -91,10 +91,10 @@
 
                     <!--  CSR Options  -->
                     <StackPanel Margin="16,0,0,0" Orientation="Vertical">
-                        <TextBlock Style="{StaticResource SubheadingWithMargin}">Certificate Signing Request (CSR)</TextBlock>
+                        <TextBlock Style="{StaticResource Subheading}">Certificate Signing Request (CSR)</TextBlock>
                         <StackPanel Visibility="{Binding SelectedItem.RequestConfig.CustomCSR, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
 
-                            <TextBlock Style="{StaticResource Instructions}">By default a CSR (Certificate Signing Request) will be generated every time certificate is requested or renewed. You can optionally supply a custom CSR</TextBlock>
+                            <TextBlock Style="{StaticResource Instructions}">By default a CSR (Certificate Signing Request) will be generated every time certificate is requested or renewed. You can optionally supply a custom CSR:</TextBlock>
                             <Button
                                 x:Name="SelectCustomCSR"
                                 Width="160"
@@ -205,7 +205,7 @@
                         LastChildFill="False">
 
                         <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">General Options</TextBlock>
-                        <DockPanel DockPanel.Dock="Top">
+                        <DockPanel Margin="0,8" DockPanel.Dock="Top">
 
                             <TextBox
                                 Width="Auto"
