@@ -10,9 +10,6 @@ using Microsoft.Win32;
 
 namespace Certify.UI.Controls.ManagedCertificate
 {
-    /// <summary>
-    /// Interaction logic for Deployment.xaml 
-    /// </summary>
     public partial class MiscOptions : UserControl
     {
         protected Certify.UI.ViewModel.ManagedCertificateViewModel ItemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
@@ -20,6 +17,8 @@ namespace Certify.UI.Controls.ManagedCertificate
         public MiscOptions()
         {
             InitializeComponent();
+
+            this.DataContext = this.ItemViewModel;
         }
 
         private void OpenCertificateFile_Click(object sender, RoutedEventArgs e)
@@ -210,6 +209,16 @@ namespace Certify.UI.Controls.ManagedCertificate
             if (MessageBox.Show("Are you sure you wish to clear the custom private key?", "Clear Custom Private Key", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
             {
                 ItemViewModel.SelectedItem.RequestConfig.CustomPrivateKey = null;
+            }
+        }
+
+        private void CertificateAuthorityList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ItemViewModel.RaisePropertyChangedEvent(nameof(ItemViewModel.CertificateAuthorityDescription));
+
+            if (ItemViewModel.SelectedItem != null && string.IsNullOrEmpty(ItemViewModel.SelectedItem.CertificateAuthorityId) && ItemViewModel.SelectedItem.UseStagingMode == true)
+            {
+                ItemViewModel.SelectedItem.UseStagingMode = false;
             }
         }
 

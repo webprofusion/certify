@@ -2,6 +2,7 @@
     x:Class="Certify.UI.Controls.ManagedCertificate.MiscOptions"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
     xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     xmlns:certifyui="clr-namespace:Certify.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -26,224 +27,327 @@
             NotNull="Collapsed"
             Null="Visible" />
     </UserControl.Resources>
-    <ScrollViewer Margin="0,16,0,0" VerticalScrollBarVisibility="Auto">
-        <DockPanel Margin="8,0,8,8" LastChildFill="False">
+    <ScrollViewer Margin="0,8,0,0" VerticalScrollBarVisibility="Auto">
+        <DockPanel Margin="0,0,8,0" LastChildFill="False">
 
-            <StackPanel
-                x:Name="GeneralOptions"
-                Margin="2,0,0,0"
-                DockPanel.Dock="Top">
+            <TabControl
+                x:Name="MiscTabControl"
+                Height="auto"
+                Margin="0,0,0,0"
+                HorizontalContentAlignment="Left"
+                VerticalContentAlignment="Stretch"
+                Controls:TabControlHelper.UnderlineBrush="{DynamicResource MahApps.Brushes.Accent4}"
+                Controls:TabControlHelper.Underlined="TabPanel"
+                DockPanel.Dock="Top"
+                TabStripPlacement="Left">
+                <TabItem
+                    Height="32"
+                    MinWidth="140"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
+                    Header="Certificate Authority"
+                    IsSelected="true">
+                    <!--  Certificate Authority Preference  -->
+                    <DockPanel Margin="16,0,8,8" DockPanel.Dock="Top">
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Certificate Authority</TextBlock>
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">
+                            Certificate Authorities are the organisations who can issue trusted certificates. You need to register an account under Settings for each (ACME) Certificate Authority you wish to use.
+                        </TextBlock>
 
-                <!--  General Options  -->
-                <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">General</TextBlock>
-                <DockPanel
-                    Margin="0,0,0,12"
-                    DockPanel.Dock="Top"
-                    LastChildFill="False">
-                    <Label
-                        Width="120"
-                        Content="{x:Static Resources:SR.Comments}"
-                        DockPanel.Dock="Left" />
-                    <TextBox
-                        Width="Auto"
-                        Height="38"
-                        MinWidth="300"
-                        MaxWidth="400"
-                        AcceptsReturn="True"
-                        DockPanel.Dock="Left"
-                        VerticalScrollBarVisibility="Auto">
-                        <TextBox.Text>
-                            <Binding Path="SelectedItem.Comments" UpdateSourceTrigger="PropertyChanged" />
-                        </TextBox.Text>
-                    </TextBox>
-                </DockPanel>
-                <StackPanel
-                    Margin="120,0,0,0"
-                    DockPanel.Dock="Top"
-                    Orientation="Vertical">
-                    <CheckBox
-                        Margin="0,4,0,4"
-                        Content="{x:Static Resources:SR.ManagedCertificateSettings_EnableAutoRenewal}"
-                        IsChecked="{Binding SelectedItem.IncludeInAutoRenew}" />
-                    <CheckBox
-                        Margin="0,4,0,4"
-                        Content="{x:Static Resources:SR.ManagedCertificateSettings_NotifyPrimaryContactOnRenewalFailure}"
-                        IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" />
-                    <CheckBox
-                        Margin="0,4,0,4"
-                        Content="Skip Certificate Request (Pre/Post Tasks will run but no new certificate order performed)"
-                        IsChecked="{Binding SelectedItem.SkipCertificateRequest}" />
-                </StackPanel>
+                        <StackPanel
+                            Margin="0,16,0,0"
+                            DockPanel.Dock="Top"
+                            Orientation="Horizontal">
+                            <ComboBox
+                                x:Name="CertificateAuthorityList"
+                                Width="180"
+                                Margin="0,0,0,0"
+                                HorizontalAlignment="Left"
+                                DisplayMemberPath="Title"
+                                ItemsSource="{Binding CertificateAuthorities}"
+                                SelectedValue="{Binding SelectedItem.CertificateAuthorityId}"
+                                SelectedValuePath="Id"
+                                SelectionChanged="CertificateAuthorityList_SelectionChanged" />
 
+                            <CheckBox
+                                Margin="4,4,0,4"
+                                Content="Use Staging Mode (Test Certificates)"
+                                IsChecked="{Binding SelectedItem.UseStagingMode}"
+                                Visibility="{Binding SelectedItem.CertificateAuthorityId, Converter={StaticResource NullCollapsedConverter}}" />
+                        </StackPanel>
+                        <TextBlock
+                            Margin="0,8"
+                            DockPanel.Dock="Top"
+                            Style="{StaticResource Instructions}"
+                            Text="{Binding CertificateAuthorityDescription}" />
+                    </DockPanel>
+                </TabItem>
 
+                <TabItem
+                    Height="32"
+                    MinWidth="100"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
+                    Header="Signing &amp; Security"
+                    IsSelected="False">
 
-                <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">CSR Options</TextBlock>
-                <!--  CSR Options  -->
-                <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
-                    <StackPanel Visibility="{Binding SelectedItem.RequestConfig.CustomCSR, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
+                    <!--  CSR Options  -->
+                    <StackPanel Margin="16,0,0,0" Orientation="Vertical">
+                        <TextBlock Style="{StaticResource SubheadingWithMargin}">Certificate Signing Request (CSR)</TextBlock>
+                        <StackPanel Visibility="{Binding SelectedItem.RequestConfig.CustomCSR, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
 
-                        <TextBlock Style="{StaticResource Instructions}">By default a CSR (Certificate Signing Request) will be generated every time certificate is requested or renewed. You can optionally supply a custom CSR</TextBlock>
-                        <Button
-                            x:Name="SelectCustomCSR"
-                            Width="160"
-                            HorizontalAlignment="Left"
-                            Click="SelectCustomCSR_Click"
-                            Content="Choose Custom CSR.." />
-                    </StackPanel>
-                    <StackPanel Visibility="{Binding SelectedItem.RequestConfig.CustomCSR, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
+                            <TextBlock Style="{StaticResource Instructions}">By default a CSR (Certificate Signing Request) will be generated every time certificate is requested or renewed. You can optionally supply a custom CSR</TextBlock>
+                            <Button
+                                x:Name="SelectCustomCSR"
+                                Width="160"
+                                HorizontalAlignment="Left"
+                                Click="SelectCustomCSR_Click"
+                                Content="Choose Custom CSR.." />
+                        </StackPanel>
 
-                        <TextBlock Style="{StaticResource Instructions}">You have set a custom CSR. To use an automatic CSR or choose an alternative:</TextBlock>
-                        <Button
-                            x:Name="ClearCustomCSR"
-                            Width="160"
-                            HorizontalAlignment="Left"
-                            Click="ClearCustomCSR_Click"
-                            Content="Clear Custom CSR" />
-                    </StackPanel>
-                    <StackPanel Visibility="{Binding SelectedItem.RequestConfig.CustomPrivateKey, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
+                        <StackPanel Visibility="{Binding SelectedItem.RequestConfig.CustomCSR, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
 
-                        <TextBlock Style="{StaticResource Instructions}">A new private key will normally be generated for each certificate request. You can optionally supply a custom key:</TextBlock>
-                        <Button
-                            x:Name="SelectPrivateKey"
-                            Width="160"
-                            HorizontalAlignment="Left"
-                            Click="SelectCustomPrivateKey_Click"
-                            Content="Choose Private Key.." />
-                    </StackPanel>
-                    <StackPanel Visibility="{Binding SelectedItem.RequestConfig.CustomPrivateKey, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
+                            <TextBlock Style="{StaticResource Instructions}">You have set a custom CSR. To use an automatic CSR or choose an alternative:</TextBlock>
+                            <Button
+                                x:Name="ClearCustomCSR"
+                                Width="160"
+                                HorizontalAlignment="Left"
+                                Click="ClearCustomCSR_Click"
+                                Content="Clear Custom CSR" />
+                        </StackPanel>
 
-                        <TextBlock Style="{StaticResource Instructions}">You have set a custom private key. To use an automatic key or choose an alternative:</TextBlock>
-                        <Button
-                            x:Name="ClearCustomPrivateKey"
-                            Width="160"
-                            HorizontalAlignment="Left"
-                            Click="ClearCustomPrivateKey_Click"
-                            Content="Clear Custom Private Key" />
-                    </StackPanel>
-                    <StackPanel Visibility="{Binding SelectedItem.RequestConfig.CustomCSR, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
-                        <StackPanel Visibility="{Binding SelectedItem.RequestConfig.CustomPrivateKey, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
-                            <Label Content="CSR Signing Algorithm" />
-                            <StackPanel Margin="120,0,0,0">
-                                <RadioButton
-                                    x:Name="CSROption_RS256"
-                                    Margin="8,4,0,4"
-                                    Content="RSASSA-PKCS1-v1_5 using SHA-256 (Default)"
-                                    GroupName="CSRAlg"
-                                    IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=RS256}" />
-                                <RadioButton
-                                    x:Name="CSROption_ECDSA256"
-                                    Margin="8,0,0,4"
-                                    Content="ECDSA using P-256 and SHA-256"
-                                    GroupName="CSRAlg"
-                                    IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=ECDSA256}" />
-                                <RadioButton
-                                    x:Name="CSROption_ECDSA384"
-                                    Margin="8,0,0,4"
-                                    Content="ECDSA using P-384 and SHA-384"
-                                    GroupName="CSRAlg"
-                                    IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=ECDSA384}" />
-                                <RadioButton
-                                    x:Name="CSROption_ECDSA521"
-                                    Margin="8,0,0,4"
-                                    Content="ECDSA using P-521 and SHA-512"
-                                    GroupName="CSRAlg"
-                                    IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=ECDSA521}" />
+                        <StackPanel Visibility="{Binding SelectedItem.RequestConfig.CustomCSR, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
+                            <TextBlock Style="{StaticResource SubheadingWithMargin}">CSR Signing Algorithm</TextBlock>
+                            <StackPanel Visibility="{Binding SelectedItem.RequestConfig.CustomPrivateKey, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
+
+                                <StackPanel Margin="0,0,0,0">
+                                    <RadioButton
+                                        x:Name="CSROption_RS256"
+                                        Margin="8,4,0,4"
+                                        Content="RSASSA-PKCS1-v1_5 using SHA-256 (Default)"
+                                        GroupName="CSRAlg"
+                                        IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=RS256}" />
+                                    <RadioButton
+                                        x:Name="CSROption_ECDSA256"
+                                        Margin="8,0,0,4"
+                                        Content="ECDSA using P-256 and SHA-256"
+                                        GroupName="CSRAlg"
+                                        IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=ECDSA256}" />
+                                    <RadioButton
+                                        x:Name="CSROption_ECDSA384"
+                                        Margin="8,0,0,4"
+                                        Content="ECDSA using P-384 and SHA-384"
+                                        GroupName="CSRAlg"
+                                        IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=ECDSA384}" />
+                                    <RadioButton
+                                        x:Name="CSROption_ECDSA521"
+                                        Margin="8,0,0,4"
+                                        Content="ECDSA using P-521 and SHA-512"
+                                        GroupName="CSRAlg"
+                                        IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=ECDSA521}" />
+                                </StackPanel>
                             </StackPanel>
                         </StackPanel>
+
+                        <TextBlock Style="{StaticResource SubheadingWithMargin}">Private Key</TextBlock>
+
+                        <StackPanel Visibility="{Binding SelectedItem.RequestConfig.CustomPrivateKey, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
+
+                            <TextBlock Style="{StaticResource Instructions}">A new private key will normally be generated for each certificate request. You can optionally supply a custom key:</TextBlock>
+                            <Button
+                                x:Name="SelectPrivateKey"
+                                Width="160"
+                                HorizontalAlignment="Left"
+                                Click="SelectCustomPrivateKey_Click"
+                                Content="Choose Private Key.." />
+                        </StackPanel>
+
+                        <StackPanel Visibility="{Binding SelectedItem.RequestConfig.CustomPrivateKey, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
+
+                            <TextBlock Style="{StaticResource Instructions}">You have set a custom private key. To use an automatic key or choose an alternative:</TextBlock>
+                            <Button
+                                x:Name="ClearCustomPrivateKey"
+                                Width="160"
+                                HorizontalAlignment="Left"
+                                Click="ClearCustomPrivateKey_Click"
+                                Content="Clear Custom Private Key" />
+                        </StackPanel>
+
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SubheadingWithMargin}">Security</TextBlock>
+
+                            <TextBlock Style="{StaticResource Instructions}">You can optionally specify a password credential to use for private keys and PFX files generated for this certificate:</TextBlock>
+                            <ComboBox
+                                x:Name="CertPasswordCredential"
+                                Width="180"
+                                Margin="0,0,0,0"
+                                HorizontalAlignment="Left"
+                                DisplayMemberPath="Title"
+                                ItemsSource="{Binding StoredPasswords}"
+                                SelectedValue="{Binding SelectedItem.CertificatePasswordCredentialId}"
+                                SelectedValuePath="StorageKey" />
+                        </StackPanel>
+
+
+
                     </StackPanel>
-                </StackPanel>
-            </StackPanel>
 
-            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Advanced Actions</TextBlock>
+                </TabItem>
 
-            <DockPanel LastChildFill="False">
-                <StackPanel DockPanel.Dock="Top">
-                    <TextBlock
-                        Grid.Row="4"
-                        Margin="0,8,32,0"
-                        HorizontalAlignment="Left"
-                        Style="{StaticResource Instructions}"
-                        Text="{x:Static Resources:SR.ManagedCertificateSettings_ExportTip}" />
-                    <TextBox
-                        x:Name="CertPath"
-                        MaxWidth="500"
-                        Margin="0,8,0,0"
-                        HorizontalAlignment="Left"
-                        Text="{Binding SelectedItem.CertificatePath, TargetNullValue={x:Static Resources:SR.ManagedCertificateSettings_CertificatePathEmpty}}" />
-                </StackPanel>
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                    <Button
-                        x:Name="OpenCertificateFile"
-                        Width="220"
-                        Margin="0,4,0,0"
-                        HorizontalAlignment="Left"
-                        Click="OpenCertificateFile_Click"
-                        Content="{x:Static Resources:SR.ManagedCertificateSettings_ViewCertificate}" />
+                <TabItem
+                    Height="32"
+                    MinWidth="100"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
+                    Header="General Options"
+                    IsSelected="false">
+                    <!--  General Options  -->
+                    <DockPanel
+                        Margin="16,0,0,12"
+                        DockPanel.Dock="Top"
+                        LastChildFill="False">
 
-                </StackPanel>
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">General Options</TextBlock>
+                        <DockPanel DockPanel.Dock="Top">
 
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                    <Button
-                        x:Name="ReapplyCertBindings"
-                        Grid.Row="2"
-                        Grid.Column="1"
-                        Width="220"
-                        Margin="0,4,0,0"
-                        HorizontalAlignment="Left"
-                        Click="ReapplyCertBindings_Click"
-                        Content="{x:Static Resources:SR.ManagedCertificateSettings_ReapplyCertificate}" />
+                            <TextBox
+                                Width="Auto"
+                                Height="38"
+                                MinWidth="300"
+                                MaxWidth="600"
+                                HorizontalAlignment="Left"
+                                Controls:TextBoxHelper.Watermark="{x:Static Resources:SR.Comments}"
+                                AcceptsReturn="True"
+                                DockPanel.Dock="Top"
+                                VerticalScrollBarVisibility="Auto">
+                                <TextBox.Text>
+                                    <Binding Path="SelectedItem.Comments" UpdateSourceTrigger="PropertyChanged" />
+                                </TextBox.Text>
+                            </TextBox>
 
-                </StackPanel>
+                        </DockPanel>
+                        <StackPanel
+                            Margin="0,8,0,0"
+                            DockPanel.Dock="Top"
+                            Orientation="Vertical">
+                            <CheckBox
+                                Margin="0,4,0,4"
+                                Content="{x:Static Resources:SR.ManagedCertificateSettings_EnableAutoRenewal}"
+                                IsChecked="{Binding SelectedItem.IncludeInAutoRenew}" />
+                            <CheckBox
+                                Margin="0,4,0,4"
+                                Content="{x:Static Resources:SR.ManagedCertificateSettings_NotifyPrimaryContactOnRenewalFailure}"
+                                IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" />
+                            <CheckBox
+                                Margin="0,4,0,4"
+                                Content="Skip Certificate Request (no new certificate order performed)"
+                                IsChecked="{Binding SelectedItem.SkipCertificateRequest}" />
+                        </StackPanel>
+                    </DockPanel>
 
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                    <Button
-                        x:Name="RefetchCertificate"
-                        Width="220"
-                        Margin="0,4,0,0"
-                        Click="RefetchCertificate_Click">
-                        Re-fetch Latest Certificate
-                    </Button>
-                </StackPanel>
-
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                    <Border Grid.Row="4" Grid.Column="1">
-                        <Border.Style>
-                            <Style>
-                                <Setter Property="Border.Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedItem.CertificateRevoked}" Value="False">
-                                        <Setter Property="Border.Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                        <Button
-                            x:Name="RevokeCertificateBtn"
-                            Width="220"
-                            Margin="0,4,0,0"
-                            HorizontalAlignment="Left"
-                            Background="{DynamicResource ErrorColorBrush}"
-                            Click="RevokeCertificateBtn_Click"
-                            Content="{x:Static Resources:SR.ManagedCertificateSettings_RevokeCertificate}" />
-                    </Border>
-                    <Border Grid.Row="4" Grid.Column="1">
-                        <Border.Style>
-                            <Style>
-                                <Setter Property="Border.Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedItem.CertificateRevoked}" Value="True">
-                                        <Setter Property="Border.Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                        <Label Background="{DynamicResource WarningColorBrush}" Content="{x:Static Resources:SR.ManagedCertificateSettings_CertificateRevokeWarning}" />
-                    </Border>
-                </StackPanel>
+                </TabItem>
 
 
 
-            </DockPanel>
+                <TabItem
+                    MinWidth="100"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
+                    Header="Actions"
+                    IsSelected="False">
+                    <!--  Actions  -->
+                    <DockPanel Margin="16,0,0,0" LastChildFill="False">
+
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Actions</TextBlock>
+                        <StackPanel DockPanel.Dock="Top">
+                            <TextBlock
+                                Grid.Row="4"
+                                Margin="0,8,32,0"
+                                HorizontalAlignment="Left"
+                                Style="{StaticResource Instructions}"
+                                Text="{x:Static Resources:SR.ManagedCertificateSettings_ExportTip}" />
+                            <TextBox
+                                x:Name="CertPath"
+                                MaxWidth="500"
+                                Margin="0,8,0,0"
+                                HorizontalAlignment="Left"
+                                Text="{Binding SelectedItem.CertificatePath, TargetNullValue={x:Static Resources:SR.ManagedCertificateSettings_CertificatePathEmpty}}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                            <Button
+                                x:Name="OpenCertificateFile"
+                                Width="220"
+                                Margin="0,4,0,0"
+                                HorizontalAlignment="Left"
+                                Click="OpenCertificateFile_Click"
+                                Content="{x:Static Resources:SR.ManagedCertificateSettings_ViewCertificate}" />
+
+                        </StackPanel>
+
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                            <Button
+                                x:Name="ReapplyCertBindings"
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                Width="220"
+                                Margin="0,4,0,0"
+                                HorizontalAlignment="Left"
+                                Click="ReapplyCertBindings_Click"
+                                Content="{x:Static Resources:SR.ManagedCertificateSettings_ReapplyCertificate}" />
+
+                        </StackPanel>
+
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                            <Button
+                                x:Name="RefetchCertificate"
+                                Width="220"
+                                Margin="0,4,0,0"
+                                Click="RefetchCertificate_Click">
+                                Re-fetch Latest Certificate
+                            </Button>
+                        </StackPanel>
+
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                            <Border Grid.Row="4" Grid.Column="1">
+                                <Border.Style>
+                                    <Style>
+                                        <Setter Property="Border.Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedItem.CertificateRevoked}" Value="False">
+                                                <Setter Property="Border.Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Button
+                                    x:Name="RevokeCertificateBtn"
+                                    Width="220"
+                                    Margin="0,4,0,0"
+                                    HorizontalAlignment="Left"
+                                    Background="{DynamicResource ErrorColorBrush}"
+                                    Click="RevokeCertificateBtn_Click"
+                                    Content="{x:Static Resources:SR.ManagedCertificateSettings_RevokeCertificate}" />
+                            </Border>
+                            <Border Grid.Row="4" Grid.Column="1">
+                                <Border.Style>
+                                    <Style>
+                                        <Setter Property="Border.Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedItem.CertificateRevoked}" Value="True">
+                                                <Setter Property="Border.Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Label Background="{DynamicResource WarningColorBrush}" Content="{x:Static Resources:SR.ManagedCertificateSettings_CertificateRevokeWarning}" />
+                            </Border>
+                        </StackPanel>
+
+
+
+                    </DockPanel>
+                </TabItem>
+            </TabControl>
+
+
+
         </DockPanel>
     </ScrollViewer>
 </UserControl>

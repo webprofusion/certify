@@ -52,6 +52,10 @@ namespace Certify.UI.ViewModel
             RaisePropertyChangedEvent(nameof(HasSelectedItemDomainOptions));
             RaisePropertyChangedEvent(nameof(HasSelectedItemWebsiteSelection));
             RaisePropertyChangedEvent(nameof(CertificateAuthorityDescription));
+
+            RaisePropertyChangedEvent(nameof(StoredPasswords));
+            RaisePropertyChangedEvent(nameof(CertificateAuthorities));
+
             RaisePropertyChangedEvent(nameof(IsEditable));
         }
 
@@ -209,6 +213,28 @@ namespace Certify.UI.ViewModel
                     Id = null,
                     Title = "Auto",
                     Description = "The Certificate Authority will be automatically selected based on compatibility and the configured ACME accounts."
+                });
+                return list;
+            }
+        }
+
+        [DependsOn("_appViewModel.StoredCredentials")]
+        public IEnumerable<Models.Config.StoredCredential> StoredPasswords
+        {
+            get
+            {
+                var list = _appViewModel.StoredCredentials?.Where(c => c.ProviderType == StandardAuthTypes.STANDARD_AUTH_PASSWORD).ToList();
+
+                if (list == null)
+                {
+                    list = new List<Models.Config.StoredCredential>();
+                }
+
+                list.Insert(0, new Models.Config.StoredCredential
+                {
+                    StorageKey = null,
+                    Title = "(No Password)",
+                    ProviderType = StandardAuthTypes.STANDARD_AUTH_PASSWORD
                 });
                 return list;
             }

@@ -15,31 +15,36 @@ namespace Certify.UI.Controls.Settings
     /// </summary>
     public partial class Credentials : UserControl
     {
-        protected Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
+        public class EditViewModel: BindableBase
+        {
+            public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
 
-        public Models.Config.StoredCredential _selectedStoredCredential = null;
+            public Models.Config.StoredCredential SelectedStoredCredential = null;
+        }
+
+        public EditViewModel EditModel { get; set; } = new EditViewModel();
 
         public Credentials()
         {
             InitializeComponent();
-            this.DataContext = MainViewModel;
+            this.DataContext = EditModel;
 
         }
 
         private async Task LoadCurrentSettings()
         {
-            if (!MainViewModel.IsServiceAvailable)
+            if (!EditModel.MainViewModel.IsServiceAvailable)
             {
                 return;
             }
 
-            DataContext = MainViewModel;
+            DataContext = EditModel;
 
             //load stored credentials list
-            await MainViewModel.RefreshStoredCredentialsList();
+            await EditModel.MainViewModel.RefreshStoredCredentialsList();
             CredentialsList.ItemsSource = FilteredStoredCredentials;
         }
-        private IEnumerable<StoredCredential> FilteredStoredCredentials => MainViewModel.StoredCredentials.Where(c => c.ProviderType != StandardAuthTypes.STANDARD_ACME_ACCOUNT);
+        private IEnumerable<StoredCredential> FilteredStoredCredentials => EditModel.MainViewModel.StoredCredentials.Where(c => c.ProviderType != StandardAuthTypes.STANDARD_ACME_ACCOUNT);
         private async void UserControl_Loaded(object sender, RoutedEventArgs e) => await LoadCurrentSettings();
 
         private void AddStoredCredential_Click(object sender, RoutedEventArgs e)
@@ -57,9 +62,9 @@ namespace Certify.UI.Controls.Settings
         private void ModifyStoredCredential_Click(object sender, RoutedEventArgs e)
         {
             //modify the selected credential
-            if (_selectedStoredCredential != null)
+            if (EditModel.SelectedStoredCredential != null)
             {
-                var d = new Windows.EditCredential(_selectedStoredCredential)
+                var d = new Windows.EditCredential(EditModel.SelectedStoredCredential)
                 {
                     Owner = Window.GetWindow(this)
                 };
@@ -78,12 +83,12 @@ namespace Certify.UI.Controls.Settings
         private async void DeleteStoredCredential_Click(object sender, RoutedEventArgs e)
         {
             //delete the selected credential, if not currently in use
-            if (_selectedStoredCredential != null)
+            if (EditModel.SelectedStoredCredential != null)
             {
                 if (MessageBox.Show("Are you sure you wish to delete this stored credential?", "Confirm Delete", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
                 {
                     //confirm item not used then delete
-                    var deleted = await MainViewModel.DeleteCredential(_selectedStoredCredential?.StorageKey);
+                    var deleted = await EditModel.MainViewModel.DeleteCredential(EditModel.SelectedStoredCredential?.StorageKey);
                     if (!deleted)
                     {
                         MessageBox.Show("This stored credential could not be removed. It may still be in use by a managed site.");
@@ -96,11 +101,11 @@ namespace Certify.UI.Controls.Settings
 
         private async void TestStoredCredential_Click(object sender, RoutedEventArgs e)
         {
-            if (_selectedStoredCredential != null)
+            if (EditModel.SelectedStoredCredential != null)
             {
                 Mouse.OverrideCursor = Cursors.Wait;
 
-                var result = await MainViewModel.TestCredentials(_selectedStoredCredential.StorageKey);
+                var result = await EditModel.MainViewModel.TestCredentials(EditModel.SelectedStoredCredential.StorageKey);
 
                 Mouse.OverrideCursor = Cursors.Arrow;
 
@@ -114,11 +119,11 @@ namespace Certify.UI.Controls.Settings
         {
             if (e.AddedItems != null && e.AddedItems.Count > 0)
             {
-                _selectedStoredCredential = (Models.Config.StoredCredential)e.AddedItems[0];
+                EditModel.SelectedStoredCredential = (Models.Config.StoredCredential)e.AddedItems[0];
             }
             else
             {
-                _selectedStoredCredential = null;
+                EditModel.SelectedStoredCredential = null;
             }
         }
 

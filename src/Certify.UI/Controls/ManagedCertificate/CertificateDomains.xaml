@@ -286,45 +286,7 @@
 
                 </ScrollViewer>
             </TabItem>
-            <TabItem
-                MinWidth="140"
-                Controls:HeaderedControlHelper.HeaderFontSize="12"
-                Header="Certificate Authority"
-                IsSelected="False">
-                <!--  Certificate Authority Preference  -->
-                <DockPanel Margin="8,0,8,8" DockPanel.Dock="Top">
-                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">
-                        Certificate Authorities are the organisations who can issue trusted certificates. You need to register an account under Settings for each (ACME) Certificate Authority you wish to use.
-                    </TextBlock>
 
-                    <StackPanel
-                        Margin="0,16,0,0"
-                        DockPanel.Dock="Top"
-                        Orientation="Horizontal">
-                        <ComboBox
-                            x:Name="CertificateAuthorityList"
-                            Width="180"
-                            Margin="0,0,0,0"
-                            HorizontalAlignment="Left"
-                            DisplayMemberPath="Title"
-                            ItemsSource="{Binding CertificateAuthorities}"
-                            SelectedValue="{Binding SelectedItem.CertificateAuthorityId}"
-                            SelectedValuePath="Id"
-                            SelectionChanged="CertificateAuthorityList_SelectionChanged" />
-
-                        <CheckBox
-                            Margin="4,4,0,4"
-                            Content="Use Staging Mode (Test Certificates)"
-                            IsChecked="{Binding SelectedItem.UseStagingMode}"
-                            Visibility="{Binding SelectedItem.CertificateAuthorityId, Converter={StaticResource NullCollapsedConverter}}" />
-                    </StackPanel>
-                    <TextBlock
-                        Margin="0,8"
-                        DockPanel.Dock="Top"
-                        Style="{StaticResource Instructions}"
-                        Text="{Binding CertificateAuthorityDescription}" />
-                </DockPanel>
-            </TabItem>
             <TabItem
                 MinWidth="100"
                 Controls:HeaderedControlHelper.HeaderFontSize="12"
