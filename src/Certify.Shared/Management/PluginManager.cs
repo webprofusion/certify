@@ -200,7 +200,14 @@ namespace Certify.Management
 
         private List<T> LoadPlugins<T>(string fileMatch)
         {
-            var pluginAssemblyFiles = new DirectoryInfo(GetPluginFolderPath()).GetFiles(fileMatch);
+            var pluginDir = new DirectoryInfo(GetPluginFolderPath());
+
+            if (!pluginDir.Exists)
+            {
+                return new List<T> { };
+            }
+
+            var pluginAssemblyFiles = pluginDir.GetFiles(fileMatch);
 
             var plugins = pluginAssemblyFiles.Select(assem =>
             {
