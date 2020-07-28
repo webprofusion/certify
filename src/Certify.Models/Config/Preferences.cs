@@ -71,6 +71,11 @@
         /// </summary>
         public bool IncludeExternalCertManagers { get; set; }
 
+        /// <summary>
+        /// If true, will allow plugins to load from appdata
+        /// </summary>
+        public bool IncludeExternalPlugins { get; set; }
+
         public string[] FeatureFlags { get; set; }
     }
 

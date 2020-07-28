@@ -133,12 +133,15 @@ namespace Certify.Management
         /// </summary>
         public bool EnableAutomaticCAFailover { get; set; }
 
-
         /// <summary>
         /// if true, will load plugins for external cert managers
         /// </summary>
         public bool IncludeExternalCertManagers { get; set; }
 
+        /// <summary>
+        /// If true, will allow plugins to load from appdata
+        /// </summary>
+        public bool IncludeExternalPlugins { get; set; }
 
         public string[] FeatureFlags { get; set; }
     }
@@ -178,7 +181,8 @@ namespace Certify.Management
             CoreAppSettings.Current.EnableStatusReporting = prefs.EnableStatusReporting;
 
             CoreAppSettings.Current.IncludeExternalCertManagers = prefs.IncludeExternalCertManagers;
-            
+            CoreAppSettings.Current.IncludeExternalPlugins = prefs.IncludeExternalPlugins;
+
             CoreAppSettings.Current.FeatureFlags = prefs.FeatureFlags;
 
             return true;
@@ -187,6 +191,7 @@ namespace Certify.Management
         public static Models.Preferences ToPreferences()
         {
             LoadAppSettings();
+
             var prefs = new Models.Preferences
             {
                 EnableAppTelematics = CoreAppSettings.Current.EnableAppTelematics,
@@ -207,6 +212,7 @@ namespace Certify.Management
                 DefaultKeyCredentials = CoreAppSettings.Current.DefaultKeyCredentials,
                 EnableAutomaticCAFailover = CoreAppSettings.Current.EnableAutomaticCAFailover,
                 IncludeExternalCertManagers = CoreAppSettings.Current.IncludeExternalCertManagers,
+                IncludeExternalPlugins = CoreAppSettings.Current.IncludeExternalPlugins,
                 FeatureFlags = CoreAppSettings.Current.FeatureFlags
             };
 

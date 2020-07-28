@@ -77,6 +77,7 @@ namespace Certify.Management
             _progressResults = new ObservableCollection<RequestProgressState>();
 
             _pluginManager = new PluginManager();
+            _pluginManager.EnableExternalPlugins = CoreAppSettings.Current.IncludeExternalPlugins;
             _pluginManager.LoadPlugins(new List<string> { "Licensing", "DashboardClient", "DeploymentTasks", "CertificateManagers", "DnsProviders" });
 
             _migrationManager = new MigrationManager(_itemManager, _credentialsManager, _serverProvider);

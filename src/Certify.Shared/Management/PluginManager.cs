@@ -33,6 +33,10 @@ namespace Certify.Management
         public List<IDnsProviderProviderPlugin> DnsProviderProviders { get; set; }
         public List<PluginLoadResult> PluginLoadResults { get; private set; } = new List<PluginLoadResult>();
 
+        /// <summary>
+        /// If enabled, external plugins will load from AppData plugins folders
+        /// </summary>
+        public bool EnableExternalPlugins { get; set; } = false;
         public static PluginManager CurrentInstance { get; private set; }
 
         private Models.Providers.ILog _log = null;
@@ -76,17 +80,24 @@ namespace Certify.Management
         }
 
 
-        private string GetPluginFolderPath(bool usePluginSubfolder = true)
+        private string GetPluginFolderPath(bool usePluginSubfolder = true, bool useAppData = false)
         {
-            var executableLocation = Assembly.GetExecutingAssembly().Location;
-            if (usePluginSubfolder)
+            if (!useAppData)
             {
-                var path = Path.Combine(Path.GetDirectoryName(executableLocation), "Plugins");
-                return path;
+                var executableLocation = Assembly.GetExecutingAssembly().Location;
+                if (usePluginSubfolder)
+                {
+                    var path = Path.Combine(Path.GetDirectoryName(executableLocation), "Plugins");
+                    return path;
+                }
+                else
+                {
+                    return Path.GetDirectoryName(executableLocation);
+                }
             }
             else
             {
-                return Path.GetDirectoryName(executableLocation);
+                return GetAppDataFolder("plugins");
             }
         }
 
@@ -139,7 +150,7 @@ namespace Certify.Management
                 _log?.Error(exp.ToString());
             }
 
-            return default(T);
+            return default;
         }
 
         public void LoadPlugins(List<string> includeSet)
@@ -169,11 +180,14 @@ namespace Certify.Management
 
             if (includeSet.Contains("CertificateManagers"))
             {
-                var certManagerProviders = LoadPlugin<ICertificateManagerProviderPlugin>("Plugin.CertificateManagers.dll");
-                CertificateManagerProviders = new List<ICertificateManagerProviderPlugin>
+                var certManagerProviders = LoadPlugins<ICertificateManagerProviderPlugin>("Plugin.CertificateManagers.*.dll");
+
+                CertificateManagerProviders = new List<ICertificateManagerProviderPlugin>();
+
+                if (certManagerProviders?.Any() == true)
                 {
-                    certManagerProviders
-                };
+                    CertificateManagerProviders.AddRange(certManagerProviders);
+                }
             }
 
             if (includeSet.Contains("DnsProviders"))
@@ -198,9 +212,25 @@ namespace Certify.Management
             _log?.Debug($"Plugin load took {s.ElapsedMilliseconds}ms");
         }
 
-        private List<T> LoadPlugins<T>(string fileMatch)
+        private List<T> LoadPlugins<T>(string fileMatch, bool loadFromAppData = false)
         {
+            var plugins = new List<T>();
+
             var pluginDir = new DirectoryInfo(GetPluginFolderPath());
+
+            if (loadFromAppData)
+            {
+                pluginDir = new DirectoryInfo(GetPluginFolderPath(usePluginSubfolder: true, useAppData: true));
+            }
+            else
+            {
+                // if loading main plugins, load external plugins first
+                var otherPlugins = LoadPlugins<T>(fileMatch, loadFromAppData: true);
+                if (otherPlugins?.Any() == true)
+                {
+                    plugins.AddRange(otherPlugins);
+                }
+            }
 
             if (!pluginDir.Exists)
             {
@@ -209,7 +239,7 @@ namespace Certify.Management
 
             var pluginAssemblyFiles = pluginDir.GetFiles(fileMatch);
 
-            var plugins = pluginAssemblyFiles.Select(assem =>
+            var discoveredPlugins = pluginAssemblyFiles.Select(assem =>
             {
 
                 try
@@ -230,12 +260,14 @@ namespace Certify.Management
                 {
                     // failed to load plugin
                     PluginLoadResults.Add(new PluginLoadResult(assem.Name, $"Failed to load plugin: {assem.Name} {exp}", false));
-                    return default(T);
+                    return default;
                 }
 
             })
             .Where(p => p != null)
             .ToList();
+
+            plugins.AddRange(discoveredPlugins);
 
             return plugins;
         }
