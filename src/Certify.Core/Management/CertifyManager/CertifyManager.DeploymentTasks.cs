@@ -28,7 +28,7 @@ namespace Certify.Management
         public async Task<DeploymentProviderDefinition> GetDeploymentProviderDefinition(string id, DeploymentTaskConfig config = null)
         {
             var provider = DeploymentTaskProviderFactory.Create(id, _pluginManager.DeploymentTaskProviders);
-            return provider.GetDefinition();            
+            return provider.GetDefinition();
         }
 
         public async Task<List<ActionStep>> PerformDeploymentTask(ILog log, string managedCertificateId, string taskId, bool isPreviewOnly, bool skipDeferredTasks)
@@ -289,7 +289,7 @@ namespace Certify.Management
 
         public async Task<List<ActionResult>> ValidateDeploymentTask(ManagedCertificate managedCertificate, DeploymentTaskConfig taskConfig)
         {
-           
+
             var provider = DeploymentTaskProviderFactory.Create(taskConfig.TaskTypeId.ToLower(), _pluginManager.DeploymentTaskProviders);
 
             Dictionary<string, string> credentials = null;
@@ -331,7 +331,7 @@ namespace Certify.Management
 
             if (!string.IsNullOrEmpty(managedCertificate.RequestConfig.PreRequestPowerShellScript))
             {
-               
+
                 //add pre-request script task
                 var task = new DeploymentTaskConfig
                 {
@@ -431,6 +431,18 @@ namespace Certify.Management
                 managedCertificate.RequestConfig.WebhookUrl = null;
                 managedCertificate.RequestConfig.WebhookTrigger = Webhook.ON_NONE;
 
+            }
+
+            // #516 check for any post-request webhooks incorrectly set to be powershell
+
+            if (managedCertificate.PostRequestTasks?.Any(t => t.TaskTypeId == StandardTaskTypes.POWERSHELL && t.Parameters?.Any(p => p.Key == "url") == true) == true)
+            {
+                var webhookTask = managedCertificate.PostRequestTasks.First(t => t.TaskTypeId == StandardTaskTypes.POWERSHELL && t.Parameters?.Any(p => p.Key == "url") == true);
+                if (webhookTask != null)
+                {
+                    webhookTask.TaskTypeId = StandardTaskTypes.WEBHOOK;
+                    requiredMigration = true;
+                }
             }
 
             return new Tuple<ManagedCertificate, bool>(managedCertificate, requiredMigration);
