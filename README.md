@@ -14,7 +14,7 @@ https://img.shields.io/github/stars/webprofusion/certify.svg)
 ![Certify App Screenshot](docs/images/app-screenshot.png)
 
 Requirements:
-- Windows Server 2008 R2 SP1 or higher (.Net 4.6.2 or higher), 64-bit
+- Windows Server 2012 R2 or higher (.Net 4.6.2 or higher), 64-bit
 
 Features:
 - Easy certificate requests & automated SSL bindings (IIS)
