@@ -296,6 +296,20 @@
                     <managedcertificate:Deployment Margin="0,8,0,0" />
                 </TabItem>
 
+                <TabItem
+                    x:Name="TabTasks"
+                    MinWidth="100"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
+                    AutomationProperties.Name="Tasks">
+                    <TabItem.HeaderTemplate>
+                        <DataTemplate>
+                            <managedcertificate:TabHeader HeaderText="Tasks" IconName="Cogs" />
+                        </DataTemplate>
+                    </TabItem.HeaderTemplate>
+                    <managedcertificate:Tasks Margin="0,8,0,0" />
+                </TabItem>
+
+
 
                 <TabItem
                     x:Name="TabPreview"

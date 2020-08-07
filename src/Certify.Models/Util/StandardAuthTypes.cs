@@ -24,6 +24,7 @@
         public const string STANDARD_AUTH_WINDOWS = "Certify.StandardChallenges.Windows";
         public const string STANDARD_AUTH_GENERIC = "Certify.StandardChallenges.Generic";
         public const string STANDARD_AUTH_PASSWORD = "Certify.StandardChallenges.Password";
+        public const string STANDARD_AUTH_API_TOKEN = "Certify.StandardChallenges.ApiToken";
         public const string STANDARD_AUTH_PROVIDER_SPECIFIED = "Certify.StandardChallenges.ProviderSpecified";
     }
 }

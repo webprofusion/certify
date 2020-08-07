@@ -348,7 +348,7 @@
                             Margin="0,8,0,0"
                             DockPanel.Dock="Top"
                             Orientation="Horizontal">
-                            <Label Width="160" Content="Target Type" />
+                            <Label Width="160" Content="Authentication" />
 
                             <ComboBox
                                 x:Name="TargetType"

@@ -31,276 +31,192 @@
         <utils:StateToColorConverter x:Key="StateToColorConverter" />
     </UserControl.Resources>
 
-    <TabControl
-        x:Name="MainTabControl"
-        Height="auto"
-        HorizontalContentAlignment="Left"
-        VerticalContentAlignment="Stretch"
-        Controls:TabControlHelper.UnderlineBrush="{DynamicResource MahApps.Brushes.Accent4}"
-        Controls:TabControlHelper.Underlined="TabPanel">
-        <TabItem
-            MinWidth="140"
-            Controls:HeaderedControlHelper.HeaderFontSize="12"
-            Header="Deployment Mode"
-            IsSelected="True">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <DockPanel Margin="8,0,8,8" LastChildFill="True">
 
-                    <TextBlock
-                        Margin="0,16,0,0"
-                        DockPanel.Dock="Top"
-                        Style="{StaticResource Subheading}">
-                        Certificate Deployment
-                    </TextBlock>
 
-                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">
-                        Deployment of your certificate can be automatic or you can perform your own deployment tasks.
-                    </TextBlock>
-                    <StackPanel
-                        Margin="0,8,0,8"
-                        DockPanel.Dock="Top"
-                        Orientation="Horizontal">
-                        <Label Width="130" Content="Deployment Mode:" />
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <DockPanel Margin="8,0,8,8" LastChildFill="True">
+
+            <TextBlock
+                Margin="0,16,0,0"
+                DockPanel.Dock="Top"
+                Style="{StaticResource Subheading}">
+                Certificate Deployment
+            </TextBlock>
+
+            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">
+                Deployment of your certificate can be automatic or you can perform your own deployment tasks (see the Tasks tab).
+            </TextBlock>
+            <StackPanel
+                Margin="0,8,0,8"
+                DockPanel.Dock="Top"
+                Orientation="Horizontal">
+                <Label Width="130" Content="Deployment Mode:" />
+                <ComboBox
+                    x:Name="DeploymentSiteOptions"
+                    DisplayMemberPath="Title"
+                    SelectedValue="{Binding SelectedItem.RequestConfig.DeploymentSiteOption, Converter={StaticResource EnumConverter}}"
+                    SelectedValuePath="Value"
+                    SelectionChanged="DeploymentSiteOptions_SelectionChanged" />
+            </StackPanel>
+            <DockPanel x:Name="AutoBinding" DockPanel.Dock="Top">
+                <DockPanel.Style>
+                    <Style>
+                        <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedItem.RequestConfig.DeploymentSiteOption}" Value="{x:Static models:DeploymentOption.Auto}">
+                                <Setter Property="UIElement.Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DockPanel.Style>
+                <TextBlock Style="{StaticResource Instructions}" Text="Certificate will be deployed to all IIS sites with matching domains or with https bindings to the old version of certificate). See the Preview tab to review the bindings which will be updated." />
+            </DockPanel>
+
+            <DockPanel x:Name="StoreOnly" DockPanel.Dock="Top">
+                <DockPanel.Style>
+                    <Style>
+                        <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedItem.RequestConfig.DeploymentSiteOption}" Value="{x:Static models:DeploymentOption.DeploymentStoreOnly}">
+                                <Setter Property="UIElement.Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DockPanel.Style>
+                <TextBlock Style="{StaticResource Instructions}" Text="Certificate will be imported into the Certificate Store on the Local Machine. No auto deployment." />
+            </DockPanel>
+
+            <DockPanel x:Name="NoDeployment" DockPanel.Dock="Top">
+                <DockPanel.Style>
+                    <Style>
+                        <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedItem.RequestConfig.DeploymentSiteOption}" Value="{x:Static models:DeploymentOption.NoDeployment}">
+                                <Setter Property="UIElement.Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DockPanel.Style>
+                <TextBlock Style="{StaticResource Instructions}" Text="Certificate will be saved to disk but will not be imported automatically into the Certificate Store." />
+            </DockPanel>
+
+            <DockPanel x:Name="AdvancedBindingOptions" DockPanel.Dock="Top">
+                <DockPanel.Style>
+                    <Style>
+                        <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedItem.RequestConfig.DeploymentSiteOption}" Value="{x:Static models:DeploymentOption.SingleSite}">
+                                <Setter Property="UIElement.Visibility" Value="Visible" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding SelectedItem.RequestConfig.DeploymentSiteOption}" Value="{x:Static models:DeploymentOption.AllSites}">
+                                <Setter Property="UIElement.Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DockPanel.Style>
+                <StackPanel DockPanel.Dock="Top">
+
+                    <StackPanel Orientation="Horizontal">
+                        <Label Width="130" Content="Binding Add/Update:" />
                         <ComboBox
-                            x:Name="DeploymentSiteOptions"
+                            x:Name="DeploymentBindingUpdates"
+                            Margin="0,4,0,0"
                             DisplayMemberPath="Title"
-                            SelectedValue="{Binding SelectedItem.RequestConfig.DeploymentSiteOption, Converter={StaticResource EnumConverter}}"
-                            SelectedValuePath="Value"
-                            SelectionChanged="DeploymentSiteOptions_SelectionChanged" />
+                            SelectedValue="{Binding SelectedItem.RequestConfig.DeploymentBindingOption, Converter={StaticResource EnumConverter}}"
+                            SelectedValuePath="Value" />
                     </StackPanel>
-                    <DockPanel x:Name="AutoBinding" DockPanel.Dock="Top">
-                        <DockPanel.Style>
-                            <Style>
-                                <Setter Property="UIElement.Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedItem.RequestConfig.DeploymentSiteOption}" Value="{x:Static models:DeploymentOption.Auto}">
-                                        <Setter Property="UIElement.Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </DockPanel.Style>
-                        <TextBlock Style="{StaticResource Instructions}" Text="Certificate will be deployed to all IIS sites with matching domains or with https bindings to the old version of certificate). See the Preview tab to review the bindings which will be updated." />
-                    </DockPanel>
-
-                    <DockPanel x:Name="StoreOnly" DockPanel.Dock="Top">
-                        <DockPanel.Style>
-                            <Style>
-                                <Setter Property="UIElement.Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedItem.RequestConfig.DeploymentSiteOption}" Value="{x:Static models:DeploymentOption.DeploymentStoreOnly}">
-                                        <Setter Property="UIElement.Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </DockPanel.Style>
-                        <TextBlock Style="{StaticResource Instructions}" Text="Certificate will be imported into the Certificate Store on the Local Machine. No auto deployment." />
-                    </DockPanel>
-
-                    <DockPanel x:Name="NoDeployment" DockPanel.Dock="Top">
-                        <DockPanel.Style>
-                            <Style>
-                                <Setter Property="UIElement.Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedItem.RequestConfig.DeploymentSiteOption}" Value="{x:Static models:DeploymentOption.NoDeployment}">
-                                        <Setter Property="UIElement.Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </DockPanel.Style>
-                        <TextBlock Style="{StaticResource Instructions}" Text="Certificate will be saved to disk but will not be imported automatically into the Certificate Store." />
-                    </DockPanel>
-
-                    <DockPanel x:Name="AdvancedBindingOptions" DockPanel.Dock="Top">
-                        <DockPanel.Style>
-                            <Style>
-                                <Setter Property="UIElement.Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedItem.RequestConfig.DeploymentSiteOption}" Value="{x:Static models:DeploymentOption.SingleSite}">
-                                        <Setter Property="UIElement.Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding SelectedItem.RequestConfig.DeploymentSiteOption}" Value="{x:Static models:DeploymentOption.AllSites}">
-                                        <Setter Property="UIElement.Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </DockPanel.Style>
-                        <StackPanel DockPanel.Dock="Top">
-
-                            <StackPanel Orientation="Horizontal">
-                                <Label Width="130" Content="Binding Add/Update:" />
-                                <ComboBox
-                                    x:Name="DeploymentBindingUpdates"
-                                    Margin="0,4,0,0"
-                                    DisplayMemberPath="Title"
-                                    SelectedValue="{Binding SelectedItem.RequestConfig.DeploymentBindingOption, Converter={StaticResource EnumConverter}}"
-                                    SelectedValuePath="Value" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal">
-                                <Label Width="130" Content="Matching any of:" />
-                                <StackPanel>
-                                    <CheckBox
-                                        Margin="0,4,0,0"
-                                        Content="Existing binding hostname matches certificate domains"
-                                        DockPanel.Dock="Top"
-                                        IsChecked="{Binding SelectedItem.RequestConfig.DeploymentBindingMatchHostname}" />
-                                    <CheckBox
-                                        Margin="0,4,0,0"
-                                        Content="Binding hostname not specified (IP only or All Unassigned)"
-                                        DockPanel.Dock="Top"
-                                        IsChecked="{Binding SelectedItem.RequestConfig.DeploymentBindingBlankHostname}" />
-                                    <CheckBox
-                                        Margin="0,4,0,0"
-                                        Content="Existing binding uses old version of same certificate"
-                                        DockPanel.Dock="Top"
-                                        IsChecked="{Binding SelectedItem.RequestConfig.DeploymentBindingReplacePrevious}" />
-                                </StackPanel>
-                            </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Width="130" Content="Matching any of:" />
+                        <StackPanel>
+                            <CheckBox
+                                Margin="0,4,0,0"
+                                Content="Existing binding hostname matches certificate domains"
+                                DockPanel.Dock="Top"
+                                IsChecked="{Binding SelectedItem.RequestConfig.DeploymentBindingMatchHostname}" />
+                            <CheckBox
+                                Margin="0,4,0,0"
+                                Content="Binding hostname not specified (IP only or All Unassigned)"
+                                DockPanel.Dock="Top"
+                                IsChecked="{Binding SelectedItem.RequestConfig.DeploymentBindingBlankHostname}" />
+                            <CheckBox
+                                Margin="0,4,0,0"
+                                Content="Existing binding uses old version of same certificate"
+                                DockPanel.Dock="Top"
+                                IsChecked="{Binding SelectedItem.RequestConfig.DeploymentBindingReplacePrevious}" />
                         </StackPanel>
+                    </StackPanel>
+                </StackPanel>
 
-                        <DockPanel x:Name="WebsiteBindingConfig">
-                            <DockPanel.Style>
-                                <Style>
-                                    <Setter Property="UIElement.Visibility" Value="Collapsed" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SelectedItem.RequestConfig.DeploymentBindingOption}" Value="{x:Static models:DeploymentBindingOption.AddOrUpdate}">
-                                            <Setter Property="UIElement.Visibility" Value="Visible" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </DockPanel.Style>
-                            <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">IIS Binding Settings</TextBlock>
-                            <TextBlock
-                                DockPanel.Dock="Top"
-                                Style="{StaticResource Instructions}"
-                                Text="If one or more new https bindings need to be created, the following settings will be used:" />
-                            <StackPanel
-                                Margin="8,4,0,0"
-                                DockPanel.Dock="Top"
-                                Orientation="Vertical">
-                                <RadioButton
-                                    Margin="0,0,0,4"
-                                    Content="{x:Static Resources:SR.ManagedCertificateSettings_AutoUpdateBinding}"
-                                    GroupName="BindingType"
-                                    IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" />
-                                <RadioButton
-                                    Margin="0,0,0,4"
-                                    Content="{x:Static Resources:SR.ManagedCertificateSettings_UseSpecificBinding}"
-                                    GroupName="BindingType"
-                                    IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Mode=OneWay, Converter={StaticResource ResourceKey=InvBoolConverter}}" />
-                            </StackPanel>
-
-                            <StackPanel
-                                Margin="32,8,0,0"
-                                DockPanel.Dock="Top"
-                                IsEnabled="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}"
-                                Orientation="Vertical">
-                                <StackPanel.Style>
-                                    <Style>
-                                        <Setter Property="UIElement.Visibility" Value="Visible" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" Value="True">
-                                                <Setter Property="UIElement.Visibility" Value="Collapsed" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
-                                <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
-                                    <Label Width="130" Content="{x:Static Resources:SR.ManagedCertificateSettings_BindIP}" />
-                                    <ComboBox
-                                        Width="225"
-                                        DisplayMemberPath="Description"
-                                        ItemsSource="{Binding HostIPAddresses}"
-                                        SelectedValue="{Binding SelectedItem.RequestConfig.BindingIPAddress}"
-                                        SelectedValuePath="IPAddress" />
-                                </StackPanel>
-                                <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
-                                    <Label Width="130" Content="{x:Static Resources:SR.ManagedCertificateSettings_BindPort}" />
-                                    <TextBox Width="225" Text="{Binding SelectedItem.RequestConfig.BindingPort}" />
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal">
-                                    <Label Width="130" Content="{x:Static Resources:SR.ManagedCertificateSettings_UseSNI}" />
-                                    <CheckBox IsChecked="{Binding SelectedItem.RequestConfig.BindingUseSNI}" />
-                                </StackPanel>
-                                <TextBlock Style="{StaticResource Instructions}" Text="{x:Static Resources:SR.ManagedCertificateSettings_BindingNote}" />
-                            </StackPanel>
-                        </DockPanel>
-                    </DockPanel>
-
-                </DockPanel>
-            </ScrollViewer>
-        </TabItem>
-
-        <TabItem
-            MinWidth="100"
-            Controls:HeaderedControlHelper.HeaderFontSize="12"
-            Header="Deployment Tasks"
-            IsSelected="False">
-
-            <ScrollViewer>
-                <DockPanel Margin="0,0,8,0" DockPanel.Dock="Top">
+                <DockPanel x:Name="WebsiteBindingConfig">
+                    <DockPanel.Style>
+                        <Style>
+                            <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedItem.RequestConfig.DeploymentBindingOption}" Value="{x:Static models:DeploymentBindingOption.AddOrUpdate}">
+                                    <Setter Property="UIElement.Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DockPanel.Style>
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">IIS Binding Settings</TextBlock>
                     <TextBlock
-                        Margin="0,0,0,0"
                         DockPanel.Dock="Top"
                         Style="{StaticResource Instructions}"
-                        Text="Tasks are a flexible way to deploy your updated certificate or trigger other actions before or after renewal. Deployment Tasks can be run immediately after the certificate has updated or they can be deferred (to run be manually or via a scheduled task etc.). "
-                        TextWrapping="Wrap" />
-
-
-                    <StackPanel DockPanel.Dock="Top">
-                        <TextBlock Margin="0,16,0,0" Style="{StaticResource Subheading}">Deployment Tasks</TextBlock>
-                        <StackPanel Orientation="Vertical">
-                            <TextBlock Style="{StaticResource Instructions}" Text="You can optionally add any number of additional deployment tasks:" />
-
-                            <Button
-                                Width="80"
-                                Height="28"
-                                Margin="0,4,0,0"
-                                HorizontalAlignment="Left"
-                                Click="AddDeploymentTask_Click"
-                                DockPanel.Dock="Left">
-                                <StackPanel Orientation="Horizontal">
-                                    <fa:ImageAwesome
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
-                                        Icon="PlusCircle" />
-                                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center">Add</TextBlock>
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-
-                        <local:TaskList DataContext="{Binding SelectedItem.PostRequestTasks}" />
-
+                        Text="If one or more new https bindings need to be created, the following settings will be used:" />
+                    <StackPanel
+                        Margin="8,4,0,0"
+                        DockPanel.Dock="Top"
+                        Orientation="Vertical">
+                        <RadioButton
+                            Margin="0,0,0,4"
+                            Content="{x:Static Resources:SR.ManagedCertificateSettings_AutoUpdateBinding}"
+                            GroupName="BindingType"
+                            IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" />
+                        <RadioButton
+                            Margin="0,0,0,4"
+                            Content="{x:Static Resources:SR.ManagedCertificateSettings_UseSpecificBinding}"
+                            GroupName="BindingType"
+                            IsChecked="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Mode=OneWay, Converter={StaticResource ResourceKey=InvBoolConverter}}" />
                     </StackPanel>
-                    <StackPanel DockPanel.Dock="Top">
-                        <TextBlock Margin="0,16,0,0" Style="{StaticResource Subheading}">Pre-Request Tasks</TextBlock>
-                        <StackPanel Orientation="Vertical">
-                            <TextBlock Style="{StaticResource Instructions}" Text="You can optionally add any number of tasks to run before the certificate request begins:" />
-                            <Button
-                                Width="80"
-                                Height="28"
-                                Margin="0,4,0,0"
-                                HorizontalAlignment="Left"
-                                Click="AddPreRequestTask_Click"
-                                DockPanel.Dock="Left">
-                                <StackPanel Orientation="Horizontal">
-                                    <fa:ImageAwesome
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
-                                        Icon="PlusCircle" />
-                                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center">Add</TextBlock>
-                                </StackPanel>
-                            </Button>
+
+                    <StackPanel
+                        Margin="32,8,0,0"
+                        DockPanel.Dock="Top"
+                        IsEnabled="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding, Converter={StaticResource ResourceKey=InvBoolConverter}}"
+                        Orientation="Vertical">
+                        <StackPanel.Style>
+                            <Style>
+                                <Setter Property="UIElement.Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedItem.RequestConfig.PerformAutomatedCertBinding}" Value="True">
+                                        <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+                            <Label Width="130" Content="{x:Static Resources:SR.ManagedCertificateSettings_BindIP}" />
+                            <ComboBox
+                                Width="225"
+                                DisplayMemberPath="Description"
+                                ItemsSource="{Binding HostIPAddresses}"
+                                SelectedValue="{Binding SelectedItem.RequestConfig.BindingIPAddress}"
+                                SelectedValuePath="IPAddress" />
                         </StackPanel>
-
-                        <local:TaskList DataContext="{Binding SelectedItem.PreRequestTasks}" />
-
-
+                        <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+                            <Label Width="130" Content="{x:Static Resources:SR.ManagedCertificateSettings_BindPort}" />
+                            <TextBox Width="225" Text="{Binding SelectedItem.RequestConfig.BindingPort}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Width="130" Content="{x:Static Resources:SR.ManagedCertificateSettings_UseSNI}" />
+                            <CheckBox IsChecked="{Binding SelectedItem.RequestConfig.BindingUseSNI}" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource Instructions}" Text="{x:Static Resources:SR.ManagedCertificateSettings_BindingNote}" />
                     </StackPanel>
                 </DockPanel>
-            </ScrollViewer>
-        </TabItem>
-    </TabControl>
+            </DockPanel>
+
+        </DockPanel>
+    </ScrollViewer>
 
 </UserControl>

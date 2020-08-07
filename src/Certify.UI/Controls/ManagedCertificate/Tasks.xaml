@@ -1,0 +1,80 @@
+﻿<UserControl
+    x:Class="Certify.UI.Controls.ManagedCertificate.Tasks"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:certifyui="clr-namespace:Certify.UI"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fa="http://schemas.fontawesome.io/icons/"
+    xmlns:local="clr-namespace:Certify.UI.Controls.ManagedCertificate"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DataContext="{d:DesignInstance Type=certifyui:ManagedCertificateDesignViewModel,
+                                     IsDesignTimeCreatable=True}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+    <ScrollViewer>
+        <DockPanel Margin="0,0,8,0" DockPanel.Dock="Top">
+            <TextBlock
+                Margin="0,0,0,0"
+                DockPanel.Dock="Top"
+                Style="{StaticResource Instructions}"
+                Text="Tasks are an optional way to work with your latest certificate or trigger other actions before or after renewal. Deployment Tasks can be run immediately after the certificate has updated or they can be deferred (to run be manually or via a scheduled task etc.). "
+                TextWrapping="Wrap" />
+
+
+            <StackPanel DockPanel.Dock="Top">
+                <TextBlock Margin="0,16,0,0" Style="{StaticResource Subheading}">Deployment Tasks</TextBlock>
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Style="{StaticResource Instructions}" Text="You can optionally add any number of deployment tasks. These will run after the standard auto deployment process has completed:" />
+
+                    <Button
+                        Width="80"
+                        Height="28"
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Left"
+                        Click="AddDeploymentTask_Click"
+                        DockPanel.Dock="Left">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:ImageAwesome
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                                Icon="PlusCircle" />
+                            <TextBlock Margin="8,0,0,0" VerticalAlignment="Center">Add</TextBlock>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <local:TaskList DataContext="{Binding SelectedItem.PostRequestTasks}" />
+
+            </StackPanel>
+            <StackPanel DockPanel.Dock="Top">
+                <TextBlock Margin="0,16,0,0" Style="{StaticResource Subheading}">Pre-Request Tasks</TextBlock>
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Style="{StaticResource Instructions}" Text="You can optionally add any number of tasks to run before the certificate request begins:" />
+                    <Button
+                        Width="80"
+                        Height="28"
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Left"
+                        Click="AddPreRequestTask_Click"
+                        DockPanel.Dock="Left">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:ImageAwesome
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                                Icon="PlusCircle" />
+                            <TextBlock Margin="8,0,0,0" VerticalAlignment="Center">Add</TextBlock>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <local:TaskList DataContext="{Binding SelectedItem.PreRequestTasks}" />
+
+
+            </StackPanel>
+        </DockPanel>
+    </ScrollViewer>
+</UserControl>

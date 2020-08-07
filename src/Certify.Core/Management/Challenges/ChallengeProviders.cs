@@ -67,6 +67,20 @@ namespace Certify.Core.Management.Challenges
                         }
                     },
 
+                      // Fake challenge type for api token authentication
+                    new ChallengeProviderDefinition
+                    {
+                        Id = StandardAuthTypes.STANDARD_AUTH_API_TOKEN,
+                        ChallengeType = "",
+                        Title = "API Key or Token",
+                        Description = "Generic API Token or Key",
+                        HandlerType = ChallengeHandlerType.INTERNAL,
+                        ProviderParameters= new List<ProviderParameter>
+                        {
+                           new ProviderParameter{ Key="api_token",Name="API Key or Token", IsRequired=true, IsPassword=true, IsCredential=true },
+                        }
+                    },
+
                     // Fake challenge type for Windows network credentials
                     new ChallengeProviderDefinition
                     {
