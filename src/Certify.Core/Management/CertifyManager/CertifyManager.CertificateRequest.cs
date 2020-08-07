@@ -561,7 +561,7 @@ namespace Certify.Management
             {
                 result.IsSuccess = false;
                 result.Abort = true;
-                result.Message = $"There is no matching ACME account for the currently selected Certificate Authority.";
+                result.Message = $"There is no matching ACME account for the currently selected Certificate Authority. Check you have added a {(managedCertificate.UseStagingMode ? "Staging" : "Production")} account for the CA under the app Settings.";
 
                 ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result });
                 await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
