@@ -81,7 +81,8 @@ namespace Certify.Service
                         var tc = new Certify.Management.Util().InitTelemetry();
                         var properties = new Dictionary<string, string>
                         {
-                            { "AppVersion", Management.Util.GetAppVersion().ToString() }
+                            { "AppVersion", Management.Util.GetAppVersion().ToString() },
+                            { "InstanceId", Management.CoreAppSettings.Current.InstanceId}
                         };
 
                         tc.TrackException((Exception)exceptionObject, properties);
@@ -103,6 +104,7 @@ namespace Certify.Service
                         AppVersion = appVersion.ToString(),
                         SupportingData = new
                         {
+                            InstanceId = Management.CoreAppSettings.Current.InstanceId,
                             Framework = Certify.Management.Util.GetDotNetVersion(),
                             OS = Environment.OSVersion.ToString(),
                             AppVersion = Management.Util.GetAppVersion(),
