@@ -8,6 +8,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models;
 using Newtonsoft.Json;
+using Polly;
+using Polly.Retry;
 
 namespace Certify.Management
 {
@@ -28,6 +30,8 @@ namespace Certify.Management
         // TODO: make db path configurable on service start
         private readonly string _dbPath = $"C:\\programdata\\certify\\{ITEMMANAGERCONFIG}.db";
         private readonly string _connectionString;
+
+        private AsyncRetryPolicy _retryPolicy = Policy.Handle<SQLiteException>().WaitAndRetryAsync(3, i => TimeSpan.FromSeconds(1));
 
         public ItemManager(string storageSubfolder = null)
         {
@@ -362,20 +366,25 @@ namespace Certify.Management
                 managedCertificate.Id = Guid.NewGuid().ToString();
             }
 
-            using (var db = new SQLiteConnection(_connectionString))
+            await _retryPolicy.ExecuteAsync(async () =>
             {
-                await db.OpenAsync();
-                using (var tran = db.BeginTransaction())
+                using (var db = new SQLiteConnection(_connectionString))
                 {
-                    using (var cmd = new SQLiteCommand("INSERT OR REPLACE INTO manageditem (id, json) VALUES (@id,@json)", db))
+                    await db.OpenAsync();
+                    using (var tran = db.BeginTransaction())
                     {
-                        cmd.Parameters.Add(new SQLiteParameter("@id", managedCertificate.Id));
-                        cmd.Parameters.Add(new SQLiteParameter("@json", JsonConvert.SerializeObject(managedCertificate, new JsonSerializerSettings { Formatting = Formatting.Indented, NullValueHandling = NullValueHandling.Ignore })));
-                        await cmd.ExecuteNonQueryAsync();
+                        using (var cmd = new SQLiteCommand("INSERT OR REPLACE INTO manageditem (id, json) VALUES (@id,@json)", db))
+                        {
+                            cmd.Parameters.Add(new SQLiteParameter("@id", managedCertificate.Id));
+                            cmd.Parameters.Add(new SQLiteParameter("@json", JsonConvert.SerializeObject(managedCertificate, new JsonSerializerSettings { Formatting = Formatting.Indented, NullValueHandling = NullValueHandling.Ignore })));
+           
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+                        tran.Commit();
                     }
-                    tran.Commit();
                 }
-            }
+
+            });
 
             return managedCertificate;
         }

@@ -86,7 +86,17 @@ namespace Certify.Management
                 managedCertificate.LastRenewalStatus = RequestState.Error;
             }
 
-            managedCertificate = await _itemManager.Update(managedCertificate);
+            try
+            {
+                managedCertificate = await _itemManager.Update(managedCertificate);
+            }
+            catch (Exception exp)
+            {
+
+                // failed to store update, e.g. database problem or disk space has run out
+                managedCertificate.LastRenewalStatus = RequestState.Error;
+                managedCertificate.RenewalFailureMessage = "Error: cannot store certificate status update to %ProgramData%\\Certify\\manageditems.db. Check there is enough disk space and permission for writes. If this problem persists, contact support. "+ exp;
+            }
 
             // report request state to status hub clients
             _statusReporting?.ReportManagedCertificateUpdated(managedCertificate);
@@ -111,9 +121,9 @@ namespace Certify.Management
                 if (_pluginManager != null && _pluginManager.DashboardClient != null)
                 {
                     var reportedCert = Newtonsoft.Json.JsonConvert.DeserializeObject<ManagedCertificate>(Newtonsoft.Json.JsonConvert.SerializeObject(managedCertificate));
-                    
+
                     // remove anything we don't want to report to the dashboard
-                  
+
                     reportedCert.RequestConfig.CustomCSR = null;
                     reportedCert.RequestConfig.CustomPrivateKey = null;
 
