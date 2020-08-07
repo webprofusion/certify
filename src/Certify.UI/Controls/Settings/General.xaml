@@ -231,8 +231,12 @@
                                 Value="{Binding MainViewModel.UIScaleFactor}" />
 
                         </StackPanel>
+
+                        <TextBlock Style="{StaticResource SubheadingWithMargin}">Experimental Features</TextBlock>
+                        <local:Experiments />
                     </StackPanel>
                 </TabItem>
+                
             </TabControl>
 
         </DockPanel>

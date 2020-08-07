@@ -94,4 +94,36 @@ namespace Certify.UI.Utils
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
+
+
+    /// <summary>
+    /// If given feature (string) is enabled return true
+    /// </summary>
+    public class FeatureBooleanConverter : IValueConverter
+    {
+        public bool WhenEnabled { get; set; } = true;
+        public bool WhenNotEnabled { get; set; } = false;
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (parameter != null)
+            {
+                var featureFlag = parameter.ToString();
+                if (UI.ViewModel.AppViewModel.Current.IsFeatureEnabled(featureFlag))
+                {
+                    return WhenEnabled;
+                }
+                else
+                {
+                    return WhenNotEnabled;
+                }
+            }
+            else
+            {
+                return WhenNotEnabled;
+            }
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+    }
 }

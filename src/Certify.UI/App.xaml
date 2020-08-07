@@ -75,6 +75,7 @@
             <DataTemplate x:Key="ProviderHiddenParameter" />
 
             <utils:FeatureVisibilityConverter x:Key="FeatureVisibilityConverter" />
+            <utils:FeatureBooleanConverter x:Key="FeatureBooleanConverter" />
         </ResourceDictionary>
 
 
