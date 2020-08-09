@@ -34,7 +34,7 @@ namespace Certify.Management
                 {
                     throw new ArgumentException($"File '{scriptFile}' does not exist.");
                 }
-                if (scriptInfo.Extension != ".ps1")
+                if (scriptInfo.Extension.ToLower() != ".ps1")
                 {
                     throw new ArgumentException($"File '{scriptFile}' is not a powershell script.");
                 }
