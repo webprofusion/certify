@@ -420,7 +420,30 @@ namespace Certify.Management
 
         public async Task<List<ActionStep>> PerformImport(ImportRequest importRequest)
         {
-            return await _migrationManager.PerformImport(importRequest.Package, importRequest.Settings, importRequest.IsPreviewMode);
+            var importResult = await _migrationManager.PerformImport(importRequest.Package, importRequest.Settings, importRequest.IsPreviewMode);
+
+            // store and apply certs if we have no errors
+            if (!importResult.Any(i => i.HasError))
+            {
+
+                var deploySteps = new List<ActionStep>();
+                foreach (var m in importRequest.Package.Content.ManagedCertificates)
+                {
+                    var managedCert = await GetManagedCertificate(m.Id);
+
+                    if (managedCert != null)
+                    {
+                        var deployResult = await DeployCertificate(managedCert, null, isPreviewOnly: importRequest.IsPreviewMode);
+
+                        deploySteps.Add(new ActionStep { Category = "Deployment", HasError = !deployResult.IsSuccess, Key = managedCert.Id, Description = deployResult.Message });
+                    }
+
+                }
+
+                importResult.Add(new ActionStep { Title = "Deployment" + (importRequest.IsPreviewMode ? "[Preview]" : ""), Substeps = deploySteps });
+            }
+
+            return importResult;
         }
 
         public async Task<ImportExportPackage> PerformExport(ExportRequest exportRequest)

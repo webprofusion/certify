@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using Certify.Config;
 using Certify.Config.Migration;
 using Certify.Management;
 using Certify.Models;
@@ -21,6 +23,7 @@ namespace Certify.Core.Management
     /// </summary>
     public class MigrationManager
     {
+        private const string EncryptionScheme = "Default";
         private IItemManager _itemManager;
         private ICredentialsManager _credentialsManager;
         private ICertifiedServer _targetServer;
@@ -39,11 +42,19 @@ namespace Certify.Core.Management
         /// <returns>Package of exported settings</returns>
         public async Task<ImportExportPackage> PerformExport(ManagedCertificateFilter filter, ExportSettings settings, bool isPreview)
         {
+            var salt = Guid.NewGuid().ToString();
+
             var export = new ImportExportPackage
             {
                 SourceName = Environment.MachineName,
                 ExportDate = DateTime.Now,
-                SystemVersion = Certify.Management.Util.GetAppVersion()
+                SystemVersion = Certify.Management.Util.GetAppVersion(),
+                EncryptionSalt = salt,
+                EncryptionValidation = new EncryptedContent
+                {
+                    Content = EncryptBytes(Encoding.ASCII.GetBytes("Secret"), settings.EncryptionSecret, salt),
+                    Scheme = EncryptionScheme
+                }
             };
 
             // export managed certs, related certificate files, stored credentials
@@ -56,6 +67,7 @@ namespace Certify.Core.Management
             {
                 ManagedCertificates = managedCerts,
                 CertificateFiles = new List<EncryptedContent>(),
+                Scripts = new List<EncryptedContent>(),
                 CertificateAuthorities = new List<CertificateAuthority>(),
                 StoredCredentials = new List<StoredCredential>()
             };
@@ -64,14 +76,24 @@ namespace Certify.Core.Management
             // for each managed cert, export the current certificate files (if present)
             foreach (var c in managedCerts)
             {
-                if (!string.IsNullOrEmpty(c.CertificatePath))
+                if (!string.IsNullOrEmpty(c.CertificatePath) && System.IO.File.Exists(c.CertificatePath))
                 {
                     var certBytes = System.IO.File.ReadAllBytes(c.CertificatePath);
 
-                    var encryptedBytes = EncryptBytes(certBytes, settings.EncryptionSecret);
-                    var content = new EncryptedContent { Filename = c.CertificatePath, Scheme = "Default", Content = encryptedBytes };
+                    var encryptedBytes = EncryptBytes(certBytes, settings.EncryptionSecret, export.EncryptionSalt);
+                    var content = new EncryptedContent { Filename = c.CertificatePath, Scheme = EncryptionScheme, Content = encryptedBytes };
 
                     export.Content.CertificateFiles.Add(content);
+                }
+
+                if (c.PreRequestTasks?.Any() == true)
+                {
+                    export.Content.Scripts.AddRange(GetTaskScriptsAndContent(c.PreRequestTasks, settings.EncryptionSecret, export.EncryptionSalt));
+                }
+
+                if (c.PostRequestTasks?.Any() == true)
+                {
+                    export.Content.Scripts.AddRange(GetTaskScriptsAndContent(c.PostRequestTasks, settings.EncryptionSecret, export.EncryptionSalt));
                 }
             }
 
@@ -140,7 +162,7 @@ namespace Certify.Core.Management
                 var decrypted = await _credentialsManager.GetUnlockedCredential(c.StorageKey);
                 if (decrypted != null)
                 {
-                    var encBytes = EncryptBytes(Encoding.UTF8.GetBytes(decrypted), settings.EncryptionSecret);
+                    var encBytes = EncryptBytes(Encoding.UTF8.GetBytes(decrypted), settings.EncryptionSecret, export.EncryptionSalt);
                     c.Secret = Convert.ToBase64String(encBytes);
                 }
             }
@@ -155,18 +177,53 @@ namespace Certify.Core.Management
             return export;
         }
 
-        private byte[] EncryptBytes(byte[] source, string secret)
+        private IEnumerable<EncryptedContent> GetTaskScriptsAndContent(ObservableCollection<DeploymentTaskConfig> tasks, string secret, string salt)
         {
-            var rmCrypto = new RijndaelManaged();
+            var scriptsAndContent = new List<EncryptedContent>();
+            if (tasks?.Any() == true)
+            {
+                foreach (var t in tasks)
+                {
+                    foreach (var p in t.Parameters)
+                    {
+                        if (!string.IsNullOrEmpty(p.Value))
+                        {
+                            if (p.Value.IndexOfAny(Path.GetInvalidPathChars()) == -1)
+                            {
+                                if (File.Exists(p.Value))
+                                {
+                                    var encryptedBytes = EncryptBytes(File.ReadAllBytes(p.Value), secret, salt);
+                                    var content = new EncryptedContent { Filename = p.Value, Scheme = EncryptionScheme, Content = encryptedBytes };
+                                    scriptsAndContent.Add(content);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return scriptsAndContent;
+        }
 
-            byte[] key = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16 };
-            byte[] iv = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16 };
+        private RijndaelManaged GetAlg(string secret, string salt)
+        {
+            var saltBytes = Encoding.ASCII.GetBytes(salt);
+            var key = new Rfc2898DeriveBytes(secret, saltBytes);
+
+            var aesAlg = new RijndaelManaged();
+            aesAlg.Key = key.GetBytes(aesAlg.KeySize / 8);
+            aesAlg.IV = key.GetBytes(aesAlg.BlockSize / 8);
+
+            return aesAlg;
+        }
+
+        private byte[] EncryptBytes(byte[] source, string secret, string salt)
+        {
+            var rmCrypto = GetAlg(secret, salt);
 
             rmCrypto.Padding = PaddingMode.PKCS7;
             using (var memoryStream = new MemoryStream())
-            using (var cryptoStream = new CryptoStream(memoryStream, rmCrypto.CreateEncryptor(key, iv), CryptoStreamMode.Write))
+            using (var cryptoStream = new CryptoStream(memoryStream, rmCrypto.CreateEncryptor(rmCrypto.Key, rmCrypto.IV), CryptoStreamMode.Write))
             {
-
                 cryptoStream.Write(source, 0, source.Length);
                 cryptoStream.FlushFinalBlock();
                 cryptoStream.Close();
@@ -174,18 +231,13 @@ namespace Certify.Core.Management
             }
         }
 
-        private byte[] DecryptBytes(byte[] source, string secret)
+        private byte[] DecryptBytes(byte[] source, string secret, string salt)
         {
-            using (RijndaelManaged rmCrypto = new RijndaelManaged())
+            using (var rmCrypto = GetAlg(secret, salt))
             {
-
-                byte[] key = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16 };
-                byte[] iv = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16 };
-
                 rmCrypto.Padding = PaddingMode.PKCS7;
 
-
-                using (var decryptor = rmCrypto.CreateDecryptor(key, iv))
+                using (var decryptor = rmCrypto.CreateDecryptor(rmCrypto.Key, rmCrypto.IV))
                 {
                     using (var memoryStream = new MemoryStream(source))
                     {
@@ -231,13 +283,41 @@ namespace Certify.Core.Management
                 steps.Add(new ActionStep { Title = "Version Check", Category = "Import", Key = "Version", Description = "Source is from the same version or a supported app version." });
             }
 
+            // check encryption
+            var decryptionFailed = false;
+            try
+            {
+                var decryptionCheckBytes = DecryptBytes(package.EncryptionValidation.Content, settings.EncryptionSecret, package.EncryptionSalt);
+                var decryptionCheckString = Encoding.ASCII.GetString(decryptionCheckBytes).Trim('\0');
+                if (decryptionCheckString != "Secret")
+                {
+                    // failed decryption
+                    decryptionFailed = true;
+                }
+            }
+            catch (Exception exp)
+            {
+                decryptionFailed = true;
+            }
+
+            if (decryptionFailed)
+            {
+                steps.Add(new ActionStep { HasError = true, Title = "Decryption Check", Category = "Import", Key = "Decrypt", Description = "Secrets cannot be decrypted using the provided password." });
+                return steps;
+            }
+            else
+            {
+                steps.Add(new ActionStep { Title = "Decryption Check", Category = "Import", Key = "Decrypt", Description = "Secrets can be decrypted OK using the provided password." });
+
+            }
+
 
             // stored credentials
             var credentialImportSteps = new List<ActionStep>();
             foreach (var c in package.Content.StoredCredentials)
             {
                 var decodedBytes = Convert.FromBase64String(c.Secret);
-                var decryptedBytes = DecryptBytes(decodedBytes, settings.EncryptionSecret);
+                var decryptedBytes = DecryptBytes(decodedBytes, settings.EncryptionSecret, package.EncryptionSalt);
 
                 // convert decrypted bytes to UTF8 string and trim NUL 
                 c.Secret = UTF8Encoding.UTF8.GetString(decryptedBytes).Trim('\0');
@@ -276,7 +356,7 @@ namespace Certify.Core.Management
             steps.Add(new ActionStep { Title = "Import Stored Credentials", Category = "Import", Substeps = credentialImportSteps, Key = "StoredCredentials" });
 
 
-            List<BindingInfo> targetSiteBindings = new List<BindingInfo>();
+            var targetSiteBindings = new List<BindingInfo>();
             if (await _targetServer?.IsAvailable() == true)
             {
                 targetSiteBindings = await _targetServer.GetSiteBindingList(false);
@@ -286,8 +366,6 @@ namespace Certify.Core.Management
             var managedCertImportSteps = new List<ActionStep>();
             foreach (var c in package.Content.ManagedCertificates)
             {
-
-
                 var existing = await _itemManager.GetById(c.Id);
                 if (existing == null)
                 {
@@ -377,44 +455,73 @@ namespace Certify.Core.Management
             var certFileImportSteps = new List<ActionStep>();
             foreach (var c in package.Content.CertificateFiles)
             {
-                var pfxBytes = DecryptBytes(c.Content, settings.EncryptionSecret);
+                var pfxBytes = DecryptBytes(c.Content, settings.EncryptionSecret, package.EncryptionSalt);
 
-                var cert = new X509Certificate2(pfxBytes);
+                X509Certificate2 cert = null;
 
-                bool isVerified = cert.Verify();
+                try
+                {
+                    cert = new X509Certificate2(pfxBytes);
+                }
+                catch (Exception)
+                {
+                    // maybe we need a password
+                    var managedCert = package.Content.ManagedCertificates.FirstOrDefault(m => m.CertificatePath == c.Filename && m.CertificatePasswordCredentialId != null);
+                    if (managedCert != null)
+                    {
+                        //get stored cred
+                        var cred = await _credentialsManager.GetUnlockedCredentialsDictionary(managedCert.CertificatePasswordCredentialId);
+                        if (cred != null)
+                        {
+                            var pfxPwd = cred["password"];
+                            cert = new X509Certificate2(pfxBytes, pfxPwd);
+                        }
+                    }
+                }
 
-                if (!System.IO.File.Exists(c.Filename))
+                if (cert != null)
                 {
 
-                    if (!isPreviewMode)
+                    bool isVerified = cert.Verify();
+
+                    if (!System.IO.File.Exists(c.Filename))
                     {
-                        // perform actual import
-                        try
+
+                        if (!isPreviewMode)
                         {
-                            System.IO.File.WriteAllBytes(c.Filename, c.Content);
-                            certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = !isVerified, Description = isVerified ? null : "Certificate did not pass verify check." });
+                            // perform actual import
+                            try
+                            {
+                                System.IO.File.WriteAllBytes(c.Filename, c.Content);
+                                certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = !isVerified, Description = isVerified ? null : "Certificate did not pass verify check." });
+                            }
+                            catch (Exception exp)
+                            {
+                                certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasError = true, Description = $"Failed to write certificate to destination: {c.Filename} [{exp.Message}]" });
+                            }
                         }
-                        catch (Exception exp)
+                        else
                         {
-                            certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasError = true, Description = $"Failed to write certificate to destination: {c.Filename} [{exp.Message}]" });
+                            // preview only
+                            certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = !isVerified, Description = isVerified ? "Would import to " + c.Filename : "Certificate did not pass verify check." });
                         }
                     }
                     else
                     {
-                        // preview only
-                        certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = !isVerified, Description = isVerified ? "Would import to " + c.Filename : "Certificate did not pass verify check." });
+                        certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = true, Description = "Output file already exists, it will not be re-imported" });
                     }
                 }
                 else
                 {
-                    certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = true, Description = "Output file already exists, it will not be re-imported" });
+                    certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX Failed", Key = c.Filename, HasWarning = true, Description = "Could not create PFX from bytes. Password may be incorrect." });
+
                 }
 
             }
 
             steps.Add(new ActionStep { Title = "Import Certificate Files", Category = "Import", Substeps = certFileImportSteps, Key = "CertFiles" });
 
-            // store and apply current certificates to bindings
+            
             return steps;
         }
     }

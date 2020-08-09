@@ -23,6 +23,7 @@ namespace Certify.UI.Windows
         public class ImportExportModel : BindableBase
         {
             public bool IsImportReady { get; set; } = false;
+            public bool IsPreviewReady { get; set; } = false;
             public ManagedCertificateFilter Filter { get; set; } = new ManagedCertificateFilter { };
             public ImportSettings ImportSettings { get; set; } = new ImportSettings { };
             public ExportSettings ExportSettings { get; set; } = new ExportSettings { };
@@ -40,8 +41,14 @@ namespace Certify.UI.Windows
 
         private async void Import_Click(object sender, RoutedEventArgs e)
         {
+            Model.IsPreviewReady = false;
+            Model.IsImportReady = false;
 
             var dialog = new OpenFileDialog();
+
+            dialog.DefaultExt = "json";
+            dialog.Filter = "Json files (*.json)|*.json|All files (*.*)|*.*";
+
             bool isPreview = true;
 
             // prompt user for save file location and perform export to json file
@@ -61,6 +68,7 @@ namespace Certify.UI.Windows
                     return;
                 }
 
+                Model.ImportSettings.EncryptionSecret = txtSecret.Password;
                 var results = await MainViewModel.PerformSettingsImport(Model.Package, Model.ImportSettings, isPreview);
                 PrepareImportSummary(isPreview, results);
             }
@@ -78,10 +86,12 @@ namespace Certify.UI.Windows
             if (results.All(r => r.HasError == false))
             {
                 Model.IsImportReady = true;
+                Model.IsPreviewReady = true;
             }
             else
             {
                 Model.IsImportReady = false;
+                Model.IsPreviewReady = true;
             }
 
         }
@@ -231,11 +241,14 @@ namespace Certify.UI.Windows
 
             // prompt user for save file location and perform export to json file
             dialog.FileName = $"certifytheweb_export_{DateTime.Now.ToString("yyyyMMdd")}.json";
+            dialog.DefaultExt = "json";
+            dialog.Filter = "Json files (*.json)|*.json|All files (*.*)|*.*";
 
             if (dialog.ShowDialog() == true)
             {
                 var savePath = dialog.FileName;
 
+                settings.EncryptionSecret = txtSecret.Password;
                 var export = await MainViewModel.GetSettingsExport(filter, settings, false);
 
                 var json = JsonConvert.SerializeObject(export);

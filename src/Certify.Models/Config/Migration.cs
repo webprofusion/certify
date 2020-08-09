@@ -10,6 +10,7 @@ namespace Certify.Config.Migration
     {
         public List<ManagedCertificate> ManagedCertificates { get; set; }
         public List<EncryptedContent> CertificateFiles { get; set; }
+        public List<EncryptedContent> Scripts { get; set; }
         public List<StoredCredential> StoredCredentials { get; set; }
         public List<CertificateAuthority> CertificateAuthorities { get; set; }
     }
@@ -22,6 +23,9 @@ namespace Certify.Config.Migration
         public string SourceName { get; set; }
         public DateTime ExportDate { get; set; }
         public ImportExportContent Content { get; set; }
+
+        public EncryptedContent EncryptionValidation { get; set; }
+        public string EncryptionSalt { get; set; }
     }
 
     public class EncryptedContent
