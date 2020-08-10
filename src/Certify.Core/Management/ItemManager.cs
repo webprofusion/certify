@@ -5,6 +5,7 @@ using System.Data.SQLite;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
 using Newtonsoft.Json;
@@ -32,6 +33,9 @@ namespace Certify.Management
         private readonly string _connectionString;
 
         private AsyncRetryPolicy _retryPolicy = Policy.Handle<SQLiteException>().WaitAndRetryAsync(3, i => TimeSpan.FromSeconds(1));
+
+        private static SemaphoreSlim _dbMutex = new SemaphoreSlim(1);
+
 
         public ItemManager(string storageSubfolder = null)
         {
@@ -64,6 +68,7 @@ namespace Certify.Management
 
         private async Task CreateManagedItemsSchema()
         {
+
             try
             {
                 using (var db = new SQLiteConnection(_connectionString))
@@ -77,6 +82,7 @@ namespace Certify.Management
                 }
             }
             catch { }
+
         }
 
         /// <summary>
@@ -93,6 +99,7 @@ namespace Certify.Management
             }
 
             // save all new/modified items into settings database
+
             using (var db = new SQLiteConnection(_connectionString))
             {
                 await db.OpenAsync();
@@ -111,6 +118,7 @@ namespace Certify.Management
                     tran.Commit();
                 }
             }
+
 
             Debug.WriteLine($"StoreSettings[SQLite] took {watch.ElapsedMilliseconds}ms for {list.Count()} records");
         }
@@ -361,30 +369,41 @@ namespace Certify.Management
                 return null;
             }
 
-            if (managedCertificate.Id == null)
+            try
             {
-                managedCertificate.Id = Guid.NewGuid().ToString();
-            }
 
-            await _retryPolicy.ExecuteAsync(async () =>
-            {
-                using (var db = new SQLiteConnection(_connectionString))
+                await _dbMutex.WaitAsync().ConfigureAwait(false);
+
+                if (managedCertificate.Id == null)
                 {
-                    await db.OpenAsync();
-                    using (var tran = db.BeginTransaction())
-                    {
-                        using (var cmd = new SQLiteCommand("INSERT OR REPLACE INTO manageditem (id, json) VALUES (@id,@json)", db))
-                        {
-                            cmd.Parameters.Add(new SQLiteParameter("@id", managedCertificate.Id));
-                            cmd.Parameters.Add(new SQLiteParameter("@json", JsonConvert.SerializeObject(managedCertificate, new JsonSerializerSettings { Formatting = Formatting.Indented, NullValueHandling = NullValueHandling.Ignore })));
-           
-                            await cmd.ExecuteNonQueryAsync();
-                        }
-                        tran.Commit();
-                    }
+                    managedCertificate.Id = Guid.NewGuid().ToString();
                 }
 
-            });
+                await _retryPolicy.ExecuteAsync(async () =>
+                {
+                    using (var db = new SQLiteConnection(_connectionString))
+                    {
+                        await db.OpenAsync();
+                        using (var tran = db.BeginTransaction())
+                        {
+                            using (var cmd = new SQLiteCommand("INSERT OR REPLACE INTO manageditem (id, json) VALUES (@id,@json)", db))
+                            {
+                                cmd.Parameters.Add(new SQLiteParameter("@id", managedCertificate.Id));
+                                cmd.Parameters.Add(new SQLiteParameter("@json", JsonConvert.SerializeObject(managedCertificate, new JsonSerializerSettings { Formatting = Formatting.Indented, NullValueHandling = NullValueHandling.Ignore })));
+
+                                await cmd.ExecuteNonQueryAsync();
+                            }
+                            tran.Commit();
+                        }
+                    }
+
+                });
+
+            }
+            finally
+            {
+                _dbMutex.Release();
+            }
 
             return managedCertificate;
         }
