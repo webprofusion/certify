@@ -13,7 +13,7 @@ https://img.shields.io/github/stars/webprofusion/certify.svg)
 
 ![Certify App Screenshot](docs/images/app-screenshot.png)
 
-# Features:
+## Features include:
 - See more details: https://certifytheweb.com/home/features
 - Easy certificate requests & automated SSL bindings (IIS)
 - Automatic renewal using a background service, with configurable renewal frequency.
@@ -29,7 +29,7 @@ https://img.shields.io/github/stars/webprofusion/certify.svg)
 
 The Community edition is free, license keys are available for commercial organisations, users who wish to help fund development or users who require support.
 
-# Requirements:
+## Requirements:
 - Windows Server 2012 R2 or higher (.Net 4.6.2 or higher), 64-bit
 ----------
 Quick Start (IIS users)
