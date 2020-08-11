@@ -99,7 +99,7 @@ namespace Certify.Client
 
         Task<DeploymentProviderDefinition> GetDeploymentProviderDefinition(string id, Config.DeploymentTaskConfig config);
 
-        Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly);
+        Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly, bool forceTaskExecute);
 
         Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo info);
 

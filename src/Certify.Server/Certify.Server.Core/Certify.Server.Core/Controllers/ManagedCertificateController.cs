@@ -100,9 +100,17 @@ namespace Certify.Service
             DebugLog();
 
             // perform deployment task for this managed certificate including deferred items
-            return await _certifyManager.PerformDeploymentTask(null, managedCertificateId, taskId, isPreviewOnly, skipDeferredTasks: false);
+            return await _certifyManager.PerformDeploymentTask(null, managedCertificateId, taskId, isPreviewOnly, skipDeferredTasks: false, forceTaskExecution: false);
         }
 
+        [HttpGet, Route("performforceddeployment/{isPreviewOnly}/{managedCertificateId}/{taskId?}")]
+        public async Task<List<ActionStep>> PerformForcedDeploymentTasks(string managedCertificateId, bool isPreviewOnly, string taskId)
+        {
+            DebugLog();
+
+            // perform deployment task for this managed certificate including deferred items
+            return await _certifyManager.PerformDeploymentTask(null, managedCertificateId, taskId, isPreviewOnly, skipDeferredTasks: false, forceTaskExecution: true);
+        }
 
         [HttpGet, Route("performdeployment/{isPreviewOnly}/{managedCertificateId}")]
         public async Task<List<ActionStep>> PerformDeploymentTask(string managedCertificateId, bool isPreviewOnly)
@@ -110,7 +118,7 @@ namespace Certify.Service
             DebugLog();
 
             // perform all deployment tasks for this managed certificate including deferred items
-            return await _certifyManager.PerformDeploymentTask(null, managedCertificateId, null, isPreviewOnly, skipDeferredTasks: false);
+            return await _certifyManager.PerformDeploymentTask(null, managedCertificateId, null, isPreviewOnly, skipDeferredTasks: false, forceTaskExecution: false);
         }
 
         [HttpPost, Route("validatedeploymenttask")]
@@ -218,7 +226,7 @@ namespace Certify.Service
         [HttpGet, Route("currentchallenges/{type}/{key?}")]
         public async Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallenges(string type, string key)
         {
-           return await _certifyManager.GetCurrentChallengeResponses(type, key);
+            return await _certifyManager.GetCurrentChallengeResponses(type, key);
         }
 
         [HttpGet, Route("dnszones/{providerTypeId}/{credentialId}")]

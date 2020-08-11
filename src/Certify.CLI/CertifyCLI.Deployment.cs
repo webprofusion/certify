@@ -13,19 +13,19 @@ namespace Certify.CLI
 
             var managedCert = await _certifyClient.GetManagedCertificate(managedCertId);
 
-            if (managedCert!=null)
-            { 
+            if (managedCert != null)
+            {
                 if (!string.IsNullOrEmpty(taskId))
                 {
                     // identify specific task
-                    
+
                     var task = managedCert.PostRequestTasks.FirstOrDefault(t => t.Id.ToLowerInvariant().Trim() == taskId.ToLowerInvariant().Trim());
 
                     Console.WriteLine($"Performing deployment task [{task.TaskName}] for managed certificate [{managedCert.Name}]..");
 
                     if (task != null)
                     {
-                        var results = await _certifyClient.PerformDeployment(managedCert.Id, task.Id, isPreviewOnly: false);
+                        var results = await _certifyClient.PerformDeployment(managedCert.Id, task.Id, isPreviewOnly: false, forceTaskExecute: false);
 
                         if (results.Any(r => r.HasError == true))
                         {
@@ -50,7 +50,7 @@ namespace Certify.CLI
                     // perform all deployment tasks
                     Console.WriteLine($"Performing all deployment tasks for managed certificate [{managedCert.Name}]..");
 
-                    var results = await _certifyClient.PerformDeployment(managedCert.Id, null, isPreviewOnly: false);
+                    var results = await _certifyClient.PerformDeployment(managedCert.Id, null, isPreviewOnly: false, forceTaskExecute: false);
 
                     if (results.Any(r => r.HasError == true))
                     {
@@ -69,9 +69,9 @@ namespace Certify.CLI
             {
                 // no matches
                 Console.WriteLine("Managed Certificate Id has no matches. Deployment failed.");
-                return false;   
+                return false;
             }
-     
+
         }
     }
 }

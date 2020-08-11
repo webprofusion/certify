@@ -47,11 +47,24 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return;
             }
 
-            if (MessageBox.Show("Run task '" + task.TaskName + "' now? The most recent certificate details will be used.", "Run Task?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+
+            // check if last status was a error
+            var msg = "Run task '" + task.TaskName + "' now? The most recent certificate details will be used.";
+            var requiresForcedTaskExecute = false;
+
+            if (ItemViewModel.SelectedItem.LastRenewalStatus != Models.RequestState.Success)
+            {
+                requiresForcedTaskExecute = true;
+
+                msg = "Force task '" + task.TaskName + "' to run now? "+(ItemViewModel.SelectedItem.LastRenewalStatus == null ? "The certificate has not yet been requested and the task will likely fail with errors." : "The last certificate request failed with one or more errors, task run may fail depending on certificate status.");
+            }
+
+
+            if (MessageBox.Show(msg, "Run Task?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 // execute task now
                 Mouse.OverrideCursor = Cursors.Wait;
-                var results = await UI.ViewModel.AppViewModel.Current.PerformDeployment(ItemViewModel.SelectedItem.Id, task.Id, isPreviewOnly: false);
+                var results = await UI.ViewModel.AppViewModel.Current.PerformDeployment(ItemViewModel.SelectedItem.Id, task.Id, isPreviewOnly: false, forceTaskExecute: requiresForcedTaskExecute);
                 Mouse.OverrideCursor = Cursors.Arrow;
 
                 if (results.Any(r => r.HasError))

@@ -19,14 +19,14 @@
                 Margin="0,0,0,0"
                 DockPanel.Dock="Top"
                 Style="{StaticResource Instructions}"
-                Text="Tasks are an optional way to work with your latest certificate or trigger other actions before or after renewal. Deployment Tasks can be run immediately after the certificate has updated or they can be deferred (to run be manually or via a scheduled task etc.). "
+                Text="Tasks are an optional way to work with your latest certificate or trigger other actions before or after renewal. "
                 TextWrapping="Wrap" />
 
 
             <StackPanel DockPanel.Dock="Top">
                 <TextBlock Margin="0,16,0,0" Style="{StaticResource Subheading}">Deployment Tasks</TextBlock>
                 <StackPanel Orientation="Vertical">
-                    <TextBlock Style="{StaticResource Instructions}" Text="You can optionally add any number of deployment tasks. These will run after the standard auto deployment process has completed:" />
+                    <TextBlock Style="{StaticResource Instructions}" Text="Deployment Tasks run (in the order shown) after the standard Deployment process has completed (see the Deployment tab). Tasks can be run immediately after the certificate has updated or they can be deferred (to run manually or via a scheduled task etc.). You can also drag tasks to re-order them:" />
 
                     <Button
                         Width="80"

@@ -231,9 +231,9 @@ namespace Certify.UI.ViewModel
 
         public virtual bool HasRegisteredContacts => AccountDetails.Any();
 
-        public async Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly)
+        public async Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly, bool forceTaskExecute)
         {
-            var results = await CertifyClient.PerformDeployment(managedCertificateId, taskId, isPreviewOnly);
+            var results = await CertifyClient.PerformDeployment(managedCertificateId, taskId, isPreviewOnly, forceTaskExecute);
             return results;
         }
 

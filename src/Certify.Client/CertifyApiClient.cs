@@ -158,7 +158,7 @@ namespace Certify.Client
 
         public async Task<ImportExportPackage> PerformExport(ExportRequest exportRequest)
         {
-            var result = await PostAsync("system/migration/export", exportRequest );
+            var result = await PostAsync("system/migration/export", exportRequest);
             return JsonConvert.DeserializeObject<ImportExportPackage>(await result.Content.ReadAsStringAsync());
         }
 
@@ -363,18 +363,35 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<DeploymentProviderDefinition>(await response.Content.ReadAsStringAsync());
         }
 
-        public async Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly)
+        public async Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly, bool forceTaskExecute)
         {
-            if (string.IsNullOrEmpty(taskId))
+            if (!forceTaskExecute)
             {
-                var response = await FetchAsync($"managedcertificates/performdeployment/{isPreviewOnly}/{managedCertificateId}");
-                return JsonConvert.DeserializeObject<List<ActionStep>>(response);
+                if (string.IsNullOrEmpty(taskId))
+                {
+                    var response = await FetchAsync($"managedcertificates/performdeployment/{isPreviewOnly}/{managedCertificateId}");
+                    return JsonConvert.DeserializeObject<List<ActionStep>>(response);
+                }
+                else
+                {
+                    var response = await FetchAsync($"managedcertificates/performdeployment/{isPreviewOnly}/{managedCertificateId}/{taskId}");
+                    return JsonConvert.DeserializeObject<List<ActionStep>>(response);
+                }
             }
             else
             {
-                var response = await FetchAsync($"managedcertificates/performdeployment/{isPreviewOnly}/{managedCertificateId}/{taskId}");
-                return JsonConvert.DeserializeObject<List<ActionStep>>(response);
+                if (string.IsNullOrEmpty(taskId))
+                {
+                    var response = await FetchAsync($"managedcertificates/performforceddeployment/{isPreviewOnly}/{managedCertificateId}");
+                    return JsonConvert.DeserializeObject<List<ActionStep>>(response);
+                }
+                else
+                {
+                    var response = await FetchAsync($"managedcertificates/performforceddeployment/{isPreviewOnly}/{managedCertificateId}/{taskId}");
+                    return JsonConvert.DeserializeObject<List<ActionStep>>(response);
+                }
             }
+
 
         }
 
@@ -402,7 +419,7 @@ namespace Certify.Client
 
         public async Task<ActionResult> DeleteCertificateAuthority(string id)
         {
-            var result = await DeleteAsync("accounts/authorities/"+id);
+            var result = await DeleteAsync("accounts/authorities/" + id);
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
 

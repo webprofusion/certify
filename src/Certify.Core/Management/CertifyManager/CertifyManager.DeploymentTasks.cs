@@ -31,7 +31,7 @@ namespace Certify.Management
             return provider.GetDefinition();
         }
 
-        public async Task<List<ActionStep>> PerformDeploymentTask(ILog log, string managedCertificateId, string taskId, bool isPreviewOnly, bool skipDeferredTasks)
+        public async Task<List<ActionStep>> PerformDeploymentTask(ILog log, string managedCertificateId, string taskId, bool isPreviewOnly, bool skipDeferredTasks, bool forceTaskExecution)
         {
             var managedCert = await GetManagedCertificate(managedCertificateId);
 
@@ -73,14 +73,14 @@ namespace Certify.Management
 
             LogMessage(managedCert.Id, $"---- Performing Task [On-Demand or Manual Execution] :: {msg} ----");
 
-            var result = await PerformTaskList(log, isPreviewOnly, skipDeferredTasks, new CertificateRequestResult { ManagedItem = managedCert, IsSuccess = managedCert.LastRenewalStatus == RequestState.Success ? true : false }, taskList);
+            var result = await PerformTaskList(log, isPreviewOnly, skipDeferredTasks, new CertificateRequestResult { ManagedItem = managedCert, IsSuccess = managedCert.LastRenewalStatus == RequestState.Success ? true : false }, taskList, forceTaskExecution);
 
             await UpdateManagedCertificate(managedCert);
 
             return result;
         }
 
-        private async Task<List<ActionStep>> PerformTaskList(ILog log, bool isPreviewOnly, bool skipDeferredTasks, CertificateRequestResult result, IEnumerable<DeploymentTaskConfig> taskList)
+        private async Task<List<ActionStep>> PerformTaskList(ILog log, bool isPreviewOnly, bool skipDeferredTasks, CertificateRequestResult result, IEnumerable<DeploymentTaskConfig> taskList, bool forceTaskExecute = false)
         {
             if (taskList == null || !taskList.Any())
             {
@@ -194,6 +194,15 @@ namespace Certify.Management
                     }
                 }
 
+                if (forceTaskExecute == true)
+                {
+                    if (!shouldRunCurrentTask)
+                    {
+                        shouldRunCurrentTask = true;
+                        taskTriggerReason = $"Task is being has been forced to run. Normal status would be [{taskTriggerReason}]";
+                    }
+                }
+
                 var taskResults = new List<ActionResult>();
 
                 if (shouldRunCurrentTask)
@@ -201,6 +210,25 @@ namespace Certify.Management
                     log.Information($"Task [{task.TaskConfig.TaskName}] :: {taskTriggerReason}");
                     task.TaskConfig.DateLastExecuted = DateTime.Now;
                     taskResults = await task.Execute(log, result, CancellationToken.None, isPreviewOnly: isPreviewOnly);
+
+                    if (!isPreviewOnly)
+                    {
+                        if (taskResults?.All(t => t.IsSuccess) == true)
+                        {
+                            _tc?.TrackEvent("TaskCompleted", new Dictionary<string, string> {
+                            { "TaskType", task.TaskConfig.TaskTypeId  }
+                        });
+                        }
+                        else
+                        {
+                            if (!forceTaskExecute)
+                            {
+                                _tc?.TrackEvent("TaskFailed", new Dictionary<string, string> {
+                                { "TaskType", task.TaskConfig.TaskTypeId  }
+                             });
+                            }
+                        }
+                    }
                 }
                 else
                 {

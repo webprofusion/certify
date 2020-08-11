@@ -150,7 +150,7 @@ namespace Certify.API
         }
 
 
-        public async Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId = null, bool isPreview = false)
+        public async Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId = null, bool isPreview = false, bool forceTaskExecute = false)
         {
             var managedCertificates = await _client.GetManagedCertificates(new ManagedCertificateFilter { Id = managedCertificateId });
 
@@ -165,7 +165,7 @@ namespace Certify.API
 
                     if (task != null)
                     {
-                        return await _client.PerformDeployment(managedCert.Id, task.Id, isPreviewOnly: false);
+                        return await _client.PerformDeployment(managedCert.Id, task.Id, isPreviewOnly: isPreview, forceTaskExecute: forceTaskExecute);
                     }
                     else
                     {
@@ -176,7 +176,7 @@ namespace Certify.API
                 else
                 {
                     // perform all deployment tasks
-                    return await _client.PerformDeployment(managedCert.Id, null, isPreviewOnly: false);
+                    return await _client.PerformDeployment(managedCert.Id, null, isPreviewOnly: isPreview, forceTaskExecute: forceTaskExecute);
                 }
             }
             else
