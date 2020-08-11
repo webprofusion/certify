@@ -50,8 +50,6 @@
             </StackPanel>
             <DockPanel>
                 <Button
-                    Grid.Row="0"
-                    Grid.Column="2"
                     Margin="8,8,8,8"
                     Click="Button_NewContact"
                     DockPanel.Dock="Left">
@@ -59,13 +57,11 @@
                 </Button>
 
                 <Button
-                    Grid.Row="0"
-                    Grid.Column="2"
                     Margin="8,8,8,8"
-                    HorizontalAlignment="Right"
+                    HorizontalAlignment="Left"
                     Click="Button_EditCertificateAuthority"
-                    DockPanel.Dock="Right"
-                    Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='CA_EDITOR'}">
+                    DockPanel.Dock="Left"
+                    Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='CA_EDITOR', Path=Prefs}">
                     Edit Certificate Authorities
                 </Button>
             </DockPanel>

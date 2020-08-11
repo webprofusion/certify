@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Certify.Models;
+using PropertyChanged;
 
 namespace Certify.UI.Controls.Settings
 {
@@ -21,35 +22,43 @@ namespace Certify.UI.Controls.Settings
     /// </summary>
     public partial class CertificateAuthorities : UserControl
     {
-        public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
+        public class Model : BindableBase
+        {
+            public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
+            public Models.Preferences Prefs => MainViewModel.Preferences;
 
-        private bool _settingsInitialised = false;
-        private Models.Preferences _prefs => MainViewModel.Preferences;
+            public bool SettingsInitialised { get; set; } = false;
+
+
+        }
+        public Model EditModel { get; set; } = new Model();
 
         public CertificateAuthorities()
         {
             InitializeComponent();
-            this.DataContext = MainViewModel;
+            this.DataContext = EditModel;
         }
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e) => LoadSettings();
 
         public void LoadSettings()
         {
-            if (!MainViewModel.IsServiceAvailable)
+            if (!EditModel.MainViewModel.IsServiceAvailable)
             {
                 return;
             }
 
-            this.AccountList.ItemsSource = MainViewModel.AccountDetails;
+            this.AccountList.ItemsSource = EditModel.MainViewModel.AccountDetails;
 
-            EnableAutomaticCAFailover.IsChecked = _prefs.EnableAutomaticCAFailover;
+            EnableAutomaticCAFailover.IsChecked = EditModel.Prefs.EnableAutomaticCAFailover;
 
-            this.CertificateAuthorityList.ItemsSource = MainViewModel.CertificateAuthorities.Where(c => c.IsEnabled == true);
+            this.CertificateAuthorityList.ItemsSource = EditModel.MainViewModel.CertificateAuthorities.Where(c => c.IsEnabled == true);
 
-            CertificateAuthorityList.SelectedValue = _prefs.DefaultCertificateAuthority;
+            CertificateAuthorityList.SelectedValue = EditModel.Prefs.DefaultCertificateAuthority;
 
-            _settingsInitialised = true;
+            EditModel.SettingsInitialised = true;
+
+            EditModel.RaisePropertyChangedEvent(null);
         }
 
         private void Button_NewContact(object sender, RoutedEventArgs e)
@@ -75,13 +84,13 @@ namespace Certify.UI.Controls.Settings
 
         private async void SettingsUpdated(object sender, RoutedEventArgs e)
         {
-            if (_settingsInitialised)
+            if (EditModel.SettingsInitialised)
             {
-                _prefs.EnableAutomaticCAFailover = (EnableAutomaticCAFailover.IsChecked == true);
+                EditModel.Prefs.EnableAutomaticCAFailover = (EnableAutomaticCAFailover.IsChecked == true);
 
-                _prefs.DefaultCertificateAuthority = CertificateAuthorityList.SelectedValue?.ToString() ?? _prefs.DefaultCertificateAuthority;
+                EditModel.Prefs.DefaultCertificateAuthority = CertificateAuthorityList.SelectedValue?.ToString() ?? EditModel.Prefs.DefaultCertificateAuthority;
 
-                await MainViewModel.SavePreferences();
+                await EditModel.MainViewModel.SavePreferences();
             }
         }
 
@@ -96,7 +105,7 @@ namespace Certify.UI.Controls.Settings
 
                 if (MessageBox.Show($"Remove this account? {account.AccountURI}", "Confirm Account Removal", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
                 {
-                    await MainViewModel.RemoveAccount(account.StorageKey ?? account.ID);
+                    await EditModel.MainViewModel.RemoveAccount(account.StorageKey ?? account.ID);
                 }
             }
         }

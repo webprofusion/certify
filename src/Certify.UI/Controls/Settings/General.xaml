@@ -174,7 +174,7 @@
                     Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="Import &amp; Export"
                     IsSelected="false"
-                    Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='IMPORT_EXPORT'}">
+                    Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='IMPORT_EXPORT', Path=Prefs}">
                     <StackPanel
                         Margin="16,0"
                         DockPanel.Dock="Top"
@@ -236,7 +236,7 @@
                         <local:Experiments />
                     </StackPanel>
                 </TabItem>
-                
+
             </TabControl>
 
         </DockPanel>

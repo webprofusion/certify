@@ -14,93 +14,100 @@ namespace Certify.UI.Controls.Settings
     /// </summary>
     public partial class General : UserControl
     {
-        public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
-        public Models.Preferences Prefs => MainViewModel.Preferences;
+        public class Model : BindableBase
+        {
+            public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
+            public Models.Preferences Prefs => MainViewModel.Preferences;
 
-        private bool settingsInitialised = false;
+            public bool SettingsInitialised { get; set; } = false;
+
+        }
+        public Model EditModel { get; set; } = new Model();
 
         public General()
         {
             InitializeComponent();
 
+            DataContext = EditModel;
         }
 
         private void Prefs_AfterPropertyChanged(object sender, EventArgs e)
         {
-            if (settingsInitialised)
+            if (EditModel.SettingsInitialised)
             {
-                MainViewModel.SavePreferences();
+                EditModel.MainViewModel.SavePreferences();
             }
         }
 
         private void LoadCurrentSettings()
         {
 
-            if (!MainViewModel.IsServiceAvailable)
+            if (!EditModel.MainViewModel.IsServiceAvailable)
             {
                 return;
             }
 
-            if (Prefs.CertificateCleanupMode == Models.CertificateCleanupMode.None)
+            if (EditModel.Prefs.CertificateCleanupMode == Models.CertificateCleanupMode.None)
             {
                 CertCleanup_None.IsChecked = true;
             }
-            else if (Prefs.CertificateCleanupMode == Models.CertificateCleanupMode.AfterExpiry)
+            else if (EditModel.Prefs.CertificateCleanupMode == Models.CertificateCleanupMode.AfterExpiry)
             {
                 CertCleanup_AfterExpiry.IsChecked = true;
             }
-            else if (Prefs.CertificateCleanupMode == Models.CertificateCleanupMode.AfterRenewal)
+            else if (EditModel.Prefs.CertificateCleanupMode == Models.CertificateCleanupMode.AfterRenewal)
             {
                 CertCleanup_AfterRenewal.IsChecked = true;
             }
-            else if (Prefs.CertificateCleanupMode == Models.CertificateCleanupMode.FullCleanup)
+            else if (EditModel.Prefs.CertificateCleanupMode == Models.CertificateCleanupMode.FullCleanup)
             {
                 CertCleanup_FullCleanup.IsChecked = true;
             }
 
-            ThemeSelector.SelectedValue = MainViewModel.UISettings?.UITheme ?? MainViewModel.DefaultUITheme;
+            ThemeSelector.SelectedValue = EditModel.MainViewModel.UISettings?.UITheme ?? EditModel.MainViewModel.DefaultUITheme;
 
-            DataContext = this;
+            
 
             // re-add property changed tracking for save
-            Prefs.AfterPropertyChanged -= Prefs_AfterPropertyChanged;
-            Prefs.AfterPropertyChanged += Prefs_AfterPropertyChanged;
+            EditModel.Prefs.AfterPropertyChanged -= Prefs_AfterPropertyChanged;
+            EditModel.Prefs.AfterPropertyChanged += Prefs_AfterPropertyChanged;
 
 
-            settingsInitialised = true;
+            EditModel.SettingsInitialised = true;
 
+            EditModel.RaisePropertyChangedEvent(null);
             
         }
 
         private async void SettingsUpdated(object sender, RoutedEventArgs e)
         {
-            if (settingsInitialised)
+            if (EditModel.SettingsInitialised)
             {
 
                 // cert cleanup mode
                 if (CertCleanup_None.IsChecked == true)
                 {
-                    Prefs.CertificateCleanupMode = Models.CertificateCleanupMode.None;
-                    Prefs.EnableCertificateCleanup = false;
+                    EditModel.Prefs.CertificateCleanupMode = Models.CertificateCleanupMode.None;
+                    EditModel.Prefs.EnableCertificateCleanup = false;
                 }
                 else if (CertCleanup_AfterExpiry.IsChecked == true)
                 {
-                    Prefs.CertificateCleanupMode = Models.CertificateCleanupMode.AfterExpiry;
-                    Prefs.EnableCertificateCleanup = true;
+                    EditModel.Prefs.CertificateCleanupMode = Models.CertificateCleanupMode.AfterExpiry;
+                    EditModel.Prefs.EnableCertificateCleanup = true;
                 }
                 else if (CertCleanup_AfterRenewal.IsChecked == true)
                 {
-                    Prefs.CertificateCleanupMode = Models.CertificateCleanupMode.AfterRenewal;
-                    Prefs.EnableCertificateCleanup = true;
+                    EditModel.Prefs.CertificateCleanupMode = Models.CertificateCleanupMode.AfterRenewal;
+                    EditModel.Prefs.EnableCertificateCleanup = true;
                 }
                 else if (CertCleanup_FullCleanup.IsChecked == true)
                 {
-                    Prefs.CertificateCleanupMode = Models.CertificateCleanupMode.FullCleanup;
-                    Prefs.EnableCertificateCleanup = true;
+                    EditModel.Prefs.CertificateCleanupMode = Models.CertificateCleanupMode.FullCleanup;
+                    EditModel.Prefs.EnableCertificateCleanup = true;
                 }
 
                 // save settings
-                await MainViewModel.SavePreferences();
+                await EditModel.MainViewModel.SavePreferences();
 
             }
         }
@@ -115,13 +122,13 @@ namespace Certify.UI.Controls.Settings
             {
                 ((Certify.UI.App)App.Current).ToggleTheme(theme);
 
-                if (MainViewModel.UISettings == null)
+                if (EditModel.MainViewModel.UISettings == null)
                 {
-                    MainViewModel.UISettings = new UI.Settings.UISettings();
+                    EditModel.MainViewModel.UISettings = new UI.Settings.UISettings();
                 }
 
-                MainViewModel.UISettings.UITheme = theme;
-                UI.Settings.UISettings.Save(MainViewModel.UISettings);
+                EditModel.MainViewModel.UISettings.UITheme = theme;
+                UI.Settings.UISettings.Save(EditModel.MainViewModel.UISettings);
             }
 
         }

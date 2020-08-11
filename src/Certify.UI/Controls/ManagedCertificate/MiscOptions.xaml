@@ -171,7 +171,7 @@
                                 Content="Clear Custom Private Key" />
                         </StackPanel>
 
-                        <StackPanel>
+                        <StackPanel Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='PRIVKEY_PWD'}">
                             <TextBlock Style="{StaticResource SubheadingWithMargin}">Security</TextBlock>
 
                             <TextBlock Style="{StaticResource Instructions}">You can optionally specify a password credential to use for private keys and PFX files generated for this certificate:</TextBlock>

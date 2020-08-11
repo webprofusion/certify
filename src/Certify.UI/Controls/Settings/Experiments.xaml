@@ -7,22 +7,21 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DesignHeight="450"
     d:DesignWidth="800"
+    Loaded="UserControl_Loaded"
     mc:Ignorable="d">
     <StackPanel>
 
         <TextBlock Style="{StaticResource Instructions}">The following features are a work in progress and can optionally be enabled for testing. Close and re-open the app to see changes:</TextBlock>
         <CheckBox
             Margin="0,8"
-            Click="CheckBox_Click"
             Content="Certificate Authority Editor"
-            IsChecked="{Binding Converter={StaticResource FeatureBooleanConverter}, ConverterParameter='CA_EDITOR', Mode=OneWay}"
+            IsChecked="{Binding IsCAEditorEnabled}"
             Tag="CA_EDITOR" />
         <TextBlock Margin="28,0" Style="{StaticResource Instructions}">Add/Remove your own custom certificate authorities. Edit under Settings &gt; Certificate Authority tab</TextBlock>
         <CheckBox
             Margin="0,8"
-            Click="CheckBox_Click"
             Content="Custom PFX/Private Key Password"
-            IsChecked="{Binding Converter={StaticResource FeatureBooleanConverter}, ConverterParameter='PRIVKEY_PWD', Mode=OneWay}"
+            IsChecked="{Binding IsPrivKeyPwdEnabled}"
             Tag="PRIVKEY_PWD" />
         <TextBlock
             Margin="28,0"
@@ -32,9 +31,8 @@
         </TextBlock>
         <CheckBox
             Margin="0,8"
-            Click="CheckBox_Click"
             Content="Import/Export Migration Tool"
-            IsChecked="{Binding Converter={StaticResource FeatureBooleanConverter}, ConverterParameter='IMPORT_EXPORT', Mode=OneWay}"
+            IsChecked="{Binding IsImportExportEnabled}"
             Tag="IMPORT_EXPORT" />
         <TextBlock
             Margin="28,0"

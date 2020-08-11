@@ -123,7 +123,7 @@ namespace Certify.UI.ViewModel
                 return true;
             }
 
-            if (Preferences?.FeatureFlags?.Any(f => f == featureFlag) == true)
+            if (Preferences?.FeatureFlags?.Contains(featureFlag) == true)
             {
                 return true;
             }
