@@ -372,7 +372,7 @@ namespace Certify.Management
             try
             {
 
-                await _dbMutex.WaitAsync().ConfigureAwait(false);
+                await _dbMutex.WaitAsync(10 * 1000).ConfigureAwait(false);
 
                 if (managedCertificate.Id == null)
                 {
