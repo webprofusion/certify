@@ -67,11 +67,6 @@
         public bool EnableAutomaticCAFailover { get; set; }
 
         /// <summary>
-        /// if true, will load plugins for external cert managers
-        /// </summary>
-        public bool IncludeExternalCertManagers { get; set; }
-
-        /// <summary>
         /// If true, will allow plugins to load from appdata
         /// </summary>
         public bool IncludeExternalPlugins { get; set; }
@@ -100,5 +95,10 @@
         /// Enable options for auto CA Failover
         /// </summary>
         public static string CA_FAILOVER = "CA_FAILOVER";
+
+        /// <summary>
+        /// Enable options for external cert managers
+        /// </summary>
+        public static string EXTERNAL_CERT_MANAGERS = "EXTERNAL_CERT_MANAGERS";
     }
 }

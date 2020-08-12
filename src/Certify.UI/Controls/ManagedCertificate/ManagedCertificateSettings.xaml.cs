@@ -64,14 +64,16 @@ namespace Certify.UI.Controls.ManagedCertificate
                         this.TabDeployment.Visibility = Visibility.Collapsed;
                         this.TabDomains.Visibility = Visibility.Collapsed;
                         this.TabAuthorization.Visibility = Visibility.Collapsed;
+                        this.TabTasks.Visibility = Visibility.Collapsed;
                         this.TabPreview.Visibility = Visibility.Collapsed;
-
+                        
                     }
                     else
                     {
                         this.TabDeployment.Visibility = Visibility.Visible;
                         this.TabDomains.Visibility = Visibility.Visible;
                         this.TabAuthorization.Visibility = Visibility.Visible;
+                        this.TabTasks.Visibility = Visibility.Visible;
                         this.TabPreview.Visibility = Visibility.Visible;
                     }
                 }
