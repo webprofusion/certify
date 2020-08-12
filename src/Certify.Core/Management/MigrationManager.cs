@@ -489,7 +489,7 @@ namespace Certify.Core.Management
 
                         if (!isPreviewMode)
                         {
-                            // perform actual import
+                            // perform actual import, TODO: re-map cert PFX storage location
                             try
                             {
                                 System.IO.File.WriteAllBytes(c.Filename, c.Content);

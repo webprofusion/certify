@@ -438,7 +438,7 @@ namespace Certify.Management
                 {
                     var managedCert = await GetManagedCertificate(m.Id);
 
-                    if (managedCert != null)
+                    if (managedCert != null && !string.IsNullOrEmpty(managedCert.CertificatePath))
                     {
                         var deployResult = await DeployCertificate(managedCert, null, isPreviewOnly: importRequest.IsPreviewMode);
 

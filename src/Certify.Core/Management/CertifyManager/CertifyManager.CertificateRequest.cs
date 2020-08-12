@@ -1273,10 +1273,19 @@ namespace Certify.Management
             var config = managedCertificate.RequestConfig;
             var pfxPath = managedCertificate.CertificatePath;
 
+
+        
+
             if (managedCertificate.ItemType == ManagedCertificateType.SSL_ACME)
             {
                 if (!isPreviewOnly)
                 {
+
+                    if (!System.IO.File.Exists(pfxPath))
+                    {
+                        return new CertificateRequestResult { IsSuccess = false, Message = $"[{managedCertificate.Name}] Certificate path is invalid or file does not exist. Cannot deploy certificate." };
+                    }
+
                     ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding, managedCertificate));
                 }
 
