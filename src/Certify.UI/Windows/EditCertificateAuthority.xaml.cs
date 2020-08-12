@@ -29,6 +29,36 @@ namespace Certify.UI.Windows
                     return list;
                 }
             }
+
+            public bool IsFeatureEnabled(CertAuthoritySupportedRequests feature)
+            {
+                return IsFeatureEnabled(feature.ToString());
+            }
+
+            public bool IsFeatureEnabled(string feature)
+            {
+                if (Item.SupportedFeatures.Contains(feature))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            public void ToggleFeature(string feature)
+            {
+                if (IsFeatureEnabled(feature))
+                {
+                    Item.SupportedFeatures.Remove(feature);
+                }
+                else
+                {
+                    Item.SupportedFeatures.Add(feature);
+                }
+            }
+
         }
 
         public EditModel Model { get; set; } = new EditModel();
@@ -41,8 +71,8 @@ namespace Certify.UI.Windows
 
             DataContext = this;
 
-            this.Width *= MainViewModel.UIScaleFactor;
-            this.Height *= MainViewModel.UIScaleFactor;
+            Width *= MainViewModel.UIScaleFactor;
+            Height *= MainViewModel.UIScaleFactor;
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
@@ -58,7 +88,7 @@ namespace Certify.UI.Windows
 
             if (result.IsSuccess)
             {
-                this.Close();
+                Close();
             }
             else
             {
@@ -75,7 +105,10 @@ namespace Certify.UI.Windows
                 {
                     // edit existing
                     var ca = MainViewModel.CertificateAuthorities.FirstOrDefault(a => a.Id == Model.SelectedCertificateAuthorityId);
-                    this.Model.Item = Newtonsoft.Json.JsonConvert.DeserializeObject<CertificateAuthority>(Newtonsoft.Json.JsonConvert.SerializeObject(ca));
+                    Model.Item = Newtonsoft.Json.JsonConvert.DeserializeObject<CertificateAuthority>(Newtonsoft.Json.JsonConvert.SerializeObject(ca));
+
+
+
                 }
                 else
                 {
@@ -90,25 +123,51 @@ namespace Certify.UI.Windows
                     CertAuthoritySupportedRequests.DOMAIN_SINGLE.ToString()
                 }
                     };
-                    this.Model.Item = ca;
+                    Model.Item = ca;
                 }
+
+                DOMAIN_SINGLE.IsOn = Model.IsFeatureEnabled(CertAuthoritySupportedRequests.DOMAIN_SINGLE);
+                DOMAIN_SINGLE_PLUS_WWW.IsOn = Model.IsFeatureEnabled(CertAuthoritySupportedRequests.DOMAIN_SINGLE_PLUS_WWW);
+                DOMAIN_WILDCARD.IsOn = Model.IsFeatureEnabled(CertAuthoritySupportedRequests.DOMAIN_WILDCARD);
+                DOMAIN_MULTIPLE_SAN.IsOn = Model.IsFeatureEnabled(CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN);
+
 
             }
         }
 
         private async void Delete_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageBox.Show("Are you sure you wish to delete this Certificate Authority?", "Confirm Delete?", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
+            var ca = MainViewModel.CertificateAuthorities.FirstOrDefault(a => a.Id == Model.SelectedCertificateAuthorityId);
+
+            if (ca != null && ca.IsCustom)
             {
-                var result = await MainViewModel.DeleteCertificateAuthority(Model.Item.Id);
-                if (result.IsSuccess)
+                if (MessageBox.Show("Are you sure you wish to delete this Certificate Authority?", "Confirm Delete?", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
                 {
-                    this.Close();
+                    var result = await MainViewModel.DeleteCertificateAuthority(Model.Item.Id);
+                    if (result.IsSuccess)
+                    {
+                        Close();
+                    }
+                    else
+                    {
+                        MessageBox.Show(result.Message);
+                    }
                 }
-                else
-                {
-                    MessageBox.Show(result.Message);
-                }
+            }
+            else
+            {
+                Close();
+            }
+        }
+
+        private void OnFeatureToggled(object sender, RoutedEventArgs e)
+        {
+            if (sender != null)
+            {
+                var s = ((MahApps.Metro.Controls.ToggleSwitch)sender);
+                var featureTag = s.Tag.ToString();
+
+                Model.ToggleFeature(featureTag);
             }
         }
     }

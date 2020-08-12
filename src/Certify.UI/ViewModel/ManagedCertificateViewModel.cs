@@ -46,7 +46,7 @@ namespace Certify.UI.ViewModel
 
             RaisePropertyChangedEvent(nameof(IsSelectedItemValid));
 
-           
+
 
             RaisePropertyChangedEvent(nameof(SelectedItem));
             RaisePropertyChangedEvent(nameof(HasSelectedItemDomainOptions));
@@ -71,7 +71,7 @@ namespace Certify.UI.ViewModel
                     }
 
                     var ca = CertificateAuthorities.FirstOrDefault(c => c.Id == SelectedItem.CertificateAuthorityId);
-                    return ca.Description;
+                    return ca?.Description ?? "(CA Unknown)";
                 }
                 else
                 {

@@ -237,6 +237,8 @@ namespace Certify.Management
 
         public async Task<List<CertificateAuthority>> GetCertificateAuthorities()
         {
+            LoadCertificateAuthorities();
+
             return _certificateAuthorities.Values.ToList();
         }
 

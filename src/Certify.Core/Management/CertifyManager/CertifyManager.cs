@@ -82,26 +82,7 @@ namespace Certify.Management
 
             _migrationManager = new MigrationManager(_itemManager, _credentialsManager, _serverProvider);
 
-            // load core CAs and custom CAs
-            foreach (var ca in CertificateAuthority.CoreCertificateAuthorities)
-            {
-                _certificateAuthorities.TryAdd(ca.Id, ca);
-            }
-
-            try
-            {
-                var customCAs = SettingsManager.GetCustomCertificateAuthorities();
-
-                foreach (var ca in customCAs)
-                {
-                    _certificateAuthorities.TryAdd(ca.Id, ca);
-                }
-            }
-            catch (Exception exp)
-            {
-                // failed to load custom CAs
-                _serviceLog.Error(exp.Message);
-            }
+            LoadCertificateAuthorities();
 
 
             // init remaining utilities and optionally enable telematics
@@ -132,6 +113,32 @@ namespace Certify.Management
             }
 
             PerformManagedCertificateMigrations().Wait();
+        }
+
+        private void LoadCertificateAuthorities()
+        {
+            _certificateAuthorities.Clear();
+
+            // load core CAs and custom CAs
+            foreach (var ca in CertificateAuthority.CoreCertificateAuthorities)
+            {
+                _certificateAuthorities.TryAdd(ca.Id, ca);
+            }
+
+            try
+            {
+                var customCAs = SettingsManager.GetCustomCertificateAuthorities();
+
+                foreach (var ca in customCAs)
+                {
+                    _certificateAuthorities.TryAdd(ca.Id, ca);
+                }
+            }
+            catch (Exception exp)
+            {
+                // failed to load custom CAs
+                _serviceLog.Error(exp.Message);
+            }
         }
 
         public void SetStatusReporting(IStatusReporting statusReporting)

@@ -38,7 +38,19 @@
             Margin="28,0"
             Style="{StaticResource Instructions}"
             TextWrapping="Wrap">
-            Perform Import or Export of application settings including managed certificates, related files, certificates. Accessible via Settings.
+            Perform Import or Export of application settings including managed certificates, related files and certificates. Accessible via Settings.
+        </TextBlock>
+        <CheckBox
+            Margin="0,8"
+            Content="External Certificate Managers"
+            IsChecked="{Binding IsExternalCertManagersEnabled}"
+            Tag="EXTERNAL_CERT_MANAGERS" />
+
+        <TextBlock
+            Margin="28,0"
+            Style="{StaticResource Instructions}"
+            TextWrapping="Wrap">
+            Display info for certificates managed by supported external certificate managers, if present.
         </TextBlock>
 
     </StackPanel>

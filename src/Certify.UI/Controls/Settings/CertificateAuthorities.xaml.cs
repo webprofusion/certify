@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -48,6 +48,10 @@ namespace Certify.UI.Controls.Settings
                 return;
             }
 
+            EditModel.SettingsInitialised = false;
+
+            EditModel.MainViewModel.RefreshCertificateAuthorityList();
+
             this.AccountList.ItemsSource = EditModel.MainViewModel.AccountDetails;
 
             EnableAutomaticCAFailover.IsChecked = EditModel.Prefs.EnableAutomaticCAFailover;
@@ -78,9 +82,15 @@ namespace Certify.UI.Controls.Settings
             {
                 Owner = Window.GetWindow(this)
             };
+           
+            d.Closed += (object s, EventArgs arg) =>
+            {
+
+                LoadSettings();
+            };
+
             d.ShowDialog();
         }
-
 
         private async void SettingsUpdated(object sender, RoutedEventArgs e)
         {

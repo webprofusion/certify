@@ -191,6 +191,8 @@ namespace Certify.UI.ViewModel
             {
                 CertificateAuthorities.Add(a);
             }
+
+            RaisePropertyChangedEvent(nameof(CertificateAuthorities));
         }
 
         public async Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority ca)
@@ -533,7 +535,7 @@ namespace Certify.UI.ViewModel
             var filter = new ManagedCertificateFilter();
 
             // include external managed certs
-            filter.IncludeExternal = Preferences.IncludeExternalCertManagers;
+            filter.IncludeExternal = IsFeatureEnabled(FeatureFlags.EXTERNAL_CERT_MANAGERS);
 
             var list = await CertifyClient.GetManagedCertificates(filter);
 

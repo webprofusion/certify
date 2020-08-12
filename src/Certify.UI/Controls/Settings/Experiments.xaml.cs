@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,20 +29,26 @@ namespace Certify.UI.Controls.Settings
 
             public bool IsCAEditorEnabled
             {
-                get => ViewModel.AppViewModel.Current.IsFeatureEnabled("CA_EDITOR");
-                set => ToggleFeature("CA_EDITOR", value);
+                get => ViewModel.AppViewModel.Current.IsFeatureEnabled(FeatureFlags.CA_EDITOR);
+                set => ToggleFeature(FeatureFlags.CA_EDITOR, value);
             }
 
             public bool IsPrivKeyPwdEnabled
             {
-                get => ViewModel.AppViewModel.Current.IsFeatureEnabled("PRIVKEY_PWD");
-                set => ToggleFeature("PRIVKEY_PWD", value);
+                get => ViewModel.AppViewModel.Current.IsFeatureEnabled(FeatureFlags.PRIVKEY_PWD);
+                set => ToggleFeature(FeatureFlags.PRIVKEY_PWD, value);
             }
 
             public bool IsImportExportEnabled
             {
-                get => ViewModel.AppViewModel.Current.IsFeatureEnabled("IMPORT_EXPORT");
-                set => ToggleFeature("IMPORT_EXPORT", value);
+                get => ViewModel.AppViewModel.Current.IsFeatureEnabled(FeatureFlags.IMPORT_EXPORT);
+                set => ToggleFeature(FeatureFlags.IMPORT_EXPORT, value);
+            }
+
+            public bool IsExternalCertManagersEnabled
+            {
+                get => ViewModel.AppViewModel.Current.IsFeatureEnabled(FeatureFlags.EXTERNAL_CERT_MANAGERS);
+                set => ToggleFeature(FeatureFlags.EXTERNAL_CERT_MANAGERS, value);
             }
 
             internal void ToggleFeature(string feature, bool isEnabled)
@@ -68,7 +74,7 @@ namespace Certify.UI.Controls.Settings
                     appModel.Preferences.FeatureFlags = list.ToArray();
                 }
 
-                appModel.SavePreferences();
+                // note: pref changes are saved by the property change listener in General settings
 
             }
 
@@ -82,19 +88,6 @@ namespace Certify.UI.Controls.Settings
 
             this.DataContext = EditModel;
 
-        }
-
-        private async void CheckBox_Click(object sender, RoutedEventArgs e)
-        {
-            /* if (sender is CheckBox)
-             {
-                 string feature = ((CheckBox)sender).Tag.ToString();
-                 bool isChecked = ((CheckBox)sender).IsChecked ?? false;
-
-
-
-
-             }*/
         }
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e)

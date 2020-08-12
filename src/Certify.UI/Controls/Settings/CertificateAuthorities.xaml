@@ -50,17 +50,17 @@
             </StackPanel>
             <DockPanel>
                 <Button
-                    Margin="8,8,8,8"
+                    Margin="0,8,8,8"
                     Click="Button_NewContact"
                     DockPanel.Dock="Left">
                     New Account
                 </Button>
 
                 <Button
-                    Margin="8,8,8,8"
-                    HorizontalAlignment="Left"
+                    Margin="0,8,16,8"
+                    HorizontalAlignment="Right"
                     Click="Button_EditCertificateAuthority"
-                    DockPanel.Dock="Left"
+                    DockPanel.Dock="Right"
                     Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='CA_EDITOR', Path=Prefs}">
                     Edit Certificate Authorities
                 </Button>

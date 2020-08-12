@@ -125,10 +125,26 @@
                 <Controls:ToggleSwitch Content="Enabled" IsOn="{Binding Model.Item.IsEnabled}" />
                 <Controls:ToggleSwitch Content="Email Address Required" IsOn="{Binding Model.Item.RequiresEmailAddress}" />
                 <Controls:ToggleSwitch Content="Allow Untrusted Tls" IsOn="{Binding Model.Item.AllowUntrustedTls}" />
-                <Controls:ToggleSwitch Content="Single Domains (www.domain.com)" />
-                <Controls:ToggleSwitch Content="Single Domain + www (e.g. domain.com and www.domain.com)" />
-                <Controls:ToggleSwitch Content="Wildcards (*.domain.com)" />
-                <Controls:ToggleSwitch Content="Multiple SAN (www.domain.com, mail.domain.com etc.)" />
+                <Controls:ToggleSwitch
+                    x:Name="DOMAIN_SINGLE"
+                    Content="Single Domains (www.domain.com)"
+                    Tag="DOMAIN_SINGLE"
+                    Toggled="OnFeatureToggled" />
+                <Controls:ToggleSwitch
+                    x:Name="DOMAIN_SINGLE_PLUS_WWW"
+                    Content="Single Domain + www (e.g. domain.com and www.domain.com)"
+                    Tag="DOMAIN_SINGLE_PLUS_WWW"
+                    Toggled="OnFeatureToggled" />
+                <Controls:ToggleSwitch
+                    x:Name="DOMAIN_WILDCARD"
+                    Content="Wildcards (*.domain.com)"
+                    Tag="DOMAIN_WILDCARD"
+                    Toggled="OnFeatureToggled" />
+                <Controls:ToggleSwitch
+                    x:Name="DOMAIN_MULTIPLE_SAN"
+                    Content="Multiple SAN (www.domain.com, mail.domain.com etc.)"
+                    Tag="DOMAIN_MULTIPLE_SAN"
+                    Toggled="OnFeatureToggled" />
 
             </StackPanel>
         </StackPanel>
@@ -144,13 +160,15 @@
                 Width="100"
                 Margin="0,0,200,0"
                 Click="Delete_Click"
-                Content="Delete" />
+                Content="Delete"
+                IsEnabled="{Binding Model.Item.IsCustom}" />
             <Button
                 x:Name="Save"
                 Width="100"
                 Margin="12,0,0,0"
                 Click="Save_Click"
-                Content="Save" />
+                Content="Save"
+                IsEnabled="{Binding Model.Item.IsCustom}" />
             <Button
                 x:Name="Cancel"
                 Width="100"
