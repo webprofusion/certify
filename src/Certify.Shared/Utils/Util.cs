@@ -25,7 +25,7 @@ namespace Certify.Management
         /// check for problems which could affect app use
         /// </summary>
         /// <returns>  </returns>
-        public static async Task<List<ActionResult>> PerformAppDiagnostics()
+        public static async Task<List<ActionResult>> PerformAppDiagnostics(string ntpServer)
         {
             var results = new List<ActionResult>();
 
@@ -79,25 +79,28 @@ namespace Certify.Management
                 results.Add(new ActionResult { IsSuccess = false, Message = $"Could not check how much disk space is left on drive C:" });
             }
 
-            // check internet time service
+            // check internet time service, unless ntpServer pref set to ""
 
-            var timeResult = await CheckTimeServer();
-            if (timeResult != null)
+            if (ntpServer != "")
             {
-                var diff = timeResult - DateTime.Now;
-                if (Math.Abs(diff.Value.TotalSeconds) > 50)
+                var timeResult = await CheckTimeServer(ntpServer);
+                if (timeResult != null)
                 {
-                    results.Add(new ActionResult { IsSuccess = false, Message = $"Note: Your system time does not appear to be in sync with an internet time service, this can result in certificate request errors." });
+                    var diff = timeResult - DateTime.Now;
+                    if (Math.Abs(diff.Value.TotalSeconds) > 50)
+                    {
+                        results.Add(new ActionResult { IsSuccess = false, Message = $"Note: Your system time does not appear to be in sync with an internet time service, this can result in certificate request errors." });
+                    }
+                    else
+                    {
+                        results.Add(new ActionResult { IsSuccess = true, Message = $"System time is correct." });
+                    }
+
                 }
                 else
                 {
-                    results.Add(new ActionResult { IsSuccess = true, Message = $"System time is correct." });
+                    results.Add(new ActionResult { IsSuccess = false, Message = $"Note: Could not confirm system time sync using NTP server ({ntpServer}). Ensure system time is correct to avoid certificate request errors." });
                 }
-
-            }
-            else
-            {
-                results.Add(new ActionResult { IsSuccess = false, Message = $"Note: Could not confirm system time sync using a public NTP server. Ensure system time is correct to avoid certificate request errors." });
             }
 
 
@@ -589,13 +592,12 @@ namespace Certify.Management
             return ToUrlSafeBase64String(bytes);
         }
 
-        public static async Task<DateTime?> CheckTimeServer()
+        public static async Task<DateTime?> CheckTimeServer(string ntpServer = "pool.ntp.org")
         {
             // https://stackoverflow.com/questions/1193955/how-to-query-an-ntp-server-using-c
 
             try
             {
-                const string NtpServer = "pool.ntp.org";
 
                 const int DaysTo1900 = 1900 * 365 + 95; // 95 = offset for leap-years etc.
                 const long TicksPerSecond = 10000000L;
@@ -605,7 +607,7 @@ namespace Certify.Management
                 var ntpData = new byte[48];
                 ntpData[0] = 0x1B; // LeapIndicator = 0 (no warning), VersionNum = 3 (IPv4 only), Mode = 3 (Client Mode)
 
-                var addresses = Dns.GetHostEntry(NtpServer).AddressList;
+                var addresses = Dns.GetHostEntry(ntpServer).AddressList;
                 var ipEndPoint = new IPEndPoint(addresses[0], 123);
                 var pingDuration = Stopwatch.GetTimestamp(); // temp access (JIT-Compiler need some time at first call)
 

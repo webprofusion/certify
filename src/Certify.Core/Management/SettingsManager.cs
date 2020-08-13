@@ -31,6 +31,7 @@ namespace Certify.Management
             CertificateAuthorityFallback = null;
             DefaultCertificateAuthority = "letsencrypt.org";
             EnableAutomaticCAFailover = false;
+            NtpServer = "pool.ntp.org";
         }
 
         public static CoreAppSettings Current
@@ -138,6 +139,11 @@ namespace Certify.Management
         public bool IncludeExternalPlugins { get; set; }
 
         public string[] FeatureFlags { get; set; }
+
+        /// <summary>
+        /// Server to use for Ntp time diagnostics
+        /// </summary>
+        public string NtpServer { get; set; }
     }
 
     public class SettingsManager
@@ -178,6 +184,8 @@ namespace Certify.Management
 
             CoreAppSettings.Current.FeatureFlags = prefs.FeatureFlags;
 
+            CoreAppSettings.Current.NtpServer = prefs.NtpServer;
+
             return true;
         }
 
@@ -205,7 +213,8 @@ namespace Certify.Management
                 DefaultKeyCredentials = CoreAppSettings.Current.DefaultKeyCredentials,
                 EnableAutomaticCAFailover = CoreAppSettings.Current.EnableAutomaticCAFailover,
                 IncludeExternalPlugins = CoreAppSettings.Current.IncludeExternalPlugins,
-                FeatureFlags = CoreAppSettings.Current.FeatureFlags
+                FeatureFlags = CoreAppSettings.Current.FeatureFlags,
+                NtpServer = CoreAppSettings.Current.NtpServer
             };
 
             return prefs;

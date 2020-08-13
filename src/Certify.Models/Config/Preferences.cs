@@ -72,6 +72,12 @@
         public bool IncludeExternalPlugins { get; set; }
 
         public string[] FeatureFlags { get; set; }
+
+
+        /// <summary>
+        /// Server to use for Ntp time diagnostics
+        /// </summary>
+        public string NtpServer { get; set; }
     }
 
     public static class FeatureFlags

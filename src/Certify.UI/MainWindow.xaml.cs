@@ -222,7 +222,7 @@ namespace Certify.UI
                 return;
             }
 
-            var diagnostics = await Management.Util.PerformAppDiagnostics();
+            var diagnostics = await Management.Util.PerformAppDiagnostics(_appViewModel.Preferences.NtpServer);
             if (diagnostics.Any(d => d.IsSuccess == false))
             {
                 MessageBox.Show(diagnostics.First(d => d.IsSuccess == false).Message, "Warning");
