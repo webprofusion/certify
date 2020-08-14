@@ -37,9 +37,16 @@ namespace Certify.UI.Controls
             {
                 Register.IsEnabled = false;
                 ValidateKey.IsEnabled = false;
+                DeactivateInstall.IsEnabled = true;
 
                 lblRegistrationType.Text = "Registered Version";
                 lblRegistrationDetails.Text = "";
+            } else
+            {
+                DeactivateInstall.IsEnabled = false;
+                ValidateKey.IsEnabled = true;
+                Register.IsEnabled = true;
+                lblRegistrationType.Text = "Community Edition (No License)";
             }
 
             creditLibs.Text = "";
@@ -115,5 +122,14 @@ namespace Certify.UI.Controls
         }
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e) => PopulateAppInfo();
+
+        private void DeactivateInstall_Click(object sender, RoutedEventArgs e)
+        {
+            var d = new Windows.Registration { Owner = Window.GetWindow(this) };
+            d.EditModel.IsRegistrationMode = false;
+            d.ShowDialog();
+
+            d.Unloaded += ApplyRegistration_Completed;
+        }
     }
 }

@@ -21,6 +21,8 @@ namespace Certify.Models.Plugins
         bool IsInstallRegistered(int productTypeId, string settingsPath);
 
         Task<bool> IsInstallActive(int productTypeId, string settingsPath);
+
+        Task<bool> DeactivateInstall(int productTypeId, string settingsPath, string email, RegisteredInstance instance);
     }
 
     public interface IDomainValidationType

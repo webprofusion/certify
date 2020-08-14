@@ -90,6 +90,16 @@
             Click="Button_ApplyRegistrationKey"
             Content="{x:Static res:SR.AboutControl_EnterKey}" />
         <Button
+            x:Name="DeactivateInstall"
+            Grid.Column="1"
+            Width="151"
+            Margin="0,168
+            ,29.6,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Click="DeactivateInstall_Click"
+            Content="Deactivate Install" />
+        <Button
             x:Name="Help"
             Grid.Column="1"
             Width="151"
@@ -101,7 +111,8 @@
         <Button
             x:Name="Feedback"
             Grid.Column="1"
-            Margin="9.8,195,29.6,0"
+            Margin="9.8,220
+            ,29.6,0"
             VerticalAlignment="Top"
             Click="Feedback_Click"
             Content="{x:Static res:SR.AboutControl_SendFeedback}" />

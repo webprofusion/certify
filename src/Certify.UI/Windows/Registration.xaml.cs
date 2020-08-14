@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Certify.Management;
+using Certify.Models;
 
 namespace Certify.UI.Windows
 {
@@ -12,17 +14,22 @@ namespace Certify.UI.Windows
     {
         protected Models.Providers.ILog Log => ViewModel.AppViewModel.Current.Log;
 
-        public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
-
+        public class Model : BindableBase
+        {
+            public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
+            public bool IsRegistrationMode { get; set; } = true;
+        }
+        public Model EditModel { get; set; } = new Model();
+       
         public Registration()
         {
             InitializeComponent();
 
 
-            this.DataContext = MainViewModel;
+            this.DataContext = EditModel;
 
-            this.Width *= MainViewModel.UIScaleFactor;
-            this.Height *= MainViewModel.UIScaleFactor;
+            this.Width *= EditModel.MainViewModel.UIScaleFactor;
+            this.Height *= EditModel.MainViewModel.UIScaleFactor;
         }
 
         private async void ValidateKey_Click(object sender, RoutedEventArgs e)
@@ -67,7 +74,7 @@ namespace Certify.UI.Windows
                         Mouse.OverrideCursor = Cursors.Arrow;
                         if (installRegistration.IsSuccess)
                         {
-                            var settingsPath = Util.GetAppDataFolder();
+                            var settingsPath = Management.Util.GetAppDataFolder();
                             if (licensingManager.FinaliseInstall(productTypeId, installRegistration, settingsPath))
                             {
                                 ViewModel.AppViewModel.Current.IsRegisteredVersion = true;
@@ -108,5 +115,50 @@ namespace Certify.UI.Windows
         private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
 
         private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e) => System.Diagnostics.Process.Start(e.Uri.ToString());
+
+        private async void Deactivate_Click(object sender, RoutedEventArgs e)
+        {
+            var productTypeId = ViewModel.AppViewModel.ProductTypeId;
+
+            var email = DeactivateEmail.Text?.Trim().ToLower();
+   
+
+            if (string.IsNullOrEmpty(email))
+            {
+                MessageBox.Show(Certify.Locales.SR.Registration_NeedEmail);
+                return;
+            }
+
+
+            Mouse.OverrideCursor = Cursors.Wait;
+
+            var licensingManager = ViewModel.AppViewModel.Current.PluginManager?.LicensingManager;
+
+            if (licensingManager != null)
+            {
+                var instance = new Models.Shared.RegisteredInstance
+                {
+                    InstanceId = ViewModel.AppViewModel.Current.Preferences.InstanceId,
+                    AppVersion = Management.Util.GetAppVersion().ToString()
+                };
+                var resultOK = await licensingManager.DeactivateInstall(productTypeId, Management.Util.GetAppDataFolder(), email, instance);
+
+                Mouse.OverrideCursor = Cursors.Arrow;
+
+                if (resultOK)
+                {
+                    ViewModel.AppViewModel.Current.IsRegisteredVersion = false;
+                    MessageBox.Show("This install has now been deactivated. You can enter a different license key or use your key on another install.");
+                    Close();
+                }
+                else
+                {
+                    MessageBox.Show("The install could not be deactivated, check specified email address is correct for account. You can manually delete the C:\\ProgramData\\Certify\\reg_1 file and deactivate your install on https://certifytheweb.com");
+                
+                }
+            }
+
+            Mouse.OverrideCursor = Cursors.Arrow;
+        }
     }
 }
