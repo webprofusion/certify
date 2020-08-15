@@ -96,7 +96,7 @@ namespace Certify.UI.ViewModel
               {"Dark","Dark Theme" }
         };
 
-        public string DefaultUITheme = "Dark";
+        public string DefaultUITheme = "Light";
 
         public UISettings UISettings { get; set; }
 
