@@ -76,7 +76,7 @@ namespace Certify.Management
                                 }
                             }
 
-                            var _defaultLogonType = LogonType.Network;
+                            var _defaultLogonType = LogonType.NewCredentials;
 
                             return await Impersonation.RunAsUser(windowsCredentials, _defaultLogonType, async () =>
                             {
