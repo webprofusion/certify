@@ -21,6 +21,8 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         protected Models.Providers.ILog Log => AppViewModel.Log;
 
+        private string _lastSelectedItemId = null;
+
         public ManagedCertificateSettings()
         {
             InitializeComponent();
@@ -33,21 +35,36 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             if (e.PropertyName == "SelectedItem")
             {
-                SettingsTab.SelectedIndex = 0;
-
                 // show status tab for existing managed certs
                 var showStatus = ItemViewModel.SelectedItem?.Id != null && ItemViewModel.SelectedItem.DateLastRenewalAttempt != null;
 
                 if (showStatus)
                 {
                     TabStatusInfo.Visibility = Visibility.Visible;
-                    SettingsTab.SelectedItem = TabStatusInfo;
                 }
                 else
                 {
                     TabStatusInfo.Visibility = Visibility.Collapsed;
-                    SettingsTab.SelectedItem = TabDomains;
                 }
+
+                if (_lastSelectedItemId != ItemViewModel.SelectedItem.Id)
+                {
+                    // switch tab to defaultif the selected item has changed
+
+                    _lastSelectedItemId = ItemViewModel.SelectedItem.Id;
+
+                    if (showStatus)
+                    {
+                        SettingsTab.SelectedItem = TabStatusInfo;
+                    }
+                    else
+                    {
+                        SettingsTab.SelectedItem = TabDomains;
+                    }
+
+                }
+
+
 
                 ItemViewModel.RaiseSelectedItemChanges();
 
@@ -66,7 +83,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                         this.TabAuthorization.Visibility = Visibility.Collapsed;
                         this.TabTasks.Visibility = Visibility.Collapsed;
                         this.TabPreview.Visibility = Visibility.Collapsed;
-                        
+
                     }
                     else
                     {
