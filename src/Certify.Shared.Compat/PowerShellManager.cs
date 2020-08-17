@@ -78,11 +78,11 @@ namespace Certify.Management
 
                             var _defaultLogonType = LogonType.NewCredentials;
 
-                            return await Impersonation.RunAsUser(windowsCredentials, _defaultLogonType, async () =>
-                            {
+                            return Impersonation.RunAsUser(windowsCredentials, _defaultLogonType, () =>
+                          {
                                 // run as current user
                                 return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell);
-                            });
+                          });
                         }
                         else
                         {
