@@ -55,7 +55,7 @@ namespace Certify.UI.Controls.Settings
             {
 
                 var appModel = ViewModel.AppViewModel.Current;
-                var featureList = ViewModel.AppViewModel.Current.Preferences.FeatureFlags;
+                var featureList = ViewModel.AppViewModel.Current.Preferences.FeatureFlags ?? new string[] { };
 
                 if (!isEnabled)
                 {
