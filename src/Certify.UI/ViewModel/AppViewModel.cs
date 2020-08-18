@@ -659,7 +659,7 @@ namespace Certify.UI.ViewModel
             // current requests?
         }
 
-        public async Task UpdatedCachedManagedCertificate(ManagedCertificate managedCertificate, bool reload = false)
+        public async Task<ManagedCertificate> UpdatedCachedManagedCertificate(ManagedCertificate managedCertificate, bool reload = false)
         {
             var existing = ManagedCertificates.FirstOrDefault(i => i.Id == managedCertificate.Id);
             var newItem = managedCertificate;
@@ -685,6 +685,8 @@ namespace Certify.UI.ViewModel
                     ManagedCertificates.Add(newItem);
                 }
             }
+
+            return newItem;
         }
 
         public async Task<List<ActionStep>> GetPreviewActions(ManagedCertificate item) => await CertifyClient.PreviewActions(item);

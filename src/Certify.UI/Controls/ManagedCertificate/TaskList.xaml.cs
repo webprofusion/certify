@@ -77,6 +77,9 @@ namespace Certify.UI.Controls.ManagedCertificate
                     (App.Current as App).ShowNotification("The deployment task completed with no reported errors.");
 
                 }
+
+                
+                ItemViewModel.SelectedItem = await UI.ViewModel.AppViewModel.Current.UpdatedCachedManagedCertificate(ItemViewModel.SelectedItem, true);
             }
         }
 
