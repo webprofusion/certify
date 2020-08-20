@@ -24,7 +24,7 @@ namespace Certify.API.Tests
         [TestInitialize]
         public async Task InitTests()
         {
-            _client = new CertifyServerClient();
+            _client = new CertifyServerClient(new SharedUtils.ServiceConfigManager());
 
             // TODO : create API server instance instead of invoking directly
             if (_apiService == null)

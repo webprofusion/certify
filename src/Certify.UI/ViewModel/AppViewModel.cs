@@ -16,6 +16,7 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Models.Utils;
+using Certify.Providers;
 using Certify.Shared;
 using Certify.UI.Settings;
 using PropertyChanged;
@@ -30,10 +31,11 @@ namespace Certify.UI.ViewModel
         /// </summary>
         //public static AppModel AppViewModel = new DesignViewModel(); // for UI testing
         public static AppViewModel Current = GetModel();
-
+        private IServiceConfigProvider _configManager;
         public AppViewModel()
         {
-            CertifyClient = new CertifyServiceClient(GetDefaultServerConnection());
+            _configManager = new SharedUtils.ServiceConfigManager();
+            CertifyClient = new CertifyServiceClient(_configManager, GetDefaultServerConnection(_configManager));
 
             Init();
         }
@@ -275,7 +277,7 @@ namespace Certify.UI.ViewModel
 
         public ServiceConfig GetAppServiceConfig()
         {
-            return CertifyClient.GetAppServiceConfig();
+            return _configManager.GetServiceConfig();
         }
 
         public int MainUITabIndex { get; set; }
@@ -369,9 +371,9 @@ namespace Certify.UI.ViewModel
             return await CertifyClient.ValidateDeploymentTask(deploymentTaskValidationInfo);
         }
 
-        public Shared.ServerConnection GetDefaultServerConnection()
+        public Shared.ServerConnection GetDefaultServerConnection(IServiceConfigProvider configProvider)
         {
-            var defaultConfig = new ServerConnection(SharedUtils.ServiceConfigManager.GetAppServiceConfig());
+            var defaultConfig = new ServerConnection(configProvider.GetServiceConfig());
 
             var connections = Shared.Core.Management.ServerConnectionManager.GetServerConnections(Log, defaultConfig);
 
@@ -392,7 +394,7 @@ namespace Certify.UI.ViewModel
             var attemptsRemaining = 5;
             while (!IsServiceAvailable && attemptsRemaining > 0)
             {
-                var connectionConfig = GetDefaultServerConnection();
+                var connectionConfig = GetDefaultServerConnection(_configManager);
                 Debug.WriteLine("Service not yet available. Waiting a few seconds..");
 
                 // the service could still be starting up or port may be reallocated
@@ -400,7 +402,7 @@ namespace Certify.UI.ViewModel
                 await Task.Delay(waitMS);
 
                 // restart client in case port has reallocated
-                CertifyClient = new CertifyServiceClient(connectionConfig);
+                CertifyClient = new CertifyServiceClient(_configManager, connectionConfig);
 
                 IsServiceAvailable = await CheckServiceAvailable();
 

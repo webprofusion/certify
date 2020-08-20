@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -36,9 +36,11 @@ namespace Certify.Client
         private readonly HttpClient _client;
         private readonly string _baseUri = "/api/";
         internal Shared.ServerConnection _connectionConfig;
+        internal Providers.IServiceConfigProvider _configProvider;
 
-        public CertifyApiClient(Shared.ServerConnection config = null)
+        public CertifyApiClient(Providers.IServiceConfigProvider configProvider,  Shared.ServerConnection config = null)
         {
+            _configProvider = configProvider;
             _connectionConfig = config ?? GetDefaultServerConnection();
 
             _baseUri = $"{(_connectionConfig.UseHTTPS ? "https" : "http")}://{_connectionConfig.Host}:{_connectionConfig.Port}" + _baseUri;
@@ -72,11 +74,10 @@ namespace Certify.Client
 
         public ServerConnection GetDefaultServerConnection()
         {
-            var serviceCfg = GetAppServiceConfig();
+            var serviceCfg = _configProvider.GetServiceConfig();
             return new ServerConnection(serviceCfg);
         }
 
-        public Shared.ServiceConfig GetAppServiceConfig() => Certify.SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
         private async Task<string> FetchAsync(string endpoint)
         {

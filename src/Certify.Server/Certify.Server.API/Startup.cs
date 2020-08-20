@@ -83,11 +83,12 @@ namespace Certify.Server.API
             });
 #endif
             // connect to certify service 
-            var defaultConnectionConfig = new Shared.ServerConnection(SharedUtils.ServiceConfigManager.GetAppServiceConfig());
+            var configManager = new SharedUtils.ServiceConfigManager();
+            var defaultConnectionConfig = new Shared.ServerConnection(configManager.GetServiceConfig());
             var connections = ServerConnectionManager.GetServerConnections(null, defaultConnectionConfig);
             var serverConnection = connections.FirstOrDefault(c => c.IsDefault = true);
 
-            services.AddSingleton(typeof(Certify.Client.ICertifyInternalApiClient), new Client.CertifyApiClient(serverConnection));
+            services.AddSingleton(typeof(Certify.Client.ICertifyInternalApiClient), new Client.CertifyApiClient(configManager, serverConnection));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

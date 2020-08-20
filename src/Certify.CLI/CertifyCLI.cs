@@ -18,7 +18,7 @@ namespace Certify.CLI
 
         public CertifyCLI()
         {
-            _certifyClient = new CertifyServiceClient();
+            _certifyClient = new CertifyServiceClient(new SharedUtils.ServiceConfigManager());
         }
 
         public async Task<bool> IsServiceAvailable()

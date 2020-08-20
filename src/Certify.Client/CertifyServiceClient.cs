@@ -39,7 +39,7 @@ namespace Certify.Client
         private string _statusHubUri = "/api/status";
 
 
-        public CertifyServiceClient(Shared.ServerConnection config = null) : base(config)
+        public CertifyServiceClient(Providers.IServiceConfigProvider configProvider, Shared.ServerConnection config = null) : base(configProvider, config)
         {
             _statusHubUri = $"{(_connectionConfig.UseHTTPS ? "https" : "http")}://{_connectionConfig.Host}:{_connectionConfig.Port}" + _statusHubUri;
         }

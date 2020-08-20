@@ -16,8 +16,6 @@ namespace Certify.Client
     public interface ICertifyInternalApiClient
     {
 
-        Shared.ServiceConfig GetAppServiceConfig();
-
         #region System
 
         Task<string> GetAppVersion();

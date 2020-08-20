@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Certify.Providers;
 using Certify.Shared;
 using Newtonsoft.Json;
 
 namespace Certify.SharedUtils
 {
-    public class ServiceConfigManager
+    public class ServiceConfigManager: IServiceConfigProvider
     {
         public const string APPDATASUBFOLDER = "Certify";
 
-        public static string GetAppDataFolder(string subFolder = null)
+        private static string GetAppDataFolder(string subFolder = null)
         {
             var parts = new List<string>()
             {
@@ -87,12 +88,6 @@ namespace Certify.SharedUtils
             return serviceConfig;
         }
 
-        public static void StoreCurrentAppServiceConfig()
-        {
-            var config = GetAppServiceConfig();
-            StoreUpdatedAppServiceConfig(config);
-        }
-
         public static void StoreUpdatedAppServiceConfig(ServiceConfig config)
         {
             if (config == null)
@@ -110,6 +105,11 @@ namespace Certify.SharedUtils
                 File.WriteAllText(serviceConfigFile, JsonConvert.SerializeObject(config, Formatting.Indented));
             }
             catch { }
+        }
+
+        public ServiceConfig GetServiceConfig()
+        {
+            return GetAppServiceConfig();
         }
     }
 }

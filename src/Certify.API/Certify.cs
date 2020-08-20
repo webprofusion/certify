@@ -33,9 +33,9 @@ namespace Certify.API
     public class CertifyServerClient
     {
         ICertifyInternalApiClient _client;
-        public CertifyServerClient()
+        public CertifyServerClient(Providers.IServiceConfigProvider configProvider)
         {
-            _client = new Certify.Client.CertifyApiClient();
+            _client = new Certify.Client.CertifyApiClient(configProvider);
         }
 
         /// <summary>

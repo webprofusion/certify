@@ -30,7 +30,8 @@ namespace Certify.CLI
 
                 if (command == "storeserverconfig")
                 {
-                    SharedUtils.ServiceConfigManager.StoreCurrentAppServiceConfig();
+                    var cfg = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
+                    SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(cfg);
                     return 0;
                 }
 

@@ -20,7 +20,7 @@ namespace Certify.Management
             return await Core.Management.DeploymentTasks.DeploymentTaskProviderFactory.GetDeploymentTaskProviders(_pluginManager.DeploymentTaskProviders);
         }
         /// <summary>
-        /// Get the current defintion for a provider including dynamic elements affected by the given config
+        /// Get the current definition for a provider including dynamic elements affected by the given config
         /// </summary>
         /// <param name="id"></param>
         /// <param name="config"></param>
