@@ -200,11 +200,11 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
             var rootDomain = domainInfo.RootDomain;
             var subdomainRecord = NormaliseRecordName(domainInfo, requestreq.RecordName);
 
-            // grab all the txt records for the zone as a json array, remove the txt record in
-            // question, and send an update command.
+            // Send PATCH request with Remove flag set to try for our TXT record
 
             var request = CreateRequest(new HttpMethod("PATCH"), string.Format(_createRecordUri, rootDomain));
-            var rec = new DnsRecordSimpleDNSPlus
+
+            var rec = new 
             {
                 Type = "TXT",
                 Name = subdomainRecord + "." + rootDomain,
