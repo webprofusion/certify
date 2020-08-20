@@ -17,6 +17,9 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
     {
         public string Domain { get; set; }
         public string DomainId { get; set; }
+
+        public string Name { get; set; }
+        public string Type { get; set; }
     }
 
     internal class DnsRecordSimpleDNSPlus
@@ -70,13 +73,13 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
                 {
                     Id = "DNS01.API.SimpleDNSPlus",
                     Title = "SimpleDNSPlus DNS API",
-                    Description = "Validates via SimpleDNSPlus DNS APIs using credentials",
+                    Description = "Validates via SimpleDNSPlus DNS APIs (use /v2/ endpoint) using basic authenticaton credentials",
                     HelpUrl = "https://simpledns.com/swagger-ui/",
                     PropagationDelaySeconds = 120,
                     ProviderParameters = new List<ProviderParameter>{
-                        new ProviderParameter{ Key="authserver", Name="Server IP", IsRequired=true },
-                        new ProviderParameter{ Key="authkey", Name="Auth Key", IsRequired=true },
-                        new ProviderParameter{ Key="authsecret", Name="Auth Secret", IsRequired=true },
+                        new ProviderParameter{ Key="authserver", Name="API Host", IsRequired=true,Description="e.g. https://192.168.1.32:8053 or http://myserver:8053" },
+                        new ProviderParameter{ Key="authkey", Name="Username", IsRequired=true },
+                        new ProviderParameter{ Key="authsecret", Name="Password", IsRequired=true },
                         new ProviderParameter{ Key="zoneid", Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false },
                         new ProviderParameter{ Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="120", IsCredential=false }
                     },
@@ -89,7 +92,7 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
 
         public string ListZonesUri { get => _listZonesUri; set => _listZonesUri = value; }
 
-        public DnsProviderSimpleDNSPlus(Dictionary<string, string> credentials)
+        public DnsProviderSimpleDNSPlus()
         {
         }
 
@@ -251,7 +254,7 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
 
                 foreach (var zone in zonesResult)
                 {
-                    zones.Add(new DnsZone { ZoneId = zone.DomainId, Name = zone.Domain });
+                    zones.Add(new DnsZone { ZoneId = zone.DomainId ?? zone.Name, Name = zone.Domain??zone.Name });
                 }
             }
             else
@@ -269,7 +272,15 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
             _authKey = credentials["authkey"];
             _authSecret = credentials["authsecret"];
             _authServer = credentials["authserver"];
-            _baseUri = "https://" + _authServer + "/v2/";
+
+            if (_authServer.StartsWith("http"))
+            {
+                _baseUri = _authServer.Trim('/') + "/v2/";
+            }
+            else
+            {
+                _baseUri = "https://" + _authServer.Trim('/') + "/v2/";
+            }
             _listZonesUri = _baseUri + "zones";
             _createRecordUri = _baseUri + "zones/{0}/records";
 

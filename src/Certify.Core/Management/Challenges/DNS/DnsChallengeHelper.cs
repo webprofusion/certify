@@ -222,7 +222,7 @@ namespace Certify.Core.Management.Challenges
                 {
                     return new DnsChallengeHelperResult
                     {
-                        Result = new ActionResult { IsSuccess = false, Message = $"Failed [{dnsAPIProvider.ProviderTitle}]: " + exp.Message },
+                        Result = new ActionResult { IsSuccess = false, Message = $"Failed [{dnsAPIProvider.ProviderTitle}]: {exp}" },
                         PropagationSeconds = 0,
                         IsAwaitingUser = false
                     };

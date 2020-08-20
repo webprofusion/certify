@@ -93,7 +93,7 @@ namespace Certify.Models.Providers
 
             if (zoneId != null)
             {
-                var zone = zones.FirstOrDefault(z => z.ZoneId.ToLower() == zoneId.ToLower().Trim());
+                var zone = zones.FirstOrDefault(z => z?.ZoneId?.ToLower() == zoneId.ToLower().Trim());
                 if (zone != null)
                 {
                     return new DnsRecord
