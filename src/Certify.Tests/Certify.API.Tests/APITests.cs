@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.AspNetCore.Builder;
 using System.Diagnostics;
+using Certify.SharedUtils;
 
 namespace Certify.API.Tests
 {
@@ -24,7 +25,7 @@ namespace Certify.API.Tests
         [TestInitialize]
         public async Task InitTests()
         {
-            _client = new CertifyServerClient(new SharedUtils.ServiceConfigManager());
+            _client = new CertifyServerClient(new ServiceConfigManager());
 
             // TODO : create API server instance instead of invoking directly
             if (_apiService == null)

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Certify.SharedUtils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Service.Tests.Integration
@@ -16,7 +17,7 @@ namespace Certify.Service.Tests.Integration
         [TestInitialize]
         public async Task InitTests()
         {
-            _client = new Certify.Client.CertifyServiceClient(new SharedUtils.ServiceConfigManager());
+            _client = new Certify.Client.CertifyServiceClient(new ServiceConfigManager());
 
             // TODO : create API server instance instead of invoking directly
             if (_apiService == null)

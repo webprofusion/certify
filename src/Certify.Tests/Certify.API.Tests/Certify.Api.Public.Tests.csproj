@@ -25,6 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Certify.API\Certify.Api.Public.csproj" />
     <ProjectReference Include="..\..\Certify.Models\Certify.Models.csproj" />
+    <ProjectReference Include="..\..\Certify.Shared.Compat\Certify.Shared.Compat.csproj" />
   </ItemGroup>
 
 </Project>

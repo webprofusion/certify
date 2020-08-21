@@ -69,6 +69,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Certify.Client\Certify.Client.csproj" />
     <ProjectReference Include="..\..\Certify.Models\Certify.Models.csproj" />
+    <ProjectReference Include="..\..\Certify.Shared.Compat\Certify.Shared.Compat.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Moq" Version="4.14.5" />
