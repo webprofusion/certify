@@ -47,11 +47,11 @@ namespace Certify.UI.Controls.ManagedCertificate
                     TabStatusInfo.Visibility = Visibility.Collapsed;
                 }
 
-                if (_lastSelectedItemId != ItemViewModel.SelectedItem.Id)
+                if (_lastSelectedItemId != ItemViewModel.SelectedItem?.Id)
                 {
                     // switch tab to defaultif the selected item has changed
 
-                    _lastSelectedItemId = ItemViewModel.SelectedItem.Id;
+                    _lastSelectedItemId = ItemViewModel.SelectedItem?.Id;
 
                     if (showStatus)
                     {
