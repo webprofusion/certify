@@ -24,7 +24,6 @@ namespace Certify.Management
     }
     public class PluginManager
     {
-        public const string APPDATASUBFOLDER = "Certify";
 
         public ILicensingManager LicensingManager { get; set; }
         public IDashboardClient DashboardClient { get; set; }
@@ -61,7 +60,7 @@ namespace Certify.Management
             var parts = new List<string>()
             {
                 Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-                APPDATASUBFOLDER
+                Models.SharedConstants.APPDATASUBFOLDER
             };
 
             if (subFolder != null)

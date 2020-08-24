@@ -9,14 +9,12 @@ namespace Certify.SharedUtils
 {
     public class ServiceConfigManager: IServiceConfigProvider
     {
-        public const string APPDATASUBFOLDER = "Certify";
-
         private static string GetAppDataFolder(string subFolder = null)
         {
             var parts = new List<string>()
             {
                 Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-                APPDATASUBFOLDER
+                Models.SharedConstants.APPDATASUBFOLDER
             };
 
             if (subFolder != null)

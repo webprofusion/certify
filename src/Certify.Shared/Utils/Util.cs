@@ -19,7 +19,6 @@ namespace Certify.Management
 {
     public class Util
     {
-        public const string APPDATASUBFOLDER = "Certify";
 
         /// <summary>
         /// check for problems which could affect app use
@@ -156,7 +155,7 @@ namespace Certify.Management
             var parts = new List<string>()
             {
                 Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-                APPDATASUBFOLDER
+                Models.SharedConstants.APPDATASUBFOLDER
             };
 
             if (subFolder != null)
@@ -357,7 +356,7 @@ namespace Certify.Management
 
         public static string GetUserLocalAppDataFolder()
         {
-            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), APPDATASUBFOLDER);
+            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Models.SharedConstants.APPDATASUBFOLDER);
             if (!System.IO.Directory.Exists(path))
             {
                 System.IO.Directory.CreateDirectory(path);

@@ -9,13 +9,12 @@ namespace Certify.Shared.Core.Management
 {
     public class ServerConnectionManager
     {
-        public const string APPDATASUBFOLDER = "Certify";
         public static string GetAppDataFolder(string subFolder = null)
         {
             var parts = new List<string>()
             {
                 Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-                APPDATASUBFOLDER
+                Models.SharedConstants.APPDATASUBFOLDER
             };
 
             if (subFolder != null)

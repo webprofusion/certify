@@ -26,11 +26,10 @@ namespace Certify.Models
 
     public class Util
     {
-        public const string APPDATASUBFOLDER = "Certify";
 
         public static string GetAppDataFolder()
         {
-            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), APPDATASUBFOLDER);
+            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), Models.SharedConstants.APPDATASUBFOLDER);
             if (!System.IO.Directory.Exists(path))
             {
                 System.IO.Directory.CreateDirectory(path);
