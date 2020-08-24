@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Net.Http;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -19,7 +19,7 @@ namespace Certify.Server.UI
 
             builder.Services.AddTransient(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
-            builder.Services.AddTransient(sp => new Certify.API.CertifyServerClient());
+            builder.Services.AddTransient(sp => new Certify.API.CertifyServerClient(new Utils.ServiceConfigManager()));
 
             await builder.Build().RunAsync();
         }

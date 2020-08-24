@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Certify.Server.Api.Public.Middleware;
 using Certify.Shared.Core.Management;
+using Certify.SharedUtils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -83,7 +84,7 @@ namespace Certify.Server.API
             });
 #endif
             // connect to certify service 
-            var configManager = new SharedUtils.ServiceConfigManager();
+            var configManager = new ServiceConfigManager();
             var defaultConnectionConfig = new Shared.ServerConnection(configManager.GetServiceConfig());
             var connections = ServerConnectionManager.GetServerConnections(null, defaultConnectionConfig);
             var serverConnection = connections.FirstOrDefault(c => c.IsDefault = true);
