@@ -19,7 +19,7 @@
             Certificate Authorities are the organisations who can issue trusted certificates. You need to register an account for each (ACME) Certificate Authority you wish to use. Accounts can either be Production (live, trusted certificates) or Staging (test, non-trusted).
         </TextBlock>
 
-        <TextBlock Style="{StaticResource Instructions}" Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='CA_FAILOVER'}">
+        <TextBlock Style="{StaticResource Instructions}" Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='CA_FAILOVER', Path=Prefs}">
             If you register with multiple authorities this may enable you to use automatic Certificate Authority Failover, so if your preferred Certificate Authority can't issue a new certificate an alternative compatible provider can be used automatically.
         </TextBlock>
 
@@ -40,7 +40,7 @@
                 Content="Enable Automatic CA Failover"
                 ToolTip="If the preferred Certificate Authority fails to renew your certificate, attempt an alternative (if configured)"
                 Unchecked="SettingsUpdated"
-                Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='CA_FAILOVER'}" />
+                Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='CA_FAILOVER', Path=Prefs}" />
 
         </StackPanel>
 

@@ -17,8 +17,6 @@ namespace Certify.UI.Controls.ManagedCertificate
         public MiscOptions()
         {
             InitializeComponent();
-
-            this.DataContext = this.ItemViewModel;
         }
 
         private void OpenCertificateFile_Click(object sender, RoutedEventArgs e)
@@ -222,5 +220,14 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.DataContext = this.ItemViewModel;
+            this.ItemViewModel.RaisePropertyChangedEvent(null);
+
+            // FIXME: combobox binding misbehaves so force it here
+            this.CertPasswordCredential.ItemsSource = ItemViewModel.StoredPasswords;
+            this.CertPasswordCredential.SelectedValue = ItemViewModel.SelectedItem?.CertificatePasswordCredentialId;
+        }
     }
 }

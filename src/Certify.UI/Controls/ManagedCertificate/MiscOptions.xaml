@@ -11,6 +11,7 @@
     xmlns:utils="clr-namespace:Certify.UI.Utils"
     d:DataContext="{d:DesignInstance Type=certifyui:ManagedCertificateDesignViewModel,
                                      IsDesignTimeCreatable=True}"
+    Loaded="UserControl_Loaded"
     mc:Ignorable="d">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
@@ -171,7 +172,7 @@
                                 Content="Clear Custom Private Key" />
                         </StackPanel>
 
-                        <StackPanel Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='PRIVKEY_PWD'}">
+                        <StackPanel Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='PRIVKEY_PWD', Path=Preferences}">
                             <TextBlock Style="{StaticResource SubheadingWithMargin}">Security</TextBlock>
 
                             <TextBlock Style="{StaticResource Instructions}">You can optionally specify a password credential to use for private keys and PFX files generated for this certificate:</TextBlock>
