@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Certify.SharedUtils;
@@ -22,8 +24,12 @@ namespace Certify.Service.Tests.Integration
             // TODO : create API server instance instead of invoking directly
             if (_apiService == null)
             {
-                _apiService = Process.Start(@"C:\Work\GIT\certify\src\Certify.Service\bin\Debug\net462\CertifySSLManager.Service.exe");
+               
+                var svcpath = $"{ Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)}\\..\\..\\..\\..\\..\\Certify.Service\\bin\\Debug\\net462\\CertifySSLManager.Service.exe";
 
+
+                _apiService = Process.Start(svcpath);
+            
                 await Task.Delay(2000);
             }
         }
