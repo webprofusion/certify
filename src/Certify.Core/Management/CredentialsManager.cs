@@ -315,13 +315,20 @@ namespace Certify.Management
             //create database if it doesn't exist
             if (!File.Exists(path))
             {
-                using (var db = new SQLiteConnection($"Data Source={path}"))
+                try
                 {
-                    await db.OpenAsync();
-                    using (var cmd = new SQLiteCommand("CREATE TABLE credential (id TEXT NOT NULL UNIQUE PRIMARY KEY, json TEXT NOT NULL, protectedvalue TEXT NOT NULL)", db))
+                    using (var db = new SQLiteConnection($"Data Source={path}"))
                     {
-                        await cmd.ExecuteNonQueryAsync();
+                        await db.OpenAsync();
+                        using (var cmd = new SQLiteCommand("CREATE TABLE credential (id TEXT NOT NULL UNIQUE PRIMARY KEY, json TEXT NOT NULL, protectedvalue TEXT NOT NULL)", db))
+                        {
+                            await cmd.ExecuteNonQueryAsync();
+                        }
                     }
+                }
+                catch (SQLiteException)
+                {
+                    // already exists
                 }
             }
 
