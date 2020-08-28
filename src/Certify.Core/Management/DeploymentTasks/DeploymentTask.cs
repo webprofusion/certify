@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Certify.Config;
+using Certify.Management;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 
@@ -27,6 +28,7 @@ namespace Certify.Providers.DeploymentTasks
 
         public async Task<List<ActionResult>> Execute(
             ILog log,
+            ICredentialsManager credentialsManager, 
             object subject,
             CancellationToken cancellationToken,
             bool isPreviewOnly = true
@@ -36,7 +38,9 @@ namespace Certify.Providers.DeploymentTasks
             {
                 try
                 {
-                    return await TaskProvider.Execute(log, subject, TaskConfig, _credentials, isPreviewOnly, null, cancellationToken);
+                    var execParams = new DeploymentTaskExecutionParams(log, credentialsManager, subject, TaskConfig, _credentials, isPreviewOnly, null, cancellationToken);
+
+                    return await TaskProvider.Execute(execParams);
                 }
                 catch (Exception exp)
                 {

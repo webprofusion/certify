@@ -12,12 +12,12 @@ namespace Certify.Providers.DeploymentTasks.Core
         public static DeploymentProviderDefinition Definition { get; }
         public DeploymentProviderDefinition GetDefinition(DeploymentProviderDefinition currentDefinition) => (currentDefinition ?? Definition);
 
-        public Task<List<ActionResult>> Execute(ILog log, object subject, DeploymentTaskConfig settings, Dictionary<string, string> credentials, bool isPreviewOnly, DeploymentProviderDefinition definition, CancellationToken cancellationToken)
+        public Task<List<ActionResult>> Execute(DeploymentTaskExecutionParams execParams)
         {
             throw new System.NotImplementedException();
         }
 
-        public Task<List<ActionResult>> Validate(object subject, DeploymentTaskConfig settings, Dictionary<string, string> credentials, DeploymentProviderDefinition definition)
+        public Task<List<ActionResult>> Validate(DeploymentTaskExecutionParams execParams)
         {
             throw new System.NotImplementedException();
         }

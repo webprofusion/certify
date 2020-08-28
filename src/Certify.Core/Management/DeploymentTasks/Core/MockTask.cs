@@ -40,25 +40,17 @@ namespace Certify.Providers.DeploymentTasks.Core
         /// <param name="credentials"></param>
         /// <param name="isPreviewOnly"></param>
         /// <returns></returns>
-        public async Task<List<ActionResult>> Execute(
-          ILog log,
-          object subject,
-          DeploymentTaskConfig settings,
-          Dictionary<string, string> credentials,
-          bool isPreviewOnly,
-          DeploymentProviderDefinition definition,
-          CancellationToken cancellationToken
-          )
+        public async Task<List<ActionResult>> Execute(DeploymentTaskExecutionParams execParams)
         {
 
-            var msg = settings.Parameters.FirstOrDefault(c => c.Key == "message")?.Value;
+            var msg = execParams.Settings.Parameters.FirstOrDefault(c => c.Key == "message")?.Value;
 
-            bool.TryParse(settings.Parameters.FirstOrDefault(c => c.Key == "throw")?.Value, out var shouldThrow);
+            bool.TryParse(execParams.Settings.Parameters.FirstOrDefault(c => c.Key == "throw")?.Value, out var shouldThrow);
 
             if (string.IsNullOrEmpty(msg))
             {
                 // fail task
-                log?.Warning($"Mock Task says: <msg not supplied, task will fail>");
+                execParams.Log?.Warning($"Mock Task says: <msg not supplied, task will fail>");
 
                 return new List<ActionResult> { new ActionResult("Mock Task message not supplied.", false) };
             }
@@ -70,8 +62,8 @@ namespace Certify.Providers.DeploymentTasks.Core
                 }
                 else
                 {
-                    log?.Information($"Mock Task says: {msg}");
-                    return new List<ActionResult> { 
+                    execParams.Log?.Information($"Mock Task says: {msg}");
+                    return new List<ActionResult> {
                         new ActionResult($"{msg}.", true),
                         new ActionResult($"MockTaskWorkCompleted.", true)
                     };
@@ -79,13 +71,13 @@ namespace Certify.Providers.DeploymentTasks.Core
             }
         }
 
-        public async Task<List<ActionResult>> Validate(object subject, DeploymentTaskConfig settings, Dictionary<string, string> credentials, DeploymentProviderDefinition definition)
+        public async Task<List<ActionResult>> Validate(DeploymentTaskExecutionParams execParams)
         {
             var results = new List<ActionResult> { };
-            foreach (var p in definition.ProviderParameters)
+            foreach (var p in execParams.Definition.ProviderParameters)
             {
 
-                if (!settings.Parameters.Exists(s => s.Key == p.Key) && p.IsRequired)
+                if (!execParams.Settings.Parameters.Exists(s => s.Key == p.Key) && p.IsRequired)
                 {
                     results.Add(new ActionResult($"Required parameter not supplied: { p.Name}", false));
                 }

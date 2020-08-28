@@ -98,11 +98,8 @@ namespace Certify.Config
         public string TargetHost { get; set; }
 
         /// <summary>
-        /// Local, Windows (Network), SSH etc
+        ///Dictionary of provider parameter values
         /// </summary>
-        //public string TargetType { get; set; }
-
-        // Dictionary of provider parameter values
         public List<ProviderParameterSetting> Parameters { get; set; }
 
         public DateTime? DateLastExecuted { get; set; }

@@ -1,15 +1,12 @@
 ﻿
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Certify.Config;
 using Certify.Models;
-using Certify.Models.Providers;
 using Certify.Models.Config;
 using Certify.Management;
 using System.Security.Cryptography.X509Certificates;
 using System;
 using System.Linq;
-using System.Threading;
 
 namespace Certify.Providers.DeploymentTasks.Core
 {
@@ -39,21 +36,21 @@ namespace Certify.Providers.DeploymentTasks.Core
 
         private bool _enableCertDoubleImportBehaviour { get; set; } = true;
 
-        public async Task<List<ActionResult>> Execute(ILog log, object subject, DeploymentTaskConfig settings, Dictionary<string, string> credentials, bool isPreviewOnly, DeploymentProviderDefinition definition, CancellationToken cancellationToken)
+        public async Task<List<ActionResult>> Execute(DeploymentTaskExecutionParams execParams)
         {
             var results = new List<ActionResult>();
 
-            var managedCert = ManagedCertificate.GetManagedCertificate(subject);
+            var managedCert = ManagedCertificate.GetManagedCertificate(execParams.Subject);
 
             // check settings are valid before proceeding
-            var validationResults = await Validate(managedCert, settings, credentials, definition);
+            var validationResults = await Validate(execParams);
             if (validationResults.Any())
             {
                 return validationResults;
             }
 
-            var requestedStore = settings.Parameters.FirstOrDefault(p => p.Key == "storetype")?.Value.Trim().ToLower();
-            var friendlyName = settings.Parameters.FirstOrDefault(p => p.Key == "friendlyname")?.Value.Trim();
+            var requestedStore = execParams.Settings.Parameters.FirstOrDefault(p => p.Key == "storetype")?.Value.Trim().ToLower();
+            var friendlyName = execParams.Settings.Parameters.FirstOrDefault(p => p.Key == "friendlyname")?.Value.Trim();
 
             //store cert against primary domain, optionally with custom friendly name
             var certStoreName = CertificateManager.DEFAULT_STORE_NAME;
@@ -65,7 +62,7 @@ namespace Certify.Providers.DeploymentTasks.Core
 
             X509Certificate2 storedCert = null;
 
-            if (!isPreviewOnly)
+            if (!execParams.IsPreviewOnly)
             {
                 try
                 {
@@ -98,12 +95,12 @@ namespace Certify.Providers.DeploymentTasks.Core
             return results;
         }
 
-        public async Task<List<ActionResult>> Validate(object subject, DeploymentTaskConfig settings, Dictionary<string, string> credentials, DeploymentProviderDefinition definition)
+        public async Task<List<ActionResult>> Validate(DeploymentTaskExecutionParams execParams)
         {
             var results = new List<ActionResult>();
 
-            var requestedStore = settings.Parameters.FirstOrDefault(p => p.Key == "storetype")?.Value.Trim().ToLower();
-            var friendlyName = settings.Parameters.FirstOrDefault(p => p.Key == "friendlyname")?.Value;
+            var requestedStore = execParams.Settings.Parameters.FirstOrDefault(p => p.Key == "storetype")?.Value.Trim().ToLower();
+            var friendlyName = execParams.Settings.Parameters.FirstOrDefault(p => p.Key == "friendlyname")?.Value;
 
             if (!string.IsNullOrEmpty(requestedStore))
             {

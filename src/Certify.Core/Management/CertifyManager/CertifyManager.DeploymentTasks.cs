@@ -209,7 +209,8 @@ namespace Certify.Management
                 {
                     log.Information($"Task [{task.TaskConfig.TaskName}] :: {taskTriggerReason}");
                     task.TaskConfig.DateLastExecuted = DateTime.Now;
-                    taskResults = await task.Execute(log, result, CancellationToken.None, isPreviewOnly: isPreviewOnly);
+                
+                    taskResults = await task.Execute(log,_credentialsManager, result, CancellationToken.None, isPreviewOnly: isPreviewOnly);
 
                     if (!isPreviewOnly)
                     {
@@ -329,7 +330,8 @@ namespace Certify.Management
 
             try
             {
-                var validationResult = await provider.Validate(managedCertificate, taskConfig, credentials, provider.GetDefinition());
+                var execParams = new DeploymentTaskExecutionParams(null, _credentialsManager, managedCertificate, taskConfig, credentials, true, provider.GetDefinition(), CancellationToken.None);
+                var validationResult = await provider.Validate(execParams);
                 return validationResult;
             }
             catch (Exception exp)

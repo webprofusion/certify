@@ -40,33 +40,33 @@ namespace Certify.Providers.DeploymentTasks.Core
             };
         }
 
-        public async Task<List<ActionResult>> Execute(ILog log, object subject, DeploymentTaskConfig settings, Dictionary<string, string> credentials, bool isPreviewOnly, DeploymentProviderDefinition definition, CancellationToken cancellationToken)
+        public async Task<List<ActionResult>> Execute(DeploymentTaskExecutionParams execParams)
         {
-            var managedCert = ManagedCertificate.GetManagedCertificate(subject);
+            var managedCert = ManagedCertificate.GetManagedCertificate(execParams.Subject);
 
             try
             {
                 var webhookConfig = new Shared.Utils.Webhook.WebhookConfig
                 {
-                    Url = settings.Parameters.FirstOrDefault(p => p.Key == "url")?.Value,
-                    Method = settings.Parameters.FirstOrDefault(p => p.Key == "method")?.Value,
-                    ContentType = settings.Parameters.FirstOrDefault(p => p.Key == "contenttype")?.Value,
-                    ContentBody = settings.Parameters.FirstOrDefault(p => p.Key == "contentbody")?.Value
+                    Url = execParams.Settings.Parameters.FirstOrDefault(p => p.Key == "url")?.Value,
+                    Method = execParams.Settings.Parameters.FirstOrDefault(p => p.Key == "method")?.Value,
+                    ContentType = execParams.Settings.Parameters.FirstOrDefault(p => p.Key == "contenttype")?.Value,
+                    ContentBody = execParams.Settings.Parameters.FirstOrDefault(p => p.Key == "contentbody")?.Value
                 };
 
-                if (!isPreviewOnly)
+                if (!execParams.IsPreviewOnly)
                 {
                     var webHookResult = await Certify.Shared.Utils.Webhook.SendRequest(webhookConfig, managedCert, managedCert.LastRenewalStatus != RequestState.Error);
 
                     var msg = $"Webhook invoked: Url: {webhookConfig.Url}, Success: {webHookResult.Success}, StatusCode: {webHookResult.StatusCode}";
 
-                    log.Information(msg);
+                    execParams.Log.Information(msg);
 
                     return new List<ActionResult> { new ActionResult(msg, true) };
                 }
                 else
                 {
-                    return await Validate(managedCert, settings, credentials, definition);
+                    return await Validate(execParams);
                 }
             }
             catch (Exception exp)
@@ -75,12 +75,12 @@ namespace Certify.Providers.DeploymentTasks.Core
             }
         }
 
-        public async Task<List<ActionResult>> Validate(object subject, DeploymentTaskConfig settings, Dictionary<string, string> credentials, DeploymentProviderDefinition definition)
+        public async Task<List<ActionResult>> Validate(DeploymentTaskExecutionParams execParams)
         {
             var results = new List<ActionResult>();
 
-            var url = settings.Parameters.FirstOrDefault(p => p.Key == "url")?.Value;
-            var method = settings.Parameters.FirstOrDefault(p => p.Key == "method")?.Value;
+            var url = execParams.Settings.Parameters.FirstOrDefault(p => p.Key == "url")?.Value;
+            var method = execParams.Settings.Parameters.FirstOrDefault(p => p.Key == "method")?.Value;
 
             if (url == null || !Uri.TryCreate(url, UriKind.Absolute, out var result))
             {
