@@ -197,7 +197,13 @@ namespace Certify.Management
 
             var username = credentials["username"];
             var pwd = credentials["password"];
+
             credentials.TryGetValue("domain", out var domain);
+
+            if (domain == null && !username.Contains(".\\") && !username.Contains("@"))
+            {
+                domain = ".";
+            }
 
             if (domain != null)
             {
