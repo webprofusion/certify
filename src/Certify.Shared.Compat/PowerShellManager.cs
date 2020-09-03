@@ -20,7 +20,8 @@ namespace Certify.Management
             Dictionary<string, object> parameters = null,
             string scriptContent = null,
             Dictionary<string, string> credentials = null,
-            string powershellExecutionPolicy = "Unrestricted"
+            string powershellExecutionPolicy = "Unrestricted",
+            bool autoConvertBoolean = true
             )
         {
 
@@ -80,8 +81,8 @@ namespace Certify.Management
 
                             return Impersonation.RunAsUser(windowsCredentials, _defaultLogonType, () =>
                           {
-                                // run as current user
-                                return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell);
+                              // run as current user
+                              return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell);
                           });
                         }
                         else
@@ -101,7 +102,7 @@ namespace Certify.Management
             }
         }
 
-        private static ActionResult InvokePowershell(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, string scriptContent, PowerShell shell)
+        private static ActionResult InvokePowershell(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, string scriptContent, PowerShell shell, bool autoConvertBoolean = true)
         {
             // ensure execution policy will allow the script to run, default to "Unrestricted", set in service config as "Default" to skip.
 
@@ -135,7 +136,21 @@ namespace Certify.Management
             {
                 foreach (var a in parameters)
                 {
-                    shell.AddParameter(a.Key, a.Value);
+                    var val = a.Value;
+                    if (autoConvertBoolean)
+                    {
+
+                        if (val != null && val?.ToString().ToLower() == "true")
+                        {
+                            val = true;
+                        }
+                        else if (val != null && val?.ToString().ToLower() == "false")
+                        {
+                            val = false;
+                        }
+
+                    }
+                    shell.AddParameter(a.Key, val);
                 }
             }
 
@@ -147,14 +162,14 @@ namespace Certify.Management
 
             // capture errors
             shell.Streams.Error.DataAdded += (sender, args) =>
-            {
-                var error = shell.Streams.Error[args.Index];
-                var src = error.InvocationInfo.MyCommand?.ToString() ?? error.InvocationInfo.InvocationName;
-                var msg = $"{src}: {error}\n{error.InvocationInfo.PositionMessage}";
-                output.AppendLine(msg);
+                {
+                    var error = shell.Streams.Error[args.Index];
+                    var src = error.InvocationInfo.MyCommand?.ToString() ?? error.InvocationInfo.InvocationName;
+                    var msg = $"{src}: {error}\n{error.InvocationInfo.PositionMessage}";
+                    output.AppendLine(msg);
 
-                errors.Add(msg);
-            };
+                    errors.Add(msg);
+                };
 
             // capture write-* methods (except write-host)
             shell.Streams.Warning.DataAdded += (sender, args) => output.AppendLine(shell.Streams.Warning[args.Index].Message);
@@ -164,14 +179,14 @@ namespace Certify.Management
             var outputData = new PSDataCollection<PSObject>();
 
             outputData.DataAdded += (sender, args) =>
-            {
+                    {
                 // capture all main output
                 var data = outputData[args.Index]?.BaseObject;
-                if (data != null)
-                {
-                    output.AppendLine(data.ToString());
-                }
-            };
+                        if (data != null)
+                        {
+                            output.AppendLine(data.ToString());
+                        }
+                    };
 
 
             try
