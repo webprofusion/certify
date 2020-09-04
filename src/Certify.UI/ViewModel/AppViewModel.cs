@@ -260,10 +260,17 @@ namespace Certify.UI.ViewModel
 
         internal async Task<ActionResult> AddContactRegistration(ContactRegistration reg)
         {
-            var result = await CertifyClient.AddAccount(reg);
+            try
+            {
+                var result = await CertifyClient.AddAccount(reg);
 
-            RaisePropertyChangedEvent(nameof(HasRegisteredContacts));
-            return result;
+                RaisePropertyChangedEvent(nameof(HasRegisteredContacts));
+                return result;
+            }
+            catch (Exception exp)
+            {
+                return new ActionResult("Contact Registration could not be completed. [" + exp.Message + "]", false);
+            }
         }
         internal async Task<ActionResult> RemoveAccount(string storageKey)
         {
