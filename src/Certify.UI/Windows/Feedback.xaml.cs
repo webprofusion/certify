@@ -1,9 +1,7 @@
-using Certify.Locales;
-using System;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
+﻿using System;
 using System.Windows;
+using System.Windows.Input;
+using Certify.Locales;
 
 namespace Certify.UI.Windows
 {
@@ -15,31 +13,35 @@ namespace Certify.UI.Windows
         public string FeedbackMessage { get; set; }
         public bool IsException { get; set; }
 
+        public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
+
         public Feedback(string feedbackMsg, bool isException)
         {
             InitializeComponent();
 
+            this.DataContext = MainViewModel;
+
+            this.Width *= MainViewModel.UIScaleFactor;
+            this.Height *= MainViewModel.UIScaleFactor;
+
             if (feedbackMsg != null)
             {
-                this.FeedbackMessage = feedbackMsg;
-                this.Comment.Text = this.FeedbackMessage;
+                FeedbackMessage = feedbackMsg;
+                Comment.Text = FeedbackMessage;
             }
-            this.IsException = isException;
+            IsException = isException;
 
-            if (this.IsException)
+            if (IsException)
             {
-                this.Prompt.Text = SR.Send_Feedback_Exception;
+                Prompt.Text = SR.Send_Feedback_Exception;
             }
         }
 
-        private void Cancel_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
+        private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
 
         private async void Submit_Click(object sender, RoutedEventArgs e)
         {
-            if (String.IsNullOrEmpty(Comment.Text))
+            if (string.IsNullOrEmpty(Comment.Text))
             {
                 return;
             }
@@ -47,46 +49,47 @@ namespace Certify.UI.Windows
             Submit.IsEnabled = false;
 
             //submit feedback if connection available
-            var API_BASE_URI = ConfigResources.APIBaseURI;
 
-            //AppDomain.CurrentDomain.SetupInformation.ConfigurationFile
+            var appVersion = Management.Util.GetAppVersion();
 
-            var client = new HttpClient();
-
-            var jsonRequest = Newtonsoft.Json.JsonConvert.SerializeObject(
-                new Models.Shared.FeedbackReport
-                {
-                    EmailAddress = EmailAddress.Text,
-                    Comment = Comment.Text,
-                    SupportingData = new
-                    {
-                        Framework = Environment.Version.ToString(),
-                        OS = Environment.OSVersion.ToString(),
-                        AppVersion = ConfigResources.AppName + " " + new Certify.Management.Util().GetAppVersion(),
-                        IsException = this.IsException
-                    }
-                });
-
-            var data = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
-            try
+            var feedbackReport = new Models.Shared.FeedbackReport
             {
-                var response = await client.PostAsync(API_BASE_URI + "submitfeedback", data);
-                if (response.IsSuccessStatusCode)
+                EmailAddress = EmailAddress.Text,
+                Comment = Comment.Text,
+                SupportingData = new
+                {
+                    OS = Environment.OSVersion.ToString(),
+                    AppVersion = ConfigResources.AppName + " " + appVersion,
+                    IsException = IsException
+                },
+                AppVersion = ConfigResources.AppName + " " + appVersion,
+                IsException = IsException
+            };
+
+            if (MainViewModel.PluginManager.DashboardClient != null)
+            {
+                Mouse.OverrideCursor = Cursors.Wait;
+                var submittedOK = await MainViewModel.PluginManager.DashboardClient.SubmitFeedbackAsync(feedbackReport);
+
+                Mouse.OverrideCursor = Cursors.Arrow;
+
+                if (submittedOK)
                 {
                     MessageBox.Show(SR.Send_Feedback_Success);
-
-                    this.Close();
+                    Close();
                     return;
                 }
+                else
+                {
+                    MessageBox.Show(SR.Send_Feedback_Error);
+                }
             }
-            catch (Exception exp)
+            else
             {
-                System.Diagnostics.Debug.WriteLine(exp.ToString());
+                //failed
+                MessageBox.Show(SR.Send_Feedback_Error);
             }
-
             Submit.IsEnabled = true;
-            //failed
-            MessageBox.Show(SR.Send_Feedback_Error);
         }
     }
 }

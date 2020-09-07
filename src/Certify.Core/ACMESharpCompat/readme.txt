@@ -1,1 +1,0 @@
-﻿The code here is adapted from ACMESharp.POSH and is provided for compatibility to remove the dependency on Powershell but perform the same vault/acme actions.

@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{FC739DD0-2073-40F0-923A-8A4875A79379}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Certify.Shared.Compat</RootNamespace>
+    <AssemblyName>Certify.Shared.Compat</AssemblyName>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.IdentityModel" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="PowerShellManager.cs" />
+    <Compile Include="ServiceConfigManager.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="readme.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Certify.Models\Certify.Models.csproj">
+      <Project>{BAAA9B8C-E44B-43F6-AC9C-B5666E69EE27}</Project>
+      <Name>Certify.Models</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Asmodat.Standard.SSH.NET">
+      <Version>1.0.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="AWSSDK.Route53">
+      <Version>3.5.0.8</Version>
+    </PackageReference>
+    <PackageReference Include="Azure.Identity">
+      <Version>1.2.2</Version>
+    </PackageReference>
+    <PackageReference Include="Azure.Security.KeyVault.Certificates">
+      <Version>4.1.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Azure.Management.Dns">
+      <Version>3.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.PowerShell.5.ReferenceAssemblies">
+      <Version>1.1.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Rest.ClientRuntime.Azure.Authentication">
+      <Version>2.4.1</Version>
+    </PackageReference>
+    <PackageReference Include="Portable.BouncyCastle">
+      <Version>1.8.6.7</Version>
+    </PackageReference>
+    <PackageReference Include="Serilog">
+      <Version>2.9.0</Version>
+    </PackageReference>
+    <PackageReference Include="SimpleImpersonation">
+      <Version>3.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.Diagnostics.DiagnosticSource">
+      <Version>4.7.1</Version>
+    </PackageReference>
+    <PackageReference Include="System.ServiceProcess.ServiceController">
+      <Version>4.7.0</Version>
+    </PackageReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

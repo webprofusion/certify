@@ -1,0 +1,57 @@
+﻿<UserControl
+    x:Class="Certify.UI.Controls.Settings.Experiments"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Certify.UI.Controls.Settings"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    Loaded="UserControl_Loaded"
+    mc:Ignorable="d">
+    <StackPanel>
+
+        <TextBlock Style="{StaticResource Instructions}">The following features are a work in progress and can optionally be enabled for testing. Close and re-open the app to see changes:</TextBlock>
+        <CheckBox
+            Margin="0,8"
+            Content="Certificate Authority Editor"
+            IsChecked="{Binding IsCAEditorEnabled}"
+            Tag="CA_EDITOR" />
+        <TextBlock Margin="28,0" Style="{StaticResource Instructions}">Add/Remove your own custom certificate authorities. Edit under Settings &gt; Certificate Authority tab</TextBlock>
+        <CheckBox
+            Margin="0,8"
+            Content="Custom PFX/Private Key Password"
+            IsChecked="{Binding IsPrivKeyPwdEnabled}"
+            Tag="PRIVKEY_PWD" />
+        <TextBlock
+            Margin="28,0"
+            Style="{StaticResource Instructions}"
+            TextWrapping="Wrap">
+            Use a Stored Credential to specify your own custom password for the PFX generated for a managed certificate. See the Advanced tab under Certificate for your managed certificate.
+        </TextBlock>
+        <CheckBox
+            Margin="0,8"
+            Content="Import/Export Migration Tool"
+            IsChecked="{Binding IsImportExportEnabled}"
+            Tag="IMPORT_EXPORT" />
+        <TextBlock
+            Margin="28,0"
+            Style="{StaticResource Instructions}"
+            TextWrapping="Wrap">
+            Perform Import or Export of application settings including managed certificates, related files and certificates. Accessible via Settings.
+        </TextBlock>
+        <CheckBox
+            Margin="0,8"
+            Content="External Certificate Managers"
+            IsChecked="{Binding IsExternalCertManagersEnabled}"
+            Tag="EXTERNAL_CERT_MANAGERS" />
+
+        <TextBlock
+            Margin="28,0"
+            Style="{StaticResource Instructions}"
+            TextWrapping="Wrap">
+            Display info for certificates managed by supported external certificate managers, if present.
+        </TextBlock>
+
+    </StackPanel>
+</UserControl>

@@ -1,11 +1,10 @@
-﻿using Certify.Models;
-using System;
+﻿using System;
 using System.Globalization;
-using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using Certify.Models;
 
 namespace Certify.UI.Controls
 {
@@ -14,27 +13,21 @@ namespace Certify.UI.Controls
     /// </summary>
     public partial class ProgressMonitor : UserControl
     {
-        protected Certify.UI.ViewModel.AppModel MainViewModel
-        {
-            get
-            {
-                return UI.ViewModel.AppModel.AppViewModel;
-            }
-        }
+        protected Certify.UI.ViewModel.AppViewModel MainViewModel => UI.ViewModel.AppViewModel.Current;
 
         public ProgressMonitor()
         {
             InitializeComponent();
-            this.DataContext = MainViewModel;
+            DataContext = MainViewModel;
         }
 
-        private void ManagedSite_ViewLog(object sender, MouseButtonEventArgs e)
+        private void ManagedCertificate_ViewLog(object sender, MouseButtonEventArgs e)
         {
             // show log for the selected managed site
             try
             {
-                var itemId = ((RequestProgressState)((StackPanel)sender).DataContext).ManagedItem.Id;
-                var logPath = Models.ManagedSiteLog.GetLogPath(itemId);
+                var itemId = ((RequestProgressState)((StackPanel)sender).DataContext).ManagedCertificate.Id;
+                var logPath = Models.ManagedCertificateLog.GetLogPath(itemId);
                 if (System.IO.File.Exists(logPath))
                 {
                     //open file
@@ -45,25 +38,5 @@ namespace Certify.UI.Controls
         }
     }
 
-    internal class StateToColorConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (value.ToString() == RequestState.Error.ToString())
-            {
-                return new SolidColorBrush(System.Windows.Media.Colors.Red);
-            }
-            if (value.ToString() == RequestState.Success.ToString())
-            {
-                return new SolidColorBrush(System.Windows.Media.Colors.Green);
-            }
 
-            return new SolidColorBrush(System.Windows.Media.Colors.DarkGray);
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return null;
-        }
-    }
 }

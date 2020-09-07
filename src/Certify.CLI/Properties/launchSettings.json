@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Certify.CLI": {
+      "commandName": "Project",
+      "commandLineArgs": "diag"
+    }
+  }
+}

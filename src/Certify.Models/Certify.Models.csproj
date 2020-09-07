@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Certify</RootNamespace>
+    <Platforms>AnyCPU;x64</Platforms>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Description>Certify SSL Manager API Models</Description>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Fody" Version="6.2.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="PropertyChanged.Fody" Version="3.2.9" />
+  </ItemGroup>
+</Project>

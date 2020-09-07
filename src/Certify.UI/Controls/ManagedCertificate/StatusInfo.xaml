@@ -1,0 +1,258 @@
+﻿<UserControl
+    x:Class="Certify.UI.Controls.ManagedCertificate.StatusInfo"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+    xmlns:certifyui="clr-namespace:Certify.UI"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fa="http://schemas.fontawesome.io/icons/"
+    xmlns:local="clr-namespace:Certify.UI.Controls.ManagedCertificate"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:utils="clr-namespace:Certify.UI.Utils"
+    VerticalAlignment="Top"
+    d:DataContext="{d:DesignInstance Type=certifyui:ManagedCertificateDesignViewModel,
+                                     IsDesignTimeCreatable=True}"
+    d:DesignHeight="432"
+    d:DesignWidth="631.2"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+        <utils:NullableDateFormatter x:Key="NullDateFormatter" />
+        <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
+        <utils:ManagedCertificateHealthVisibilityConverter x:Key="HealthVisibleConverter" />
+        <utils:OptionalBooleanToVisibilityConverter
+            x:Key="InvBoolVisConverter"
+            False="Visible"
+            True="Collapsed" />
+        <utils:EnumConverter x:Key="EnumConverter" />
+        <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
+        <utils:NullVisibilityConverter
+            x:Key="NullVisibleConverter"
+            NotNull="Collapsed"
+            Null="Visible" />
+        <utils:ExpiryDateColourConverter x:Key="ExpiryDateColourConverter" />
+    </UserControl.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,8,8">
+
+            <StackPanel Margin="0,0,0,16" Visibility="{Binding SelectedItem.SourceId, Converter={StaticResource NullCollapsedConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource Subheading}" Text="Managed by " />
+                    <TextBlock
+                        Foreground="{StaticResource WarningColorBrush}"
+                        Style="{StaticResource Subheading}"
+                        Text="{Binding Path=SelectedItem.SourceName}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource Instructions}" Text="This certificate is externally managed by another certificate management tool. For more information see the documentation for that tool. " Width="604"  />
+                </StackPanel>
+            </StackPanel>
+
+
+            <StackPanel x:Name="RenewalFailed" Visibility="Collapsed">
+
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome
+                        Height="32"
+                        Foreground="{StaticResource MahApps.Brushes.ValidationSummary1}"
+                        Icon="ExclamationTriangle" />
+
+                    <TextBlock
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        Foreground="{StaticResource MahApps.Brushes.ValidationSummary1}"
+                        Style="{StaticResource Subheading}"
+                        Text="Renewal Failure" />
+                </StackPanel>
+                <!--  Renewal warning messages  -->
+                <StackPanel MinHeight="80" Margin="0,16">
+                    <StackPanel Orientation="Horizontal">
+                        <Label
+                            Width="160"
+                            Content="Renewal Failures:"
+                            FontWeight="Bold" />
+                        <Label Content="{Binding SelectedItem.RenewalFailureCount}" FontWeight="Bold" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label
+                            Width="160"
+                            Content="Last Renewal Attempt:"
+                            FontWeight="Bold" />
+                        <Label Content="{Binding SelectedItem.DateLastRenewalAttempt, Converter={StaticResource NullDateFormatter}}" FontWeight="Bold" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label
+                            Width="160"
+                            Content="Days Remaining:"
+                            FontWeight="Bold" />
+                        <Label
+                            Content="{Binding DaysRemaining}"
+                            FontWeight="Bold"
+                            Foreground="{Binding Path=SelectedItem.DateExpiry, Converter={StaticResource ExpiryDateColourConverter}}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label
+                            Width="160"
+                            Content="Next Renewal Due:"
+                            FontWeight="Bold" />
+                        <Label
+                            Content="{Binding Path=DateNextRenewalDue, Converter={StaticResource NullDateFormatter}}"
+                            ContentStringFormat="d"
+                            FontWeight="Bold" />
+                    </StackPanel>
+                    <TextBlock
+                        Margin="4,0,16,0"
+                        Style="{StaticResource Instructions}"
+                        Text="Renewal failures can be caused by temporary API timeouts, rate limits, configuration problems or settings which are no longer valid. Please review the renewal status error and test your configuration." />
+                    <TextBlock
+                        Margin="4,4,0,0"
+                        FontWeight="Bold"
+                        Style="{StaticResource Instructions}"
+                        Text="If you do not require this certificate anymore you can delete it from the app or uncheck 'Enable Auto Renewal' in General Options to prevent further renewal error messages." />
+                </StackPanel>
+                <Border
+                    Margin="0,16,8,8"
+                    Background="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
+                    DockPanel.Dock="Top">
+                    <TextBlock
+                        Margin="8,8,8,8"
+                        FontStyle="Italic"
+                        Foreground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}"
+                        Text="{Binding SelectedItem.RenewalFailureMessage}"
+                        TextWrapping="Wrap" />
+                </Border>
+            </StackPanel>
+            <StackPanel x:Name="RenewalSuccess" Visibility="Collapsed">
+
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome
+                        Height="32"
+                        Foreground="{StaticResource MahApps.Brushes.Accent}"
+                        Icon="CheckCircle" />
+
+                    <TextBlock
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        Foreground="{StaticResource MahApps.Brushes.AccentBase}"
+                        Style="{StaticResource Subheading}">
+                        Certificate Active
+                    </TextBlock>
+                </StackPanel>
+                <!--  Renewal success messages  -->
+                <StackPanel MinHeight="80" Margin="0,16">
+                    <StackPanel Orientation="Horizontal">
+                        <Label
+                            Width="160"
+                            Content="Auto Renewal Enabled:"
+                            FontWeight="Bold" />
+                        <Label
+                            Content="Yes"
+                            FontWeight="Bold"
+                            Visibility="{Binding SelectedItem.IncludeInAutoRenew, Converter={StaticResource BoolToVisConverter}}" />
+                        <Label
+                            Content="No"
+                            FontWeight="Bold"
+                            Visibility="{Binding SelectedItem.IncludeInAutoRenew, Converter={StaticResource InvBoolVisConverter}}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Width="160" Content="Last Renewal:" />
+                        <Label Content="{Binding SelectedItem.DateRenewed, Converter={StaticResource NullDateFormatter}}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Width="160" Content="Expiry:" />
+                        <Label
+                            Content="{Binding Path=SelectedItem.DateExpiry, Converter={StaticResource NullDateFormatter}}"
+                            FontWeight="Bold"
+                            Foreground="{Binding Path=SelectedItem.DateExpiry, Converter={StaticResource ExpiryDateColourConverter}}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Width="160" Content="Days Remaining:" />
+                        <Label Content="{Binding DaysRemaining}" Foreground="{Binding Path=SelectedItem.DateExpiry, Converter={StaticResource ExpiryDateColourConverter}}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Width="160" Content="Next Planned Renewal:" />
+                        <Label Content="{Binding Path=DateNextRenewalDue, Converter={StaticResource NullDateFormatter}}" ContentStringFormat="d" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel x:Name="RenewalPaused" Visibility="Collapsed">
+
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome
+                        Height="32"
+                        Foreground="{StaticResource MahApps.Brushes.ValidationSummary1}"
+                        Icon="PauseCircle" />
+
+                    <TextBlock
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        Foreground="{StaticResource MahApps.Brushes.ValidationSummary1}"
+                        Style="{StaticResource Subheading}"
+                        Text="Waiting for User Action" />
+                </StackPanel>
+                <!--  Renewal warning messages  -->
+                <StackPanel Margin="0,16">
+
+                    <TextBlock
+                        Margin="0,0,0,0"
+                        Style="{StaticResource Instructions}"
+                        Text="Your action is required to complete this certificate request. Once completed, select 'Request Certificate' to resume." />
+                </StackPanel>
+                <Border
+                    Margin="0,0,0,0"
+                    Background="{DynamicResource {x:Static SystemColors.ControlBrush}}"
+                    BorderThickness="1">
+
+                    <TextBox
+                        Margin="0,8,0,8"
+                        Padding="8,8,8,8"
+                        Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseHigh}"
+                        IsReadOnly="True"
+                        Text="{Binding SelectedItem.RenewalFailureMessage}"
+                        TextWrapping="WrapWithOverflow" />
+                </Border>
+            </StackPanel>
+
+
+            <StackPanel Background="{DynamicResource WarningColorBrush}">
+                <StackPanel.Style>
+                    <Style>
+                        <Setter Property="StackPanel.Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedItem.CertificateRevoked}" Value="True">
+                                <Setter Property="StackPanel.Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <Label Margin="8" Content="{x:Static Resources:SR.ManagedCertificateSettings_CertificateRevokeWarning}" />
+            </StackPanel>
+
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Button
+                        x:Name="OpenLogFile"
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Left"
+                        Click="OpenLogFile_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:ImageAwesome
+                                Height="16"
+                                Margin="0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Foreground="#FF6BB039"
+                                Icon="Database" />
+                            <TextBlock
+                                Margin="8,0,0,0"
+                                HorizontalAlignment="Center"
+                                Text="{x:Static Resources:SR.ManagedCertificateSettings_OpenLogFile}" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

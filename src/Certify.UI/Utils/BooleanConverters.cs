@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Data;
 
 namespace Certify.UI.Utils
@@ -21,15 +17,9 @@ namespace Certify.UI.Utils
         public T True { get; set; }
         public T False { get; set; }
 
-        public virtual object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return value is bool && ((bool)value) ? True : False;
-        }
+        public virtual object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value is bool && ((bool)value) ? True : False;
 
-        public virtual object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return value is T && EqualityComparer<T>.Default.Equals((T)value, True);
-        }
+        public virtual object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => value is T && EqualityComparer<T>.Default.Equals((T)value, True);
     }
 
     public class InverseBooleanConverter : IValueConverter
@@ -40,16 +30,15 @@ namespace Certify.UI.Utils
             System.Globalization.CultureInfo culture)
         {
             if (!(value is bool))
+            {
                 throw new InvalidOperationException("The target must be a boolean");
+            }
 
             return !(bool)value;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter,
-            System.Globalization.CultureInfo culture)
-        {
-            return this.Convert(value, targetType, parameter, culture);
-        }
+            System.Globalization.CultureInfo culture) => Convert(value, targetType, parameter, culture);
 
         #endregion IValueConverter Members
     }
@@ -69,14 +58,72 @@ namespace Certify.UI.Utils
         public Visibility Null { get; set; } = Visibility.Collapsed;
         public Visibility NotNull { get; set; } = Visibility.Visible;
 
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (value == null || string.IsNullOrEmpty(value?.ToString())) ? Null : NotNull;
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+    }
+
+
+    /// <summary>
+    /// If given feature (string) is enabled return the required Visibility
+    /// </summary>
+    public class FeatureVisibilityConverter : IValueConverter
+    {
+        public Visibility WhenEnabled { get; set; } = Visibility.Visible;
+        public Visibility WhenNotEnabled { get; set; } = Visibility.Collapsed;
+
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return value == null ? Null : NotNull;
+            if (parameter != null)
+            {
+                var featureFlag = parameter.ToString();
+                if (UI.ViewModel.AppViewModel.Current.IsFeatureEnabled(featureFlag))
+                {
+                    return WhenEnabled;
+                }
+                else
+                {
+                    return WhenNotEnabled;
+                }
+            }
+            else
+            {
+                return WhenNotEnabled;
+            }
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+    }
+
+
+    /// <summary>
+    /// If given feature (string) is enabled return true
+    /// </summary>
+    public class FeatureBooleanConverter : IValueConverter
+    {
+        public bool WhenEnabled { get; set; } = true;
+        public bool WhenNotEnabled { get; set; } = false;
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            throw new NotImplementedException();
+            if (parameter != null)
+            {
+               var featureFlag = parameter.ToString();
+                if (UI.ViewModel.AppViewModel.Current.IsFeatureEnabled(featureFlag))
+                {
+                    return WhenEnabled;
+                }
+                else
+                {
+                    return WhenNotEnabled;
+                }
+            }
+            else
+            {
+                return WhenNotEnabled;
+            }
         }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 }

@@ -1,98 +1,63 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{8BCAA93D-18AA-4F62-BCB4-C883CC65C049}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Certify.Locales</RootNamespace>
-    <AssemblyName>Certify.Locales</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Platforms>x64</Platforms>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Description>Certify SSL Manager UI Resources</Description>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet>..\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Presentation" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Update="SR.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>SR.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConfigResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ConfigResources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="CoreSR.Designer.cs">
-      <DependentUpon>CoreSR.resx</DependentUpon>
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-    </Compile>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SR.Designer.cs">
-      <DependentUpon>SR.resx</DependentUpon>
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-    </Compile>
-    <Compile Include="Utils\SRDescription.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="CoreSR.es-ES.resx">
-      <DependentUpon>CoreSR.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CoreSR.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>CoreSR.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CoreSR.zh-Hans.resx">
-      <DependentUpon>CoreSR.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources.es-ES.resx">
+    <EmbeddedResource Update="ConfigResources.es-ES.resx">
       <DependentUpon>ConfigResources.resx</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ConfigResources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <SubType>Designer</SubType>
-      <LastGenOutput>ConfigResources.Designer.cs</LastGenOutput>
+    <EmbeddedResource Update="ConfigResources.zh-Hans.resx">
+      <DependentUpon>ConfigResources.resx</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SR.es-ES.resx">
+    <EmbeddedResource Update="ConfigResources.nb-NO.resx">
+      <DependentUpon>ConfigResources.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="CoreSR.es-ES.resx">
+      <DependentUpon>CoreSR.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="CoreSR.nb-NO.resx">
+      <DependentUpon>CoreSR.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="CoreSR.zh-Hans.resx">
+      <DependentUpon>CoreSR.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="SR.es-ES.resx">
       <DependentUpon>SR.resx</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SR.resx">
+    <EmbeddedResource Update="SR.nb-NO.resx">
+      <DependentUpon>SR.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="SR.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>SR.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="SR.zh-Hans.resx">
+    <EmbeddedResource Update="SR.zh-Hans.resx">
       <DependentUpon>SR.resx</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="Resources\icon.ico" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

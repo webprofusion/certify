@@ -1,0 +1,47 @@
+﻿This app makes use of the following Open Source projects. 
+
+Please refer to each project website for full license details:
+
+Certes: 
+	MIT License
+	Copyright (c) 2018 Certes Project 
+	https://github.com/fszlin/certes 
+Fody: 
+	MIT License
+	Copyright (c) Simon Cropp and contributors
+	https://github.com/Fody/Fody 
+MahApps.Metro: 
+	MIT License
+	Copyright (c) 2016 MahApps 
+	http://mahapps.com/
+ACMESharp:
+	MPL 2.0
+	https://pkisharp.github.io/ACMESharp-docs/
+Newtonsoft Json.Net: 
+	MIT License
+	Copyright (c) 2007 James Newton-King 
+	https://www.newtonsoft.com/json 
+Fontawesome.WPF: 
+	MIT License
+	Copyright (c) 2014-2016 charri
+	https://github.com/charri/Font-Awesome-WPF
+ARSoft.Tools.Net: 
+	Apache License 2.0
+	Copyright (c) 2010-2017 Alexander Reinert
+	https://github.com/alexreinert/ARSoft.Tools.Net
+LightInject: 
+	MIT License
+	Copyright (c) 2017 Bernhard Richter
+	https://github.com/seesharper/LightInject
+BouncyCastle: 
+	MIT License
+	Copyright (c) 2000 - 2017 The Legion of the Bouncy Castle Inc.
+	http://www.bouncycastle.org
+SignalR: 	
+	Apache License 2.0
+	Copyright (c) .NET Foundation.
+	http://signalr.net/ 
+Topshelf: 
+	Apache License 2.0
+	Copyright 2007-2016 Travis Smith, Chris Patterson, Dru Sellers, Henrik Feldt et al.
+	http://topshelf-project.com/ 

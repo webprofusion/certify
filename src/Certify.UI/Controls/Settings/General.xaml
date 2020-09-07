@@ -1,0 +1,245 @@
+<UserControl
+    x:Class="Certify.UI.Controls.Settings.General"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:clr="clr-namespace:System;assembly=mscorlib"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fa="http://schemas.fontawesome.io/icons/"
+    xmlns:local="clr-namespace:Certify.UI.Controls.Settings"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+    d:DesignHeight="420.042"
+    d:DesignWidth="885.537"
+    Loaded="UserControl_Loaded"
+    mc:Ignorable="d">
+
+    <UserControl.Resources />
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <DockPanel Margin="0,8,0,8">
+            <TabControl
+                x:Name="GeneralSettingsTab"
+                Height="auto"
+                Margin="0,0,0,0"
+                HorizontalContentAlignment="Left"
+                VerticalContentAlignment="Stretch"
+                Controls:TabControlHelper.UnderlineBrush="{DynamicResource MahApps.Brushes.Accent4}"
+                Controls:TabControlHelper.Underlined="TabPanel"
+                DockPanel.Dock="Top"
+                TabStripPlacement="Left">
+                <TabItem
+                    Height="32"
+                    MinWidth="140"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
+                    Header="Renewal Settings"
+                    IsSelected="true">
+                    <StackPanel
+                        Margin="16,0,0,0"
+                        DockPanel.Dock="Top"
+                        Orientation="Vertical">
+                        <TextBlock Style="{StaticResource Subheading}">Renewal Settings</TextBlock>
+
+
+                        <StackPanel Margin="0,8" Orientation="Horizontal">
+                            <Controls:NumericUpDown
+                                x:Name="RenewalIntervalDays"
+                                Width="100"
+                                Interval="1"
+                                Maximum="60"
+                                Minimum="1"
+                                Value="{Binding Prefs.RenewalIntervalDays}" />
+                            <Label
+                                Width="340"
+                                Margin="4,0,0,0"
+                                Content="{x:Static res:SR.Settings_AutoRenewalInterval}" />
+                        </StackPanel>
+                        <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+                            <Controls:NumericUpDown
+                                x:Name="RenewalMaxRequests"
+                                Width="100"
+                                Interval="1"
+                                Maximum="100"
+                                Minimum="0"
+                                Value="{Binding Prefs.MaxRenewalRequests}" />
+                            <Label
+                                Width="340"
+                                Margin="4,0,0,0"
+                                Content="{x:Static res:SR.Settings_AutoRenewalRequestLimit}" />
+                        </StackPanel>
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
+
+                                <CheckBox
+                                    x:Name="EnableProxyAPICheckbox"
+                                    Margin="0,4,0,0"
+                                    Content="{x:Static res:SR.Settings_EnableProxyApiForDomainConfig}"
+                                    IsChecked="{Binding Prefs.EnableValidationProxyAPI}" />
+
+                                <CheckBox
+                                    x:Name="IgnoreStoppedSites"
+                                    Margin="0,4,0,0"
+                                    Content="{x:Static res:SR.Settings_IgnoreStoppedSites}"
+                                    IsChecked="{Binding Prefs.IgnoreStoppedSites}" />
+
+                                <CheckBox
+                                    x:Name="EnableDNSValidationChecks"
+                                    Margin="0,4,0,0"
+                                    Content="{x:Static res:SR.Settings_EnableDnsValidation}"
+                                    IsChecked="{Binding Prefs.EnableDNSValidationChecks}" />
+
+                                <CheckBox
+                                    x:Name="EnableHttpChallengeServer"
+                                    Margin="0,4,0,0"
+                                    Content="{x:Static res:SR.Settings_EnableHttpChallengeServer}"
+                                    IsChecked="{Binding Prefs.EnableHttpChallengeServer}" />
+
+                                <CheckBox
+                                    x:Name="EnableStatusReporting"
+                                    Margin="0,4,0,0"
+                                    Content="{x:Static res:SR.Settings_EnableStatusReporting}"
+                                    IsChecked="{Binding Prefs.EnableStatusReporting}" />
+
+                            </StackPanel>
+
+                            <!--  Cert Cleanup Options  -->
+                            <StackPanel
+                                Margin="32,0,0,0"
+                                DockPanel.Dock="Right"
+                                Orientation="Vertical">
+                                <Label Content="Certificate Store Cleanup:" />
+                                <StackPanel Margin="16,0,0,0">
+                                    <RadioButton
+                                        x:Name="CertCleanup_None"
+                                        Margin="8,0,0,4"
+                                        Checked="SettingsUpdated"
+                                        Content="None"
+                                        GroupName="CertCleanupMode"
+                                        Unchecked="SettingsUpdated" />
+                                    <RadioButton
+                                        x:Name="CertCleanup_AfterExpiry"
+                                        Margin="8,0,0,4"
+                                        Checked="SettingsUpdated"
+                                        Content="After Expiry"
+                                        GroupName="CertCleanupMode"
+                                        Unchecked="SettingsUpdated" />
+                                    <RadioButton
+                                        x:Name="CertCleanup_AfterRenewal"
+                                        Margin="8,0,0,4"
+                                        Checked="SettingsUpdated"
+                                        Content="After Renewal"
+                                        GroupName="CertCleanupMode"
+                                        Unchecked="SettingsUpdated" />
+
+                                    <RadioButton
+                                        x:Name="CertCleanup_FullCleanup"
+                                        Margin="8,0,0,4"
+                                        Checked="SettingsUpdated"
+                                        Content="Daily Full Cleanup"
+                                        GroupName="CertCleanupMode"
+                                        Unchecked="SettingsUpdated" />
+
+                                </StackPanel>
+                            </StackPanel>
+                        </DockPanel>
+
+                    </StackPanel>
+                </TabItem>
+
+                <TabItem
+                    Height="32"
+                    MinWidth="140"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
+                    Header="Certificate Authorities">
+                    <StackPanel Margin="16,0,0,0">
+                        <TextBlock Style="{StaticResource Subheading}">Certificate Authority Settings</TextBlock>
+                        <local:CertificateAuthorities />
+                    </StackPanel>
+                </TabItem>
+
+                <TabItem
+                    Height="32"
+                    MinWidth="140"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
+                    Header="Stored Credentials">
+                    <StackPanel Margin="16,0,0,0">
+                        <TextBlock Style="{StaticResource Subheading}">Stored Credentials</TextBlock>
+                        <local:Credentials />
+                    </StackPanel>
+
+                </TabItem>
+
+                <TabItem
+                    Height="32"
+                    MinWidth="140"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
+                    Header="Import &amp; Export"
+                    IsSelected="false"
+                    Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='IMPORT_EXPORT', Path=Prefs}">
+                    <StackPanel
+                        Margin="16,0"
+                        DockPanel.Dock="Top"
+                        Orientation="Vertical">
+                        <TextBlock Style="{StaticResource Subheading}">Import &amp; Export</TextBlock>
+                        <StackPanel Margin="0,8" Orientation="Vertical">
+                            <TextBlock Style="{StaticResource Instructions}">You can move managed certificates and their related settings, credentials and certificates to or from another instance:</TextBlock>
+                            <Button
+                                x:Name="ImportExport"
+                                Width="120"
+                                HorizontalAlignment="Left"
+                                Click="ImportExport_Click">
+                                Import or Export..
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </TabItem>
+
+                <TabItem
+                    Height="32"
+                    MinWidth="140"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
+                    Header="UI Settings"
+                    IsSelected="true">
+                    <StackPanel Margin="16,0" DockPanel.Dock="Top">
+                        <TextBlock Style="{StaticResource Subheading}">User Interface Settings</TextBlock>
+                        <StackPanel Margin="0,8">
+                            <CheckBox
+                                x:Name="EnableTelematicsCheckbox"
+                                Content="{x:Static res:SR.Settings_EnableTelemetry}"
+                                IsChecked="{Binding Prefs.EnableAppTelematics}" />
+
+                        </StackPanel>
+                        <StackPanel Margin="0,8" Orientation="Horizontal">
+                            <Label Width="100" Content="UI Theme" />
+                            <ComboBox
+                                x:Name="ThemeSelector"
+                                DisplayMemberPath="Value"
+                                ItemsSource="{Binding MainViewModel.UIThemes}"
+                                SelectedValuePath="Key"
+                                SelectionChanged="ThemeSelector_Selected" />
+
+                        </StackPanel>
+
+                        <StackPanel Margin="0,4" Orientation="Horizontal">
+                            <Label Width="100" Content="Text/UI Size" />
+                            <Controls:NumericUpDown
+                                x:Name="UIScaling"
+                                Width="100"
+                                Interval="0.1"
+                                Maximum="2"
+                                Minimum="1"
+                                NumericInputMode="Decimal"
+                                Value="{Binding MainViewModel.UIScaleFactor}" />
+
+                        </StackPanel>
+
+                        <TextBlock Style="{StaticResource SubheadingWithMargin}">Experimental Features</TextBlock>
+                        <local:Experiments />
+                    </StackPanel>
+                </TabItem>
+
+            </TabControl>
+
+        </DockPanel>
+    </ScrollViewer>
+
+</UserControl>

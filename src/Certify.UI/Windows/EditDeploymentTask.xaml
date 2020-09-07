@@ -1,0 +1,52 @@
+﻿<Controls:MetroWindow
+    x:Class="Certify.UI.Windows.EditDeploymentTask"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:ManagedCertificate="clr-namespace:Certify.UI.Controls.ManagedCertificate"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Certify.UI.Windows"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="Edit Deployment Task"
+    Width="480"
+    Height="460"
+    BorderThickness="1"
+    GlowBrush="{StaticResource MahApps.Brushes.Accent}"
+    ResizeMode="CanResize"
+    TitleCharacterCasing="Normal"
+    WindowStartupLocation="CenterOwner"
+    WindowTransitionsEnabled="False"
+    mc:Ignorable="d">
+    <Controls:MetroWindow.LayoutTransform>
+        <ScaleTransform x:Name="ApplicationScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding UIScaleFactor}" ScaleY="{Binding UIScaleFactor}" />
+    </Controls:MetroWindow.LayoutTransform>
+    <DockPanel LastChildFill="True">
+
+
+        <DockPanel Margin="0,0,24,16" DockPanel.Dock="Bottom">
+            <Button
+                x:Name="Cancel"
+                Width="75"
+                Margin="16,0,0,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Click="Cancel_Click"
+                Content="Cancel"
+                DockPanel.Dock="Right" />
+            <Button
+                x:Name="Save"
+                Width="77"
+                Margin="16,0,0,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Click="Save_Click"
+                Content="OK"
+                DockPanel.Dock="Right" />
+        </DockPanel>
+        <ManagedCertificate:DeploymentTask
+            x:Name="DeploymentTaskEditor"
+            Margin="8,0,0,0"
+            VerticalAlignment="Top"
+            DockPanel.Dock="Top" />
+    </DockPanel>
+</Controls:MetroWindow>

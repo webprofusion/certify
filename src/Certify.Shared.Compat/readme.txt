@@ -1,0 +1,1 @@
+﻿Package references from other .net standard components, referenced as .net framework 4.6.2

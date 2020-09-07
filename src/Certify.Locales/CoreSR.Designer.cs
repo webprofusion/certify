@@ -227,16 +227,25 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Previous renewals failed: {0}. Renewal will be attempted within 48hrs..
+        /// </summary>
+        public static string CertifyManager_RenewalOnHold {
+            get {
+                return ResourceManager.GetString("CertifyManager_RenewalOnHold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Requesting Validation from Let&apos;s Encrypt: {0}.
         /// </summary>
-        public static string CertifyManager_ReqestValidationFromLetsEncrypt {
+        public static string CertifyManager_ReqestValidationFromCertificateAuthority {
             get {
                 return ResourceManager.GetString("CertifyManager_ReqestValidationFromLetsEncrypt", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Requesting Certificate via Lets Encrypt.
+        ///   Looks up a localized string similar to Requesting Certificate via Certificate Authority.
         /// </summary>
         public static string CertifyManager_RequestCertificate {
             get {
@@ -292,18 +301,18 @@ namespace Certify.Locales {
         /// <summary>
         ///   Looks up a localized string similar to Local IIS, SSL Certificate via Let&apos;s Encrypt.
         /// </summary>
-        public static string ManagedItemType_LocalIIS {
+        public static string ManagedCertificateType_LocalIIS {
             get {
-                return ResourceManager.GetString("ManagedItemType_LocalIIS", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateType_LocalIIS", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Manual SSL Certificate via Let&apos;s Encrypt.
         /// </summary>
-        public static string ManagedItemType_Manual {
+        public static string ManagedCertificateType_Manual {
             get {
-                return ResourceManager.GetString("ManagedItemType_Manual", resourceCulture);
+                return ResourceManager.GetString("ManagedCertificateType_Manual", resourceCulture);
             }
         }
     }

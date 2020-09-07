@@ -1,0 +1,77 @@
+<Controls:MetroWindow
+    x:Class="Certify.UI.Windows.UpdateAvailable"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:Controls1="clr-namespace:Certify.UI.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fa="http://schemas.fontawesome.io/icons/"
+    xmlns:local="clr-namespace:Certify.UI.Windows"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+    Title="Update Available"
+    Width="739.386"
+    Height="423"
+    MinWidth="300"
+    MinHeight="300"
+    BorderThickness="1"
+    GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
+    IsVisibleChanged="UserControl_IsVisibleChanged"
+    ShowMaxRestoreButton="False"
+    ShowMinButton="False"
+    TitleCharacterCasing="Normal"
+    WindowStartupLocation="CenterOwner"
+    WindowTransitionsEnabled="False"
+    mc:Ignorable="d">
+    <Controls:MetroWindow.LayoutTransform>
+        <ScaleTransform x:Name="ApplicationScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding UIScaleFactor}" ScaleY="{Binding UIScaleFactor}" />
+    </Controls:MetroWindow.LayoutTransform>
+    <DockPanel Margin="16,16,16,16" LastChildFill="False">
+        <TextBlock
+            x:Name="UpdateMessage"
+            DockPanel.Dock="Top"
+            Style="{StaticResource SubheadingWithMargin}">
+            New Update Available
+        </TextBlock>
+
+        <WebBrowser
+            x:Name="MarkdownView"
+            Height="284"
+            DockPanel.Dock="Top" />
+
+
+        <DockPanel
+            Height="32"
+            DockPanel.Dock="Bottom"
+            LastChildFill="False">
+            <Button
+                x:Name="Proceed"
+                Click="Proceed_Click"
+                DockPanel.Dock="Right"
+                ToolTip="Download now. You will be prompted to confirm installation after the download completes.">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                        Icon="Download" />
+                    <TextBlock Margin="8,0,0,0">Download</TextBlock>
+                </StackPanel>
+            </Button>
+            <Button
+                x:Name="Cancel"
+                Click="Cancel_Click"
+                DockPanel.Dock="Left"
+                ToolTip="Cancel">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                        Icon="ArrowCircleLeft" />
+                    <TextBlock Margin="8,0,0,0">Later</TextBlock>
+                </StackPanel>
+            </Button>
+        </DockPanel>
+    </DockPanel>
+</Controls:MetroWindow>

@@ -1,10 +1,34 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
+using System.Security.Principal;
 using System.Web.Http;
+using System.Web.Http.Controllers;
 
 namespace Certify.Service.Controllers
 {
+    public class CustomAuthCheckAttribute : AuthorizeAttribute
+    {
+        protected override bool IsAuthorized(HttpActionContext actionContext)
+        {
+#if DEBUG_NO_AUTH
+    return true;
+#endif
+            var user = actionContext.RequestContext.Principal as System.Security.Principal.WindowsPrincipal;
+            if (user.IsInRole(WindowsBuiltInRole.Administrator))
+            {
+                return true;
+            }
+
+            if (user.IsInRole(WindowsBuiltInRole.PowerUser))
+            {
+                return true;
+            }
+
+            return false;
+        }
+    }
+
+    [CustomAuthCheck]
     public class ControllerBase : ApiController
     {
         public void DebugLog(string msg = null,
@@ -12,7 +36,7 @@ namespace Certify.Service.Controllers
               [System.Runtime.CompilerServices.CallerFilePath] string sourceFilePath = "")
         {
 #if DEBUG
-            if (!String.IsNullOrEmpty(sourceFilePath))
+            if (!string.IsNullOrEmpty(sourceFilePath))
             {
                 sourceFilePath = System.IO.Path.GetFileName(sourceFilePath);
             }

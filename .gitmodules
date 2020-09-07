@@ -1,4 +1,0 @@
-[submodule "src/lib/ACMESharp"]
-	path = src/lib/ACMESharp
-	url = https://github.com/ebekker/ACMESharp.git
-	branch = master

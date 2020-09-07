@@ -1,0 +1,329 @@
+<UserControl
+    x:Class="Certify.UI.Controls.ManagedCertificate.ManagedCertificateSettings"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:Custom="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+    xmlns:certifyui="clr-namespace:Certify.UI"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fa="http://schemas.fontawesome.io/icons/"
+    xmlns:local="clr-namespace:Certify.UI.Controls"
+    xmlns:managedcertificate="clr-namespace:Certify.UI.Controls.ManagedCertificate"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:model="clr-namespace:Certify.Models;assembly=Certify.Models"
+    xmlns:utils="clr-namespace:Certify.UI.Utils"
+    d:DataContext="{d:DesignInstance Type=certifyui:AppDesignViewModel,
+                                     IsDesignTimeCreatable=True}"
+    d:DesignHeight="600"
+    d:DesignWidth="697.442"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+        <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
+        <utils:OptionalBooleanToVisibilityConverter
+            x:Key="InvBoolVisConverter"
+            False="Visible"
+            True="Collapsed" />
+        <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
+        <utils:ManagedCertificateHealthColourConverter x:Key="HealthColourConverter" />
+        <utils:NullVisibilityConverter
+            x:Key="NullVisibleConverter"
+            NotNull="Collapsed"
+            Null="Visible" />
+    </UserControl.Resources>
+
+    <DockPanel LastChildFill="False">
+        <!--  managed item summary title and close button  -->
+
+        <DockPanel Height="32" DockPanel.Dock="Top">
+
+            <!--  Managed Item display name  -->
+            <StackPanel
+                Margin="0,0,0,0"
+                Orientation="Horizontal"
+                Visibility="{Binding IsNameEditMode, Converter={StaticResource ResourceKey=BoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
+
+                <TextBox
+                    Height="24"
+                    MinWidth="400"
+                    Margin="16,0,0,0"
+                    Controls:TextBoxHelper.Watermark="Display Name"
+                    DockPanel.Dock="Left"
+                    KeyDown="DisplayName_KeyDown"
+                    Text="{Binding SelectedItem.Name, UpdateSourceTrigger=PropertyChanged}"
+                    ToolTip="Enter a display name for this managed certificate. This is for your own use and is not included in the certificate." />
+
+                <Button
+                    x:Name="FinishedEditName"
+                    Margin="0,4,8,4"
+                    VerticalAlignment="Top"
+                    AutomationProperties.Name="Finish Edit"
+                    Background="{DynamicResource MahApps.Brushes.Control.Background}"
+                    BorderThickness="0"
+                    Click="FinishedEditName_Click"
+                    DockPanel.Dock="Left"
+                    ToolTip="Finish Edit">
+                    <fa:ImageAwesome Foreground="{DynamicResource MahApps.Brushes.Accent3}" Icon="CheckCircleOutline" />
+                </Button>
+            </StackPanel>
+            <StackPanel
+                Margin="0,0,0,0"
+                DockPanel.Dock="Left"
+                Orientation="Horizontal"
+                Visibility="{Binding IsNameEditMode, Converter={StaticResource ResourceKey=InvBoolVisConverter}, UpdateSourceTrigger=PropertyChanged}">
+                <TextBlock
+                    Margin="16,0,0,4"
+                    VerticalAlignment="Top"
+                    AutomationProperties.Name="{Binding SelectedItem.Name}"
+                    DockPanel.Dock="Left"
+                    FontSize="20"
+                    Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMediumHigh}"
+                    Text="{Binding SelectedItem.Name}" />
+                <Button
+                    x:Name="EditName"
+                    Margin="16,4,8,4"
+                    VerticalAlignment="Top"
+                    AutomationProperties.Name="Edit Name"
+                    Background="{DynamicResource MahApps.Brushes.Control.Background}"
+                    BorderThickness="0"
+                    Click="EditName_Click"
+                    DockPanel.Dock="Left"
+                    ToolTip="Edit Name">
+                    <fa:ImageAwesome Foreground="{DynamicResource MahApps.Brushes.Accent2}" Icon="Edit" />
+                </Button>
+
+
+            </StackPanel>
+            <Button
+                x:Name="Dismiss"
+                Margin="0,4,8,4"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                AutomationProperties.Name="Dismiss"
+                Background="{DynamicResource MahApps.Brushes.Control.Background}"
+                BorderThickness="0"
+                Click="Dismiss_Click"
+                DockPanel.Dock="Right"
+                ToolTip="Dismiss"
+                Visibility="{Binding IsNameEditMode, Converter={StaticResource ResourceKey=InvBoolVisConverter}, UpdateSourceTrigger=PropertyChanged}">
+
+                <fa:ImageAwesome Foreground="{DynamicResource MahApps.Brushes.Accent3}" Icon="AngleDoubleDown" />
+
+            </Button>
+        </DockPanel>
+        <Rectangle
+            Height="1"
+            Margin="16,8"
+            HorizontalAlignment="Stretch"
+            DockPanel.Dock="Top"
+            Fill="{DynamicResource MahApps.Brushes.Accent4}" />
+
+        <!--  save/request buttons  -->
+        <DockPanel
+            Height="32"
+            Margin="8,8,8,0"
+            DockPanel.Dock="Top"
+            LastChildFill="False"
+            Visibility="{Binding IsEditable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+
+            <Button
+                Margin="8,0,0,0"
+                Click="Button_Save"
+                DockPanel.Dock="Left"
+                IsEnabled="{Binding SelectedItem.IsChanged}"
+                Visibility="{Binding IsEditable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                        Icon="Save" />
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.Save}" /></TextBlock>
+                </StackPanel>
+            </Button>
+
+            <Button
+                Margin="8,0,0,0"
+                Click="Button_DiscardChanges"
+                DockPanel.Dock="Left"
+                IsEnabled="{Binding SelectedItem.IsChanged}"
+                Visibility="{Binding IsEditable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                        Icon="Undo" />
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.DiscardChanges}" /></TextBlock>
+                </StackPanel>
+            </Button>
+
+            <Button
+                Margin="8,0,0,0"
+                Click="Button_Delete"
+                DockPanel.Dock="Left"
+                Visibility="{Binding IsEditable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                        Icon="Trash" />
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.Delete}" /></TextBlock>
+                </StackPanel>
+            </Button>
+
+            <Button
+                Margin="8,0,0,0"
+                Click="Button_RequestCertificate"
+                DockPanel.Dock="Right"
+                Visibility="{Binding IsEditable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                        Icon="Play" />
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.ManagedCertificateSettings_RequestCertificate}" /></TextBlock>
+                </StackPanel>
+            </Button>
+
+            <Button
+                Name="Button_TestChallenge"
+                Height="32"
+                MinWidth="70"
+                Margin="4,0,0,0"
+                VerticalAlignment="Top"
+                Click="TestChallenge_Click"
+                DockPanel.Dock="Right"
+                Visibility="{Binding IsEditable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome
+                        Height="16"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                        Icon="Refresh"
+                        Spin="True"
+                        SpinDuration="1"
+                        Visibility="{Binding IsTestInProgress, Converter={StaticResource ResourceKey=BoolToVisConverter}}" />
+                    <fa:ImageAwesome
+                        Height="16"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                        Icon="CheckCircle"
+                        Spin="False"
+                        Visibility="{Binding IsTestInProgress, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" />
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.Test}" /></TextBlock>
+                </StackPanel>
+            </Button>
+        </DockPanel>
+
+        <!--  managed cert detail tabs  -->
+        <DockPanel
+            Margin="8,0,8,0"
+            Background="{DynamicResource MahApps.Brushes.Control.Background}"
+            DockPanel.Dock="Top"
+            Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
+
+
+            <Controls:MetroTabControl
+                x:Name="SettingsTab"
+                Margin="8"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Stretch"
+                Controls:ScrollViewerHelper.IsHorizontalScrollWheelEnabled="True"
+                Controls:TabControlHelper.UnderlineBrush="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseLow}"
+                Controls:TabControlHelper.Underlined="TabPanel"
+                DockPanel.Dock="Top"
+                TabStripPlacement="Right">
+
+                <TabItem
+                    x:Name="TabStatusInfo"
+                    MinWidth="100"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
+                    Controls:TabControlHelper.UnderlineBrush="White"
+                    AutomationProperties.Name="Status">
+                    <TabItem.HeaderTemplate>
+                        <DataTemplate>
+                            <managedcertificate:TabHeader HeaderText="Status" IconName="Support" />
+                        </DataTemplate>
+                    </TabItem.HeaderTemplate>
+                    <managedcertificate:StatusInfo Margin="0,8,0,0" />
+                </TabItem>
+
+                <TabItem
+                    x:Name="TabDomains"
+                    MinWidth="130"
+                    Margin="0"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
+                    AutomationProperties.Name="Certificate"
+                    IsSelected="True">
+                    <TabItem.HeaderTemplate>
+                        <DataTemplate>
+                            <managedcertificate:TabHeader HeaderText="Certificate" IconName="Globe" />
+                        </DataTemplate>
+                    </TabItem.HeaderTemplate>
+                    <managedcertificate:CertificateDomains Margin="0,8,0,0" />
+                </TabItem>
+
+                <TabItem
+                    x:Name="TabAuthorization"
+                    MinWidth="100"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
+                    AutomationProperties.Name="Authorization">
+                    <TabItem.HeaderTemplate>
+                        <DataTemplate>
+                            <managedcertificate:TabHeader HeaderText="Authorization" IconName="Lock" />
+                        </DataTemplate>
+                    </TabItem.HeaderTemplate>
+
+                    <managedcertificate:DomainAuthorization Margin="0,8,0,0" />
+                </TabItem>
+
+                <TabItem
+                    x:Name="TabDeployment"
+                    MinWidth="100"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
+                    AutomationProperties.Name="Deployment">
+                    <TabItem.HeaderTemplate>
+                        <DataTemplate>
+                            <managedcertificate:TabHeader HeaderText="Deployment" IconName="Copy" />
+                        </DataTemplate>
+                    </TabItem.HeaderTemplate>
+                    <managedcertificate:Deployment Margin="0,8,0,0" />
+                </TabItem>
+
+                <TabItem
+                    x:Name="TabTasks"
+                    MinWidth="100"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
+                    AutomationProperties.Name="Tasks">
+                    <TabItem.HeaderTemplate>
+                        <DataTemplate>
+                            <managedcertificate:TabHeader HeaderText="Tasks" IconName="Cogs" />
+                        </DataTemplate>
+                    </TabItem.HeaderTemplate>
+                    <managedcertificate:Tasks Margin="0,8,0,0" />
+                </TabItem>
+
+
+
+                <TabItem
+                    x:Name="TabPreview"
+                    MinWidth="100"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
+                    AutomationProperties.Name="Preview">
+                    <TabItem.HeaderTemplate>
+                        <DataTemplate>
+                            <managedcertificate:TabHeader HeaderText="Preview" IconName="PlayCircle" />
+                        </DataTemplate>
+                    </TabItem.HeaderTemplate>
+                    <managedcertificate:Preview Margin="0,8,0,0" />
+                </TabItem>
+            </Controls:MetroTabControl>
+        </DockPanel>
+    </DockPanel>
+</UserControl>

@@ -1,61 +1,44 @@
-# Certify The Web - SSL Manager
+# Certify The Web - Certificate Manager UI for Windows
 
-Home page for downloads and info : [https://certifytheweb.com/](https://certifytheweb.com/)
+- Home page for downloads, info and support : [https://certifytheweb.com/](https://certifytheweb.com/)
+- Documentation can be found at: [https://docs.certifytheweb.com](https://docs.certifytheweb.com)
+- Community Discussions: [https://community.certifytheweb.com](https://community.certifytheweb.com)
 
-The SSL/TLS Certificate Management GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/), allowing you to generate and install free SSL certificates for IIS (with a 90 day expiry and automated renewal).
+The SSL/TLS Certificate Management GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/). This app makes it easy to automatically request, install and continuously renew free certificates for Windows/IIS or for any other services which requires a domain certificate.  
 
-Features:
-- Easy certificate requests & automated SSL bindings
-- Auto renewal, with configurable renewal frequency
+**Certify The Web is used by many thousands of organisations to manage millions of certificates each month** and is the perfect solution for administrators who want visibility of certificate management for their domains. Centralised dashboard status reporting is also available.
+
+![Stars](
+https://img.shields.io/github/stars/webprofusion/certify.svg)
+
+![Certify App Screenshot](docs/images/app-screenshot.png)
+
+## Features include:
+- See more details: https://certifytheweb.com/home/features
+- Easy certificate requests & automated SSL bindings (IIS)
+- Automatic renewal using a background service, with configurable renewal frequency.
+- Preview mode to see which actions the app will perform (including which bindings will be added/updated)
 - SAN support (multi-domain certificates)
-- Pre/Post request powershell and web hook support ![scripting hooks](https://github.com/webprofusion/certify/blob/master/docs/Request%20Script%20Hooks.md) for advanced users (feature contributed by [Marcus-L](https://github.com/Marcus-L))
+- Support for v2 of the Let's Encrypt API including Wildcard Certificate support (*.example.com)
+- Support for BuyPass Go SSL.
+- Http or DNS challenge validation.
+	- Built-in Http Challenge Server for easier configuration of challenge responses
+	- DNS Validation via over 26 supported APIs (including Azure DNS, Alibaba Cloud, AWS Route53, Cloudflare, DnsMadeEasy, GoDaddy, OVH, SimpleDNSPlus)
+- Stored Credentials (API access keys etc. protected by the Windows Data Protection API)
+- Optional Pre/Post request deployment tasks and scripting for advanced deployment (**Exchange, RDS, multi-server, CCS, Apache, nginx, export, webhooks, Azure KeyVault etc**)
 
-![App Screenshot](https://certifytheweb.com/images/screen3.png)
+The Community edition is free, license keys are available for commercial organisations, users who wish to help fund development or users who require support.
 
-
+## Requirements:
+- Windows Server 2012 R2 or higher (.Net 4.6.2 or higher), 64-bit
 ----------
-Quick Start
+Quick Start (IIS users)
 ----------
-1. Download from [https://certifytheweb.com/](https://certifytheweb.com/) and install it.
-2. Click 'New Certificate', choose your IIS site (which must have 1 or more hostname bindings set). Save your settings and click 'Request Certificate'
-3. All done! Click 'Configure Auto Renew' to setup the scheduled task for renewals.
+1. Download from [https://certifytheweb.com/](https://certifytheweb.com/) and install it. Chocolatey users can alternatively `choco install certifytheweb`.
+2. Click 'New Certificate', optionally choose your IIS site (binding hostnames will be auto detected, or just enter them manually). Save your settings and click 'Request Certificate'
+3. All done! The certificate will renew automatically.
 
-Development & Bug Reporting
--------------
+Users with more complex requirements can explore the different validation modes, deployment modes and other advanced options.
 
-If you have a bug or feature and you can fix the problem yourself please just:
-
-   1. File a new issue
-   2. Fork the repository
-   2. Make your changes 
-   3. Submit a pull request, detailing the problem being solved and testing steps/evidence
-   
-If you cannot provide a fix for the problem yourself, please file an issue and describe the fault with steps to reproduce.
-
-Translation
-------------
-
-You can help translate the app by cloning the repo and installing ResXManager to easily update translation text:
-https://marketplace.visualstudio.com/items?itemName=TomEnglert.ResXManager
-
-
-
-Build/Run Requirements:
-----------------------
-
-> - Visual Studio 2017 Community Edition (or higher) 
-> - A local instance of IIS installed.
-> - To build the current release version use the release branch: https://github.com/webprofusion/certify/tree/release, master is the current work in progress.
-> - fetch any submodules using:
-```
-git submodule sync
-git submodule update --init --recursive --remote
-```
-
-> - To build, first build the submodule for ACMESharp under /src/lib/ACMESharp - this will restore the required nuget packages.
-> - The app needs to run as Administrator, otherwise it cannot access IIS, write to the IIS website root paths or manage the windows certificate store.
-
-> **Note:**  For testing you will require a publicly accessible IP mapped to the domain/subdomain you want to test with. The Let's Encrypt service will need to be able to access your test site remotely via HTTP in order to complete authorisation challenges.
-
-apps {at} webprofusion.com
+https://docs.certifytheweb.com
 

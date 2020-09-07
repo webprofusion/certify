@@ -117,11 +117,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="ManagedItemType_LocalIIS" xml:space="preserve">
-    <value>本地IIS，Let's Encrypt的证书</value>
+  <data name="ManagedCertificateType_LocalIIS" xml:space="preserve">
+    <value>本地IIS，的证书</value>
   </data>
-  <data name="ManagedItemType_Manual" xml:space="preserve">
-    <value>手动绑定，Let's Encrypt的证书</value>
+  <data name="ManagedCertificateType_Manual" xml:space="preserve">
+    <value>手动绑定，的证书</value>
   </data>
   <data name="Finish" xml:space="preserve">
     <value>完成</value>
@@ -155,7 +155,7 @@
     <value>证书已可供手动绑定：{0}</value>
   </data>
   <data name="CertifyManager_LetsEncryptServiceTimeout" xml:space="preserve">
-    <value>Let's Encrypt 服务未在指定的时间内颁发有效的证书。{0}</value>
+    <value>ACME CA 服务未在指定的时间内颁发有效的证书。{0}</value>
   </data>
   <data name="CertifyManager_ValidationForChallengeNotSuccess" xml:space="preserve">
     <value>必须的验证未能成功完成。{0}</value>
@@ -193,10 +193,10 @@
   <data name="CertifyManager_RegisteringAndValidatingX0" xml:space="preserve">
     <value>注册并验证 {0}</value>
   </data>
-  <data name="CertifyManager_PerformingChallengeResponseViaIISX0" xml:space="preserve">
-    <value>通过IIS进行认证: {0}</value>
-  </data>
   <data name="CertifyManager_RegisterDomainIdentity" xml:space="preserve">
     <value>注册域名标识符</value>
+  </data>
+  <data name="CertifyManager_RenewalOnHold" xml:space="preserve">
+    <value>上次证书续期失败：{0}，将会在48小时内重试。</value>
   </data>
 </root>

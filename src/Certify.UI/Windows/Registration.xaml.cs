@@ -1,76 +1,91 @@
-using Certify.Management;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using Certify.Management;
+using Certify.Models;
 
 namespace Certify.UI.Windows
 {
     /// <summary>
-    /// Interaction logic for Registration.xaml
+    /// Interaction logic for Registration.xaml 
     /// </summary>
     public partial class Registration
     {
+        protected Models.Providers.ILog Log => ViewModel.AppViewModel.Current.Log;
+
+        public class Model : BindableBase
+        {
+            public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
+            public bool IsRegistrationMode { get; set; } = true;
+        }
+        public Model EditModel { get; set; } = new Model();
+       
         public Registration()
         {
             InitializeComponent();
+
+
+            this.DataContext = EditModel;
+
+            this.Width *= EditModel.MainViewModel.UIScaleFactor;
+            this.Height *= EditModel.MainViewModel.UIScaleFactor;
         }
 
         private async void ValidateKey_Click(object sender, RoutedEventArgs e)
         {
-            var productTypeId = ViewModel.AppModel.ProductTypeId;
+            var productTypeId = ViewModel.AppViewModel.ProductTypeId;
 
             var email = EmailAddress.Text?.Trim().ToLower();
             var key = LicenseKey.Text?.Trim().ToLower();
 
-            if (String.IsNullOrEmpty(email))
+            if (string.IsNullOrEmpty(email))
             {
                 MessageBox.Show(Certify.Locales.SR.Registration_NeedEmail);
                 return;
             }
 
-            if (String.IsNullOrEmpty(key))
+            if (string.IsNullOrEmpty(key))
             {
                 MessageBox.Show(Certify.Locales.SR.Registration_NeedKey);
                 return;
             }
 
-            var pluginManager = new PluginManager();
-            pluginManager.LoadPlugins();
+            ValidateKey.IsEnabled = false;
+            Mouse.OverrideCursor = Cursors.Wait;
 
-            if (pluginManager.LicensingManager != null)
+            var licensingManager = ViewModel.AppViewModel.Current.PluginManager?.LicensingManager;
+
+            if (licensingManager != null)
             {
-                var licensingManager = pluginManager.LicensingManager;
-
                 try
                 {
                     var validationResult = await licensingManager.Validate(productTypeId, email, key);
                     if (validationResult.IsValid)
                     {
-                        var installRegistration = await licensingManager.RegisterInstall(productTypeId, email, key, System.Environment.MachineName);
+                        var instance = new Models.Shared.RegisteredInstance
+                        {
+                            InstanceId = ViewModel.AppViewModel.Current.Preferences.InstanceId,
+                            AppVersion = Management.Util.GetAppVersion().ToString()
+                        };
 
+                        var installRegistration = await licensingManager.RegisterInstall(productTypeId, email, key, instance);
+
+                        Mouse.OverrideCursor = Cursors.Arrow;
                         if (installRegistration.IsSuccess)
                         {
-                            var settingsPath = Util.GetAppDataFolder();
+                            var settingsPath = Management.Util.GetAppDataFolder();
                             if (licensingManager.FinaliseInstall(productTypeId, installRegistration, settingsPath))
                             {
-                                ViewModel.AppModel.AppViewModel.IsRegisteredVersion = true;
+                                ViewModel.AppViewModel.Current.IsRegisteredVersion = true;
                                 MessageBox.Show(installRegistration.Message);
 
-                                this.Close();
+                                Close();
                             }
                         }
                         else
                         {
+                            ValidateKey.IsEnabled = true;
                             MessageBox.Show(installRegistration.Message);
                         }
                     }
@@ -79,20 +94,71 @@ namespace Certify.UI.Windows
                         MessageBox.Show(validationResult.ValidationMessage);
                     }
                 }
-                catch (Exception)
+                catch (Exception exp)
                 {
+
+                    Log?.Information("ValidateKey:" + exp.ToString());
+
                     MessageBox.Show(Certify.Locales.SR.Registration_KeyValidationError);
+                    MessageBox.Show(exp.ToString());
                 }
             }
             else
             {
-                MessageBox.Show(Certify.Locales.SR.Registration_UnableToVerify);
+                MessageBox.Show("Could not load the licensing validation plugin. The app may need to be re-installed.");
             }
+
+            ValidateKey.IsEnabled = true;
+            Mouse.OverrideCursor = Cursors.Arrow;
         }
 
-        private void Cancel_Click(object sender, RoutedEventArgs e)
+        private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
+
+        private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e) => System.Diagnostics.Process.Start(e.Uri.ToString());
+
+        private async void Deactivate_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            var productTypeId = ViewModel.AppViewModel.ProductTypeId;
+
+            var email = DeactivateEmail.Text?.Trim().ToLower();
+   
+
+            if (string.IsNullOrEmpty(email))
+            {
+                MessageBox.Show(Certify.Locales.SR.Registration_NeedEmail);
+                return;
+            }
+
+
+            Mouse.OverrideCursor = Cursors.Wait;
+
+            var licensingManager = ViewModel.AppViewModel.Current.PluginManager?.LicensingManager;
+
+            if (licensingManager != null)
+            {
+                var instance = new Models.Shared.RegisteredInstance
+                {
+                    InstanceId = ViewModel.AppViewModel.Current.Preferences.InstanceId,
+                    AppVersion = Management.Util.GetAppVersion().ToString()
+                };
+                var resultOK = await licensingManager.DeactivateInstall(productTypeId, Management.Util.GetAppDataFolder(), email, instance);
+
+                Mouse.OverrideCursor = Cursors.Arrow;
+
+                if (resultOK)
+                {
+                    ViewModel.AppViewModel.Current.IsRegisteredVersion = false;
+                    MessageBox.Show("This install has now been deactivated. You can enter a different license key or use your key on another install.");
+                    Close();
+                }
+                else
+                {
+                    MessageBox.Show("The install could not be deactivated, check specified email address is correct for account. You can manually delete the C:\\ProgramData\\Certify\\reg_1 file and deactivate your install on https://certifytheweb.com");
+                
+                }
+            }
+
+            Mouse.OverrideCursor = Cursors.Arrow;
         }
     }
 }

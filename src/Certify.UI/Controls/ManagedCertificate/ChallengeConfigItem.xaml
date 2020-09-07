@@ -1,0 +1,287 @@
+﻿<UserControl
+    x:Class="Certify.UI.Controls.ManagedCertificate.ChallengeConfigItem"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fa="http://schemas.fontawesome.io/icons/"
+    xmlns:local="clr-namespace:Certify.UI.Windows"
+    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:Certify.Models;assembly=Certify.Models"
+    d:DesignHeight="200"
+    d:DesignWidth="468"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+        <DataTemplate x:Key="ProviderStringParameter">
+            <StackPanel
+                Margin="0,8,0,0"
+                DockPanel.Dock="Left"
+                Orientation="Horizontal">
+                <Label Width="160" Content="{Binding Name}" />
+                <TextBox
+                    Width="250"
+                    mah:TextBoxHelper.Watermark="{Binding Description}"
+                    KeyUp="ParameterInput_KeyUp"
+                    Text="{Binding Value}" />
+                <Button
+                    x:Name="ShowParamLookup"
+                    Padding="4"
+                    Click="ShowParamLookup_Click">
+                    <Button.Style>
+                        <Style>
+                            <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Key}" Value="zoneid">
+                                    <Setter Property="UIElement.Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    ...
+                </Button>
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="ProviderDropDownParameter">
+            <StackPanel
+                Margin="0,8,0,0"
+                DockPanel.Dock="Left"
+                Orientation="Horizontal">
+                <Label Width="160" Content="{Binding Name}" />
+                <ComboBox
+                    Width="250"
+                    DisplayMemberPath="Value"
+                    ItemsSource="{Binding Options}"
+                    SelectedValue="{Binding Value}"
+                    SelectedValuePath="Key" />
+            </StackPanel>
+
+        </DataTemplate>
+        <DataTemplate x:Key="ProviderPasswordParameter">
+            <StackPanel
+                Margin="0,8,0,0"
+                DockPanel.Dock="Left"
+                Orientation="Horizontal">
+                <Label Width="160" Content="{Binding Name}" />
+                <PasswordBox
+                    Width="250"
+                    local:PasswordBoxAssistant.BindPassword="True"
+                    local:PasswordBoxAssistant.BoundPassword="{Binding Value, Mode=TwoWay}" />
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="ProviderHiddenParameter" />
+
+        <DataTemplate x:Key="ProviderBooleanParameter">
+            <StackPanel
+                Margin="0,8,0,0"
+                DockPanel.Dock="Left"
+                Orientation="Horizontal">
+                <Label Width="160" Content="{Binding Name}" />
+                <CheckBox IsChecked="{Binding Value, Mode=TwoWay}" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+    <DockPanel>
+
+        <!--  challenge type selection  -->
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+            <Label Width="160" Content="{x:Static Resources:SR.ManagedCertificateSettings_ChallengeTypes}" />
+            <ComboBox
+                x:Name="ChallengeTypeList"
+                Width="270"
+                ItemsSource="{Binding ChallengeTypes}"
+                SelectedItem="{Binding SelectedItem.ChallengeType}"
+                SelectionChanged="ChallengeTypeList_SelectionChanged" />
+        </StackPanel>
+
+        <!--  http-01 Challenge Config UI  -->
+        <StackPanel x:Name="ChallengeConfigHttp" DockPanel.Dock="Top">
+            <StackPanel.Style>
+                <Style>
+                    <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SelectedItem.ChallengeType}" Value="{x:Static models:SupportedChallengeTypes.CHALLENGE_TYPE_HTTP}">
+                            <Setter Property="UIElement.Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+            <StackPanel Margin="160,0,0,0">
+                <TextBlock Style="{StaticResource Instructions}"><Run Text="For HTTP validation the app will automatically create the challenge response file required. Your server must allow http requests on port 80 (https redirections permitted)." /></TextBlock>
+            </StackPanel>
+            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                <Label Width="160" Content="{x:Static Resources:SR.ManagedCertificateSettings_WebsiteRoot}" />
+                <TextBox
+                    Width="225"
+                    mah:TextBoxHelper.Watermark="(optional, leave blank to auto discover)"
+                    Text="{Binding SelectedItem.ChallengeRootPath}" />
+                <Button
+                    x:Name="Button_WebRoot"
+                    Margin="4,0,0,0"
+                    Click="DirectoryBrowse_Click"
+                    Content="{x:Static Resources:SR.ManagedCertificateSettings_BrowseFolder}" />
+            </StackPanel>
+
+            <StackPanel Margin="160,8,0,0" Orientation="Vertical">
+                <CheckBox Content="{x:Static Resources:SR.ManagedCertificateSettings_PerformChallengeResponseConfigCheck}" IsChecked="{Binding ParentManagedCertificate.RequestConfig.PerformExtensionlessConfigChecks}" />
+                <CheckBox Content="{x:Static Resources:SR.ManagedCertificateSettings_PerformWebAppAutoConfig}" IsChecked="{Binding ParentManagedCertificate.RequestConfig.PerformAutoConfig}" />
+            </StackPanel>
+
+        </StackPanel>
+
+        <!--  dns-01 Challenge Config UI  -->
+        <StackPanel x:Name="ChallengeConfigDns" DockPanel.Dock="Top">
+            <StackPanel.Style>
+                <Style>
+                    <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SelectedItem.ChallengeType}" Value="{x:Static models:SupportedChallengeTypes.CHALLENGE_TYPE_DNS}">
+                            <Setter Property="UIElement.Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+            <StackPanel Margin="160,0,0,0">
+                <TextBlock Style="{StaticResource Instructions}"><Run Text="For DNS validation the app will need to create a 'TXT' record in the DNS zone of your domain(s) as an answer to the authorization challenge." /></TextBlock>
+            </StackPanel>
+            <StackPanel Margin="0,8,0,0" Orientation="Vertical">
+                <StackPanel Orientation="Horizontal">
+                    <Label Width="160" Content="DNS Update Method:" />
+
+                    <ComboBox
+                        x:Name="ChallengeAPIProviderList"
+                        Width="270"
+                        Margin="0,0,0,0"
+                        DisplayMemberPath="Title"
+                        ItemsSource="{Binding ChallengeProviders}"
+                        SelectedValue="{Binding SelectedItem.ChallengeProvider}"
+                        SelectedValuePath="Id"
+                        SelectionChanged="ChallengeAPIProviderList_SelectionChanged" />
+                </StackPanel>
+
+                <StackPanel
+                    Margin="160,8,8,0"
+                    DockPanel.Dock="Top"
+                    Orientation="Vertical">
+                    <TextBlock Style="{StaticResource Instructions}">
+                        <Span>
+                            <Run Text="{Binding SelectedChallengeProvider.Description}" />
+                            <LineBreak />
+                            <Hyperlink
+                                x:Name="HelpUrl"
+                                NavigateUri="{Binding SelectedChallengeProvider.HelpUrl}"
+                                RequestNavigate="HelpUrl_RequestNavigate"
+                                ToolTip="{Binding SelectedChallengeProvider.HelpUrl}">
+                                Browse Documentation
+                            </Hyperlink>
+                        </Span>
+
+                    </TextBlock>
+
+                </StackPanel>
+
+                <StackPanel x:Name="ProviderCredentials" Orientation="Vertical">
+                    <StackPanel.Style>
+                        <Style>
+                            <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding UsesCredentials}" Value="True">
+                                    <Setter Property="UIElement.Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                        <Label Width="160" Content="Credentials" />
+
+                        <ComboBox
+                            x:Name="StoredCredentialList"
+                            Width="225"
+                            Margin="0,0,8,0"
+                            DisplayMemberPath="Title"
+                            ItemsSource="{Binding FilteredCredentials}"
+                            SelectedValue="{Binding SelectedItem.ChallengeCredentialKey, UpdateSourceTrigger=PropertyChanged}"
+                            SelectedValuePath="StorageKey" />
+
+                        <Button
+                            x:Name="AddStoredCredential"
+                            Click="AddStoredCredential_Click"
+                            Content="New" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+
+            <ItemsControl
+                MinHeight="30"
+                DockPanel.Dock="Top"
+                ItemsSource="{Binding SelectedItem.Parameters, UpdateSourceTrigger=PropertyChanged}">
+                <ItemsControl.ItemTemplateSelector>
+                    <local:ControlTemplateSelector />
+                </ItemsControl.ItemTemplateSelector>
+            </ItemsControl>
+
+            <StackPanel Margin="160,8,0,0" Orientation="Horizontal">
+                <StackPanel.Style>
+                    <Style>
+                        <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ShowZoneLookup}" Value="True">
+                                <Setter Property="UIElement.Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+
+                <StackPanel Orientation="Horizontal">
+                    <ComboBox
+                        x:Name="DnsZoneList"
+                        Width="270"
+                        Margin="0,0,0,0"
+                        DisplayMemberPath="Name"
+                        DropDownOpened="DnsZoneList_DropDownOpened"
+                        ItemsSource="{Binding DnsZones}"
+                        SelectedValuePath="ZoneId"
+                        SelectionChanged="DnsZoneList_SelectionChanged" />
+                    <fa:ImageAwesome
+                        x:Name="RefreshingDnsZones"
+                        Height="12"
+                        Margin="4,0,0,0"
+                        Foreground="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                        Icon="Refresh"
+                        Spin="True"
+                        SpinDuration="1"
+                        Visibility="{Binding IsZoneLookupInProgress, Converter={StaticResource ResourceKey=BoolToVisConverter}}" />
+                </StackPanel>
+
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel
+            Margin="0,8,0,0"
+            DockPanel.Dock="Top"
+            Orientation="Horizontal">
+            <Label Width="160" Content="Domain Match" />
+            <TextBox
+                x:Name="DomainMatchText"
+                Width="270"
+                mah:TextBoxHelper.Watermark="(optional, *.example.com; www.sub.example.com)"
+                Text="{Binding SelectedItem.DomainMatch}" />
+        </StackPanel>
+        <StackPanel Margin="160,0,0,0" DockPanel.Dock="Top">
+            <TextBlock Style="{StaticResource Instructions}"><Run Text="A domain match rule is only required when validating multiple domains using different methods in one certificate." /></TextBlock>
+        </StackPanel>
+
+        <Button
+            x:Name="DeleteAuth"
+            MaxWidth="160"
+            Margin="8,16,0,0"
+            HorizontalAlignment="Left"
+            Click="DeleteAuth_Click"
+            DockPanel.Dock="Bottom"
+            Tag="{Binding SelectedItem}">
+            Delete Configuration
+        </Button>
+    </DockPanel>
+
+</UserControl>

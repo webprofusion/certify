@@ -1,0 +1,157 @@
+﻿<UserControl
+    x:Class="Certify.UI.Controls.ManagedCertificate.TaskList"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+    xmlns:certifyui="clr-namespace:Certify.UI"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fa="http://schemas.fontawesome.io/icons/"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:Certify.Models;assembly=Certify.Models"
+    xmlns:utils="clr-namespace:Certify.UI.Utils"
+    d:DataContext="{d:DesignInstance Type=certifyui:ManagedCertificateDesignViewModel,
+                                     IsDesignTimeCreatable=True}"
+    d:DesignWidth="572.8"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+        <utils:TaskTriggerConverter x:Key="TaskTriggerConverter" />
+        <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
+        <utils:OptionalBooleanToVisibilityConverter
+            x:Key="InvBoolVisConverter"
+            False="Visible"
+            True="Collapsed" />
+        <utils:EnumConverter x:Key="EnumConverter" />
+        <utils:NullVisibilityConverter
+            x:Key="NullVisibleConverter"
+            NotNull="Collapsed"
+            Null="Visible" />
+        <utils:StateToColorConverter x:Key="StateToColorConverter" />
+    </UserControl.Resources>
+
+    <ItemsControl
+        x:Name="Tasks"
+        Margin="0,16,0,0"
+        AllowDrop="True"
+        Drop="TaskCompleteDrop"
+        ItemsSource="{Binding}">
+        <ItemsControl.ItemTemplate>
+            <DataTemplate>
+                <DockPanel Margin="4">
+
+
+                    <DockPanel DockPanel.Dock="Top" MouseLeftButtonDown="TaskStartDrop">
+                        <Button
+                            x:Name="RunDeploymentTask"
+                            Height="28"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            Click="RunDeploymentTask_Click"
+                            CommandParameter="{Binding}"
+                            DockPanel.Dock="Left"
+                            ToolTip="Run Task">
+                            <StackPanel Orientation="Horizontal">
+                                <fa:ImageAwesome
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Foreground="{StaticResource MahApps.Brushes.Accent}"
+                                    Icon="Play" />
+
+                            </StackPanel>
+                        </Button>
+
+                        <Button
+                            x:Name="DeleteDeploymentTask"
+                            Height="28"
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Top"
+                            Click="DeleteDeploymentTask_Click"
+                            CommandParameter="{Binding}"
+                            DockPanel.Dock="Right">
+                            <StackPanel Orientation="Horizontal">
+                                <fa:ImageAwesome
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Foreground="{StaticResource MahApps.Brushes.Accent}"
+                                    Icon="Trash" />
+
+                            </StackPanel>
+                        </Button>
+                        <Button
+                            Height="28"
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Top"
+                            Click="EditDeploymentTask_Click"
+                            CommandParameter="{Binding}"
+                            DockPanel.Dock="Right">
+                            <StackPanel Orientation="Horizontal">
+                                <fa:ImageAwesome
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Foreground="{StaticResource MahApps.Brushes.Accent}"
+                                    Icon="Edit" />
+
+                            </StackPanel>
+                        </Button>
+
+                        <StackPanel Margin="0,0,0,0" DockPanel.Dock="Left">
+                            <TextBlock FontWeight="SemiBold" Text="{Binding TaskName}" />
+                            <TextBlock DockPanel.Dock="Left" Text="{Binding TaskTrigger, Converter={StaticResource TaskTriggerConverter}}" />
+                            <TextBlock
+                                DockPanel.Dock="Left"
+                                Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                                Text="{Binding Description}"
+                                TextWrapping="WrapWithOverflow"
+                                Visibility="Collapsed" />
+
+                        </StackPanel>
+
+
+                    </DockPanel>
+
+                    <StackPanel Margin="32,4,4,16" DockPanel.Dock="Bottom">
+                        <StackPanel.Style>
+                            <Style>
+                                <Setter Property="UIElement.Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding LastRunStatus}" Value="{x:Null}">
+                                        <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock
+                                    FontWeight="SemiBold"
+                                    Foreground="{Binding LastRunStatus, Converter={StaticResource StateToColorConverter}}"
+                                    Text="Status: " />
+                                <TextBlock
+                                    FontWeight="SemiBold"
+                                    Foreground="{Binding LastRunStatus, Converter={StaticResource StateToColorConverter}}"
+                                    Text="{Binding LastRunStatus}" />
+
+                                <TextBlock
+                                    Margin="8,0,0,0"
+                                    Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                                    Text="{Binding DateLastExecuted, StringFormat=F}" />
+                            </StackPanel>
+
+                            <TextBlock
+                                MaxHeight="32"
+                                Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                                Text="{Binding LastResult}"
+                                TextTrimming="WordEllipsis"
+                                TextWrapping="WrapWithOverflow" />
+
+                        </StackPanel>
+                    </StackPanel>
+                </DockPanel>
+
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+</UserControl>

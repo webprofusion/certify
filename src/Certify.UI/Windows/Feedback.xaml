@@ -1,22 +1,76 @@
-<Controls:MetroWindow x:Class="Certify.UI.Windows.Feedback"
-        xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Certify.UI.Windows"
-        xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-        mc:Ignorable="d"
-        Title="{x:Static res:SR.Send_Feedback}" Height="333.8" Width="356.8"
-        GlowBrush="{DynamicResource AccentColorBrush}"
-        BorderThickness="1" WindowTransitionsEnabled="False" WindowStartupLocation="CenterOwner" MinWidth="300" MinHeight="300">
+<Controls:MetroWindow
+    x:Class="Certify.UI.Windows.Feedback"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Certify.UI.Windows"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+    Title="{x:Static res:SR.Send_Feedback}"
+    Width="356.8"
+    Height="333.8"
+    MinWidth="300"
+    MinHeight="300"
+    BorderThickness="1"
+    GlowBrush="{StaticResource MahApps.Brushes.Accent}"
+    TitleCharacterCasing="Normal"
+    WindowStartupLocation="CenterOwner"
+    WindowTransitionsEnabled="False"
+    mc:Ignorable="d">
+    <Controls:MetroWindow.LayoutTransform>
+        <ScaleTransform x:Name="ApplicationScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding UIScaleFactor}" ScaleY="{Binding UIScaleFactor}" />
+    </Controls:MetroWindow.LayoutTransform>
     <Grid Margin="0,0,2,6.8">
-        <TextBox x:Name="Comment" Height="111" Margin="13,78,9.8,0" TextWrapping="Wrap" VerticalAlignment="Top" Text="" VerticalScrollBarVisibility="Auto" AcceptsReturn="True" AcceptsTab="True" />
-        <TextBlock x:Name="Prompt" HorizontalAlignment="Left" Margin="13,9,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontWeight="Bold"><Run Text="{x:Static res:SR.Send_Feedback_Tip}" /></TextBlock>
-        <TextBlock Margin="13,58,15.2,0" TextWrapping="Wrap" VerticalAlignment="Top" ><Run Text="{x:Static res:SR.Send_Feedback_Quest}" /></TextBlock>
-        <Button x:Name="Submit" Content="{x:Static res:SR.Send}" Margin="0,268,9.8,0" VerticalAlignment="Top" Click="Submit_Click" HorizontalAlignment="Right" Width="78" />
-        <Button x:Name="Cancel" Content="{x:Static res:SR.Cancel}" HorizontalAlignment="Left" Margin="10,268,0,0" VerticalAlignment="Top" Width="75" Click="Cancel_Click" />
-        <TextBlock HorizontalAlignment="Left" Margin="13,202,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="268" Text="{x:Static res:SR.Send_Feedback_Email}" />
-        <TextBox x:Name="EmailAddress" Height="10" Margin="13,223,9.8,0" TextWrapping="Wrap" VerticalAlignment="Top" />
+        <TextBox
+            x:Name="Comment"
+            Height="111"
+            Margin="13,78,9.8,0"
+            VerticalAlignment="Top"
+            AcceptsReturn="True"
+            AcceptsTab="True"
+            Text=""
+            TextWrapping="Wrap"
+            VerticalScrollBarVisibility="Auto" />
+        <TextBlock
+            x:Name="Prompt"
+            Margin="13,9,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            FontWeight="Bold"
+            TextWrapping="Wrap"><Run Text="{x:Static res:SR.Send_Feedback_Tip}" /></TextBlock>
+        <TextBlock
+            Margin="13,58,15.2,0"
+            VerticalAlignment="Top"
+            TextWrapping="Wrap"><Run Text="{x:Static res:SR.Send_Feedback_Quest}" /></TextBlock>
+        <Button
+            x:Name="Submit"
+            Width="78"
+            Margin="0,268,9.8,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Click="Submit_Click"
+            Content="{x:Static res:SR.Send}" />
+        <Button
+            x:Name="Cancel"
+            Width="75"
+            Margin="10,268,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Click="Cancel_Click"
+            Content="{x:Static res:SR.Cancel}" />
+        <TextBlock
+            Width="268"
+            Margin="13,202,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Text="{x:Static res:SR.Send_Feedback_Email}"
+            TextWrapping="Wrap" />
+        <TextBox
+            x:Name="EmailAddress"
+            Height="10"
+            Margin="13,223,9.8,0"
+            VerticalAlignment="Top"
+            TextWrapping="Wrap" />
     </Grid>
 </Controls:MetroWindow>

@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Platforms>x64</Platforms>
+    <AssemblyName>Plugin.DNS.OVH</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Certify.Models\Certify.Models.csproj" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="REM Copy latest plugin build to plugins output folder&#xD;&#xA;xcopy /i /s /Y $(TargetPath) $(SolutionDir)\..\build\plugins\$(ConfigurationName)\" />
+  </Target>
+
+</Project>
+

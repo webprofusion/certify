@@ -165,17 +165,8 @@
   <data name="Register_Contact" xml:space="preserve">
     <value>Registrar Contacto</value>
   </data>
-  <data name="NewContact_AgreeConfirm" xml:space="preserve">
-    <value>¿Estás de acuerdo con el Acuerdo del suscriptor de LetsEncrypt.org? Consulte su sitio web para obtener todos los detalles antes de continuar. https://letsencrypt.org/repository/</value>
-  </data>
-  <data name="New_Contact_Tip1" xml:space="preserve">
-    <value>Debe registrarse como contacto para utilizar Certify y el servicio gratuito Let's Encrypt para adquirir certificados SSL.</value>
-  </data>
   <data name="New_Contact_Tip2" xml:space="preserve">
-    <value>La dirección de correo electrónico provista se puede ser utilizada para notificarle acerca de la próxima renovación de certificados si es necesario. Las direcciones de correo electrónico no válidas serán rechazadas por Let's Encrypt.</value>
-  </data>
-  <data name="New_Contact" xml:space="preserve">
-    <value>Nuevo contacto</value>
+    <value>La dirección de correo electrónico provista se puede ser utilizada para notificarle acerca de la próxima renovación de certificados si es necesario. Las direcciones de correo electrónico no válidas serán rechazadas por la autoridad de certificación.</value>
   </data>
   <data name="Send_Feedback" xml:space="preserve">
     <value>Enviar comentarios</value>
@@ -219,25 +210,25 @@
   <data name="Comments" xml:space="preserve">
     <value>Comentarios:</value>
   </data>
-  <data name="ManagedItemSettings_HookUrl" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookUrl" xml:space="preserve">
     <value>Url:</value>
   </data>
-  <data name="ManagedItemSettings_HookMethod" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookMethod" xml:space="preserve">
     <value>Método:</value>
   </data>
-  <data name="ManagedItemSettings_HookBody" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookBody" xml:space="preserve">
     <value>Cuerpo:</value>
   </data>
-  <data name="ManagedItemSettings_HookContentType" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookContentType" xml:space="preserve">
     <value>ContentType:</value>
   </data>
-  <data name="ManagedItemSettings_RevokeCertificate" xml:space="preserve">
+  <data name="ManagedCertificateSettings_RevokeCertificate" xml:space="preserve">
     <value>Revocar Certificado</value>
   </data>
   <data name="MainWindow_TitleTrialPostfix" xml:space="preserve">
     <value>[Versión de prueba gratuita]</value>
   </data>
-  <data name="ManagedItemSettings_Certificate_Revoked" xml:space="preserve">
+  <data name="ManagedCertificateSettings_Certificate_Revoked" xml:space="preserve">
     <value>Certificado Revocado.</value>
   </data>
   <data name="Alert" xml:space="preserve">
@@ -257,12 +248,6 @@
   </data>
   <data name="Send_Feedback_Error" xml:space="preserve">
     <value>Lo sentimos, hubo un problema al enviar sus comentarios.</value>
-  </data>
-  <data name="New_Contact_EmailError" xml:space="preserve">
-    <value>Ooops, olvidaste proporcionar una dirección de correo electrónico válida.</value>
-  </data>
-  <data name="New_Contact_NeedAgree" xml:space="preserve">
-    <value>Debe aceptar el último Acuerdo de Suscriptor de LetsEncrypt.org.</value>
   </data>
   <data name="Registration_NeedEmail" xml:space="preserve">
     <value>Ingrese la dirección de correo electrónico que utilizó al registrar su clave.</value>
@@ -298,7 +283,7 @@
     <value>Para realizar la renovación automática de certificados, Certify creará una tarea en el Programador de Tareas de Windows. Esta tarea debe ejecutarse como un usuario de nivel de Administrador para realizar tareas de administración de certificados y administración de IIS.</value>
   </data>
   <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
-    <value>Esta versión es gratuita para evaluación y está limitada a la administración de hasta 5 sitios web. Para eliminar este límite, compre una clave de registro. Si ha donado previamente, envíe un correo electrónico a apps@webprofusion.com con los detalles de su transacción de patrocinio de PayPal para obtener una clave gratuita. Esta oferta también está disponible para los desarrolladores que tengan un Pull Request aceptado para esta aplicación en GitHub.</value>
+    <value>Esta versión es gratuita para evaluación.  Para eliminar este límite, compre una clave de registro.</value>
   </data>
   <data name="AboutControl_RegistrationTypeLabel" xml:space="preserve">
     <value>No Registrado</value>
@@ -321,16 +306,13 @@
   <data name="UpdateCheckLatestVersion" xml:space="preserve">
     <value>Estás usando la última versión.</value>
   </data>
-  <data name="ManagedSites_Filter" xml:space="preserve">
+  <data name="ManagedCertificates_Filter" xml:space="preserve">
     <value>Filtrar...</value>
   </data>
-  <data name="ManagedSites_NoItemSelectedDesc" xml:space="preserve">
-    <value>Certificados SSL gratuitos proporcionados a través del servicio Let's Encrypt (https://letsencrypt.org).</value>
-  </data>
-  <data name="ManagedSites_NoItemSelectedTip" xml:space="preserve">
+  <data name="ManagedCertificates_NoItemSelectedTip" xml:space="preserve">
     <value>Seleccione un Sitio Administrado o seleccione Nuevo certificado para comenzar.</value>
   </data>
-  <data name="ManagedSites_UnsavedWarning" xml:space="preserve">
+  <data name="ManagedCertificates_UnsavedWarning" xml:space="preserve">
     <value>Hay cambios no guardados en el sitio seleccionado. ¿Descartar los cambios?</value>
   </data>
   <data name="ProgressMonitor_NoProgress" xml:space="preserve">
@@ -348,19 +330,19 @@
   <data name="ExpiryDateConverter_NoCurrentCertificate" xml:space="preserve">
     <value>Sin certificado actual.</value>
   </data>
-  <data name="ManagedItemSettings_CertificatePathEmpty" xml:space="preserve">
+  <data name="ManagedCertificateSettings_CertificatePathEmpty" xml:space="preserve">
     <value>Ruta del certificado: [establecer]</value>
   </data>
-  <data name="ManagedItemSettings_HookTrigger" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookTrigger" xml:space="preserve">
     <value>Trigger de Webhook:</value>
   </data>
-  <data name="ManagedItemSettings_UseSpecificBinding" xml:space="preserve">
+  <data name="ManagedCertificateSettings_UseSpecificBinding" xml:space="preserve">
     <value>Usar enlaces de IP/Puerto específicos</value>
   </data>
-  <data name="ManagedItemSettings_AutoUpdateBinding" xml:space="preserve">
+  <data name="ManagedCertificateSettings_AutoUpdateBinding" xml:space="preserve">
     <value>Creación/ ctualización automática de enlaces de IIS (utiliza SNI)</value>
   </data>
-  <data name="ManagedItemSettings_PostRequestScript" xml:space="preserve">
+  <data name="ManagedCertificateSettings_PostRequestScript" xml:space="preserve">
     <value>Post-solicitud PS Script:</value>
   </data>
   <data name="About_LanguageTranslator" xml:space="preserve">
@@ -372,10 +354,10 @@
   <data name="MainWindow_VisitDownloadPage" xml:space="preserve">
     <value>¿Desea visitar la página de descarga ahora?</value>
   </data>
-  <data name="ManagedItemSettings_RevokeCertificateError" xml:space="preserve">
+  <data name="ManagedCertificateSettings_RevokeCertificateError" xml:space="preserve">
     <value>Error al Revocar Certificado: {0}</value>
   </data>
-  <data name="ManagedItemSettings_ConfirmRevokeCertificate" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ConfirmRevokeCertificate" xml:space="preserve">
     <value>¿Está seguro de que desea revocar este certificado?</value>
   </data>
   <data name="MainWindow_TrialLimitationReached" xml:space="preserve">
@@ -385,7 +367,7 @@
     <value>Esto renovará los certificados para todos los elementos de auto-renovación. ¿Proceder?</value>
   </data>
   <data name="MainWindow_IISNotAvailable" xml:space="preserve">
-    <value>No se detectó IIS en este servidor, una serie de características importantes no estarán disponible. Si IIS está instalado y ejecutándose en este servidor, informe este error a apps@webprofusion proporcionando detalles de la versión del sistema operativo del servidor y las versiones de IIS.</value>
+    <value>No se detectó IIS en este servidor, una serie de características importantes no estarán disponible. Si IIS está instalado y ejecutándose en este servidor, informe este error a support@certifytheweb.com proporcionando detalles de la versión del sistema operativo del servidor y las versiones de IIS.</value>
   </data>
   <data name="MainWindow_GetStartGuideWithNewCert" xml:space="preserve">
     <value>Comience registrando un nuevo contacto, luego puede comenzar a solicitar certificados.</value>
@@ -420,10 +402,10 @@
   <data name="failed" xml:space="preserve">
     <value>fallido</value>
   </data>
-  <data name="ManagedItemSettings_WebhookTest" xml:space="preserve">
+  <data name="ManagedCertificateSettings_WebhookTest" xml:space="preserve">
     <value>Prueba de Webhook</value>
   </data>
-  <data name="ManagedItemSettings_ViewCertificate" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ViewCertificate" xml:space="preserve">
     <value>Ver Certificado</value>
   </data>
   <data name="SaveError" xml:space="preserve">
@@ -441,149 +423,146 @@
   <data name="DiscardChanges" xml:space="preserve">
     <value>Descartar Cambios</value>
   </data>
-  <data name="ManagedItemSettings_RequestCertificate" xml:space="preserve">
+  <data name="ManagedCertificateSettings_RequestCertificate" xml:space="preserve">
     <value>Solicitar Certificado</value>
   </data>
-  <data name="ManagedItemSettings_EnableAutoRenewal" xml:space="preserve">
+  <data name="ManagedCertificateSettings_EnableAutoRenewal" xml:space="preserve">
     <value>Habilitar renovación automática</value>
   </data>
-  <data name="ManagedItemSettings_NotifyPrimaryContactOnRenewalFailure" xml:space="preserve">
+  <data name="ManagedCertificateSettings_NotifyPrimaryContactOnRenewalFailure" xml:space="preserve">
     <value>Notificar al contacto principal sobre la falla de renovación</value>
   </data>
-  <data name="ManagedItemSettings_Tab_Options" xml:space="preserve">
+  <data name="ManagedCertificateSettings_Tab_Options" xml:space="preserve">
     <value>Opciones</value>
   </data>
-  <data name="ManagedItemSettings_SelectIISSite" xml:space="preserve">
+  <data name="ManagedCertificateSettings_SelectWebsite" xml:space="preserve">
     <value>Seleccione el sitio IIS:</value>
   </data>
-  <data name="ManagedItemSettings_DisplayName" xml:space="preserve">
+  <data name="ManagedCertificateSettings_DisplayName" xml:space="preserve">
     <value>Nombre para mostrar:</value>
   </data>
-  <data name="ManagedItemSettings_DomainIncluded" xml:space="preserve">
+  <data name="ManagedCertificateSettings_DomainIncluded" xml:space="preserve">
     <value>Los siguientes dominios seleccionados se incluirán como una única solicitud de certificado. El servicio Let's Encrypt debe poder acceder a todos estos dominios a través del puerto 80 (para desafíos HTTP) o el puerto 443 (para desafíos TLS-SNI) para que el proceso de certificación funcione.</value>
   </data>
-  <data name="ManagedItemSettings_SelectDomain" xml:space="preserve">
+  <data name="ManagedCertificateSettings_SelectDomain" xml:space="preserve">
     <value>Dominios y subdominios para incluir:</value>
   </data>
   <data name="SelectAll" xml:space="preserve">
     <value>Seleccionar Todo</value>
   </data>
-  <data name="ManagedItemSettings_SelectNone" xml:space="preserve">
+  <data name="ManagedCertificateSettings_SelectNone" xml:space="preserve">
     <value>Quitar Selección</value>
   </data>
-  <data name="ManagedItemSettings_Primary" xml:space="preserve">
+  <data name="ManagedCertificateSettings_Primary" xml:space="preserve">
     <value>Primario</value>
   </data>
-  <data name="ManagedItemSettings_Include" xml:space="preserve">
+  <data name="ManagedCertificateSettings_Include" xml:space="preserve">
     <value>Incluir</value>
   </data>
-  <data name="ManagedItemSettings_Domain" xml:space="preserve">
+  <data name="ManagedCertificateSettings_Domain" xml:space="preserve">
     <value>Dominio</value>
   </data>
   <data name="Advanced" xml:space="preserve">
     <value>Avanzado</value>
   </data>
-  <data name="ManagedItemSettings_ChallengeTypes" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ChallengeTypes" xml:space="preserve">
     <value>Tipo de desafío:</value>
   </data>
-  <data name="ManagedItemSettings_WebsiteRoot" xml:space="preserve">
+  <data name="ManagedCertificateSettings_WebsiteRoot" xml:space="preserve">
     <value>Directorio raíz del sitio web</value>
   </data>
-  <data name="ManagedItemSettings_BrowseFolder" xml:space="preserve">
+  <data name="ManagedCertificateSettings_BrowseFolder" xml:space="preserve">
     <value>...</value>
   </data>
-  <data name="ManagedItemSettings_PerformChallengeResponseConfigCheck" xml:space="preserve">
+  <data name="ManagedCertificateSettings_PerformChallengeResponseConfigCheck" xml:space="preserve">
     <value>Realizar comprobaciones de configuración de respuesta de desafío</value>
   </data>
-  <data name="ManagedItemSettings_PerformWebAppAutoConfig" xml:space="preserve">
+  <data name="ManagedCertificateSettings_PerformWebAppAutoConfig" xml:space="preserve">
     <value>Realizar la configuración automática de la aplicación web</value>
   </data>
-  <data name="ManagedItemSettings_BindIP" xml:space="preserve">
+  <data name="ManagedCertificateSettings_BindIP" xml:space="preserve">
     <value>Enlace a IP específico:</value>
   </data>
-  <data name="ManagedItemSettings_BindPort" xml:space="preserve">
+  <data name="ManagedCertificateSettings_BindPort" xml:space="preserve">
     <value>Enlace al puerto específico:</value>
   </data>
-  <data name="ManagedItemSettings_UseSNI" xml:space="preserve">
+  <data name="ManagedCertificateSettings_UseSNI" xml:space="preserve">
     <value>Usar SNI (IIS 8+):</value>
   </data>
-  <data name="ManagedItemSettings_PerRequsetScript" xml:space="preserve">
+  <data name="ManagedCertificateSettings_PerRequsetScript" xml:space="preserve">
     <value>Pre-solicitud PS Script:</value>
   </data>
   <data name="Test" xml:space="preserve">
     <value>Prueba</value>
   </data>
-  <data name="ManagedItemSettings_ExportTip" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ExportTip" xml:space="preserve">
     <value>Nota: Para exportar este certificado, use la opción Administrar Certificados en Windows.</value>
   </data>
-  <data name="ManagedItemSettings_OpenLogFile" xml:space="preserve">
+  <data name="ManagedCertificateSettings_OpenLogFile" xml:space="preserve">
     <value>brir archivo de registro</value>
   </data>
-  <data name="ManagedItemSettings_CertificateRevokeWarning" xml:space="preserve">
+  <data name="ManagedCertificateSettings_CertificateRevokeWarning" xml:space="preserve">
     <value>ADVERTENCIA: este certificado ha sido revocado.</value>
   </data>
-  <data name="ManagedItemSettings_SelectWebsiteOrCert" xml:space="preserve">
+  <data name="ManagedCertificateSettings_SelectWebsiteOrCert" xml:space="preserve">
     <value>Seleccione el sitio web para crear un certificado</value>
   </data>
-  <data name="ManagedItemSettings_NameRequired" xml:space="preserve">
+  <data name="ManagedCertificateSettings_NameRequired" xml:space="preserve">
     <value>Se requiere un nombre para este elemento.</value>
   </data>
-  <data name="ManagedItemSettings_NeedPrimaryDomain" xml:space="preserve">
+  <data name="ManagedCertificateSettings_NeedPrimaryDomain" xml:space="preserve">
     <value>Se debe incluir un Dominio Principal</value>
   </data>
-  <data name="ManagedItemSettings_ChallengeNotAvailable" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ChallengeNotAvailable" xml:space="preserve">
     <value>El desafío {0} solo está disponible para las versiones de IIS 8+.</value>
   </data>
-  <data name="ManagedItemSettings_HookMustBeValidUrl" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookMustBeValidUrl" xml:space="preserve">
     <value>La URL para el webhook debe establecerse en una URL válida.</value>
   </data>
-  <data name="ManagedItemSettings_HookMethodMustBeSet" xml:space="preserve">
+  <data name="ManagedCertificateSettings_HookMethodMustBeSet" xml:space="preserve">
     <value>El Método para el webhook debe estar configurado.</value>
   </data>
-  <data name="ManagedItemSettings_NoChanges" xml:space="preserve">
+  <data name="ManagedCertificateSettings_NoChanges" xml:space="preserve">
     <value>No se realizaron cambios, omitiendo guardar</value>
   </data>
   <data name="ConfirmDelete" xml:space="preserve">
     <value>Confirmar eliminación</value>
   </data>
-  <data name="ManagedItemSettings_ConfirmDelete" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ConfirmDelete" xml:space="preserve">
     <value>¿Seguro que quieres eliminar este elemento? Eliminalo no afectará la configuración de IIS, etc.</value>
   </data>
-  <data name="ManagedItemSettings_LogNotCreated" xml:space="preserve">
+  <data name="ManagedCertificateSettings_LogNotCreated" xml:space="preserve">
     <value>El archivo de registro para este elemento no ha sido creado todavía.</value>
   </data>
-  <data name="ManagedItemSettings_CertificateNotReady" xml:space="preserve">
+  <data name="ManagedCertificateSettings_CertificateNotReady" xml:space="preserve">
     <value>El archivo de certificado para este elemento no ha sido creado todavía.</value>
   </data>
   <data name="ChallengeError" xml:space="preserve">
     <value>Error de Desafío</value>
   </data>
-  <data name="ManagedItemSettings_CannotChallengeWithoutIIS" xml:space="preserve">
+  <data name="ManagedCertificateSettings_CannotChallengeWithoutIIS" xml:space="preserve">
     <value>No se pueden verificar los desafíos si el IIS no está disponible.</value>
   </data>
   <data name="Challenge" xml:space="preserve">
     <value>Desafío</value>
   </data>
-  <data name="ManagedItemSettings_ConfigurationCheckOk" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ConfigurationCheckOk" xml:space="preserve">
     <value>Configuración comprobada OK</value>
   </data>
-  <data name="ManagedItemSettings_ConfigurationCheckFailed" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ConfigurationCheckFailed" xml:space="preserve">
     <value>Error de comprobación de configuración:
 {0}</value>
   </data>
-  <data name="ManagedItemSettings_ChallengeTestFailed" xml:space="preserve">
+  <data name="ManagedCertificateSettings_ChallengeTestFailed" xml:space="preserve">
     <value>Prueba de Desafío Fallida</value>
   </data>
-  <data name="ManagedItemSettings_WebhookTestFailed" xml:space="preserve">
+  <data name="ManagedCertificateSettings_WebhookTestFailed" xml:space="preserve">
     <value>Prueba de Webhook Fallida</value>
   </data>
-  <data name="ManagedItemSettings_WebhookRequestResult" xml:space="preserve">
+  <data name="ManagedCertificateSettings_WebhookRequestResult" xml:space="preserve">
     <value>Solicitud de Webhook {0}: HTTP {1}</value>
   </data>
-  <data name="ManagedItemSettings_WebhookRequestError" xml:space="preserve">
+  <data name="ManagedCertificateSettings_WebhookRequestError" xml:space="preserve">
     <value>Error de solicitud de Webhook: {0}</value>
-  </data>
-  <data name="ManagedItemSettings_NoHostNameBindingWarning" xml:space="preserve">
-    <value>No hay enlaces de nombre de host http o https asociados con el sitio seleccionado en IIS. Se requiere al menos un nombre de host completo (por ejemplo, 'github.com') para crear un certificado.</value>
   </data>
 </root>

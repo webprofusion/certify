@@ -154,11 +154,11 @@
   <data name="CertifyManager_DomainValidationSkipVerifed" xml:space="preserve">
     <value>El dominio ya está autorizado, omitiendo la verificación: {0}</value>
   </data>
-  <data name="ManagedItemType_Manual" xml:space="preserve">
-    <value>Certificado SSL Manual vía Let's Encrypt</value>
+  <data name="ManagedCertificateType_Manual" xml:space="preserve">
+    <value>Certificado SSL Manual</value>
   </data>
-  <data name="ManagedItemType_LocalIIS" xml:space="preserve">
-    <value>Certificado SSL IIS Local vía Let's Encrypt</value>
+  <data name="ManagedCertificateType_LocalIIS" xml:space="preserve">
+    <value>Certificado SSL IIS Local</value>
   </data>
   <data name="CertifyManager_AutomateConfigurationCheckFailed_SNI" xml:space="preserve">
     <value>Las comprobaciones automatizadas de configuración fallaron. Las autorizaciones no podrán completarse.
@@ -172,10 +172,7 @@ Compruebe que tiene enlaces https de SNI para su sitio
     <value>Verificación de configuración de pre-requisitos fallida ({0})</value>
   </data>
   <data name="CertifyManager_LetsEncryptServiceTimeout" xml:space="preserve">
-    <value>El servicio Let's Encrypt no emitió un certificado válido en el tiempo permitido. {0}</value>
-  </data>
-  <data name="CertifyManager_PerformingChallengeResponseViaIISX0" xml:space="preserve">
-    <value>Ejecutando Respuesta al Desafío vía IIS: {0}</value>
+    <value>El servicio ACME no emitió un certificado válido en el tiempo permitido. {0}</value>
   </data>
   <data name="CertifyManager_PerformingConfigTests" xml:space="preserve">
     <value>Ejecutando Pruebas de Configuración</value>
@@ -184,10 +181,10 @@ Compruebe que tiene enlaces https de SNI para su sitio
     <value>Registrando y Validando {0}</value>
   </data>
   <data name="CertifyManager_RequestCertificate" xml:space="preserve">
-    <value>Solicitando Certificado vía Let's Encrypt</value>
+    <value>Solicitando Certificado</value>
   </data>
   <data name="CertifyManager_ReqestValidationFromLetsEncrypt" xml:space="preserve">
-    <value>Solicitando Valdiación desde Let's Encrypt: {0}</value>
+    <value>Solicitando Valdiación desde ACME CA: {0}</value>
   </data>
   <data name="CertifyManager_RequestFailed" xml:space="preserve">
     <value>{0}: Solicitud fallida - {1} {2}</value>

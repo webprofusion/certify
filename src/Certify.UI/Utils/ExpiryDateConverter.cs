@@ -1,7 +1,7 @@
-using Certify.Locales;
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Data;
+using Certify.Locales;
 
 namespace Certify.UI.Utils
 {
@@ -9,8 +9,6 @@ namespace Certify.UI.Utils
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if (value == null) return DependencyProperty.UnsetValue;
-
             return GetDescription((DateTime?)value);
         }
 
@@ -21,10 +19,22 @@ namespace Certify.UI.Utils
 
         public static string GetDescription(DateTime? expiry)
         {
-            if (expiry == null) return SR.ExpiryDateConverter_NoCurrentCertificate;
+            if (expiry == null)
+            {
+                return SR.ExpiryDateConverter_NoCurrentCertificate;
+            }
 
-            var days = (int)Math.Abs((DateTime.Now - expiry).Value.TotalDays);
-            return String.Format(SR.ExpiryDateConverter_CertificateExpiresIn, days);
+            var days = (int)(expiry - DateTime.Now).Value.TotalDays;
+
+            if (days < 0)
+            {
+                return string.Format(SR.ExpiryDateConverter_CertificateExpiredNDaysAgo, -days);
+            }
+            else
+            {
+                return string.Format(SR.ExpiryDateConverter_CertificateExpiresIn, days);
+            }
+
         }
     }
 
@@ -32,8 +42,6 @@ namespace Certify.UI.Utils
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if (value == null) return DependencyProperty.UnsetValue;
-
             return GetColour((DateTime?)value);
         }
 
@@ -44,21 +52,29 @@ namespace Certify.UI.Utils
 
         public static System.Windows.Media.Brush GetColour(DateTime? expiry)
         {
-            if (expiry == null) return System.Windows.Media.Brushes.SlateGray;
-
-            var days = (int)Math.Abs((DateTime.Now - expiry).Value.TotalDays);
-
-            if (days < 7)
+            if (expiry == null)
             {
-                return System.Windows.Media.Brushes.Red;
+                return System.Windows.Media.Brushes.SlateGray;
+            }
+
+            var days = (int)(expiry - DateTime.Now).Value.TotalDays;
+
+            if (days < 0)
+            {
+                return System.Windows.Media.Brushes.DarkRed;
+            }
+            else if (days < 7)
+            {
+                return  System.Windows.Media.Brushes.IndianRed;
             }
             else if (days < 30)
             {
-                return System.Windows.Media.Brushes.OrangeRed;
+                return System.Windows.Media.Brushes.Chocolate;
             }
             else
             {
-                return System.Windows.Media.Brushes.Green;
+                return (System.Windows.Media.Brush)App.Current.Resources["MahApps.Brushes.SystemControlForegroundBaseMediumHigh"];
+                //return System.Windows.Media.Brushes.Green;
             }
         }
     }

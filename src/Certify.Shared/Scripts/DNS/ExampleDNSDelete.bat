@@ -1,0 +1,1 @@
+ECHO "Deleted TXT Record in the DNS Zone for domain: %1 with Record Name: %2" > dns_delete_test.log

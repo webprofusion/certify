@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Platforms>x64</Platforms>
+    <AssemblyName>Plugin.DNS.AWSRoute53</AssemblyName>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.Route53" Version="3.5.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Certify.Models\Certify.Models.csproj" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="REM Copy latest plugin build to plugins output folder&#xD;&#xA;xcopy /i /s /Y $(TargetPath) $(SolutionDir)\..\build\plugins\$(ConfigurationName)\" />
+  </Target>
+
+</Project>
