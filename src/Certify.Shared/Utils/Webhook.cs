@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -97,7 +98,7 @@ namespace Certify.Shared.Utils
                 }
 
                 var resp = await client.SendAsync(message);
-                
+
                 return new WebhookResult(resp.IsSuccessStatusCode, (int)resp.StatusCode);
             }
         }
@@ -116,7 +117,23 @@ namespace Certify.Shared.Utils
 
             foreach (var prop in config.GetType().GetProperties())
             {
-                var value = prop.GetValue(config)?.ToString() ?? "";
+                var objValue = prop.GetValue(config);
+
+                var value = "";
+                if (objValue != null && objValue is Array)
+                {
+
+                    foreach (var i in ((Array)objValue))
+                    {
+                        value += i.ToString() + " ";
+                    }
+
+                }
+                else
+                {
+                    value = objValue?.ToString() ?? "";
+                }
+
 
                 if (url_encode)
                 {
@@ -129,6 +146,10 @@ namespace Certify.Shared.Utils
 
                 vars[prop.Name.ToLower()] = value;
             }
+
+            // ChallengeType can be multiple values, use the first one present
+
+            vars["challengetype"] = config.Challenges.FirstOrDefault()?.ChallengeType ?? vars["challengetype"];
 
             // add special processing for these values
             vars["success"] = forSuccess ? "true" : "false";
