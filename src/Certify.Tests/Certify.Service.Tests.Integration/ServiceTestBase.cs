@@ -27,7 +27,6 @@ namespace Certify.Service.Tests.Integration
                
                 var svcpath = $"{ Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)}\\..\\..\\..\\..\\..\\Certify.Service\\bin\\Debug\\net462\\CertifySSLManager.Service.exe";
 
-
                 _apiService = Process.Start(svcpath);
             
                 await Task.Delay(2000);

@@ -4,6 +4,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.AspNetCore.Builder;
 using System.Diagnostics;
 using Certify.SharedUtils;
+using System.IO;
+using System.Reflection;
 
 namespace Certify.API.Tests
 {
@@ -30,7 +32,9 @@ namespace Certify.API.Tests
             // TODO : create API server instance instead of invoking directly
             if (_apiService == null)
             {
-                _apiService = Process.Start(@"..\..\..\..\..\src\Certify.Service\bin\Debug\net462\CertifySSLManager.Service.exe");
+                var svcpath = $"{ Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)}\\..\\..\\..\\..\\..\\Certify.Service\\bin\\Debug\\net462\\CertifySSLManager.Service.exe";
+
+                _apiService = Process.Start(svcpath);
 
                 await Task.Delay(2000);
             }
