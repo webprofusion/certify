@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -687,7 +687,15 @@ namespace Certify.UI.ViewModel
                 if (existing != null)
                 {
                     var index = ManagedCertificates.IndexOf(existing);
-                    ManagedCertificates[index] = newItem;
+                    if (index > -1)
+                    {
+                        ManagedCertificates[index] = newItem;
+                    }
+                else
+                {
+                    ManagedCertificates.Add(newItem);
+                }
+
                 }
                 else
                 {
