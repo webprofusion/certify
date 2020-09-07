@@ -14,14 +14,23 @@ namespace Certify.Management
 {
     public class PowerShellManager
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="powershellExecutionPolicy">Unrestricted etc, </param>
+        /// <param name="result"></param>
+        /// <param name="scriptFile"></param>
+        /// <param name="parameters"></param>
+        /// <param name="scriptContent"></param>
+        /// <param name="credentials"></param>
+        /// <returns></returns>
         public static async Task<ActionResult> RunScript(
+            string powershellExecutionPolicy,
             CertificateRequestResult result,
             string scriptFile = null,
             Dictionary<string, object> parameters = null,
             string scriptContent = null,
-            Dictionary<string, string> credentials = null,
-            string powershellExecutionPolicy = "Unrestricted",
-            bool autoConvertBoolean = true
+            Dictionary<string, string> credentials = null
             )
         {
 

@@ -31,6 +31,7 @@ namespace Certify.Providers.DeploymentTasks
             ICredentialsManager credentialsManager, 
             object subject,
             CancellationToken cancellationToken,
+            DeploymentContext deploymentContext,
             bool isPreviewOnly = true
             )
         {
@@ -38,7 +39,7 @@ namespace Certify.Providers.DeploymentTasks
             {
                 try
                 {
-                    var execParams = new DeploymentTaskExecutionParams(log, credentialsManager, subject, TaskConfig, _credentials, isPreviewOnly, null, cancellationToken);
+                    var execParams = new DeploymentTaskExecutionParams(log, credentialsManager, subject, TaskConfig, _credentials, isPreviewOnly, null, cancellationToken, deploymentContext);
 
                     return await TaskProvider.Execute(execParams);
                 }

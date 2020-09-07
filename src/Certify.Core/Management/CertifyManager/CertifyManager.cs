@@ -46,6 +46,7 @@ namespace Certify.Management
 
         private ConcurrentDictionary<string, CertificateAuthority> _certificateAuthorities = new ConcurrentDictionary<string, CertificateAuthority>();
         private bool _useWindowsNativeFeatures = true;
+        private Shared.ServiceConfig _serverConfig;
 
         public CertifyManager() : this(true)
         {
@@ -55,11 +56,11 @@ namespace Certify.Management
         {
             _useWindowsNativeFeatures = useWindowsNativeFeatures;
 
-            var serverConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
+            _serverConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
             SettingsManager.LoadAppSettings();
 
-            InitLogging(serverConfig);
+            InitLogging(_serverConfig);
 
             Util.SetSupportedTLSVersions();
             try
@@ -93,7 +94,7 @@ namespace Certify.Management
                 _tc = new Util().InitTelemetry();
             }
 
-            _httpChallengePort = serverConfig.HttpChallengeServerPort;
+            _httpChallengePort = _serverConfig.HttpChallengeServerPort;
             _httpChallengeServerClient.Timeout = new TimeSpan(0, 0, 20);
 
             if (_tc != null)

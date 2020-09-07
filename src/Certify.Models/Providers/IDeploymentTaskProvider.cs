@@ -9,6 +9,11 @@ using Certify.Models.Providers;
 namespace Certify.Providers.DeploymentTasks
 {
 
+    public class DeploymentContext
+    {
+        public string PowershellExecutionPolicy { get; set; } = "Unrestricted";
+    }
+
     public class DeploymentTaskExecutionParams
     {
         public DeploymentTaskExecutionParams(
@@ -19,7 +24,8 @@ namespace Certify.Providers.DeploymentTasks
             Dictionary<string, string> credentials,
             bool isPreviewOnly,
             DeploymentProviderDefinition definition,
-            CancellationToken cancellationToken
+            CancellationToken cancellationToken,
+            DeploymentContext context
             )
         {
             Log = log;
@@ -30,6 +36,7 @@ namespace Certify.Providers.DeploymentTasks
             IsPreviewOnly = isPreviewOnly;
             Definition = definition;
             CancellationToken = cancellationToken;
+            Context = context;
         }
 
         /// <summary>
@@ -47,6 +54,7 @@ namespace Certify.Providers.DeploymentTasks
             IsPreviewOnly = execParams.IsPreviewOnly;
             Definition = definition ?? execParams.Definition;
             CancellationToken = execParams.CancellationToken;
+            Context = execParams.Context;
         }
 
         public ILog Log { get; }
@@ -57,6 +65,8 @@ namespace Certify.Providers.DeploymentTasks
         public bool IsPreviewOnly { get; }
         public DeploymentProviderDefinition Definition { get; }
         public CancellationToken CancellationToken { get; }
+
+        public DeploymentContext Context { get; }
     }
 
     public interface IDeploymentTaskProvider

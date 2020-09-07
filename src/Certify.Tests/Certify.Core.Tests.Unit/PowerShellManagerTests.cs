@@ -19,7 +19,7 @@ namespace Certify.Core.Tests.Unit
         {
             var path = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
-            await PowerShellManager.RunScript(new CertificateRequestResult {}, path+"\\Assets\\Powershell\\Simple.ps1");
+            await PowerShellManager.RunScript("Unrestricted", new CertificateRequestResult {}, path+"\\Assets\\Powershell\\Simple.ps1");
 
 
             var transcriptLogExists = System.IO.File.Exists(@"C:\Temp\Certify\TestOutput\TestTranscript.txt");

@@ -771,7 +771,7 @@ namespace Certify.Core.Management.Challenges.DNS
 
             var objParams = _parameters.ToDictionary(p => p.Key, p => p.Value as object);
 
-            return await PowerShellManager.RunScript(null, null, objParams, scriptContent, null, _scriptExecutionPolicy);
+            return await PowerShellManager.RunScript(_scriptExecutionPolicy, null, null, objParams, scriptContent, null);
         }
 
         public async Task<ActionResult> DeleteRecord(DnsRecord request)
@@ -780,7 +780,7 @@ namespace Certify.Core.Management.Challenges.DNS
 
             var objParams = _parameters.ToDictionary(p => p.Key, p => p.Value as object);
 
-            return await PowerShellManager.RunScript(null, null, objParams, scriptContent, null, _scriptExecutionPolicy);
+            return await PowerShellManager.RunScript(_scriptExecutionPolicy, null, null, objParams, scriptContent, null);
         }
 
         Task<List<DnsZone>> IDnsProvider.GetZones() => Task.FromResult(new List<DnsZone>());
