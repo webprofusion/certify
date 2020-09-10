@@ -10,15 +10,22 @@
 
         public static AppVersion FromString(string version)
         {
-            var versionComponents = version.Split('.');
-
-            var current = new AppVersion
+            try
             {
-                Major = int.Parse(versionComponents[0]),
-                Minor = int.Parse(versionComponents[1]),
-                Patch = int.Parse(versionComponents[2])
-            };
-            return current;
+                var versionComponents = version.Split('.');
+
+                var current = new AppVersion
+                {
+                    Major = int.Parse(versionComponents[0]),
+                    Minor = int.Parse(versionComponents[1]),
+                    Patch = int.Parse(versionComponents[2])
+                };
+                return current;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public static AppVersion FromVersion(System.Version version)
@@ -34,6 +41,16 @@
 
         public static bool IsOtherVersionNewer(AppVersion currentVersion, AppVersion otherVersion)
         {
+            if (currentVersion == null)
+            {
+                return true;
+            }
+
+            if (otherVersion == null)
+            {
+                return false;
+            }
+
             if (otherVersion.Major > currentVersion.Major)
             {
                 return true;

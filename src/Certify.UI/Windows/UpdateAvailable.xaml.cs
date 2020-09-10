@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Certify.Models;
 
 namespace Certify.UI.Windows
 {
@@ -28,7 +29,7 @@ namespace Certify.UI.Windows
                 var cssPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "CSS", "markdown.css");
                 _css = System.IO.File.ReadAllText(cssPath);
 
-                if (MainViewModel.UISettings?.UITheme?.ToLower()=="dark")
+                if (MainViewModel.UISettings?.UITheme?.ToLower() == "dark")
                 {
                     cssPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "CSS", "dark-mode.css");
                     _css += System.IO.File.ReadAllText(cssPath);
@@ -46,6 +47,8 @@ namespace Certify.UI.Windows
         {
             // generate release notes
 
+            bool showAllChanges = false;
+
             UpdateMessage.Text = _update.Message.Body;
 
             StringBuilder sb = new StringBuilder();
@@ -55,10 +58,15 @@ namespace Certify.UI.Windows
 
             if (_update.Message.ReleaseNotes != null)
             {
+
                 foreach (var note in _update.Message.ReleaseNotes)
                 {
-                    sb.AppendLine($"{note.Version}: {note.ReleaseDate}");
-                    sb.AppendLine($"{note.Body}\n");
+                    if (showAllChanges || _update.InstalledVersion == null || AppVersion.IsOtherVersionNewer(_update.InstalledVersion, AppVersion.FromString(note.Version)))
+                    {
+                        sb.AppendLine($"{note.Version}: {note.ReleaseDate}");
+                        sb.AppendLine($"{note.Body}\n");
+                        sb.AppendLine($"-------------------------\n");
+                    }
                 }
             }
 

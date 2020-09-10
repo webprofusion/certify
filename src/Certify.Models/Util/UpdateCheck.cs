@@ -1,4 +1,4 @@
-namespace Certify.Models
+﻿namespace Certify.Models
 {
     public class UpdateCheck
     {
@@ -10,5 +10,7 @@ namespace Certify.Models
 
         public bool MustUpdate { get; set; }
         public string UpdateFilePath { get; set; }
+
+        public AppVersion InstalledVersion { get; set; }
     }
 }

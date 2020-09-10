@@ -243,7 +243,7 @@ namespace Certify.Management
                     return CompareVersions(appVersion, checkResult);
                 }
 
-                return new UpdateCheck { IsNewerVersion = false };
+                return new UpdateCheck { IsNewerVersion = false, InstalledVersion = AppVersion.FromString(appVersion) };
             }
             catch (Exception)
             {
@@ -260,6 +260,8 @@ namespace Certify.Management
             {
                 checkResult.MustUpdate = AppVersion.IsOtherVersionNewer(AppVersion.FromString(appVersion), checkResult.Message.MandatoryBelowVersion);
             }
+
+            checkResult.InstalledVersion = AppVersion.FromString(appVersion);
 
             return checkResult;
         }
