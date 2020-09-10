@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Data;
 using System.Windows.Forms;
 using System.Windows.Input;
 using Certify.Client;
@@ -28,10 +29,11 @@ namespace Certify.UI.ViewModel
     {
         /// <summary>
         /// Provide single static instance of model for all consumers 
-        /// </summary>
-        //public static AppModel AppViewModel = new DesignViewModel(); // for UI testing
+        /// </summary>        
         public static AppViewModel Current = GetModel();
+
         private IServiceConfigProvider _configManager;
+
         public AppViewModel()
         {
             _configManager = new SharedUtils.ServiceConfigManager();
@@ -73,7 +75,6 @@ namespace Certify.UI.ViewModel
 
         public const int ProductTypeId = 1;
 
-        //private CertifyManager certifyManager = null;
         internal ICertifyClient CertifyClient = null;
 
         public PluginManager PluginManager { get; set; }
@@ -148,15 +149,26 @@ namespace Certify.UI.ViewModel
             Preferences = prefs;
         }
 
+        private object _managedCertificatesLock = new object();
+
         /// <summary>
         /// List of all the sites we currently manage 
         /// </summary>
         public ObservableCollection<ManagedCertificate> ManagedCertificates
         {
-            get => managedCertificates;
+            get {
+                lock (_managedCertificatesLock)
+                {
+                    return managedCertificates;
+                }
+            }
+
             set
             {
                 managedCertificates = value;
+
+                BindingOperations.EnableCollectionSynchronization(managedCertificates, _managedCertificatesLock);
+
                 if (SelectedItem != null)
                 {
                     SelectedItem = SelectedItem;
@@ -592,7 +604,16 @@ namespace Certify.UI.ViewModel
                     var deletedOK = await CertifyClient.DeleteManagedCertificate(selectedItem.Id);
                     if (deletedOK)
                     {
-                        ManagedCertificates.Remove(existing);
+                        await _managedCertCacheSemaphore.WaitAsync();
+
+                        try 
+                        {
+                            ManagedCertificates.Remove(existing);
+                        }
+                        finally
+                        {
+                            _managedCertCacheSemaphore.Release();
+                        }
                     }
                     return deletedOK;
                 }
@@ -663,47 +684,55 @@ namespace Certify.UI.ViewModel
                 // very long running renewal may time out on task await
                 Log?.Warning("Auto Renewal UI task cancelled (timeout) " + exp.ToString());
             }
-
-            // now continue to poll status of current request. should this just be a query for all
-            // current requests?
         }
 
+        private static SemaphoreSlim _managedCertCacheSemaphore = new SemaphoreSlim(1, 1);
         public async Task<ManagedCertificate> UpdatedCachedManagedCertificate(ManagedCertificate managedCertificate, bool reload = false)
         {
-            var existing = ManagedCertificates.FirstOrDefault(i => i.Id == managedCertificate.Id);
-            var newItem = managedCertificate;
 
-            // optional reload managed site details (for refresh)
-            if (reload)
+            await _managedCertCacheSemaphore.WaitAsync();
+
+            try
             {
-                newItem = await CertifyClient.GetManagedCertificate(managedCertificate.Id);
-            }
+                var existing = ManagedCertificates.FirstOrDefault(i => i.Id == managedCertificate.Id);
+                var newItem = managedCertificate;
 
-            if (newItem != null)
-            {
-                newItem.IsChanged = false;
-
-                // update our cached copy of the managed site details
-                if (existing != null)
+                // optional reload managed site details (for refresh)
+                if (reload)
                 {
-                    var index = ManagedCertificates.IndexOf(existing);
-                    if (index > -1)
+                    newItem = await CertifyClient.GetManagedCertificate(managedCertificate.Id);
+                }
+
+                if (newItem != null)
+                {
+                    newItem.IsChanged = false;
+
+                    // update our cached copy of the managed site details
+                    if (existing != null)
                     {
-                        ManagedCertificates[index] = newItem;
+                        var index = ManagedCertificates.IndexOf(existing);
+                        if (index > -1)
+                        {
+                            ManagedCertificates[index] = newItem;
+                        }
+                        else
+                        {
+                            ManagedCertificates.Add(newItem);
+                        }
+
                     }
-                else
-                {
-                    ManagedCertificates.Add(newItem);
+                    else
+                    {
+                        ManagedCertificates.Add(newItem);
+                    }
                 }
 
-                }
-                else
-                {
-                    ManagedCertificates.Add(newItem);
-                }
+                return newItem;
             }
-
-            return newItem;
+            finally
+            {
+                _managedCertCacheSemaphore.Release();
+            }
         }
 
         public async Task<List<ActionStep>> GetPreviewActions(ManagedCertificate item) => await CertifyClient.PreviewActions(item);
