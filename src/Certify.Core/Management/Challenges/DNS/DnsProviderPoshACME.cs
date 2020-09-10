@@ -329,6 +329,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ProviderParameters = new List<ProviderParameter>
                 {
                     new ProviderParameter { Key = "DSTokenInsecure", Name = "Token", IsRequired = true, IsCredential = true },
+                    new ProviderParameter { Key = "DSTTL", Name = "TTL", IsRequired = true, IsCredential = false, Type = OptionType.Integer, Value = "3600" },
                     _defaultPropagationDelayParam
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
@@ -730,6 +731,43 @@ namespace Certify.Core.Management.Challenges.DNS
             }
         }
 
+        private string FormatParamKeyValue(ProviderParameter parameterDefinition, KeyValuePair<string, string> paramKeyValue)
+        {
+            if (parameterDefinition == null)
+            {
+                return "";
+            }
+
+            var val = paramKeyValue.Value;
+
+            if (paramKeyValue.Value == null)
+            {
+                // use default 
+                val = parameterDefinition.Value;
+            }
+
+            if (val == null)
+            {
+                return null;
+            }
+
+            if (parameterDefinition.Type == OptionType.Boolean)
+            {
+                // boolean
+                return parameterDefinition.Key + "=" + (bool.Parse(val) == true ? "$true" : "$false");
+            }
+            else if (parameterDefinition.Type == OptionType.Integer)
+            {
+                // integer
+                return parameterDefinition.Key + "=" + val + "";
+            }
+            else
+            {
+                // string
+                return parameterDefinition.Key + "='" + val + "'";
+            }
+        }
+
         private string PrepareScript(string action, string recordName, string recordValue)
         {
             var config = DelegateProviderDefinition.Config.Split(';');
@@ -743,21 +781,41 @@ namespace Certify.Core.Management.Challenges.DNS
 
             var scriptContent = wrapper + "\r\n. \"" + scriptFile + ".ps1\" \r\n";
 
+            KeyValuePair<string, string> GetMostSpecificParameterValue(ProviderParameter s)
+            {
+                if (s == null)
+                {
+                    return default;
+                }
+
+                // check if we have a parameter value in our configuration for this key
+                if (_parameters?.Keys.Contains(s.Key) == true)
+                {
+                    return _parameters.FirstOrDefault(p => p.Key == s.Key);
+                }
+                else if (_credentials?.Keys.Contains(s.Key) == true)
+                {
+                    // check if we have a credential value in our configuration for this key
+                    return _credentials.FirstOrDefault(c => c.Key == s.Key);
+                }
+                else
+                {
+                    // use the default value for this parameter if we have no other value in our config
+                    return new KeyValuePair<string, string>(s.Key, s.Value);
+                }
+            }
+
             // arrange params and credentials into one ordered set of arguments
-            var set = DelegateProviderDefinition
+            var formattedArgumentValues = DelegateProviderDefinition
                 .ProviderParameters
                 .Where(p => p.Key != "propagationdelay")
-                .Select(s => _parameters.Keys.Contains(s.Key) ? _parameters.FirstOrDefault(p => p.Key == s.Key) : _credentials.FirstOrDefault(c => c.Key == s.Key));
+                .Select(p =>
+                    FormatParamKeyValue(p, GetMostSpecificParameterValue(p))
+                )
+                .Where(i => i != null);
 
-            var args = string.Join("; ",
-                            set.Select(p =>
-                                DelegateProviderDefinition
-                                .ProviderParameters
-                                .FirstOrDefault(a => a.Key == p.Key)?.Type == OptionType.Boolean ?
-                                    p.Key + "=" + (bool.Parse(p.Value) == true ? "$true" : "$false") : // bool param
-                                    p.Key + "='" + p.Value + "'" // string param
-                            )
-                        );
+
+            var args = string.Join("; ", formattedArgumentValues.ToArray());
 
             scriptContent += " $PluginArgs= @{" + args + "} \r\n";
             scriptContent += $"{action}{script} -RecordName '{recordName}' -TxtValue '{recordValue}' @PluginArgs \r\n";

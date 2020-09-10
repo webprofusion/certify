@@ -11,7 +11,8 @@ namespace Certify.Models.Config
         Select = 4,
         MultiSelect = 5,
         RadioButton = 6,
-        StoredCredential = 8
+        StoredCredential = 8,
+        Integer = 16
     }
 
     /// <summary>
