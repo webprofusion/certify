@@ -3,6 +3,7 @@
 - Home page for downloads, info and support : [https://certifytheweb.com/](https://certifytheweb.com/)
 - Documentation can be found at: [https://docs.certifytheweb.com](https://docs.certifytheweb.com)
 - Community Discussions: [https://community.certifytheweb.com](https://community.certifytheweb.com)
+- Changelog (release notes): https://certifytheweb.com/home/changelog
 
 The SSL/TLS Certificate Management GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/). This app makes it easy to automatically request, install and continuously renew free certificates for Windows/IIS or for any other services which requires a domain certificate.  
 
