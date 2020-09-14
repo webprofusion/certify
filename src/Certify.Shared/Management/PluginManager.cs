@@ -152,7 +152,7 @@ namespace Certify.Management
             return default;
         }
 
-        public void LoadPlugins(List<string> includeSet)
+        public void LoadPlugins(List<string> includeSet, bool usePluginSubfolder = true)
         {
             var s = Stopwatch.StartNew();
 
@@ -172,14 +172,14 @@ namespace Certify.Management
 
                 DeploymentTaskProviders = deploymentTaskProviders;
 
-                var taskPlugins = LoadPlugins<IDeploymentTaskProviderPlugin>("Plugin.DeploymentTasks.*.dll");
+                var taskPlugins = LoadPlugins<IDeploymentTaskProviderPlugin>("Plugin.DeploymentTasks.*.dll", usePluginSubfolder:usePluginSubfolder);
 
                 deploymentTaskProviders.AddRange(taskPlugins);
             }
 
             if (includeSet.Contains("CertificateManagers"))
             {
-                var certManagerProviders = LoadPlugins<ICertificateManagerProviderPlugin>("Plugin.CertificateManagers.*.dll");
+                var certManagerProviders = LoadPlugins<ICertificateManagerProviderPlugin>("Plugin.CertificateManagers.*.dll", usePluginSubfolder: usePluginSubfolder);
 
                 CertificateManagerProviders = new List<ICertificateManagerProviderPlugin>();
 
@@ -201,7 +201,7 @@ namespace Certify.Management
                 var poshAcmeProvider = (IDnsProviderProviderPlugin)Activator.CreateInstance(Type.GetType("Certify.Core.Management.Challenges.DNS.DnsProviderPoshACME+PoshACMEDnsProviderProvider, Certify.Core"));
                 dnsProviderProviders.Add(poshAcmeProvider);
 
-                var dnsPlugins = LoadPlugins<IDnsProviderProviderPlugin>("Plugin.DNS.*.dll");
+                var dnsPlugins = LoadPlugins<IDnsProviderProviderPlugin>("Plugin.DNS.*.dll", usePluginSubfolder: usePluginSubfolder);
 
                 dnsProviderProviders.AddRange(dnsPlugins);
             }
@@ -211,20 +211,20 @@ namespace Certify.Management
             _log?.Debug($"Plugin load took {s.ElapsedMilliseconds}ms");
         }
 
-        private List<T> LoadPlugins<T>(string fileMatch, bool loadFromAppData = false)
+        private List<T> LoadPlugins<T>(string fileMatch, bool loadFromAppData = false, bool usePluginSubfolder = true)
         {
             var plugins = new List<T>();
 
-            var pluginDir = new DirectoryInfo(GetPluginFolderPath());
+            var pluginDir = new DirectoryInfo(GetPluginFolderPath(usePluginSubfolder));
 
             if (loadFromAppData)
             {
-                pluginDir = new DirectoryInfo(GetPluginFolderPath(usePluginSubfolder: true, useAppData: true));
+                pluginDir = new DirectoryInfo(GetPluginFolderPath(usePluginSubfolder: usePluginSubfolder, useAppData: true));
             }
             else
             {
                 // if loading main plugins, load external plugins first
-                var otherPlugins = LoadPlugins<T>(fileMatch, loadFromAppData: true);
+                var otherPlugins = LoadPlugins<T>(fileMatch, loadFromAppData: true, usePluginSubfolder: usePluginSubfolder);
                 if (otherPlugins?.Any() == true)
                 {
                     plugins.AddRange(otherPlugins);
