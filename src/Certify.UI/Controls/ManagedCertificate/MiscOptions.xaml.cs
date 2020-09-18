@@ -226,8 +226,9 @@ namespace Certify.UI.Controls.ManagedCertificate
             this.ItemViewModel.RaisePropertyChangedEvent(null);
 
             // FIXME: combobox binding misbehaves so force it here
+            var currentCredentialId = ItemViewModel.SelectedItem?.CertificatePasswordCredentialId;
             this.CertPasswordCredential.ItemsSource = ItemViewModel.StoredPasswords;
-            this.CertPasswordCredential.SelectedValue = ItemViewModel.SelectedItem?.CertificatePasswordCredentialId;
+            this.CertPasswordCredential.SelectedValue = currentCredentialId;
         }
     }
 }
