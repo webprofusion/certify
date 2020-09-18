@@ -15,7 +15,7 @@
     <PackageReference Include="Portable.BouncyCastle" Version="1.8.6.7" />
     <PackageReference Include="System.IO.FileSystem.AccessControl" Version="4.7.0" />
     <PackageReference Include="Portable.BouncyCastle" Version="1.8.6.7" />
-    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.14.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.15.0" />
     <PackageReference Include="Microsoft.Web.Administration" Version="11.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="Serilog" Version="2.10.0" />
