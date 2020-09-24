@@ -107,7 +107,7 @@ namespace Certify.Server.Core
 
             //
 
-            app.UseHttpsRedirection();
+           // app.UseHttpsRedirection();
 
             app.UseRouting();
 
