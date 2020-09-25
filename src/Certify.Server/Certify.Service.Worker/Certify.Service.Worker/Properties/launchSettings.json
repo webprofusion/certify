@@ -28,7 +28,7 @@
     },
     "Docker": {
       "commandName": "Docker",
-      "launchBrowser": true,
+      "launchBrowser": false,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/api/system/appversion",
       "environmentVariables": {
         "ASPNETCORE_URLS": "https://+:443;http://+:80",

@@ -4,6 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UserSecretsId>dotnet-Certify.Service.Worker-347A036F-C1EA-4D32-A163-DCB38C3CA53E</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+		<DockerfileRunArguments>-v certifydata:/usr/share/Certify</DockerfileRunArguments>
   </PropertyGroup>
 
   <ItemGroup>

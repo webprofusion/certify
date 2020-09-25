@@ -86,7 +86,7 @@ namespace Certify.Management
                 var executableLocation = Assembly.GetExecutingAssembly().Location;
                 if (usePluginSubfolder)
                 {
-                    var path = Path.Combine(Path.GetDirectoryName(executableLocation), "Plugins");
+                    var path = Path.Combine(Path.GetDirectoryName(executableLocation), "plugins");
                     return path;
                 }
                 else
