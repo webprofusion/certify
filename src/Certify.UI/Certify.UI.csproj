@@ -173,6 +173,9 @@
     <Compile Include="ViewModel\ChallengeConfigItemViewModel.cs" />
     <Compile Include="ViewModel\ManagedCertificateViewModel.cs" />
     <Compile Include="ViewModel\Design\AppDesignViewModel.cs" />
+    <Compile Include="Windows\Connections.xaml.cs">
+      <DependentUpon>Connections.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Windows\ControlTemplateSelector.cs" />
     <Compile Include="Windows\EditCertificateAuthority.xaml.cs">
       <DependentUpon>EditCertificateAuthority.xaml</DependentUpon>
@@ -313,6 +316,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Windows\Connections.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Windows\EditCertificateAuthority.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

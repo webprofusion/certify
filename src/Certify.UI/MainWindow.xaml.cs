@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Certify.Locales;
+using Certify.Models;
 using Certify.UI.Settings;
 using Microsoft.ApplicationInsights;
 
@@ -167,7 +168,8 @@ namespace Certify.UI
                 if (uiSettings.UITheme != null)
                 {
                     ((Certify.UI.App)App.Current).ToggleTheme(uiSettings.UITheme);
-                } else
+                }
+                else
                 {
                     // default theme
                     ((Certify.UI.App)App.Current).ToggleTheme(_appViewModel.DefaultUITheme);
@@ -179,13 +181,26 @@ namespace Certify.UI
                 }
 
                 _appViewModel.UISettings = uiSettings;
-            } else
+            }
+            else
             {
                 // default theme
                 ((Certify.UI.App)App.Current).ToggleTheme(_appViewModel.DefaultUITheme);
             }
 
             await PerformAppStartupChecks();
+
+            if (_appViewModel.IsFeatureEnabled(FeatureFlags.SERVER_CONNECTIONS))
+            {
+                await ChooseConnection();
+            }
+        }
+
+        private async Task ChooseConnection()
+        {
+            var d = new Windows.Connections { Owner = Window.GetWindow(this) };
+
+            d.ShowDialog();
         }
 
         private async Task PerformAppStartupChecks()

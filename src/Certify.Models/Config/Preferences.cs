@@ -106,5 +106,11 @@
         /// Enable options for external cert managers
         /// </summary>
         public static string EXTERNAL_CERT_MANAGERS = "EXTERNAL_CERT_MANAGERS";
+
+
+        /// <summary>
+        /// Enable server connection UI
+        /// </summary>
+        public static string SERVER_CONNECTIONS = "SERVER_CONNECTIONS";
     }
 }

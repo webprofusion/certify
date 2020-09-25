@@ -53,5 +53,18 @@
             Display info for certificates managed by supported external certificate managers, if present.
         </TextBlock>
 
+        <CheckBox
+            Margin="0,8"
+            Content="Server Connections"
+            IsChecked="{Binding IsServerConnectionsEnabled}"
+            Tag="SERVER_CONNECTIONS" />
+
+        <TextBlock
+            Margin="28,0"
+            Style="{StaticResource Instructions}"
+            TextWrapping="Wrap">
+            Enable UI to connect to multiple Certify.Server instances
+        </TextBlock>
+
     </StackPanel>
 </UserControl>

@@ -156,7 +156,8 @@ namespace Certify.UI.ViewModel
         /// </summary>
         public ObservableCollection<ManagedCertificate> ManagedCertificates
         {
-            get {
+            get
+            {
                 lock (_managedCertificatesLock)
                 {
                     return managedCertificates;
@@ -401,19 +402,35 @@ namespace Certify.UI.ViewModel
                 Shared.Core.Management.ServerConnectionManager.Save(Log, connections);
             }
 
-            return connections.FirstOrDefault(c => c.IsDefault = true);
+            return connections.FirstOrDefault(c => c.IsDefault == true);
         }
 
-        public async Task InitServiceConnections()
+        public List<Shared.ServerConnection> GetServerConnections()
+        {
+
+            var defaultConfig = new ServerConnection(_configManager.GetServiceConfig());
+
+            var connections = Shared.Core.Management.ServerConnectionManager.GetServerConnections(Log, defaultConfig);
+
+            return connections;
+        }
+
+        public async Task InitServiceConnections(Shared.ServerConnection conn = null)
         {
 
             //check service connection
-            IsServiceAvailable = await CheckServiceAvailable();
+            IsServiceAvailable = false;
+
+            if (conn == null)
+            {
+                // check default connection
+                IsServiceAvailable = await CheckServiceAvailable();
+            }
 
             var attemptsRemaining = 5;
             while (!IsServiceAvailable && attemptsRemaining > 0)
             {
-                var connectionConfig = GetDefaultServerConnection(_configManager);
+                var connectionConfig = conn ?? GetDefaultServerConnection(_configManager);
                 Debug.WriteLine("Service not yet available. Waiting a few seconds..");
 
                 // the service could still be starting up or port may be reallocated
@@ -606,7 +623,7 @@ namespace Certify.UI.ViewModel
                     {
                         await _managedCertCacheSemaphore.WaitAsync();
 
-                        try 
+                        try
                         {
                             ManagedCertificates.Remove(existing);
                         }

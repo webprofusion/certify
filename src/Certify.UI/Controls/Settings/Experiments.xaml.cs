@@ -51,6 +51,13 @@ namespace Certify.UI.Controls.Settings
                 set => ToggleFeature(FeatureFlags.EXTERNAL_CERT_MANAGERS, value);
             }
 
+            public bool IsServerConnectionsEnabled
+            {
+                get => ViewModel.AppViewModel.Current.IsFeatureEnabled(FeatureFlags.SERVER_CONNECTIONS);
+                set => ToggleFeature(FeatureFlags.SERVER_CONNECTIONS, value);
+            }
+
+
             internal void ToggleFeature(string feature, bool isEnabled)
             {
 
