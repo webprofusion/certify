@@ -1,7 +1,9 @@
-﻿using Certify.Management;
+﻿using Certify.Config.Migration;
+using Certify.Management;
 using Certify.Models;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Certify.Service
@@ -42,5 +44,26 @@ namespace Certify.Service
             await _certifyManager.PerformCertificateCleanup();
             return "OK";
         }
+
+        [HttpGet, Route("diagnostics")]
+        public async Task<List<Models.Config.ActionResult>> PerformServiceDiagnostics()
+        {
+            DebugLog();
+
+            return await _certifyManager.PerformServiceDiagnostics();
+        }
+
+        [HttpPost, Route("migration/export")]
+        public async Task<ImportExportPackage> PerformExport(ExportRequest exportRequest)
+        {
+            return await _certifyManager.PerformExport(exportRequest);
+        }
+
+        [HttpPost, Route("migration/import")]
+        public async Task<List<ActionStep>> PerformImport(ImportRequest importRequest)
+        {
+            return await _certifyManager.PerformImport(importRequest);
+        }
+
     }
 }

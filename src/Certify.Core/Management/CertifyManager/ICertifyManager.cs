@@ -40,7 +40,7 @@ namespace Certify.Management
         Task<ActionResult> RemoveAccount(string storageKey);
 
         Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate, bool isPreviewMode, IProgress<RequestProgressState> progress = null);
-
+        Task<List<ActionResult>> PerformServiceDiagnostics();
         Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId);
         Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority certificateAuthority);
         Task<List<CertificateAuthority>> GetCertificateAuthorities();

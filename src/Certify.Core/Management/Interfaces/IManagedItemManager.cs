@@ -13,5 +13,7 @@ namespace Certify.Management
         Task<ManagedCertificate> GetById(string siteId);
         Task<List<ManagedCertificate>> GetAll(ManagedCertificateFilter filter = null);
         Task<ManagedCertificate> Update(ManagedCertificate managedCertificate);
+
+        Task PerformMaintenance();
     }
 }

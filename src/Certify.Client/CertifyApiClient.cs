@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -155,6 +155,12 @@ namespace Certify.Client
                 //could not check for updates
                 return null;
             }
+        }
+
+        public async Task<List<ActionResult>> PerformServiceDiagnostics()
+        {
+            var result = await FetchAsync("system/diagnostics");
+            return JsonConvert.DeserializeObject<List<ActionResult>>(result);
         }
 
         public async Task<ImportExportPackage> PerformExport(ExportRequest exportRequest)
@@ -469,9 +475,6 @@ namespace Certify.Client
             var result = await PostAsync($"credentials/{credentialKey}/test", new { });
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
-
-
-
 
         #endregion
     }

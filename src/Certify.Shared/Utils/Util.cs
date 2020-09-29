@@ -24,7 +24,7 @@ namespace Certify.Management
         /// check for problems which could affect app use
         /// </summary>
         /// <returns>  </returns>
-        public static async Task<List<ActionResult>> PerformAppDiagnostics(string ntpServer)
+        public static async Task<List<ActionResult>> PerformAppDiagnostics(string ntpServer = null)
         {
             var results = new List<ActionResult>();
 
@@ -55,6 +55,7 @@ namespace Certify.Management
             }
 
             // check free disk space
+            var limit = 512;
             try
             {
                 var cDrive = new DriveInfo("c");
@@ -63,13 +64,13 @@ namespace Certify.Management
                     var freeSpaceBytes = cDrive.AvailableFreeSpace;
 
                     // Check disk has at least 128MB free
-                    if (freeSpaceBytes < (1024L * 1024 * 128))
+                    if (freeSpaceBytes < (1024L * 1024 * limit))
                     {
-                        results.Add(new ActionResult { IsSuccess = false, Message = $"Drive C: has less than 128MB of disk space free. The application may not run correctly." });
+                        results.Add(new ActionResult { IsSuccess = false, Message = $"Drive C: has less than {limit}MB of disk space free. The application may not run correctly." });
                     }
                     else
                     {
-                        results.Add(new ActionResult { IsSuccess = true, Message = $"Drive C: has more than 128MB of disk space free." });
+                        results.Add(new ActionResult { IsSuccess = true, Message = $"Drive C: has more than {limit}MB of disk space free." });
                     }
                 }
             }
@@ -596,6 +597,11 @@ namespace Certify.Management
         public static async Task<DateTime?> CheckTimeServer(string ntpServer = "pool.ntp.org")
         {
             // https://stackoverflow.com/questions/1193955/how-to-query-an-ntp-server-using-c
+
+            if (ntpServer == null)
+            {
+                ntpServer = "pool.ntp.org";
+            }
 
             try
             {

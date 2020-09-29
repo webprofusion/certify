@@ -108,10 +108,13 @@ namespace Certify.UI.ViewModel
             IsError = true;
             CurrentError = exp.Message;
 
-            System.Windows.MessageBox.Show(exp.Message);
+            SystemDiagnosticError = "An error occurred. Persistent errors should be reported to Certify The Web support: "+ exp.Message;
         }
 
         public Preferences Preferences { get; set; } = new Preferences();
+
+        public string SystemDiagnosticWarning { get; set; }
+        public string SystemDiagnosticError { get; set; }
 
         internal async Task SetPreferences(Preferences prefs)
         {
@@ -252,6 +255,11 @@ namespace Certify.UI.ViewModel
         {
             var results = await CertifyClient.PerformDeployment(managedCertificateId, taskId, isPreviewOnly, forceTaskExecute);
             return results;
+        }
+
+        internal async Task<List<ActionResult>> PerformServiceDiagnostics()
+        {
+            return await CertifyClient.PerformServiceDiagnostics();
         }
 
         public ManagedCertificate SelectedItem

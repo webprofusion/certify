@@ -22,6 +22,8 @@ namespace Certify.Client
 
         Task<UpdateCheck> CheckForUpdates();
 
+        Task<List<Models.Config.ActionResult>> PerformServiceDiagnostics();
+
         Task<ImportExportPackage> PerformExport(ExportRequest exportRequest);
         Task<List<ActionStep>> PerformImport(ImportRequest importRequest);
 

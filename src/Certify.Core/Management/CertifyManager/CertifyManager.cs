@@ -312,6 +312,8 @@ namespace Certify.Management
 
             SettingsManager.LoadAppSettings();
 
+            await _itemManager.PerformMaintenance();
+
             await PerformRenewalAllManagedCertificates(new RenewalSettings { }, null);
 
             return await Task.FromResult(true);
@@ -457,6 +459,12 @@ namespace Certify.Management
         public async Task<ImportExportPackage> PerformExport(ExportRequest exportRequest)
         {
             return await _migrationManager.PerformExport(exportRequest.Filter, exportRequest.Settings, exportRequest.IsPreviewMode);
+        }
+
+        public async Task<List<ActionResult>> PerformServiceDiagnostics()
+        {
+            var diag = await Certify.Management.Util.PerformAppDiagnostics();
+            return diag;
         }
     }
 }

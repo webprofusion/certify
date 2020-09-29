@@ -1,6 +1,7 @@
 ﻿using Certify.Config.Migration;
 using Certify.Management;
 using Certify.Models;
+using Certify.Models.Config;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Web.Http;
@@ -42,6 +43,14 @@ namespace Certify.Service
 
             await _certifyManager.PerformCertificateCleanup();
             return "OK";
+        }
+
+        [HttpGet, Route("diagnostics")]
+        public async Task<List<ActionResult>> PerformServiceDiagnostics()
+        {
+            DebugLog();
+
+            return await _certifyManager.PerformServiceDiagnostics();            
         }
 
         [HttpPost, Route("migration/export")]
