@@ -46,7 +46,7 @@ namespace Certify.Management
 
             _dbPath = GetDbPath();
 
-            _connectionString = $"Data Source={_dbPath};PRAGMA temp_store=MEMORY;";
+            _connectionString = $"Data Source={_dbPath};PRAGMA temp_store=MEMORY;Cache=Shared;PRAGMA journal_mode=WAL;";
 
             if (File.Exists(_dbPath))
             {
@@ -58,8 +58,47 @@ namespace Certify.Management
                 // upgrade from JSON storage if db doesn't exist yet
                 var settingsUpgraded = UpgradeSettings().Result;
             }
+
+            //enable write ahead logging mode
+            EnableDBWriteAheadLogging();
+
+            PerformMaintenance();
         }
 
+
+        private void EnableDBWriteAheadLogging()
+        {
+            using (var db = new SQLiteConnection(_connectionString))
+            {
+                db.Open();
+                var walCmd = db.CreateCommand();
+                walCmd.CommandText =
+                @"
+                    PRAGMA journal_mode = 'wal';
+                ";
+                walCmd.ExecuteNonQuery();
+                db.Close();
+            }
+
+        }
+
+        public Task PerformMaintenance()
+        {
+            using (var db = new SQLiteConnection(_connectionString))
+            {
+                db.Open();
+                var walCmd = db.CreateCommand();
+                walCmd.CommandText =
+                @"
+                    PRAGMA wal_checkpoint(FULL);
+                    VACUUM;
+                ";
+                walCmd.ExecuteNonQuery();
+                db.Close();
+            }
+
+            return Task.FromResult(true);
+        }
         private string GetDbPath()
         {
             var appDataPath = Util.GetAppDataFolder(_storageSubFolder);
@@ -384,6 +423,7 @@ namespace Certify.Management
                     using (var db = new SQLiteConnection(_connectionString))
                     {
                         await db.OpenAsync();
+
                         using (var tran = db.BeginTransaction())
                         {
                             using (var cmd = new SQLiteCommand("INSERT OR REPLACE INTO manageditem (id, json) VALUES (@id,@json)", db))
