@@ -49,8 +49,8 @@ namespace Certify.Providers.DeploymentTasks.Core
                 return validationResults;
             }
 
-            var requestedStore = execParams.Settings.Parameters.FirstOrDefault(p => p.Key == "storetype")?.Value.Trim().ToLower();
-            var friendlyName = execParams.Settings.Parameters.FirstOrDefault(p => p.Key == "friendlyname")?.Value.Trim();
+            var requestedStore = execParams.Settings.Parameters.FirstOrDefault(p => p.Key == "storetype")?.Value?.Trim().ToLower();
+            var friendlyName = execParams.Settings.Parameters.FirstOrDefault(p => p.Key == "friendlyname")?.Value?.Trim();
 
             //store cert against primary domain, optionally with custom friendly name
             var certStoreName = CertificateManager.DEFAULT_STORE_NAME;
@@ -59,8 +59,23 @@ namespace Certify.Providers.DeploymentTasks.Core
             {
                 certStoreName = requestedStore;
             }
+            else
+            {
+                certStoreName = "My";
+            }
 
             X509Certificate2 storedCert = null;
+
+            var certPwd = "";
+
+            if (!string.IsNullOrWhiteSpace(managedCert.CertificatePasswordCredentialId))
+            {
+                var cred = await execParams.CredentialsManager.GetUnlockedCredentialsDictionary(managedCert.CertificatePasswordCredentialId);
+                if (cred != null)
+                {
+                    certPwd = cred["password"];
+                }
+            }
 
             if (!execParams.IsPreviewOnly)
             {
@@ -72,7 +87,8 @@ namespace Certify.Providers.DeploymentTasks.Core
                         isRetry: false,
                         enableRetryBehaviour: _enableCertDoubleImportBehaviour,
                         storeName: certStoreName,
-                        customFriendlyName: friendlyName
+                        customFriendlyName: friendlyName, 
+                        certPwd
                        );
 
                     if (storedCert != null)
