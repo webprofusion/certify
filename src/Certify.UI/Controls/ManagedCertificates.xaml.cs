@@ -28,7 +28,7 @@ namespace Certify.UI.Controls
 
             _appViewModel.PropertyChanged -= AppViewModel_PropertyChanged;
             _appViewModel.PropertyChanged += AppViewModel_PropertyChanged;
-
+    
         }
 
         private void AppViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -313,6 +313,14 @@ namespace Certify.UI.Controls
         private async void Refresh_Click(object sender, RoutedEventArgs e)
         {
             await _appViewModel.RefreshManagedCertificates();
+        }
+
+        private void Connect_Click(object sender, RoutedEventArgs e)
+        {
+            if (_appViewModel.IsFeatureEnabled(Models.FeatureFlags.SERVER_CONNECTIONS))
+            {
+              _appViewModel.ChooseConnection(this);
+            }
         }
     }
 }

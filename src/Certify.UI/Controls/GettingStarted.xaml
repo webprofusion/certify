@@ -86,30 +86,32 @@
                     <StackPanel
                         x:Name="DiagnosticWarnings"
                         Margin="0,16,16,8"
-                        Background="{StaticResource WarningColorBrush}" Visibility="{Binding SystemDiagnosticWarning, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
-                        
+                        Background="{StaticResource WarningColorBrush}"
+                        Visibility="{Binding SystemDiagnosticWarning, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
+
                         <TextBlock
                             Margin="8"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top"
                             FontSize="12"
-                            
-                            TextWrapping="Wrap" Text="{Binding SystemDiagnosticWarning}"></TextBlock>
-                        
+                            Text="{Binding SystemDiagnosticWarning}"
+                            TextWrapping="Wrap" />
+
                     </StackPanel>
 
                     <StackPanel
                         x:Name="DiagnosticErrors"
                         Margin="0,16,16,8"
-                        Background="{StaticResource ErrorColorBrush}" Visibility="{Binding SystemDiagnosticError, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
+                        Background="{StaticResource ErrorColorBrush}"
+                        Visibility="{Binding SystemDiagnosticError, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
 
                         <TextBlock
                             Margin="8"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top"
                             FontSize="12"
-                            
-                            TextWrapping="Wrap" Text="{Binding SystemDiagnosticError}"></TextBlock>
+                            Text="{Binding SystemDiagnosticError}"
+                            TextWrapping="Wrap" />
 
                     </StackPanel>
 

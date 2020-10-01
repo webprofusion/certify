@@ -42,17 +42,17 @@
             <ScaleTransform x:Name="ApplicationScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding UIScaleFactor}" ScaleY="{Binding UIScaleFactor}" />
         </Grid.LayoutTransform>
 
-        <StackPanel
+        <DockPanel
             Grid.Row="0"
             Margin="8,8,8,0"
-            VerticalAlignment="Top"
-            Orientation="Horizontal">
+            VerticalAlignment="Top">
 
             <Button
                 Height="32"
                 Margin="8,0,0,5"
                 AutomationProperties.Name="{x:Static res:SR.New_Certificate}"
-                Click="Button_NewCertificate">
+                Click="Button_NewCertificate"
+                DockPanel.Dock="Left">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
@@ -66,7 +66,8 @@
                 Height="32"
                 Margin="8,0,0,5"
                 AutomationProperties.Name="{x:Static res:SR.Renew_All}"
-                Click="Button_RenewAll">
+                Click="Button_RenewAll"
+                DockPanel.Dock="Left">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
@@ -77,7 +78,10 @@
                 </StackPanel>
             </Button>
 
-            <StackPanel Orientation="Horizontal" Visibility="{Binding IsUpdateAvailable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+            <StackPanel
+                DockPanel.Dock="Left"
+                Orientation="Horizontal"
+                Visibility="{Binding IsUpdateAvailable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
                 <Button
                     x:Name="ButtonUpdateAvailable"
                     Height="32"
@@ -99,8 +103,10 @@
                     </StackPanel>
                 </Button>
             </StackPanel>
+
             <StackPanel
                 Margin="24,0,0,0"
+                DockPanel.Dock="Left"
                 Orientation="Horizontal"
                 Visibility="{Binding IsLoading, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
 
@@ -118,7 +124,44 @@
                     VerticalAlignment="Center"
                     Foreground="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"><Run Text="Loading.." /></TextBlock>
             </StackPanel>
-        </StackPanel>
+
+            <DockPanel
+                Height="32"
+                Margin="32,0,32,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                DockPanel.Dock="Right"
+                Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='SERVER_CONNECTIONS', Path=Preferences}">
+
+                <Button
+                    x:Name="Connect"
+                    Margin="0,0,4,0"
+                    AutomationProperties.Name="Connect"
+                    Click="Connect_Click"
+                    DockPanel.Dock="Left">
+                    <StackPanel Orientation="Horizontal">
+                        <fa:ImageAwesome
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="{StaticResource MahApps.Brushes.AccentBase}"
+                            Icon="Plug" />
+
+                    </StackPanel>
+                </Button>
+                <TextBlock
+                    Margin="4,0,0,0"
+                    DockPanel.Dock="top"
+                    Text="Connected" />
+                <TextBlock
+                    Margin="4,0,0,0"
+                    DockPanel.Dock="Left"
+                    Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMedium}"
+                    Text="{Binding ConnectionTitle}" />
+
+
+            </DockPanel>
+
+        </DockPanel>
 
         <TabControl
             x:Name="MainTabControl"

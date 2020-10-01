@@ -8,6 +8,7 @@ using Certify.Config;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Utils;
+using Certify.Shared;
 using Microsoft.AspNet.SignalR.Client;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,7 +38,6 @@ namespace Certify.Client
         private Microsoft.AspNet.SignalR.Client.HubConnection _legacyConnection;
 
         private string _statusHubUri = "/api/status";
-
 
         public CertifyServiceClient(Providers.IServiceConfigProvider configProvider, Shared.ServerConnection config = null) : base(configProvider, config)
         {
@@ -100,6 +100,11 @@ namespace Certify.Client
 
                 await connection.StartAsync();
             }
+        }
+
+        public ServerConnection GetConnectionInfo()
+        {
+            return _connectionConfig;
         }
     }
 }

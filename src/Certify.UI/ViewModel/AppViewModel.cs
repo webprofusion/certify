@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Data;
 using System.Windows.Forms;
 using System.Windows.Input;
 using Certify.Client;
@@ -108,7 +107,7 @@ namespace Certify.UI.ViewModel
             IsError = true;
             CurrentError = exp.Message;
 
-            SystemDiagnosticError = "An error occurred. Persistent errors should be reported to Certify The Web support: "+ exp.Message;
+            SystemDiagnosticError = "An error occurred. Persistent errors should be reported to Certify The Web support: " + exp.Message;
         }
 
         public Preferences Preferences { get; set; } = new Preferences();
@@ -171,7 +170,7 @@ namespace Certify.UI.ViewModel
             {
                 managedCertificates = value;
 
-                BindingOperations.EnableCollectionSynchronization(managedCertificates, _managedCertificatesLock);
+                System.Windows.Data.BindingOperations.EnableCollectionSynchronization(managedCertificates, _managedCertificatesLock);
 
                 if (SelectedItem != null)
                 {
@@ -423,7 +422,36 @@ namespace Certify.UI.ViewModel
             return connections;
         }
 
-        public async Task InitServiceConnections(Shared.ServerConnection conn = null)
+        public string ConnectionTitle
+        {
+            get
+            {
+                return $"{CertifyClient.GetConnectionInfo()}";
+            }
+        }
+        public async Task ConnectToServer(Shared.ServerConnection conn, CancellationToken cancellationToken)
+        {
+            Mouse.OverrideCursor = System.Windows.Input.Cursors.AppStarting;
+            IsLoading = true;
+
+            var connectedOk = await InitServiceConnections(conn, cancellationToken);
+
+            if (connectedOk)
+            {
+                await ViewModel.AppViewModel.Current.LoadSettingsAsync();
+            }
+            else
+            {
+                MessageBox.Show("The server connection could not be completed. Check the service is running and that the connection details are correct.");
+            }
+
+            RaisePropertyChangedEvent(nameof(ConnectionTitle));
+
+            IsLoading = false;
+            Mouse.OverrideCursor = System.Windows.Input.Cursors.Arrow;
+        }
+
+        public async Task<bool> InitServiceConnections(Shared.ServerConnection conn, CancellationToken cancellationToken)
         {
 
             //check service connection
@@ -432,52 +460,73 @@ namespace Certify.UI.ViewModel
             if (conn == null)
             {
                 // check default connection
-                IsServiceAvailable = await CheckServiceAvailable();
+                IsServiceAvailable = await CheckServiceAvailable(CertifyClient);
             }
 
-            var attemptsRemaining = 5;
-            while (!IsServiceAvailable && attemptsRemaining > 0)
+            var maxAttempts = 3;
+            var attemptsRemaining = maxAttempts;
+
+            ICertifyClient clientConnection = CertifyClient;
+
+            while (!IsServiceAvailable && attemptsRemaining > 0 && cancellationToken.IsCancellationRequested != true)
             {
                 var connectionConfig = conn ?? GetDefaultServerConnection(_configManager);
                 Debug.WriteLine("Service not yet available. Waiting a few seconds..");
 
-                // the service could still be starting up or port may be reallocated
-                var waitMS = (6 - attemptsRemaining) * 1000;
-                await Task.Delay(waitMS);
-
-                // restart client in case port has reallocated
-                CertifyClient = new CertifyServiceClient(_configManager, connectionConfig);
-
-                IsServiceAvailable = await CheckServiceAvailable();
-
-                if (!IsServiceAvailable)
+                if (attemptsRemaining != maxAttempts)
                 {
-                    attemptsRemaining--;
+                    // the service could still be starting up or port may be reallocated
+                    var waitMS = (maxAttempts - attemptsRemaining) * 1000;
+                    await Task.Delay(waitMS, cancellationToken);
+                }
 
-                    // give up
-                    if (attemptsRemaining == 0)
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    // restart client in case port has reallocated
+                    clientConnection = new CertifyServiceClient(_configManager, connectionConfig);
+
+                    IsServiceAvailable = await CheckServiceAvailable(clientConnection);
+
+                    if (!IsServiceAvailable)
                     {
-                        return;
+                        attemptsRemaining--;
+
+                        // give up
+                        if (attemptsRemaining == 0)
+                        {
+                            return false;
+                        }
                     }
                 }
             }
 
+            if (cancellationToken.IsCancellationRequested == true)
+            {
+                return false;
+            }
+
             // wire up stream events
-            CertifyClient.OnMessageFromService += CertifyClient_SendMessage;
-            CertifyClient.OnRequestProgressStateUpdated += UpdateRequestTrackingProgress;
-            CertifyClient.OnManagedCertificateUpdated += CertifyClient_OnManagedCertificateUpdated;
+            clientConnection.OnMessageFromService += CertifyClient_SendMessage;
+            clientConnection.OnRequestProgressStateUpdated += UpdateRequestTrackingProgress;
+            clientConnection.OnManagedCertificateUpdated += CertifyClient_OnManagedCertificateUpdated;
 
             // connect to status api stream & handle events
             try
             {
-                await CertifyClient.ConnectStatusStreamAsync();
+                await clientConnection.ConnectStatusStreamAsync();
 
             }
             catch (Exception exp)
             {
                 // failed to connect to status signalr hub
                 Log?.Error($"Failed to connect to status hub: {exp}");
+                return false;
             }
+
+            // replace active connection
+            CertifyClient = clientConnection;
+
+            return true;
         }
 
         public async Task<List<DnsZone>> GetDnsProviderZones(string challengeProvider, string challengeCredentialKey)
@@ -495,12 +544,12 @@ namespace Certify.UI.ViewModel
         /// Checks the service availability by fetching the version. If the service is available but the version is wrong an exception will be raised.
         /// </summary>
         /// <returns></returns>
-        public async Task<bool> CheckServiceAvailable()
+        public async Task<bool> CheckServiceAvailable(ICertifyClient client)
         {
             string version = null;
             try
             {
-                version = await CertifyClient.GetAppVersion();
+                version = await client.GetAppVersion();
 
                 IsServiceAvailable = true;
             }
@@ -522,7 +571,7 @@ namespace Certify.UI.ViewModel
 
                 if (v.Major != assemblyVersion.Major)
                 {
-                    throw new Exception($"Invalid service version ({v}). Please ensure the old version of the app has been fully uninstalled, then re-install the latest version.");
+                    throw new Exception($"Mismatched service version ({v}). Please ensure the old version of the app has been fully uninstalled, then re-install the latest version.");
                 }
                 else
                 {
@@ -943,6 +992,13 @@ namespace Certify.UI.ViewModel
         {
             var results = await CertifyClient.PerformImport(new ImportRequest { Package = package, Settings = settings, IsPreviewMode = isPreviewMode });
             return results;
+        }
+
+        internal void ChooseConnection(System.Windows.DependencyObject parentWindow)
+        {
+            var d = new Windows.Connections { Owner = System.Windows.Window.GetWindow(parentWindow) };
+
+            d.ShowDialog();
         }
     }
 }

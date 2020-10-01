@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -190,18 +191,9 @@ namespace Certify.UI
 
             await PerformAppStartupChecks();
 
-            if (_appViewModel.IsFeatureEnabled(FeatureFlags.SERVER_CONNECTIONS))
-            {
-                await ChooseConnection();
-            }
+          
         }
 
-        private async Task ChooseConnection()
-        {
-            var d = new Windows.Connections { Owner = Window.GetWindow(this) };
-
-            d.ShowDialog();
-        }
 
         private async Task PerformAppStartupChecks()
         {
@@ -214,7 +206,9 @@ namespace Certify.UI
                 _appViewModel.SystemDiagnosticWarning = diagnostics.First(d => d.IsSuccess == false).Message;
             }
 
-            await _appViewModel.InitServiceConnections();
+            var cts = new CancellationTokenSource();
+            
+            var connectedOk = await _appViewModel.InitServiceConnections(null, cts.Token);
 
             if (_appViewModel.IsServiceAvailable)
             {
@@ -373,6 +367,14 @@ namespace Certify.UI
                     //quit
                     App.Current.Shutdown();
                 }
+            }
+        }
+
+        private void Connect_Click(object sender, RoutedEventArgs e)
+        {
+            if (_appViewModel.IsFeatureEnabled(Models.FeatureFlags.SERVER_CONNECTIONS))
+            {
+                _appViewModel.ChooseConnection(this);
             }
         }
 

@@ -41,5 +41,10 @@ namespace Certify.Shared
             Authentication = "default";
             IsDefault = true;
         }
+
+        public override string ToString()
+        {
+            return $"{DisplayName ?? $"{Host}:{Port}"}";
+        }
     }
 }

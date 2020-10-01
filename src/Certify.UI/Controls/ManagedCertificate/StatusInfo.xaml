@@ -44,7 +44,10 @@
                         Text="{Binding Path=SelectedItem.SourceName}" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Style="{StaticResource Instructions}" Text="This certificate is externally managed by another certificate management tool. For more information see the documentation for that tool. " Width="604"  />
+                    <TextBlock
+                        Width="604"
+                        Style="{StaticResource Instructions}"
+                        Text="This certificate is externally managed by another certificate management tool. For more information see the documentation for that tool. " />
                 </StackPanel>
             </StackPanel>
 

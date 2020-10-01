@@ -42,26 +42,64 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <Grid Grid.Column="0" Margin="0,10,0,0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="28" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
+        <DockPanel Grid.Column="0" LastChildFill="False">
 
-            <TextBox
-                Name="txtFilter"
-                Grid.Row="0"
-                Controls:TextBoxHelper.ClearTextButton="True"
-                Controls:TextBoxHelper.Watermark="{x:Static res:SR.ManagedCertificates_Filter}"
-                AutomationProperties.Name="{x:Static res:SR.ManagedCertificates_Filter}"
-                PreviewKeyDown="TxtFilter_PreviewKeyDown"
-                TextChanged="TxtFilter_TextChanged" />
+            <DockPanel
+                Height="32"
+                Margin="0,2,0,4"
+                DockPanel.Dock="Top"
+                Visibility="Collapsed">
+
+                <Button
+                    x:Name="Connect"
+                    Margin="0,0,4,0"
+                    AutomationProperties.Name="Connect"
+                    Click="Connect_Click"
+                    DockPanel.Dock="Left">
+                    <StackPanel Orientation="Horizontal">
+                        <fa:ImageAwesome
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="{StaticResource MahApps.Brushes.AccentBase}"
+                            Icon="Plug" />
+
+                    </StackPanel>
+                </Button>
+                <TextBlock
+                    Margin="4,0,0,0"
+                    DockPanel.Dock="top"
+                    Text="Connected" />
+                <TextBlock
+                    Margin="4,0,0,0"
+                    DockPanel.Dock="Left"
+                    Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMedium}"
+                    Text="{Binding ConnectionTitle}" />
+
+
+            </DockPanel>
+            <DockPanel
+                Margin="0,0,0,4"
+                DockPanel.Dock="Top"
+                LastChildFill="true">
+
+                <TextBox
+                    Name="txtFilter"
+                    Controls:TextBoxHelper.ClearTextButton="True"
+                    Controls:TextBoxHelper.Watermark="{x:Static res:SR.ManagedCertificates_Filter}"
+                    AutomationProperties.Name="{x:Static res:SR.ManagedCertificates_Filter}"
+                    DockPanel.Dock="Right"
+                    PreviewKeyDown="TxtFilter_PreviewKeyDown"
+                    TextChanged="TxtFilter_TextChanged" />
+
+
+            </DockPanel>
+
 
             <ListView
                 Name="lvManagedCertificates"
-                Grid.Row="1"
                 AutomationProperties.Name="Managed Certificates List"
                 Background="{DynamicResource MahApps.Brushes.Control.Background}"
+                DockPanel.Dock="Top"
                 ItemsSource="{Binding ManagedCertificates}"
                 ScrollViewer.CanContentScroll="True"
                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
@@ -150,7 +188,7 @@
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
-        </Grid>
+        </DockPanel>
         <GridSplitter
             Grid.Column="1"
             Width="2"

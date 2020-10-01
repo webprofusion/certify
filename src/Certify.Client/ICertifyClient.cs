@@ -130,5 +130,7 @@ namespace Certify.Client
         event Action<ManagedCertificate> OnManagedCertificateUpdated;
 
         Task ConnectStatusStreamAsync();
+
+        Shared.ServerConnection GetConnectionInfo();
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,36 +18,37 @@ namespace Certify.UI.Windows
     /// <summary>
     /// Interaction logic for Connections.xaml
     /// </summary>
-    public partial class Connections 
+    public partial class Connections
     {
+        private CancellationTokenSource _cts = new CancellationTokenSource();
+
         public Connections()
         {
             InitializeComponent();
 
-
             var list = ViewModel.AppViewModel.Current.GetServerConnections();
-            this.ConnectionList.ItemsSource = list;
-
+            ConnectionList.ItemsSource = list;
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+          
+            Close();
         }
 
-        private void Connect_Click(object sender, RoutedEventArgs e)
+        private async void Connect_Click(object sender, RoutedEventArgs e)
         {
-            var selectedConnection = this.ConnectionList.SelectedItem;
+            var selectedConnection = (sender as Button).DataContext as Shared.ServerConnection;
 
-            if (selectedConnection is Shared.ServerConnection)
-            {
-                ViewModel.AppViewModel.Current.InitServiceConnections(selectedConnection as Shared.ServerConnection);
-                ViewModel.AppViewModel.Current.LoadSettingsAsync();
-            }
+            await ViewModel.AppViewModel.Current.ConnectToServer(selectedConnection, _cts.Token);
 
-       
+            Close();
+        }
 
-            this.Close();
+        private void MetroWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            // cancel pending operations (if any)
+            _cts.Cancel();
         }
     }
 }
