@@ -99,6 +99,7 @@ namespace Certify.Management
 
             return Task.FromResult(true);
         }
+
         private string GetDbPath()
         {
             var appDataPath = Util.GetAppDataFolder(_storageSubFolder);
@@ -141,6 +142,7 @@ namespace Certify.Management
 
             using (var db = new SQLiteConnection(_connectionString))
             {
+                
                 await db.OpenAsync();
                 using (var tran = db.BeginTransaction())
                 {
@@ -418,14 +420,49 @@ namespace Certify.Management
                     managedCertificate.Id = Guid.NewGuid().ToString();
                 }
 
+                managedCertificate.Version++;
+                if (managedCertificate.Version == long.MaxValue)
+                {
+                    // rollover version, unlikely but accomodate it anyway
+                    managedCertificate.Version = -1;
+                }
+
                 await _retryPolicy.ExecuteAsync(async () =>
                 {
                     using (var db = new SQLiteConnection(_connectionString))
                     {
                         await db.OpenAsync();
 
+                        ManagedCertificate current = null;
+
+                        // get current version from DB
                         using (var tran = db.BeginTransaction())
                         {
+                            using (var cmd = new SQLiteCommand("SELECT json FROM manageditem WHERE id=@id", db))
+                            {
+                                cmd.Parameters.Add(new SQLiteParameter("@id", managedCertificate.Id));
+
+                                using (var reader = await cmd.ExecuteReaderAsync())
+                                {
+                                    if (await reader.ReadAsync())
+                                    {
+                                        current = JsonConvert.DeserializeObject<ManagedCertificate>((string)reader["json"]);
+                                        current.IsChanged = false;
+                                    }
+                                    reader.Close();
+                                }
+                            }
+
+                            if (current != null)
+                            {
+                                if (managedCertificate.Version != -1 && current.Version >= managedCertificate.Version)
+                                {
+                                    // version conflict
+                                    tran.Rollback();
+                                    throw new Exception("Update failed. Newer managed certificate version already stored.");
+                                }
+                            }
+
                             using (var cmd = new SQLiteCommand("INSERT OR REPLACE INTO manageditem (id, json) VALUES (@id,@json)", db))
                             {
                                 cmd.Parameters.Add(new SQLiteParameter("@id", managedCertificate.Id));
@@ -433,10 +470,11 @@ namespace Certify.Management
 
                                 await cmd.ExecuteNonQueryAsync();
                             }
+
                             tran.Commit();
                         }
+                        db.Close();
                     }
-
                 });
 
             }

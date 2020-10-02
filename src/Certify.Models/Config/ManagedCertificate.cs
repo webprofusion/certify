@@ -101,6 +101,7 @@ namespace Certify.Models
         /// Unique ID for this managed item
         /// </summary>
         public string Id { get; set; }
+        public long Version { get; set; }
 
         /// <summary>
         /// If set, this the Id of the parent managed item which controls the Certificate Request.

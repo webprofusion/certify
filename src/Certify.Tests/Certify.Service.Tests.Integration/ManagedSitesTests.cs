@@ -3,6 +3,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
 using Certify.Models;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Linq;
 
 namespace Certify.Service.Tests.Integration
 {
@@ -39,7 +41,16 @@ namespace Certify.Service.Tests.Integration
         {
             //get full list
 
-            var list = new List<ManagedCertificate>
+            var list = GetTestManagedCerts();
+
+            foreach (var site in list)
+            {
+                await _client.UpdateManagedCertificate(site);
+            }
+
+        }
+
+        private List<ManagedCertificate> GetTestManagedCerts() => new List<ManagedCertificate>
             {
                 GetExample("msdn.webprofusion.com", 12),
                 GetExample("demo.webprofusion.co.uk", 45),
@@ -52,14 +63,6 @@ namespace Certify.Service.Tests.Integration
 
             };
 
-            foreach (var site in list)
-            {
-
-                await _client.UpdateManagedCertificate(site);
-            }
-            
-        }
-
         private ManagedCertificate GetExample(string title, int numDays)
         {
             return new ManagedCertificate()
@@ -71,6 +74,64 @@ namespace Certify.Service.Tests.Integration
                 LastRenewalStatus = RequestState.Success
 
             };
+        }
+
+        [TestMethod]
+
+        public async Task TestManagedCertificatesVersioning()
+        {
+            var list = GetTestManagedCerts();
+
+            try
+            {
+                //create test managed certs
+
+                foreach (var site in list)
+                {
+                    await _client.UpdateManagedCertificate(site);
+                }
+
+                // attempting to add twice should result in version conflict
+
+                foreach (var site in list)
+                {
+                    await Assert.ThrowsExceptionAsync<Certify.Client.ServiceCommsException>(async () => await _client.UpdateManagedCertificate(site));
+                }
+
+                // get latest versions of each managed cert
+
+                var currentVersions = new ConcurrentDictionary<string, ManagedCertificate>();
+
+                foreach (var site in list)
+                {
+                    var current = await _client.GetManagedCertificate(site.Id);
+                    currentVersions.TryAdd(current.Id, current);
+                }
+
+                // attempt many updates, always using current item version
+
+                long maxVersions = 10;
+                for (var passes = 0; passes < maxVersions; passes++)
+                {
+                    foreach (var site in list)
+                    {
+                        var current = await _client.GetManagedCertificate(site.Id);
+                        current.Name = Guid.NewGuid().ToString();
+                        current = await _client.UpdateManagedCertificate(current);
+
+                        currentVersions[current.Id] = current;
+                    }
+                }
+
+                Assert.AreEqual(maxVersions + 1, currentVersions.First().Value.Version);
+            }
+            finally
+            {
+                foreach (var site in list)
+                {
+                    await _client.DeleteManagedCertificate(site.Id);
+                }
+            }
         }
     }
 }
