@@ -10,10 +10,11 @@
     Title="Connections"
     Width="342"
     Height="384"
+    Closing="MetroWindow_Closing"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False"
-    mc:Ignorable="d" Closing="MetroWindow_Closing">
+    mc:Ignorable="d">
     <DockPanel Margin="8" LastChildFill="False">
         <TextBlock
             DockPanel.Dock="Top"
@@ -25,75 +26,72 @@
             Text="You can manage multiple connections to different servers:" />
 
         <ScrollViewer DockPanel.Dock="Top">
-        <ItemsControl
-            x:Name="ConnectionList"
-            Margin="0,16,0,0"
-            >
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
+            <ItemsControl x:Name="ConnectionList" Margin="0,16,0,0">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
 
-                    <DockPanel Margin="4">
-                        <Button
-                            Height="28"
-                            Margin="0,0,8,0"
-                            VerticalAlignment="Center"
-                            Click="Connect_Click"
-                            CommandParameter="{Binding}"
-                            DockPanel.Dock="Left"
-                            ToolTip="Connect">
-                            <StackPanel Orientation="Horizontal">
-                                <fa:ImageAwesome
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Foreground="{StaticResource MahApps.Brushes.Accent}"
-                                    Icon="Plug" />
+                        <DockPanel Margin="4">
+                            <Button
+                                Height="28"
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Center"
+                                Click="Connect_Click"
+                                CommandParameter="{Binding}"
+                                DockPanel.Dock="Left"
+                                ToolTip="Connect">
+                                <StackPanel Orientation="Horizontal">
+                                    <fa:ImageAwesome
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Foreground="{StaticResource MahApps.Brushes.Accent}"
+                                        Icon="Plug" />
+
+                                </StackPanel>
+                            </Button>
+
+
+                            <Button
+                                Height="28"
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Top"
+                                CommandParameter="{Binding}"
+                                DockPanel.Dock="Right">
+                                <StackPanel Orientation="Horizontal">
+                                    <fa:ImageAwesome
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Foreground="{StaticResource MahApps.Brushes.Accent}"
+                                        Icon="Edit" />
+
+                                </StackPanel>
+                            </Button>
+
+                            <StackPanel Margin="0,4,0,0" DockPanel.Dock="Left">
+                                <TextBlock FontWeight="SemiBold" Text="{Binding Path=DisplayName}" />
+
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock
+                                        DockPanel.Dock="Left"
+                                        Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                                        Text="{Binding Path=Host}"
+                                        TextWrapping="WrapWithOverflow" />
+                                    <TextBlock
+                                        Margin="4,0,0,0"
+                                        DockPanel.Dock="Left"
+                                        Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                                        Text="{Binding Path=Port}"
+                                        TextWrapping="WrapWithOverflow" />
+                                </StackPanel>
 
                             </StackPanel>
-                        </Button>
 
 
-                        <Button
-                            Height="28"
-                            Margin="8,0,0,0"
-                            VerticalAlignment="Top"
-                            CommandParameter="{Binding}"
-                            DockPanel.Dock="Right">
-                            <StackPanel Orientation="Horizontal">
-                                <fa:ImageAwesome
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Foreground="{StaticResource MahApps.Brushes.Accent}"
-                                    Icon="Edit" />
-
-                            </StackPanel>
-                        </Button>
-
-                        <StackPanel Margin="0,4,0,0" DockPanel.Dock="Left">
-                            <TextBlock FontWeight="SemiBold" Text="{Binding Path=DisplayName}" />
-
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock
-                                    DockPanel.Dock="Left"
-                                    Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
-                                    Text="{Binding Path=Host}"
-                                    TextWrapping="WrapWithOverflow" />
-                                <TextBlock
-                                    Margin="4,0,0,0"
-                                    DockPanel.Dock="Left"
-                                    Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
-                                    Text="{Binding Path=Port}"
-                                    TextWrapping="WrapWithOverflow" />
-                            </StackPanel>
-
-                        </StackPanel>
+                        </DockPanel>
 
 
-                    </DockPanel>
-
-
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </ScrollViewer>
 
     </DockPanel>

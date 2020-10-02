@@ -21,16 +21,7 @@ namespace Certify.UI.Controls
 
         private void PopulateAppInfo()
         {
-            if (MainViewModel.IsServiceAvailable)
-            {
-                ServiceConnected.Foreground = System.Windows.Media.Brushes.DarkGreen;
-                ServiceConnected.Icon = FontAwesome.WPF.FontAwesomeIcon.Chain;
-            }
-            else
-            {
-                ServiceConnected.Foreground = System.Windows.Media.Brushes.Red;
-                ServiceConnected.Icon = FontAwesome.WPF.FontAwesomeIcon.ChainBroken;
-            }
+
             lblAppVersion.Text = ConfigResources.AppName + " " + Management.Util.GetAppVersion();
 
             if (MainViewModel.IsRegisteredVersion)
@@ -41,7 +32,8 @@ namespace Certify.UI.Controls
 
                 lblRegistrationType.Text = "Registered Version";
                 lblRegistrationDetails.Text = "";
-            } else
+            }
+            else
             {
                 DeactivateInstall.IsEnabled = false;
                 ValidateKey.IsEnabled = true;

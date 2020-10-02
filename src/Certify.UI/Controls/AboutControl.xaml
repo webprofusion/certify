@@ -62,69 +62,70 @@
             </Expander>
         </DockPanel>
 
-        <Button
+        <DockPanel
             Grid.Column="1"
-            Width="151"
-            Margin="0,10,29.6,0"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top"
-            Click="UpdateCheck_Click"
-            Content="{x:Static res:SR.AboutControl_CheckForUpdateButton}" />
-        <Button
-            x:Name="Register"
-            Grid.Column="1"
-            Width="151"
-            Margin="0,105,29.6,0"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top"
-            Click="Button_Click"
-            Content="{x:Static res:SR.AboutControl_Register}" />
+            Width="160"
+            Margin="0,24,0,0">
+            <Button
+                Width="150"
+                Margin="0,0,0,8"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Click="UpdateCheck_Click"
+                Content="{x:Static res:SR.AboutControl_CheckForUpdateButton}"
+                DockPanel.Dock="Top" />
+            <Button
+                x:Name="Register"
+                Width="150"
+                Margin="0,0,0,8"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Click="Button_Click"
+                Content="{x:Static res:SR.AboutControl_Register}"
+                DockPanel.Dock="Top" />
 
-        <Button
-            x:Name="ValidateKey"
-            Grid.Column="1"
-            Width="151"
-            Margin="0,137,29.6,0"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top"
-            Click="Button_ApplyRegistrationKey"
-            Content="{x:Static res:SR.AboutControl_EnterKey}" />
-        <Button
-            x:Name="DeactivateInstall"
-            Grid.Column="1"
-            Width="151"
-            Margin="0,168,29.6,0"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top"
-            Click="DeactivateInstall_Click"
-            Content="Deactivate Install" />
-        <Button
-            x:Name="Help"
-            Grid.Column="1"
-            Width="151"
-            Margin="0,42,29.6,0"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top"
-            Click="Help_Click"
-            Content="{x:Static res:SR.AboutControl_Support}" />
-        <Button
-            x:Name="Feedback"
-            Grid.Column="1"
-            Margin="9.8,220,29.6,0"
-            VerticalAlignment="Top"
-            Click="Feedback_Click"
-            Content="{x:Static res:SR.AboutControl_SendFeedback}" />
-        <fa:ImageAwesome
-            x:Name="ServiceConnected"
-            Grid.Column="1"
-            Width="16"
-            Height="23"
-            Margin="0,0,29.6,10.2"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Bottom"
-            Foreground="{DynamicResource MahApps.Brushes.Accent}"
-            Icon="Chain"
-            RenderTransformOrigin="0.453,2.187"
-            ToolTip="Service Status" />
+            <Button
+                x:Name="ValidateKey"
+                Width="150"
+                Margin="0,0,0,8"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Click="Button_ApplyRegistrationKey"
+                Content="{x:Static res:SR.AboutControl_EnterKey}"
+                DockPanel.Dock="Top" />
+
+            <Button
+                x:Name="DeactivateInstall"
+                Width="150"
+                Margin="0,0,0,8"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Click="DeactivateInstall_Click"
+                Content="Deactivate Install"
+                DockPanel.Dock="Top" />
+
+            <Button
+                x:Name="Help"
+                Width="150"
+                Margin="0,24,0,8"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Click="Help_Click"
+                Content="{x:Static res:SR.AboutControl_Support}"
+                DockPanel.Dock="Top" />
+
+            <Button
+                x:Name="Feedback"
+                Width="150"
+                Margin="0,0,0,8"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Click="Feedback_Click"
+                Content="{x:Static res:SR.AboutControl_SendFeedback}"
+                DockPanel.Dock="Top" />
+
+
+        </DockPanel>
+
     </Grid>
 </UserControl>
