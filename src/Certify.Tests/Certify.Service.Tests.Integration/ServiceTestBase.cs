@@ -14,32 +14,31 @@ namespace Certify.Service.Tests.Integration
     public class ServiceTestBase
     {
         protected Client.CertifyServiceClient _client = null;
-        private Process _apiService;
+        private OwinService _svc;
 
         [TestInitialize]
         public async Task InitTests()
         {
             _client = new Certify.Client.CertifyServiceClient(new ServiceConfigManager());
 
-            // TODO : create API server instance instead of invoking directly
-            if (_apiService == null)
+            // create API server instance
+            if (_svc == null)
             {
-               
-                var svcpath = $"{ Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)}\\..\\..\\..\\..\\..\\Certify.Service\\bin\\Debug\\net462\\CertifySSLManager.Service.exe";
-
-                _apiService = Process.Start(svcpath);
-            
+                _svc = new Certify.Service.OwinService();
+                _svc.Start();
+                
                 await Task.Delay(2000);
+
+                await _client.GetAppVersion();            
             }
         }
 
         [TestCleanup]
         public void TestCleanup()
         {
-            if (_apiService != null)
+            if (_svc != null)
             {
-                _apiService.Kill();
-                _apiService.WaitForExit();
+                _svc.Stop();
             }
         }
     }

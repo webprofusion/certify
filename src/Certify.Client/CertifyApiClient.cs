@@ -38,7 +38,7 @@ namespace Certify.Client
         internal Shared.ServerConnection _connectionConfig;
         internal Providers.IServiceConfigProvider _configProvider;
 
-        public CertifyApiClient(Providers.IServiceConfigProvider configProvider,  Shared.ServerConnection config = null)
+        public CertifyApiClient(Providers.IServiceConfigProvider configProvider, Shared.ServerConnection config = null)
         {
             _configProvider = configProvider;
             _connectionConfig = config ?? GetDefaultServerConnection();
@@ -81,15 +81,22 @@ namespace Certify.Client
 
         private async Task<string> FetchAsync(string endpoint)
         {
-            var response = await _client.GetAsync(_baseUri + endpoint);
-            if (response.IsSuccessStatusCode)
+            try
             {
-                return await response.Content.ReadAsStringAsync();
+                var response = await _client.GetAsync(_baseUri + endpoint);
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadAsStringAsync();
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error} ");
+                }
             }
-            else
+            catch (HttpRequestException exp)
             {
-                var error = await response.Content.ReadAsStringAsync();
-                throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error} ");
+                throw new ServiceCommsException($"Failed to communicate with service: {_baseUri}{endpoint}: {exp} ");
             }
         }
 

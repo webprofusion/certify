@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
     <Configurations>Debug;Release;</Configurations>
@@ -69,6 +69,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Certify.Client\Certify.Client.csproj" />
     <ProjectReference Include="..\..\Certify.Models\Certify.Models.csproj" />
+    <ProjectReference Include="..\..\Certify.Service\Certify.Service.csproj" />
     <ProjectReference Include="..\..\Certify.Shared.Compat\Certify.Shared.Compat.csproj" />
   </ItemGroup>
   <ItemGroup>
@@ -79,6 +80,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
     <PackageReference Include="MSTest.TestAdapter" Version="2.1.2" />
     <PackageReference Include="MSTest.TestFramework" Version="2.1.2" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.113.1" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

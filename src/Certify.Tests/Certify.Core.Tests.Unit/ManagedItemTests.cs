@@ -152,7 +152,7 @@ namespace Certify.Core.Tests.Unit
 
             // create competing sets of tasks to create managed items
 
-            var numItems = 100; // 100,000 items takes about 40 mins to generate
+            var numItems = 10000; // 100,000 items takes about 40 mins to generate
 
             // now attempt async creation of bindings
             var taskSet = new Task[numItems];

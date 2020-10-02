@@ -15,12 +15,12 @@ namespace Certify.Core.Tests.Unit
             // current version is older than newer version
             Assert.IsTrue(result.IsNewerVersion);
 
-            result = updateChecker.CheckForUpdates("5.1.1").Result;
+            result = updateChecker.CheckForUpdates("6.1.1").Result;
 
             // current version is newer than update version
             Assert.IsFalse(result.IsNewerVersion);
 
-            result = updateChecker.CheckForUpdates("5.1.1").Result;
+            result = updateChecker.CheckForUpdates("6.1.1").Result;
 
             // current version is newer than update version
             Assert.IsFalse(result.IsNewerVersion);

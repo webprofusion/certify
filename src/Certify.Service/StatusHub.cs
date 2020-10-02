@@ -73,13 +73,13 @@ namespace Certify.Service
 
         public static void SendProgressState(RequestProgressState state)
         {
-            Debug.WriteLine("StatusHub: Sending progress state to UI..");
+            Debug.WriteLine("StatusHub: Broadcasting progress state to UI/clients..");
             HubContext.Clients.All.SendProgressState(state);
         }
 
         public static void SendManagedCertificateUpdate(ManagedCertificate site)
         {
-            Debug.WriteLine("StatusHub: Sending managed site update to UI..");
+            Debug.WriteLine("StatusHub: Broadcasting managed site update to UI/clients..");
             HubContext.Clients.All.SendManagedCertificateUpdate(site);
         }
     }

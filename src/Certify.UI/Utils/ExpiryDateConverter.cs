@@ -65,7 +65,7 @@ namespace Certify.UI.Utils
             }
             else if (days < 7)
             {
-                return  System.Windows.Media.Brushes.IndianRed;
+                return System.Windows.Media.Brushes.IndianRed;
             }
             else if (days < 30)
             {
@@ -73,8 +73,15 @@ namespace Certify.UI.Utils
             }
             else
             {
-                return (System.Windows.Media.Brush)App.Current.Resources["MahApps.Brushes.SystemControlForegroundBaseMediumHigh"];
-                //return System.Windows.Media.Brushes.Green;
+                try
+                {
+                    return (System.Windows.Media.Brush)App.Current.Resources["MahApps.Brushes.SystemControlForegroundBaseMediumHigh"];
+                }
+                catch
+                {
+                    //unit test may not reference MahApps
+                    return System.Windows.Media.Brushes.Green;
+                }
             }
         }
     }

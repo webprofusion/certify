@@ -41,10 +41,10 @@ namespace Certify.UI.Tests.Integration
         [TestMethod]
         public void ExpiryDateConvertColour()
         {
-            // 7 days to go, should be orange
-            var color = ExpiryDateColourConverter.GetColour(DateTime.Now.AddDays(7.1));
+            // 13 days to go
+            var color = ExpiryDateColourConverter.GetColour(DateTime.Now.AddDays(13));
 
-            Assert.AreEqual(System.Windows.Media.Brushes.Orange, color);
+            Assert.AreEqual(System.Windows.Media.Brushes.Chocolate, color);
 
             // 6 days to go, should be red
             color = ExpiryDateColourConverter.GetColour(DateTime.Now.AddDays(6.1));

@@ -14,9 +14,6 @@ MahApps.Metro:
 	MIT License
 	Copyright (c) 2016 MahApps 
 	http://mahapps.com/
-ACMESharp:
-	MPL 2.0
-	https://pkisharp.github.io/ACMESharp-docs/
 Newtonsoft Json.Net: 
 	MIT License
 	Copyright (c) 2007 James Newton-King 
