@@ -103,7 +103,8 @@ namespace Certify.Core.Management
 
         public Task<List<BindingInfo>> GetSiteBindingList(bool ignoreStoppedSites, string siteId = null)
         {
-            throw new NotImplementedException();
+            var result = new List<BindingInfo>();
+            return Task.FromResult(result);
         }
 
         public Task<SiteInfo> GetSiteById(string siteId)
@@ -113,12 +114,12 @@ namespace Certify.Core.Management
 
         public Task<bool> IsAvailable()
         {
-            throw new NotImplementedException();
+            return Task.FromResult(true);
         }
 
         public Task<bool> IsSiteRunning(string id)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(true);
         }
 
         public Task RemoveHttpsBinding(string siteId, string sni)
