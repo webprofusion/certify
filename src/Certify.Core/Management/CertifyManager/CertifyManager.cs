@@ -73,7 +73,7 @@ namespace Certify.Management
             }
 
             _credentialsManager = new CredentialsManager(useWindowsNativeFeatures);
-            _serverProvider = (ICertifiedServer)new ServerProviderIIS();
+            _serverProvider = (ICertifiedServer)new ServerProviderIIS(_serviceLog);
 
             _progressResults = new ObservableCollection<RequestProgressState>();
 
@@ -225,7 +225,7 @@ namespace Certify.Management
                 new LoggerConfiguration()
                .MinimumLevel.ControlledBy(_loggingLevelSwitch)
                .WriteTo.Debug()
-               .WriteTo.File(Path.Combine(Util.GetAppDataFolder("logs"), "session.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
+               .WriteTo.File(Path.Combine(Util.GetAppDataFolder("logs"), "session.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10), rollOnFileSizeLimit:true, fileSizeLimitBytes: 5*1024*1024)
                .CreateLogger()
                );
 

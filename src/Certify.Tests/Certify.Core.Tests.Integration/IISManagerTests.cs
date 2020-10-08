@@ -284,7 +284,7 @@ namespace Certify.Core.Tests
             {
                 var certStoreName = CertificateManager.DEFAULT_STORE_NAME;
                 var cert = CertificateManager.GetCertificatesFromStore().First();
-                await new IISBindingDeploymentTarget().AddBinding(
+                await new IISBindingDeploymentTarget(new ServerProviderIIS()).AddBinding(
                     new BindingInfo
                     {
                         Host = testDomainName,

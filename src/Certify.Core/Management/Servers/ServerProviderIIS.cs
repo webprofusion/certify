@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Providers;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.Web.Administration;
 using Microsoft.Win32;
 
@@ -24,11 +25,22 @@ namespace Certify.Management.Servers
         /// </summary>
         private static readonly object _iisAPILock = new object();
 
-        public ServerProviderIIS()
+        private ILog _log;
+
+        public ServerProviderIIS(ILog log = null)
         {
+            _log = log;
         }
 
-        public IBindingDeploymentTarget GetDeploymentTarget() => new IISBindingDeploymentTarget();
+        private IISBindingDeploymentTarget _iisBindingDeploymentTarget = null;
+        public IBindingDeploymentTarget GetDeploymentTarget()
+        {
+            if (_iisBindingDeploymentTarget == null)
+            {
+                _iisBindingDeploymentTarget = new IISBindingDeploymentTarget(this);
+            }
+            return _iisBindingDeploymentTarget;
+        }
 
         public Task<bool> IsAvailable()
         {
@@ -596,9 +608,12 @@ namespace Certify.Management.Servers
                             var bindingDetails = binding.Protocol.StartsWith("ftp") ? GetFtpSiteBinding(site, binding) : GetSiteBinding(site, binding);
 
                             //ignore bindings which are not http or https
-                            if (bindingDetails.Protocol?.ToLower().StartsWith("http") == true || bindingDetails.Protocol?.ToLower().StartsWith("ftp") == true)
+                            if (bindingDetails != null)
                             {
-                                result.Add(bindingDetails);
+                                if (bindingDetails.Protocol?.ToLower().StartsWith("http") == true || bindingDetails.Protocol?.ToLower().StartsWith("ftp") == true)
+                                {
+                                    result.Add(bindingDetails);
+                                }
                             }
                         }
                     }
@@ -637,65 +652,93 @@ namespace Certify.Management.Servers
 
         private BindingInfo GetSiteBinding(Site site, Binding binding)
         {
-            var siteInfo = Map(site);
-
-            byte[] bindingHash = null;
-
             try
             {
-                // attempting to read certificate hash for an invalid cert can cause an exception
-                bindingHash = binding.CertificateHash;
-            }
-            catch { }
+                var siteInfo = Map(site);
 
-            return new BindingInfo()
+                byte[] bindingHash = null;
+
+                try
+                {
+                    // attempting to read certificate hash for an invalid cert can cause an exception
+                    bindingHash = binding.CertificateHash;
+                }
+                catch { }
+
+                return new BindingInfo()
+                {
+                    SiteId = siteInfo.Id,
+                    SiteName = siteInfo.Name,
+                    PhysicalPath = siteInfo.Path,
+                    Host = binding.Host.ToLower(),
+                    IP = binding.EndPoint?.Address?.ToString(),
+                    Port = binding.EndPoint?.Port ?? 0,
+                    IsHTTPS = binding.Protocol.ToLower() == "https",
+                    Protocol = binding.Protocol.ToLower(),
+                    HasCertificate = (bindingHash != null),
+                    CertificateHash = bindingHash != null ? HashBytesToThumprint(bindingHash) : null,
+                    CertificateHashBytes = bindingHash
+                };
+            }
+            catch (Exception exp)
             {
-                SiteId = siteInfo.Id,
-                SiteName = siteInfo.Name,
-                PhysicalPath = siteInfo.Path,
-                Host = binding.Host.ToLower(),
-                IP = binding.EndPoint?.Address?.ToString(),
-                Port = binding.EndPoint?.Port ?? 0,
-                IsHTTPS = binding.Protocol.ToLower() == "https",
-                Protocol = binding.Protocol.ToLower(),
-                HasCertificate = (bindingHash != null),
-                CertificateHash = bindingHash != null ? HashBytesToThumprint(bindingHash) : null,
-                CertificateHashBytes = bindingHash
-            };
+                _log?.Warning($"IIS - GetSiteBinding failed :: {site.Name} {site.Id} :: {exp}");
+                return null;
+            }
         }
 
 
         private BindingInfo GetFtpSiteBinding(Site site, Binding binding)
         {
-            var siteInfo = Map(site);
-
-            byte[] bindingHash = null;
-
             try
             {
-                // attempting to read certificate hash for an invalid cert can cause an exception
-                bindingHash = binding.CertificateHash;
-            }
-            catch
-            {
-            }
-            var bindingComponents = binding.BindingInformation.Split(':');
+                var siteInfo = Map(site);
 
-            return new BindingInfo()
+                byte[] bindingHash = null;
+
+                try
+                {
+                    // attempting to read certificate hash for an invalid cert can cause an exception
+                    bindingHash = binding.CertificateHash;
+                }
+                catch
+                {
+                }
+
+                var bindingComponents = binding.BindingInformation.Split(':');
+
+                var port = 21; //default port if we can't parse the configuration
+
+                if (!string.IsNullOrWhiteSpace(bindingComponents[1]))
+                {
+
+                    if (int.TryParse(bindingComponents[1].Trim(), out var parsedPort))
+                    {
+                        port = parsedPort;
+                    }
+                }
+
+                return new BindingInfo()
+                {
+                    SiteId = siteInfo.Id,
+                    SiteName = siteInfo.Name,
+                    PhysicalPath = siteInfo.Path,
+                    Host = bindingComponents[2],
+                    IP = bindingComponents[0],
+                    Port = port,
+                    IsHTTPS = false,
+                    Protocol = binding.Protocol.ToLower(),
+                    HasCertificate = (bindingHash != null),
+                    CertificateHash = bindingHash != null ? HashBytesToThumprint(bindingHash) : null,
+                    CertificateHashBytes = bindingHash,
+                    IsFtpSite = true
+                };
+            }
+            catch (Exception exp)
             {
-                SiteId = siteInfo.Id,
-                SiteName = siteInfo.Name,
-                PhysicalPath = siteInfo.Path,
-                Host = bindingComponents[2],
-                IP = bindingComponents[0],
-                Port = int.Parse(bindingComponents[1]),
-                IsHTTPS = false,
-                Protocol = binding.Protocol.ToLower(),
-                HasCertificate = (bindingHash != null),
-                CertificateHash = bindingHash != null ? HashBytesToThumprint(bindingHash) : null,
-                CertificateHashBytes = bindingHash,
-                IsFtpSite = true
-            };
+                _log?.Warning($"IIS - GetFtpSiteBinding failed :: {site.Name} {site.Id} :: {exp}");
+                return null;
+            }
         }
 
         private async Task<Site> GetIISSiteByDomain(string domain)
@@ -931,9 +974,9 @@ namespace Certify.Management.Servers
     {
         private ServerProviderIIS _iisManager;
 
-        public IISBindingDeploymentTarget()
+        public IISBindingDeploymentTarget(ServerProviderIIS iisManager)
         {
-            _iisManager = new ServerProviderIIS();
+            _iisManager = iisManager;
         }
 
         public async Task<ActionStep> AddBinding(BindingInfo targetBinding) => await _iisManager.AddOrUpdateSiteBinding(targetBinding, true);
