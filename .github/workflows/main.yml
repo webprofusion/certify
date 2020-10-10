@@ -15,7 +15,7 @@ jobs:
   # This workflow contains a single job called "build"
   build:
     # The type of runner that the job will run on
-    runs-on: [self-hosted, Windows, X64]
+    runs-on: windows-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -24,6 +24,5 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Clean
-        working-directory: certify
         run:    
           msbuild.exe Certify.Core.Service.sln /t:Build /p:Configuration=Debug
