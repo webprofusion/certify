@@ -30,7 +30,8 @@ namespace Certify.Management
             string scriptFile = null,
             Dictionary<string, object> parameters = null,
             string scriptContent = null,
-            Dictionary<string, string> credentials = null
+            Dictionary<string, string> credentials = null,
+            string logonType = null
             )
         {
 
@@ -52,6 +53,8 @@ namespace Certify.Management
 
             try
             {
+
+
                 // create a new runspace to isolate the scripts
                 using (var runspace = RunspaceFactory.CreateRunspace())
                 {
@@ -86,7 +89,29 @@ namespace Certify.Management
                                 }
                             }
 
+                            // logon type affects the range of abilities the impersonated user has
                             var _defaultLogonType = LogonType.NewCredentials;
+
+                            if (logonType == "network")
+                            {
+                                _defaultLogonType = LogonType.Network;
+                            }
+                            else if (logonType == "batch")
+                            {
+                                _defaultLogonType = LogonType.Batch;
+                            }
+                            else if (logonType == "service")
+                            {
+                                _defaultLogonType = LogonType.Service;
+                            }
+                            else if (logonType == "interactive")
+                            {
+                                _defaultLogonType = LogonType.Interactive;
+                            }
+                            else if (logonType == "newcredentials")
+                            {
+                                _defaultLogonType = LogonType.NewCredentials;
+                            }
 
                             return Impersonation.RunAsUser(windowsCredentials, _defaultLogonType, () =>
                           {
@@ -189,8 +214,8 @@ namespace Certify.Management
 
             outputData.DataAdded += (sender, args) =>
                     {
-                // capture all main output
-                var data = outputData[args.Index]?.BaseObject;
+                        // capture all main output
+                        var data = outputData[args.Index]?.BaseObject;
                         if (data != null)
                         {
                             output.AppendLine(data.ToString());
@@ -200,7 +225,8 @@ namespace Certify.Management
 
             try
             {
-                var async = shell.BeginInvoke<PSObject, PSObject>(null, outputData);
+                
+                var async = shell.BeginInvoke<PSObject, PSObject>(null, outputData, new PSInvocationSettings { FlowImpersonationPolicy = false }, null, null);
                 shell.EndInvoke(async);
 
                 return new ActionResult(output.ToString().TrimEnd('\n'), !errors.Any());
