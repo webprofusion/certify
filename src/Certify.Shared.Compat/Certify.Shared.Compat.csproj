@@ -10,6 +10,7 @@
     <RootNamespace>Certify.Shared.Compat</RootNamespace>
     <AssemblyName>Certify.Shared.Compat</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
@@ -60,6 +61,10 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj">
+      <Project>{1efdebe9-468b-4aa0-afd4-1c6d0a321be5}</Project>
+      <Name>Certify.Locales</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Certify.Models\Certify.Models.csproj">
       <Project>{BAAA9B8C-E44B-43F6-AC9C-B5666E69EE27}</Project>
       <Name>Certify.Models</Name>
