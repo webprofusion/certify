@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.SQLite;
@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
+using Certify.Models.Providers;
 using Newtonsoft.Json;
 using Polly;
 using Polly.Retry;
@@ -36,9 +37,12 @@ namespace Certify.Management
 
         private static SemaphoreSlim _dbMutex = new SemaphoreSlim(1);
 
+        private ILog _log;
 
-        public ItemManager(string storageSubfolder = null)
+        public ItemManager(string storageSubfolder = null, ILog log = null)
         {
+            _log = log;
+
             if (!string.IsNullOrEmpty(storageSubfolder))
             {
                 _storageSubFolder = storageSubfolder;
@@ -142,7 +146,7 @@ namespace Certify.Management
 
             using (var db = new SQLiteConnection(_connectionString))
             {
-                
+
                 await db.OpenAsync();
                 using (var tran = db.BeginTransaction())
                 {
@@ -458,8 +462,7 @@ namespace Certify.Management
                                 if (managedCertificate.Version != -1 && current.Version >= managedCertificate.Version)
                                 {
                                     // version conflict
-                                    tran.Rollback();
-                                    throw new Exception("Update failed. Newer managed certificate version already stored.");
+                                    _log?.Error("Managed certificate DB version conflict - newer managed certificate version already stored. UI may have updated item while request was in progress.");
                                 }
                             }
 
