@@ -32,6 +32,6 @@ jobs:
         run: dotnet restore Certify.UI.sln
         
       # Runs a single command using the runners shell
-      - name: Clean
+      - name: Build
         run:    
           msbuild.exe Certify.Core.Service.sln /t:Build /p:Configuration=Debug
