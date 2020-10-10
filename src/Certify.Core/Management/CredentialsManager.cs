@@ -116,6 +116,7 @@ namespace Certify.Management
 
         public async Task<bool> IsCredentialInUse(string storageKey)
         {
+            // TODO: inject item manager or move this check out to certify manager
             var managedCertificates = await new ItemManager().GetAll(new Models.ManagedCertificateFilter { StoredCredentialKey = storageKey });
             if (managedCertificates.Any())
             {
