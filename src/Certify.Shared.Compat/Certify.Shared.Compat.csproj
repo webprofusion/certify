@@ -10,7 +10,7 @@
     <RootNamespace>Certify.Shared.Compat</RootNamespace>
     <AssemblyName>Certify.Shared.Compat</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
-    
+    <RuntimeIdentifiers>win-x64;win</RuntimeIdentifiers>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
