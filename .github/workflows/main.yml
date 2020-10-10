@@ -25,6 +25,12 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
+      - name: Restore Svc
+        run: dotnet restore Certify.Core.Service.sln
+    
+      - name: Restore UI
+        run: dotnet restore Certify.UI.sln
+        
       # Runs a single command using the runners shell
       - name: Clean
         run:    
