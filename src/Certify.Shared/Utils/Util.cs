@@ -9,7 +9,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
-using Certify.Locales;
+
 using Certify.Models;
 using Certify.Models.Config;
 using Microsoft.ApplicationInsights;
@@ -179,8 +179,8 @@ namespace Certify.Management
         {
             var tc = new TelemetryClient();
 
-            tc.Context.InstrumentationKey = ConfigResources.AIInstrumentationKey;
-            tc.InstrumentationKey = ConfigResources.AIInstrumentationKey;
+            tc.Context.InstrumentationKey = Certify.Locales.ConfigResources.AIInstrumentationKey;
+            tc.InstrumentationKey = Certify.Locales.ConfigResources.AIInstrumentationKey;
 
             // Set session data:
 
