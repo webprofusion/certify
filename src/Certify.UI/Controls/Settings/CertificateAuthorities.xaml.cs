@@ -50,7 +50,9 @@ namespace Certify.UI.Controls.Settings
 
             EditModel.SettingsInitialised = false;
 
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             EditModel.MainViewModel.RefreshCertificateAuthorityList();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
             this.AccountList.ItemsSource = EditModel.MainViewModel.AccountDetails;
 

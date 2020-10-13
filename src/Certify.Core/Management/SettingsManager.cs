@@ -267,7 +267,7 @@ namespace Certify.Management
                 System.IO.File.WriteAllText(path, json);
                 return true;
             }
-            catch (Exception exp)
+            catch (Exception)
             {
                 // Failed to save custom certificate authorities
                 return false;

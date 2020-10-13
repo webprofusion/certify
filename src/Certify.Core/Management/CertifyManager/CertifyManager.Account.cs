@@ -306,7 +306,7 @@ namespace Certify.Management
                 }
             }
 
-            return new ActionResult("An error occurred saving the updated Certificate Authorities list.", false);
+            return await Task.FromResult(new ActionResult("An error occurred saving the updated Certificate Authorities list.", false));
         }
     }
 }

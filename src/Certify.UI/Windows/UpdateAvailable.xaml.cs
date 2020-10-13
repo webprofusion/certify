@@ -73,9 +73,8 @@ namespace Certify.UI.Windows
             var result = Markdig.Markdown.ToHtml(sb.ToString(), _markdownPipeline);
             result = "<html><head><meta http-equiv='Content-Type' content='text/html;charset=UTF-8'><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />" +
                     "<style>" + _css + "</style></head><body>" + result + "</body></html>";
-            return result;
-
-
+            
+            return await Task.FromResult(result);
         }
 
         private async void UserControl_IsVisibleChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)

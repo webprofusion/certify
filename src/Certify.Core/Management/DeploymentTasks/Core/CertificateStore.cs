@@ -128,7 +128,7 @@ namespace Certify.Providers.DeploymentTasks.Core
                 }
             }
 
-            return results;
+            return await Task.FromResult(results);
         }
 
     }

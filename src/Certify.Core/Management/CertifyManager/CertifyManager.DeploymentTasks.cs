@@ -28,7 +28,7 @@ namespace Certify.Management
         public async Task<DeploymentProviderDefinition> GetDeploymentProviderDefinition(string id, DeploymentTaskConfig config = null)
         {
             var provider = DeploymentTaskProviderFactory.Create(id, _pluginManager.DeploymentTaskProviders);
-            return provider.GetDefinition();
+            return await Task.FromResult(provider.GetDefinition());
         }
 
         public async Task<List<ActionStep>> PerformDeploymentTask(ILog log, string managedCertificateId, string taskId, bool isPreviewOnly, bool skipDeferredTasks, bool forceTaskExecution)

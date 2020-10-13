@@ -52,7 +52,7 @@ namespace Certify.Providers.DeploymentTasks.Core
                 // fail task
                 execParams.Log?.Warning($"Mock Task says: <msg not supplied, task will fail>");
 
-                return new List<ActionResult> { new ActionResult("Mock Task message not supplied.", false) };
+                return await Task.FromResult(new List<ActionResult> { new ActionResult("Mock Task message not supplied.", false) });
             }
             else
             {
@@ -63,10 +63,10 @@ namespace Certify.Providers.DeploymentTasks.Core
                 else
                 {
                     execParams.Log?.Information($"Mock Task says: {msg}");
-                    return new List<ActionResult> {
+                    return await Task.FromResult(new List<ActionResult> {
                         new ActionResult($"{msg}.", true),
                         new ActionResult($"MockTaskWorkCompleted.", true)
-                    };
+                    });
                 }
             }
         }
@@ -82,7 +82,7 @@ namespace Certify.Providers.DeploymentTasks.Core
                     results.Add(new ActionResult($"Required parameter not supplied: { p.Name}", false));
                 }
             }
-            return results;
+            return await Task.FromResult(results);
         }
     }
 }

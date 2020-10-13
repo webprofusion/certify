@@ -226,7 +226,8 @@ namespace Certify.Core.Management.Challenges
 
         public static async Task<List<ChallengeProviderDefinition>> GetChallengeAPIProviders()
         {
-            return PluginManager.CurrentInstance.DnsProviderProviders.SelectMany(pp => pp.GetProviders(pp.GetType())).ToList();
+            var result = PluginManager.CurrentInstance.DnsProviderProviders.SelectMany(pp => pp.GetProviders(pp.GetType())).ToList();
+            return await Task.FromResult(result);
         }
     }
 }

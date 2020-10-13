@@ -154,7 +154,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                         ItemViewModel.SelectedItem.RequestConfig.PrimaryDomain = domainOptions.First(o => o.IsPrimaryDomain).Domain;
                         ItemViewModel.SelectedItem.RequestConfig.SubjectAlternativeNames = domainOptions.Select(d => d.Domain).ToArray();
                     }
-                    catch (Exception exp)
+                    catch (Exception)
                     {
                         isInvalid = true;
                     }

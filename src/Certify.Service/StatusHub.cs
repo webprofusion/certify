@@ -14,6 +14,7 @@ namespace Certify.Service
 
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public async Task ReportRequestProgress(RequestProgressState state)
         {
             System.Diagnostics.Debug.WriteLine($"Sending progress update message to UI: {state.Message}");
@@ -21,10 +22,12 @@ namespace Certify.Service
         }
 
         public async Task ReportManagedCertificateUpdated(ManagedCertificate item)
+
         {
             System.Diagnostics.Debug.WriteLine($"Sending updated managed cert message to UI: {item.Name}");
             StatusHub.SendManagedCertificateUpdate(item);
         }
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
     }
 
 

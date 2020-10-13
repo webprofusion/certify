@@ -33,7 +33,7 @@ namespace Certify.Server.API.Controllers
         [Route("status")]
         public async Task<IActionResult> Get()
         {
-            return new OkResult();
+            return await Task.FromResult(new OkResult());
         }
 
         [HttpPost]

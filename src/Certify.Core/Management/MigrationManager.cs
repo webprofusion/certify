@@ -295,7 +295,7 @@ namespace Certify.Core.Management
                     decryptionFailed = true;
                 }
             }
-            catch (Exception exp)
+            catch (Exception)
             {
                 decryptionFailed = true;
             }
@@ -374,7 +374,6 @@ namespace Certify.Core.Management
                     DeploymentOption deploymentMode = c.RequestConfig.DeploymentSiteOption;
                     bool hasUnmatchedTargets = false;
                     bool siteIdChanged = false;
-                    bool deploymentModeChanged = false;
 
                     var warningMsg = "";
                     if (deploymentMode == DeploymentOption.SingleSite)

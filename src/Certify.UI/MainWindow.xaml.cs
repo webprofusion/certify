@@ -317,7 +317,7 @@ namespace Certify.UI
             }
         }
 
-        private async void ButtonUpdateAvailable_Click(object sender, RoutedEventArgs e)
+        private void ButtonUpdateAvailable_Click(object sender, RoutedEventArgs e)
         {
             if (_appViewModel.IsUpdateInProgress)
             {
