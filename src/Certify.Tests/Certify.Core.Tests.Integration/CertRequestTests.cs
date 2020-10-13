@@ -158,40 +158,42 @@ namespace Certify.Core.Tests
                 await iisManager.DeleteSite(testIDNDomain);
             }
 
-            try
+            var dummyManagedCertificate = new ManagedCertificate
             {
-                var site = await iisManager.CreateSite(testIDNDomain, testIDNDomain, testSitePath, "DefaultAppPool", port: testSiteHttpPort);
-
-                Assert.AreEqual(site.Name, testIDNDomain);
-
-                var dummyManagedCertificate = new ManagedCertificate
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Name = testIDNDomain,
-                    GroupId = site.Id.ToString(),
-                    UseStagingMode = true,
-                    DomainOptions = new ObservableCollection<DomainOption> {
+                Id = Guid.NewGuid().ToString(),
+                Name = testIDNDomain,
+                UseStagingMode = true,
+                DomainOptions = new ObservableCollection<DomainOption> {
                     new DomainOption{ Domain= testIDNDomain, IsManualEntry=true, IsPrimaryDomain=true, IsSelected=true}
                 },
-                    RequestConfig = new CertRequestConfig
-                    {
-                        PrimaryDomain = testIDNDomain,
-                        Challenges = new ObservableCollection<CertRequestChallengeConfig>(
-                            new List<CertRequestChallengeConfig>
-                            {
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = testIDNDomain,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>(
+                          new List<CertRequestChallengeConfig>
+                          {
                             new CertRequestChallengeConfig{
                                 ChallengeType="http-01"
                             }
-                            }),
-                        PerformAutoConfig = true,
-                        PerformAutomatedCertBinding = true,
-                        PerformChallengeFileCopy = true,
-                        PerformExtensionlessConfigChecks = true,
-                        WebsiteRootPath = testSitePath
-                    },
-                    ItemType = ManagedCertificateType.SSL_ACME
-                };
+                          }),
+                    PerformAutoConfig = true,
+                    PerformAutomatedCertBinding = true,
+                    PerformChallengeFileCopy = true,
+                    PerformExtensionlessConfigChecks = true,
+                    WebsiteRootPath = testSitePath
+                },
+                ItemType = ManagedCertificateType.SSL_ACME
+            };
 
+
+            try
+            {
+                var site = await iisManager.CreateSite(testIDNDomain, testIDNDomain, testSitePath, "DefaultAppPool", port: testSiteHttpPort);
+                dummyManagedCertificate.GroupId = site.Id.ToString();
+
+                Assert.AreEqual(site.Name, testIDNDomain);
+
+              
                 var result = await certifyManager.PerformCertificateRequest(_log, dummyManagedCertificate);
 
                 //ensure cert request was successful
@@ -215,6 +217,7 @@ namespace Certify.Core.Tests
             }
             finally
             {
+                await certifyManager.DeleteManagedCertificate(dummyManagedCertificate.Id);
                 await iisManager.DeleteSite(testIDNDomain);
             }
         }
@@ -525,7 +528,7 @@ namespace Certify.Core.Tests
 
             try
             {
-                var dummyManagedCertificate = new ManagedCertificate
+                managedCertificate = new ManagedCertificate
                 {
                     Id = Guid.NewGuid().ToString(),
                     Name = testWildcardSiteName,
@@ -552,14 +555,14 @@ namespace Certify.Core.Tests
                     ItemType = ManagedCertificateType.SSL_ACME
                 };
 
-                var result = await certifyManager.PerformCertificateRequest(_log, dummyManagedCertificate);
+                var result = await certifyManager.PerformCertificateRequest(_log, managedCertificate);
 
                 //ensure cert request was successful
                 Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");
 
                 //check details of cert, subject alternative name should include domain and expiry must be great than 89 days in the future
                 var managedCertificates = await certifyManager.GetManagedCertificates();
-                managedCertificate = managedCertificates.FirstOrDefault(m => m.Id == dummyManagedCertificate.Id);
+                managedCertificate = managedCertificates.FirstOrDefault(m => m.Id == managedCertificate.Id);
 
                 //emsure we have a new managed site
                 Assert.IsNotNull(managedCertificate);

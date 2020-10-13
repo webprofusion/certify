@@ -843,10 +843,11 @@ namespace Certify.Management.Servers
             {
                 lock (_iisAPILock)
                 {
-                    var siteToRemove = iisManager.Sites[siteName];
-                    if (siteToRemove != null)
+                    while (iisManager.Sites[siteName] != null)
                     {
+                        var siteToRemove = iisManager.Sites[siteName];
                         iisManager.Sites.Remove(siteToRemove);
+
                     }
                     iisManager.CommitChanges();
                 }
