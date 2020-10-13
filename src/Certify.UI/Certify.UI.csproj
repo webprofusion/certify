@@ -473,6 +473,6 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>xcopy /i /s /Y /C $(SolutionDir)..\build\plugins\$(ConfigurationName)\Plugin.*.dll $(TargetDir)Plugins\</PostBuildEvent>
+    <PostBuildEvent>REM xcopy /i /s /Y /C $(SolutionDir)..\build\plugins\$(ConfigurationName)\Plugin.*.dll $(TargetDir)Plugins\</PostBuildEvent>
   </PropertyGroup>
 </Project>
