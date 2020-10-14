@@ -32,7 +32,7 @@ namespace Certify.CLI
             }
             catch (Exception exp)
             {
-                System.Diagnostics.Debug.WriteLine(exp.ToString());
+                System.Console.WriteLine(exp.ToString());
                 isAvailable = false;
             }
             return isAvailable;
