@@ -34,4 +34,4 @@ jobs:
       # Runs a single command using the runners shell
       - name: Build
         run:    
-          msbuild.exe Certify.Core.Service.sln /t:Build /p:Configuration=Debug
+          msbuild.exe Certify.UI.sln /t:Build /p:Configuration=Debug
