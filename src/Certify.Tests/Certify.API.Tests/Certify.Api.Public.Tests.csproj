@@ -15,7 +15,7 @@
     <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.7" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="3.1.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="3.1.9" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
     <PackageReference Include="Microsoft.Owin.Testing" Version="4.1.1" />
     <PackageReference Include="MSTest.TestAdapter" Version="2.1.2" />
@@ -25,6 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Certify.API\Certify.Api.Public.csproj" />
     <ProjectReference Include="..\..\Certify.Models\Certify.Models.csproj" />
+    <ProjectReference Include="..\..\Certify.Server\Certify.Server.Core\Certify.Server.Core\Certify.Server.Core.csproj" />
     <ProjectReference Include="..\..\Certify.Shared.Compat\Certify.Shared.Compat.csproj" />
   </ItemGroup>
 

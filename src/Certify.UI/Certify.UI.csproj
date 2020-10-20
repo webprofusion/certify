@@ -419,7 +419,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Fody">
-      <Version>6.2.6</Version>
+      <Version>6.3.0</Version>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
@@ -442,7 +442,7 @@
       <Version>12.0.3</Version>
     </PackageReference>
     <PackageReference Include="PropertyChanged.Fody">
-      <Version>3.2.9</Version>
+      <Version>3.2.10</Version>
     </PackageReference>
     <PackageReference Include="Serilog">
       <Version>2.10.0</Version>
@@ -473,6 +473,7 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>REM xcopy /i /s /Y /C $(SolutionDir)..\build\plugins\$(ConfigurationName)\Plugin.*.dll $(TargetDir)Plugins\</PostBuildEvent>
+    <PostBuildEvent>xcopy /i /s /Y /C $(SolutionDir)..\build\plugins\$(ConfigurationName)\Plugin.*.dll $(TargetDir)Plugins\
+</PostBuildEvent>
   </PropertyGroup>
 </Project>
