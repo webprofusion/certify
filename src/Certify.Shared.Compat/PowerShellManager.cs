@@ -34,8 +34,6 @@ namespace Certify.Management
             string logonType = null
             )
         {
-
-
             // argument check for script file existence and .ps1 extension
             FileInfo scriptInfo = null;
             if (scriptContent == null)
@@ -53,8 +51,6 @@ namespace Certify.Management
 
             try
             {
-
-
                 // create a new runspace to isolate the scripts
                 using (var runspace = RunspaceFactory.CreateRunspace())
                 {
@@ -124,8 +120,6 @@ namespace Certify.Management
                             // run as current user
                             return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell);
                         }
-
-
                     }
                 }
 
@@ -138,9 +132,9 @@ namespace Certify.Management
 
         private static ActionResult InvokePowershell(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, string scriptContent, PowerShell shell, bool autoConvertBoolean = true)
         {
-            // ensure execution policy will allow the script to run, default to "Unrestricted", set in service config as "Default" to skip.
+            // ensure execution policy will allow the script to run, default to system default, default policy is set in service config object 
 
-            if (executionPolicy != "Default")
+            if (!string.IsNullOrEmpty(executionPolicy))
             {
                 shell.AddCommand("Set-ExecutionPolicy")
                         .AddParameter("ExecutionPolicy", executionPolicy)
@@ -188,13 +182,13 @@ namespace Certify.Management
                 }
             }
 
-
             var errors = new List<string>();
 
             // accumulate output
             var output = new StringBuilder();
 
             // capture errors
+
             shell.Streams.Error.DataAdded += (sender, args) =>
                 {
                     var error = shell.Streams.Error[args.Index];
@@ -206,9 +200,13 @@ namespace Certify.Management
                 };
 
             // capture write-* methods (except write-host)
+
+            // TODO: one of these streams may be causing ssh hang when ssh spwaned as part of script..
+
             shell.Streams.Warning.DataAdded += (sender, args) => output.AppendLine(shell.Streams.Warning[args.Index].Message);
             shell.Streams.Debug.DataAdded += (sender, args) => output.AppendLine(shell.Streams.Debug[args.Index].Message);
             shell.Streams.Verbose.DataAdded += (sender, args) => output.AppendLine(shell.Streams.Verbose[args.Index].Message);
+
 
             var outputData = new PSDataCollection<PSObject>();
 
@@ -222,12 +220,45 @@ namespace Certify.Management
                         }
                     };
 
-
             try
             {
-                
-                var async = shell.BeginInvoke<PSObject, PSObject>(null, outputData, new PSInvocationSettings { FlowImpersonationPolicy = false }, null, null);
-                shell.EndInvoke(async);
+
+                var async = shell.BeginInvoke<PSObject, PSObject>(null, outputData);
+
+                var maxWait = 60 * 5; // 5 min timeout
+                var currentWait = 0;
+                var pollSeconds = 5;
+
+                bool timeoutOccurred = false;
+
+                while (!timeoutOccurred && !async.AsyncWaitHandle.WaitOne(pollSeconds * 1000, false))
+                {
+                    // poll while async task is still running
+                    currentWait += pollSeconds;
+
+                    if (currentWait <= maxWait)
+                    {
+                        output.AppendLine($"Waiting for powershell to complete..{currentWait}s");
+                    }
+                    else
+                    {
+                        output.AppendLine($"Timeout waiting for powershell to complete ({currentWait}s)");
+                        errors.Add($"Script did not complete in the required time. ({maxWait}s)");
+                        timeoutOccurred = true;
+                    }
+                }
+
+                try
+                {
+                    if (async.IsCompleted)
+                    {
+                        shell.EndInvoke(async);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    errors.Add($"Script invoke failed: {ex}");
+                }
 
                 return new ActionResult(output.ToString().TrimEnd('\n'), !errors.Any());
             }
