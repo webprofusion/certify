@@ -473,7 +473,11 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>xcopy /i /s /Y /C $(SolutionDir)..\build\plugins\$(ConfigurationName)\Plugin.*.dll $(TargetDir)Plugins\
+    <PostBuildEvent>IF NOT DEFINED _CI_BUILD (
+ xcopy /i /s /Y /C $(SolutionDir)..\build\plugins\$(ConfigurationName)\Plugin.*.dll $(TargetDir)Plugins\
+)
+
+
 </PostBuildEvent>
   </PropertyGroup>
 </Project>
