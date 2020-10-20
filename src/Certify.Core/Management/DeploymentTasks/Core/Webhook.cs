@@ -92,7 +92,7 @@ namespace Certify.Providers.DeploymentTasks.Core
                 results.Add(new ActionResult($"The webhook HTTP method must be a selected.", false));
             }
 
-            return results;
+            return await Task.FromResult(results);
         }
 
     }

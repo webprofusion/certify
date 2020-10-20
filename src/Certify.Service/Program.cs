@@ -78,7 +78,7 @@ namespace Certify.Service
                 {
                     if (exceptionObject != null && exceptionObject is Exception)
                     {
-                        var tc = new Certify.Management.Util().InitTelemetry();
+                        var tc = new Certify.Management.Util().InitTelemetry(Locales.ConfigResources.AIInstrumentationKey);
                         var properties = new Dictionary<string, string>
                         {
                             { "AppVersion", Management.Util.GetAppVersion().ToString() },

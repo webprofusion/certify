@@ -308,7 +308,7 @@ namespace Certify.UI
         {
             if (_appViewModel.Preferences.EnableAppTelematics)
             {
-                tc = new Certify.Management.Util().InitTelemetry();
+                tc = new Certify.Management.Util().InitTelemetry(Certify.Locales.ConfigResources.AIInstrumentationKey);
                 tc.TrackEvent("Start");
             }
             else

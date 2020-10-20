@@ -91,7 +91,7 @@ namespace Certify.Management
 
             if (CoreAppSettings.Current.EnableAppTelematics)
             {
-                _tc = new Util().InitTelemetry();
+                _tc = new Util().InitTelemetry(Locales.ConfigResources.AIInstrumentationKey);
             }
 
             _httpChallengePort = _serverConfig.HttpChallengeServerPort;

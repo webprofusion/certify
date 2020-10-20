@@ -239,7 +239,7 @@ namespace Certify.Management
         {
             LoadCertificateAuthorities();
 
-            return _certificateAuthorities.Values.ToList();
+            return await Task.FromResult(_certificateAuthorities.Values.ToList());
         }
 
         public async Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority certificateAuthority)
@@ -286,7 +286,7 @@ namespace Certify.Management
                 _serviceLog.Error(exp.Message);
             }
 
-            return new ActionResult("An error occurred saving the updated Certificate Authorities list.", false);
+            return await Task.FromResult( new ActionResult("An error occurred saving the updated Certificate Authorities list.", false));
 
         }
 

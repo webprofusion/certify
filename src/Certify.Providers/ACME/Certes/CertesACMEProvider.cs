@@ -1245,7 +1245,7 @@ namespace Certify.Providers.ACME.Certes
                     _issuerCertCache.Add(intermediates);
                 }
             }
-            catch (Exception exp)
+            catch (Exception)
             {
                 //TODO: log
                 System.Diagnostics.Debug.WriteLine("Failed to properly cache issuer certs.");

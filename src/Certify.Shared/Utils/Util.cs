@@ -175,12 +175,12 @@ namespace Certify.Management
         }
 
 
-        public TelemetryClient InitTelemetry()
+        public TelemetryClient InitTelemetry(string key)
         {
             var tc = new TelemetryClient();
 
-            tc.Context.InstrumentationKey = Certify.Locales.ConfigResources.AIInstrumentationKey;
-            tc.InstrumentationKey = Certify.Locales.ConfigResources.AIInstrumentationKey;
+            tc.Context.InstrumentationKey = key;
+            tc.InstrumentationKey = key;
 
             // Set session data:
 
