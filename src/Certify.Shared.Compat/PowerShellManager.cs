@@ -194,8 +194,7 @@ namespace Certify.Management
                     var error = shell.Streams.Error[args.Index];
                     var src = error.InvocationInfo.MyCommand?.ToString() ?? error.InvocationInfo.InvocationName;
                     var msg = $"{src}: {error}\n{error.InvocationInfo.PositionMessage}";
-                    output.AppendLine(msg);
-
+  
                     errors.Add(msg);
                 };
 
@@ -260,6 +259,14 @@ namespace Certify.Management
                     errors.Add($"Script invoke failed: {ex}");
                 }
 
+                if (errors.Any())
+                {
+
+                    foreach(var e in errors)
+                    {
+                        output.AppendLine("Error: " + e);
+                    }
+                }
                 return new ActionResult(output.ToString().TrimEnd('\n'), !errors.Any());
             }
             catch (ParseException ex)
