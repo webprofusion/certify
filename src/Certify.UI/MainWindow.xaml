@@ -127,7 +127,7 @@
 
             <DockPanel
                 Height="32"
-                Margin="32,0,32,0"
+                Margin="32,0,16,0"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Top"
                 DockPanel.Dock="Right"
@@ -135,10 +135,10 @@
 
                 <Button
                     x:Name="Connect"
-                    Margin="0,0,4,0"
+                    Margin="8,0,0,0"
                     AutomationProperties.Name="Connect"
                     Click="Connect_Click"
-                    DockPanel.Dock="Left">
+                    DockPanel.Dock="Right">
                     <StackPanel Orientation="Horizontal">
                         <fa:ImageAwesome
                             HorizontalAlignment="Center"
@@ -151,6 +151,7 @@
                 <TextBlock
                     Margin="4,0,0,0"
                     DockPanel.Dock="top"
+                    Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMedium}"
                     Text="Connected" />
                 <TextBlock
                     Margin="4,0,0,0"
