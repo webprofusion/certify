@@ -15,5 +15,7 @@ namespace Certify.Management
         Task<ManagedCertificate> Update(ManagedCertificate managedCertificate);
 
         Task PerformMaintenance();
+
+        bool IsInitialised();
     }
 }

@@ -39,6 +39,8 @@ namespace Certify.Management
 
         private ILog _log;
 
+        private bool _initialised { get; set; } = false;
+
         public ItemManager(string storageSubfolder = null, ILog log = null)
         {
             _log = log;
@@ -52,44 +54,113 @@ namespace Certify.Management
 
             _connectionString = $"Data Source={_dbPath};PRAGMA temp_store=MEMORY;Cache=Shared;PRAGMA journal_mode=WAL;";
 
-            if (File.Exists(_dbPath))
+            try
             {
-                // upgrade schema if db exists
-                var upgraded = UpgradeSchema().Result;
+                if (File.Exists(_dbPath))
+                {
+                    // upgrade schema if db exists
+                    var upgraded = UpgradeSchema().Result;
+                }
+                else
+                {
+                    // upgrade from JSON storage if db doesn't exist yet
+                    var settingsUpgraded = UpgradeSettings().Result;
+                }
+
+                PerformDBBackup();
+
+                //enable write ahead logging mode
+                EnableDBWriteAheadLogging();
+
+                _initialised = true;
             }
-            else
+            catch (Exception exp)
             {
-                // upgrade from JSON storage if db doesn't exist yet
-                var settingsUpgraded = UpgradeSettings().Result;
+                var msg = "Failed to initialise item manager. Database may be inaccessible. " + exp;
+                _log?.Error(msg);
+
+                _initialised = false;
             }
-
-            //enable write ahead logging mode
-            EnableDBWriteAheadLogging();
-
-
         }
 
+        public bool IsInitialised()
+        {
+            return _initialised;
+        }
+        private void PerformDBBackup()
+        {
+            try
+            {
+                if (File.Exists(_dbPath))
+                {
+                    using (var db = new SQLiteConnection(_connectionString))
+                    {
+                        db.Open();
+
+                        var backupFile = $"{ _dbPath }.bak";
+
+                        // archive previous backup if it looks valid
+                        if (File.Exists(backupFile) && new System.IO.FileInfo(backupFile).Length > 1024)
+                        {
+                            File.Copy($"{ _dbPath }.bak", $"{ _dbPath }.bak.old", true);
+                        }
+
+                        // remove previous backup (invalid backups can be corrupt and cause subsequent backups to fail)
+                        if (File.Exists(backupFile))
+                        {
+                            File.Delete(backupFile);
+                        }
+
+                        // create new backup
+                        using (var backupDB = new SQLiteConnection($"Data Source ={ backupFile}"))
+                        {
+                            backupDB.Open();
+                            db.BackupDatabase(backupDB, "main", "main", -1, null, 1000);
+                            backupDB.Close();
+
+                            _log?.Information($"Performed db backup to {backupFile}. To switch to the backup, rename the old manageditems.db file and rename the .bak file as manageditems.db, then restart service to recover. ");
+                        }
+                        db.Close();
+                    }
+                }
+            }
+            catch (SQLiteException exp)
+            {
+                _log?.Error("Failed to perform db backup: " + exp);
+            }
+        }
 
         private void EnableDBWriteAheadLogging()
         {
-            using (var db = new SQLiteConnection(_connectionString))
+            try
             {
-                db.Open();
-                var walCmd = db.CreateCommand();
-                walCmd.CommandText =
-                @"
+                using (var db = new SQLiteConnection(_connectionString))
+                {
+                    db.Open();
+                    var walCmd = db.CreateCommand();
+                    walCmd.CommandText =
+                    @"
                     PRAGMA journal_mode = 'wal';
                 ";
-                walCmd.ExecuteNonQuery();
-                db.Close();
+                    walCmd.ExecuteNonQuery();
+                    db.Close();
+                }
             }
-
+            catch (SQLiteException exp)
+            {
+                if (exp.ResultCode == SQLiteErrorCode.ReadOnly)
+                {
+                    _log?.Error($"Encountered a read only database. A backup of the original database was recently performed to {_dbPath}.bak, you should revert to this backup.");
+                }
+            }
         }
 
         public Task PerformMaintenance()
         {
             try
             {
+                PerformDBBackup();
+
                 using (var db = new SQLiteConnection(_connectionString))
                 {
                     db.Open();

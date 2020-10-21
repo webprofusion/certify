@@ -65,7 +65,12 @@ namespace Certify.Management
             Util.SetSupportedTLSVersions();
             try
             {
-                _itemManager = new ItemManager();
+                _itemManager = new ItemManager(null, _serviceLog);
+
+                if (!_itemManager.IsInitialised())
+                {
+                    _serviceLog.Error($"Item Manager failed to initialise properly. Check service logs for more information.");
+                }
             }
             catch (Exception exp)
             {
