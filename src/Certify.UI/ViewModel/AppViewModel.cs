@@ -442,7 +442,10 @@ namespace Certify.UI.ViewModel
             }
             else
             {
-                MessageBox.Show("The server connection could not be completed. Check the service is running and that the connection details are correct.");
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    MessageBox.Show("The server connection could not be completed. Check the service is running and that the connection details are correct.");
+                }
             }
 
             RaisePropertyChangedEvent(nameof(ConnectionTitle));

@@ -15,6 +15,11 @@
     WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False"
     mc:Ignorable="d">
+
+    <Controls:MetroWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+    </Controls:MetroWindow.Resources>
+
     <DockPanel Margin="8" LastChildFill="False">
         <TextBlock
             DockPanel.Dock="Top"
@@ -93,6 +98,18 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </ScrollViewer>
+        <DockPanel
+            DockPanel.Dock="Bottom"
+            LastChildFill="False"
+            Visibility="{Binding IsLoading, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
 
+            <ProgressBar
+                Width="200"
+                Height="24"
+                HorizontalAlignment="Stretch"
+                DockPanel.Dock="Left"
+                IsIndeterminate="True" />
+            <Button Width="80" DockPanel.Dock="Right" Click="Button_Click">Cancel</Button>
+        </DockPanel>
     </DockPanel>
 </Controls:MetroWindow>

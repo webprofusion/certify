@@ -12,6 +12,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Certify.UI.ViewModel;
 
 namespace Certify.UI.Windows
 {
@@ -21,6 +22,7 @@ namespace Certify.UI.Windows
     public partial class Connections
     {
         private CancellationTokenSource _cts = new CancellationTokenSource();
+        
 
         public Connections()
         {
@@ -28,6 +30,7 @@ namespace Certify.UI.Windows
 
             var list = ViewModel.AppViewModel.Current.GetServerConnections();
             ConnectionList.ItemsSource = list;
+            this.DataContext = AppViewModel.Current;
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
@@ -49,6 +52,12 @@ namespace Certify.UI.Windows
         {
             // cancel pending operations (if any)
             _cts.Cancel();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            _cts.Cancel();
+
         }
     }
 }
