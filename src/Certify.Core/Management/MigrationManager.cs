@@ -16,8 +16,6 @@ using Certify.Models.Providers;
 
 namespace Certify.Core.Management
 {
-
-
     /// <summary>
     /// Perform/preview import and export
     /// </summary>
@@ -134,12 +132,6 @@ namespace Certify.Core.Management
 
                     if (allTasks.Any())
                     {
-
-                        /*var usedTaskCredentials = allTasks
-                            .SelectMany(t => t.Parameters?.Select(p => p.Value))
-                            .Distinct()
-                            .Where(t => allCredentials.Any(ac => ac.StorageKey == t))
-                            .ToList();*/
                         var usedTaskCredentials = allTasks
                             .Select(t => t.ChallengeCredentialKey)
                             .Distinct()

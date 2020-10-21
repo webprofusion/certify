@@ -251,14 +251,12 @@ namespace Certify.UI.Windows
                 settings.EncryptionSecret = txtSecret.Password;
                 var export = await MainViewModel.GetSettingsExport(filter, settings, false);
 
-                var json = JsonConvert.SerializeObject(export);
+                var json = JsonConvert.SerializeObject(export, new JsonSerializerSettings { Formatting = Formatting.Indented, NullValueHandling = NullValueHandling.Ignore });
                 System.IO.File.WriteAllText(savePath, json);
 
                 (App.Current as App).ShowNotification("Export completed OK", App.NotificationType.Success);
             }
 
         }
-
-
     }
 }
