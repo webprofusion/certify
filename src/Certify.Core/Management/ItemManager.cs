@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.SQLite;
@@ -66,7 +66,7 @@ namespace Certify.Management
             //enable write ahead logging mode
             EnableDBWriteAheadLogging();
 
-            PerformMaintenance();
+
         }
 
 
@@ -88,19 +88,25 @@ namespace Certify.Management
 
         public Task PerformMaintenance()
         {
-            using (var db = new SQLiteConnection(_connectionString))
+            try
             {
-                db.Open();
-                var walCmd = db.CreateCommand();
-                walCmd.CommandText =
-                @"
+                using (var db = new SQLiteConnection(_connectionString))
+                {
+                    db.Open();
+                    var walCmd = db.CreateCommand();
+                    walCmd.CommandText =
+                    @"
                     PRAGMA wal_checkpoint(FULL);
                     VACUUM;
                 ";
-                walCmd.ExecuteNonQuery();
-                db.Close();
+                    walCmd.ExecuteNonQuery();
+                    db.Close();
+                }
             }
-
+            catch (Exception exp)
+            {
+                _log?.Error("An error occurred during database maintenance. Check storage free space and disk IO. " + exp);
+            }
             return Task.FromResult(true);
         }
 
