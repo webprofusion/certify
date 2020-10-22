@@ -38,7 +38,7 @@ namespace Certify.UI.Controls
                 DeactivateInstall.IsEnabled = false;
                 ValidateKey.IsEnabled = true;
                 Register.IsEnabled = true;
-                lblRegistrationType.Text = "Community Edition (No License)";
+                lblRegistrationType.Text = "Community Edition (Not Licensed)";
             }
 
             creditLibs.Text = "";
