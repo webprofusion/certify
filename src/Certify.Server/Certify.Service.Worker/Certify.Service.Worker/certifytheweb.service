@@ -1,0 +1,14 @@
+[Unit]
+Description=Certify The Web API Worker
+
+[Service]
+Type=notify
+ExecStart=/usr/sbin/certifytheweb
+WorkingDirectory=/opt/certifytheweb
+Restart=always
+
+# Restart every day
+RuntimeMaxSec=604800
+
+[Install]
+WantedBy=multi-user.target

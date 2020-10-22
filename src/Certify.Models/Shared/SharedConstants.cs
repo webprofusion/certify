@@ -5,7 +5,7 @@
 #if _DEMO_
         public static string APPDATASUBFOLDER = "CertifyDemo";
 #else
-        public static string APPDATASUBFOLDER = "Certify";
+        public static string APPDATASUBFOLDER = "certify";
 #endif
     }
 }
