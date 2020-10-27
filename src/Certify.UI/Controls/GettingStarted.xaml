@@ -62,7 +62,10 @@
                             Getting Started
                         </TextBlock>
 
-                        <TextBlock Margin="0,0,0,0" TextWrapping="Wrap"><Run Text="{x:Static res:SR.ManagedCertificates_NoItemSelectedTip}" /><Run Text="&#x9;" /></TextBlock>
+                        <TextBlock
+                            Margin="0,0,0,0"
+                            Style="{StaticResource Instructions}"
+                            TextWrapping="Wrap"><Run Text="{x:Static res:SR.ManagedCertificates_NoItemSelectedTip}" /><Run Text="&#x9;" /></TextBlock>
 
                         <Button
                             x:Name="QuickStart"
@@ -205,7 +208,7 @@
                             FontSize="20"
                             TextWrapping="Wrap"><Run Text="{x:Static res:SR.GettingStarted_Dashboard}" /></TextBlock>
 
-                        <TextBlock Margin="0,0,16,16" TextWrapping="Wrap"><Run Text="{x:Static res:SR.GettingStarted_DashboardIntro}" /></TextBlock>
+                        <TextBlock Margin="0,0,8,8" Style="{StaticResource Instructions}"><Run Text="{x:Static res:SR.GettingStarted_DashboardIntro}" /></TextBlock>
                         <StackPanel Orientation="Horizontal">
 
                             <Button

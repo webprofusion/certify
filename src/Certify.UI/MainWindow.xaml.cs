@@ -191,7 +191,7 @@ namespace Certify.UI
 
             await PerformAppStartupChecks();
 
-          
+
         }
 
 
@@ -207,7 +207,7 @@ namespace Certify.UI
             }
 
             var cts = new CancellationTokenSource();
-            
+
             var connectedOk = await _appViewModel.InitServiceConnections(null, cts.Token);
 
             if (_appViewModel.IsServiceAvailable)
@@ -241,11 +241,18 @@ namespace Certify.UI
                     MessageBox.Show("Certify SSL Manager service not started. Please restart the service. If this problem persists please refer to https://docs.certifytheweb.com/docs/faq and if you cannot resolve the problem contact support@certifytheweb.com.");
                 }
 
-                App.Current.Shutdown();
+                if (_appViewModel.IsFeatureEnabled(FeatureFlags.SERVER_CONNECTIONS))
+                {
+                    // user can select a connection
+                }
+                else
+                {
+                    App.Current.Shutdown();
+                }
                 return;
             }
 
-           
+
 
             // init telemetry if enabled
             InitTelemetry();

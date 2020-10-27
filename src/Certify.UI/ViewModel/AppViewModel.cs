@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -90,7 +90,11 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// Feature toggled items which no longer require a feature flag
         /// </summary>
-        public string[] StandardFeatures = { }; //FeatureFlags.CA_EDITOR 
+        public string[] StandardFeatures = {
+#if DEBUG
+            FeatureFlags.SERVER_CONNECTIONS
+#endif
+        }; 
 
         public Dictionary<string, string> UIThemes { get; } = new Dictionary<string, string>
         {
@@ -422,6 +426,8 @@ namespace Certify.UI.ViewModel
             return connections;
         }
 
+        public string ConnectionState { get; set; } = "Not Connected";
+        
         public string ConnectionTitle
         {
             get
@@ -460,6 +466,8 @@ namespace Certify.UI.ViewModel
             //check service connection
             IsServiceAvailable = false;
 
+            ConnectionState = "Connecting...";
+
             if (conn == null)
             {
                 // check default connection
@@ -497,6 +505,7 @@ namespace Certify.UI.ViewModel
                         // give up
                         if (attemptsRemaining == 0)
                         {
+                            ConnectionState = IsServiceAvailable ? "Connected" : "Not Connected";
                             return false;
                         }
                     }
@@ -505,6 +514,7 @@ namespace Certify.UI.ViewModel
 
             if (cancellationToken.IsCancellationRequested == true)
             {
+                ConnectionState = IsServiceAvailable ? "Connected" : "Not Connected";
                 return false;
             }
 
@@ -523,12 +533,16 @@ namespace Certify.UI.ViewModel
             {
                 // failed to connect to status signalr hub
                 Log?.Error($"Failed to connect to status hub: {exp}");
+
+                ConnectionState = IsServiceAvailable ? "Connected" : "Not Connected";
                 return false;
             }
 
             // replace active connection
             CertifyClient = clientConnection;
 
+
+            ConnectionState = IsServiceAvailable ? "Connected" : "Not Connected";
             return true;
         }
 

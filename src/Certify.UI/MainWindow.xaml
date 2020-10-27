@@ -152,7 +152,7 @@
                     Margin="4,0,0,0"
                     DockPanel.Dock="top"
                     Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMedium}"
-                    Text="Connected" />
+                    Text="{Binding ConnectionState}" />
                 <TextBlock
                     Margin="4,0,0,0"
                     DockPanel.Dock="Left"
