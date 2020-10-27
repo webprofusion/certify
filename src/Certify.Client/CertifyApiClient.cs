@@ -15,6 +15,8 @@ namespace Certify.Client
 {
     public class ServiceCommsException : Exception
     {
+        public bool IsAccessDenied { get; set; } = false;
+
         public ServiceCommsException()
         {
         }
@@ -114,7 +116,16 @@ namespace Certify.Client
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
+
+                    if (response.StatusCode == HttpStatusCode.Unauthorized)
+                    {
+                        throw new ServiceCommsException($"API Access Denied: {endpoint}: {error}");
+                    }
+                    else
+                    {
+                        throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
+                    }
+
                 }
             }
             else
