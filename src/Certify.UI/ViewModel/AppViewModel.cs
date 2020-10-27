@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -1002,6 +1002,11 @@ namespace Certify.UI.ViewModel
             var d = new Windows.Connections { Owner = System.Windows.Window.GetWindow(parentWindow) };
 
             d.ShowDialog();
+        }
+        public async Task<string[]> GetItemLog(string id, int limit)
+        {
+            var result = await CertifyClient.GetItemLog(id, limit);
+            return result;
         }
     }
 }

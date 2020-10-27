@@ -479,5 +479,40 @@ namespace Certify.Management
             var diag = await Certify.Management.Util.PerformAppDiagnostics();
             return diag;
         }
+
+        public async Task<string[]> GetLog(string type, int limit)
+        {
+            string logPath = null;
+
+            if (type == "session")
+            {
+                logPath = Path.Combine(Util.GetAppDataFolder("logs"), "session.log");
+            }
+
+            if (logPath != null && System.IO.File.Exists(logPath))
+            {
+                try
+                {
+                    // TODO: use reverse stream reader for large files
+
+                    // get last n rows in date order
+                    var log = System.IO.File.ReadAllLines(logPath)
+                        .Reverse()
+                        .Take(limit)
+                        .Reverse()
+                        .ToArray();
+
+                    return log;
+                }
+                catch (Exception exp)
+                {
+                    return new string[] { $"Failed to read log: {exp}" };
+                }
+            }
+            else
+            {
+                return new string[] { "" };
+            }
+        }
     }
 }

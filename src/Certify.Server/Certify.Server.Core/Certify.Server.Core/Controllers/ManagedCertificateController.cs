@@ -173,6 +173,13 @@ namespace Certify.Service
             return _certifyManager.GetRequestProgressState(managedItemId);
         }
 
+        [HttpGet, Route("log/{managedItemId}/{limit}")]
+        public async Task<string[]> GetLog(string managedItemId, int limit)
+        {
+            DebugLog();
+            return await _certifyManager.GetItemLog(managedItemId, limit);
+        }
+
         [HttpGet, Route("revoke/{managedItemId}")]
         public async Task<StatusMessage> RevokeCertificate(string managedItemId)
         {

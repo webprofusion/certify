@@ -44,7 +44,7 @@ namespace Certify.Management
         Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId);
         Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority certificateAuthority);
         Task<List<CertificateAuthority>> GetCertificateAuthorities();
-  
+
         Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate);
 
         Task<CertificateRequestResult> PerformDummyCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null);
@@ -82,5 +82,9 @@ namespace Certify.Management
         Task<List<ActionResult>> ValidateDeploymentTask(ManagedCertificate managedCertificate, DeploymentTaskConfig taskConfig);
 
         Task<DeploymentProviderDefinition> GetDeploymentProviderDefinition(string id, DeploymentTaskConfig config);
+
+        Task<string[]> GetItemLog(string id, int limit = 1000);
+
+        Task<string[]> GetLog(string logType, int limit = 10000);
     }
 }

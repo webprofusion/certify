@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using System;
+using System.IO;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Certify.Locales;
@@ -12,6 +14,9 @@ namespace Certify.UI.Controls.ManagedCertificate
     {
         protected Certify.UI.ViewModel.ManagedCertificateViewModel ItemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
         protected Certify.UI.ViewModel.AppViewModel AppViewModel => UI.ViewModel.AppViewModel.Current;
+
+        private string _tempLogFilePath = null;
+        private System.Diagnostics.Process _tempLogViewerProcess = null;
 
         public StatusInfo()
         {
@@ -52,7 +57,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        private void OpenLogFile_Click(object sender, System.Windows.RoutedEventArgs e)
+        private async void OpenLogFile_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             if (ItemViewModel?.SelectedItem?.Id == null)
             {
@@ -70,7 +75,36 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
             else
             {
-                MessageBox.Show(SR.ManagedCertificateSettings_LogNotCreated);
+                // fetch log from server
+
+                try
+                {
+                    var log = await AppViewModel.GetItemLog(ItemViewModel.SelectedItem.Id, 1000);
+                    var tempPath = System.IO.Path.GetTempFileName() + ".txt";
+
+                    System.IO.File.WriteAllLines(tempPath, log);
+                    _tempLogFilePath = tempPath;
+
+                    _tempLogViewerProcess = System.Diagnostics.Process.Start(tempPath);
+                    _tempLogViewerProcess.Exited += Process_Exited;
+                }
+                catch (Exception exp)
+                {
+                    MessageBox.Show("Failed to fetch log file. " + exp);
+                }
+            }
+        }
+
+        private void Process_Exited(object sender, EventArgs e)
+        {
+            // attempt to cleanup temp log file copy
+            if (!string.IsNullOrEmpty(_tempLogFilePath) && File.Exists(_tempLogFilePath))
+            {
+                try
+                {
+                    File.Delete(_tempLogFilePath);
+                }
+                catch { }
             }
         }
 

@@ -405,8 +405,6 @@ namespace Certify.Client
                     return JsonConvert.DeserializeObject<List<ActionStep>>(response);
                 }
             }
-
-
         }
 
         public async Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo info)
@@ -415,6 +413,11 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<List<ActionResult>>(await result.Content.ReadAsStringAsync());
         }
 
+        public async Task<string[]> GetItemLog(string id, int limit)
+        {
+            var response = await FetchAsync($"managedcertificates/log/{id}/{limit}");
+            return JsonConvert.DeserializeObject<string[]>(response);
+        }
 
         #endregion Managed Certificates
 

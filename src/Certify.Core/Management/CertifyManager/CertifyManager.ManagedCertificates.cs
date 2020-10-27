@@ -95,7 +95,7 @@ namespace Certify.Management
 
                 // failed to store update, e.g. database problem or disk space has run out
                 managedCertificate.LastRenewalStatus = RequestState.Error;
-                managedCertificate.RenewalFailureMessage = "Error: cannot store certificate status update to %ProgramData%\\Certify\\manageditems.db. Check there is enough disk space and permission for writes. If this problem persists, contact support. "+ exp;
+                managedCertificate.RenewalFailureMessage = "Error: cannot store certificate status update to %ProgramData%\\Certify\\manageditems.db. Check there is enough disk space and permission for writes. If this problem persists, contact support. " + exp;
             }
 
             // report request state to status hub clients
@@ -387,6 +387,35 @@ namespace Certify.Management
             else
             {
                 return new List<DnsZone>();
+            }
+        }
+
+        public async Task<string[]> GetItemLog(string id, int limit)
+        {
+            var logPath = ManagedCertificateLog.GetLogPath(id);
+
+            if (System.IO.File.Exists(logPath))
+            {
+                try
+                {
+                    // TODO: use reverse stream reader for large files
+
+                    var log = System.IO.File.ReadAllLines(logPath)
+                        .Reverse()
+                        .Take(limit)
+                        .Reverse()
+                        .ToArray();
+
+                    return log;
+                }
+                catch (Exception exp)
+                {
+                    return new string[] { $"Failed to read log: {exp}" };
+                }
+            }
+            else
+            {
+                return new string[] { "" };
             }
         }
 
