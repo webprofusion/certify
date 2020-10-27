@@ -319,8 +319,6 @@ namespace Certify.Management
 
                 SettingsManager.LoadAppSettings();
 
-                await _itemManager.PerformMaintenance();
-
                 await PerformRenewalAllManagedCertificates(new RenewalSettings { }, null);
             }
             catch (Exception exp)
@@ -334,23 +332,37 @@ namespace Certify.Management
 
         public async Task<bool> PerformDailyTasks()
         {
-            _serviceLog?.Information($"Checking for daily tasks..");
-
-            // clear old cache of challenge responses
-            _currentChallenges = new ConcurrentDictionary<string, SimpleAuthorizationChallengeItem>();
-
-            // use latest settings
-            SettingsManager.LoadAppSettings();
-
-            if (_tc != null)
+            try
             {
-                _tc.TrackEvent("ServiceDailyTaskCheck");
+                _serviceLog?.Information($"Checking for daily tasks..");
+
+                if (_tc != null)
+                {
+                    _tc.TrackEvent("ServiceDailyTaskCheck");
+                }
+
+                // clear old cache of challenge responses
+                _currentChallenges = new ConcurrentDictionary<string, SimpleAuthorizationChallengeItem>();
+
+                // use latest settings
+                SettingsManager.LoadAppSettings();
+
+                // perform expired cert cleanup (if enabled)
+                if (CoreAppSettings.Current.EnableCertificateCleanup)
+                {
+                    await PerformCertificateCleanup();
+                }
+
+                // perform item db maintenance
+                await _itemManager.PerformMaintenance();
             }
-
-            // perform expired cert cleanup (if enabled)
-            if (CoreAppSettings.Current.EnableCertificateCleanup)
+            catch (Exception exp)
             {
-                await PerformCertificateCleanup();
+                _tc?.TrackException(exp);
+
+                _serviceLog?.Error($"Exception during daily task check..: {exp}");
+
+                return await Task.FromResult(false);
             }
 
             return await Task.FromResult(true);
