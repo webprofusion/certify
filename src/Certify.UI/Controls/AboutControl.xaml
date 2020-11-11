@@ -25,8 +25,8 @@
             <TextBlock
                 x:Name="lblAppTitle"
                 DockPanel.Dock="Top"
-                FontSize="24"
-                TextWrapping="Wrap"><Run FontFamily="Segoe UI Semibold" Text="Certify the web" /></TextBlock>
+                FontSize="22"
+                TextWrapping="Wrap"><Run FontFamily="Segoe UI Bold" Text="Certify" /><Run FontFamily="Segoe UI" Text=" the web" /></TextBlock>
             <TextBlock
                 x:Name="lblAppVersion"
                 Margin="0,8"
@@ -40,6 +40,7 @@
 
             <TextBlock
                 x:Name="lblRegistrationType"
+                Margin="0,8"
                 DockPanel.Dock="Top"
                 FontWeight="Bold"
                 Text="{x:Static res:SR.AboutControl_RegistrationTypeLabel}"
@@ -49,7 +50,13 @@
                 DockPanel.Dock="Top"
                 Style="{StaticResource Instructions}"
                 TextWrapping="Wrap"><Run Text="{x:Static res:SR.AboutControl_TrialDetailLabel}" /></TextBlock>
-            <Expander Margin="0,16,0,0" Header="Open Source Licenses">
+            <Expander
+                Width="600"
+                Margin="0,32,0,0"
+                HorizontalAlignment="Left"
+                BorderThickness="0"
+                Header="Open Source Licenses">
+
                 <ScrollViewer>
                     <TextBlock
                         x:Name="creditLibs"
