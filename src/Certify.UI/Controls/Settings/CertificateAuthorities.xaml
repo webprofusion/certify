@@ -67,8 +67,8 @@
             </DockPanel>
         </StackPanel>
 
-        <StackPanel Orientation="Horizontal" />
-        <ScrollViewer Height="300">
+
+        <ScrollViewer>
             <ListView
                 x:Name="AccountList"
                 Height="Auto"
@@ -77,22 +77,32 @@
                 <ListView.ItemTemplate>
                     <DataTemplate>
 
-                        <StackPanel Orientation="Horizontal">
-
-                            <Button Margin="0,8,8,8" Click="Button_Delete">
-                                Delete
-                            </Button>
+                        <DockPanel Margin="0,4" LastChildFill="False">
 
                             <fa:FontAwesome
                                 Margin="0,8,8,0"
+                                DockPanel.Dock="Left"
                                 FontSize="24"
                                 Icon="UserCircle" />
 
-                            <TextBlock Margin="0,8,8,0" Text="{Binding Title}" />
-                            <TextBlock Margin="0,8,8,0" Text="{Binding Email}" />
+                            <TextBlock
+                                MinWidth="200"
+                                Margin="0,12,8,0"
+                                DockPanel.Dock="Left"
+                                Text="{Binding Title}" />
+                            <TextBlock
+                                Margin="0,8,8,0"
+                                DockPanel.Dock="Left"
+                                Style="{StaticResource Instructions}"
+                                Text="{Binding Email}" />
 
-
-                        </StackPanel>
+                            <Button
+                                Margin="0,0,8,0"
+                                Click="Button_Delete"
+                                DockPanel.Dock="Right">
+                                Delete
+                            </Button>
+                        </DockPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>

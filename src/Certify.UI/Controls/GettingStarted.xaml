@@ -25,54 +25,190 @@
                 <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
             </DockPanel.Resources>
 
-            <Border
-                Margin="8,0,8,8"
-                Padding="0,0,0,16"
-                BorderThickness="0"
-                CornerRadius="4"
-                DockPanel.Dock="Top">
-                <Border.BorderBrush>
-                    <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
-                        <GradientStop Offset="1" Color="#FFE7E7E7" />
-                        <GradientStop Offset="0.003" Color="#FFE8E8E8" />
-                    </LinearGradientBrush>
-                </Border.BorderBrush>
-
-                <StackPanel>
 
 
+            <StackPanel>
+
+
+                <TextBlock
+                    Margin="0,0,0,8"
+                    FontFamily="Segoe UI"
+                    FontSize="30"
+                    Foreground="{DynamicResource MahApps.Brushes.Gray1}"
+                    TextWrapping="Wrap"><Run FontWeight="Bold" Text="Certify" /><Run Text=" the web" /></TextBlock>
+                <TextBlock Style="{StaticResource Instructions}" TextWrapping="Wrap">
+                    <Run>Easily automate your TLS/SSL certificates from ACME enabled Certificate Authorities including Let's Encrypt (https://letsencrypt.org) and BuyPass Go (https://www.buypass.com/ssl/products/acme).</Run>
+                    <LineBreak />  <LineBreak />
+                    <Run>For more information, documentation, community discussions and support options, see https://certifytheweb.com</Run>
+
+                </TextBlock>
+
+                <StackPanel Orientation="Vertical">
                     <TextBlock
-                        Margin="0,0,0,8"
-                        FontSize="36"
-                        TextWrapping="Wrap"><Run FontWeight="Bold" Text="Certify" /><Run Text=" the web" /></TextBlock>
-                    <TextBlock Style="{StaticResource Instructions}" TextWrapping="Wrap">
-                        <Run>Easily automate your TLS/SSL certificates from ACME enabled Certificate Authorities including Let's Encrypt (https://letsencrypt.org) and BuyPass Go (https://www.buypass.com/ssl/products/acme).</Run>
-                        <LineBreak />  <LineBreak />
-                        <Run>For more information, documentation, community discussions and support options, see https://certifytheweb.com</Run>
-
+                        Margin="0,16,0,8"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        FontSize="20"
+                        TextWrapping="Wrap">
+                        Getting Started
                     </TextBlock>
 
-                    <StackPanel Orientation="Vertical">
-                        <TextBlock
-                            Margin="0,16,0,8"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            FontSize="20"
-                            TextWrapping="Wrap">
-                            Getting Started
-                        </TextBlock>
+                    <TextBlock
+                        Margin="0,0,0,0"
+                        Style="{StaticResource Instructions}"
+                        TextWrapping="Wrap"><Run Text="{x:Static res:SR.ManagedCertificates_NoItemSelectedTip}" /><Run Text="&#x9;" /></TextBlock>
 
-                        <TextBlock
-                            Margin="0,0,0,0"
-                            Style="{StaticResource Instructions}"
-                            TextWrapping="Wrap"><Run Text="{x:Static res:SR.ManagedCertificates_NoItemSelectedTip}" /><Run Text="&#x9;" /></TextBlock>
+                    <Button
+                        x:Name="QuickStart"
+                        Width="180"
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Left"
+                        Click="QuickStart_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:ImageAwesome
+                                Height="16"
+                                Margin="0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Foreground="#FF6BB039"
+                                Icon="PlayCircle" />
+                            <TextBlock Margin="8,0,0,0" HorizontalAlignment="Left"><Run Text="Quick Start Guide" /></TextBlock>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel
+                    x:Name="DiagnosticWarnings"
+                    Margin="0,16,16,8"
+                    Background="{StaticResource WarningColorBrush}"
+                    Visibility="{Binding SystemDiagnosticWarning, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
+
+                    <TextBlock
+                        Margin="8"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        FontSize="12"
+                        Text="{Binding SystemDiagnosticWarning}"
+                        TextWrapping="Wrap" />
+
+                </StackPanel>
+
+                <StackPanel
+                    x:Name="DiagnosticErrors"
+                    Margin="0,16,16,8"
+                    Background="{StaticResource ErrorColorBrush}"
+                    Visibility="{Binding SystemDiagnosticError, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
+
+                    <TextBlock
+                        Margin="8"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        FontSize="12"
+                        Text="{Binding SystemDiagnosticError}"
+                        TextWrapping="Wrap" />
+
+                </StackPanel>
+
+
+                <StackPanel
+                    x:Name="IISVersionWarnings"
+                    Margin="0,16,16,8"
+                    Background="DarkRed">
+                    <StackPanel.Style>
+                        <Style>
+                            <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ShowIISWarning}" Value="True">
+                                    <Setter Property="UIElement.Visibility" Value="Visible" />
+                                </DataTrigger>
+                                <Trigger Property="UIElement.Visibility" Value="Visible">
+                                    <Trigger.EnterActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation
+                                                    Storyboard.TargetProperty="Opacity"
+                                                    From="0.0"
+                                                    To="1.0"
+                                                    Duration="0:0:0.5" />
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </Trigger.EnterActions>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock
+                        Margin="16,8,0,16"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        FontSize="20"
+                        Foreground="White"
+                        TextWrapping="Wrap"><Run Text="Warning: Your version of Windows/IIS has limited SSL Support" /></TextBlock>
+                    <TextBlock
+                        Margin="16,8,0,16"
+                        Foreground="White"
+                        Style="{StaticResource Instructions}"><Run Text="IIS Versions below 8.0 lack SNI support. This means that only one certificate can be used per IP address for standard https. If you require more than a single certificate you will need to ensure each certificate binding is associated with its own IP address otherwise you may encounter binding conflicts." /></TextBlock>
+                </StackPanel>
+
+                <StackPanel
+                    x:Name="DeprecatedChallengeTypeWarning"
+                    Margin="0,16,16,16"
+                    Background="DarkRed">
+                    <StackPanel.Style>
+                        <Style>
+                            <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasDeprecatedChallengeTypes}" Value="True">
+                                    <Setter Property="UIElement.Visibility" Value="Visible" />
+                                </DataTrigger>
+                                <Trigger Property="UIElement.Visibility" Value="Visible">
+                                    <Trigger.EnterActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation
+                                                    Storyboard.TargetProperty="Opacity"
+                                                    From="0.0"
+                                                    To="1.0"
+                                                    Duration="0:0:0.5" />
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </Trigger.EnterActions>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock
+                        Margin="16,8,0,16"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        FontSize="20"
+                        Foreground="White"
+                        TextWrapping="Wrap"><Run Text="Warning: Unsupported challenge type in use." /></TextBlock>
+                    <TextBlock
+                        Margin="16,8,0,16"
+                        Foreground="White"
+                        Style="{StaticResource Instructions}"><Run Text="One or more managed certificates is still using the unsupported tls-sni-01 challenge type. You must change these to a different challenge under Authorization or they will fail to renew." /></TextBlock>
+                </StackPanel>
+
+                <StackPanel x:Name="Dashboard" Margin="0,16,0,0">
+
+                    <TextBlock
+                        Margin="0,8,0,8"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        FontSize="20"
+                        TextWrapping="Wrap"><Run Text="{x:Static res:SR.GettingStarted_Dashboard}" /></TextBlock>
+
+                    <TextBlock Margin="0,0,8,8" Style="{StaticResource Instructions}"><Run Text="{x:Static res:SR.GettingStarted_DashboardIntro}" /></TextBlock>
+                    <StackPanel Orientation="Horizontal">
 
                         <Button
-                            x:Name="QuickStart"
-                            Width="180"
-                            Margin="0,8,0,0"
+                            x:Name="AddToDashboard"
+                            Width="200"
+                            Margin="0,0,16,0"
                             HorizontalAlignment="Left"
-                            Click="QuickStart_Click">
+                            Click="AddToDashboard_Click"
+                            Visibility="{Binding Preferences.IsInstanceRegistered, Converter={StaticResource ResourceKey=InvBoolVisConverter}}">
                             <StackPanel Orientation="Horizontal">
                                 <fa:ImageAwesome
                                     Height="16"
@@ -80,176 +216,31 @@
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Center"
                                     Foreground="#FF6BB039"
-                                    Icon="PlayCircle" />
-                                <TextBlock Margin="8,0,0,0" HorizontalAlignment="Left"><Run Text="Quick Start Guide" /></TextBlock>
+                                    Icon="PlusCircle" />
+                                <TextBlock Margin="8,0,0,0" HorizontalAlignment="Center"><Run Text="{x:Static res:SR.GettingStarted_AddToDashboard}" /></TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <Button
+                            x:Name="ViewDashboard"
+                            Width="180"
+                            Margin="0,0,0,0"
+                            HorizontalAlignment="Left"
+                            Click="ViewDashboard_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <fa:ImageAwesome
+                                    Height="16"
+                                    Margin="0"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Foreground="#FF6BB039"
+                                    Icon="Leaf" />
+                                <TextBlock Margin="8,0,0,0" HorizontalAlignment="Center"><Run Text="{x:Static res:SR.GettingStarted_ViewDashboard}" /></TextBlock>
                             </StackPanel>
                         </Button>
                     </StackPanel>
-
-                    <StackPanel
-                        x:Name="DiagnosticWarnings"
-                        Margin="0,16,16,8"
-                        Background="{StaticResource WarningColorBrush}"
-                        Visibility="{Binding SystemDiagnosticWarning, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
-
-                        <TextBlock
-                            Margin="8"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            FontSize="12"
-                            Text="{Binding SystemDiagnosticWarning}"
-                            TextWrapping="Wrap" />
-
-                    </StackPanel>
-
-                    <StackPanel
-                        x:Name="DiagnosticErrors"
-                        Margin="0,16,16,8"
-                        Background="{StaticResource ErrorColorBrush}"
-                        Visibility="{Binding SystemDiagnosticError, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
-
-                        <TextBlock
-                            Margin="8"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            FontSize="12"
-                            Text="{Binding SystemDiagnosticError}"
-                            TextWrapping="Wrap" />
-
-                    </StackPanel>
-
-
-                    <StackPanel
-                        x:Name="IISVersionWarnings"
-                        Margin="0,16,16,8"
-                        Background="DarkRed">
-                        <StackPanel.Style>
-                            <Style>
-                                <Setter Property="UIElement.Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding ShowIISWarning}" Value="True">
-                                        <Setter Property="UIElement.Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                    <Trigger Property="UIElement.Visibility" Value="Visible">
-                                        <Trigger.EnterActions>
-                                            <BeginStoryboard>
-                                                <Storyboard>
-                                                    <DoubleAnimation
-                                                        Storyboard.TargetProperty="Opacity"
-                                                        From="0.0"
-                                                        To="1.0"
-                                                        Duration="0:0:0.5" />
-                                                </Storyboard>
-                                            </BeginStoryboard>
-                                        </Trigger.EnterActions>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </StackPanel.Style>
-                        <TextBlock
-                            Margin="16,8,0,16"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            FontSize="20"
-                            Foreground="White"
-                            TextWrapping="Wrap"><Run Text="Warning: Your version of Windows/IIS has limited SSL Support" /></TextBlock>
-                        <TextBlock
-                            Margin="16,8,0,16"
-                            Foreground="White"
-                            Style="{StaticResource Instructions}"><Run Text="IIS Versions below 8.0 lack SNI support. This means that only one certificate can be used per IP address for standard https. If you require more than a single certificate you will need to ensure each certificate binding is associated with its own IP address otherwise you may encounter binding conflicts." /></TextBlock>
-                    </StackPanel>
-
-                    <StackPanel
-                        x:Name="DeprecatedChallengeTypeWarning"
-                        Margin="0,16,16,16"
-                        Background="DarkRed">
-                        <StackPanel.Style>
-                            <Style>
-                                <Setter Property="UIElement.Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding HasDeprecatedChallengeTypes}" Value="True">
-                                        <Setter Property="UIElement.Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                    <Trigger Property="UIElement.Visibility" Value="Visible">
-                                        <Trigger.EnterActions>
-                                            <BeginStoryboard>
-                                                <Storyboard>
-                                                    <DoubleAnimation
-                                                        Storyboard.TargetProperty="Opacity"
-                                                        From="0.0"
-                                                        To="1.0"
-                                                        Duration="0:0:0.5" />
-                                                </Storyboard>
-                                            </BeginStoryboard>
-                                        </Trigger.EnterActions>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </StackPanel.Style>
-                        <TextBlock
-                            Margin="16,8,0,16"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            FontSize="20"
-                            Foreground="White"
-                            TextWrapping="Wrap"><Run Text="Warning: Unsupported challenge type in use." /></TextBlock>
-                        <TextBlock
-                            Margin="16,8,0,16"
-                            Foreground="White"
-                            Style="{StaticResource Instructions}"><Run Text="One or more managed certificates is still using the unsupported tls-sni-01 challenge type. You must change these to a different challenge under Authorization or they will fail to renew." /></TextBlock>
-                    </StackPanel>
-
-                    <StackPanel x:Name="Dashboard" Margin="0,16,0,0">
-
-                        <TextBlock
-                            Margin="0,8,0,8"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            FontSize="20"
-                            TextWrapping="Wrap"><Run Text="{x:Static res:SR.GettingStarted_Dashboard}" /></TextBlock>
-
-                        <TextBlock Margin="0,0,8,8" Style="{StaticResource Instructions}"><Run Text="{x:Static res:SR.GettingStarted_DashboardIntro}" /></TextBlock>
-                        <StackPanel Orientation="Horizontal">
-
-                            <Button
-                                x:Name="AddToDashboard"
-                                Width="200"
-                                Margin="0,0,16,0"
-                                HorizontalAlignment="Left"
-                                Click="AddToDashboard_Click"
-                                Visibility="{Binding Preferences.IsInstanceRegistered, Converter={StaticResource ResourceKey=InvBoolVisConverter}}">
-                                <StackPanel Orientation="Horizontal">
-                                    <fa:ImageAwesome
-                                        Height="16"
-                                        Margin="0"
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Center"
-                                        Foreground="#FF6BB039"
-                                        Icon="PlusCircle" />
-                                    <TextBlock Margin="8,0,0,0" HorizontalAlignment="Center"><Run Text="{x:Static res:SR.GettingStarted_AddToDashboard}" /></TextBlock>
-                                </StackPanel>
-                            </Button>
-                            <Button
-                                x:Name="ViewDashboard"
-                                Width="180"
-                                Margin="0,0,0,0"
-                                HorizontalAlignment="Left"
-                                Click="ViewDashboard_Click">
-                                <StackPanel Orientation="Horizontal">
-                                    <fa:ImageAwesome
-                                        Height="16"
-                                        Margin="0"
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Center"
-                                        Foreground="#FF6BB039"
-                                        Icon="Leaf" />
-                                    <TextBlock Margin="8,0,0,0" HorizontalAlignment="Center"><Run Text="{x:Static res:SR.GettingStarted_ViewDashboard}" /></TextBlock>
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-                    </StackPanel>
                 </StackPanel>
-            </Border>
+            </StackPanel>
+
         </DockPanel>
     </ScrollViewer>
 </UserControl>
