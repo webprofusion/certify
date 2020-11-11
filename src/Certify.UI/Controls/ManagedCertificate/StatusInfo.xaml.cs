@@ -53,13 +53,23 @@ namespace Certify.UI.Controls.ManagedCertificate
                         RenewalFailed.Visibility = Visibility.Visible;
                         RenewalPaused.Visibility = Visibility.Collapsed;
                     }
+
+
+                    if (!string.IsNullOrEmpty(ItemViewModel?.SelectedItem.SourceId))
+                    {
+                        // hide log option if from external source
+                        this.OpenLogFile.Visibility = Visibility.Hidden;
+                    } else
+                    {
+                        this.OpenLogFile.Visibility = Visibility.Visible;
+                    }
                 }
             }
         }
 
         private async void OpenLogFile_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (ItemViewModel?.SelectedItem?.Id == null)
+            if (ItemViewModel?.SelectedItem?.Id == null || !string.IsNullOrEmpty(ItemViewModel?.SelectedItem.SourceId))
             {
                 return;
             }
