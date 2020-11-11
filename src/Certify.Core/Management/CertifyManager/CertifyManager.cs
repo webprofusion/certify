@@ -488,7 +488,8 @@ namespace Certify.Management
 
         public async Task<List<ActionResult>> PerformServiceDiagnostics()
         {
-            var diag = await Certify.Management.Util.PerformAppDiagnostics();
+
+            var diag = await Certify.Management.Util.PerformAppDiagnostics(ntpServer: CoreAppSettings.Current.NtpServer);
             return diag;
         }
 

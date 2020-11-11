@@ -142,6 +142,25 @@
                             </StackPanel>
                         </DockPanel>
 
+                        <DockPanel LastChildFill="False">
+                            <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">Diagnostics</TextBlock>
+                            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">On startup the app runs basic diagnostic checks such as system drive disk space and system time, to help ensure the system keeps running normally:</TextBlock>
+
+                            <StackPanel
+                                Margin="0,4"
+                                DockPanel.Dock="Top"
+                                Orientation="Horizontal">
+                                <Label Content="Time Check NTP Server" />
+                                <TextBox
+                                    Width="240"
+                                    Margin="4,0"
+                                    Controls:TextBoxHelper.Watermark="e.g. pool.ntp.org or blank to skip check."
+                                    Text="{Binding Prefs.NtpServer}" />
+                                <Button Margin="0,0,0,0" Click="SettingsUpdated">Apply</Button>
+                            </StackPanel>
+
+                        </DockPanel>
+
                     </StackPanel>
                 </TabItem>
 

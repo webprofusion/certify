@@ -99,7 +99,7 @@ namespace Certify.Management
                 }
                 else
                 {
-                    results.Add(new ActionResult { IsSuccess = false, Message = $"Note: Could not confirm system time sync using NTP server ({ntpServer}). Ensure system time is correct to avoid certificate request errors." });
+                    results.Add(new ActionResult { IsSuccess = false, Message = $"Note: Could not confirm system time is correct using NTP server ({ntpServer ?? "pool.ntp.org (default, UDP port 123)"}). You should ensure the system time is always correct to avoid certificate request errors." });
                 }
             }
 

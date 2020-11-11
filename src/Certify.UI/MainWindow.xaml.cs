@@ -200,11 +200,7 @@ namespace Certify.UI
             Mouse.OverrideCursor = Cursors.AppStarting;
             _appViewModel.IsLoading = true;
 
-            var diagnostics = await Management.Util.PerformAppDiagnostics(_appViewModel.Preferences.NtpServer);
-            if (diagnostics.Any(d => d.IsSuccess == false))
-            {
-                _appViewModel.SystemDiagnosticWarning = diagnostics.First(d => d.IsSuccess == false).Message;
-            }
+ 
 
             var cts = new CancellationTokenSource();
 
@@ -214,14 +210,21 @@ namespace Certify.UI
             {
                 await _appViewModel.LoadSettingsAsync();
 
-                // TODO: service diagnostics
-                var svc = await _appViewModel.PerformServiceDiagnostics();
+                // service host diagnostics
+      
                 var svcDiag = await _appViewModel.PerformServiceDiagnostics();
                 if (svcDiag.Any(d => d.IsSuccess == false))
                 {
                     _appViewModel.SystemDiagnosticWarning = svcDiag.First(d => d.IsSuccess == false).Message;
                 }
             }
+
+            var diagnostics = await Management.Util.PerformAppDiagnostics(_appViewModel.Preferences.NtpServer);
+            if (diagnostics.Any(d => d.IsSuccess == false))
+            {
+                _appViewModel.SystemDiagnosticWarning = diagnostics.First(d => d.IsSuccess == false).Message;
+            }
+
 
             Mouse.OverrideCursor = Cursors.Arrow;
 
