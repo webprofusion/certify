@@ -119,20 +119,25 @@ namespace Certify.Management
 
                 _serviceLog?.Information($"Registering account with ACME CA {acmeProvider.GetAcmeBaseURI()}]: {reg.EmailAddress}");
 
-                var addAccountResult = await acmeProvider.AddNewAccountAndAcceptTOS(_serviceLog, reg.EmailAddress);
+                var addedAccount = await acmeProvider.AddNewAccountAndAcceptTOS(_serviceLog, reg.EmailAddress, reg.EabKeyId, reg.EabKey, reg.EabKeyAlgorithm);
 
-                if (addAccountResult.IsSuccess)
+                if (addedAccount.IsSuccess)
                 {
                     // store new account details as credentials
-                    addAccountResult.Result.ID = storageKey;
-                    addAccountResult.Result.StorageKey = storageKey;
-                    addAccountResult.Result.CertificateAuthorityId = certAuthority.Id;
-                    addAccountResult.Result.IsStagingAccount = reg.IsStaging;
+                    addedAccount.Result.ID = storageKey;
+                    addedAccount.Result.StorageKey = storageKey;
+                    addedAccount.Result.CertificateAuthorityId = certAuthority.Id;
+                    addedAccount.Result.IsStagingAccount = reg.IsStaging;
+                    
+                    addedAccount.Result.EabKeyId = reg.EabKeyId;
+                    addedAccount.Result.EabKey = reg.EabKey;
+                    addedAccount.Result.EabKeyAlgorithm = reg.EabKeyAlgorithm;
+                    addedAccount.Result.PreferredChain = reg.PreferredChain;
 
-                    await StoreAccountAsCredential(addAccountResult.Result);
+                    await StoreAccountAsCredential(addedAccount.Result);
                 }
 
-                return addAccountResult;
+                return addedAccount;
             }
             else
             {
@@ -211,7 +216,7 @@ namespace Certify.Management
 
                         if (!string.IsNullOrEmpty(email))
                         {
-                            var registerResult = await provider.AddNewAccountAndAcceptTOS(_serviceLog, email);
+                            var registerResult = await provider.AddNewAccountAndAcceptTOS(_serviceLog, email, null, null, null);
                             if (registerResult.IsSuccess)
                             {
                                 var newId = Guid.NewGuid().ToString();

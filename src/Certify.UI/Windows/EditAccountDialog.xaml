@@ -10,10 +10,10 @@
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     Title="Edit ACME Account"
     Width="514"
-    Height="366"
+    Height="450"
     BorderThickness="1"
     GlowBrush="{StaticResource MahApps.Brushes.Accent}"
-    ResizeMode="NoResize"
+    ResizeMode="CanResizeWithGrip"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False"
@@ -21,75 +21,195 @@
     <Controls:MetroWindow.LayoutTransform>
         <ScaleTransform x:Name="ApplicationScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding MainViewModel.UIScaleFactor}" ScaleY="{Binding MainViewModel.UIScaleFactor}" />
     </Controls:MetroWindow.LayoutTransform>
-    <DockPanel LastChildFill="False">
+    <DockPanel Margin="8" LastChildFill="False">
 
-        <TextBlock
-            Width="472"
-            Margin="12,12,0,0"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top"
+        <TabControl
+            x:Name="AccountTab"
+            Height="auto"
+            Margin="0,0,0,0"
+            HorizontalContentAlignment="Left"
+            VerticalContentAlignment="Stretch"
+            Controls:TabControlHelper.UnderlineBrush="{DynamicResource MahApps.Brushes.Accent4}"
+            Controls:TabControlHelper.Underlined="TabPanel"
             DockPanel.Dock="Top"
-            Style="{StaticResource Instructions}"
-            TextWrapping="Wrap"><Run Text="{x:Static res:SR.New_Contact_Tip1}" /><LineBreak /><Run /></TextBlock>
-        <!--  Certificate Authority Preference  -->
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-            <Label Margin="12,4,4,4" Content="Certificate Authority" />
-            <ComboBox
-                x:Name="CertificateAuthorityList"
-                Width="300"
-                DisplayMemberPath="Title"
-                ItemsSource="{Binding CertificateAuthorities}"
-                SelectedValue="{Binding Item.CertificateAuthorityId}"
-                SelectedValuePath="Id"
-                SelectionChanged="CertificateAuthorityList_SelectionChanged" />
-        </StackPanel>
-        <!--  Certificate Authority Preference  -->
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+            TabStripPlacement="Top">
+            <TabItem
+                Height="32"
+                MinWidth="140"
+                Controls:HeaderedControlHelper.HeaderFontSize="12"
+                Header="Account Settings"
+                IsSelected="true">
+                <DockPanel Margin="8,0,0,0" LastChildFill="True">
+                    <TextBlock
+                        Width="472"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        DockPanel.Dock="Top"
+                        Style="{StaticResource Instructions}"
+                        TextWrapping="Wrap"><Run Text="{x:Static res:SR.New_Contact_Tip1}" /><LineBreak /><Run /></TextBlock>
+                    <!--  Certificate Authority Preference  -->
+                    <StackPanel
+                        Margin="0,0,0,8"
+                        DockPanel.Dock="Top"
+                        Orientation="Horizontal">
+                        <Label
+                            Width="120"
+                            Margin="0,0,8,0"
+                            Content="Certificate Authority" />
+                        <ComboBox
+                            x:Name="CertificateAuthorityList"
+                            Width="300"
+                            DisplayMemberPath="Title"
+                            ItemsSource="{Binding CertificateAuthorities}"
+                            SelectedValue="{Binding Item.CertificateAuthorityId}"
+                            SelectedValuePath="Id"
+                            SelectionChanged="CertificateAuthorityList_SelectionChanged" />
+                    </StackPanel>
+                    <!--  Certificate Authority Preference  -->
 
-            <CheckBox
-                Width="297"
-                Margin="132,4,0,4"
-                Content="Use Staging (Test) Mode"
-                IsChecked="{Binding Item.IsStaging}" />
-        </StackPanel>
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-            <Label
-                Width="120"
-                Margin="12,0,0,0"
-                VerticalAlignment="Top"
-                Content="{x:Static res:SR.Email_Address}" />
-            <TextBox
-                Width="300"
-                Height="23"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Text="{Binding Item.EmailAddress}"
-                TextWrapping="Wrap" />
-        </StackPanel>
-        <TextBlock
-            Width="490"
-            Margin="12,8,8,0"
-            DockPanel.Dock="Top"
-            Style="{StaticResource Instructions}"
-            TextWrapping="Wrap"><Run Text="{x:Static res:SR.New_Contact_Tip2}" /></TextBlock>
-        <TextBlock
-            Margin="12,0,0,0"
-            VerticalAlignment="Top"
-            DockPanel.Dock="Top"
-            FontWeight="Bold"
-            Style="{StaticResource Instructions}"
-            Text="{x:Static res:SR.New_Contact_NeedAgree}"
-            TextWrapping="Wrap" />
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                        <Label
+                            Width="120"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Top"
+                            Content="{x:Static res:SR.Email_Address}" />
+                        <TextBox
+                            Width="300"
+                            Height="23"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Text="{Binding Item.EmailAddress}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                    <TextBlock
+                        Width="490"
+                        Margin="0,0,8,0"
+                        DockPanel.Dock="Top"
+                        Style="{StaticResource Instructions}"
+                        TextWrapping="Wrap"><Run Text="{x:Static res:SR.New_Contact_Tip2}" /></TextBlock>
 
-        <CheckBox
-            Margin="12,12,12,12"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top"
-            Content="{x:Static res:SR.Yes_I_Agree}"
-            DockPanel.Dock="Top"
-            IsChecked="{Binding Item.AgreedToTermsAndConditions}" />
+                    <StackPanel
+                        Margin="0,8"
+                        VerticalAlignment="Bottom"
+                        DockPanel.Dock="Bottom"
+                        Orientation="Horizontal">
+                        <TextBlock
+                            Width="330"
+                            Margin="0,0,0,0"
+                            FontWeight="Bold"
+                            Style="{StaticResource Instructions}"
+                            Text="{x:Static res:SR.New_Contact_NeedAgree}"
+                            TextWrapping="Wrap" />
 
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                        <CheckBox
+                            Margin="12,12,12,12"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Content="{x:Static res:SR.Yes_I_Agree}"
+                            DockPanel.Dock="Top"
+                            IsChecked="{Binding Item.AgreedToTermsAndConditions}" />
+
+                    </StackPanel>
+
+                </DockPanel>
+            </TabItem>
+
+            <TabItem
+                Height="32"
+                MinWidth="140"
+                Controls:HeaderedControlHelper.HeaderFontSize="12"
+                Header="Advanced">
+                <DockPanel Margin="8,0,8,0">
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Mode &amp; Preferences</TextBlock>
+                    <StackPanel DockPanel.Dock="Top">
+                        <TextBlock Style="{StaticResource Instructions}">If you need to test certificate requests without affecting your CA rate limit you can use an account which only issues test (staging) certificates:</TextBlock>
+                        <CheckBox
+                            Margin="4,4,0,4"
+                            Content="Use Staging (Test) Mode"
+                            IsChecked="{Binding Item.IsStaging}" />
+                    </StackPanel>
+                    <StackPanel DockPanel.Dock="Top">
+                        <TextBlock Style="{StaticResource Instructions}">The authority may offer an &quot;alternative chain&quot; using a different root certificate:</TextBlock>
+                        <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+                            <Label
+                                Width="120"
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Top"
+                                Content="Preferred Chain" />
+                            <TextBox
+                                Width="300"
+                                Height="23"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                Controls:TextBoxHelper.Watermark="(optional) e.g. DST Root CA X3"
+                                Text="{Binding Item.PreferredChain}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </StackPanel>
+
+
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">External Account Binding</TextBlock>
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">If required by your Certificate Authority, you can provide external account binding details here.</TextBlock>
+
+
+                    <StackPanel
+                        Margin="0,0,0,4"
+                        DockPanel.Dock="Top"
+                        Orientation="Horizontal">
+                        <Label
+                            Width="120"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Top"
+                            Content="Key Id" />
+                        <TextBox
+                            Width="300"
+                            Height="23"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Text="{Binding Item.EabKeyId}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                    <StackPanel
+                        Margin="0,0,0,4"
+                        DockPanel.Dock="Top"
+                        Orientation="Horizontal">
+                        <Label
+                            Width="120"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Top"
+                            Content="Key (HMAC)" />
+                        <TextBox
+                            Width="300"
+                            Height="23"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Text="{Binding Item.EabKey}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                    <StackPanel
+                        Margin="0,0,0,4"
+                        DockPanel.Dock="Top"
+                        Orientation="Horizontal">
+                        <Label
+                            Width="120"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Top"
+                            Content="Key Algorithm" />
+                        <TextBox
+                            Width="300"
+                            Height="23"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Controls:TextBoxHelper.Watermark="optional, e.g. HS256 (default), HS384 or HS512"
+                            Text="{Binding Item.EabKeyAlgorithm}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </DockPanel>
+            </TabItem>
+        </TabControl>
+
+
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
             <Button
                 x:Name="Save"
                 Margin="12,0,0,0"

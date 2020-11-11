@@ -31,7 +31,7 @@ namespace Certify.Models.Plugins
 
         Task<string> GetAcmeAccountStatus();
 
-        Task<ActionResult<AccountDetails>> AddNewAccountAndAcceptTOS(ILog log, string email);
+        Task<ActionResult<AccountDetails>> AddNewAccountAndAcceptTOS(ILog log, string email, string eabKeyId, string eabKey, string eabKeyAlg);
 
         Task<bool> DeactivateAccount(ILog log);
 

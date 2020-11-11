@@ -16,5 +16,9 @@ namespace Certify.Models
         public string Email { get; set; }
         public string AccountURI { get; set; }
         public string AccountKey { get; set; }
+        public string EabKeyId { get; set; }
+        public string EabKey { get; set; }
+        public string EabKeyAlgorithm { get; set; }
+        public string PreferredChain { get; set; }
     }
 }

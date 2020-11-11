@@ -446,7 +446,7 @@ namespace Certify.Providers.ACME.Certes
         /// <param name="log">  </param>
         /// <param name="email">  </param>
         /// <returns>  </returns>
-        public async Task<ActionResult<AccountDetails>> AddNewAccountAndAcceptTOS(ILog log, string email)
+        public async Task<ActionResult<AccountDetails>> AddNewAccountAndAcceptTOS(ILog log, string email, string eabKeyId, string eabKey, string eabKeyAlg)
         {
             try
             {
@@ -459,39 +459,26 @@ namespace Certify.Providers.ACME.Certes
 
                 // start new account context, create new account (with new key, if not enabled)
                 _acme = new AcmeContext(_serviceUri, accKey, _httpClient);
-                var account = await _acme.NewAccount(email, true);
+                var account = await _acme.NewAccount(email, true, eabKeyId, eabKey, eabKeyAlg);
 
                 _settings.AccountEmail = email;
 
                 await PopulateSettingsFromCurrentAccount();
 
-                // archive account key and update current settings with new ACME account key and account URI
-                // var keyUpdated = ArchiveAccountKey(account);
-                // var settingsSaved = await SaveSettings();
+                log?.Information($"Registering account {email} with certificate authority");
 
-                //  if (keyUpdated && settingsSaved)
+                return new ActionResult<AccountDetails>
                 {
-                    log?.Information($"Registering account {email} with certificate authority");
-
-                    // re-init provider based on new account key
-                    // await InitProvider(acmeApiEndpoint, _log);
-
-                    return new ActionResult<AccountDetails>
+                    IsSuccess = true,
+                    Result = new AccountDetails
                     {
-                        IsSuccess = true,
-                        Result = new AccountDetails
-                        {
-                            AccountKey = _settings.AccountKey,
-                            Email = _settings.AccountEmail,
-                            AccountURI = _settings.AccountUri,
-                            ID = _settings.AccountUri.Split('/').Last()
-                        }
-                    };
-                }
-                /* else
-                 {
-                     throw new Exception($"Failed to save account settings: keyUpdate:{keyUpdated} settingsSaved:{settingsSaved}");
-                 }*/
+                        AccountKey = _settings.AccountKey,
+                        Email = _settings.AccountEmail,
+                        AccountURI = _settings.AccountUri,
+                        ID = _settings.AccountUri.Split('/').Last()
+                    }
+                };
+               
             }
             catch (Exception exp)
             {
