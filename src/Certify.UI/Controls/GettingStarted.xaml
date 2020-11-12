@@ -37,7 +37,7 @@
                     Foreground="{DynamicResource MahApps.Brushes.Gray1}"
                     TextWrapping="Wrap"><Run FontWeight="Bold" Text="Certify" /><Run Text=" the web" /></TextBlock>
                 <TextBlock Style="{StaticResource Instructions}" TextWrapping="Wrap">
-                    <Run>Easily automate your TLS/SSL certificates from ACME enabled Certificate Authorities including Let's Encrypt (https://letsencrypt.org) and BuyPass Go (https://www.buypass.com/ssl/products/acme).</Run>
+                    <Run>Easily automate your TLS/SSL certificates from ACME enabled Certificate Authorities including Let's Encrypt, BuyPass Go and ZeroSSL.</Run>
                     <LineBreak />  <LineBreak />
                     <Run>For more information, documentation, community discussions and support options, see https://certifytheweb.com</Run>
 
