@@ -478,7 +478,7 @@ namespace Certify.Providers.ACME.Certes
                         ID = _settings.AccountUri.Split('/').Last()
                     }
                 };
-               
+
             }
             catch (Exception exp)
             {
@@ -1118,19 +1118,37 @@ namespace Certify.Providers.ACME.Certes
 
                         byte[] csrBytes = Convert.FromBase64String(pemString);
 
-                        await orderContext.Finalize(csrBytes);
-
-                        certificateChain = await orderContext.Download();
+                        order = await orderContext.Finalize(csrBytes);
                     }
                     else
                     {
-                        // finalise and download
-
-                        certificateChain = await orderContext.Generate(new CsrInfo
+                        order = await orderContext.Finalize(new CsrInfo
                         {
                             CommonName = _idnMapping.GetAscii(config.PrimaryDomain)
                         }, csrKey);
+
                     }
+
+                    if (order.Status == OrderStatus.Processing)
+                    {
+                        // some CAs enter the processing state while they generate the final certificate, so we may need to check the status a few times
+                        // https://tools.ietf.org/html/rfc8555#section-7.1.6
+
+                        attempts = 3;
+                        while (attempts > 0 && order.Status == OrderStatus.Processing)
+                        {
+                            await Task.Delay(2000);
+                            order = await orderContext.Resource();
+                            attempts--;
+                        }
+                    }
+
+                    if (order.Status != OrderStatus.Valid)
+                    {
+                        throw new AcmeException("Failed to finalise certificate order.");
+                    }
+
+                    certificateChain = await orderContext.Download();
                 }
 
                 var cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(certificateChain.Certificate.ToDer());
