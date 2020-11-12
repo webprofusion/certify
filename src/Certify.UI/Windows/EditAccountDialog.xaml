@@ -184,7 +184,7 @@
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top"
                             Text="{Binding Item.EabKey}"
-                            TextWrapping="Wrap" />
+                            TextWrapping="NoWrap" />
                     </StackPanel>
                     <StackPanel
                         Margin="0,0,0,4"

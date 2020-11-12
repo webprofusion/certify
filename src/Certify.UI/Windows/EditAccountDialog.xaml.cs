@@ -71,6 +71,19 @@ namespace Certify.UI.Windows
                 }
             }
 
+            if (ca.RequiresExternalAccountBinding)
+            {
+                if (string.IsNullOrEmpty(Item.EabKeyId) || string.IsNullOrEmpty(Item.EabKey))
+                {
+                    MessageBox.Show(ca.EabInstructions ?? "An external account binding Key Id and (HMAC) Key are required and will be provided by your Certificate Authority. You can enter these on the Advanced tab.");
+                }
+            }
+
+            if (Item.IsStaging && string.IsNullOrEmpty(ca.StagingAPIEndpoint))
+            {
+                MessageBox.Show("This certificate authority does not have a staging (test) API so can't be used for Staging certificate requests.");
+            }
+
             if (Item.AgreedToTermsAndConditions)
             {
                 Mouse.OverrideCursor = Cursors.Wait;
