@@ -22,6 +22,7 @@ namespace Certify.Models
     {
         public static string LETS_ENCRYPT = "letsencrypt.org";
         public static string BUYPASS = "buypass.com";
+        public static string ZEROSSL = "zerossl.com";
     }
 
     public class CertificateAuthority
@@ -50,7 +51,7 @@ namespace Certify.Models
              new CertificateAuthority{
                 Id="buypass.com",
                 Title ="Buypass Go SSL",
-                Description="Buypass Go SSL is a free SSL certificate service from Buypass CA using the Buypass ACME API. Certificates are valid for 180 days and can be for one domain and a www. subdomain (optional).",
+                Description="Buypass Go SSL is a free SSL certificate service from Buypass CA using the Buypass ACME API. Certificates are valid for 180 days and can contain up to 5 domains per certificate (wildcards are not available)",
                 APIType = CertAuthorityAPIType.ACME_V2.ToString(),
                 WebsiteUrl ="https://www.buypass.com/",
                 PrivacyPolicyUrl ="https://www.buypass.com/about-buypass/privacy-policy",
@@ -58,12 +59,33 @@ namespace Certify.Models
                 StagingAPIEndpoint = "https://api.test4.buypass.no/acme/directory",
                 IsEnabled=true,
                 IsCustom = false,
-                SANLimit=1,
+                SANLimit=5,
                 RequiresEmailAddress = true,
                 SupportedFeatures = new List<string>{
                     CertAuthoritySupportedRequests.DOMAIN_SINGLE.ToString(),
-                    CertAuthoritySupportedRequests.DOMAIN_SINGLE_PLUS_WWW.ToString()
+                    CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN.ToString()
                 }
+            },
+               new CertificateAuthority{
+                Id="zerossl.com",
+                Title ="ZeroSSL",
+                Description="ZeroSSL is a free certificate service from apilayer. Certificates are valid for 90 days and can contain multiple domains or wildcards.",
+                APIType = CertAuthorityAPIType.ACME_V2.ToString(),
+                WebsiteUrl ="https://zerossl.com/",
+                PrivacyPolicyUrl ="https://zerossl.com/privacy/",
+                ProductionAPIEndpoint = "https://acme.zerossl.com/v2/DV90",
+                StagingAPIEndpoint = null,
+                IsEnabled=true,
+                IsCustom = false,
+                SANLimit = 100,
+                RequiresEmailAddress = true,
+                RequiresExternalAccountBinding = true,
+                SupportedFeatures = new List<string>{
+                    CertAuthoritySupportedRequests.DOMAIN_SINGLE.ToString(),
+                    CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN.ToString(),
+                    CertAuthoritySupportedRequests.DOMAIN_WILDCARD.ToString()
+                },
+                EabInstructions="To use ZeroSSL, Create a free account on ZeroSSL.com then navigate to Developer > EAB Credentials for ACME Clients > Generate. Save your EAB KID and EAB HMAC Key. Enter these in the Advanced tab (Add/Edit Account)."
             }
         };
 
@@ -81,6 +103,10 @@ namespace Certify.Models
         public bool IsCustom { get; set; } = true;
         public int SANLimit { get; set; }
         public bool RequiresEmailAddress { get; set; }
+        public bool RequiresExternalAccountBinding { get; set; } = false;
         public bool AllowUntrustedTls { get; set; } = false;
+
+        public string EabInstructions { get; set; }
+
     }
 }
