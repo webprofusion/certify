@@ -208,6 +208,10 @@ namespace Certify.Models
         /// </summary>
         public string CustomPrivateKey { get; set; }
 
+        /// <summary>
+        /// If set, this is the preferred chain to select if present (e.g. the name of the root cert in the preferred chain)
+        /// </summary>
+        public string PreferredChain { get; set; }
         public void ApplyDeploymentOptionDefaults()
         {
             // if the selected mode is auto, discard settings which do not apply

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -123,7 +123,7 @@ namespace Certify.Providers.ACME.Certes
 
             var certesAssembly = typeof(AcmeContext).Assembly.GetName();
 
-            _userAgentName = $"{userAgentName} {certesAssembly.Name}/{certesAssembly.Version}";
+            _userAgentName = $"{userAgentName}";
 
             _serviceUri = new Uri(acmeBaseUri);
 
@@ -169,11 +169,8 @@ namespace Certify.Providers.ACME.Certes
 
             _loggingHandler = new LoggingHandler(new HttpClientHandler(), _log);
             var customHttpClient = new System.Net.Http.HttpClient(_loggingHandler);
-            if (customHttpClient.DefaultRequestHeaders.Contains("User-Agent"))
-            {
-                customHttpClient.DefaultRequestHeaders.Remove("User-Agent");
-            }
-            customHttpClient.DefaultRequestHeaders.Add("User-Agent", _userAgentName);
+
+            customHttpClient.DefaultRequestHeaders.UserAgent.ParseAdd(_userAgentName);
 
 #if DEBUG
             //  customHttpClient.Timeout = TimeSpan.FromSeconds(10);
@@ -1039,7 +1036,7 @@ namespace Certify.Providers.ACME.Certes
         /// <param name="alternativeDnsIdentifiers">  </param>
         /// <param name="config">  </param>
         /// <returns>  </returns>
-        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId, string pwd)
+        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId, string pwd, string preferredChain)
         {
             var orderContext = _currentOrders[orderId];
 
@@ -1097,12 +1094,13 @@ namespace Certify.Providers.ACME.Certes
             // generate cert
             CertificateChain certificateChain = null;
             DateTime? certExpiration = null;
+
             try
             {
                 if (order.Status == OrderStatus.Valid)
                 {
                     // download existing cert
-                    certificateChain = await orderContext.Download();
+                    certificateChain = await orderContext.Download(preferredChain);
                 }
                 else
                 {
@@ -1148,7 +1146,7 @@ namespace Certify.Providers.ACME.Certes
                         throw new AcmeException("Failed to finalise certificate order.");
                     }
 
-                    certificateChain = await orderContext.Download();
+                    certificateChain = await orderContext.Download(preferredChain);
                 }
 
                 var cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(certificateChain.Certificate.ToDer());

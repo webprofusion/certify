@@ -890,9 +890,20 @@ namespace Certify.Management
                     new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RequestCertificate,
                         managedCertificate));
 
+                // check item or settings for preferred chain option
+                string preferredChain = managedCertificate.RequestConfig.PreferredChain;
+                if (string.IsNullOrEmpty(preferredChain))
+                {
+                    var acc = await GetAccountDetailsForManagedItem(managedCertificate);
+                    if (acc != null && !string.IsNullOrEmpty(acc.PreferredChain))
+                    {
+                        preferredChain = acc.PreferredChain;
+                    }
+                }
+                
                 var pfxPwd = await GetPfxPassword(managedCertificate);
 
-                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, managedCertificate.RequestConfig, pendingOrder.OrderUri, pfxPwd);
+                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, managedCertificate.RequestConfig, pendingOrder.OrderUri, pfxPwd, preferredChain);
 
                 if (certRequestResult.IsSuccess)
                 {
