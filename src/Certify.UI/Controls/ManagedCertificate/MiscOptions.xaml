@@ -80,6 +80,16 @@
                             DockPanel.Dock="Top"
                             Style="{StaticResource Instructions}"
                             Text="{Binding CertificateAuthorityDescription}" />
+
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Preferred Chain</TextBlock>
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">
+                            The certificate authority may present multiple versions of your certificate signed with different root (issuer) certificates and you can specify a preference for this certificate. If the exact chain is not available then the default chain will be used.
+                        </TextBlock>
+                        <TextBox
+                            Width="200"
+                            HorizontalAlignment="left"
+                            Controls:TextBoxHelper.Watermark="e.g. DST Root CA X3"
+                            Text="{Binding SelectedItem.RequestConfig.PreferredChain}" />
                     </DockPanel>
                 </TabItem>
 
