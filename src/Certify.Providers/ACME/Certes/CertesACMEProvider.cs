@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -1133,9 +1133,10 @@ namespace Certify.Providers.ACME.Certes
                         // https://tools.ietf.org/html/rfc8555#section-7.1.6
 
                         attempts = 3;
+
                         while (attempts > 0 && order.Status == OrderStatus.Processing)
                         {
-                            await Task.Delay(2000);
+                            await Task.Delay(TimeSpan.FromSeconds(Math.Max(orderContext.RetryAfter, 1)));
                             order = await orderContext.Resource();
                             attempts--;
                         }
