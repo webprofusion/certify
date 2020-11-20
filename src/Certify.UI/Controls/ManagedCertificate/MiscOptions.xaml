@@ -186,15 +186,21 @@
                             <TextBlock Style="{StaticResource SubheadingWithMargin}">Security</TextBlock>
 
                             <TextBlock Style="{StaticResource Instructions}">You can optionally specify a password credential to use for private keys and PFX files generated for this certificate:</TextBlock>
-                            <ComboBox
-                                x:Name="CertPasswordCredential"
-                                Width="180"
-                                Margin="0,0,0,0"
-                                HorizontalAlignment="Left"
-                                DisplayMemberPath="Title"
-                                ItemsSource="{Binding StoredPasswords}"
-                                SelectedValue="{Binding SelectedItem.CertificatePasswordCredentialId}"
-                                SelectedValuePath="StorageKey" />
+                            <StackPanel Orientation="Horizontal">
+                                <ComboBox
+                                    x:Name="CertPasswordCredential"
+                                    Width="180"
+                                    Margin="0,0,4,0"
+                                    HorizontalAlignment="Left"
+                                    DisplayMemberPath="Title"
+                                    ItemsSource="{Binding StoredPasswords}"
+                                    SelectedValue="{Binding SelectedItem.CertificatePasswordCredentialId}"
+                                    SelectedValuePath="StorageKey" />
+                                <Button
+                                    x:Name="AddStoredCredential"
+                                    Click="AddStoredCredential_Click"
+                                    Content="New" />
+                            </StackPanel>
                         </StackPanel>
 
 

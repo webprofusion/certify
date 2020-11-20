@@ -220,15 +220,45 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
+        private async void AddStoredCredential_Click(object sender, RoutedEventArgs e)
+        {
+            var cred = new Windows.EditCredential
+            {
+                Owner = Window.GetWindow(this)
+            };
+
+            cred.Item.ProviderType = Models.StandardAuthTypes.STANDARD_AUTH_PASSWORD;
+
+            cred.ShowDialog();
+
+            //refresh credentials list on complete
+
+            RefreshPfxCredentials();
+
+            var credential = cred.Item;
+
+            if (cred.Item != null && cred.Item.StorageKey != null)
+            {
+                this.CertPasswordCredential.SelectedValue = credential.StorageKey;
+            }
+        }
+
+        private void RefreshPfxCredentials()
+        {
+            // FIXME: combobox binding misbehaves so force it here
+            var currentCredentialId = ItemViewModel.SelectedItem?.CertificatePasswordCredentialId;
+            this.CertPasswordCredential.ItemsSource = ItemViewModel.StoredPasswords;
+            this.CertPasswordCredential.SelectedValue = currentCredentialId;
+        }
+
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
             this.DataContext = this.ItemViewModel;
             this.ItemViewModel.RaisePropertyChangedEvent(null);
 
-            // FIXME: combobox binding misbehaves so force it here
-            var currentCredentialId = ItemViewModel.SelectedItem?.CertificatePasswordCredentialId;
-            this.CertPasswordCredential.ItemsSource = ItemViewModel.StoredPasswords;
-            this.CertPasswordCredential.SelectedValue = currentCredentialId;
+
+            this.RefreshPfxCredentials();
+            
         }
     }
 }

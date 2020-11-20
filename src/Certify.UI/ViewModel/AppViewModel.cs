@@ -91,6 +91,8 @@ namespace Certify.UI.ViewModel
         /// Feature toggled items which no longer require a feature flag
         /// </summary>
         public string[] StandardFeatures = {
+            FeatureFlags.EXTERNAL_CERT_MANAGERS,
+            FeatureFlags.PRIVKEY_PWD,
 #if DEBUG
             FeatureFlags.SERVER_CONNECTIONS
 #endif
