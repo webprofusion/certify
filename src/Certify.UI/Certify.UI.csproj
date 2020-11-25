@@ -427,7 +427,7 @@
       <Version>4.7.0.9</Version>
     </PackageReference>
     <PackageReference Include="MahApps.Metro">
-      <Version>2.2.0</Version>
+      <Version>2.3.4</Version>
     </PackageReference>
     <PackageReference Include="Markdig.Wpf">
       <Version>0.4.0</Version>
@@ -473,9 +473,9 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>REM IF NOT DEFINED _CI_BUILD (
-REM  xcopy /i /s /Y /C $(SolutionDir)..\build\plugins\$(ConfigurationName)\Plugin.*.dll $(TargetDir)Plugins\
-REM )
+    <PostBuildEvent>IF NOT DEFINED _CI_BUILD (
+xcopy /i /s /Y /C $(SolutionDir)..\build\plugins\$(ConfigurationName)\Plugin.*.dll $(TargetDir)Plugins\
+)
 
 
 </PostBuildEvent>
