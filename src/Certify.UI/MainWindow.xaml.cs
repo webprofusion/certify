@@ -71,18 +71,20 @@ namespace Certify.UI
                 return;
             }
 
-            if (!_appViewModel.IsRegisteredVersion && _appViewModel.ManagedCertificates != null && _appViewModel.ManagedCertificates.Count >= NUM_ITEMS_FOR_REMINDER)
+            var managedCertCount = _appViewModel.ManagedCertificates?.Where(c => string.IsNullOrEmpty(c.SourceId)).Count() ?? 0;
+
+            if (!_appViewModel.IsRegisteredVersion && managedCertCount >= NUM_ITEMS_FOR_REMINDER)
             {
                 MessageBox.Show(SR.MainWindow_TrialLimitationReached);
 
-                if (_appViewModel.ManagedCertificates?.Count >= NUM_ITEMS_FOR_LIMIT)
+                if (managedCertCount >= NUM_ITEMS_FOR_LIMIT)
                 {
                     return;
                 }
             }
             else
             {
-                if (_appViewModel.IsRegisteredVersion && _appViewModel.ManagedCertificates?.Count >= 1)
+                if (_appViewModel.IsRegisteredVersion && managedCertCount >= 1)
                 {
                     var licensingManager = ViewModel.AppViewModel.Current.PluginManager?.LicensingManager;
 
@@ -90,7 +92,7 @@ namespace Certify.UI
                     {
                         MessageBox.Show(Certify.Locales.SR.MainWindow_KeyExpired);
 
-                        if (_appViewModel.ManagedCertificates?.Count >= NUM_ITEMS_FOR_LIMIT)
+                        if (managedCertCount >= NUM_ITEMS_FOR_LIMIT)
                         {
                             return;
                         }
@@ -200,7 +202,7 @@ namespace Certify.UI
             Mouse.OverrideCursor = Cursors.AppStarting;
             _appViewModel.IsLoading = true;
 
- 
+
 
             var cts = new CancellationTokenSource();
 
@@ -211,7 +213,7 @@ namespace Certify.UI
                 await _appViewModel.LoadSettingsAsync();
 
                 // service host diagnostics
-      
+
                 var svcDiag = await _appViewModel.PerformServiceDiagnostics();
                 if (svcDiag.Any(d => d.IsSuccess == false))
                 {
