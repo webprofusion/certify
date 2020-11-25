@@ -257,21 +257,20 @@
             </StackPanel>
         </StackPanel>
 
-        <StackPanel
-            Margin="0,8,0,0"
-            DockPanel.Dock="Top"
-            Orientation="Horizontal">
-            <Label Width="160" Content="Domain Match" />
-            <TextBox
-                x:Name="DomainMatchText"
-                Width="270"
-                mah:TextBoxHelper.Watermark="(optional, *.example.com; www.sub.example.com)"
-                Text="{Binding SelectedItem.DomainMatch}" />
-        </StackPanel>
-        <StackPanel Margin="160,0,0,0" DockPanel.Dock="Top">
-            <TextBlock Style="{StaticResource Instructions}"><Run Text="A domain match rule is only required when validating multiple domains using different methods in one certificate." /></TextBlock>
-        </StackPanel>
+        <StackPanel DockPanel.Dock="Top" Visibility="{Binding HasMultipleChallengeConfigurations, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                <Label Width="160" Content="Domain Match" />
+                <TextBox
+                    x:Name="DomainMatchText"
+                    Width="270"
+                    mah:TextBoxHelper.Watermark="(optional, *.example.com; www.sub.example.com)"
+                    Text="{Binding SelectedItem.DomainMatch}" />
+            </StackPanel>
+            <StackPanel Margin="160,0,0,0">
+                <TextBlock Style="{StaticResource Instructions}"><Run Text="Note: A domain match rule is only required when validating multiple domains using different methods in one certificate." /></TextBlock>
+            </StackPanel>
 
+        </StackPanel>
         <Button
             x:Name="DeleteAuth"
             MaxWidth="160"

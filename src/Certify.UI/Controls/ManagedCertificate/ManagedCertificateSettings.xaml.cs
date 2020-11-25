@@ -64,8 +64,6 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 }
 
-
-
                 ItemViewModel.RaiseSelectedItemChanges();
 
                 if (ItemViewModel.SelectedItem?.Id == null)
@@ -106,7 +104,6 @@ namespace Certify.UI.Controls.ManagedCertificate
         }
         private async Task<bool> ValidateAndSave(Models.ManagedCertificate item)
         {
-
 
             if (item.RequestConfig.Challenges == null)
             {
@@ -195,7 +192,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             if (item.RequestConfig.Challenges.Count(c => string.IsNullOrEmpty(c.DomainMatch)) > 1)
             {
-                ShowValidationError("Only one authorization configuration can be used match any domain (domain match blank). Specify domain(s) to match or remove additional configuration. ");
+                ShowValidationError("Only one authorization configuration can be used which matches any domain (domain match blank). Specify domain(s) to match or remove additional configuration. ");
                 return false;
             }
 
@@ -248,30 +245,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                         return false;
                     };
                 }
-            }
-
-            if (!string.IsNullOrEmpty(item.RequestConfig.WebhookTrigger) &&
-                item.RequestConfig.WebhookTrigger != Webhook.ON_NONE)
-            {
-                if (string.IsNullOrEmpty(item.RequestConfig.WebhookUrl) ||
-                    !Uri.TryCreate(item.RequestConfig.WebhookUrl, UriKind.Absolute, out var uri))
-                {
-                    ShowValidationError(SR.ManagedCertificateSettings_HookMustBeValidUrl);
-                    return false;
-                }
-                if (string.IsNullOrEmpty(item.RequestConfig.WebhookMethod))
-                {
-                    ShowValidationError(SR.ManagedCertificateSettings_HookMethodMustBeSet);
-                    return false;
-                }
-            }
-            else
-            {
-                // clear out saved values if setting webhook to NONE
-                item.RequestConfig.WebhookUrl = null;
-                item.RequestConfig.WebhookMethod = null;
-                item.RequestConfig.WebhookContentType = null;
-                item.RequestConfig.WebhookContentBody = null;
             }
 
             //creating new managed item
@@ -331,7 +304,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                         Log?.Error($"RequestCertificate: {msg}");
                     }
                 }
-
             }
         }
 
@@ -423,7 +395,6 @@ namespace Certify.UI.Controls.ManagedCertificate
             ItemViewModel.IsNameEditMode = true;
             EditName.Focus();
         }
-
         private void FinishedEditName_Click(object sender, RoutedEventArgs e)
         {
             ItemViewModel.IsNameEditMode = false;

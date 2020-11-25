@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using Certify.Models;
 using Certify.Models.Config;
 using Certify.UI.ViewModel;
 using WinForms = System.Windows.Forms;
@@ -57,7 +58,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void DirectoryBrowse_Click(object sender, EventArgs e)
         {
-            // Website root path (fi required) is shared across all challenge configs
+            // Website root path (if required) is shared across all challenge configs
 
             var config = EditModel.ParentManagedCertificate.RequestConfig;
 
@@ -200,7 +201,8 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private async void ChallengeTypeList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if ((string)ChallengeTypeList.SelectedValue == "dns-01")
+
+            if ((string)ChallengeTypeList.SelectedValue == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
             {
                 if (string.IsNullOrEmpty(EditModel.SelectedItem.ChallengeProvider))
                 {
@@ -209,6 +211,12 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 }
             }
+            else if ((string)ChallengeTypeList.SelectedValue == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
+            {
+                await SetChallengeProvider(null);
+
+            }
+
         }
     }
 }

@@ -11,10 +11,6 @@ namespace Certify.UI.ViewModel
 {
     public class ChallengeConfigItemViewModel : BindableBase
     {
-        /// <summary>
-        /// Provide single static instance of model for all consumers 
-        /// </summary>
-        //public static ChallengeConfigItemViewModel Current = ChallengeConfigItemViewModel.GetModel();
 
         private AppViewModel _appViewModel => AppViewModel.Current;
 
@@ -28,6 +24,14 @@ namespace Certify.UI.ViewModel
         public ChallengeConfigItemViewModel(CertRequestChallengeConfig item)
         {
             SelectedItem = item;
+        }
+
+        public bool HasMultipleChallengeConfigurations
+        {
+            get
+            {
+                return ParentManagedCertificate.RequestConfig.Challenges.Count() > 1;
+            }
         }
 
         /// <summary>
@@ -144,6 +148,12 @@ namespace Certify.UI.ViewModel
 
             var definition = _appViewModel.ChallengeAPIProviders.FirstOrDefault(p => p.Id == SelectedItem.ChallengeProvider);
 
+            // challenge provider has changed, by way of change to overall challenge type
+            if (SelectedItem.ChallengeType != definition?.ChallengeType)
+            {
+                definition = null;
+            }
+
             if (definition != null)
             {
                 if (definition.ProviderParameters.Any(p => p.IsCredential))
@@ -183,7 +193,10 @@ namespace Certify.UI.ViewModel
                     SelectedItem.Parameters.Remove(r);
                 }
             }
+            else
+            {
+                SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();
+            }
         }
-
     }
 }
