@@ -211,11 +211,6 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 }
             }
-            else if ((string)ChallengeTypeList.SelectedValue == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
-            {
-                await SetChallengeProvider(null);
-
-            }
 
         }
     }

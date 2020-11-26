@@ -24,6 +24,32 @@ namespace Certify.UI.ViewModel
         public ChallengeConfigItemViewModel(CertRequestChallengeConfig item)
         {
             SelectedItem = item;
+
+            if (SelectedItem != null)
+            {
+                SelectedItem.AfterPropertyChanged -= SelectedItem_AfterPropertyChanged;
+                SelectedItem.AfterPropertyChanged += SelectedItem_AfterPropertyChanged;
+            }
+        }
+
+        private void SelectedItem_AfterPropertyChanged(object sender, EventArgs e)
+        {
+            if (e is System.ComponentModel.PropertyChangedEventArgs)
+            {
+                var args = e as System.ComponentModel.PropertyChangedEventArgs;
+                if (args.PropertyName== nameof(SelectedItem.ChallengeType))
+                {
+                    if (SelectedItem.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
+                    {
+                        SelectedItem.PauseChangeEvents();
+                        SelectedItem.ChallengeProvider = null;
+                        SelectedItem.ChallengeCredentialKey = null;
+                        SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();
+                        SelectedItem.ResumeChangeEvents();
+                    }
+                }
+            }
+            
         }
 
         public bool HasMultipleChallengeConfigurations
@@ -195,7 +221,11 @@ namespace Certify.UI.ViewModel
             }
             else
             {
-                SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();
+                //if definition has change to a type with no parameters, reset the parameters collection.
+                if (SelectedItem.Parameters?.Any() == true)
+                {
+                    SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();
+                }
             }
         }
     }
