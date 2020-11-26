@@ -220,7 +220,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        private async void AddStoredCredential_Click(object sender, RoutedEventArgs e)
+        private void AddStoredCredential_Click(object sender, RoutedEventArgs e)
         {
             var cred = new Windows.EditCredential
             {
