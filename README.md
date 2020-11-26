@@ -5,7 +5,7 @@
 - Community Discussions: [https://community.certifytheweb.com](https://community.certifytheweb.com)
 - Changelog (release notes): https://certifytheweb.com/home/changelog
 
-The SSL/TLS Certificate Management GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/). This app makes it easy to automatically request, install and continuously renew free certificates for Windows/IIS or for any other services which requires a domain certificate.  
+The SSL/TLS Certificate Management GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/) and other ACME certificate authorities. This app makes it easy to automatically request, install and continuously renew free certificates for Windows/IIS or for any other services which requires a domain certificate.  
 
 **Certify The Web is used by many thousands of organisations to manage millions of certificates each month** and is the perfect solution for administrators who want visibility of certificate management for their domains. Centralised dashboard status reporting is also available.
 
@@ -17,11 +17,11 @@ https://img.shields.io/github/stars/webprofusion/certify.svg)
 ## Features include:
 - See more details: https://certifytheweb.com/home/features
 - Easy certificate requests & automated SSL bindings (IIS)
+- Fetch certificates from ACME Certificate Authorities including **Let's Encrypt, BuyPass Go and ZeroSSL**
 - Automatic renewal using a background service, with configurable renewal frequency.
 - Preview mode to see which actions the app will perform (including which bindings will be added/updated)
 - SAN support (multi-domain certificates)
-- Support for v2 of the Let's Encrypt API including Wildcard Certificate support (*.example.com)
-- Support for BuyPass Go SSL.
+- Single domains, multiple-domains (SAN) and wildcard certificates (*.example.com)
 - Http or DNS challenge validation.
 	- Built-in Http Challenge Server for easier configuration of challenge responses
 	- DNS Validation via over 26 supported APIs (including Azure DNS, Alibaba Cloud, AWS Route53, Cloudflare, DnsMadeEasy, GoDaddy, OVH, SimpleDNSPlus)
