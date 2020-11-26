@@ -17,7 +17,7 @@ https://img.shields.io/github/stars/webprofusion/certify.svg)
 ## Features include:
 - See more details: https://certifytheweb.com/home/features
 - Easy certificate requests & automated SSL bindings (IIS)
-- Fetch certificates from ACME Certificate Authorities including Let's Encrypt, BuyPass Go and ZeroSSL
+- Fetch certificates from ACME Certificate Authorities including **Let's Encrypt, BuyPass Go and ZeroSSL**
 - Automatic renewal using a background service, with configurable renewal frequency.
 - Preview mode to see which actions the app will perform (including which bindings will be added/updated)
 - SAN support (multi-domain certificates)
