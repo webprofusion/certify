@@ -78,7 +78,7 @@
       <Version>1.0.0.1</Version>
     </PackageReference>
     <PackageReference Include="AWSSDK.Route53">
-      <Version>3.5.0.42</Version>
+      <Version>3.5.0.45</Version>
     </PackageReference>
     <PackageReference Include="Azure.Identity">
       <Version>1.3.0</Version>
