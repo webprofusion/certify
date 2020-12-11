@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -570,7 +570,7 @@ namespace Certify.Management
 
             LogMessage(managedCertificate.Id, $"Beginning Certificate Request Process: {managedCertificate.Name} using ACME Provider:{_acmeClientProvider.GetProviderName()}");
 
-            LogMessage(managedCertificate.Id, $"Requested domains to include on certificate: {string.Join(";", managedCertificate.GetCertificateDomains())}");
+            LogMessage(managedCertificate.Id, $"Requested identifiers to include on certificate: {string.Join(";", managedCertificate.GetCertificateDomains())}");
 
             ReportProgress(progress,
                 new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RegisterDomainIdentity, managedCertificate)
@@ -587,8 +587,6 @@ namespace Certify.Management
                             }
                         });
             }
-
-            var distinctDomains = managedCertificate.GetCertificateDomains();
 
             var identifierAuthorizations = new List<PendingAuthorization>();
 
@@ -626,7 +624,7 @@ namespace Certify.Management
                 // perform all automated challenges (creating either http resources within the domain
                 // sites or creating DNS TXT records, depending on the challenge types)
 
-                await PerformAutomatedChallengeResponses(log, managedCertificate, distinctDomains, authorizations, result, config, progress);
+                await PerformAutomatedChallengeResponses(log, managedCertificate, authorizations, result, config, progress);
 
                 // if any challenge responses require a manual step, pause our request here and wait
                 // for user intervention
@@ -900,7 +898,7 @@ namespace Certify.Management
                         preferredChain = acc.PreferredChain;
                     }
                 }
-                
+
                 var pfxPwd = await GetPfxPassword(managedCertificate);
 
                 var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, managedCertificate.RequestConfig, pendingOrder.OrderUri, pfxPwd, preferredChain);
@@ -1089,17 +1087,25 @@ namespace Certify.Management
             return pfxPwd;
         }
 
-        private async Task PerformAutomatedChallengeResponses(ILog log, ManagedCertificate managedCertificate, IEnumerable<string> distinctDomains, List<PendingAuthorization> authorizations, CertificateRequestResult result, CertRequestConfig config, IProgress<RequestProgressState> progress)
+        private async Task PerformAutomatedChallengeResponses(ILog log, ManagedCertificate managedCertificate, List<PendingAuthorization> authorizations, CertificateRequestResult result, CertRequestConfig config, IProgress<RequestProgressState> progress)
         {
             var failureSummaryMessage = "";
 
-            foreach (var domain in distinctDomains)
+            List<IdentifierItem> identifiers = new List<IdentifierItem>();
+
+            var distinctDomains = managedCertificate.GetCertificateDomains();
+
+            distinctDomains.ForEach(d => identifiers.Add(new IdentifierItem { Name = d, ItemType = "dns" }));
+
+            managedCertificate.RequestConfig.SubjectIPAddresses?.ToList().ForEach(i => identifiers.Add(new IdentifierItem { Name = i, ItemType = "ip" }));
+
+            foreach (var identifier in identifiers)
             {
-                var asciiDomain = _idnMapping.GetAscii(domain).ToLower();
+                var asciiDomain = _idnMapping.GetAscii(identifier.Name).ToLower();
 
                 var authorization = authorizations.FirstOrDefault(a => a.Identifier?.Dns == asciiDomain);
 
-                var challengeConfig = managedCertificate.GetChallengeConfig(domain);
+                var challengeConfig = managedCertificate.GetChallengeConfig(identifier.Name);
 
                 // if our challenge takes a while to propagate, wait
                 if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
@@ -1144,12 +1150,12 @@ namespace Certify.Management
 
                 if (authorization?.Identifier != null)
                 {
-                    LogMessage(managedCertificate.Id, $"Attempting Domain Validation: {domain}",
+                    LogMessage(managedCertificate.Id, $"Attempting Domain Validation: {identifier.Dns}",
                         LogItemType.CertificateRequestStarted);
 
                     ReportProgress(progress,
                         new RequestProgressState(RequestState.Running,
-                            string.Format(Certify.Locales.CoreSR.CertifyManager_RegisteringAndValidatingX0, domain),
+                            string.Format(Certify.Locales.CoreSR.CertifyManager_RegisteringAndValidatingX0, identifier.Dns),
                             managedCertificate)
                     );
 
@@ -1160,7 +1166,7 @@ namespace Certify.Management
                         ReportProgress(progress,
                             new RequestProgressState(
                                 RequestState.Running,
-                                $"Performing automated challenge responses ({domain})",
+                                $"Performing automated challenge responses ({identifier.Dns})",
                                 managedCertificate
                             )
                         );
@@ -1222,7 +1228,7 @@ namespace Certify.Management
                             {
                                 case SupportedChallengeTypes.CHALLENGE_TYPE_HTTP:
                                     result.Message =
-                                        string.Format(CoreSR.CertifyManager_AutomateConfigurationCheckFailed_HTTP, domain);
+                                        string.Format(CoreSR.CertifyManager_AutomateConfigurationCheckFailed_HTTP, identifier.Dns);
                                     break;
 
                                 case SupportedChallengeTypes.CHALLENGE_TYPE_SNI:
@@ -1244,13 +1250,13 @@ namespace Certify.Management
                         {
                             ReportProgress(progress,
                                 new RequestProgressState(RequestState.Running,
-                                    string.Format(CoreSR.CertifyManager_ReqestValidationFromCertificateAuthority, domain),
+                                    string.Format(CoreSR.CertifyManager_ReqestValidationFromCertificateAuthority, identifier.Dns),
                                     managedCertificate));
                         }
                     }
                     else
                     {
-                        log.Information($"Authorization already valid for domain: {domain}");
+                        log.Information($"Authorization already valid for {identifier.Dns}");
                     }
                 }
                 else
@@ -1258,8 +1264,8 @@ namespace Certify.Management
                     // could not begin authorization
 
                     LogMessage(managedCertificate.Id,
-                        $"Could not begin authorization for domain with the Certificate Authority: [{domain}] {(authorization?.AuthorizationError ?? "Could not register domain identifier")} ");
-                    failureSummaryMessage = $"[{domain}] : {authorization?.AuthorizationError}";
+                        $"Could not begin authorization for identifier with the Certificate Authority: [{identifier.Dns}] {(authorization?.AuthorizationError ?? "Could not register identifier")} ");
+                    failureSummaryMessage = $"[{identifier.Dns}] : {authorization?.AuthorizationError}";
                 }
             }
         }
@@ -1285,7 +1291,7 @@ namespace Certify.Management
             var pfxPath = managedCertificate.CertificatePath;
 
 
-        
+
 
             if (managedCertificate.ItemType == ManagedCertificateType.SSL_ACME)
             {

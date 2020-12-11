@@ -152,7 +152,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return false;
             }
 
-            if (ItemViewModel.SelectedItem.DomainOptions.Any(d => d.IsSelected && (!d.Domain.Contains(".") || d.Domain.ToLower().EndsWith(".local"))))
+            if (ItemViewModel.SelectedItem.DomainOptions.Any(d => d.IsSelected && d.Type == "dns" && (!d.Domain.Contains(".") || d.Domain.ToLower().EndsWith(".local"))))
             {
                 // one or more selected domains does not include a label seperator (is an internal host name) or end in .local
                 ShowValidationError("One or more domains specified are internal hostnames. Certificates for internal host names are not supported by the Certificate Authority.");

@@ -239,7 +239,12 @@ namespace Certify.Models
         /// <returns></returns>
         public List<string> GetCertificateDomains()
         {
-            var allDomains = new List<string> { RequestConfig.PrimaryDomain };
+            var allDomains = new List<string>();
+
+            if (!string.IsNullOrEmpty(RequestConfig.PrimaryDomain))
+            {
+                allDomains.Add(RequestConfig.PrimaryDomain);
+            }
 
             if (RequestConfig.SubjectAlternativeNames != null)
             {
@@ -247,7 +252,7 @@ namespace Certify.Models
             }
 
             return allDomains.Distinct().ToList();
-            ;
+
         }
 
         /// <summary>
@@ -479,6 +484,6 @@ namespace Certify.Models
 
     }
 
-  
+
 }
 

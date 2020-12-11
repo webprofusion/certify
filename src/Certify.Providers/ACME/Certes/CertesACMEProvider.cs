@@ -5,21 +5,16 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Certes;
 using Certes.Acme;
 using Certes.Acme.Resource;
-using Certes.Pkcs;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
-
 using Org.BouncyCastle.OpenSsl;
-using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.X509;
 
 namespace Certify.Providers.ACME.Certes
@@ -507,11 +502,13 @@ namespace Certify.Providers.ACME.Certes
             var authzList = new List<PendingAuthorization>();
 
             //if no alternative domain specified, use the primary domain as the subject
-            var domainOrders = new List<string>
+            var domainOrders = new List<string>();
+
+            if (!string.IsNullOrEmpty(config.PrimaryDomain))
             {
                 // order all of the distinct domains in the config (primary + SAN).
-                _idnMapping.GetAscii(config.PrimaryDomain)
-            };
+                _idnMapping.GetAscii(config.PrimaryDomain);
+            }
 
             if (config.SubjectAlternativeNames != null)
             {
@@ -522,6 +519,19 @@ namespace Certify.Providers.ACME.Certes
                         domainOrders.Add(_idnMapping.GetAscii(s));
                     }
                 }
+            }
+
+            var certificateIdentifiers = new List<Identifier>();
+
+            // prepare list of identifiers on certs, which may be domains or ip addresses
+            foreach (var d in domainOrders.Where(i => i != null))
+            {
+                certificateIdentifiers.Add(new Identifier { Type = IdentifierType.Dns, Value = d });
+            }
+
+            foreach (var i in config.SubjectIPAddresses)
+            {
+                certificateIdentifiers.Add(new Identifier { Type = IdentifierType.Ip, Value = i });
             }
 
             try
@@ -548,7 +558,7 @@ namespace Certify.Providers.ACME.Certes
                             }
                             else
                             {
-                                order = await _acme.NewOrder(domainOrders);
+                                order = await _acme.NewOrder(certificateIdentifiers);
                             }
 
                             if (order != null)
@@ -702,6 +712,7 @@ namespace Certify.Providers.ACME.Certes
                         var allChallenges = await authz.Challenges();
                         var res = await authz.Resource();
                         var authzDomain = res.Identifier.Value;
+
                         if (res.Wildcard == true)
                         {
                             authzDomain = "*." + authzDomain;
@@ -809,6 +820,7 @@ namespace Certify.Providers.ACME.Certes
                              Identifier = new IdentifierItem
                              {
                                  Dns = authzDomain,
+                                 ItemType = res.Identifier.Type == IdentifierType.Ip ? "ip" : "dns",
                                  IsAuthorizationPending = !challenges.Any(c => c.IsValidated) //auth is pending if we have no challenges already validated
                              },
                              AuthorizationContext = authz,
@@ -1127,6 +1139,7 @@ namespace Certify.Providers.ACME.Certes
 
                     }
 
+                    //TODO: we can remove this as certes now provides this functionality, so we shouldn't hit the Processing state.
                     if (order.Status == OrderStatus.Processing)
                     {
                         // some CAs enter the processing state while they generate the final certificate, so we may need to check the status a few times

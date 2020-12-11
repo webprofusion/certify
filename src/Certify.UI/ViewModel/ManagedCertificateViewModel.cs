@@ -442,33 +442,31 @@ namespace Certify.UI.ViewModel
         {
             var item = SelectedItem;
             var config = item.RequestConfig;
-            var primaryDomain = item.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain == true);
 
-            if (primaryDomain == null)
+            if (item.DomainOptions.Any(d => d.IsSelected))
             {
-                if (item.DomainOptions.Any())
-                {
-                    item.DomainOptions[0].IsPrimaryDomain = true;
-                }
+                item.DomainOptions.First(d => d.IsSelected == true).IsPrimaryDomain = true;
             }
+
+            var primaryIdentifier = item.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain == true);
 
             //if no primary domain need to go back and select one
-            if (primaryDomain == null && throwOnInvalidSettings)
+            if (primaryIdentifier == null && throwOnInvalidSettings)
             {
-                throw new ArgumentException("Primary subject domain must be set.");
+                throw new ArgumentException("Primary subject identifier must be set.");
             }
 
-            if (primaryDomain != null)
+            if (primaryIdentifier != null)
             {
-                if (config.PrimaryDomain != primaryDomain.Domain)
+                if (config.PrimaryDomain != primaryIdentifier.Domain && primaryIdentifier.Type == "dns")
                 {
-                    config.PrimaryDomain = primaryDomain.Domain.Trim();
+                    config.PrimaryDomain = primaryIdentifier.Domain.Trim();
                 }
             }
 
             //apply remaining selected domains as subject alternative names
             var sanList =
-                item.DomainOptions.Where(dm => dm.IsSelected)
+                item.DomainOptions.Where(dm => dm.IsSelected && dm.Type == "dns")
                 .Select(i => i.Domain)
                 .ToArray();
 
@@ -478,7 +476,15 @@ namespace Certify.UI.ViewModel
                 config.SubjectAlternativeNames = sanList;
             }
 
-            //determine if this site has an existing entry in  Managed Certificates, if so use that, otherwise start a new one
+
+            // update our list of selected subject ip addresses, if any
+            if (!config.SubjectIPAddresses.SequenceEqual(item.DomainOptions.Where(i => i.IsSelected && i.Type == "ip").Select(s => s.Domain).ToArray()))
+            {
+                config.SubjectIPAddresses = item.DomainOptions.Where(i => i.IsSelected && i.Type == "ip").Select(s => s.Domain).ToArray();
+            }
+            
+
+            //determine if this site has an existing entry in Managed Certificates, if so use that, otherwise start a new one
             if (SelectedItem.Id == null)
             {
                 item.Id = Guid.NewGuid().ToString();
@@ -588,6 +594,17 @@ namespace Certify.UI.ViewModel
                                     wildcardAdded = true;
                                 }
                             }
+                            else if (Uri.CheckHostName(domain) == UriHostNameType.IPv4 || Uri.CheckHostName(domain) == UriHostNameType.IPv6)
+                            {
+                                option.Type = "ip";
+                                // add an IP address instead of a domain
+                                if (item.DomainOptions.Count == 0)
+                                {
+                                    option.IsPrimaryDomain = true;
+                                }
+
+                                item.DomainOptions.Add(option);
+                            }
                             else
                             {
                                 invalidDomains += domain + "\n";
@@ -598,11 +615,12 @@ namespace Certify.UI.ViewModel
 
                 RaiseSelectedItemChanges();
 
+                /*
                 if (!string.IsNullOrEmpty(invalidDomains))
                 {
                     MessageBox.Show("Invalid domains: " + invalidDomains);
                     return false;
-                }
+                }*/
 
                 if (wildcardAdded && !SelectedItem.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS))
                 {

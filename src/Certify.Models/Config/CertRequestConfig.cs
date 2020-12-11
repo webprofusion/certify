@@ -61,6 +61,11 @@ namespace Certify.Models
         public string[] SubjectAlternativeNames { get; set; } = new string[] { };
 
         /// <summary>
+        /// Optional list of IP addresses to include in cert request, primary first
+        /// </summary>
+        public string[] SubjectIPAddresses { get; set; } = new string[] { };
+
+        /// <summary>
         /// Root path for our website content, used when responding to file based challenges 
         /// </summary>
         ///
