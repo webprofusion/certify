@@ -618,7 +618,11 @@ namespace Certify.UI.ViewModel
             }
             finally
             {
-                _prefLock.Release();
+                try
+                {
+                    _prefLock.Release();
+                }
+                catch { }
             }
         }
 
