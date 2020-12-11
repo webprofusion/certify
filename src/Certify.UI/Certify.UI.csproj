@@ -427,7 +427,7 @@
       <Version>4.7.0.9</Version>
     </PackageReference>
     <PackageReference Include="MahApps.Metro">
-      <Version>2.3.4</Version>
+      <Version>2.4.3</Version>
     </PackageReference>
     <PackageReference Include="Markdig.Wpf">
       <Version>0.4.0</Version>
