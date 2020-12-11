@@ -143,6 +143,7 @@ namespace Certify.CLI
             if (args.Contains("--force-renew-all"))
             {
                 renewalMode = RenewalMode.All;
+                forceRenewal = true;
             }
 
             if (args.Contains("--renew-witherrors"))
@@ -155,6 +156,27 @@ namespace Certify.CLI
             {
                 // renew only new items
                 renewalMode = RenewalMode.NewItems;
+            }
+
+            if (args.Contains("--renew-all-due"))
+            {
+                // renew only new items
+                renewalMode = RenewalMode.RenewalsDue;
+            }
+
+            List<string> targetItemIds = new List<string> { };
+
+            if (args.Any(a => a.StartsWith("id=")))
+            {
+                var idArg = args.FirstOrDefault(a => a.StartsWith("id="));
+                if (idArg != null)
+                {
+                    var ids = idArg.Replace("id=", "").Split(',');
+                    foreach (var id in ids)
+                    {
+                        targetItemIds.Add(id.Trim());
+                    }
+                }
             }
 
             var isPreviewMode = false;
@@ -178,11 +200,12 @@ namespace Certify.CLI
             System.Console.WriteLine("\nPerforming Auto Renewals..\n");
             if (forceRenewal)
             {
-                System.Console.WriteLine("\nForcing auto renew (--force-renewal specified). \n");
+                System.Console.WriteLine("\nForcing auto renew (--force-renewal-all specified). \n");
             }
 
             //go through list of items configured for auto renew, perform renewal and report the result
-            var results = await _certifyClient.BeginAutoRenewal(new RenewalSettings { Mode = renewalMode, IsPreviewMode = isPreviewMode });
+            var results = await _certifyClient.BeginAutoRenewal(new RenewalSettings { Mode = renewalMode, IsPreviewMode = isPreviewMode, TargetManagedCertificates = targetItemIds.Any() ? targetItemIds : null });
+
             Console.ForegroundColor = ConsoleColor.White;
 
             foreach (var r in results)

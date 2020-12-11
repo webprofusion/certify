@@ -357,6 +357,21 @@
                             </Border>
                         </StackPanel>
 
+                        <StackPanel DockPanel.Dock="Top">
+                            <TextBlock
+                                Grid.Row="4"
+                                Margin="0,8,32,0"
+                                HorizontalAlignment="Left"
+                                Style="{StaticResource Instructions}"
+                                Text="Managed Certificate Id" />
+                            <TextBox
+                                MaxWidth="500"
+                                Margin="0,8,0,0"
+                                HorizontalAlignment="Left"
+                                Text="{Binding SelectedItem.Id}"
+                                TextWrapping="Wrap" IsReadOnly="True" />
+                        </StackPanel>
+
 
 
                     </DockPanel>

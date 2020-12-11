@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -68,7 +68,9 @@ namespace Certify.Management
             if (settings.Mode == RenewalMode.Auto || settings.Mode == RenewalMode.RenewalsDue)
             {
                 // auto renew enabled sites in order of oldest date renewed (or earliest attempted), items not yet attempted are first.
-                managedCertificates = managedCertificates.Where(s => s.IncludeInAutoRenew == true)
+                // if mode is just RenewalDue then we also include items that are not marked auto renew (the user may be controlling when to perform renewal).
+
+                managedCertificates = managedCertificates.Where(s => s.IncludeInAutoRenew == true || settings.Mode== RenewalMode.RenewalsDue)
                              .OrderBy(s => s.DateRenewed ?? s.DateLastRenewalAttempt ?? DateTime.MinValue);
             }
             else if (settings.Mode == RenewalMode.NewItems)
@@ -123,6 +125,12 @@ namespace Certify.Management
                     }
                 }
 
+                if (settings.Mode== RenewalMode.All)
+                {
+                    // on all mode, everything gets an attempted renewal
+                    isRenewalRequired = true;
+                }
+
                 //if we care about stopped sites being stopped, check for that if a specific site is selected
                 var isSiteRunning = true;
                 if (!CoreAppSettings.Current.IgnoreStoppedSites && !string.IsNullOrEmpty(managedCertificate.ServerSiteId))
@@ -158,7 +166,7 @@ namespace Certify.Management
                         {
                             renewalTasks.Add(
                                new Task<CertificateRequestResult>(
-                               () => PerformCertificateRequest(null, managedCertificate, tracker, skipRequest: settings.IsPreviewMode).Result,
+                               () => PerformCertificateRequest(null, managedCertificate, tracker, skipRequest: settings.IsPreviewMode, skipTasks: settings.IsPreviewMode).Result,
                                TaskCreationOptions.LongRunning
                            ));
                         }
@@ -322,7 +330,8 @@ namespace Certify.Management
             IProgress<RequestProgressState> progress = null,
             bool resumePaused = false,
             bool skipRequest = false,
-            bool failOnSkip = false
+            bool failOnSkip = false,
+            bool skipTasks = false
             )
         {
             _serviceLog?.Information($"Performing Certificate Request: {managedCertificate.Name} [{managedCertificate.Id}]");
