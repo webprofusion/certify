@@ -11,7 +11,7 @@ using Microsoft.Rest.Azure.Authentication;
 
 namespace Certify.Providers.DNS.Azure
 {
-    public class DnsProviderAzureProvider : PluginProviderBase<IDnsProvider,ChallengeProviderDefinition>, IDnsProviderProviderPlugin { }
+    public class DnsProviderAzureProvider : PluginProviderBase<IDnsProvider, ChallengeProviderDefinition>, IDnsProviderProviderPlugin { }
 
     public class DnsProviderAzure : DnsProviderBase, IDnsProvider
     {
@@ -207,7 +207,10 @@ namespace Certify.Providers.DNS.Azure
         public override async Task<List<DnsZone>> GetZones()
         {
             var results = new List<DnsZone>();
-            var list = await _dnsClient.Zones.ListAsync();
+            
+            // azure defaults to returning only the first 100 zones, and the max that can be listed in one call is 1000
+            // TODO: move to paging API.
+            var list = await _dnsClient.Zones.ListAsync(top: 999);
             foreach (var z in list)
             {
                 results.Add(new DnsZone { ZoneId = z.Name, Name = z.Name });
