@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -433,6 +433,15 @@ namespace Certify.Core.Management
 
                     // we have added a binding, add to our list of known bindings to avoid trying to add any duplicates
                     existingBindings.Add(bindingSpec);
+                }
+                else
+                {
+                    // preview mode, validate binding spec
+                    if (string.IsNullOrEmpty(bindingSpec.SiteId))
+                    {
+                        action.HasError = true;
+                        action.Description += $" Failed to add/update binding. [IIS Site Id could not be determined]";
+                    }
                 }
 
                 steps.Add(action);
