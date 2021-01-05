@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
@@ -18,7 +20,7 @@ namespace Certify.Providers.DNS.IONOS
     {
 
         private ILog _log;
-        private RestSharp.RestClient _client = new RestSharp.RestClient();
+        private readonly HttpClient _client = new HttpClient();
         private Dictionary<string, string> _credentials;
         private const string baseUri = "https://api.hosting.ionos.com/dns/v1/";
         public static ChallengeProviderDefinition Definition => new ChallengeProviderDefinition
@@ -93,13 +95,13 @@ namespace Certify.Providers.DNS.IONOS
                 url += "?" + parameterString;
             }
 
-            var result = await _client.ExecuteAsync(CreateRequest(RestSharp.Method.GET, url));
-            if (!result.IsSuccessful)
+            var result = await _client.SendAsync(CreateRequest(HttpMethod.Get, url));
+            if (!result.IsSuccessStatusCode)
             {
                 return Array.Empty<DnsRecord>().ToList();
             }
 
-            var resultJson = result.Content;
+            var resultJson = await result.Content.ReadAsStringAsync();
             var recordsRaw = JsonConvert.DeserializeAnonymousType(resultJson, rawJsonDefinition);
 
             return recordsRaw.records.Select(r => new DnsRecord
@@ -132,13 +134,12 @@ namespace Certify.Providers.DNS.IONOS
                 ttl = 60
             }).ToList();
 
-            var httpRequest = CreateRequest(RestSharp.Method.PATCH, $"{baseUri}zones/{request.ZoneId}");
-            httpRequest.AddJsonBody(ionosRecords);
-            var result = await _client.ExecuteAsync(httpRequest);
+            var httpRequest = CreateRequest(new HttpMethod("PATCH"), $"{baseUri}zones/{request.ZoneId}", JsonConvert.SerializeObject(ionosRecords));
+            var result = await _client.SendAsync(httpRequest);
             return new ActionResult
             {
-                IsSuccess = result.IsSuccessful,
-                Message = !result.IsSuccessful
+                IsSuccess = result.IsSuccessStatusCode,
+                Message = !result.IsSuccessStatusCode
                     ? $"DNS Record {request.RecordName} with content {request.RecordValue} could not be created.\r\nHTTP-Error was {result.StatusCode}."
                     : null
             };
@@ -151,12 +152,12 @@ namespace Certify.Providers.DNS.IONOS
             var results = new List<ActionResult>();
             foreach (var iRequest in requests)
             {
-                var httpRequest = CreateRequest(RestSharp.Method.DELETE, $"{baseUri}zones/{iRequest.ZoneId}/records/{iRequest.RecordId}");
-                var result = await _client.ExecuteAsync(httpRequest);
+                var httpRequest = CreateRequest(HttpMethod.Delete, $"{baseUri}zones/{iRequest.ZoneId}/records/{iRequest.RecordId}");
+                var result = await _client.SendAsync(httpRequest);
                 results.Add(new ActionResult
                 {
-                    IsSuccess = result.IsSuccessful,
-                    Message = !result.IsSuccessful
+                    IsSuccess = result.IsSuccessStatusCode,
+                    Message = !result.IsSuccessStatusCode
                         ? $"DNS Record {request.RecordName} could not be deleted.\r\nHTTP-Error was {result.StatusCode}."
                         : null
                 });
@@ -180,27 +181,28 @@ namespace Certify.Providers.DNS.IONOS
         public async override Task<List<DnsZone>> GetZones()
         {
             var rawJsonDefinition = new[] { new { name = string.Empty, id = string.Empty, type = string.Empty } };
-            var result = await _client.ExecuteAsync(CreateRequest(RestSharp.Method.GET, baseUri + "zones"));
-            if (!result.IsSuccessful)
+            var result = await _client.SendAsync(CreateRequest(HttpMethod.Get, baseUri + "zones"));
+            if (!result.IsSuccessStatusCode)
             {
                 return Array.Empty<DnsZone>().ToList();
             }
 
-            var resultJson = result.Content;
+            var resultJson = await result.Content.ReadAsStringAsync();
             var zonesRaw = JsonConvert.DeserializeAnonymousType(resultJson, rawJsonDefinition);
             return zonesRaw.Select(r => new DnsZone { Name = r.name, ZoneId = r.id }).ToList();
         }
 
-        private RestSharp.RestRequest CreateRequest(RestSharp.Method httpMethod, string url, string httpContent = null)
+        private HttpRequestMessage CreateRequest(HttpMethod httpMethod, string url, string httpContent = null)
         {
-            var request = new RestSharp.RestRequest(url, httpMethod);
+            var request = new HttpRequestMessage(httpMethod, url);
             if (httpContent != null)
             {
-                request.AddParameter("application/json", httpContent);
+                request.Content = new StringContent(httpContent, Encoding.Default, "application/json");
             }
 
-            request.AddHeader("accept", "application/json");
-            request.AddHeader("X-API-Key", $"{_credentials["public"]}.{_credentials["secret"]}");
+            request.Headers.Add("accept", "application/json");
+            request.Headers.Add("X-API-Key", $"{_credentials["public"]}.{_credentials["secret"]}");
+            request.Headers.Add("User-Agent", "Certify");
             return request;
         }
 

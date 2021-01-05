@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="RestSharp" Version="106.11.7" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\..\Certify.Models\Certify.Models.csproj" />
     <ProjectReference Include="..\..\..\Certify.Shared\Certify.Shared.Core.csproj" />
   </ItemGroup>
