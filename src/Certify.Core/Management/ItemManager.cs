@@ -439,48 +439,22 @@ namespace Certify.Management
 
         public async Task<List<ManagedCertificate>> GetAll(ManagedCertificateFilter filter = null)
         {
-
             var items = await LoadAllManagedCertificates(filter);
 
             if (filter != null)
             {
-                if (!string.IsNullOrEmpty(filter.Id))
-                {
-                    items = items.Where(i => i.Id.ToLowerInvariant().Trim() == filter.Id.ToLowerInvariant().Trim());
-                }
+                ApplyCertificateFilter(filter.Id, () => items = items.Where(i => i.Id.ToLowerInvariant().Trim() == filter.Id.ToLowerInvariant().Trim()));
+                ApplyCertificateFilter(filter.Name, () => items = items.Where(i => i.Name.ToLowerInvariant().Trim() == filter.Name.ToLowerInvariant().Trim()));
+                ApplyCertificateFilter(filter.Keyword, () => items = items.Where(i => i.Name.ToLowerInvariant().Contains(filter.Keyword.ToLowerInvariant())));
+                ApplyCertificateFilter(filter.ChallengeType, () => items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeType == filter.ChallengeType)));
+                ApplyCertificateFilter(filter.ChallengeProvider, () => items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeProvider == filter.ChallengeProvider)));
+                ApplyCertificateFilter(filter.StoredCredentialKey, () => items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeCredentialKey == filter.StoredCredentialKey)));
 
-                if (!string.IsNullOrEmpty(filter.Name))
-                {
-                    items = items.Where(i => i.Name.ToLowerInvariant().Trim() == filter.Name.ToLowerInvariant().Trim());
-                }
-
-                if (!string.IsNullOrEmpty(filter.Keyword))
-                {
-                    items = items.Where(i => i.Name.ToLowerInvariant().Contains(filter.Keyword.ToLowerInvariant()));
-                }
-
-                if (!string.IsNullOrEmpty(filter.ChallengeType))
-                {
-                    items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeType == filter.ChallengeType));
-                }
-
-                if (!string.IsNullOrEmpty(filter.ChallengeProvider))
-                {
-                    items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeProvider == filter.ChallengeProvider));
-                }
-
-                if (!string.IsNullOrEmpty(filter.StoredCredentialKey))
-                {
-                    items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeCredentialKey == filter.StoredCredentialKey));
-                }
 
                 //TODO: IncludeOnlyNextAutoRenew
-                if (filter.MaxResults > 0)
-                {
-                    items = items.Take(filter.MaxResults);
-                }
+                ApplyCertificateFilter(filter.MaxResults > 0, () => items = items.Take(filter.MaxResults));
             }
-
+            
             return items.ToList();
         }
 
@@ -595,5 +569,22 @@ namespace Certify.Management
                 await Delete(item);
             }
         }
+
+        private void ApplyCertificateFilter(string filterName,Action applyFilter)
+        {
+            if (!string.IsNullOrEmpty(filterName))
+            {
+                applyFilter();
+            }
+        }
+
+        private void ApplyCertificateFilter(bool filterCriteria, Action applyFilter)
+        {
+            if (filterCriteria)
+            {
+                applyFilter();
+            }
+        }
+
     }
 }
