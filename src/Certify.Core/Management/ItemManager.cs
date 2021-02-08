@@ -441,20 +441,15 @@ namespace Certify.Management
         {
             var items = await LoadAllManagedCertificates(filter);
 
-            if (filter != null)
-            {
-                ApplyCertificateFilter(filter.Id, () => items = items.Where(i => i.Id.ToLowerInvariant().Trim() == filter.Id.ToLowerInvariant().Trim()));
-                ApplyCertificateFilter(filter.Name, () => items = items.Where(i => i.Name.ToLowerInvariant().Trim() == filter.Name.ToLowerInvariant().Trim()));
-                ApplyCertificateFilter(filter.Keyword, () => items = items.Where(i => i.Name.ToLowerInvariant().Contains(filter.Keyword.ToLowerInvariant())));
-                ApplyCertificateFilter(filter.ChallengeType, () => items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeType == filter.ChallengeType)));
-                ApplyCertificateFilter(filter.ChallengeProvider, () => items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeProvider == filter.ChallengeProvider)));
-                ApplyCertificateFilter(filter.StoredCredentialKey, () => items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeCredentialKey == filter.StoredCredentialKey)));
+            ApplyCertificateFilter(filter?.Id, () => items = items.Where(i => i.Id.ToLowerInvariant().Trim() == filter.Id.ToLowerInvariant().Trim()));
+            ApplyCertificateFilter(filter?.Name, () => items = items.Where(i => i.Name.ToLowerInvariant().Trim() == filter.Name.ToLowerInvariant().Trim()));
+            ApplyCertificateFilter(filter?.Keyword, () => items = items.Where(i => i.Name.ToLowerInvariant().Contains(filter.Keyword.ToLowerInvariant())));
+            ApplyCertificateFilter(filter?.ChallengeType, () => items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeType == filter.ChallengeType)));
+            ApplyCertificateFilter(filter?.ChallengeProvider, () => items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeProvider == filter.ChallengeProvider)));
+            ApplyCertificateFilter(filter?.StoredCredentialKey, () => items = items.Where(i => i.RequestConfig.Challenges != null && i.RequestConfig.Challenges.Any(t => t.ChallengeCredentialKey == filter.StoredCredentialKey)));
+            //TODO: IncludeOnlyNextAutoRenew
+            ApplyCertificateFilter(filter?.MaxResults > 0, () => items = items.Take(filter.MaxResults));
 
-
-                //TODO: IncludeOnlyNextAutoRenew
-                ApplyCertificateFilter(filter.MaxResults > 0, () => items = items.Take(filter.MaxResults));
-            }
-            
             return items.ToList();
         }
 
