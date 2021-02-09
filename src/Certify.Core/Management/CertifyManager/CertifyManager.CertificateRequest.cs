@@ -635,6 +635,19 @@ namespace Certify.Management
 
                 await PerformAutomatedChallengeResponses(log, managedCertificate, authorizations, result, config, progress);
 
+                if (authorizations.Any(a=>a.IsFailure==true))
+                {
+                    result.IsSuccess = false;
+                    result.Abort = true;
+                    result.Message = $"{authorizations.FirstOrDefault(a => a.IsFailure)?.AuthorizationError}";
+
+                    ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result });
+                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
+                    LogMessage(managedCertificate.Id, result.Message, LogItemType.CertficateRequestFailed);
+
+                    return result;
+                }    
+
                 // if any challenge responses require a manual step, pause our request here and wait
                 // for user intervention
                 if (authorizations.Any(a => a.AttemptedChallenge?.IsAwaitingUser == true))

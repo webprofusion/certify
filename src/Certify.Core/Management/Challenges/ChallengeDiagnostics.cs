@@ -49,7 +49,7 @@ namespace Certify.Core.Management.Challenges
             var results = new List<StatusMessage>();
 
             var requestConfig = managedCertificate.RequestConfig;
-            var result = new StatusMessage { IsOK = true };
+
             var domains = new List<string> { requestConfig.PrimaryDomain };
 
             if (requestConfig.SubjectAlternativeNames != null)
@@ -161,6 +161,7 @@ namespace Certify.Core.Management.Challenges
 
                         if (!httpChallengeResult.IsSuccess)
                         {
+                            var result = new StatusMessage();
                             result.IsOK = false;
                             result.FailedItemSummary.Add($"Config checks failed to verify http://{domain} is both publicly accessible and can serve extensionless files e.g. {challengeFileUrl}");
                             result.Message = httpChallengeResult.Message;
@@ -176,7 +177,7 @@ namespace Certify.Core.Management.Challenges
                     }
                     else if (challengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
                     {
-
+                        var result = new StatusMessage();
                         result.IsOK = false;
                         result.FailedItemSummary.Add($"The {SupportedChallengeTypes.CHALLENGE_TYPE_SNI} challenge type is no longer available.");
                         results.Add(result);
@@ -251,8 +252,14 @@ namespace Certify.Core.Management.Challenges
                                 credentialsManager
                             );
 
+                        var result = new StatusMessage();
+
                         result.Message = dnsResult.Result.Message;
                         result.IsOK = dnsResult.Result.IsSuccess;
+                        if (!result.IsOK)
+                        {
+                            result.FailedItemSummary.Add(dnsResult.Result.Message);
+                        }
 
                         results.Add(result);
                     }
@@ -354,10 +361,12 @@ namespace Certify.Core.Management.Challenges
                     {
                         // perform dns-01 challenge response
                         var check = await PerformChallengeResponse_Dns01(log, domain, managedCertificate, pendingAuth, isTestMode: false, credentialsManager);
-                        pendingAuth.AttemptedChallenge.ConfigCheckedOK = check.Result.IsSuccess;
+                        pendingAuth.AttemptedChallenge.IsFailure = !check.Result.IsSuccess;
                         pendingAuth.AttemptedChallenge.ChallengeResultMsg = check.Result.Message;
                         pendingAuth.AttemptedChallenge.IsAwaitingUser = check.IsAwaitingUser;
                         pendingAuth.AttemptedChallenge.PropagationSeconds = check.PropagationSeconds;
+                        pendingAuth.IsFailure = !check.Result.IsSuccess;
+                        pendingAuth.AuthorizationError = check.Result.Message;
                     }
                 }
             }
@@ -509,7 +518,7 @@ namespace Certify.Core.Management.Challenges
                     // Or include preset key in our config, or make behaviour configurable
                     LogAction($"Pre-config check failed: Auto-config will overwrite existing config: {destPath}\\web.config");
 
-                    var configOptions = Directory.EnumerateFiles(Path.Combine(Environment.CurrentDirectory, "Scripts","Web.config"), "*.config");
+                    var configOptions = Directory.EnumerateFiles(Path.Combine(Environment.CurrentDirectory, "Scripts", "Web.config"), "*.config");
 
                     foreach (var configFile in configOptions)
                     {
@@ -656,8 +665,7 @@ namespace Certify.Core.Management.Challenges
             // configure cleanup actions for use after challenge completes
             pendingAuth.Cleanup = async () =>
                {
-                   var result = await dnsHelper.DeleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value);
-                   //log.Information(result.Result?.Message);
+                   _ = await dnsHelper.DeleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value);
                };
 
             return dnsResult;
