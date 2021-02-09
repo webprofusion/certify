@@ -10,7 +10,7 @@ namespace Certify.Providers.DNS.TransIP
 {
     internal class DnsClient
     {
-        private HttpClient _client = new HttpClient();
+        private HttpClient _client;
         private Authenticator _authenticator;
 
         internal DnsClient(
@@ -19,6 +19,8 @@ namespace Certify.Providers.DNS.TransIP
             int loginDuration)
         {
             _authenticator = new Authenticator(login, privateKey, loginDuration);
+
+            _client = new HttpClient();
         }
 
         private async Task<ActionResult<HttpRequestMessage>> CreateRequest(HttpMethod method, string url)

@@ -71,7 +71,7 @@ namespace Certify.Providers.DNS.Cloudflare
     {
         private ILog _log;
 
-        private HttpClient _client = new HttpClient();
+        private HttpClient _client;
 
         private string _authKey;
         private string _apiToken;
@@ -352,6 +352,8 @@ namespace Certify.Providers.DNS.Cloudflare
         public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
+
+            _client = new HttpClient();
 
             _authKey = credentials.ContainsKey("authkey") ? credentials["authkey"] : null;
             _apiToken = credentials.ContainsKey("apitoken") ? credentials["apitoken"] : null;

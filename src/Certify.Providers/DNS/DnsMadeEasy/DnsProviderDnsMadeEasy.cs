@@ -79,7 +79,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
 
         public DnsProviderDnsMadeEasy()
         {
-            _httpClient = new HttpClient();
+        
         }
 
         private static string ComputeHMAC(string input, string key)
@@ -280,6 +280,8 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             _log = log;
             _apiKey = credentials["apikey"];
             _apiSecret = credentials["apisecret"];
+
+            _httpClient = new HttpClient();
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {

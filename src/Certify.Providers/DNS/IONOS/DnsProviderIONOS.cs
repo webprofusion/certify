@@ -20,7 +20,7 @@ namespace Certify.Providers.DNS.IONOS
     {
 
         private ILog _log;
-        private readonly HttpClient _client = new HttpClient();
+        private HttpClient _client;
         private Dictionary<string, string> _credentials;
         private const string baseUri = "https://api.hosting.ionos.com/dns/v1/";
         public static ChallengeProviderDefinition Definition => new ChallengeProviderDefinition
@@ -45,6 +45,9 @@ namespace Certify.Providers.DNS.IONOS
         {
             _log = log;
             _credentials = credentials;
+
+            _client= new HttpClient();
+
             return true;
         }
 
@@ -194,6 +197,11 @@ namespace Certify.Providers.DNS.IONOS
 
         private HttpRequestMessage CreateRequest(HttpMethod httpMethod, string url, string httpContent = null)
         {
+            if (_credentials == null ||(_credentials!=null && (!_credentials.ContainsKey("public") || !_credentials.ContainsKey("secret"))))
+            {
+                throw new Exception("IONOS DNS provider requires credentials to be set (Public Key and Secret)");
+            }
+
             var request = new HttpRequestMessage(httpMethod, url);
             if (httpContent != null)
             {
