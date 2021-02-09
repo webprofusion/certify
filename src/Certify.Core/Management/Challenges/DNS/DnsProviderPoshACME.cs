@@ -556,7 +556,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
-                    new ProviderParameter { Key = "NameComUserName", Name = "APU Username", IsRequired = true, IsCredential = true },
+                    new ProviderParameter { Key = "NameComUserName", Name = "API Username", IsRequired = true, IsCredential = true },
                     new ProviderParameter { Key = "NameComToken", Name = "API Token", IsRequired = true, IsCredential = true },
                     new ProviderParameter { Key = "NameComUseTestEnv", Name = "Use Test Environment", IsRequired = true, Value="false", Type= OptionType.Boolean, IsHidden=true, IsCredential=false },
                     _defaultPropagationDelayParam
