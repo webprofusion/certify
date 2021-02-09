@@ -9,12 +9,12 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.1" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="5.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="5.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="5.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="5.0.2" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.9" />
     <PackageReference Include="Serilog" Version="2.10.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="5.6.3" />
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.113.6" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.0.2" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.113.7" />
     <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="5.0.0" />
     <PackageReference Include="System.Threading.Timer" Version="4.3.0" />
