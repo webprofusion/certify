@@ -194,9 +194,9 @@ namespace Certify.UI.Controls.ManagedCertificate
                         throw new ArgumentException("Unsupported key format");
                     }
                 }
-                catch
+                catch(Exception exp)
                 {
-                    MessageBox.Show("The private key could not be processed. Key should be unencrypted and in PEM format");
+                    MessageBox.Show("The private key could not be processed. Key should be unencrypted and in PEM format ["+exp.ToString()+"]");
                 }
 
             }
