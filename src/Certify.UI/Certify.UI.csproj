@@ -443,6 +443,7 @@
     </PackageReference>
     <PackageReference Include="PropertyChanged.Fody">
       <Version>3.3.1</Version>
+      <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Serilog">
       <Version>2.10.0</Version>

@@ -12,12 +12,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Certes" Version="2.3.4" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="Portable.BouncyCastle" Version="1.8.8" />
+    <PackageReference Include="Portable.BouncyCastle" Version="1.8.9" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\..\ThirdParty\certes\src\Certes\Certes.csproj" />
     <ProjectReference Include="..\..\..\Certify.Locales\Certify.Locales.csproj" />
     <ProjectReference Include="..\..\..\Certify.Models\Certify.Models.csproj" />
   </ItemGroup>

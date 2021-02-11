@@ -96,7 +96,7 @@ namespace Certify.UI.ViewModel
 #if DEBUG
             FeatureFlags.SERVER_CONNECTIONS
 #endif
-        }; 
+        };
 
         public Dictionary<string, string> UIThemes { get; } = new Dictionary<string, string>
         {
@@ -283,6 +283,29 @@ namespace Certify.UI.ViewModel
         private ManagedCertificate selectedItem;
 
         public bool IsRegisteredVersion { get; set; }
+        public int NumManagedCerts
+        {
+            get
+            {
+                return ManagedCertificates?.Where(c => string.IsNullOrEmpty(c.SourceId)).Count() ?? 0;
+            }
+        }
+
+        [DependsOn(nameof(ManagedCertificates), nameof(IsRegisteredVersion))]
+        public bool IsLicenseUpgradeRecommended
+        {
+            get
+            {
+                if (!IsRegisteredVersion && NumManagedCerts >= 3)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
 
         internal async Task<ActionResult> AddContactRegistration(ContactRegistration reg)
         {
@@ -429,7 +452,7 @@ namespace Certify.UI.ViewModel
         }
 
         public string ConnectionState { get; set; } = "Not Connected";
-        
+
         public string ConnectionTitle
         {
             get
