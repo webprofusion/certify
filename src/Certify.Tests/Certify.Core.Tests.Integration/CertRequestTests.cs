@@ -243,36 +243,36 @@ namespace Certify.Core.Tests
 
             var site = await iisManager.CreateSite(siteName, domainList[0], testSitePath, "DefaultAppPool", port: testSiteHttpPort);
 
+            var dummyManagedCertificate = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = testSiteName,
+                GroupId = site.Id.ToString(),
+                UseStagingMode = true,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = domainList[0],
+                    SubjectAlternativeNames = domainList.ToArray(),
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>(
+                           new List<CertRequestChallengeConfig>
+                           {
+                            new CertRequestChallengeConfig{
+                                ChallengeType="http-01"
+                            }
+                           }),
+                    PerformAutoConfig = true,
+                    PerformAutomatedCertBinding = true,
+                    PerformChallengeFileCopy = true,
+                    PerformExtensionlessConfigChecks = false,
+                    WebsiteRootPath = testSitePath
+                },
+                ItemType = ManagedCertificateType.SSL_ACME,
+            };
+
             try
             {
                 // add bindings
                 await iisManager.AddSiteBindings(site.Id.ToString(), domainList, testSiteHttpPort);
-
-                var dummyManagedCertificate = new ManagedCertificate
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Name = testSiteName,
-                    GroupId = site.Id.ToString(),
-                    UseStagingMode = true,
-                    RequestConfig = new CertRequestConfig
-                    {
-                        PrimaryDomain = domainList[0],
-                        SubjectAlternativeNames = domainList.ToArray(),
-                        Challenges = new ObservableCollection<CertRequestChallengeConfig>(
-                            new List<CertRequestChallengeConfig>
-                            {
-                            new CertRequestChallengeConfig{
-                                ChallengeType="http-01"
-                            }
-                            }),
-                        PerformAutoConfig = true,
-                        PerformAutomatedCertBinding = true,
-                        PerformChallengeFileCopy = true,
-                        PerformExtensionlessConfigChecks = false,
-                        WebsiteRootPath = testSitePath
-                    },
-                    ItemType = ManagedCertificateType.SSL_ACME,
-                };
 
                 //ensure cert request was successful
 
@@ -285,6 +285,9 @@ namespace Certify.Core.Tests
             finally
             {
                 await iisManager.DeleteSite(siteName);
+          
+                await certifyManager.DeleteManagedCertificate(dummyManagedCertificate.Id);
+                    
             }
         }
 
