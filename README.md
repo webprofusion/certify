@@ -18,6 +18,7 @@ https://img.shields.io/github/stars/webprofusion/certify.svg)
 - See more details: https://certifytheweb.com/home/features
 - Easy certificate requests & automated SSL bindings (IIS)
 - Fetch certificates from ACME Certificate Authorities including **Let's Encrypt, BuyPass Go and ZeroSSL**
+- Works with private ACME CA servers including DigiCert, smallstep, Keyon true-Xtender etc.
 - Automatic renewal using a background service, with configurable renewal frequency.
 - Preview mode to see which actions the app will perform (including which bindings will be added/updated)
 - SAN support (multi-domain certificates)
@@ -26,12 +27,13 @@ https://img.shields.io/github/stars/webprofusion/certify.svg)
 	- Built-in Http Challenge Server for easier configuration of challenge responses
 	- DNS Validation via over 26 supported APIs (including Azure DNS, Alibaba Cloud, AWS Route53, Cloudflare, DnsMadeEasy, GoDaddy, OVH, SimpleDNSPlus)
 - Stored Credentials (API access keys etc. protected by the Windows Data Protection API)
-- Optional Pre/Post request deployment tasks and scripting for advanced deployment (**Exchange, RDS, multi-server, CCS, Apache, nginx, export, webhooks, Azure KeyVault etc**)
+- Optional pre/post request Deployment Tasks and scripting for advanced deployment (**Exchange, RDS, multi-server, CCS, Apache, nginx, export, webhooks, Azure KeyVault etc**)
 
 The Community edition is free, license keys are available for commercial organisations, users who wish to help fund development or users who require support.
 
 ## Requirements:
 - Windows Server 2012 R2 or higher (.Net 4.6.2 or higher), 64-bit
+- PowerShell 5.1 or higher (for functionality like Deployment Tasks and some DNS providers).
 ----------
 Quick Start (IIS users)
 ----------
