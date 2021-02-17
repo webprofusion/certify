@@ -252,6 +252,7 @@ namespace Certify.Management
                     if (async.IsCompleted)
                     {
                         shell.EndInvoke(async);
+                        output.AppendLine($"Powershell Task Completed.");
                     }
                 }
                 catch (Exception ex)
