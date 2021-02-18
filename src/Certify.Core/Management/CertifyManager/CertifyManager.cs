@@ -78,7 +78,7 @@ namespace Certify.Management
             }
 
             _credentialsManager = new CredentialsManager(useWindowsNativeFeatures);
-            _serverProvider = (ICertifiedServer)new ServerProviderIIS(_serviceLog);
+            _serverProvider = new ServerProviderIIS(_serviceLog);
 
             _progressResults = new ObservableCollection<RequestProgressState>();
 

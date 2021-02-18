@@ -192,7 +192,7 @@ namespace Certify.Management
                 var provider = new CertesACMEProvider(apiEndpoint, providerPath, Util.GetUserAgent());
                 await provider.InitProvider(_serviceLog);
 
-                var acc = (provider as CertesACMEProvider).GetCurrentAcmeAccount();
+                var acc = provider.GetCurrentAcmeAccount();
                 if (acc != null)
                 {
                     // we have a legacy certes account to migrate to the newer account store

@@ -859,7 +859,7 @@ namespace Certify.UI.ViewModel
 
         private void UpdateRequestTrackingProgress(RequestProgressState state)
         {
-            System.Windows.Application.Current.Dispatcher.Invoke((Action)delegate
+            System.Windows.Application.Current.Dispatcher.Invoke(delegate
                                         {
                                             var existing = ProgressResults.FirstOrDefault(p => p.ManagedCertificate.Id == state.ManagedCertificate.Id);
 
@@ -981,7 +981,7 @@ namespace Certify.UI.ViewModel
         public async Task RefreshChallengeAPIList()
         {
             var list = await CertifyClient.GetChallengeAPIList();
-            System.Windows.Application.Current.Dispatcher.Invoke((Action)delegate
+            System.Windows.Application.Current.Dispatcher.Invoke(delegate
             {
                 ChallengeAPIProviders = new ObservableCollection<ChallengeProviderDefinition>(list);
             });
@@ -993,7 +993,7 @@ namespace Certify.UI.ViewModel
         public async Task RefreshDeploymentTaskProviderList()
         {
             var list = await CertifyClient.GetDeploymentProviderList();
-            System.Windows.Application.Current.Dispatcher.Invoke((Action)delegate
+            System.Windows.Application.Current.Dispatcher.Invoke(delegate
             {
                 DeploymentTaskProviders = new ObservableCollection<DeploymentProviderDefinition>(list.OrderBy(l => l.Title));
             });
@@ -1008,7 +1008,7 @@ namespace Certify.UI.ViewModel
             var definition = await CertifyClient.GetDeploymentProviderDefinition(id, config);
             if (definition != null)
             {
-                System.Windows.Application.Current.Dispatcher.Invoke((Action)delegate
+                System.Windows.Application.Current.Dispatcher.Invoke(delegate
                 {
 
                     var orig = DeploymentTaskProviders.FirstOrDefault(i => i.Id == definition.Id);
