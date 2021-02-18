@@ -50,7 +50,7 @@
                     Background="{DynamicResource InformationColorBrush}">
                     <StackPanel.Style>
                         <Style>
-                            <Setter Property="UIElement.Visibility" Value="Visible" />
+                            <Setter Property="UIElement.Visibility" Value="Collapsed" />
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsLicenseUpgradeRecommended}" Value="True">
                                     <Setter Property="UIElement.Visibility" Value="Visible" />
