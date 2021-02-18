@@ -1449,7 +1449,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Your Email Address (if you would like a response):.
+        ///   Looks up a localized string similar to Your Email Address (optional):.
         /// </summary>
         public static string Send_Feedback_Email {
             get {
@@ -1494,7 +1494,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Your feedback is important to us. Please let us know how we can improve..
+        ///   Looks up a localized string similar to Thanks for submitting feedback to our developers. Please email support@certifytheweb.com if you have a question..
         /// </summary>
         public static string Send_Feedback_Tip {
             get {

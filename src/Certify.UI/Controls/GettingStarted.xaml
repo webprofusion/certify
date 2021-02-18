@@ -59,10 +59,15 @@
                             </Style.Triggers>
                         </Style>
                     </StackPanel.Style>
-                    <TextBlock Margin="8" Style="{StaticResource Subheading}">License Upgrade Recommended</TextBlock>
                     <TextBlock
                         Margin="8"
-                        Foreground="{DynamicResource MahApps.Brushes.Control.Background}"
+                        Foreground="{DynamicResource MahApps.Brushes.IdealForeground}"
+                        Style="{StaticResource Subheading}">
+                        License Upgrade Recommended
+                    </TextBlock>
+                    <TextBlock
+                        Margin="8"
+                        Foreground="{DynamicResource MahApps.Brushes.IdealForeground}"
                         Style="{StaticResource Instructions}"><Run Text="You are using the community edition. Upgrading to a licensed (supported) version is recommended. Visit https://certifytheweb.com/register for more information." /></TextBlock>
                 </StackPanel>
 
