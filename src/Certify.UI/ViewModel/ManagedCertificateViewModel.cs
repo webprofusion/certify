@@ -482,7 +482,7 @@ namespace Certify.UI.ViewModel
             {
                 config.SubjectIPAddresses = item.DomainOptions.Where(i => i.IsSelected && i.Type == "ip").Select(s => s.Domain).ToArray();
             }
-            
+
 
             //determine if this site has an existing entry in Managed Certificates, if so use that, otherwise start a new one
             if (SelectedItem.Id == null)

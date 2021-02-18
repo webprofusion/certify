@@ -207,7 +207,7 @@ namespace Certify.Providers.DNS.Azure
         public override async Task<List<DnsZone>> GetZones()
         {
             var results = new List<DnsZone>();
-            
+
             // azure defaults to returning only the first 100 zones, and the max that can be listed in one call is 1000
             // TODO: move to paging API.
             var list = await _dnsClient.Zones.ListAsync(top: 999);

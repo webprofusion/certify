@@ -161,7 +161,7 @@ namespace Certify.Management
             else
             {
                 // TODO: dummy implementation, require alternative implementation for non-windows
-               return  Convert.ToBase64String(Encoding.UTF8.GetBytes(clearText).Reverse().ToArray());
+                return Convert.ToBase64String(Encoding.UTF8.GetBytes(clearText).Reverse().ToArray());
             }
         }
 
@@ -192,7 +192,8 @@ namespace Certify.Management
                     : Encoding.UTF8.GetBytes(optionalEntropy);
                 var clearBytes = ProtectedData.Unprotect(encryptedBytes, entropyBytes, scope);
                 return Encoding.UTF8.GetString(clearBytes);
-            } else
+            }
+            else
             {
 
                 // TODO: dummy implementation, implement alternative implementation for non-windows

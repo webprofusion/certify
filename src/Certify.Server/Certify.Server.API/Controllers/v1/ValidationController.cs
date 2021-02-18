@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Certify.Client;
-using Certify.Server.Api.Public.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -37,7 +33,7 @@ namespace Certify.Server.API.Controllers
             }
 
             var list = await _client.GetCurrentChallenges(type, key);
-            return new OkObjectResult(list); 
+            return new OkObjectResult(list);
         }
 
     }

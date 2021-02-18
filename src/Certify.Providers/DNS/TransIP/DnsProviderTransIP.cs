@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
-using Certify.Providers.DNS.TransIP.Authentication;
-using Newtonsoft.Json;
 
 namespace Certify.Providers.DNS.TransIP
 {
@@ -126,7 +123,7 @@ namespace Certify.Providers.DNS.TransIP
                 return test;
             }
 
-            var root = await DetermineZoneDomainRoot(request.RecordName, request.ZoneId);            
+            var root = await DetermineZoneDomainRoot(request.RecordName, request.ZoneId);
             var entry = GetEntry(request, root);
             return await _dnsClient.Remove(root.RootDomain, entry);
         }

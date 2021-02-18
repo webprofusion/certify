@@ -512,7 +512,7 @@ namespace Certify.Core.Management
 
             steps.Add(new ActionStep { Title = "Import Certificate Files", Category = "Import", Substeps = certFileImportSteps, Key = "CertFiles" });
 
-            
+
             return steps;
         }
     }

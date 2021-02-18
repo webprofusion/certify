@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Windows;
+using ControlzEx.Theming;
 using ToastNotifications;
 using ToastNotifications.Lifetime;
-using ToastNotifications.Position;
 using ToastNotifications.Messages;
-using ControlzEx.Theming;
+using ToastNotifications.Position;
 
 namespace Certify.UI
 {

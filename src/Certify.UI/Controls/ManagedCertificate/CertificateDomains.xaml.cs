@@ -56,7 +56,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                     WebsiteDropdown.Text = "(No IIS Sites Found)";
                 }
 
-             
+
 
                 if (ItemViewModel.SelectedItem != null)
                 {
@@ -76,7 +76,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                         ItemViewModel.SelectedWebSite = null;
                     }
 
-                    
+
                 }
             }
         }
@@ -91,10 +91,11 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        private async void RefreshWebsiteList_Click(object sender, RoutedEventArgs e)  {
-        
+        private async void RefreshWebsiteList_Click(object sender, RoutedEventArgs e)
+        {
+
             await ItemViewModel.RefreshWebsiteList();
-        
+
         }
 
         private async void RefreshSanList_Click(object sender, RoutedEventArgs e) => await ItemViewModel.SANRefresh();

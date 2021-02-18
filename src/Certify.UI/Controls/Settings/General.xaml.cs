@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using Certify.Models;
 
 namespace Certify.UI.Controls.Settings
@@ -68,7 +64,7 @@ namespace Certify.UI.Controls.Settings
 
             ThemeSelector.SelectedValue = EditModel.MainViewModel.UISettings?.UITheme ?? EditModel.MainViewModel.DefaultUITheme;
 
-            
+
 
             // re-add property changed tracking for save
             EditModel.Prefs.AfterPropertyChanged -= Prefs_AfterPropertyChanged;
@@ -78,7 +74,7 @@ namespace Certify.UI.Controls.Settings
             EditModel.SettingsInitialised = true;
 
             EditModel.RaisePropertyChangedEvent(null);
-            
+
         }
 
         private async void SettingsUpdated(object sender, RoutedEventArgs e)

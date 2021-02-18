@@ -46,7 +46,7 @@ namespace Certify.Providers.DNS.IONOS
             _log = log;
             _credentials = credentials;
 
-            _client= new HttpClient();
+            _client = new HttpClient();
 
             return await Task.FromResult(true);
         }
@@ -197,7 +197,7 @@ namespace Certify.Providers.DNS.IONOS
 
         private HttpRequestMessage CreateRequest(HttpMethod httpMethod, string url, string httpContent = null)
         {
-            if (_credentials == null ||(_credentials!=null && (!_credentials.ContainsKey("public") || !_credentials.ContainsKey("secret"))))
+            if (_credentials == null || (_credentials != null && (!_credentials.ContainsKey("public") || !_credentials.ContainsKey("secret"))))
             {
                 throw new Exception("IONOS DNS provider requires credentials to be set (Public Key and Secret)");
             }

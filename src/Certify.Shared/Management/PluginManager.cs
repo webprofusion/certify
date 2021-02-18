@@ -6,7 +6,6 @@ using System.Linq;
 using System.Reflection;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
-using Certify.Providers.DeploymentTasks;
 using Serilog;
 
 namespace Certify.Management
@@ -172,7 +171,7 @@ namespace Certify.Management
 
                 DeploymentTaskProviders = deploymentTaskProviders;
 
-                var taskPlugins = LoadPlugins<IDeploymentTaskProviderPlugin>("Plugin.DeploymentTasks.*.dll", usePluginSubfolder:usePluginSubfolder);
+                var taskPlugins = LoadPlugins<IDeploymentTaskProviderPlugin>("Plugin.DeploymentTasks.*.dll", usePluginSubfolder: usePluginSubfolder);
 
                 deploymentTaskProviders.AddRange(taskPlugins);
             }

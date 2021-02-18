@@ -5,23 +5,25 @@ using System.Threading.Tasks;
 using Certify.Models.Config;
 using Newtonsoft.Json;
 
-namespace Certify.Providers.DNS.TransIP.Authentication {
-	internal class Authenticator {
+namespace Certify.Providers.DNS.TransIP.Authentication
+{
+    internal class Authenticator
+    {
         private const int DEFAULT_LOGIN_DURATION = 300;
 
-		private readonly string _login;
+        private readonly string _login;
         private readonly string _privateKey;
         private readonly int _loginDuration;
         private readonly Util _util;
         private readonly DigestCreator _digestCreator;
-		private readonly DigestSigner _digestSigner;
+        private readonly DigestSigner _digestSigner;
 
-		private string _token = "";
-		private DateTime _tokenValidUntil = DateTime.MinValue;
+        private string _token = "";
+        private DateTime _tokenValidUntil = DateTime.MinValue;
 
-		public Authenticator(
-			string login,
-			string privateKey,
+        public Authenticator(
+            string login,
+            string privateKey,
             int loginDuration
         )
         {
@@ -45,12 +47,13 @@ namespace Certify.Providers.DNS.TransIP.Authentication {
             return temp;
         }
 
-        public async Task<ActionResult<string>> GetLoginToken() {
-			if (LoginNeeded)
+        public async Task<ActionResult<string>> GetLoginToken()
+        {
+            if (LoginNeeded)
             {
                 _tokenValidUntil = DateTime.Now.AddMinutes(_loginDuration);
                 var token = await Login();
-				if (!token.IsSuccess)
+                if (!token.IsSuccess)
                 {
                     ResetToken();
                     return new ActionResult<string> { IsSuccess = false, Message = token.Message };
@@ -59,22 +62,23 @@ namespace Certify.Providers.DNS.TransIP.Authentication {
             }
 
             return new ActionResult<string> { IsSuccess = true, Result = _token };
-		}
+        }
 
         private bool LoginNeeded => DateTime.Now >= _tokenValidUntil;
 
-		private async Task<ActionResult<string>> Login() {
-			try
+        private async Task<ActionResult<string>> Login()
+        {
+            try
             {
                 var payload = GetPayload();
-                var signature = GetSignature(payload);                
+                var signature = GetSignature(payload);
                 var response = await Login(payload, signature);
                 return ProcessResponse(response);
             }
             catch (Exception ex)
-			{
+            {
                 return new ActionResult<string> { IsSuccess = false, Message = ex.Message };
-			}
+            }
         }
 
         private string GetPayload()

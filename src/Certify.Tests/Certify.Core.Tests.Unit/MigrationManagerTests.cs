@@ -1,12 +1,11 @@
-﻿using Certify.Config.Migration;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Certify.Config.Migration;
 using Certify.Core.Management;
 using Certify.Management;
 using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Certify.Core.Tests.Unit
 {
@@ -22,7 +21,7 @@ namespace Certify.Core.Tests.Unit
             var migrationManager = new MigrationManager(new ItemManager(), new CredentialsManager(), new ServerProviderMock());
 
             // export
-            var export = await migrationManager.PerformExport( new ManagedCertificateFilter { }, new ExportSettings { EncryptionSecret = "secret" }, isPreview: false);
+            var export = await migrationManager.PerformExport(new ManagedCertificateFilter { }, new ExportSettings { EncryptionSecret = "secret" }, isPreview: false);
 
             // assert
             Assert.AreEqual(1, export.FormatVersion);

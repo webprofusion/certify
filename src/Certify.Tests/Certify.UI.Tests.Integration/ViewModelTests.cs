@@ -1,12 +1,12 @@
-﻿using Certify.Client;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Certify.Client;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.UI.ViewModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Certify.UI.Tests.Integration
 {

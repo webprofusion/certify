@@ -1,6 +1,5 @@
-﻿using System;
+﻿using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Threading.Tasks;
 
 namespace Certify.Service.Tests.Integration
 {

@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Certify.Client;
 using Certify.Models;
 using Certify.Models.Config;
-using Newtonsoft.Json;
 
 namespace Certify.API
 {

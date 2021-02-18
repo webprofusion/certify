@@ -1,10 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using Certify.Config;
 using Certify.UI.Windows;
 
 namespace Certify.UI.Controls.ManagedCertificate

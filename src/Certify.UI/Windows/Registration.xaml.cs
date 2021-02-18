@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using Certify.Management;
 using Certify.Models;
 
 namespace Certify.UI.Windows
@@ -20,7 +18,7 @@ namespace Certify.UI.Windows
             public bool IsRegistrationMode { get; set; } = true;
         }
         public Model EditModel { get; set; } = new Model();
-       
+
         public Registration()
         {
             InitializeComponent();
@@ -121,7 +119,7 @@ namespace Certify.UI.Windows
             var productTypeId = ViewModel.AppViewModel.ProductTypeId;
 
             var email = DeactivateEmail.Text?.Trim().ToLower();
-   
+
 
             if (string.IsNullOrEmpty(email))
             {
@@ -154,7 +152,7 @@ namespace Certify.UI.Windows
                 else
                 {
                     MessageBox.Show("The install could not be deactivated, check specified email address is correct for account. You can manually delete the C:\\ProgramData\\Certify\\reg_1 file and deactivate your install on https://certifytheweb.com");
-                
+
                 }
             }
 

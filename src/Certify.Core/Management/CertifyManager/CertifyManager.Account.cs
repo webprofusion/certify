@@ -128,7 +128,7 @@ namespace Certify.Management
                     addedAccount.Result.StorageKey = storageKey;
                     addedAccount.Result.CertificateAuthorityId = certAuthority.Id;
                     addedAccount.Result.IsStagingAccount = reg.IsStaging;
-                    
+
                     addedAccount.Result.EabKeyId = reg.EabKeyId;
                     addedAccount.Result.EabKey = reg.EabKey;
                     addedAccount.Result.EabKeyAlgorithm = reg.EabKeyAlgorithm;
@@ -291,7 +291,7 @@ namespace Certify.Management
                 _serviceLog.Error(exp.Message);
             }
 
-            return await Task.FromResult( new ActionResult("An error occurred saving the updated Certificate Authorities list.", false));
+            return await Task.FromResult(new ActionResult("An error occurred saving the updated Certificate Authorities list.", false));
 
         }
 

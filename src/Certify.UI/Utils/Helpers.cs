@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace Certify.UI.Utils
@@ -14,7 +10,7 @@ namespace Certify.UI.Utils
             try
             {
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url));
-               
+
             }
             catch (Exception)
             {

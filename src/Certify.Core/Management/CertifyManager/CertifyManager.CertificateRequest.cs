@@ -9,7 +9,6 @@ using Certify.Locales;
 using Certify.Models;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
-using Certify.Shared.Utils;
 
 namespace Certify.Management
 {
@@ -70,7 +69,7 @@ namespace Certify.Management
                 // auto renew enabled sites in order of oldest date renewed (or earliest attempted), items not yet attempted are first.
                 // if mode is just RenewalDue then we also include items that are not marked auto renew (the user may be controlling when to perform renewal).
 
-                managedCertificates = managedCertificates.Where(s => s.IncludeInAutoRenew == true || settings.Mode== RenewalMode.RenewalsDue)
+                managedCertificates = managedCertificates.Where(s => s.IncludeInAutoRenew == true || settings.Mode == RenewalMode.RenewalsDue)
                              .OrderBy(s => s.DateRenewed ?? s.DateLastRenewalAttempt ?? DateTime.MinValue);
             }
             else if (settings.Mode == RenewalMode.NewItems)
@@ -125,7 +124,7 @@ namespace Certify.Management
                     }
                 }
 
-                if (settings.Mode== RenewalMode.All)
+                if (settings.Mode == RenewalMode.All)
                 {
                     // on all mode, everything gets an attempted renewal
                     isRenewalRequired = true;
@@ -635,7 +634,7 @@ namespace Certify.Management
 
                 await PerformAutomatedChallengeResponses(log, managedCertificate, authorizations, result, config, progress);
 
-                if (authorizations.Any(a=>a.IsFailure==true))
+                if (authorizations.Any(a => a.IsFailure == true))
                 {
                     result.IsSuccess = false;
                     result.Abort = true;
@@ -646,7 +645,7 @@ namespace Certify.Management
                     LogMessage(managedCertificate.Id, result.Message, LogItemType.CertficateRequestFailed);
 
                     return result;
-                }    
+                }
 
                 // if any challenge responses require a manual step, pause our request here and wait
                 // for user intervention

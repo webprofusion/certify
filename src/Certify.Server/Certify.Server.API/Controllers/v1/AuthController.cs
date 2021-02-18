@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Certify.Client;
 using Certify.Server.Api.Public.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;

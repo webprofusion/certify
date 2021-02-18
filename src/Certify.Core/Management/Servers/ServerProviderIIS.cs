@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Providers;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.Web.Administration;
 using Microsoft.Win32;
 
@@ -225,7 +224,7 @@ namespace Certify.Management.Servers
                                      return ftpState == (int)ObjectState.Started;
                                  }
 
-                                 
+
                                  else
                                  {
                                      return site.State == ObjectState.Started;

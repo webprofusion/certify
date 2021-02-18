@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Certify.Server.Core;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,7 +27,7 @@ namespace Certify.Service.Worker
                     {
                         // serverOptions.AllowSynchronousIO = true; // allow sync IO for legacy outputs
                         serverOptions.UseSystemd();
-                    });  
+                    });
 
                     webBuilder.ConfigureLogging(logging =>
                       {

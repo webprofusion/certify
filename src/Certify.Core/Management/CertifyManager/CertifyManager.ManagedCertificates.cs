@@ -3,12 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Certify.Config;
-using Certify.Core.Management.DeploymentTasks;
 using Certify.Models;
-using Certify.Models.Config;
 using Certify.Models.Providers;
-using Certify.Providers.DeploymentTasks;
 
 namespace Certify.Management
 {

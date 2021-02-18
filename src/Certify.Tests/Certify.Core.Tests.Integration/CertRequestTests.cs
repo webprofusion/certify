@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Management.Servers;
 using Certify.Models;
-using Certify.Models.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Serilog;
 
@@ -193,7 +192,7 @@ namespace Certify.Core.Tests
 
                 Assert.AreEqual(site.Name, testIDNDomain);
 
-              
+
                 var result = await certifyManager.PerformCertificateRequest(_log, dummyManagedCertificate);
 
                 //ensure cert request was successful
@@ -285,9 +284,9 @@ namespace Certify.Core.Tests
             finally
             {
                 await iisManager.DeleteSite(siteName);
-          
+
                 await certifyManager.DeleteManagedCertificate(dummyManagedCertificate.Id);
-                    
+
             }
         }
 

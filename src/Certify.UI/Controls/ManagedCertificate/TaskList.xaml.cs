@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -56,7 +53,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 requiresForcedTaskExecute = true;
 
-                msg = "Force task '" + task.TaskName + "' to run now? "+(ItemViewModel.SelectedItem.LastRenewalStatus == null ? "The certificate has not yet been requested and the task will likely fail with errors." : "The last certificate request failed with one or more errors, task run may fail depending on certificate status.");
+                msg = "Force task '" + task.TaskName + "' to run now? " + (ItemViewModel.SelectedItem.LastRenewalStatus == null ? "The certificate has not yet been requested and the task will likely fail with errors." : "The last certificate request failed with one or more errors, task run may fail depending on certificate status.");
             }
 
 
@@ -78,7 +75,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 }
 
-                
+
                 ItemViewModel.SelectedItem = await UI.ViewModel.AppViewModel.Current.UpdatedCachedManagedCertificate(ItemViewModel.SelectedItem, true);
             }
         }

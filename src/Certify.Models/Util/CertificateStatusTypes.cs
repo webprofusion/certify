@@ -2,10 +2,11 @@
 {
     namespace Certify.Models
     {
-        public enum CertificateStatusType { 
-            Active, 
+        public enum CertificateStatusType
+        {
+            Active,
             Expired,
-            Revoked, 
+            Revoked,
             Unknown
         }
     }

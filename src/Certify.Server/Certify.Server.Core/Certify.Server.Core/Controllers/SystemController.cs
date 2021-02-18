@@ -1,10 +1,10 @@
-﻿using Certify.Config.Migration;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Certify.Config.Migration;
 using Certify.Management;
 using Certify.Models;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Certify.Service
 {

@@ -104,7 +104,7 @@ namespace Certify.Providers.DNS.TransIP
 
             request.Result.Content = GetContent(new DTO.SingleDnsEntry { dnsEntry = entry });
             var result = await _client.SendAsync(request.Result);
-           
+
             if (result.IsSuccessStatusCode)
             {
                 return new ActionResult { IsSuccess = true, Message = "DNS record added." };
@@ -129,7 +129,7 @@ namespace Certify.Providers.DNS.TransIP
 
             request.Result.Content = GetContent(new DTO.SingleDnsEntry { dnsEntry = entry });
             var result = await _client.SendAsync(request.Result);
-           
+
             if (result.IsSuccessStatusCode)
             {
                 return new ActionResult { IsSuccess = true, Message = "DNS record updated." };
@@ -154,7 +154,7 @@ namespace Certify.Providers.DNS.TransIP
 
             request.Result.Content = GetContent(new DTO.SingleDnsEntry { dnsEntry = entry });
             var result = await _client.SendAsync(request.Result);
-           
+
             if (result.IsSuccessStatusCode)
             {
                 return new ActionResult { IsSuccess = true, Message = "DNS record deleted." };

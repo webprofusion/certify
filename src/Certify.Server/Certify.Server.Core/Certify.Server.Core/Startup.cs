@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.SignalR;
-using System.Runtime.InteropServices;
 using Microsoft.OpenApi.Models;
 
 namespace Certify.Server.Core
@@ -37,7 +31,7 @@ namespace Certify.Server.Core
                 options.AddDefaultPolicy(
                                   builder =>
                                   {
-                                      
+
                                       builder.AllowAnyOrigin();
                                       builder.AllowAnyMethod();
                                   });
@@ -101,13 +95,13 @@ namespace Certify.Server.Core
             {
                 app.UseDeveloperExceptionPage();
             }
-            
+
             // set status report context provider
             certifyManager.SetStatusReporting(new Service.StatusHubReporting(statusHubContext));
 
             //
 
-           // app.UseHttpsRedirection();
+            // app.UseHttpsRedirection();
 
             app.UseRouting();
 
@@ -119,7 +113,7 @@ namespace Certify.Server.Core
             {
                 endpoints.MapHub<Service.StatusHub>("/api/status");
                 endpoints.MapControllers();
-   
+
             });
 
 #if DEBUG

@@ -1,7 +1,7 @@
-﻿using Certify.Management;
+﻿using System;
+using Certify.Management;
 using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 
 namespace Certify.Core.Tests.Unit
 {

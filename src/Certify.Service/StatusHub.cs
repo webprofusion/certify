@@ -1,7 +1,7 @@
-﻿using Certify.Models;
-using Microsoft.AspNet.SignalR;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Threading.Tasks;
+using Certify.Models;
+using Microsoft.AspNet.SignalR;
 
 namespace Certify.Service
 {
