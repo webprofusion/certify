@@ -474,9 +474,10 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>REM IF NOT DEFINED _CI_BUILD (
-REM xcopy /i /s /Y /C $(SolutionDir)..\build\plugins\$(ConfigurationName)\Plugin.*.dll $(TargetDir)Plugins\
-REM )
+    <PostBuildEvent>
+IF NOT DEFINED _CI_BUILD (
+xcopy /i /s /Y /C $(SolutionDir)..\build\plugins\$(ConfigurationName)\Plugin.*.dll $(TargetDir)Plugins\
+ )
 
 
 </PostBuildEvent>

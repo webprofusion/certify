@@ -48,7 +48,7 @@ namespace Certify.Providers.DNS.IONOS
 
             _client= new HttpClient();
 
-            return true;
+            return await Task.FromResult(true);
         }
 
         public async Task<ActionResult> Test()
