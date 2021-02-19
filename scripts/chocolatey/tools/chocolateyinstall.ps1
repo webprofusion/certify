@@ -1,6 +1,6 @@
 ﻿$ErrorActionPreference = 'Stop';
 $toolsDir   = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
-$url64      = 'https://certifytheweb.s3.amazonaws.com/downloads/archive/CertifyTheWebSetup_V5.2.1.exe'
+$url64      = 'https://certifytheweb.s3.amazonaws.com/downloads/archive/CertifyTheWebSetup_V5.3.0.exe'
 
 $packageArgs = @{
   packageName   = $env:ChocolateyPackageName
@@ -8,7 +8,7 @@ $packageArgs = @{
   fileType      = 'exe'
   url64bit      = $url64
   softwareName  = 'Certify The Web*'
-  checksum64    = 'd3fb076d8104992324fbd6c1ab9f47eb8741244664db77646cd5cece5396ae31'
+  checksum64    = '291253cd50b6dea2951527739fa78763fe14a0be83ac5d10916b94d905fcf4ab'
   checksumType64= 'sha256'
   validExitCodes= @(0)
   silentArgs   = '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-'
