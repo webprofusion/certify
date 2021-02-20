@@ -208,9 +208,10 @@ namespace Certify.Management
             else
             {
                 var userAgent = Util.GetUserAgent();
-                var providerPath = Path.Combine(Management.Util.GetAppDataFolder(), "certes_" + storageKey);
+                var settingBaseFolder = Management.Util.GetAppDataFolder();
+                var providerPath = Path.Combine(settingBaseFolder, "certes_" + storageKey);
 
-                var newProvider = new CertesACMEProvider(acmeApiEndpoint, providerPath, userAgent, allowUntrustedTsl);
+                var newProvider = new CertesACMEProvider(acmeApiEndpoint, settingBaseFolder, providerPath, userAgent, allowUntrustedTsl);
 
                 await newProvider.InitProvider(_serviceLog, account);
 

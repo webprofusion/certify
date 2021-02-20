@@ -188,8 +188,9 @@ namespace Certify.Management
 
                 // create provider pointing to legacy storage
                 var apiEndpoint = _certificateAuthorities[StandardCertAuthorities.LETS_ENCRYPT].ProductionAPIEndpoint;
-                var providerPath = System.IO.Path.Combine(Management.Util.GetAppDataFolder(), "certes");
-                var provider = new CertesACMEProvider(apiEndpoint, providerPath, Util.GetUserAgent());
+                var settingBaseFolder = Management.Util.GetAppDataFolder();
+                var providerPath = System.IO.Path.Combine(settingBaseFolder, "certes");
+                var provider = new CertesACMEProvider(apiEndpoint, settingBaseFolder, providerPath, Util.GetUserAgent());
                 await provider.InitProvider(_serviceLog);
 
                 var acc = provider.GetCurrentAcmeAccount();
