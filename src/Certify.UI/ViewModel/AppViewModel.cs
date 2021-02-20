@@ -898,7 +898,14 @@ namespace Certify.UI.ViewModel
 
         internal async Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate managedCertificate)
         {
-            return await CertifyClient.TestChallengeConfiguration(managedCertificate);
+            try
+            {
+                return await CertifyClient.TestChallengeConfiguration(managedCertificate);
+            }
+            catch (TaskCanceledException)
+            {
+                return new List<StatusMessage> { new StatusMessage { IsOK = false, Message = "The test took too long to complete and has timed out. Please check and try again." } };
+            }
         }
 
         internal async Task<StatusMessage> RevokeManageSiteCertificate(string id)
