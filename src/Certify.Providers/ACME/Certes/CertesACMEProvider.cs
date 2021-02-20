@@ -1437,19 +1437,19 @@ namespace Certify.Providers.ACME.Certes
             var pfxFile = certId + ".pfx";
             var pfxPath = Path.Combine(storePath, pfxFile);
 
-            var pfx = certificateChain.ToPfx(csrKey);
-
-            if (_issuerCertCache.Any())
-            {
-                foreach (var c in _issuerCertCache)
-                {
-                    pfx.AddIssuers(c);
-                }
-            }
-
             byte[] pfxBytes;
             try
             {
+                var pfx = certificateChain.ToPfx(csrKey);
+
+                if (_issuerCertCache.Any())
+                {
+                    foreach (var c in _issuerCertCache)
+                    {
+                        pfx.AddIssuers(c);
+                    }
+                }
+
                 pfxBytes = pfx.Build(certFriendlyName, pwd);
                 System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
             }
@@ -1458,6 +1458,16 @@ namespace Certify.Providers.ACME.Certes
                 // if build failed, try refreshing issuer certs
                 RefreshIssuerCertCache();
 
+                var pfx = certificateChain.ToPfx(csrKey);
+
+                if (_issuerCertCache.Any())
+                {
+                    foreach (var c in _issuerCertCache)
+                    {
+                        pfx.AddIssuers(c);
+                    }
+                }
+
                 try
                 {
                     pfxBytes = pfx.Build(certFriendlyName, pwd);
@@ -1465,7 +1475,7 @@ namespace Certify.Providers.ACME.Certes
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception("Failed to build certificate as PFX. Check system date/time is correct and that the issuing CA is a trusted root CA on this machine. :" + ex.Message);
+                    throw new Exception("Failed to build certificate as PFX. Check system date/time is correct and that the issuing CA is a trusted root CA on this machine (or in custom_ca_certs). :" + ex.Message);
                 }
             }
 
