@@ -1171,12 +1171,12 @@ namespace Certify.Management
 
                 if (authorization?.Identifier != null)
                 {
-                    LogMessage(managedCertificate.Id, $"Attempting Domain Validation: {identifier.Dns}",
+                    LogMessage(managedCertificate.Id, $"Attempting Domain Validation: {identifier.Name}",
                         LogItemType.CertificateRequestStarted);
 
                     ReportProgress(progress,
                         new RequestProgressState(RequestState.Running,
-                            string.Format(Certify.Locales.CoreSR.CertifyManager_RegisteringAndValidatingX0, identifier.Dns),
+                            string.Format(Certify.Locales.CoreSR.CertifyManager_RegisteringAndValidatingX0, identifier.Name),
                             managedCertificate)
                     );
 
@@ -1187,7 +1187,7 @@ namespace Certify.Management
                         ReportProgress(progress,
                             new RequestProgressState(
                                 RequestState.Running,
-                                $"Performing automated challenge responses ({identifier.Dns})",
+                                $"Performing automated challenge responses ({identifier.Name})",
                                 managedCertificate
                             )
                         );
@@ -1249,7 +1249,7 @@ namespace Certify.Management
                             {
                                 case SupportedChallengeTypes.CHALLENGE_TYPE_HTTP:
                                     result.Message =
-                                        string.Format(CoreSR.CertifyManager_AutomateConfigurationCheckFailed_HTTP, identifier.Dns);
+                                        string.Format(CoreSR.CertifyManager_AutomateConfigurationCheckFailed_HTTP, identifier.Name);
                                     break;
 
                                 case SupportedChallengeTypes.CHALLENGE_TYPE_SNI:
@@ -1271,13 +1271,13 @@ namespace Certify.Management
                         {
                             ReportProgress(progress,
                                 new RequestProgressState(RequestState.Running,
-                                    string.Format(CoreSR.CertifyManager_ReqestValidationFromCertificateAuthority, identifier.Dns),
+                                    string.Format(CoreSR.CertifyManager_RequestValidationFromCertificateAuthority, identifier.Name),
                                     managedCertificate));
                         }
                     }
                     else
                     {
-                        log.Information($"Authorization already valid for {identifier.Dns}");
+                        log.Information($"Authorization already valid for {identifier.Name}");
                     }
                 }
                 else
@@ -1285,8 +1285,8 @@ namespace Certify.Management
                     // could not begin authorization
 
                     LogMessage(managedCertificate.Id,
-                        $"Could not begin authorization for identifier with the Certificate Authority: [{identifier.Dns}] {(authorization?.AuthorizationError ?? "Could not register identifier")} ");
-                    failureSummaryMessage = $"[{identifier.Dns}] : {authorization?.AuthorizationError}";
+                        $"Could not begin authorization for identifier with the Certificate Authority: [{identifier.Name}] {(authorization?.AuthorizationError ?? "Could not register identifier")} ");
+                    failureSummaryMessage = $"[{identifier.Name}] : {authorization?.AuthorizationError}";
                 }
             }
         }

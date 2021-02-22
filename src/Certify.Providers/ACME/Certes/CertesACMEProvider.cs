@@ -783,7 +783,7 @@ namespace Certify.Providers.ACME.Certes
                             {
                                 httpChallenge = await authContext.Http();
                             }
-                            catch (Exception exp)
+                            catch (Exception)
                             {
                                 log.Information("Could not fetch an http-01 challenge for this identifier: " + authzDomain);
                             }
@@ -831,7 +831,7 @@ namespace Certify.Providers.ACME.Certes
                             {
                                 dnsChallenge = await authContext.Dns();
                             }
-                            catch (Exception exp)
+                            catch (Exception)
                             {
                                 log.Information("Could not fetch a dns-01 challenge for this identifier: " + authzDomain);
                             }
@@ -1222,6 +1222,7 @@ namespace Certify.Providers.ACME.Certes
                 }
 
                 var cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(certificateChain.Certificate.ToDer());
+
                 certExpiration = cert.NotAfter;
                 certFriendlyName += $"{ cert.GetEffectiveDateString()} to {cert.GetExpirationDateString()}";
             }
@@ -1436,6 +1437,7 @@ namespace Certify.Providers.ACME.Certes
 
             var pfxFile = certId + ".pfx";
             var pfxPath = Path.Combine(storePath, pfxFile);
+            var failedBuildMsg = "Failed to build certificate as PFX. Check system date/time is correct and that the issuing CA is a trusted root CA on this machine (or in custom_ca_certs). :";
 
             byte[] pfxBytes;
             try
@@ -1450,6 +1452,7 @@ namespace Certify.Providers.ACME.Certes
                     }
                 }
 
+                // attempt to build pfx cert chain issing known issuers and known roots, if this fails it throws an AcmeException
                 pfxBytes = pfx.Build(certFriendlyName, pwd);
                 System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
             }
@@ -1475,7 +1478,7 @@ namespace Certify.Providers.ACME.Certes
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception("Failed to build certificate as PFX. Check system date/time is correct and that the issuing CA is a trusted root CA on this machine (or in custom_ca_certs). :" + ex.Message);
+                    throw new Exception(failedBuildMsg + ex.Message);
                 }
             }
 

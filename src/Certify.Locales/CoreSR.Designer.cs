@@ -238,7 +238,7 @@ namespace Certify.Locales {
         /// <summary>
         ///   Looks up a localized string similar to Requesting Validation from Let&apos;s Encrypt: {0}.
         /// </summary>
-        public static string CertifyManager_ReqestValidationFromCertificateAuthority {
+        public static string CertifyManager_RequestValidationFromCertificateAuthority {
             get {
                 return ResourceManager.GetString("CertifyManager_ReqestValidationFromLetsEncrypt", resourceCulture);
             }
