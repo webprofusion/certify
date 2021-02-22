@@ -105,7 +105,20 @@ namespace Certify.UI.Controls.ManagedCertificate
                 if (MessageBox.Show("Re-fetch certificate from Certificate Authority?", "Confirm Re-Fetch?", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
                 {
 
-                    await ItemViewModel.RefetchCertificate(ItemViewModel.SelectedItem.Id);
+                    try
+                    {
+                        Cursor = System.Windows.Input.Cursors.Wait;
+                        await ItemViewModel.RefetchCertificate(ItemViewModel.SelectedItem.Id);
+                        MessageBox.Show("Latest cert re-fetched from Certificate Authority.");
+                    }
+                    catch (Client.ServiceCommsException exp)
+                    {
+                        MessageBox.Show(exp.Message);
+                    }
+                    finally
+                    {
+                        Cursor = System.Windows.Input.Cursors.Arrow;
+                    }
                 }
             }
             else
