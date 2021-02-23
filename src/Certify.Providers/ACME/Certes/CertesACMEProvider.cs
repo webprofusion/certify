@@ -509,7 +509,7 @@ namespace Certify.Providers.ACME.Certes
             if (!string.IsNullOrEmpty(config.PrimaryDomain))
             {
                 // order all of the distinct domains in the config (primary + SAN).
-                _idnMapping.GetAscii(config.PrimaryDomain);
+                domainOrders.Add(_idnMapping.GetAscii(config.PrimaryDomain));
             }
 
             if (config.SubjectAlternativeNames != null)
@@ -531,9 +531,12 @@ namespace Certify.Providers.ACME.Certes
                 certificateIdentifiers.Add(new Identifier { Type = IdentifierType.Dns, Value = d });
             }
 
-            foreach (var i in config.SubjectIPAddresses)
+            if (config.SubjectIPAddresses?.Any() == true)
             {
-                certificateIdentifiers.Add(new Identifier { Type = IdentifierType.Ip, Value = i });
+                foreach (var i in config.SubjectIPAddresses)
+                {
+                    certificateIdentifiers.Add(new Identifier { Type = IdentifierType.Ip, Value = i });
+                }
             }
 
             try
