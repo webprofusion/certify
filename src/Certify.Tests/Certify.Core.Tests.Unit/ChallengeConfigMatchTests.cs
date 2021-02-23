@@ -55,7 +55,7 @@ namespace Certify.Core.Tests.Unit
                             },
                               new CertRequestChallengeConfig{
                                 ChallengeType="http-01",
-                                DomainMatch= "example.com;www.exaomple.com;*.exaomple1.com",
+                                DomainMatch= "example.com;www.exaomple.com, *.exaomple1.com ", ///should allow edither semicolon or comma delimiters, spaces trimmed
                                 ChallengeCredentialKey="config4"
                             },
                         }),
