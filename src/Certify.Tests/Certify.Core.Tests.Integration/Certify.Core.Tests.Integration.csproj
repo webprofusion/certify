@@ -146,7 +146,4 @@
   <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy /i /s /Y  $(SolutionDir)..\build\plugins\$(ConfigurationName)\ $(TargetDir)Plugins" />
-  </Target>
 </Project>
