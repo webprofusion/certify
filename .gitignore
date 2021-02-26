@@ -211,4 +211,5 @@ src/lib/
 
 Directory.Build.props
 
-src/Certify.UI/Plugins/
+src/Certify.UI/Plugins/*.dll
+
