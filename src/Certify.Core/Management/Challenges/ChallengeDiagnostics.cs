@@ -59,6 +59,8 @@ namespace Certify.Core.Management.Challenges
 
             domains = domains.Distinct().ToList();
 
+            // TODO: some of these checks can be moved/shared with general item validation 
+
             // if wildcard domain included, check first level labels not also specified, i.e.
             // *.example.com & www.example.com cannot be mixed, but example.com, *.example.com &
             // test.wwww.example.com can

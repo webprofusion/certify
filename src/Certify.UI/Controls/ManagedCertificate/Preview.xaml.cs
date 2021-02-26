@@ -57,9 +57,15 @@ namespace Certify.UI.Controls.ManagedCertificate
 
 
                 var steps = new List<ActionStep>();
+
                 try
                 {
-                    ItemViewModel.UpdateManagedCertificateSettings(throwOnInvalidSettings: false);
+                    var validationResult = ItemViewModel.Validate(applyAutoConfiguration: true);
+
+                    if (!validationResult.IsValid)
+                    {
+                        throw new Exception("Validation Error: " + validationResult.Message);
+                    }
 
                     steps = await AppViewModel.GetPreviewActions(ItemViewModel.SelectedItem);
                 }
