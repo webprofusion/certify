@@ -263,10 +263,11 @@ namespace Certify.Core.Management.Challenges.DNS
                 IsTestModeSupported = true,
                 IsExperimental = true
             },
-            new ChallengeProviderDefinition
+ 
+             new ChallengeProviderDefinition
             {
                 Id = "DNS01.API.PoshACME.DNSPod",
-                Title = "DNSPod DNS API (using Posh-ACME)",
+                Title = "DNSPod DNS API (Deprecated - use v2 instead)",
                 Description = "Validates via DNS API using credentials",
                 HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/DNSPod-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
@@ -274,6 +275,26 @@ namespace Certify.Core.Management.Challenges.DNS
                 {
                     new ProviderParameter { Key = "DNSPodUsername", Name = "Username", IsRequired = true, IsCredential = true },
                     new ProviderParameter { Key = "DNSPodPwdInsecure", Name = "Password", IsRequired = true, IsCredential = true },
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=DNSPod",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
+            new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.DNSPod.v2",
+                Title = "DNSPod (v2) DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/DNSPod-Readme.md",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters = new List<ProviderParameter>
+                {
+                    new ProviderParameter { Key = "DNSPodKeyID", Name = "Key ID", IsRequired = true, IsCredential = true },
+                    new ProviderParameter { Key = "DNSPodKeyTokenInsecure", Name = "Key Token", IsRequired = true, IsCredential = true },
+                    new ProviderParameter { Key = "DNSPodApiRoot", Name = "API Root", IsRequired = true, IsCredential = false, Value="https://api.dnspod.com" },
                     _defaultPropagationDelayParam
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
