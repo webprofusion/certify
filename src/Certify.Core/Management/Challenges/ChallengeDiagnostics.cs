@@ -50,6 +50,11 @@ namespace Certify.Core.Management.Challenges
 
             var requestConfig = managedCertificate.RequestConfig;
 
+            if (string.IsNullOrEmpty(requestConfig.PrimaryDomain))
+            {
+                return new List<StatusMessage> { new StatusMessage { IsOK = false, Message = "There is no primary domain set for this certificate." } };
+            }
+
             var domains = new List<string> { requestConfig.PrimaryDomain };
 
             if (requestConfig.SubjectAlternativeNames != null)
