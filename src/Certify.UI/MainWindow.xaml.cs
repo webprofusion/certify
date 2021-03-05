@@ -29,7 +29,7 @@ namespace Certify.UI
         protected Certify.UI.ViewModel.AppViewModel _appViewModel => UI.ViewModel.AppViewModel.Current;
         protected Certify.UI.ViewModel.ManagedCertificateViewModel _itemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
         private const int NUM_ITEMS_FOR_REMINDER = 3;
-        private const int NUM_ITEMS_FOR_LIMIT = 10;
+        private const int NUM_ITEMS_FOR_LIMIT = 5;
 
         public int NumManagedCertificates
         {
