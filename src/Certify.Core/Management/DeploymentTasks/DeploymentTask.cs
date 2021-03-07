@@ -28,7 +28,7 @@ namespace Certify.Providers.DeploymentTasks
 
         public async Task<List<ActionResult>> Execute(
             ILog log,
-            ICredentialsManager credentialsManager, 
+            ICredentialsManager credentialsManager,
             object subject,
             CancellationToken cancellationToken,
             DeploymentContext deploymentContext,

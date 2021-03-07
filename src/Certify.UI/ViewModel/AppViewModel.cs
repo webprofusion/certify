@@ -96,7 +96,7 @@ namespace Certify.UI.ViewModel
 #if DEBUG
             FeatureFlags.SERVER_CONNECTIONS
 #endif
-        }; 
+        };
 
         public Dictionary<string, string> UIThemes { get; } = new Dictionary<string, string>
         {
@@ -283,6 +283,29 @@ namespace Certify.UI.ViewModel
         private ManagedCertificate selectedItem;
 
         public bool IsRegisteredVersion { get; set; }
+        public int NumManagedCerts
+        {
+            get
+            {
+                return ManagedCertificates?.Where(c => string.IsNullOrEmpty(c.SourceId)).Count() ?? 0;
+            }
+        }
+
+        [DependsOn(nameof(ManagedCertificates), nameof(IsRegisteredVersion))]
+        public bool IsLicenseUpgradeRecommended
+        {
+            get
+            {
+                if (!IsRegisteredVersion && NumManagedCerts >= 3)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
 
         internal async Task<ActionResult> AddContactRegistration(ContactRegistration reg)
         {
@@ -429,7 +452,7 @@ namespace Certify.UI.ViewModel
         }
 
         public string ConnectionState { get; set; } = "Not Connected";
-        
+
         public string ConnectionTitle
         {
             get
@@ -836,7 +859,7 @@ namespace Certify.UI.ViewModel
 
         private void UpdateRequestTrackingProgress(RequestProgressState state)
         {
-            System.Windows.Application.Current.Dispatcher.Invoke((Action)delegate
+            System.Windows.Application.Current.Dispatcher.Invoke(delegate
                                         {
                                             var existing = ProgressResults.FirstOrDefault(p => p.ManagedCertificate.Id == state.ManagedCertificate.Id);
 
@@ -875,7 +898,14 @@ namespace Certify.UI.ViewModel
 
         internal async Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate managedCertificate)
         {
-            return await CertifyClient.TestChallengeConfiguration(managedCertificate);
+            try
+            {
+                return await CertifyClient.TestChallengeConfiguration(managedCertificate);
+            }
+            catch (TaskCanceledException)
+            {
+                return new List<StatusMessage> { new StatusMessage { IsOK = false, Message = "The test took too long to complete and has timed out. Please check and try again." } };
+            }
         }
 
         internal async Task<StatusMessage> RevokeManageSiteCertificate(string id)
@@ -958,7 +988,7 @@ namespace Certify.UI.ViewModel
         public async Task RefreshChallengeAPIList()
         {
             var list = await CertifyClient.GetChallengeAPIList();
-            System.Windows.Application.Current.Dispatcher.Invoke((Action)delegate
+            System.Windows.Application.Current.Dispatcher.Invoke(delegate
             {
                 ChallengeAPIProviders = new ObservableCollection<ChallengeProviderDefinition>(list);
             });
@@ -970,7 +1000,7 @@ namespace Certify.UI.ViewModel
         public async Task RefreshDeploymentTaskProviderList()
         {
             var list = await CertifyClient.GetDeploymentProviderList();
-            System.Windows.Application.Current.Dispatcher.Invoke((Action)delegate
+            System.Windows.Application.Current.Dispatcher.Invoke(delegate
             {
                 DeploymentTaskProviders = new ObservableCollection<DeploymentProviderDefinition>(list.OrderBy(l => l.Title));
             });
@@ -985,7 +1015,7 @@ namespace Certify.UI.ViewModel
             var definition = await CertifyClient.GetDeploymentProviderDefinition(id, config);
             if (definition != null)
             {
-                System.Windows.Application.Current.Dispatcher.Invoke((Action)delegate
+                System.Windows.Application.Current.Dispatcher.Invoke(delegate
                 {
 
                     var orig = DeploymentTaskProviders.FirstOrDefault(i => i.Id == definition.Id);

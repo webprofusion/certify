@@ -65,7 +65,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             Title = "DnsMadeEasy DNS API",
             Description = "Validates via DnsMadeEasy APIs using credentials found in your DnsMadeEasy control panel under Config - Account Settings",
             HelpUrl = "http://docs.certifytheweb.com/docs/dns-dnsmadeeasy",
-                    PropagationDelaySeconds = 120,
+            PropagationDelaySeconds = 120,
             ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{Key="apikey", Name="API Key", IsRequired=true },
                         new ProviderParameter{Key="apisecret", Name="API Secret", IsRequired=true },
@@ -79,7 +79,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
 
         public DnsProviderDnsMadeEasy()
         {
-            _httpClient = new HttpClient();
+
         }
 
         private static string ComputeHMAC(string input, string key)
@@ -280,6 +280,8 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             _log = log;
             _apiKey = credentials["apikey"];
             _apiSecret = credentials["apisecret"];
+
+            _httpClient = new HttpClient();
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {

@@ -1,11 +1,11 @@
-﻿using Certify.Config.Migration;
-using Certify.Management;
-using Certify.Models;
-using Certify.Models.Config;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Cors;
+using Certify.Config.Migration;
+using Certify.Management;
+using Certify.Models;
+using Certify.Models.Config;
 
 namespace Certify.Service
 {
@@ -50,7 +50,7 @@ namespace Certify.Service
         {
             DebugLog();
 
-            return await _certifyManager.PerformServiceDiagnostics();            
+            return await _certifyManager.PerformServiceDiagnostics();
         }
 
         [HttpPost, Route("migration/export")]

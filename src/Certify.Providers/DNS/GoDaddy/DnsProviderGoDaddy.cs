@@ -37,7 +37,7 @@ namespace Certify.Providers.DNS.GoDaddy
     public class DnsProviderGoDaddy : DnsProviderBase, IDnsProvider
     {
         private ILog _log;
-        private HttpClient _client = new HttpClient();
+        private HttpClient _client;
         private string _authKey;
         private string _authSecret;
         private const string _baseUri = "https://api.godaddy.com/v1/";
@@ -68,7 +68,7 @@ namespace Certify.Providers.DNS.GoDaddy
             Title = "GoDaddy DNS API",
             Description = "Validates via GoDaddy DNS APIs using credentials",
             HelpUrl = "http://docs.certifytheweb.com/docs/dns-godaddy",
-                    PropagationDelaySeconds = 120,
+            PropagationDelaySeconds = 120,
             ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{ Key="authkey", Name="Auth Key", IsRequired=true },
                         new ProviderParameter{ Key="authsecret", Name="Auth Secret", IsRequired=true },
@@ -307,6 +307,8 @@ namespace Certify.Providers.DNS.GoDaddy
 
             _authKey = credentials["authkey"];
             _authSecret = credentials["authsecret"];
+
+            _client = new HttpClient();
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {

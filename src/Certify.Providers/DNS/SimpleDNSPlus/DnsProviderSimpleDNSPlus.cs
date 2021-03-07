@@ -204,7 +204,7 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
 
             var request = CreateRequest(new HttpMethod("PATCH"), string.Format(_createRecordUri, rootDomain));
 
-            var rec = new 
+            var rec = new
             {
                 Type = "TXT",
                 Name = subdomainRecord + "." + rootDomain,
@@ -254,7 +254,7 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
 
                 foreach (var zone in zonesResult)
                 {
-                    zones.Add(new DnsZone { ZoneId = zone.DomainId ?? zone.Name, Name = zone.Domain??zone.Name });
+                    zones.Add(new DnsZone { ZoneId = zone.DomainId ?? zone.Name, Name = zone.Domain ?? zone.Name });
                 }
             }
             else

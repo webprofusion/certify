@@ -1,7 +1,7 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
 using Certify.Models;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Service.Tests.Integration
 {

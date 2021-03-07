@@ -26,12 +26,13 @@ namespace Certify.Management
         /// <returns></returns>
         public static async Task<ActionResult> RunScript(
             string powershellExecutionPolicy,
-            CertificateRequestResult result,
+            CertificateRequestResult result = null,
             string scriptFile = null,
             Dictionary<string, object> parameters = null,
             string scriptContent = null,
             Dictionary<string, string> credentials = null,
-            string logonType = null
+            string logonType = null,
+            string[] ignoredCommandExceptions = null
             )
         {
             // argument check for script file existence and .ps1 extension
@@ -112,13 +113,13 @@ namespace Certify.Management
                             return Impersonation.RunAsUser(windowsCredentials, _defaultLogonType, () =>
                           {
                               // run as current user
-                              return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell);
+                              return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions);
                           });
                         }
                         else
                         {
                             // run as current user
-                            return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell);
+                            return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions);
                         }
                     }
                 }
@@ -130,7 +131,7 @@ namespace Certify.Management
             }
         }
 
-        private static ActionResult InvokePowershell(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, string scriptContent, PowerShell shell, bool autoConvertBoolean = true)
+        private static ActionResult InvokePowershell(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, string scriptContent, PowerShell shell, bool autoConvertBoolean = true, string[] ignoredCommandExceptions = null)
         {
             // ensure execution policy will allow the script to run, default to system default, default policy is set in service config object 
 
@@ -189,18 +190,25 @@ namespace Certify.Management
 
             // capture errors
 
+            if (ignoredCommandExceptions == null)
+            {
+                ignoredCommandExceptions = new string[] { };
+            }
+
             shell.Streams.Error.DataAdded += (sender, args) =>
                 {
                     var error = shell.Streams.Error[args.Index];
                     var src = error.InvocationInfo.MyCommand?.ToString() ?? error.InvocationInfo.InvocationName;
                     var msg = $"{src}: {error}\n{error.InvocationInfo.PositionMessage}";
-  
-                    errors.Add(msg);
+                    if (!ignoredCommandExceptions.Contains(error.InvocationInfo.MyCommand?.Name))
+                    {
+                        errors.Add(msg);
+                    }
                 };
 
             // capture write-* methods (except write-host)
 
-            // TODO: one of these streams may be causing ssh hang when ssh spwaned as part of script..
+            // TODO: one of these streams may be causing ssh hang when ssh spawned as part of script..
 
             shell.Streams.Warning.DataAdded += (sender, args) => output.AppendLine(shell.Streams.Warning[args.Index].Message);
             shell.Streams.Debug.DataAdded += (sender, args) => output.AppendLine(shell.Streams.Debug[args.Index].Message);
@@ -221,7 +229,6 @@ namespace Certify.Management
 
             try
             {
-
                 var async = shell.BeginInvoke<PSObject, PSObject>(null, outputData);
 
                 var maxWait = 60 * 5; // 5 min timeout
@@ -252,7 +259,12 @@ namespace Certify.Management
                     if (async.IsCompleted)
                     {
                         shell.EndInvoke(async);
+                        output.AppendLine($"Powershell Task Completed.");
                     }
+                }
+                catch (System.Management.Automation.RuntimeException ex)
+                {
+                    errors.Add($"{ex.ErrorRecord} {ex.ErrorRecord.ScriptStackTrace}");
                 }
                 catch (Exception ex)
                 {
@@ -261,8 +273,7 @@ namespace Certify.Management
 
                 if (errors.Any())
                 {
-
-                    foreach(var e in errors)
+                    foreach (var e in errors)
                     {
                         output.AppendLine("Error: " + e);
                     }

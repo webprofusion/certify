@@ -50,7 +50,7 @@ namespace Certify.UI.Windows
             {
                 template = context.FindResource("ProviderMultiLineStringParameter") as DataTemplate;
             }
-            else if (providerParameter.Type== OptionType.Boolean)
+            else if (providerParameter.Type == OptionType.Boolean)
             {
                 template = context.FindResource("ProviderBooleanParameter") as DataTemplate;
             }

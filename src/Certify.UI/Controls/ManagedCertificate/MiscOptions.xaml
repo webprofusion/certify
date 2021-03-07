@@ -279,13 +279,7 @@
                                 HorizontalAlignment="Left"
                                 Style="{StaticResource Instructions}"
                                 Text="{x:Static Resources:SR.ManagedCertificateSettings_ExportTip}" />
-                            <TextBox
-                                x:Name="CertPath"
-                                MaxWidth="500"
-                                Margin="0,8,0,0"
-                                HorizontalAlignment="Left"
-                                Text="{Binding SelectedItem.CertificatePath, TargetNullValue={x:Static Resources:SR.ManagedCertificateSettings_CertificatePathEmpty}}"
-                                TextWrapping="Wrap" />
+
                         </StackPanel>
                         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
                             <Button
@@ -298,28 +292,7 @@
 
                         </StackPanel>
 
-                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                            <Button
-                                x:Name="ReapplyCertBindings"
-                                Grid.Row="2"
-                                Grid.Column="1"
-                                Width="220"
-                                Margin="0,4,0,0"
-                                HorizontalAlignment="Left"
-                                Click="ReapplyCertBindings_Click"
-                                Content="{x:Static Resources:SR.ManagedCertificateSettings_ReapplyCertificate}" />
 
-                        </StackPanel>
-
-                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                            <Button
-                                x:Name="RefetchCertificate"
-                                Width="220"
-                                Margin="0,4,0,0"
-                                Click="RefetchCertificate_Click">
-                                Re-fetch Latest Certificate
-                            </Button>
-                        </StackPanel>
 
                         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
                             <Border Grid.Row="4" Grid.Column="1">
@@ -338,7 +311,8 @@
                                     Width="220"
                                     Margin="0,4,0,0"
                                     HorizontalAlignment="Left"
-                                    Background="{DynamicResource ErrorColorBrush}"
+                                    BorderBrush="{DynamicResource ErrorColorBrush}"
+                                    BorderThickness="1"
                                     Click="RevokeCertificateBtn_Click"
                                     Content="{x:Static Resources:SR.ManagedCertificateSettings_RevokeCertificate}" />
                             </Border>
@@ -353,26 +327,73 @@
                                         </Style.Triggers>
                                     </Style>
                                 </Border.Style>
-                                <Label Background="{DynamicResource WarningColorBrush}" Content="{x:Static Resources:SR.ManagedCertificateSettings_CertificateRevokeWarning}" />
+                                <Label
+                                    Margin="0,8,0,0"
+                                    Background="{DynamicResource WarningColorBrush}"
+                                    BorderBrush="{DynamicResource ErrorColorBrush}"
+                                    BorderThickness="2"
+                                    Content="{x:Static Resources:SR.ManagedCertificateSettings_CertificateRevokeWarning}"
+                                    FontWeight="Bold"
+                                    Foreground="{DynamicResource MahApps.Brushes.IdealForeground}" />
                             </Border>
                         </StackPanel>
 
                         <StackPanel DockPanel.Dock="Top">
                             <TextBlock
-                                Grid.Row="4"
                                 Margin="0,8,32,0"
                                 HorizontalAlignment="Left"
                                 Style="{StaticResource Instructions}"
-                                Text="Managed Certificate Id" />
+                                Text="Managed Certificate Reference Id:" />
                             <TextBox
                                 MaxWidth="500"
                                 Margin="0,8,0,0"
                                 HorizontalAlignment="Left"
+                                IsReadOnly="True"
                                 Text="{Binding SelectedItem.Id}"
-                                TextWrapping="Wrap" IsReadOnly="True" />
+                                TextWrapping="Wrap" />
                         </StackPanel>
 
+                        <StackPanel DockPanel.Dock="Top">
+                            <TextBlock
+                                Margin="0,8,32,0"
+                                HorizontalAlignment="Left"
+                                Style="{StaticResource Instructions}"
+                                Text="Current Certificate PFX path (changes after every renewal):" />
+                            <TextBox
+                                x:Name="CertPath"
+                                MaxWidth="500"
+                                Margin="0,8,0,0"
+                                HorizontalAlignment="Left"
+                                IsReadOnly="True"
+                                MaxLines="3"
+                                Text="{Binding SelectedItem.CertificatePath, TargetNullValue={x:Static Resources:SR.ManagedCertificateSettings_CertificatePathEmpty}}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
 
+                        <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
+                            <TextBlock
+                                Margin="0,8,32,0"
+                                HorizontalAlignment="Left"
+                                Style="{StaticResource Instructions}"
+                                Text="Advance options:" />
+                            <Button
+                                x:Name="ReapplyCertBindings"
+                                Width="220"
+                                Margin="0,4,0,0"
+                                HorizontalAlignment="Left"
+                                Click="ReapplyCertBindings_Click"
+                                Content="{x:Static Resources:SR.ManagedCertificateSettings_ReapplyCertificate}" />
+
+
+                            <Button
+                                x:Name="RefetchCertificate"
+                                Width="220"
+                                Margin="0,4,0,0"
+                                HorizontalAlignment="Left"
+                                Click="RefetchCertificate_Click">
+                                Re-fetch Latest Certificate
+                            </Button>
+                        </StackPanel>
 
                     </DockPanel>
                 </TabItem>

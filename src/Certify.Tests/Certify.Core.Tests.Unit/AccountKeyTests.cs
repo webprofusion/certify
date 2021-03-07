@@ -1,7 +1,5 @@
 ﻿using System.IO;
 using Certes;
-using Certify.Management;
-using Certify.Providers.ACME.Certes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Org.BouncyCastle.Crypto.EC;
 using Org.BouncyCastle.Crypto.Parameters;
@@ -67,7 +65,7 @@ namespace Certify.Core.Tests.Unit
         {
             // found a problem key with invalid X/Y coord byte length
             Assert.IsNotNull(newKey);
-            
+
         }
 
     }

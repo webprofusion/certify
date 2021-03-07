@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -72,7 +71,7 @@ namespace Certify.UI.Controls.Settings
             }
         }
 
-        private void UpdateDisplayedCredentialsList() => App.Current.Dispatcher.Invoke((Action)delegate
+        private void UpdateDisplayedCredentialsList() => App.Current.Dispatcher.Invoke(delegate
                                                        {
                                                            CredentialsList.ItemsSource = FilteredStoredCredentials;
                                                        });

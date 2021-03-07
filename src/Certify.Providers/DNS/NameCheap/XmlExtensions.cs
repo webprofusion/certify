@@ -13,7 +13,7 @@ namespace Certify.Providers.DNS.NameCheap
         {
             try
             {
-                return (T) Convert.ChangeType(xml.Attribute(attrName)?.Value, typeof(T));
+                return (T)Convert.ChangeType(xml.Attribute(attrName)?.Value, typeof(T));
             }
             catch
             {

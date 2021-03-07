@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.AspNetCore.Builder;
 using System.Diagnostics;
-using Certify.SharedUtils;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
+using Certify.SharedUtils;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.API.Tests
 {

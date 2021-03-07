@@ -94,7 +94,7 @@ namespace Certify.Core.Tests.Unit
             deploymentTarget.AllBindings = _allSites;
 
             managedCertificate.ServerSiteId = "ShouldNotMatch";
-            var preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd:"", isPreviewOnly: true);
+            var preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true);
             Assert.IsFalse(preview.Any(), " Should not match any bindings");
 
             managedCertificate.ServerSiteId = "1.1";
@@ -295,7 +295,7 @@ namespace Certify.Core.Tests.Unit
 
 
             var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, "test.pfx", pfxPwd: "", true);
-        
+
             Assert.IsTrue(results.Any());
         }
     }

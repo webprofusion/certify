@@ -175,13 +175,13 @@
     <value>Send Feedback</value>
   </data>
   <data name="Send_Feedback_Tip" xml:space="preserve">
-    <value>Your feedback is important to us. Please let us know how we can improve.</value>
+    <value>Thanks for submitting feedback to our developers. Please email support@certifytheweb.com if you have a question.</value>
   </data>
   <data name="Send_Feedback_Quest" xml:space="preserve">
     <value>Do you have any suggestions?</value>
   </data>
   <data name="Send_Feedback_Email" xml:space="preserve">
-    <value>Your Email Address (if you would like a response):</value>
+    <value>Your Email Address (optional):</value>
   </data>
   <data name="Send" xml:space="preserve">
     <value>Send</value>

@@ -1,11 +1,10 @@
-﻿using System;
+﻿using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Threading.Tasks;
 
 namespace Certify.Service.Tests.Integration
 {
     [TestClass]
-    public class ServerTests: ServiceTestBase
+    public class ServerTests : ServiceTestBase
     {
         [TestMethod]
         public async Task TestServerAvailable()

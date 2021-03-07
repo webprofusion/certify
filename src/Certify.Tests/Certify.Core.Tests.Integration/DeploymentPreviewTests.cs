@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Management.Servers;
 using Certify.Models;
-using Certify.Models.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Serilog;
 

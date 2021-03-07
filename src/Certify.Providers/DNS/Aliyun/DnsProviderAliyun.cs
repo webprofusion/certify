@@ -71,12 +71,12 @@ namespace Certify.Providers.DNS.Aliyun
                             IsPassword = false,
                             IsCredential = false
                         },
-                        new ProviderParameter{ 
+                        new ProviderParameter{
                             Key="propagationdelay",
-                            Name="Propagation Delay Seconds", 
-                            IsRequired=false, IsPassword=false, 
-                            Value="120", 
-                            IsCredential=false 
+                            Name="Propagation Delay Seconds",
+                            IsRequired=false, IsPassword=false,
+                            Value="120",
+                            IsCredential=false
                         }
                     },
             ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
@@ -85,7 +85,7 @@ namespace Certify.Providers.DNS.Aliyun
         };
 
         public DnsProviderAliyun()
-        {}
+        { }
 
         public async Task<ActionResult> Test()
         {

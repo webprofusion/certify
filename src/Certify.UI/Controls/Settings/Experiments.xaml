@@ -41,7 +41,7 @@
             Margin="28,0"
             Style="{StaticResource Instructions}"
             TextWrapping="Wrap">
-            Enable UI to connect to multiple Certify.Server instances
+            Enable experimental UI to connect to multiple Certify.Server instances
         </TextBlock>
 
     </StackPanel>

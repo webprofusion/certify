@@ -5,15 +5,17 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Security;
 
-namespace Certify.Providers.DNS.TransIP.Authentication {
-	internal class DigestSigner {
-		public string Sign(byte[] data, string privateKey) 
+namespace Certify.Providers.DNS.TransIP.Authentication
+{
+    internal class DigestSigner
+    {
+        public string Sign(byte[] data, string privateKey)
         {
             var pem = GetPem(privateKey);
             var parameters = GetCipherParameters(pem);
             var signature = Encrypt(data, parameters);
-			return Convert.ToBase64String(signature);
-		}
+            return Convert.ToBase64String(signature);
+        }
 
         private static object GetPem(string key)
         {
@@ -35,7 +37,7 @@ namespace Certify.Providers.DNS.TransIP.Authentication {
             }
         }
 
-		private static byte[] Encrypt(byte[] digest, ICipherParameters parameters)
+        private static byte[] Encrypt(byte[] digest, ICipherParameters parameters)
         {
             var cipher = CipherUtilities.GetCipher("RSA/None/PKCS1Padding");
             cipher.Init(true, parameters);

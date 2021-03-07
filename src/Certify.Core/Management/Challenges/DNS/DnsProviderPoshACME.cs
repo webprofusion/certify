@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
-using Microsoft.ApplicationInsights.DataContracts;
 
 namespace Certify.Core.Management.Challenges.DNS
 {
@@ -23,35 +20,35 @@ namespace Certify.Core.Management.Challenges.DNS
 
         /*
             Implemented providers (Posh-ACME: https://github.com/rmbolger/Posh-ACME)
-            [Akamai](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Akamai-Readme.md),
-            [AutoDNS](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/AutoDNS-Readme.md),
-            [ClouDNS](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/ClouDNS-Readme.md),
-            [DNSPod](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DNSPod-Readme.md),
-            [DNSimple](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DNSimple-Readme.md),
-            [DomainOffensive](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DomainOffensive-Readme.md),
-            [deSEC](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DeSEC-Readme.md),
-            [DigitalOcean](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DOcean-Readme.md),
-            [Dreamhost](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Dreamhost-Readme.md),
-            [Dynu](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Dynu-Readme.md),
-            [EasyDNS](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/EasyDNS-Readme.md),
-            [Gandi](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Gandi-Readme.md),
-            [Google Cloud](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/GCloud-Readme.md),
-            [Hetzner](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Hetzner-Readme.md),
-            [Hurricane Electric](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/HurricaneElectric-Readme.md),
-            [Infoblox](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Infoblox-Readme.md),
-            [IBM Cloud/SoftLayer](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/IBMSoftLayer-Readme.md),
-            [Linode](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Linode-Readme.md),
-            [Loopia](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Loopia-Readme.md),
-            [LuaDns](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/LuaDns-Readme.md),
-            [name.com](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/NameCom-Readme.md),
-            [NS1](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/NS1-Readme.md),
-            [PointDNS](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/PointDNS-Readme.md),
-            [Rackspace](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Rackspace-Readme.md),
-            [RFC2136](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/RFC2136-Readme.md),
-            [Selectel](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Selectel-Readme.md),
-            [UnoEuro](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/UnoEuro-Readme.md),
-            [Yandex](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Yandex-Readme.md),
-            [Zonomi](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Zonomi-Readme.md)
+            [Akamai](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Akamai-Readme.md),
+            [AutoDNS](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/AutoDNS-Readme.md),
+            [ClouDNS](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/ClouDNS-Readme.md),
+            [DNSPod](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/DNSPod-Readme.md),
+            [DNSimple](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/DNSimple-Readme.md),
+            [DomainOffensive](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/DomainOffensive-Readme.md),
+            [deSEC](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/DeSEC-Readme.md),
+            [DigitalOcean](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/DOcean-Readme.md),
+            [Dreamhost](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Dreamhost-Readme.md),
+            [Dynu](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Dynu-Readme.md),
+            [EasyDNS](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/EasyDNS-Readme.md),
+            [Gandi](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Gandi-Readme.md),
+            [Google Cloud](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/GCloud-Readme.md),
+            [Hetzner](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Hetzner-Readme.md),
+            [Hurricane Electric](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/HurricaneElectric-Readme.md),
+            [Infoblox](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Infoblox-Readme.md),
+            [IBM Cloud/SoftLayer](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/IBMSoftLayer-Readme.md),
+            [Linode](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Linode-Readme.md),
+            [Loopia](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Loopia-Readme.md),
+            [LuaDns](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/LuaDns-Readme.md),
+            [name.com](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/NameCom-Readme.md),
+            [NS1](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/NS1-Readme.md),
+            [PointDNS](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/PointDNS-Readme.md),
+            [Rackspace](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Rackspace-Readme.md),
+            [RFC2136](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/RFC2136-Readme.md),
+            [Selectel](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Selectel-Readme.md),
+            [Simply](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Simply-Readme.md),
+            [Yandex](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Yandex-Readme.md),
+            [Zonomi](https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Zonomi-Readme.md)
         */
 
         public class PoshACMEDnsProviderProvider : IDnsProviderProviderPlugin
@@ -111,6 +108,8 @@ namespace Certify.Core.Management.Challenges.DNS
         private string _poshAcmeScriptPath = @"Scripts\DNS\PoshACME";
         private string _scriptExecutionPolicy = "Unrestricted";
 
+        private string[] ignoredCommandExceptions = { "Get-PAAccount", "Join-Path", "Test-Path" };
+
         private static ProviderParameter _defaultPropagationDelayParam = new ProviderParameter
         {
             Key = "propagationdelay",
@@ -152,7 +151,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.DigitalOcean",
                 Title = "DigitalOcean DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials (Personal Access Token)",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DOcean-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/DOcean-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -170,7 +169,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.GCloud",
                 Title = "Google Cloud DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/GCloud-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/GCloud-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -188,7 +187,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.AkamaiEdgeRC",
                 Title = "Akamai DNS API with .edgerc file (using Posh-ACME)",
                 Description = "Validates via DNS API using .edgerc file",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Akamai-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Akamai-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -207,7 +206,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Akamai",
                 Title = "Akamai DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Akamai-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Akamai-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -228,7 +227,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.AutoDNS",
                 Title = "AutoDNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/AutoDNS-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/AutoDNS-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -249,7 +248,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.ClouDNS",
                 Title = "ClouDNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/ClouDNS-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/ClouDNS-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -264,12 +263,13 @@ namespace Certify.Core.Management.Challenges.DNS
                 IsTestModeSupported = true,
                 IsExperimental = true
             },
-            new ChallengeProviderDefinition
+ 
+             new ChallengeProviderDefinition
             {
                 Id = "DNS01.API.PoshACME.DNSPod",
-                Title = "DNSPod DNS API (using Posh-ACME)",
+                Title = "DNSPod DNS API (Deprecated - use v2 instead)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DNSPod-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/DNSPod-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -285,10 +285,30 @@ namespace Certify.Core.Management.Challenges.DNS
             },
             new ChallengeProviderDefinition
             {
+                Id = "DNS01.API.PoshACME.DNSPod.v2",
+                Title = "DNSPod (v2) DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/DNSPod-Readme.md",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters = new List<ProviderParameter>
+                {
+                    new ProviderParameter { Key = "DNSPodKeyID", Name = "Key ID", IsRequired = true, IsCredential = true },
+                    new ProviderParameter { Key = "DNSPodKeyTokenInsecure", Name = "Key Token", IsRequired = true, IsCredential = true },
+                    new ProviderParameter { Key = "DNSPodApiRoot", Name = "API Root", IsRequired = true, IsCredential = false, Value="https://api.dnspod.com" },
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=DNSPod",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
+            new ChallengeProviderDefinition
+            {
                 Id = "DNS01.API.PoshACME.DNSimple",
                 Title = "DNSimple DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DNSimple-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/DNSimple-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -306,7 +326,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.DomainOffensive",
                 Title = "DomainOffensive DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DomainOffensive-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/DomainOffensive-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -324,7 +344,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.DeSEC",
                 Title = "deSEC DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/DeSEC-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/DeSEC-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -343,7 +363,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Dreamhost",
                 Title = "Dreamhost DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Dreamhost-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Dreamhost-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -361,7 +381,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Dynu",
                 Title = "Dynu DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Dynu-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Dynu-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -380,7 +400,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.EasyDNS",
                 Title = "EasyDNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/EasyDNS-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/EasyDNS-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -401,7 +421,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Gandi",
                 Title = "Gandi DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Gandi-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Gandi-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -419,7 +439,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Hetzner",
                 Title = "Hetzner DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Hetzner-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Hetzner-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -437,7 +457,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.HurricaneElectric",
                 Title = "Hurricane Electric DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/HurricaneElectric-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/HurricaneElectric-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -456,7 +476,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.IBMSoftLayer",
                 Title = "IBM Cloud/SoftLayer DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/IBMSoftLayer-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/IBMSoftLayer-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -475,7 +495,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Infoblox",
                 Title = "Infoblox DDI DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Infoblox-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Infoblox-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -496,7 +516,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Linode",
                 Title = "Linode DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Linode-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Linode-Readme.md",
                 PropagationDelaySeconds = 1020,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -514,7 +534,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Loopia",
                 Title = "Loopia DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Loopia-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Loopia-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -533,7 +553,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.LuaDns",
                 Title = "LuaDns API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/LuaDns-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/LuaDns-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -552,11 +572,11 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.NameCom",
                 Title = "name.com DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/NameCom-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/NameCom-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
-                    new ProviderParameter { Key = "NameComUserName", Name = "APU Username", IsRequired = true, IsCredential = true },
+                    new ProviderParameter { Key = "NameComUserName", Name = "API Username", IsRequired = true, IsCredential = true },
                     new ProviderParameter { Key = "NameComToken", Name = "API Token", IsRequired = true, IsCredential = true },
                     new ProviderParameter { Key = "NameComUseTestEnv", Name = "Use Test Environment", IsRequired = true, Value="false", Type= OptionType.Boolean, IsHidden=true, IsCredential=false },
                     _defaultPropagationDelayParam
@@ -572,7 +592,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.NS1",
                 Title = "NS1 DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/NS1-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/NS1-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -590,7 +610,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.PointDNS",
                 Title = "PointDNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/PointDNS-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/PointDNS-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -609,7 +629,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Rackspace",
                 Title = "Rackspace Cloud DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Rackspace-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Rackspace-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -628,7 +648,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.RFC2136",
                 Title = "RFC2136 with nsupdate as DNS API (using Posh-ACME)",
                 Description = "Validates via nsupdate, using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/RFC2136-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/RFC2136-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -651,7 +671,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Selectel",
                 Title = "Selectel DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Selectel-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Selectel-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -666,19 +686,19 @@ namespace Certify.Core.Management.Challenges.DNS
             },
             new ChallengeProviderDefinition
             {
-                Id = "DNS01.API.PoshACME.UnoEuro",
-                Title = "UnoEuro DNS API (using Posh-ACME)",
+                Id = "DNS01.API.PoshACME.Simply",
+                Title = "Simply.com DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/UnoEuro-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Simply-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
-                    new ProviderParameter { Key = "UEAccount", Name = "Account", IsRequired = true, IsCredential = true },
-                    new ProviderParameter { Key = "UEAPIKey", Name = "API Key", IsRequired = true, IsCredential = true },
+                    new ProviderParameter { Key = "SimplyAccount", Name = "Account", IsRequired = true, IsCredential = true, Description="e.g. S123456"},
+                    new ProviderParameter { Key = "SimplyAPIKeyInsecure", Name = "API Key", IsRequired = true, IsCredential = true },
                     _defaultPropagationDelayParam
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=UnoEuro",
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Simply",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = true,
                 IsExperimental = true
@@ -688,7 +708,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Yandex",
                 Title = "Yandex DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Yandex-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Yandex-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -706,7 +726,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Zonomi",
                 Title = "Zonomi DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/DnsPlugins/Zonomi-Readme.md",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Zonomi-Readme.md",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -715,6 +735,25 @@ namespace Certify.Core.Management.Challenges.DNS
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Zonomi",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
+             new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.RimuHosting",
+                Title = "Rimu Hosting DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://github.com/rmbolger/Posh-ACME/blob/master/Posh-ACME/Plugins/Zonomi-Readme.md",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters = new List<ProviderParameter>
+                {
+                    new ProviderParameter { Key = "ZonomiApiKey", Name = "API Key", IsRequired = true, IsCredential = true },
+                    new ProviderParameter { Key = "ZonomiApiUrl ", Name = "API Url", IsRequired = true, IsCredential = false, Value="https://rimuhosting.com/dns/dyndns.jsp" },
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Zonomi", // this uses the same plugin as Zonomi because they share the same API
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = true,
                 IsExperimental = true
@@ -774,7 +813,7 @@ namespace Certify.Core.Management.Challenges.DNS
 
             var script = config.FirstOrDefault(c => c.StartsWith("Script="))?.Split('=')[1];
 
-            var scriptFile = Path.Combine(_poshAcmeScriptPath, "DnsPlugins", script);
+            var scriptFile = Path.Combine(_poshAcmeScriptPath, "Plugins", script);
 
             var wrapper = $" $PoshACMERoot = \"{_poshAcmeScriptPath}\" \r\n";
             wrapper += File.ReadAllText(Path.Combine(_poshAcmeScriptPath, "Posh-ACME-Wrapper.ps1"));
@@ -818,7 +857,7 @@ namespace Certify.Core.Management.Challenges.DNS
             var args = string.Join("; ", formattedArgumentValues.ToArray());
 
             scriptContent += " $PluginArgs= @{" + args + "} \r\n";
-            scriptContent += $"{action}{script} -RecordName '{recordName}' -TxtValue '{recordValue}' @PluginArgs \r\n";
+            scriptContent += $"{action} -RecordName '{recordName}' -TxtValue '{recordValue}' @PluginArgs \r\n";
 
             return scriptContent;
         }
@@ -829,7 +868,7 @@ namespace Certify.Core.Management.Challenges.DNS
 
             var objParams = _parameters.ToDictionary(p => p.Key, p => p.Value as object);
 
-            return await PowerShellManager.RunScript(_scriptExecutionPolicy, null, null, objParams, scriptContent, null);
+            return await PowerShellManager.RunScript(_scriptExecutionPolicy, parameters: objParams, scriptContent: scriptContent, ignoredCommandExceptions: ignoredCommandExceptions);
         }
 
         public async Task<ActionResult> DeleteRecord(DnsRecord request)
@@ -838,7 +877,7 @@ namespace Certify.Core.Management.Challenges.DNS
 
             var objParams = _parameters.ToDictionary(p => p.Key, p => p.Value as object);
 
-            return await PowerShellManager.RunScript(_scriptExecutionPolicy, null, null, objParams, scriptContent, null);
+            return await PowerShellManager.RunScript(_scriptExecutionPolicy, parameters: objParams, scriptContent: scriptContent, ignoredCommandExceptions: ignoredCommandExceptions);
         }
 
         Task<List<DnsZone>> IDnsProvider.GetZones() => Task.FromResult(new List<DnsZone>());

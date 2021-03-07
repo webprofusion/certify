@@ -1,6 +1,5 @@
-﻿using Certify.Models;
-using System.Collections.Generic;
-using System.Web.Http;
+﻿using System.Web.Http;
+using Certify.Models;
 
 namespace Certify.Service
 {

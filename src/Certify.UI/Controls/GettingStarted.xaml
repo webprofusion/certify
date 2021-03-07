@@ -43,6 +43,36 @@
 
                 </TextBlock>
 
+
+                <StackPanel
+                    x:Name="CommunityEdition"
+                    Margin="0,16,16,8"
+                    Background="{DynamicResource InformationColorBrush}">
+                    <StackPanel.Style>
+                        <Style>
+                            <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsLicenseUpgradeRecommended}" Value="True">
+                                    <Setter Property="UIElement.Visibility" Value="Visible" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsLicenseUpgradeRecommended}" Value="False">
+                                    <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock
+                        Margin="8"
+                        Foreground="{DynamicResource MahApps.Brushes.IdealForeground}"
+                        Style="{StaticResource Subheading}">
+                        License Upgrade Recommended
+                    </TextBlock>
+                    <TextBlock
+                        Margin="8"
+                        Foreground="{DynamicResource MahApps.Brushes.IdealForeground}"
+                        Style="{StaticResource Instructions}"><Run Text="You are using the community edition. Upgrading to a licensed (supported) version is recommended. Visit https://certifytheweb.com/register for more information." /></TextBlock>
+                </StackPanel>
+
                 <StackPanel Orientation="Vertical">
                     <TextBlock
                         Margin="0,16,0,8"

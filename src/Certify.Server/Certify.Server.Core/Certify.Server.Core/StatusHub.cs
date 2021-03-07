@@ -1,9 +1,9 @@
-﻿using Certify.Models;
-using Certify.Providers;
-using Microsoft.AspNetCore.SignalR;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Certify.Models;
+using Certify.Providers;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Certify.Service
 {

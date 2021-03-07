@@ -5,7 +5,6 @@ using System.Windows;
 using System.Windows.Controls;
 using Certify.Locales;
 using Certify.Models;
-using Certify.Shared.Utils;
 using MahApps.Metro.Controls;
 
 namespace Certify.UI.Controls.ManagedCertificate
@@ -102,142 +101,21 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             (App.Current as App).ShowNotification(msg, App.NotificationType.Error, true);
         }
-        private async Task<bool> ValidateAndSave(Models.ManagedCertificate item)
+
+        private async Task<bool> ValidateAndSave()
         {
 
-            if (item.RequestConfig.Challenges == null)
-            {
-                item.RequestConfig.Challenges = new System.Collections.ObjectModel.ObservableCollection<CertRequestChallengeConfig>();
-            }
+            var validationResult = ItemViewModel.Validate(applyAutoConfiguration: true);
 
-            if (item.Id == null && item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
+            if (!validationResult.IsValid)
             {
-                ShowValidationError("Sorry, the tls-sni-01 challenge type is no longer supported for new certificates.");
-                return false;
-            }
-
-            if (string.IsNullOrEmpty(item.Name))
-            {
-                ItemViewModel.IsNameEditMode = true;
-                ShowValidationError(SR.ManagedCertificateSettings_NameRequired);
+                ShowValidationError(validationResult.Message);
                 return false;
             }
             else
             {
-                ItemViewModel.IsNameEditMode = false;
-            }
-
-            // check primary domain is also checked
-            if (ItemViewModel.PrimarySubjectDomain != null && ItemViewModel.SelectedItem.DomainOptions.Any())
-            {
-                var primaryDomain = ItemViewModel.SelectedItem.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain);
-                if (primaryDomain != null && !primaryDomain.IsSelected)
-                {
-                    primaryDomain.IsSelected = true;
-                }
-            }
-
-            // no primary domain selected, try to auto select first checked domain
-            if (ItemViewModel.PrimarySubjectDomain == null && ItemViewModel.SelectedItem.DomainOptions.Any(d => d.IsSelected))
-            {
-                var autoPrimaryDomain = ItemViewModel.SelectedItem.DomainOptions.First(d => d.IsSelected);
-                autoPrimaryDomain.IsPrimaryDomain = true;
-            }
-
-            // a primary subject domain must be set
-            if (ItemViewModel.PrimarySubjectDomain == null)
-            {
-                // if we still can't decide on the primary domain ask user to define it
-                MessageBox.Show(SR.ManagedCertificateSettings_NeedPrimaryDomain, SR.SaveError, MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
-            }
-
-            if (ItemViewModel.SelectedItem.DomainOptions.Any(d => d.IsSelected && d.Type == "dns" && (!d.Domain.Contains(".") || d.Domain.ToLower().EndsWith(".local"))))
-            {
-                // one or more selected domains does not include a label seperator (is an internal host name) or end in .local
-                ShowValidationError("One or more domains specified are internal hostnames. Certificates for internal host names are not supported by the Certificate Authority.");
-                return false;
-            }
-
-            // if title set to the default, use the primary domain
-            if (item.Name == SR.ManagedCertificateSettings_DefaultTitle)
-            {
-                item.Name = ItemViewModel.PrimarySubjectDomain.Domain;
-            }
-
-            // certificates cannot request wildcards unless they also use DNS validation
-            if (
-                item.DomainOptions.Any(d => d.IsSelected && d.Domain.StartsWith("*."))
-                &&
-                !item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
-                )
-            {
-
-                ShowValidationError("Wildcard domains cannot use http-01 validation for domain authorization. Use dns-01 instead.");
-                return false;
-            }
-
-            // TLS-SNI-01 (deprecated)
-            if (item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
-            {
-                ShowValidationError("The tls-sni-01 challenge type is no longer available. You need to switch to either http-01 or dns-01.");
-                return false;
-            }
-
-            if (item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS && c.ChallengeProvider == null))
-            {
-                ShowValidationError("The dns-01 challenge type requires a DNS Update Method selection.");
-                return false;
-            }
-
-            if (item.RequestConfig.Challenges.Count(c => string.IsNullOrEmpty(c.DomainMatch)) > 1)
-            {
-                ShowValidationError("Only one authorization configuration can be used which matches any domain (domain match blank). Specify domain(s) to match or remove additional configuration. ");
-                return false;
-            }
-
-            // validate settings for authorizations non-optional parmaeters
-            foreach (var c in item.RequestConfig.Challenges)
-            {
-                if (c.Parameters != null && c.Parameters.Any())
-                {
-                    //validate parameters
-                    foreach (var p in c.Parameters)
-                    {
-                        if (p.IsRequired && string.IsNullOrEmpty(p.Value))
-                        {
-                            ShowValidationError($"Challenge configuration parameter required: {p.Name}");
-                            return false;
-                        }
-                    }
-                }
-            }
-
-            // check certificate will not exceed 100 name limit
-            var numSelectedDomains = item.DomainOptions.Count(d => d.IsSelected);
-
-            if (numSelectedDomains > 100)
-            {
-                ShowValidationError($"Certificates cannot include more than 100 names. You will need to remove names or split your certificate into 2 or more managed certificates.");
-                return false;
-            }
-
-            if (item.RequestConfig.PerformAutomatedCertBinding)
-            {
-                item.RequestConfig.BindingIPAddress = null;
-                item.RequestConfig.BindingPort = null;
-                item.RequestConfig.BindingUseSNI = null;
-            }
-            else
-            {
-                //always select Use SNI unless it's specifically set to false
-                if (item.RequestConfig.BindingUseSNI == null)
-                {
-                    item.RequestConfig.BindingUseSNI = true;
-                }
-
                 // if user has chosen to bind SNI with a specific IP, warn and confirm save
-                if (item.RequestConfig.BindingUseSNI == true && !string.IsNullOrEmpty(item.RequestConfig.BindingIPAddress) && item.RequestConfig.BindingIPAddress != "*")
+                if (ItemViewModel.SelectedItem.RequestConfig.BindingUseSNI == true && !string.IsNullOrEmpty(ItemViewModel.SelectedItem.RequestConfig.BindingIPAddress) && ItemViewModel.SelectedItem.RequestConfig.BindingIPAddress != "*")
                 {
                     if (MessageBox.Show(SR.ManagedCertificateSettings_InvalidSNI, SR.SaveError, MessageBoxButton.YesNoCancel, MessageBoxImage.Warning) != MessageBoxResult.Yes)
                     {
@@ -245,18 +123,18 @@ namespace Certify.UI.Controls.ManagedCertificate
                         return false;
                     };
                 }
+
+                //creating new managed item
+                return await ItemViewModel.SaveManagedCertificateChanges();
             }
 
-            //creating new managed item
-            return await ItemViewModel.SaveManagedCertificateChanges();
         }
 
         private async void Button_Save(object sender, RoutedEventArgs e)
         {
             if (ItemViewModel.SelectedItem.IsChanged)
             {
-                var item = ItemViewModel.SelectedItem;
-                await ValidateAndSave(item);
+                await ValidateAndSave();
             }
             else
             {
@@ -287,7 +165,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             if (ItemViewModel.SelectedItem != null)
             {
 
-                var savedOK = await ValidateAndSave(ItemViewModel.SelectedItem);
+                var savedOK = await ValidateAndSave();
                 if (!savedOK)
                 {
                     return;
@@ -335,7 +213,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
 
             // validate and save before test
-            if (!await ValidateAndSave(ItemViewModel.SelectedItem))
+            if (!await ValidateAndSave())
             {
                 return;
             }
@@ -350,20 +228,6 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 ItemViewModel.IsTestInProgress = true;
                 Button_TestChallenge.IsEnabled = false;
-
-                try
-                {
-                    ItemViewModel.UpdateManagedCertificateSettings();
-                }
-                catch (Exception exp)
-                {
-                    // usual failure is that primary domain is not set
-                    Button_TestChallenge.IsEnabled = true;
-                    ItemViewModel.IsTestInProgress = false;
-
-                    MessageBox.Show(exp.Message);
-                    return;
-                }
 
                 ItemViewModel.ConfigCheckResults = new System.Collections.ObjectModel.ObservableCollection<StatusMessage> {
                     new StatusMessage{IsOK=true, Message="Testing in progress.."}

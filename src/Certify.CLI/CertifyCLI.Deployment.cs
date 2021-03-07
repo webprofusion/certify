@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Certify.Management;
-using Certify.Models;
 
 namespace Certify.CLI
 {

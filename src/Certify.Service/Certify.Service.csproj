@@ -65,6 +65,6 @@
    <Folder Include="Properties\" />
  </ItemGroup>
  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-   <Exec Command="IF NOT DEFINED _CI_BUILD (&#xD;&#xA;xcopy /i /s /Y $(SolutionDir)..\build\plugins\$(ConfigurationName)\Plugin.*.dll $(TargetDir)\Plugins\&#xD;&#xA;)" />
+   <Exec Command="REM&#xD;&#xA;REM IF NOT DEFINED _CI_BUILD (&#xD;&#xA;REM xcopy /i /s /Y $(SolutionDir)..\build\plugins\$(ConfigurationName)\Plugin.*.dll $(TargetDir)\Plugins\&#xD;&#xA;REM )" />
  </Target> 
 </Project>

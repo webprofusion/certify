@@ -68,11 +68,11 @@ namespace Certify.Models.Config
         /// Default title for a new task of this type
         /// </summary>
         public string DefaultTitle { get; set; }
-        
+
         /// <summary>
         /// Flags for allowed usage types
         /// </summary>
-        public DeploymentProviderUsage UsageType {get;set;} = DeploymentProviderUsage.Any;
+        public DeploymentProviderUsage UsageType { get; set; } = DeploymentProviderUsage.Any;
 
         /// <summary>
         /// Flags for supported execution context (local, local as user, windows network, remote ssh)

@@ -37,7 +37,7 @@ namespace Certify.UI.ViewModel
             if (e is System.ComponentModel.PropertyChangedEventArgs)
             {
                 var args = e as System.ComponentModel.PropertyChangedEventArgs;
-                if (args.PropertyName== nameof(SelectedItem.ChallengeType))
+                if (args.PropertyName == nameof(SelectedItem.ChallengeType))
                 {
                     if (SelectedItem.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
                     {
@@ -49,7 +49,7 @@ namespace Certify.UI.ViewModel
                     }
                 }
             }
-            
+
         }
 
         public bool HasMultipleChallengeConfigurations

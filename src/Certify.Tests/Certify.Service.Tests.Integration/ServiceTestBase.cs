@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Certify.SharedUtils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -26,10 +19,10 @@ namespace Certify.Service.Tests.Integration
             {
                 _svc = new Certify.Service.OwinService();
                 _svc.Start();
-                
+
                 await Task.Delay(2000);
 
-                await _client.GetAppVersion();            
+                await _client.GetAppVersion();
             }
         }
 

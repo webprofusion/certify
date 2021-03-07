@@ -104,6 +104,8 @@ namespace Certify.UI
                 new AccountDetails{ ID="125", CertificateAuthorityId=StandardCertAuthorities.BUYPASS, IsStagingAccount=true, Email="test@example.com", Title = "Title"},
                 new AccountDetails{ ID="126", CertificateAuthorityId=StandardCertAuthorities.BUYPASS, IsStagingAccount=false, Email="test@example.com", Title = "Title"}
             };
+
+            StoredCredentials = new ObservableCollection<Models.Config.StoredCredential>();
         }
 
         private string MockDataStore;

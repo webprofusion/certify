@@ -2,17 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Pkcs;
-using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Utilities.IO.Pem;
-using Org.BouncyCastle.Security;
-using Org.BouncyCastle.Crypto.Parameters;
 
 namespace Certify.Shared.Core.Utils.PKI
 {

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Certify.Config;
 using Certify.Config.Migration;
 using Certify.Models;
 using Certify.Models.Config;

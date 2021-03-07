@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Certify.Shared;
+﻿using Certify.Shared;
 
 namespace Certify.Providers
 {

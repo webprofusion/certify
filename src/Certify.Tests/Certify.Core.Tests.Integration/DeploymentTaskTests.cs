@@ -2,16 +2,13 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using Certify.Config;
 using Certify.Management;
-using Certify.Management.Servers;
 using Certify.Models;
-using Certify.Models.Providers;
+using Certify.Models.Config;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Serilog;
-using Certify.Models.Config;
-using Certify.Config;
 
 namespace Certify.Core.Tests
 {

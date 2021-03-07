@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
-using Certify.Core.Management;
 using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -58,7 +55,7 @@ namespace Certify.Core.Tests.Unit
                             },
                               new CertRequestChallengeConfig{
                                 ChallengeType="http-01",
-                                DomainMatch= "example.com;www.exaomple.com;*.exaomple1.com",
+                                DomainMatch= "example.com;www.exaomple.com, *.exaomple1.com ", ///should allow edither semicolon or comma delimiters, spaces trimmed
                                 ChallengeCredentialKey="config4"
                             },
                         }),

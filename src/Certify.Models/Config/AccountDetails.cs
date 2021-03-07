@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Certify.Models
+﻿namespace Certify.Models
 {
     public class AccountDetails
     {

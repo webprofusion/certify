@@ -41,7 +41,7 @@ namespace Certify.Service
             config.Formatters.JsonFormatter.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
 
             appBuilder.UseCors(Microsoft.Owin.Cors.CorsOptions.AllowAll);
-            
+
             appBuilder.MapSignalR("/api/status", new HubConfiguration());
             appBuilder.UseWebApi(config);
 
@@ -58,7 +58,7 @@ namespace Certify.Service
             // attached handlers for SignalR hub updates
             currentCertifyManager.SetStatusReporting(new StatusHubReporting());
 
-           
+
             // hourly jobs timer (renewal etc)
             _timer = new System.Timers.Timer(60 * 60 * 1000); // every 60 minutes
             _timer.Elapsed += _timer_Elapsed;

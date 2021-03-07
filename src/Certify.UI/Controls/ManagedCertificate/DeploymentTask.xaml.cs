@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Certify.Config;
-using Certify.Models;
 using Certify.Models.Config;
 
 namespace Certify.UI.Controls.ManagedCertificate

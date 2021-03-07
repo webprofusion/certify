@@ -95,6 +95,7 @@ namespace Certify.Providers.ACME.Certes
         private Uri _serviceUri = null;
 
         private readonly string _settingsFolder = null;
+        private readonly string _settingsBaseFolder = null;
 
         private CertesSettings _settings = null;
         private Dictionary<string, IOrderContext> _currentOrders;
@@ -112,9 +113,10 @@ namespace Certify.Providers.ACME.Certes
 
         private ACMECompatibilityMode _compatibilityMode = ACMECompatibilityMode.Standard;
 
-        public CertesACMEProvider(string acmeBaseUri, string settingsPath, string userAgentName, bool allowInvalidTls = false)
+        public CertesACMEProvider(string acmeBaseUri, string settingsBasePath, string settingsPath, string userAgentName, bool allowInvalidTls = false)
         {
             _settingsFolder = settingsPath;
+            _settingsBaseFolder = settingsBasePath;
 
             var certesAssembly = typeof(AcmeContext).Assembly.GetName();
 
@@ -507,7 +509,7 @@ namespace Certify.Providers.ACME.Certes
             if (!string.IsNullOrEmpty(config.PrimaryDomain))
             {
                 // order all of the distinct domains in the config (primary + SAN).
-                _idnMapping.GetAscii(config.PrimaryDomain);
+                domainOrders.Add(_idnMapping.GetAscii(config.PrimaryDomain));
             }
 
             if (config.SubjectAlternativeNames != null)
@@ -529,9 +531,12 @@ namespace Certify.Providers.ACME.Certes
                 certificateIdentifiers.Add(new Identifier { Type = IdentifierType.Dns, Value = d });
             }
 
-            foreach (var i in config.SubjectIPAddresses)
+            if (config.SubjectIPAddresses?.Any() == true)
             {
-                certificateIdentifiers.Add(new Identifier { Type = IdentifierType.Ip, Value = i });
+                foreach (var i in config.SubjectIPAddresses)
+                {
+                    certificateIdentifiers.Add(new Identifier { Type = IdentifierType.Ip, Value = i });
+                }
             }
 
             try
@@ -544,6 +549,19 @@ namespace Certify.Providers.ACME.Certes
 
                 try
                 {
+                    // first check we can access the ACME API
+                    try
+                    {
+                        _ = await _acme.GetDirectory(throwOnError: true);
+                    }
+                    catch (AcmeException exp)
+                    {
+                        var msg = exp.Message;
+                        log.Error(exp.Message);
+                        return new PendingOrder(msg);
+                    }
+
+                    // attempt to start our certificate order
                     while (!orderCreated && remainingAttempts > 0)
                     {
                         try
@@ -705,17 +723,33 @@ namespace Certify.Providers.ACME.Certes
                     var orderAuthorizations = await order.Authorizations();
 
                     // get the challenges for each authorization
-                    foreach (var authz in orderAuthorizations)
+                    foreach (var authContext in orderAuthorizations)
                     {
-                        log.Debug($"Fetching Authz Challenges.");
 
-                        var allChallenges = await authz.Challenges();
-                        var res = await authz.Resource();
-                        var authzDomain = res.Identifier.Value;
+                        string authzDomain = null;
+                        IdentifierType authIdentifierType = IdentifierType.Dns;
 
-                        if (res.Wildcard == true)
+                        log.Debug($"Fetching Authz Challenges: {authContext.Location}");
+
+                        IList<Challenge> allIdentifierChallenges;
+
+                        try
                         {
-                            authzDomain = "*." + authzDomain;
+                            var res = await authContext.Resource();
+                            authzDomain = res?.Identifier.Value;
+
+                            if (res.Wildcard == true)
+                            {
+                                authzDomain = "*." + authzDomain;
+                            }
+
+                            authIdentifierType = res.Identifier.Type;
+                            allIdentifierChallenges = res.Challenges;
+                        }
+                        catch
+                        {
+                            log.Error("Failed to fetch auth challenge details from ACME API.");
+                            break;
                         }
 
                         var challenges = new List<AuthorizationChallengeItem>();
@@ -747,7 +781,16 @@ namespace Certify.Providers.ACME.Certes
                         // add http challenge (if any)
                         if (includeHttp01)
                         {
-                            var httpChallenge = await authz.Http();
+                            IChallengeContext httpChallenge = null;
+                            try
+                            {
+                                httpChallenge = await authContext.Http();
+                            }
+                            catch (Exception)
+                            {
+                                log.Information("Could not fetch an http-01 challenge for this identifier: " + authzDomain);
+                            }
+
                             if (httpChallenge != null)
                             {
                                 try
@@ -786,7 +829,16 @@ namespace Certify.Providers.ACME.Certes
                         // add dns challenge (if any)
                         if (includeDns01)
                         {
-                            var dnsChallenge = await authz.Dns();
+                            IChallengeContext dnsChallenge = null;
+                            try
+                            {
+                                dnsChallenge = await authContext.Dns();
+                            }
+                            catch (Exception)
+                            {
+                                log.Information("Could not fetch a dns-01 challenge for this identifier: " + authzDomain);
+                            }
+
                             if (dnsChallenge != null)
                             {
                                 var dnsChallengeStatus = await dnsChallenge.Resource();
@@ -820,10 +872,10 @@ namespace Certify.Providers.ACME.Certes
                              Identifier = new IdentifierItem
                              {
                                  Dns = authzDomain,
-                                 ItemType = res.Identifier.Type == IdentifierType.Ip ? "ip" : "dns",
+                                 ItemType = authIdentifierType == IdentifierType.Ip ? "ip" : "dns",
                                  IsAuthorizationPending = !challenges.Any(c => c.IsValidated) //auth is pending if we have no challenges already validated
                              },
-                             AuthorizationContext = authz,
+                             AuthorizationContext = authContext,
                              IsValidated = challenges.Any(c => c.IsValidated),
                              OrderUri = orderUri
                          });
@@ -915,7 +967,15 @@ namespace Certify.Providers.ACME.Certes
                         var waitMs = 1000 + (((maxAttempts + 1) - attempts) * 500);
                         await Task.Delay(waitMs);
 
-                        result = await challenge.Resource();
+                        try
+                        {
+                            result = await challenge.Resource();
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            // failed to fetch resource
+                            log?.Warning("Failed to check challenge status because the request to the CAs ACME API timed out. API is unavailable or inaccessible.");
+                        }
 
                         attempts--;
                     }
@@ -1161,9 +1221,11 @@ namespace Certify.Providers.ACME.Certes
                     }
 
                     certificateChain = await orderContext.Download(preferredChain);
+
                 }
 
                 var cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(certificateChain.Certificate.ToDer());
+
                 certExpiration = cert.NotAfter;
                 certFriendlyName += $"{ cert.GetEffectiveDateString()} to {cert.GetExpirationDateString()}";
             }
@@ -1174,17 +1236,25 @@ namespace Certify.Providers.ACME.Certes
 
                 return new ProcessStepResult { ErrorMessage = msg, IsSuccess = false, Result = exp.Error };
             }
+            catch (TaskCanceledException exp)
+            {
+                var msg = "Failed to complete certificate request because the request to the CAs ACME API timed out. API may be temporarily unavailable or inaccessible.";
+                log.Error(msg);
+                return new ProcessStepResult { ErrorMessage = msg, IsSuccess = false, Result = exp };
+            }
 
             // file will be named as {expiration yyyyMMdd}_{guid} e.g. 20290301_4fd1b2ea-7b6e-4dca-b5d9-e0e7254e568b
             var certId = certExpiration.Value.ToString("yyyyMMdd") + "_" + Guid.NewGuid().ToString().Substring(0, 8);
 
             var domainAsPath = config.PrimaryDomain.Replace("*", "_");
 
-            // var pemPath = ExportFullCertPEM(null, certificateChain, certId, domainAsPath);
-
             var pfxPath = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath);
 
-            return new ProcessStepResult { IsSuccess = true, Result = pfxPath };
+            return new ProcessStepResult
+            {
+                IsSuccess = true,
+                Result = pfxPath
+            };
         }
 
         private byte[] GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName storeName)
@@ -1241,6 +1311,88 @@ namespace Certify.Providers.ACME.Certes
             }
         }
 
+        private byte[] GetCustomCaCertsFromFileStore()
+        {
+            try
+            {
+                var customCertPemPath = Path.Combine(_settingsBaseFolder, "custom_ca_certs", "pem");
+                var customCertDerPath = Path.Combine(_settingsBaseFolder, "custom_ca_certs", "der");
+
+                var x509CertificateParser = new X509CertificateParser();
+
+                var discoveredCerts = new List<X509Certificate>();
+
+                if (System.IO.Directory.Exists(customCertPemPath))
+                {
+
+                    var files = System.IO.Directory.GetFiles(customCertPemPath);
+                    foreach (var f in files)
+                    {
+                        try
+                        {
+
+                            var cert = x509CertificateParser.ReadCertificate(File.ReadAllBytes(f));
+                            discoveredCerts.Add(cert);
+                        }
+                        catch
+                        {
+                            // failed to parse this file as a cert
+                            _log?.Warning("Invalid Custom CA Cert file found in " + customCertPemPath);
+                        }
+                    }
+                }
+
+                if (System.IO.Directory.Exists(customCertDerPath))
+                {
+
+                    var files = System.IO.Directory.GetFiles(customCertDerPath);
+                    foreach (var f in files)
+                    {
+                        try
+                        {
+
+                            var cert = x509CertificateParser.ReadCertificate(File.ReadAllBytes(f));
+                            discoveredCerts.Add(cert);
+                        }
+                        catch
+                        {
+                            // failed to parse this file as a cert
+                            _log?.Warning("Invalid Custom CA Cert file found in " + customCertDerPath);
+                        }
+                    }
+                }
+
+                // attempt to parse and add each cert
+                using (var writer = new StringWriter())
+                {
+                    var pemWriter = new PemWriter(writer);
+
+                    var certsAdded = false;
+                    foreach (var c in discoveredCerts)
+                    {
+                        pemWriter.WriteObject(c);
+                        certsAdded = true;
+                    }
+
+                    writer.Flush();
+
+                    if (certsAdded)
+                    {
+                        return System.Text.Encoding.ASCII.GetBytes(writer.ToString());
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                _log?.Error("GetcustomCACerts: Failed to read custom ca certs. " + exp);
+                return null;
+            }
+        }
+
         /// <summary>
         /// Compile cache of root and intermediate CAs which may be in use to sign certs
         /// </summary>
@@ -1261,6 +1413,14 @@ namespace Certify.Providers.ACME.Certes
                 {
                     _issuerCertCache.Add(intermediates);
                 }
+
+                // custom CA roots
+                var customCARoots = GetCustomCaCertsFromFileStore();
+                if (customCARoots != null)
+                {
+                    _issuerCertCache.Add(customCARoots);
+                }
+
             }
             catch (Exception)
             {
@@ -1280,20 +1440,22 @@ namespace Certify.Providers.ACME.Certes
 
             var pfxFile = certId + ".pfx";
             var pfxPath = Path.Combine(storePath, pfxFile);
-
-            var pfx = certificateChain.ToPfx(csrKey);
-
-            if (_issuerCertCache.Any())
-            {
-                foreach (var c in _issuerCertCache)
-                {
-                    pfx.AddIssuers(c);
-                }
-            }
+            var failedBuildMsg = "Failed to build certificate as PFX. Check system date/time is correct and that the issuing CA is a trusted root CA on this machine (or in custom_ca_certs). :";
 
             byte[] pfxBytes;
             try
             {
+                var pfx = certificateChain.ToPfx(csrKey);
+
+                if (_issuerCertCache.Any())
+                {
+                    foreach (var c in _issuerCertCache)
+                    {
+                        pfx.AddIssuers(c);
+                    }
+                }
+
+                // attempt to build pfx cert chain issing known issuers and known roots, if this fails it throws an AcmeException
                 pfxBytes = pfx.Build(certFriendlyName, pwd);
                 System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
             }
@@ -1302,6 +1464,16 @@ namespace Certify.Providers.ACME.Certes
                 // if build failed, try refreshing issuer certs
                 RefreshIssuerCertCache();
 
+                var pfx = certificateChain.ToPfx(csrKey);
+
+                if (_issuerCertCache.Any())
+                {
+                    foreach (var c in _issuerCertCache)
+                    {
+                        pfx.AddIssuers(c);
+                    }
+                }
+
                 try
                 {
                     pfxBytes = pfx.Build(certFriendlyName, pwd);
@@ -1309,7 +1481,7 @@ namespace Certify.Providers.ACME.Certes
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception("Failed to build certificate as PFX. Check system date/time is correct and that the issuing CA is a trusted root CA on this machine. :" + ex.Message);
+                    throw new Exception(failedBuildMsg + ex.Message);
                 }
             }
 

@@ -317,6 +317,11 @@ namespace Certify.Models
                         var configsPerDomain = new Dictionary<string, CertRequestChallengeConfig>();
                         foreach (var c in RequestConfig.Challenges.Where(config => !string.IsNullOrEmpty(config.DomainMatch)))
                         {
+                            if (c.DomainMatch != null)
+                            {
+                                c.DomainMatch = c.DomainMatch.Replace(",", ";"); // if user has entered comma seperators instead of semicolons, convert now.
+                            }
+
                             if (!string.IsNullOrEmpty(c.DomainMatch) && !c.DomainMatch.Contains(";"))
                             {
                                 var domainMatchKey = c.DomainMatch.Trim();

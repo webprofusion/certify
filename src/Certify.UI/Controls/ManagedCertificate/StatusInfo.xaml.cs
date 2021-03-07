@@ -3,7 +3,6 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Certify.Locales;
 
 namespace Certify.UI.Controls.ManagedCertificate
 {
@@ -59,7 +58,8 @@ namespace Certify.UI.Controls.ManagedCertificate
                     {
                         // hide log option if from external source
                         this.OpenLogFile.Visibility = Visibility.Hidden;
-                    } else
+                    }
+                    else
                     {
                         this.OpenLogFile.Visibility = Visibility.Visible;
                     }

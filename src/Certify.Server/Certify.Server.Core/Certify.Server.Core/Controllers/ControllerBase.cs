@@ -1,36 +1,35 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using System;
+﻿using System;
 using System.Diagnostics;
-using System.Security.Principal;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 
 namespace Certify.Service.Controllers
 {
     public class CustomAuthCheckAttribute : AuthorizeAttribute
     {
-       /* protected override bool IsAuthorized(HttpActionContext actionContext)
-        {
-#if DEBUG_NO_AUTH
-    return true;
-#endif
-            var user = actionContext.RequestContext.Principal as System.Security.Principal.WindowsPrincipal;
-            if (user.IsInRole(WindowsBuiltInRole.Administrator))
-            {
-                return true;
-            }
+        /* protected override bool IsAuthorized(HttpActionContext actionContext)
+         {
+ #if DEBUG_NO_AUTH
+     return true;
+ #endif
+             var user = actionContext.RequestContext.Principal as System.Security.Principal.WindowsPrincipal;
+             if (user.IsInRole(WindowsBuiltInRole.Administrator))
+             {
+                 return true;
+             }
 
-            if (user.IsInRole(WindowsBuiltInRole.PowerUser))
-            {
-                return true;
-            }
+             if (user.IsInRole(WindowsBuiltInRole.PowerUser))
+             {
+                 return true;
+             }
 
-            return false;
-        }*/
+             return false;
+         }*/
     }
 
     [ApiController]
- //   [CustomAuthCheck]
+    //   [CustomAuthCheck]
     public class ControllerBase : Controller
     {
         internal void DebugLog(string msg = null,

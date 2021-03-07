@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace Certify.SharedUtils
 {
-    public class ServiceConfigManager: IServiceConfigProvider
+    public class ServiceConfigManager : IServiceConfigProvider
     {
         private static string GetAppDataFolder(string subFolder = null)
         {

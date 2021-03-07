@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Globalization;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Input;
-using System.Windows.Media;
 using Certify.Models;
 
 namespace Certify.UI.Controls

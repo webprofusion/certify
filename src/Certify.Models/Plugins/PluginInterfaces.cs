@@ -44,7 +44,7 @@ namespace Certify.Models.Plugins
         Task<bool> ReportUserActionRequiredAsync(ItemActionRequired actionRequired);
     }
 
-    public interface IProviderPlugin<TProviderInterface,TProviderDefinition>
+    public interface IProviderPlugin<TProviderInterface, TProviderDefinition>
     {
         List<TProviderDefinition> GetProviders(Type pluginType);
         TProviderInterface GetProvider(Type pluginType, string id);
@@ -53,21 +53,21 @@ namespace Certify.Models.Plugins
     /// <summary>
     /// Plugins which implement one or more deployment tasks implement this interface for dynamic plugin loading
     /// </summary>
-    public interface IDeploymentTaskProviderPlugin: IProviderPlugin<IDeploymentTaskProvider, DeploymentProviderDefinition>
+    public interface IDeploymentTaskProviderPlugin : IProviderPlugin<IDeploymentTaskProvider, DeploymentProviderDefinition>
     {
     }
 
     /// <summary>
     /// Plugins which implement certificate managers implement this interface for dynamic login loading
     /// </summary>
-    public interface ICertificateManagerProviderPlugin: IProviderPlugin<ICertificateManager, ProviderDefinition>
+    public interface ICertificateManagerProviderPlugin : IProviderPlugin<ICertificateManager, ProviderDefinition>
     {
     }
 
     /// <summary>
     /// Plugins which implement one or more DNS providers implement this interface for dynamic plugin loading
     /// </summary>
-    public interface IDnsProviderProviderPlugin: IProviderPlugin<IDnsProvider, ChallengeProviderDefinition>
-    { 
+    public interface IDnsProviderProviderPlugin : IProviderPlugin<IDnsProvider, ChallengeProviderDefinition>
+    {
     }
 }

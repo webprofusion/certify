@@ -28,7 +28,7 @@ namespace Certify.UI.Controls
 
             _appViewModel.PropertyChanged -= AppViewModel_PropertyChanged;
             _appViewModel.PropertyChanged += AppViewModel_PropertyChanged;
-    
+
         }
 
         private void AppViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -153,15 +153,15 @@ namespace Certify.UI.Controls
 
         private void SelectAndFocus(object obj)
         {
-            
+
             var managedCert = obj as Models.ManagedCertificate;
 
             lvManagedCertificates.Items.Refresh();
 
             if (lvManagedCertificates.Items.Count > 0 && lvManagedCertificates.Items.Contains(managedCert))
             {
-               
-               // lvManagedCertificates.UpdateLayout(); // ensure containers exist
+
+                // lvManagedCertificates.UpdateLayout(); // ensure containers exist
 
                 if (lvManagedCertificates.ItemContainerGenerator.ContainerFromItem(managedCert) is ListViewItem item)
                 {
@@ -172,7 +172,7 @@ namespace Certify.UI.Controls
 
             this.Dispatcher.Invoke(new Action(() => { _appViewModel.SelectedItem = managedCert; }));
 
-          
+
         }
 
         private async void ListViewItem_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -319,7 +319,7 @@ namespace Certify.UI.Controls
         {
             if (_appViewModel.IsFeatureEnabled(Models.FeatureFlags.SERVER_CONNECTIONS))
             {
-              _appViewModel.ChooseConnection(this);
+                _appViewModel.ChooseConnection(this);
             }
         }
     }

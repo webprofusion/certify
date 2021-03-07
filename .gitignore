@@ -210,3 +210,6 @@ src/lib/
 *.pyc
 
 Directory.Build.props
+
+src/Certify.UI/Plugins/*.dll
+

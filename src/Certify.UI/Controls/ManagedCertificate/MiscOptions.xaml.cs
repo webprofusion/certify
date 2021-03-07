@@ -105,7 +105,20 @@ namespace Certify.UI.Controls.ManagedCertificate
                 if (MessageBox.Show("Re-fetch certificate from Certificate Authority?", "Confirm Re-Fetch?", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
                 {
 
-                    await ItemViewModel.RefetchCertificate(ItemViewModel.SelectedItem.Id);
+                    try
+                    {
+                        Cursor = System.Windows.Input.Cursors.Wait;
+                        await ItemViewModel.RefetchCertificate(ItemViewModel.SelectedItem.Id);
+                        MessageBox.Show("Latest cert re-fetched from Certificate Authority.");
+                    }
+                    catch (Client.ServiceCommsException exp)
+                    {
+                        MessageBox.Show(exp.Message);
+                    }
+                    finally
+                    {
+                        Cursor = System.Windows.Input.Cursors.Arrow;
+                    }
                 }
             }
             else
@@ -194,9 +207,9 @@ namespace Certify.UI.Controls.ManagedCertificate
                         throw new ArgumentException("Unsupported key format");
                     }
                 }
-                catch
+                catch (Exception exp)
                 {
-                    MessageBox.Show("The private key could not be processed. Key should be unencrypted and in PEM format");
+                    MessageBox.Show("The private key could not be processed. Key should be unencrypted and in PEM format [" + exp.ToString() + "]");
                 }
 
             }
@@ -258,7 +271,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
 
             this.RefreshPfxCredentials();
-            
+
         }
     }
 }

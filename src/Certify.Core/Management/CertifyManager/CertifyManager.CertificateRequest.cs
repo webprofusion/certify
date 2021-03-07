@@ -9,7 +9,6 @@ using Certify.Locales;
 using Certify.Models;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
-using Certify.Shared.Utils;
 
 namespace Certify.Management
 {
@@ -70,7 +69,7 @@ namespace Certify.Management
                 // auto renew enabled sites in order of oldest date renewed (or earliest attempted), items not yet attempted are first.
                 // if mode is just RenewalDue then we also include items that are not marked auto renew (the user may be controlling when to perform renewal).
 
-                managedCertificates = managedCertificates.Where(s => s.IncludeInAutoRenew == true || settings.Mode== RenewalMode.RenewalsDue)
+                managedCertificates = managedCertificates.Where(s => s.IncludeInAutoRenew == true || settings.Mode == RenewalMode.RenewalsDue)
                              .OrderBy(s => s.DateRenewed ?? s.DateLastRenewalAttempt ?? DateTime.MinValue);
             }
             else if (settings.Mode == RenewalMode.NewItems)
@@ -125,7 +124,7 @@ namespace Certify.Management
                     }
                 }
 
-                if (settings.Mode== RenewalMode.All)
+                if (settings.Mode == RenewalMode.All)
                 {
                     // on all mode, everything gets an attempted renewal
                     isRenewalRequired = true;
@@ -634,6 +633,19 @@ namespace Certify.Management
                 // sites or creating DNS TXT records, depending on the challenge types)
 
                 await PerformAutomatedChallengeResponses(log, managedCertificate, authorizations, result, config, progress);
+
+                if (authorizations.Any(a => a.IsFailure == true))
+                {
+                    result.IsSuccess = false;
+                    result.Abort = true;
+                    result.Message = $"{authorizations.FirstOrDefault(a => a.IsFailure)?.AuthorizationError}";
+
+                    ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result });
+                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
+                    LogMessage(managedCertificate.Id, result.Message, LogItemType.CertficateRequestFailed);
+
+                    return result;
+                }
 
                 // if any challenge responses require a manual step, pause our request here and wait
                 // for user intervention
@@ -1159,12 +1171,12 @@ namespace Certify.Management
 
                 if (authorization?.Identifier != null)
                 {
-                    LogMessage(managedCertificate.Id, $"Attempting Domain Validation: {identifier.Dns}",
+                    LogMessage(managedCertificate.Id, $"Attempting Domain Validation: {identifier.Name}",
                         LogItemType.CertificateRequestStarted);
 
                     ReportProgress(progress,
                         new RequestProgressState(RequestState.Running,
-                            string.Format(Certify.Locales.CoreSR.CertifyManager_RegisteringAndValidatingX0, identifier.Dns),
+                            string.Format(Certify.Locales.CoreSR.CertifyManager_RegisteringAndValidatingX0, identifier.Name),
                             managedCertificate)
                     );
 
@@ -1175,7 +1187,7 @@ namespace Certify.Management
                         ReportProgress(progress,
                             new RequestProgressState(
                                 RequestState.Running,
-                                $"Performing automated challenge responses ({identifier.Dns})",
+                                $"Performing automated challenge responses ({identifier.Name})",
                                 managedCertificate
                             )
                         );
@@ -1237,7 +1249,7 @@ namespace Certify.Management
                             {
                                 case SupportedChallengeTypes.CHALLENGE_TYPE_HTTP:
                                     result.Message =
-                                        string.Format(CoreSR.CertifyManager_AutomateConfigurationCheckFailed_HTTP, identifier.Dns);
+                                        string.Format(CoreSR.CertifyManager_AutomateConfigurationCheckFailed_HTTP, identifier.Name);
                                     break;
 
                                 case SupportedChallengeTypes.CHALLENGE_TYPE_SNI:
@@ -1259,13 +1271,13 @@ namespace Certify.Management
                         {
                             ReportProgress(progress,
                                 new RequestProgressState(RequestState.Running,
-                                    string.Format(CoreSR.CertifyManager_ReqestValidationFromCertificateAuthority, identifier.Dns),
+                                    string.Format(CoreSR.CertifyManager_RequestValidationFromCertificateAuthority, identifier.Name),
                                     managedCertificate));
                         }
                     }
                     else
                     {
-                        log.Information($"Authorization already valid for {identifier.Dns}");
+                        log.Information($"Authorization already valid for {identifier.Name}");
                     }
                 }
                 else
@@ -1273,8 +1285,8 @@ namespace Certify.Management
                     // could not begin authorization
 
                     LogMessage(managedCertificate.Id,
-                        $"Could not begin authorization for identifier with the Certificate Authority: [{identifier.Dns}] {(authorization?.AuthorizationError ?? "Could not register identifier")} ");
-                    failureSummaryMessage = $"[{identifier.Dns}] : {authorization?.AuthorizationError}";
+                        $"Could not begin authorization for identifier with the Certificate Authority: [{identifier.Name}] {(authorization?.AuthorizationError ?? "Could not register identifier")} ");
+                    failureSummaryMessage = $"[{identifier.Name}] : {authorization?.AuthorizationError}";
                 }
             }
         }

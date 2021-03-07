@@ -108,7 +108,7 @@ namespace Certify.UI.Utils
         {
             if (parameter != null)
             {
-               var featureFlag = parameter.ToString();
+                var featureFlag = parameter.ToString();
                 if (UI.ViewModel.AppViewModel.Current.IsFeatureEnabled(featureFlag))
                 {
                     return WhenEnabled;

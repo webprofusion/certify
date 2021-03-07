@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 
 using Certify.Config.Migration;
 using Certify.Models;
-using Certify.UI.ViewModel;
 using Microsoft.Win32;
 using Newtonsoft.Json;
 

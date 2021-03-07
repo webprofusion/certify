@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Linq;
-using System.Windows;
 using System.Windows.Data;
 using Certify.Config;
-using Certify.Locales;
 
 namespace Certify.UI.Utils
 {
@@ -15,7 +13,7 @@ namespace Certify.UI.Utils
             {
                 return null;
             }
-            
+
             return DeploymentTaskTypes.TriggerTypes.FirstOrDefault(t => t.Key == (TaskTriggerType)value).Value;
         }
 
@@ -41,6 +39,6 @@ namespace Certify.UI.Utils
         {
             return null;
         }
-   
+
     }
 }

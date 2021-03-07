@@ -38,6 +38,8 @@ namespace Certify.Models
         public bool ConfigCheckedOK { get; set; } = false;
 
         public string ChallengeResultMsg { get; set; }
+
+        public bool IsFailure { get; set; } = false;
     }
 
     public class SimpleAuthorizationChallengeItem

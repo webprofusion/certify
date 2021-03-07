@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Providers;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.Web.Administration;
 using Microsoft.Win32;
 
@@ -206,7 +205,17 @@ namespace Certify.Management.Servers
                              {
                                  if (site.Bindings?.Any(ftp => ftp.Protocol == "ftp") == true)
                                  {
-                                     //site is ftp site, have to check for state differently
+                                     try
+                                     {
+                                         if (site.State == ObjectState.Started)
+                                         {
+                                             // site has one or more ftp bindings but overall IIS site state is started
+                                             return true;
+                                         }
+                                     }
+                                     catch { }
+
+                                     //site is ftp site but may not be started, have to check for state differently
                                      var ftpState = Convert.ToInt32(
                                          site.GetChildElement("ftpServer")
                                          .GetAttributeValue("state")
@@ -214,6 +223,8 @@ namespace Certify.Management.Servers
 
                                      return ftpState == (int)ObjectState.Started;
                                  }
+
+
                                  else
                                  {
                                      return site.State == ObjectState.Started;

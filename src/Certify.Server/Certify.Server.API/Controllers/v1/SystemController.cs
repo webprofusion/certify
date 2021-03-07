@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Certify.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -27,7 +24,7 @@ namespace Certify.Server.API.Controllers
         [Route("version")]
         public async Task<IActionResult> Get()
         {
-            var versionInfo= await _client.GetAppVersion();
+            var versionInfo = await _client.GetAppVersion();
 
             return new OkObjectResult(versionInfo);
         }

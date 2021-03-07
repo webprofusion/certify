@@ -1,12 +1,12 @@
 ﻿
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
-using Certify.Management;
-using System.Security.Cryptography.X509Certificates;
-using System;
-using System.Linq;
 
 namespace Certify.Providers.DeploymentTasks.Core
 {
@@ -87,7 +87,7 @@ namespace Certify.Providers.DeploymentTasks.Core
                         isRetry: false,
                         enableRetryBehaviour: _enableCertDoubleImportBehaviour,
                         storeName: certStoreName,
-                        customFriendlyName: friendlyName, 
+                        customFriendlyName: friendlyName,
                         certPwd
                        );
 
