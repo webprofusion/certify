@@ -57,11 +57,12 @@ namespace Certify.Providers.DNS.IONOS
             try
             {
                 var zones = await GetZones();
+                result.Message = "Authentication successful!";
                 result.IsSuccess = zones.Any();
             }
             catch (Exception e)
             {
-                _log.Error(e, "");
+                result.Message = "Authentication failed!";
                 result.IsSuccess = false;
             }
             return result;
@@ -187,7 +188,7 @@ namespace Certify.Providers.DNS.IONOS
             var result = await _client.SendAsync(CreateRequest(HttpMethod.Get, baseUri + "zones"));
             if (!result.IsSuccessStatusCode)
             {
-                return Array.Empty<DnsZone>().ToList();
+                throw new Exception("DNS Zones could not be fetched due to a http exception.");
             }
 
             var resultJson = await result.Content.ReadAsStringAsync();
