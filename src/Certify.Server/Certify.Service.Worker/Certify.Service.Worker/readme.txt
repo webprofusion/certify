@@ -2,7 +2,9 @@
 
 dotnet ./Certify.Service.Worker.dll
 
-API will listen on http://localhost:500 and https://localhost:5001
+API will listen on http://localhost:32768 and https://localhost:44360
+HTTPS certificate setup is configured in Program.cs
+Initial setup should use invalid pfx for https, with valid FPX to be acquired from own API. API status should flag https cert status for UI to report.
 
 Linux Install
 ------------

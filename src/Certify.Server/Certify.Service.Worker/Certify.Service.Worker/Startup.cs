@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 
 namespace Certify.Server.Worker
 {
@@ -6,7 +6,7 @@ namespace Certify.Server.Worker
     {
         public Startup(IConfiguration configuration) : base(configuration)
         {
-
+            // base startup performs most of the configuration in this instance
         }
     }
 }
