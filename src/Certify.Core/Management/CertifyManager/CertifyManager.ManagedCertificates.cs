@@ -31,10 +31,13 @@ namespace Certify.Management
                             var providers = p.GetProviders(pluginType);
                             foreach (var cp in providers)
                             {
-                                var certManager = p.GetProvider(pluginType, cp.Id);
-                                var certs = await certManager.GetManagedCertificates(filter);
+                                if (cp.IsEnabled)
+                                {
+                                    var certManager = p.GetProvider(pluginType, cp.Id);
+                                    var certs = await certManager.GetManagedCertificates(filter);
 
-                                list.AddRange(certs);
+                                    list.AddRange(certs);
+                                }
                             }
                         }
                         else
