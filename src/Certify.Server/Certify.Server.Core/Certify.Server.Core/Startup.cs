@@ -86,6 +86,14 @@ namespace Certify.Server.Core
             var certifyManager = new Management.CertifyManager(useWindowsNativeFeatures);
 
             services.AddSingleton<Management.ICertifyManager>(certifyManager);
+
+
+                services.AddHttpsRedirection(options =>
+                {
+                    options.RedirectStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status307TemporaryRedirect;
+                    options.HttpsPort = 443;
+                });
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -94,6 +102,18 @@ namespace Certify.Server.Core
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+              
+                // Enable middleware to serve generated Swagger as a JSON endpoint.
+                app.UseSwagger();
+
+                // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
+                // specifying the Swagger JSON endpoint.
+                app.UseSwaggerUI(c =>
+                {
+                    c.RoutePrefix = "docs";
+                    c.DocumentTitle = "Certify Core Server API";
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Certify Core Server API");
+                });
             }
 
             // set status report context provider
@@ -101,7 +121,7 @@ namespace Certify.Server.Core
 
             //
 
-            // app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
 
             app.UseRouting();
 
@@ -115,20 +135,6 @@ namespace Certify.Server.Core
                 endpoints.MapControllers();
 
             });
-
-#if DEBUG
-            // Enable middleware to serve generated Swagger as a JSON endpoint.
-            app.UseSwagger();
-
-            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
-            // specifying the Swagger JSON endpoint.
-            app.UseSwaggerUI(c =>
-            {
-                c.RoutePrefix = "docs";
-                c.DocumentTitle = "Certify Core Server API";
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Certify Core Server API");
-            });
-#endif
 
         }
     }
