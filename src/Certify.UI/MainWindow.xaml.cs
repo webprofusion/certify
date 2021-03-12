@@ -154,35 +154,42 @@ namespace Certify.UI
 
             if (uiSettings != null)
             {
-                Width = uiSettings.Width ?? Width;
-                Height = uiSettings.Height ?? Height;
-
-                Top = uiSettings.Top ?? Top;
-
-                // only apply saved left pos if it's not off-screen
-                double virtScreenWidth = System.Windows.SystemParameters.VirtualScreenWidth;
-                if (uiSettings.Left < virtScreenWidth)
+                try
                 {
-                    Left = uiSettings.Left ?? Left;
-                }
+                    Width = uiSettings.Width ?? Width;
+                    Height = uiSettings.Height ?? Height;
 
-                // set theme based on pref
-                if (uiSettings.UITheme != null)
-                {
-                    ((Certify.UI.App)App.Current).ToggleTheme(uiSettings.UITheme);
-                }
-                else
-                {
-                    // default theme
-                    ((Certify.UI.App)App.Current).ToggleTheme(_appViewModel.DefaultUITheme);
-                }
+                    Top = uiSettings.Top ?? Top;
 
-                if (uiSettings.Scaling > 0.5 && uiSettings.Scaling < 2)
-                {
-                    _appViewModel.UIScaleFactor = uiSettings.Scaling ?? 1;
-                }
+                    // only apply saved left pos if it's not off-screen
+                    double virtScreenWidth = System.Windows.SystemParameters.VirtualScreenWidth;
+                    if (uiSettings.Left < virtScreenWidth)
+                    {
+                        Left = uiSettings.Left ?? Left;
+                    }
 
-                _appViewModel.UISettings = uiSettings;
+                    // set theme based on pref
+                    if (uiSettings.UITheme != null)
+                    {
+                        ((Certify.UI.App)App.Current).ToggleTheme(uiSettings.UITheme);
+                    }
+                    else
+                    {
+                        // default theme
+                        ((Certify.UI.App)App.Current).ToggleTheme(_appViewModel.DefaultUITheme);
+                    }
+
+                    if (uiSettings.Scaling > 0.5 && uiSettings.Scaling < 2)
+                    {
+                        _appViewModel.UIScaleFactor = uiSettings.Scaling ?? 1;
+                    }
+
+                    _appViewModel.UISettings = uiSettings;
+                }
+                catch
+                {
+                    // failed to get window position etc
+                }
             }
             else
             {
