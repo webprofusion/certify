@@ -105,7 +105,7 @@ namespace Certify.Models
         public bool PerformTlsSniBindingConfigChecks { get; set; } = true;
 
         /// <summary>
-        /// If true, attempt to automatically configure the web host/web aplication as required 
+        /// If true, attempt to automatically configure the web host/web application as required 
         /// </summary>
         public bool PerformAutoConfig { get; set; } = true;
 

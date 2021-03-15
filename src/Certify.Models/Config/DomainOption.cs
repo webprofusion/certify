@@ -18,7 +18,7 @@
         public bool IsSelected { get; set; }
 
         /// <summary>
-        /// If true, domain is not present in site bindings but is implicit by IP/dns wilcard etc and
+        /// If true, domain is not present in site bindings but is implicit by IP/dns wildcard etc and
         /// is being specified manually
         /// </summary>
         public bool IsManualEntry { get; set; }
