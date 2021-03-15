@@ -171,6 +171,35 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// If required, migrate legacy setting for this managed certicate related to pre/post deployment tasks
+        /// </summary>
+        /// <param name="managedCert">The source managed certificate to be migrated</param>
+        /// <returns>The updated managed certificate to be stored</returns>
+        private ManagedCertificate MigrateManagedCertificateSettings(ManagedCertificate managedCert)
+        {
+            if (
+                !string.IsNullOrEmpty(managedCert.RequestConfig.WebhookUrl)
+                || !string.IsNullOrEmpty(managedCert.RequestConfig.PreRequestPowerShellScript)
+                || !string.IsNullOrEmpty(managedCert.RequestConfig.PostRequestPowerShellScript)
+                || managedCert.PostRequestTasks?.Any(t => t.TaskTypeId == StandardTaskTypes.POWERSHELL && t.Parameters?.Any(p => p.Key == "url") == true) == true)
+            {
+                var result = MigrateDeploymentTasks(managedCert);
+                if (result.Item2 == true)
+                {
+                    return result.Item1;
+                }
+                else
+                {
+                    return managedCert;
+                }
+            }
+            else
+            {
+                return managedCert;
+            }
+        }
+
 
         private async Task<IACMEClientProvider> GetACMEProvider(ManagedCertificate managedItem)
         {

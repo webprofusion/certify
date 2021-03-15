@@ -51,14 +51,18 @@ namespace Certify.Management
             return list;
         }
 
-        public async Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate site)
+        public async Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate managedCert)
         {
-            site = await _itemManager.Update(site);
+            // migrate item settings as source can include legacy settings (e.g. CSV import) - TODO: remove when legacy sources no longer supported
+            managedCert = MigrateManagedCertificateSettings(managedCert);
+
+            // store managed cert in database store
+            managedCert = await _itemManager.Update(managedCert);
 
             // report request state to status hub clients
-            _statusReporting?.ReportManagedCertificateUpdated(site);
+            _statusReporting?.ReportManagedCertificateUpdated(managedCert);
 
-            return site;
+            return managedCert;
         }
 
         private async Task UpdateManagedCertificateStatus(ManagedCertificate managedCertificate, RequestState status,
