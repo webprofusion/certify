@@ -22,6 +22,10 @@ namespace Certify.Models.Config
         public List<ProviderParameter> ProviderParameters { get; set; }
         public string Config { get; set; }
         public bool IsExperimental { get; set; }
+
+        /// <summary>
+        /// If not enabled, provider will be skipped when loading
+        /// </summary>
         public bool IsEnabled { get; set; } = true;
         public bool IsTestModeSupported { get; set; } = true;
         public bool HasDynamicParameters { get; set; } = false;
