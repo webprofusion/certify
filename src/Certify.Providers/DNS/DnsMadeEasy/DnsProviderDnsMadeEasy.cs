@@ -40,7 +40,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
 
         private static string _apiUrl = "https://api.dnsmadeeasy.com/V2.0/";
 
-        private HttpClient _httpClient;
+        private static readonly HttpClient _httpClient;
         private string _apiKey;
         private string _apiSecret;
 
@@ -77,9 +77,9 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             HandlerType = ChallengeHandlerType.INTERNAL
         };
 
-        public DnsProviderDnsMadeEasy()
+        static DnsProviderDnsMadeEasy()
         {
-
+            _httpClient = new HttpClient();
         }
 
         private static string ComputeHMAC(string input, string key)
@@ -210,7 +210,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
                     var url = $"{_apiUrl}dns/managed/{request.ZoneId}/records/{r.RecordId}";
                     var apiRequest = CreateRequest(HttpMethod.Delete, url, DateTimeOffset.Now);
                     var result = await _httpClient.SendAsync(apiRequest);
-
+                    
                     if (!result.IsSuccessStatusCode)
                     {
                         return new ActionResult
@@ -280,9 +280,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             _log = log;
             _apiKey = credentials["apikey"];
             _apiSecret = credentials["apisecret"];
-
-            _httpClient = new HttpClient();
-
+           
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
                 if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
@@ -318,10 +316,6 @@ namespace Certify.Providers.DNS.DnsMadeEasy
 
         public void Dispose()
         {
-            if (_httpClient != null)
-            {
-                _httpClient.Dispose();
-            }
         }
     }
 }
