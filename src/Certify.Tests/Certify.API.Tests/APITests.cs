@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -32,7 +33,7 @@ namespace Certify.API.Tests
             // TODO : create API server instance instead of invoking directly
             if (_apiService == null)
             {
-                var svcpath = $"{ Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)}\\..\\..\\..\\..\\..\\Certify.Service\\bin\\Debug\\net462\\CertifySSLManager.Service.exe";
+                var svcpath = Path.Combine(AppContext.BaseDirectory ,"..\\..\\..\\..\\..\\Certify.Service\\bin\\Debug\\net462\\CertifySSLManager.Service.exe");
 
                 _apiService = Process.Start(svcpath);
 

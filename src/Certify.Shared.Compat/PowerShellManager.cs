@@ -127,7 +127,7 @@ namespace Certify.Management
             }
             catch (Exception ex)
             {
-                return new ActionResult($"Error - {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}", false);
+                return await Task.FromResult(new ActionResult($"Error - {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}", false));
             }
         }
 

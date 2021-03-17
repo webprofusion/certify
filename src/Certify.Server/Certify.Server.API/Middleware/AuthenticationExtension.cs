@@ -33,7 +33,8 @@ namespace Certify.Server.Api.Public.Middleware
                 {
                     IssuerSigningKey = new SymmetricSecurityKey(key),
                     ValidateIssuer = false,
-                    ValidateAudience = false
+                    ValidateAudience = false,
+                    ValidateIssuerSigningKey = true
                 };
             });
 

@@ -57,7 +57,7 @@ namespace Certify.Management
             _useWindowsNativeFeatures = useWindowsNativeFeatures;
 
             _serverConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
-
+            
             SettingsManager.LoadAppSettings();
 
             InitLogging(_serverConfig);
@@ -119,6 +119,8 @@ namespace Certify.Management
             }
 
             PerformManagedCertificateMigrations().Wait();
+
+            // if jwt auth mode is enabled, init auth key for first windows user
         }
 
         private void LoadCertificateAuthorities()
@@ -545,7 +547,7 @@ namespace Certify.Management
                         .Reverse()
                         .ToArray();
 
-                    return log;
+                    return await Task.FromResult(log);
                 }
                 catch (Exception exp)
                 {

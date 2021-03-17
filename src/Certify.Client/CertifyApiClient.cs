@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Certify.Config.Migration;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Utils;
 using Certify.Shared;
+using Microsoft.AspNetCore.Connections.Features;
 using Newtonsoft.Json;
 
 namespace Certify.Client
@@ -35,10 +37,14 @@ namespace Certify.Client
     // This version of the client communicates with the Certify.Service instance on the local machine
     public class CertifyApiClient : ICertifyInternalApiClient
     {
-        private readonly HttpClient _client;
+        private HttpClient _client;
         private readonly string _baseUri = "/api/";
         internal Shared.ServerConnection _connectionConfig;
         internal Providers.IServiceConfigProvider _configProvider;
+
+        internal string _authKey { get; set; } = "";
+        internal string _accessToken { get; set; } = "";
+        internal string _refreshToken { get; set; } = "";
 
         public CertifyApiClient(Providers.IServiceConfigProvider configProvider, Shared.ServerConnection config = null)
         {
@@ -58,6 +64,17 @@ namespace Certify.Client
             }
 #pragma warning restore SCS0004 // Certificate Validation has been disabled
 
+            CreateHttpClient();
+
+        }
+
+        private void CreateHttpClient()
+        {
+            if (_client != null)
+            {
+                _client.Dispose();
+                _client = null;
+            }
 
             if (_connectionConfig.Authentication == "default")
             {
@@ -66,12 +83,22 @@ namespace Certify.Client
             }
             else
             {
-                //alternative auth
+                //alternative auth (jwt)
                 _client = new HttpClient();
+
+                if (!string.IsNullOrEmpty(_accessToken))
+                {
+                    SetClientAuthorizationBearerToken();
+                }
             }
 
             _client.DefaultRequestHeaders.Add("User-Agent", "Certify/App");
             _client.Timeout = new TimeSpan(0, 20, 0); // 20 min timeout on service api calls
+        }
+
+        private void SetClientAuthorizationBearerToken()
+        {
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",_accessToken);
         }
 
         public ServerConnection GetDefaultServerConnection()
@@ -80,6 +107,12 @@ namespace Certify.Client
             return new ServerConnection(serviceCfg);
         }
 
+        public void SetConnectionAuthMode(string mode)
+        {
+            _connectionConfig.Authentication = mode;
+
+            CreateHttpClient();
+        }
 
         private async Task<string> FetchAsync(string endpoint)
         {
@@ -495,6 +528,53 @@ namespace Certify.Client
         {
             var result = await PostAsync($"credentials/{credentialKey}/test", new { });
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
+        }
+
+        #endregion
+
+        #region Auth
+        public async Task<string> GetAuthKeyWindows()
+        {
+            var result = await FetchAsync("auth/windows");
+            return JsonConvert.DeserializeObject<string>(result);
+        }
+
+        public async Task<string> GetAccessToken(string key)
+        {
+            var result = await PostAsync("auth/token", new { Key = key });
+            _accessToken = JsonConvert.DeserializeObject<string>(await result.Content.ReadAsStringAsync());
+
+            if (!string.IsNullOrEmpty(_accessToken))
+            {
+                SetClientAuthorizationBearerToken();
+            }
+
+            return _accessToken;
+        }
+
+        public async Task<string> GetAccessToken(string username, string password)
+        {
+            var result = await PostAsync("auth/token", new { Username = username, Password = password });
+            _accessToken = JsonConvert.DeserializeObject<string>(await result.Content.ReadAsStringAsync());
+
+            if (!string.IsNullOrEmpty(_accessToken))
+            {
+                SetClientAuthorizationBearerToken();
+            }
+
+            return _accessToken;
+        }
+
+        public async Task<string> RefreshAccessToken()
+        {
+            var result = await PostAsync("auth/refresh", new { Token = _accessToken });
+            _accessToken = JsonConvert.DeserializeObject<string>(await result.Content.ReadAsStringAsync());
+
+            if (!string.IsNullOrEmpty(_accessToken))
+            {
+                SetClientAuthorizationBearerToken();
+            }
+            return _refreshToken;
         }
 
         #endregion

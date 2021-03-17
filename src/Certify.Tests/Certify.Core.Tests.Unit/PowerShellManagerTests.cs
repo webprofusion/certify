@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models;
@@ -13,9 +14,9 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Test Script runs OK")]
         public async Task TestLoadManagedCertificates()
         {
-            var path = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var path = AppContext.BaseDirectory;
 
-            await PowerShellManager.RunScript("Unrestricted", new CertificateRequestResult { }, path + "\\Assets\\Powershell\\Simple.ps1");
+            await PowerShellManager.RunScript("Unrestricted", new CertificateRequestResult { }, System.IO.Path.Combine(path, "Assets\\Powershell\\Simple.ps1"));
 
 
             var transcriptLogExists = System.IO.File.Exists(@"C:\Temp\Certify\TestOutput\TestTranscript.txt");

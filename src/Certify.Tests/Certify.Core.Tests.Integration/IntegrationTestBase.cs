@@ -63,7 +63,7 @@ namespace Certify.Core.Tests
                     DeploymentSiteOption = DeploymentOption.SingleSite
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\Assets\\dummycert.pfx"
+                CertificatePath = Path.Combine(AppContext.BaseDirectory, "Assets\\dummycert.pfx")
             };
 
             return dummyManagedCertificate;
