@@ -156,16 +156,28 @@ namespace Certify.UI
             {
                 try
                 {
-                    Width = uiSettings.Width ?? Width;
-                    Height = uiSettings.Height ?? Height;
-
-                    Top = uiSettings.Top ?? Top;
-
                     // only apply saved left pos if it's not off-screen
                     double virtScreenWidth = System.Windows.SystemParameters.VirtualScreenWidth;
-                    if (uiSettings.Left < virtScreenWidth)
+                    double virtScreenHeight = System.Windows.SystemParameters.VirtualScreenHeight;
+
+                    if (uiSettings.Width < virtScreenWidth)
                     {
-                        Left = uiSettings.Left ?? Left;
+                        Width = uiSettings.Width ?? Width;
+                    }
+
+                    if (uiSettings.Height < virtScreenHeight)
+                    {
+                        Height = uiSettings.Height ?? Height;
+                    }
+
+                    if (uiSettings.Top >= 0 && uiSettings.Top < (virtScreenHeight - Height))
+                    {
+                        Top = (double)uiSettings.Top;
+                    }
+
+                    if (uiSettings.Left >= 0 && uiSettings.Left < (virtScreenWidth - Width))
+                    {
+                        Left = (double)uiSettings.Left;
                     }
 
                     // set theme based on pref
