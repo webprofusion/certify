@@ -3,7 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
-    xmlns:utils="clr-namespace:Certify.UI.Utils"
+    xmlns:utils="clr-namespace:Certify.UI.Utils;assembly=Certify.UI.Shared"
     StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
