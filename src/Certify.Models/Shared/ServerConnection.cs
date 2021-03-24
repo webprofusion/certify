@@ -10,6 +10,7 @@ namespace Certify.Shared
         public string Id { get; set; }
         public string DisplayName { get; set; }
         public bool UseHTTPS { get; set; } = false;
+        public bool AllowUntrusted { get; set; } = false;
 #if DEBUG
         public int Port { get; set; } = 9695;
 #else

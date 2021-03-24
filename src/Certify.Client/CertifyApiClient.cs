@@ -38,6 +38,7 @@ namespace Certify.Client
     public class CertifyApiClient : ICertifyInternalApiClient
     {
         private HttpClient _client;
+        private HttpClientHandler _clientHandler;
         private readonly string _baseUri = "/api/";
         internal Shared.ServerConnection _connectionConfig;
         internal Providers.IServiceConfigProvider _configProvider;
@@ -53,17 +54,6 @@ namespace Certify.Client
 
             _baseUri = $"{(_connectionConfig.UseHTTPS ? "https" : "http")}://{_connectionConfig.Host}:{_connectionConfig.Port}" + _baseUri;
 
-#pragma warning disable SCS0004 // Certificate Validation has been disabled
-            if (_connectionConfig.UseHTTPS)
-            {
-                ServicePointManager.ServerCertificateValidationCallback += (obj, cert, chain, errors) =>
-                {
-                    // ignore all cert errors when validating URL response
-                    return true;
-                };
-            }
-#pragma warning restore SCS0004 // Certificate Validation has been disabled
-
             CreateHttpClient();
 
         }
@@ -76,15 +66,25 @@ namespace Certify.Client
                 _client = null;
             }
 
+            _clientHandler = new HttpClientHandler();
+
+            if (_connectionConfig.UseHTTPS && _connectionConfig.AllowUntrusted)
+            {
+                // ignore all cert errors when validating URL response
+                _clientHandler.ServerCertificateCustomValidationCallback =
+                   (message, certificate, chain, sslPolicyErrors) => true;
+            }
+
             if (_connectionConfig.Authentication == "default")
             {
                 // use windows authentication
-                _client = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true });
+                _clientHandler.UseDefaultCredentials = true;
+                _client = new HttpClient(_clientHandler);
             }
             else
             {
                 //alternative auth (jwt)
-                _client = new HttpClient();
+                _client = new HttpClient(_clientHandler);
 
                 if (!string.IsNullOrEmpty(_accessToken))
                 {
@@ -98,7 +98,7 @@ namespace Certify.Client
 
         private void SetClientAuthorizationBearerToken()
         {
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",_accessToken);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
         }
 
         public ServerConnection GetDefaultServerConnection()
