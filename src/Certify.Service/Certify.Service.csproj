@@ -9,7 +9,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <PlatformTarget>x64</PlatformTarget>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -51,7 +51,7 @@
     <PackageReference Include="Microsoft.Owin.Hosting" Version="4.1.1" /> 
     <PackageReference Include="Microsoft.Owin.Security" Version="4.1.1" /> 
     <PackageReference Include="Microsoft.Owin.SelfHost" Version="4.1.1" /> 
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" /> 
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" /> 
     <PackageReference Include="Owin" Version="1.0.0" /> 
     <PackageReference Include="Serilog" Version="2.10.0" /> 
     <PackageReference Include="Serilog.Sinks.ListOfString" Version="4.1.4.3" /> 
