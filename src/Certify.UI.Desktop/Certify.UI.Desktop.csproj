@@ -17,18 +17,4 @@
     <ProjectReference Include="..\Certify.UI.Shared\Certify.UI.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="MainWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Page Update="MainWindow.xaml">
-      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
-      <SubType>Designer</SubType>
-    </Page>
-  </ItemGroup>
-
-
 </Project>

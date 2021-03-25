@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
     xmlns:utils="clr-namespace:Certify.UI.Utils;assembly=Certify.UI.Shared"
-    StartupUri="MainWindow.xaml">
+    StartupUri="pack://application:,,,/Certify.UI.Shared;component/Windows/MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

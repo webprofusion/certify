@@ -11,7 +11,7 @@ using Certify.UI.Settings;
 using Certify.UI.Shared;
 using Microsoft.ApplicationInsights;
 
-namespace Certify.UI
+namespace Certify.UI.Windows
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
