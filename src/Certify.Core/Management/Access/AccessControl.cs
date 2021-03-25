@@ -99,12 +99,13 @@ namespace Certify.Core.Management.Access
 
         public async Task<List<Role>> GetSystemRoles()
         {
-            return new List<Role>
+           
+            return await Task.FromResult(new List<Role>
             {
                 StandardRoles.Administrator,
                 StandardRoles.DomainOwner,
                 StandardRoles.CertificateConsumer
-            };
+            });
         }
 
         public async Task<List<SecurityPrinciple>> GetSecurityPrinciples()

@@ -19,12 +19,11 @@ namespace Certify.Service
             var config = new HttpConfiguration();
 
             // enable windows auth credentials
-#if !DEBUG_NO_AUTH
+
             var owinHttp = appBuilder.Properties["Microsoft.Owin.Host.HttpListener.OwinHttpListener"] as Microsoft.Owin.Host.HttpListener.OwinHttpListener;
             owinHttp.Listener.AuthenticationSchemes = AuthenticationSchemes.IntegratedWindowsAuthentication | AuthenticationSchemes.Anonymous;
-
             owinHttp.Listener.AuthenticationSchemeSelectorDelegate = IdentifyAuthentication;
-#endif
+
 
 #if DEBUG
             config
