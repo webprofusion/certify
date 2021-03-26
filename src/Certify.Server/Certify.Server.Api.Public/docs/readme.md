@@ -36,6 +36,9 @@
 # Get certificate as PFX
 `curl https://localhost:44331/api/v1/certificate/ba05f0ef-f43b-46d3-9227-a4e8e1b864aa:7/download/pfx`
 
+# Get unlocked stored credential as a JSON key-value dictionary (if permitted for token role)
+`curl https://localhost:44331/api/v1/credential/1eb2c3d4`
+
 # Get http-01 challenges waiting to be answered
 
 `curl https://localhost:44331/api/v1/validation/http-01`

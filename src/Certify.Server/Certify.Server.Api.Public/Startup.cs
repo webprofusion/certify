@@ -81,7 +81,7 @@ namespace Certify.Server.API
             var configManager = new ServiceConfigManager();
             var defaultConnectionConfig = new Shared.ServerConnection(configManager.GetServiceConfig());
             var connections = ServerConnectionManager.GetServerConnections(null, defaultConnectionConfig);
-            var serverConnection = connections.FirstOrDefault(c => c.IsDefault = true);
+            var serverConnection = connections.FirstOrDefault(c => c.IsDefault == true);
 
             services.AddSingleton(typeof(Certify.Client.ICertifyInternalApiClient), new Client.CertifyApiClient(configManager, serverConnection));
         }

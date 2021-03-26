@@ -20,7 +20,7 @@
     "Certify.Server.API": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "",
+      "launchUrl": "/docs",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

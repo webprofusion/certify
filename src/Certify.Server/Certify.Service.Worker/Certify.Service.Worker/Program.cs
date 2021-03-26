@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using Certify.Server.Core;
 using Microsoft.AspNetCore.Hosting;
@@ -23,6 +24,15 @@ namespace Certify.Service.Worker
         {
 
             var builder = Host.CreateDefaultBuilder(args)
+                 .ConfigureAppConfiguration((context, builder) =>
+                 {
+                     // when running within an integration test optionally load test config
+                     if (File.Exists(Path.Join(AppContext.BaseDirectory, "appsettings.worker.test.json")))
+                     {
+                         builder.AddJsonFile("appsettings.worker.test.json");
+                         builder.AddUserSecrets(typeof(Program).GetTypeInfo().Assembly); // for worker pfx details)
+                     }
+                 })
                  .ConfigureLogging(logging =>
                  {
                      logging.ClearProviders();

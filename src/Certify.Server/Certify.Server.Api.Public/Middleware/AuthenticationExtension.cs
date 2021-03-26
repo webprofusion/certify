@@ -26,7 +26,7 @@ namespace Certify.Server.Api.Public.Middleware
             })
             .AddJwtBearer(x =>
             {
-                x.RequireHttpsMetadata = false;
+                x.RequireHttpsMetadata = true;
                 x.SaveToken = true;
 
                 x.TokenValidationParameters = new TokenValidationParameters
@@ -34,7 +34,8 @@ namespace Certify.Server.Api.Public.Middleware
                     IssuerSigningKey = new SymmetricSecurityKey(key),
                     ValidateIssuer = false,
                     ValidateAudience = false,
-                    ValidateIssuerSigningKey = true
+                    ValidateIssuerSigningKey = true,
+                    ValidateLifetime = true
                 };
             });
 
