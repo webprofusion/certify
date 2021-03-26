@@ -1,13 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
-using System.Web.Http.Results;
-using Amazon.Route53.Model;
 using Certify.Management;
-using Certify.Models;
-using Certify.Models.Config;
 
 namespace Certify.Service
 {
@@ -42,7 +36,7 @@ namespace Certify.Service
             var userIdPlusSecret = ActionContext.RequestContext.Principal.Identity.Name + ":" + secret;
 
             // return auth secret as Base64 string suitable for Basic Authorization https://en.wikipedia.org/wiki/Basic_access_authentication
-            return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(userIdPlusSecret)); 
+            return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(userIdPlusSecret));
         }
 
         [HttpPost, Route("token")]

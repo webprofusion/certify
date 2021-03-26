@@ -1,11 +1,10 @@
 ﻿using System;
-using Certify.Core.Management.Access;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Certify.Core.Management.Access;
 using Certify.Models;
-using Certify.Models.Providers;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Serilog;
 
 namespace Certify.Core.Tests.Unit

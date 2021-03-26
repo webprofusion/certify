@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Controllers;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.Extensions.DependencyInjection;
 namespace Certify.Service.Controllers
 {
     public class CustomAuthCheckAttribute : AuthorizeAttribute

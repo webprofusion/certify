@@ -57,7 +57,7 @@ namespace Certify.Management
             _useWindowsNativeFeatures = useWindowsNativeFeatures;
 
             _serverConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
-            
+
             SettingsManager.LoadAppSettings();
 
             InitLogging(_serverConfig);

@@ -10,7 +10,6 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Utils;
 using Certify.Shared;
-using Microsoft.AspNetCore.Connections.Features;
 using Newtonsoft.Json;
 
 namespace Certify.Client

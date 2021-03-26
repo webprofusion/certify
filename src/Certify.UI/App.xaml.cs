@@ -122,7 +122,7 @@ namespace Certify.UI
             d.ShowDialog();
         }
 
-       
+
         public void ShowNotification(string msg, NotificationType type = NotificationType.Info, bool autoClose = true)
         {
             var opts = new ToastNotifications.Core.MessageOptions { ShowCloseButton = false };

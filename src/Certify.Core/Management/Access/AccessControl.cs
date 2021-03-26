@@ -99,7 +99,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<List<Role>> GetSystemRoles()
         {
-           
+
             return await Task.FromResult(new List<Role>
             {
                 StandardRoles.Administrator,

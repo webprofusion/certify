@@ -87,7 +87,7 @@ namespace Certify.Management
                 {
                     throw new ArgumentNullException("GetPluginFolderPath: Executing assembly location is null");
                 }
-                    
+
                 if (usePluginSubfolder)
                 {
                     var path = Path.Combine(Path.GetDirectoryName(executableLocation), "plugins");

@@ -264,7 +264,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 IsTestModeSupported = true,
                 IsExperimental = true
             },
- 
+
              new ChallengeProviderDefinition
             {
                 Id = "DNS01.API.PoshACME.DNSPod",

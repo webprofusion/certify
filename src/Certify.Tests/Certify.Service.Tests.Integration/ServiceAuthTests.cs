@@ -1,13 +1,11 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Threading.Tasks;
-using System.Diagnostics;
+﻿using System.Threading.Tasks;
 using Certify.Client;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Service.Tests.Integration
 {
     [TestClass]
-    public class ServiceAuthTests: ServiceTestBase
+    public class ServiceAuthTests : ServiceTestBase
     {
         [TestMethod]
         public async Task TestAuthFlow()
@@ -27,7 +25,7 @@ namespace Certify.Service.Tests.Integration
             });
 
             // use auth key to get JWT
-            
+
             var jwt = await _client.GetAccessToken(authKey);
             Assert.IsNotNull(jwt);
 
