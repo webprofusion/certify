@@ -4,6 +4,8 @@
     <TargetFramework>net5.0</TargetFramework>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>..\..\..\..\certify.service</DockerfileContext>
+    <UserSecretsId>8793068b-aa98-48a5-807b-962b5b3e1aea</UserSecretsId>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

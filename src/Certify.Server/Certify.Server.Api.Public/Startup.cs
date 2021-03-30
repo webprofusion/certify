@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using Certify.Server.Api.Public.Middleware;
 using Certify.Shared.Core.Management;
 using Certify.SharedUtils;
@@ -44,9 +47,9 @@ namespace Certify.Server.API
 
                 c.SwaggerDoc("v1", new OpenApiInfo
                 {
-                    Title = "CertifyServer - Certificate Server API",
+                    Title = "Certify Server API",
                     Version = "v1",
-                    Description = "CertifyServer provides a certificate services API for use in devops, CI/CD, middleware etc. Certificates are managed by Certify The Web on the primary server using ACME, with API access controlled using API tokens."
+                    Description = "The Certify Server API provides a certificate services API for use in devops, CI/CD, middleware etc. Certificates are managed by Certify The Web (https://certifytheweb.com) on the primary server using ACME, with API access controlled using API tokens."
                 });
 
                 // declare authorization method
@@ -75,6 +78,11 @@ namespace Certify.Server.API
                     }
                 });
 
+                // Set the comments path for the Swagger JSON and UI.
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                c.IncludeXmlComments(xmlPath);
+
             });
 #endif
             // connect to certify service 
@@ -97,6 +105,14 @@ namespace Certify.Server.API
             app.UseHttpsRedirection();
 
             app.UseRouting();
+            app.UseCors((p) =>
+            {
+                p.AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+                //.AllowCredentials();
+                
+            });
 
             app.UseAuthentication();
             app.UseAuthorization();
@@ -115,8 +131,8 @@ namespace Certify.Server.API
             app.UseSwaggerUI(c =>
             {
                 c.RoutePrefix = "docs";
-                c.DocumentTitle = "CertifyServer - Certificate Server API";
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "CertifyServer - Certificate Server API");
+                c.DocumentTitle = "Certify Server API";
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Certify Server API");
             });
 #endif
         }

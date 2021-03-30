@@ -18,6 +18,12 @@ namespace Certify.Server.API.Controllers
         private readonly ICertifyInternalApiClient _client;
         private IConfiguration _config;
 
+        /// <summary>
+        /// Controller for Auth operations
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <param name="client"></param>
+        /// <param name="config"></param>
         public AuthController(ILogger<AuthController> logger, ICertifyInternalApiClient client, IConfiguration config)
         {
             _logger = logger;
@@ -25,6 +31,11 @@ namespace Certify.Server.API.Controllers
             _config = config;
         }
 
+
+        /// <summary>
+        /// Operations to check current auth status for the given presented authentication tokens
+        /// </summary>
+        /// <returns></returns>
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet]
         [Route("status")]
@@ -33,6 +44,11 @@ namespace Certify.Server.API.Controllers
             return await Task.FromResult(new OkResult());
         }
 
+        /// <summary>
+        /// Perform login using username and password
+        /// </summary>
+        /// <param name="login">Login credentials</param>
+        /// <returns>Response contains access token and refresh token for API operations.</returns>
         [HttpPost]
         [Route("login")]
         public AuthResponse Login(AuthRequest login)

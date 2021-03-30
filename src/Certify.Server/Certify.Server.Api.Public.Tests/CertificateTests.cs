@@ -71,7 +71,7 @@ namespace Certify.Service.Api.Tests
 
             Assert.IsTrue(cert.HasPrivateKey, "Downloaded PFX has private key");
 
-            Assert.AreEqual(cert.Subject, "CN=" + itemWithCert.PrimaryDomain, "Primary domain of cert should match primary domain of managed item");
+            Assert.AreEqual(cert.Subject, "CN=" + itemWithCert.PrimaryIdentifier.Value, "Primary domain of cert should match primary domain of managed item");
         }
     }
 }
