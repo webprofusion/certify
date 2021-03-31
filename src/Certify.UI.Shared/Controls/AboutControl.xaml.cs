@@ -92,7 +92,7 @@ namespace Certify.UI.Controls
             }
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e) => System.Diagnostics.Process.Start("https://certifytheweb.com/register?src=app");
+        private void Button_Click(object sender, RoutedEventArgs e) => Utils.Helpers.LaunchBrowser("https://certifytheweb.com/register?src=app");
 
         private void Button_ApplyRegistrationKey(object sender, RoutedEventArgs e)
         {
@@ -106,7 +106,7 @@ namespace Certify.UI.Controls
             //refresh registration status TODO: main window title
             PopulateAppInfo();
 
-        private void Help_Click(object sender, RoutedEventArgs e) => System.Diagnostics.Process.Start("https://certifytheweb.com");
+        private void Help_Click(object sender, RoutedEventArgs e) => Utils.Helpers.LaunchBrowser("https://certifytheweb.com");
 
         private void Feedback_Click(object sender, RoutedEventArgs e)
         {

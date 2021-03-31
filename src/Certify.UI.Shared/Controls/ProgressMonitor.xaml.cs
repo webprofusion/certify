@@ -28,7 +28,7 @@ namespace Certify.UI.Controls
                 if (System.IO.File.Exists(logPath))
                 {
                     //open file
-                    System.Diagnostics.Process.Start(logPath);
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(logPath) { UseShellExecute = true });
                 }
             }
             catch (Exception) { }
