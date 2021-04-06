@@ -42,11 +42,12 @@ namespace Certify.Providers.DNS.Azure
             HelpUrl = "http://docs.certifytheweb.com/docs/dns-azuredns",
             PropagationDelaySeconds = 60,
             ProviderParameters = new List<ProviderParameter>{
-                        new ProviderParameter{Key="tenantid", Name="Tenant Id", IsRequired=false },
-                        new ProviderParameter{Key="clientid", Name="Application Id", IsRequired=false },
-                        new ProviderParameter{Key="secret",Name="Svc Principal Secret", IsRequired=true , IsPassword=true},
-                        new ProviderParameter{Key="subscriptionid",Name="DNS Subscription Id", IsRequired=true , IsPassword=false},
-                        new ProviderParameter{Key="resourcegroupname",Name="Resource Group Name", IsRequired=true , IsPassword=false},
+                        new ProviderParameter{ Key="service",Name="Azure Service", IsRequired=true, IsPassword=false, IsCredential=true, Value="global", OptionsList="global=Azure Cloud; china=Azure China; germany=Azure Germany; usgov=Azure US Government" },
+                        new ProviderParameter{ Key="tenantid", Name="Tenant Id", IsRequired=false },
+                        new ProviderParameter{ Key="clientid", Name="Application Id", IsRequired=false },
+                        new ProviderParameter{ Key="secret",Name="Svc Principal Secret", IsRequired=true , IsPassword=true},
+                        new ProviderParameter{ Key="subscriptionid",Name="DNS Subscription Id", IsRequired=true , IsPassword=false},
+                        new ProviderParameter{ Key="resourcegroupname",Name="Resource Group Name", IsRequired=true , IsPassword=false},
                         new ProviderParameter{ Key="zoneid",Name="DNS Zone Name", IsRequired=true, IsPassword=false, IsCredential=false }
                     },
             ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
@@ -88,10 +89,13 @@ namespace Certify.Providers.DNS.Azure
 
             // https://docs.microsoft.com/en-us/dotnet/api/overview/azure/dns?view=azure-dotnet
 
+            _credentials.TryGetValue("service", out var service);
+
             var serviceCreds = await ApplicationTokenProvider.LoginSilentAsync(
                 _credentials["tenantid"],
                 _credentials["clientid"],
-                _credentials["secret"]
+                _credentials["secret"],
+                GetAzureServiceSettings(service ?? "global")
                 );
 
             _dnsClient = new DnsManagementClient(serviceCreds);
@@ -106,6 +110,26 @@ namespace Certify.Providers.DNS.Azure
                 }
             }
             return true;
+        }
+
+        private ActiveDirectoryServiceSettings GetAzureServiceSettings(string service = "global")
+        {
+            if (service == "usgov")
+            {
+                return ActiveDirectoryServiceSettings.AzureUSGovernment;
+            }
+            else if (service == "china")
+            {
+                return ActiveDirectoryServiceSettings.AzureChina;
+            }
+            else if (service == "germany")
+            {
+                return ActiveDirectoryServiceSettings.AzureGermany;
+            }
+            else
+            {
+                return ActiveDirectoryServiceSettings.Azure;
+            }
         }
 
         public async Task<ActionResult> CreateRecord(DnsRecord request)
