@@ -30,6 +30,12 @@ namespace Certify.CLI
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("Importing CSV: " + filename);
 
+            if (!System.IO.File.Exists(filename))
+            {
+                Console.WriteLine("File does not exist, import cannot continue");
+                return;
+            }
+
             var currentManagedCertificates = await _certifyClient.GetManagedCertificates(new ManagedCertificateFilter() { });
             var rows = System.IO.File.ReadAllLines(filename);
             var csvHasHeaders = false;
