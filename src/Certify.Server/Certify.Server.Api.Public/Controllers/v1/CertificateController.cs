@@ -72,6 +72,7 @@ namespace Certify.Server.API.Controllers
         [HttpGet]
         [Route("{managedCertId}/log")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
         public async Task<IActionResult> DownloadLog(string managedCertId, int maxLines = 1000)
         {
             var managedCert = await _client.GetManagedCertificate(managedCertId);
@@ -90,7 +91,7 @@ namespace Certify.Server.API.Controllers
             var logByteArrays = log.Select(l => System.Text.Encoding.UTF8.GetBytes(l + "\n")).ToArray();
 
             // combine log lines to one byte array
-            
+
             var bytes = new byte[logByteArrays.Sum(a => a.Length)];
             var offset = 0;
             foreach (byte[] array in logByteArrays)
@@ -98,7 +99,7 @@ namespace Certify.Server.API.Controllers
                 System.Buffer.BlockCopy(array, 0, bytes, offset, array.Length);
                 offset += array.Length;
             }
-          
+
             return new FileContentResult(bytes, "text/plain") { FileDownloadName = "log.txt" };
 
         }

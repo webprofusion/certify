@@ -19,11 +19,11 @@ namespace Certify.Server.Api.Public.Models
         /// List of all identifiers included in this managed certificate (e.g. dns domain names)
         /// </summary>
         public IEnumerable<Identifier> Identifiers { get; set; }
-        
+
         /// <summary>
         /// Primary identifier (e.g. primary subject domain name)
         /// </summary>
-        public Identifier PrimaryIdentifier{ get; set; }
+        public Identifier PrimaryIdentifier { get; set; }
 
         /// <summary>
         /// Date request/renewal was last attempted (if any)

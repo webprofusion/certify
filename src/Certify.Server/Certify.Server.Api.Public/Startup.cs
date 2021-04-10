@@ -15,16 +15,31 @@ using Microsoft.OpenApi.Models;
 
 namespace Certify.Server.API
 {
+
+    /// <summary>
+    /// Startup configuration for Public API
+    /// </summary>
     public class Startup
+
     {
+        /// <summary>
+        /// Startup
+        /// </summary>
+        /// <param name="configuration"></param>
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
 
+        /// <summary>
+        /// Injected configuration
+        /// </summary>
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
+        /// <summary>
+        /// Configure services for use by the API
+        /// </summary>
+        /// <param name="services"></param>
         public void ConfigureServices(IServiceCollection services)
         {
 
@@ -94,7 +109,11 @@ namespace Certify.Server.API
             services.AddSingleton(typeof(Certify.Client.ICertifyInternalApiClient), new Client.CertifyApiClient(configManager, serverConnection));
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        /// <summary>
+        /// Configure the http request pipeline
+        /// </summary>
+        /// <param name="app"></param>
+        /// <param name="env"></param>
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -111,7 +130,7 @@ namespace Certify.Server.API
                 .AllowAnyMethod()
                 .AllowAnyHeader();
                 //.AllowCredentials();
-                
+
             });
 
             app.UseAuthentication();

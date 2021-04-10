@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -81,7 +80,7 @@ namespace Certify.Server.Api.Public.Services
                 throw new SecurityTokenException("Invalid token");
             }
 
-           // principal.Identity.Name = jwtSecurityToken.Claims.First(c => c.Type == "name").Value;
+            // principal.Identity.Name = jwtSecurityToken.Claims.First(c => c.Type == "name").Value;
             return principal;
         }
 
