@@ -14,7 +14,6 @@ namespace Certify.Core.Tests.Unit
     {
 
         [TestMethod, Description("Ensure managed cert and bundle exported")]
-        [Ignore]
         public async Task TestPerformExport()
         {
             // setup
@@ -37,7 +36,6 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Ensure bundled certs can be decrypted")]
-        [Ignore]
         public async Task TestDecryptExportedCerts()
         {
             // setup
