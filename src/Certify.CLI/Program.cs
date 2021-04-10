@@ -121,6 +121,16 @@ namespace Certify.CLI
                 {
                     await p.ImportCSV(args);
                 }
+
+                if (command == "add")
+                {
+                    await p.AddIdentifiers(args);
+                }
+
+                if (command == "remove")
+                {
+                    await p.RemoveIdentifiers(args);
+                }
             }
 #if DEBUG
             System.Console.WriteLine("CLI: Completed (DEBUG)");
