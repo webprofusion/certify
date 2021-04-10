@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using Certify.UI.Shared;
 using ControlzEx.Theming;
 using ToastNotifications;
 using ToastNotifications.Lifetime;
@@ -11,7 +12,7 @@ namespace Certify.UI
     /// <summary>
     /// Interaction logic for App.xaml 
     /// </summary>
-    public partial class App : Application
+    public partial class App : Application, Certify.UI.Shared.ICertifyApp
     {
 
         private Notifier _notifier;
@@ -121,13 +122,7 @@ namespace Certify.UI
             d.ShowDialog();
         }
 
-        public enum NotificationType
-        {
-            Info = 1,
-            Success = 2,
-            Error = 3,
-            Warning = 4
-        }
+
         public void ShowNotification(string msg, NotificationType type = NotificationType.Info, bool autoClose = true)
         {
             var opts = new ToastNotifications.Core.MessageOptions { ShowCloseButton = false };

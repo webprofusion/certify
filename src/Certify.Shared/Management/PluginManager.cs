@@ -82,7 +82,12 @@ namespace Certify.Management
         {
             if (!useAppData)
             {
-                var executableLocation = Assembly.GetExecutingAssembly().Location;
+                var executableLocation = AppContext.BaseDirectory;
+                if (string.IsNullOrEmpty(executableLocation))
+                {
+                    throw new ArgumentNullException("GetPluginFolderPath: Executing assembly location is null");
+                }
+
                 if (usePluginSubfolder)
                 {
                     var path = Path.Combine(Path.GetDirectoryName(executableLocation), "plugins");

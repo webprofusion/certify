@@ -20,6 +20,11 @@ namespace Certify.Shared
 
         public string PowershellExecutionPolicy { get; set; } = "Unrestricted";
 
+        /// <summary>
+        /// windows;jwt;
+        /// </summary>
+        public string AuthenticationModes { get; set; } = "windows";
+
         [JsonIgnore]
         public ConfigStatus ConfigStatus { get; set; }
     }

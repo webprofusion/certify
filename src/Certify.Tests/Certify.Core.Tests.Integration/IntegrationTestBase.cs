@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Reflection;
 using Certify.Models;
 using Certify.Models.Providers;
 using Newtonsoft.Json;
@@ -63,7 +62,7 @@ namespace Certify.Core.Tests
                     DeploymentSiteOption = DeploymentOption.SingleSite
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\Assets\\dummycert.pfx"
+                CertificatePath = Path.Combine(AppContext.BaseDirectory, "Assets\\dummycert.pfx")
             };
 
             return dummyManagedCertificate;

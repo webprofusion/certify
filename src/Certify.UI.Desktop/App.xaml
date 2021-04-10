@@ -1,0 +1,83 @@
+﻿<Application
+    x:Class="Certify.UI.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:utils="clr-namespace:Certify.UI.Utils;assembly=Certify.UI.Shared"
+    StartupUri="pack://application:,,,/Certify.UI.Shared;component/Windows/MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Green.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Dark.Green.xaml" />
+
+                <ResourceDictionary Source="pack://application:,,,/ToastNotifications.Messages;component/Themes/Default.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <!--  Heading  -->
+            <Style x:Key="Subheading" TargetType="TextBlock">
+                <Setter Property="HorizontalAlignment" Value="Left" />
+                <Setter Property="FontFamily" Value="Segoe UI Semibold" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="Padding" Value="0,0,0,4" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+            </Style>
+            <!--  Heading With Top Margin  -->
+            <Style x:Key="SubheadingWithMargin" TargetType="TextBlock">
+                <Setter Property="HorizontalAlignment" Value="Left" />
+                <Setter Property="FontFamily" Value="Segoe UI Semibold" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="Padding" Value="0,8,0,4" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+            </Style>
+            <!--  Instruction Text  -->
+
+            <Style x:Key="Instructions" TargetType="TextBlock">
+                <Setter Property="HorizontalAlignment" Value="Left" />
+                <Setter Property="FontFamily" Value="Segoe UI" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Padding" Value="0,6,0,6" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMediumHigh}" />
+                <Setter Property="TextWrapping" Value="WrapWithOverflow" />
+
+            </Style>
+
+            <!--  brush color overrides (tab items and disabled buttons)  -->
+            <SolidColorBrush x:Key="MahApps.Brushes.Gray" Color="{DynamicResource MahApps.Colors.SystemChromeHigh}" />
+            <SolidColorBrush x:Key="MahApps.Brushes.Control.Disabled" Color="{DynamicResource MahApps.Colors.SystemAltLow}" />
+
+            <Style TargetType="Controls:NumericUpDown">
+                <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseLow}" />
+            </Style>
+
+            <Style BasedOn="{StaticResource MahApps.Styles.ComboBox}" TargetType="ComboBox">
+                <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseLow}" />
+            </Style>
+
+            <Style BasedOn="{StaticResource MahApps.Styles.TextBox}" TargetType="TextBox">
+                <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseLow}" />
+            </Style>
+
+            <Style BasedOn="{StaticResource MahApps.Styles.Button}" TargetType="Button">
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontWeight" Value="Normal" />
+                <Setter Property="BorderThickness" Value="1" />
+
+                <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseLow}" />
+                <Setter Property="Controls:ControlsHelper.ContentCharacterCasing" Value="Normal" />
+                <Setter Property="Controls:ControlsHelper.CornerRadius" Value="0" />
+            </Style>
+
+
+            <!--  control templates  -->
+            <DataTemplate x:Key="ProviderHiddenParameter" />
+
+            <utils:FeatureVisibilityConverter x:Key="FeatureVisibilityConverter" />
+            <utils:FeatureBooleanConverter x:Key="FeatureBooleanConverter" />
+        </ResourceDictionary>
+
+
+    </Application.Resources>
+</Application>

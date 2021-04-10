@@ -19,10 +19,11 @@ namespace Certify.Service
             var config = new HttpConfiguration();
 
             // enable windows auth credentials
-#if !DEBUG_NO_AUTH
+
             var owinHttp = appBuilder.Properties["Microsoft.Owin.Host.HttpListener.OwinHttpListener"] as Microsoft.Owin.Host.HttpListener.OwinHttpListener;
-            owinHttp.Listener.AuthenticationSchemes = AuthenticationSchemes.IntegratedWindowsAuthentication;
-#endif
+            owinHttp.Listener.AuthenticationSchemes = AuthenticationSchemes.IntegratedWindowsAuthentication | AuthenticationSchemes.Anonymous;
+            owinHttp.Listener.AuthenticationSchemeSelectorDelegate = IdentifyAuthentication;
+
 
 #if DEBUG
             config
@@ -70,6 +71,28 @@ namespace Certify.Service
             _dailyTimer.Start();
         }
 
+        private AuthenticationSchemes IdentifyAuthentication(HttpListenerRequest request)
+        {
+            if (request.HttpMethod == "OPTIONS")
+            {
+                return AuthenticationSchemes.Anonymous;
+            }
+
+            // allow JWT pass through if provided
+            if (request.Headers["Authorization"] != null && request.Headers["Authorization"].Contains("Bearer "))
+            {
+                return AuthenticationSchemes.Anonymous;
+            }
+
+            // hack to allow anonymous auth on /api/auth/token without an Authorization: Bearer header
+            if (request.RawUrl.EndsWith("/auth/token"))
+            {
+                return AuthenticationSchemes.Anonymous;
+            }
+
+            // for windows auth require windows credentials
+            return AuthenticationSchemes.IntegratedWindowsAuthentication;
+        }
         private async void _dailyTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             var currentCertifyManager = _container.GetInstance<Management.ICertifyManager>();

@@ -88,11 +88,11 @@ namespace Certify.Server.Core
             services.AddSingleton<Management.ICertifyManager>(certifyManager);
 
 
-                services.AddHttpsRedirection(options =>
-                {
-                    options.RedirectStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status307TemporaryRedirect;
-                    options.HttpsPort = 443;
-                });
+            services.AddHttpsRedirection(options =>
+            {
+                options.RedirectStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status307TemporaryRedirect;
+                options.HttpsPort = 443;
+            });
 
         }
 
@@ -102,7 +102,7 @@ namespace Certify.Server.Core
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-              
+
                 // Enable middleware to serve generated Swagger as a JSON endpoint.
                 app.UseSwagger();
 

@@ -196,12 +196,12 @@ namespace Certify.Core.Management
             return scriptsAndContent;
         }
 
-        private RijndaelManaged GetAlg(string secret, string salt)
+        private Aes GetAlg(string secret, string salt)
         {
             var saltBytes = Encoding.ASCII.GetBytes(salt);
             var key = new Rfc2898DeriveBytes(secret, saltBytes);
 
-            var aesAlg = new RijndaelManaged();
+            var aesAlg = Aes.Create();
             aesAlg.Key = key.GetBytes(aesAlg.KeySize / 8);
             aesAlg.IV = key.GetBytes(aesAlg.BlockSize / 8);
 
@@ -210,16 +210,18 @@ namespace Certify.Core.Management
 
         private byte[] EncryptBytes(byte[] source, string secret, string salt)
         {
-            var rmCrypto = GetAlg(secret, salt);
-
-            rmCrypto.Padding = PaddingMode.PKCS7;
-            using (var memoryStream = new MemoryStream())
-            using (var cryptoStream = new CryptoStream(memoryStream, rmCrypto.CreateEncryptor(rmCrypto.Key, rmCrypto.IV), CryptoStreamMode.Write))
+            using (var rmCrypto = GetAlg(secret, salt))
             {
-                cryptoStream.Write(source, 0, source.Length);
-                cryptoStream.FlushFinalBlock();
-                cryptoStream.Close();
-                return memoryStream.ToArray();
+
+                rmCrypto.Padding = PaddingMode.PKCS7;
+                using (var memoryStream = new MemoryStream())
+                using (var cryptoStream = new CryptoStream(memoryStream, rmCrypto.CreateEncryptor(rmCrypto.Key, rmCrypto.IV), CryptoStreamMode.Write))
+                {
+                    cryptoStream.Write(source, 0, source.Length);
+                    cryptoStream.FlushFinalBlock();
+                    cryptoStream.Close();
+                    return memoryStream.ToArray();
+                }
             }
         }
 

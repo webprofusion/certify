@@ -210,7 +210,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
                     var url = $"{_apiUrl}dns/managed/{request.ZoneId}/records/{r.RecordId}";
                     var apiRequest = CreateRequest(HttpMethod.Delete, url, DateTimeOffset.Now);
                     var result = await _httpClient.SendAsync(apiRequest);
-                    
+
                     if (!result.IsSuccessStatusCode)
                     {
                         return new ActionResult
@@ -280,7 +280,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             _log = log;
             _apiKey = credentials["apikey"];
             _apiSecret = credentials["apisecret"];
-           
+
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
                 if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))

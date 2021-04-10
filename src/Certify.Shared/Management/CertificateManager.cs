@@ -208,6 +208,7 @@ namespace Certify.Management
         {
             try
             {
+                
                 var cert = new X509Certificate2(filename, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
                 return cert;
             }
@@ -216,6 +217,14 @@ namespace Certify.Management
                 System.Diagnostics.Debug.WriteLine($"LoadCertificate: Failed to load certificate: {filename}" + exp.Message);
                 return null;
             }
+        }
+
+        public static Org.BouncyCastle.X509.X509Certificate ReadCertificateFromPem(string pemFile)
+        {
+            var x509CertificateParser = new X509CertificateParser();
+            var cert = x509CertificateParser.ReadCertificate(File.ReadAllBytes(pemFile));
+
+            return cert;
         }
 
         public static async Task<X509Certificate2> StoreCertificate(

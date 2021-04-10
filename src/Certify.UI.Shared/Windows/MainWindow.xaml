@@ -1,0 +1,228 @@
+<Controls:MetroWindow
+    x:Class="Certify.UI.Windows.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:CustomControls="clr-namespace:Certify.UI.Controls"
+    xmlns:SettingsControls="clr-namespace:Certify.UI.Controls.Settings"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fa="http://schemas.fontawesome.io/icons/"
+    xmlns:local="clr-namespace:Certify.UI"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+    Title="Certify SSL/TLS Certificate Management"
+    Width="940"
+    Height="640"
+    MinWidth="680"
+    MinHeight="400"
+    d:DataContext="{d:DesignInstance Type=local:AppDesignViewModel,
+                                     IsDesignTimeCreatable=True}"
+    BorderThickness="1"
+    Closing="MetroWindow_Closing"
+    GlowBrush="{StaticResource MahApps.Brushes.Accent}"
+    Loaded="Window_Loaded"
+    TitleCharacterCasing="Normal"
+    WindowButtonCommandsOverlayBehavior="Never"
+    WindowStyle="ToolWindow"
+    WindowTransitionsEnabled="False"
+    mc:Ignorable="d">
+
+    <Controls:MetroWindow.Resources>
+        <ResourceDictionary>
+            <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+        </ResourceDictionary>
+    </Controls:MetroWindow.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid.LayoutTransform>
+            <ScaleTransform CenterX="0" CenterY="0" ScaleX="{Binding UIScaleFactor}" ScaleY="{Binding UIScaleFactor}" />
+        </Grid.LayoutTransform>
+
+        <DockPanel
+            Grid.Row="0"
+            Margin="8,8,8,0"
+            VerticalAlignment="Top">
+
+            <Button
+                Height="32"
+                Margin="8,0,0,5"
+                AutomationProperties.Name="{x:Static res:SR.New_Certificate}"
+                Click="Button_NewCertificate"
+                DockPanel.Dock="Left">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{StaticResource MahApps.Brushes.Accent}"
+                        Icon="PlusCircle" />
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.New_Certificate}" /></TextBlock>
+                </StackPanel>
+            </Button>
+            <Button
+                Height="32"
+                Margin="8,0,0,5"
+                AutomationProperties.Name="{x:Static res:SR.Renew_All}"
+                Click="Button_RenewAll"
+                DockPanel.Dock="Left">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{StaticResource MahApps.Brushes.Accent}"
+                        Icon="Refresh" />
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Renew_All}" /></TextBlock>
+                </StackPanel>
+            </Button>
+
+            <StackPanel
+                DockPanel.Dock="Left"
+                Orientation="Horizontal"
+                Visibility="{Binding IsUpdateAvailable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                <Button
+                    x:Name="ButtonUpdateAvailable"
+                    Height="32"
+                    Margin="8,0,0,5"
+                    AutomationProperties.Name="{x:Static res:SR.Update_Available}"
+                    Background="{DynamicResource MahApps.Brushes.AccentBase}"
+                    Click="ButtonUpdateAvailable_Click"
+                    FontWeight="DemiBold"
+                    Foreground="{DynamicResource MahApps.Brushes.SystemControlBackgroundAltMediumHigh}">
+
+                    <StackPanel Orientation="Horizontal">
+                        <fa:ImageAwesome
+                            Name="UpdateIcon"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundAltMediumHigh}"
+                            Icon="Download" />
+                        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Update_Available}" /></TextBlock>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <StackPanel
+                Margin="24,0,0,0"
+                DockPanel.Dock="Left"
+                Orientation="Horizontal"
+                Visibility="{Binding IsLoading, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+
+                <fa:ImageAwesome
+                    x:Name="ConnectingService"
+                    Height="12                                      "
+                    Margin="4,0,0,0"
+                    Foreground="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                    Icon="Refresh"
+                    Spin="True"
+                    SpinDuration="1"
+                    Visibility="Visible" />
+                <TextBlock
+                    Margin="8,0,0,0"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"><Run Text="Loading.." /></TextBlock>
+            </StackPanel>
+
+            <DockPanel
+                Height="32"
+                Margin="32,0,16,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                DockPanel.Dock="Right"
+                Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='SERVER_CONNECTIONS', Path=Preferences}">
+
+                <Button
+                    x:Name="Connect"
+                    Margin="8,0,0,0"
+                    AutomationProperties.Name="Connect"
+                    Click="Connect_Click"
+                    DockPanel.Dock="Right">
+                    <StackPanel Orientation="Horizontal">
+                        <fa:ImageAwesome
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="{StaticResource MahApps.Brushes.AccentBase}"
+                            Icon="Plug" />
+
+                    </StackPanel>
+                </Button>
+                <TextBlock
+                    Margin="4,0,0,0"
+                    DockPanel.Dock="top"
+                    Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMedium}"
+                    Text="{Binding ConnectionState}" />
+                <TextBlock
+                    Margin="4,0,0,0"
+                    DockPanel.Dock="Left"
+                    Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMedium}"
+                    Text="{Binding ConnectionTitle}" />
+
+
+            </DockPanel>
+
+        </DockPanel>
+
+        <TabControl
+            x:Name="MainTabControl"
+            Grid.Row="1"
+            Height="auto"
+            Margin="8,8,8,8"
+            HorizontalContentAlignment="Left"
+            VerticalContentAlignment="Stretch"
+            Controls:TabControlHelper.UnderlineBrush="{DynamicResource MahApps.Brushes.Accent4}"
+            Controls:TabControlHelper.Underlined="TabPanel"
+            SelectedIndex="{Binding MainUITabIndex}">
+
+            <TabItem
+                MinWidth="100"
+                Controls:HeaderedControlHelper.HeaderFontSize="12"
+                Controls:HeaderedControlHelper.HeaderForeground="Blue"
+                Header="{x:Static res:SR.Managed_Certificates}"
+                IsSelected="True">
+                <CustomControls:ManagedCertificates Width="Auto" Height="Auto" />
+            </TabItem>
+            <TabItem
+                MinWidth="80"
+                HorizontalAlignment="Left"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Stretch"
+                Controls:HeaderedControlHelper.HeaderFontSize="12"
+                Header="{x:Static res:SR.In_Progress}">
+                <CustomControls:ProgressMonitor />
+            </TabItem>
+            <TabItem
+                MinWidth="60"
+                HorizontalAlignment="Left"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Stretch"
+                Controls:HeaderedControlHelper.HeaderFontSize="12"
+                Header="{x:Static res:SR.Settings}">
+                <SettingsControls:General Height="Auto" />
+            </TabItem>
+            <TabItem
+                MinWidth="80"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Stretch"
+                Controls:HeaderedControlHelper.HeaderFontSize="12"
+                Header="{x:Static res:SR.About}">
+                <CustomControls:AboutControl Width="Auto" Height="Auto" />
+            </TabItem>
+        </TabControl>
+    </Grid>
+    <Controls:MetroWindow.Flyouts>
+
+        <Controls:FlyoutsControl>
+            <Controls:FlyoutsControl.LayoutTransform>
+                <ScaleTransform x:Name="FlyoutScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding UIScaleFactor}" ScaleY="{Binding UIScaleFactor}" />
+            </Controls:FlyoutsControl.LayoutTransform>
+            <Controls:Flyout
+                Name="MainFlyout"
+                Width="300"
+                Header="Flyout"
+                Position="Right"
+                Theme="Adapt" />
+        </Controls:FlyoutsControl>
+    </Controls:MetroWindow.Flyouts>
+</Controls:MetroWindow>

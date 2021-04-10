@@ -57,12 +57,12 @@ namespace Certify.Providers.DNS.IONOS
             try
             {
                 var zones = await GetZones();
-                result.Message = "Authentication successful!";
+                result.Message = "Authentication successful";
                 result.IsSuccess = zones.Any();
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                result.Message = "Authentication failed!";
+                result.Message = "Authentication failed";
                 result.IsSuccess = false;
             }
             return result;

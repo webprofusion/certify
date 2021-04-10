@@ -1,0 +1,62 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net5.0-windows;net462</TargetFrameworks>
+		<UseWPF>true</UseWPF>
+		<UseWindowsForms>true</UseWindowsForms>
+		<!--assembly version specified here to allow WPF to load windows via startupUI without version dependency-->
+		<AssemblyVersion>6.0.0.*</AssemblyVersion>
+	</PropertyGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
+		<Reference Include="System.Security" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Remove="Assets\CSS\dark-mode.css" />
+		<None Remove="Assets\CSS\markdown.css" />
+		<None Remove="Assets\Images\icon.ico" />
+		<None Remove="Assets\Images\QuickStart\ChooseAuth.png" />
+		<None Remove="Assets\Images\QuickStart\ChooseDomains.png" />
+		<None Remove="Assets\Images\QuickStart\PreviewDeployment.png" />
+		<None Remove="Assets\Images\splashscreen.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Assets\CSS\dark-mode.css">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="Assets\CSS\markdown.css">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Fody" Version="6.5.1" PrivateAssets="All" />
+		<PackageReference Include="FontAwesome.WPF" Version="4.7.0.9" />
+		<PackageReference Include="MahApps.Metro" Version="2.4.4" />
+		<PackageReference Include="Markdig.Wpf" Version="0.5.0.1" />
+		<PackageReference Include="PropertyChanged.Fody" Version="3.3.3" />
+		<PackageReference Include="Serilog" Version="2.10.0" />
+		<PackageReference Include="ToastNotifications.Messages" Version="2.5.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Certify.Client\Certify.Client.csproj" />
+		<ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />
+		<ProjectReference Include="..\Certify.Models\Certify.Models.csproj" />
+		<ProjectReference Include="..\Certify.Shared\Certify.Shared.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Resource Include="Assets\Images\icon.ico" />
+		<Resource Include="Assets\Images\QuickStart\ChooseAuth.png" />
+		<Resource Include="Assets\Images\QuickStart\ChooseDomains.png" />
+		<Resource Include="Assets\Images\QuickStart\PreviewDeployment.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<SplashScreen Include="Assets\Images\splashscreen.png" />
+	</ItemGroup>
+
+</Project>

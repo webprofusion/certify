@@ -418,7 +418,7 @@ namespace Certify.Management
             }
             else
             {
-                return new string[] { "" };
+                return await Task.FromResult(new string[] { "" });
             }
         }
 
