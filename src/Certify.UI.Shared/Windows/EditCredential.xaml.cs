@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using Certify.Models.Config;
+using Newtonsoft.Json;
 
 namespace Certify.UI.Windows
 {
@@ -46,6 +47,9 @@ namespace Certify.UI.Windows
 
         public EditCredential(StoredCredential editItem = null)
         {
+
+            EditViewModel = new EditCredentialViewModel();
+
             InitializeComponent();
             this.Width *= MainViewModel.UIScaleFactor;
             this.Height *= MainViewModel.UIScaleFactor;
@@ -157,12 +161,16 @@ namespace Certify.UI.Windows
 
         private void RefreshCredentialOptions()
         {
-            var selectedType = ProviderTypes.SelectedItem as ProviderDefinition;
-            if (selectedType != null)
+            if (ProviderTypes.SelectedItem != null)
             {
-                EditViewModel.CredentialSet = new ObservableCollection<ProviderParameter>(selectedType.ProviderParameters.Where(p => p.IsCredential));
 
-                EditViewModel.RaisePropertyChangedEvent(nameof(EditViewModel.SelectedChallengeProvider));
+                var selectedType = JsonConvert.DeserializeObject<ProviderDefinition>(JsonConvert.SerializeObject( ProviderTypes.SelectedItem as ProviderDefinition));
+                if (selectedType != null)
+                {
+                    EditViewModel.CredentialSet = new ObservableCollection<ProviderParameter>(selectedType.ProviderParameters.Where(p => p.IsCredential));
+
+                    EditViewModel.RaisePropertyChangedEvent(nameof(EditViewModel.SelectedChallengeProvider));
+                }
             }
         }
 
