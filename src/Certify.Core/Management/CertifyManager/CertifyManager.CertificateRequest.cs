@@ -100,6 +100,11 @@ namespace Certify.Management
                 progressTrackers = new Dictionary<string, Progress<RequestProgressState>>();
             }
 
+            if (managedCertificates.Count(c => c.LastRenewalStatus == RequestState.Error) > MAX_CERTIFICATE_REQUEST_TASKS)
+            {
+                System.Diagnostics.Debug.WriteLine("Too many failed certificates. Fix failures or delete. Failures: " + managedCertificates.Count(c => c.LastRenewalStatus == RequestState.Error));
+            }
+
             foreach (var managedCertificate in managedCertificates)
             {
                 var progressState = new RequestProgressState(RequestState.Running, "Starting..", managedCertificate);
@@ -176,7 +181,13 @@ namespace Certify.Management
                         var progress = (IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id];
                         ReportProgress(progress, new RequestProgressState(RequestState.NotRunning, "Skipped renewal because the max requests per batch has been reached. This request will be attempted again later.", managedCertificate), true);
                     }
-                    numRenewalTasks++;
+
+                    // track number of tasks being attempted, not counting failures (otherwise cumulative failures can eventually exhaust allowed number of task)
+                    if (managedCertificate.LastRenewalStatus != RequestState.Error)
+                    {
+                        numRenewalTasks++;
+                    }
+
                 }
                 else
                 {
