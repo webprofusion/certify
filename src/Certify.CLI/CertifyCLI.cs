@@ -374,7 +374,7 @@ namespace Certify.CLI
 
                     if (domainOption != null)
                     {
-                        managedCert.DomainOptions.Remove(domainOption);                    
+                        managedCert.DomainOptions.Remove(domainOption);
                     }
 
                     if (managedCert.RequestConfig.SubjectAlternativeNames.Contains(d))
@@ -396,11 +396,21 @@ namespace Certify.CLI
                     }
                 }
 
-                var updatedManagedCert = await _certifyClient.UpdateManagedCertificate(managedCert);
-
-                if (updatedManagedCert != null && performRequestNow)
+                if (managedCert.GetCertificateDomains().Count() == 0)
                 {
-                    await _certifyClient.BeginCertificateRequest(updatedManagedCert.Id, true);
+                    // this managed certificate has no domains anymore. Delete it.
+                    await _certifyClient.DeleteManagedCertificate(managedCert.Id);
+                    Console.WriteLine("Managed certificate has no more domains, deleted.");
+                }
+                else
+                {
+                    // update managed cert and optionally begin the request
+                    var updatedManagedCert = await _certifyClient.UpdateManagedCertificate(managedCert);
+
+                    if (updatedManagedCert != null && performRequestNow)
+                    {
+                        await _certifyClient.BeginCertificateRequest(updatedManagedCert.Id, true);
+                    }
                 }
 
             }
