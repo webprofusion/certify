@@ -184,9 +184,17 @@ namespace Certify.Core.Management
                             {
                                 if (File.Exists(p.Value))
                                 {
-                                    var encryptedBytes = EncryptBytes(File.ReadAllBytes(p.Value), secret, salt);
-                                    var content = new EncryptedContent { Filename = p.Value, Scheme = EncryptionScheme, Content = encryptedBytes };
-                                    scriptsAndContent.Add(content);
+                                    try
+                                    {
+                                        var encryptedBytes = EncryptBytes(File.ReadAllBytes(p.Value), secret, salt);
+                                        var content = new EncryptedContent { Filename = p.Value, Scheme = EncryptionScheme, Content = encryptedBytes };
+                                        scriptsAndContent.Add(content);
+                                    }
+                                    catch (Exception exp)
+                                    {
+                                        // TODO: log errors and inform user - one or more script or file assets exists but is not readable
+                                        System.Diagnostics.Debug.WriteLine("GetTaskScriptsAndContent: file content is not accessible - " + exp);
+                                    }
                                 }
                             }
                         }
