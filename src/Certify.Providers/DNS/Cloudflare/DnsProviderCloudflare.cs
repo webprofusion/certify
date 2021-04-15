@@ -269,9 +269,20 @@ namespace Certify.Providers.DNS.Cloudflare
         {
             try
             {
-                var records = await GetDnsRecords(request.ZoneId);
+                // check existing before creating new
+                try
+                {
+                    var records = await GetDnsRecords(request.ZoneId);
+                    if (records.Any(r => r.Name == request.RecordName && r.Type.ToLower() == request.RecordType.ToLower() && r.Content == request.RecordValue))
+                    {
+                        return new ActionResult("Record with required value exists, OK", true);
+                    }
+
+                }
+                catch { }
 
                 return await AddDnsRecord(request.ZoneId, request.RecordName, request.RecordValue);
+
             }
             catch (Exception exp)
             {
@@ -281,8 +292,19 @@ namespace Certify.Providers.DNS.Cloudflare
 
         public async Task<ActionResult> DeleteRecord(DnsRecord request)
         {
+            return await DeleteRecord(request, false);
+        }
+
+        public async Task<ActionResult> DeleteRecord(DnsRecord request, bool requireSameValue)
+        {
+
+            if (string.IsNullOrEmpty(request.RecordName))
+            {
+                return new ActionResult("Cannot delete a record with no dns name", false);
+            }
+
             var records = await GetDnsRecords(request.ZoneId);
-            var recordsToDelete = records.Where(x => x.Name == request.RecordName);
+            var recordsToDelete = records.Where(x => x.Name == request.RecordName && (requireSameValue == false || (requireSameValue == true && x.Content == request.RecordValue && x.Type.ToLower() == "txt")));
 
             if (!recordsToDelete.Any())
             {
