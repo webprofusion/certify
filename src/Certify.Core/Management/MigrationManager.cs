@@ -139,9 +139,16 @@ namespace Certify.Core.Management
 
                         foreach (var used in usedTaskCredentials)
                         {
-                            if (!usedCredentials.Any(u => u.StorageKey == used))
+                            if (used != null)
                             {
-                                usedCredentials.Add(allCredentials.FirstOrDefault(u => u.StorageKey == used));
+                                var usedCredential = allCredentials.FirstOrDefault(u => u.StorageKey == used);
+                                if (usedCredential != null)
+                                {
+                                    if (!usedCredentials.Any(u => u.StorageKey == used))
+                                    {
+                                        usedCredentials.Add(usedCredential);
+                                    }
+                                }
                             }
                         }
                     }
