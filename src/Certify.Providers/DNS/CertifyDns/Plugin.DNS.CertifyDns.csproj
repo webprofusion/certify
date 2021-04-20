@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Platforms>x64</Platforms>
+    <AssemblyName>Plugin.DNS.CertifyDns</AssemblyName>
+  </PropertyGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy /i /s /Y &quot;$(TargetPath)&quot; &quot;$(SolutionDir)\..\build\plugins\$(ConfigurationName)\&quot;" />
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Certify.Models\Certify.Models.csproj" />
+    <ProjectReference Include="..\..\..\Certify.Shared\Certify.Shared.Core.csproj" />
+  </ItemGroup>
+
+</Project>
