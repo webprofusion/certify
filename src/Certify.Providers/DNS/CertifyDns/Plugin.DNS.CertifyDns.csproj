@@ -13,6 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Certify.Models\Certify.Models.csproj" />
     <ProjectReference Include="..\..\..\Certify.Shared\Certify.Shared.Core.csproj" />
+    <ProjectReference Include="..\AcmeDns\AcmeDns\Plugin.DNS.AcmeDns.csproj" />
   </ItemGroup>
 
 </Project>

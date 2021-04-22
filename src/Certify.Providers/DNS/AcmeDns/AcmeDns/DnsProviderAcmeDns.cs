@@ -28,6 +28,8 @@ namespace Certify.Providers.DNS.AcmeDns
 
     public class DnsProviderAcmeDns : IDnsProvider
     {
+        private Dictionary<string, string> _credentials;
+
         private ILog _log;
 
         private int? _customPropagationDelay = null;
@@ -147,9 +149,18 @@ namespace Certify.Providers.DNS.AcmeDns
 
             var json = JsonConvert.SerializeObject(registration, _serializerSettings);
 
-            var httpContent = new StringContent(json);
+            var req = new HttpRequestMessage(HttpMethod.Post, "/register");
 
-            var response = await _client.PostAsync("/register", httpContent);
+            if (_credentials?.ContainsKey("user") == true && _credentials?.ContainsKey("key") == true)
+            {
+                var basicCredentials = "Basic " + ToUrlSafeBase64String(_credentials["user"] + ":" + _credentials["key"]);
+                req.Headers.Add("Authorization", basicCredentials);
+            }
+
+      
+            req.Content = new StringContent(json);
+
+            var response = await _client.SendAsync(req);
 
             if (response.IsSuccessStatusCode)
             {
@@ -179,6 +190,11 @@ namespace Certify.Providers.DNS.AcmeDns
         {
             // create or load registration settings
             var (registration, isNewRegistration) = await Register(_settingsPath, request.TargetDomainName);
+
+            if (registration == null)
+            {
+                return new ActionResult { IsSuccess = false, Message = $"Failed to register with acme-dns. Check API Url and required credentials (if any)." };
+            }
 
             if (isNewRegistration)
             {
@@ -233,6 +249,7 @@ namespace Certify.Providers.DNS.AcmeDns
 
         public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
         {
+            _credentials = credentials;
             _log = log;
             _parameters = parameters;
 
