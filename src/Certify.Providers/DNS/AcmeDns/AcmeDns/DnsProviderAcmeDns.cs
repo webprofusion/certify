@@ -13,16 +13,28 @@ using Newtonsoft.Json;
 
 namespace Certify.Providers.DNS.AcmeDns
 {
+
+#pragma warning disable IDE1006 // Naming Styles
     internal class AcmeDnsRegistration
     {
-#pragma warning disable IDE1006 // Naming Styles
+
         public List<string> allowfrom { get; set; }
         public string fulldomain { get; set; }
         public string subdomain { get; set; }
         public string password { get; set; }
         public string username { get; set; }
-#pragma warning restore IDE1006 // Naming Styles
+
     }
+
+    internal class AcmeDnsUpdate
+    {
+        public string txt { get; set; }
+
+        // length of time to wait before checking challenge response, non-standard and used by CertifyDns in some cases
+        public int? propagationDelaySeconds { get; set; }
+    }
+
+#pragma warning restore IDE1006 // Naming Styles
 
     public class DnsProviderAcmeDnsProvider : PluginProviderBase<IDnsProvider, ChallengeProviderDefinition>, IDnsProviderProviderPlugin { }
 
@@ -157,7 +169,7 @@ namespace Certify.Providers.DNS.AcmeDns
                 req.Headers.Add("Authorization", basicCredentials);
             }
 
-      
+
             req.Content = new StringContent(json);
 
             var response = await _client.SendAsync(req);
@@ -221,23 +233,32 @@ namespace Certify.Providers.DNS.AcmeDns
             {
                 if (result.IsSuccessStatusCode)
                 {
-                    return new ActionResult { IsSuccess = true, Message = $"acme-dns updated: {request.RecordName} :: {registration.fulldomain}" };
+                    var responseJson = await result.Content.ReadAsStringAsync();
+                    var updateResult = JsonConvert.DeserializeObject<AcmeDnsUpdate>(responseJson);
+
+                    if (updateResult.propagationDelaySeconds != null)
+                    {
+                        // some variants (CertifyDns) may provide a preferred propagation delay time which can vary.
+                        _customPropagationDelay = updateResult.propagationDelaySeconds;
+                    }
+
+                    return new ActionResult { IsSuccess = true, Message = $"Updated: {request.RecordName} :: {registration.fulldomain}" };
                 }
                 else
                 {
-                    return new ActionResult { IsSuccess = false, Message = $"acme-dns update failed: Ensure the {request.RecordName} CNAME points to {registration.fulldomain}" };
+                    return new ActionResult { IsSuccess = false, Message = $"Update failed: Ensure the {request.RecordName} CNAME points to {registration.fulldomain}" };
                 }
             }
             catch (Exception exp)
             {
-                return new ActionResult { IsSuccess = false, Message = $"acme-dns update failed: {exp.Message}" };
+                return new ActionResult { IsSuccess = false, Message = $"Update failed: {exp.Message}" };
             }
         }
 
         public async Task<ActionResult> DeleteRecord(DnsRecord request)
         {
             return await Task.FromResult(
-                new ActionResult { IsSuccess = true, Message = $"Dns Record Delete completed: {request.RecordName}" }
+                new ActionResult { IsSuccess = true, Message = $"Dns Record Delete skipped (acme-dns): {request.RecordName}" }
                 );
         }
 
