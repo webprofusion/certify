@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
@@ -30,6 +30,7 @@ namespace Certify.Providers.DNS.MSDNS
         private SecureString _password;
         private string _server;
         private string _serverConnectionName;
+        private string _zoneID;
         private ILog _log;
         private PasswordAuthenticationMechanism _authMechanism = PasswordAuthenticationMechanism.Default;
         private WindowsRemotingProtocol _protocol = WindowsRemotingProtocol.DCOM;
@@ -60,6 +61,7 @@ namespace Certify.Providers.DNS.MSDNS
                         new ProviderParameter{ Key="protocol", Name="Remote Management Protocol", IsRequired = true, IsCredential = false, IsPassword = false, Description="Must be one of the following: DCOM, WinRM", Value="DCOM", OptionsList="DCOM;WinRM" },
                         new ProviderParameter{ Key="authentication", Name="Authentication", IsRequired = true, IsCredential = false, IsPassword = false, Description="Must be one of the following: Basic, CredSsp, Default, Digest, Kerberos, Negotiate, NtlmDomain", Value="Default", OptionsList="Basic;CredSsp;Default;Digest;Kerberos;Negotiate;NtlmDomain" },
                         new ProviderParameter{ Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="60", IsCredential=false },
+                        new ProviderParameter{ Key="zoneid",Name="Zone ID", IsRequired=false, IsPassword=false, IsCredential=false },
                     },
             ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
             Config = "Provider=Certify.Providers.DNS.MSDNS",
@@ -84,10 +86,12 @@ namespace Certify.Providers.DNS.MSDNS
         {
             var session = CreateCimSession();
 
+            var containerName = !string.IsNullOrEmpty(_zoneID) ? _zoneID : SolveContainerName(session, request.RecordName);
+
             var parameters = new CimMethodParametersCollection
             {
                 CimMethodParameter.Create("DnsServerName", _server, CimType.String, CimFlags.None),
-                CimMethodParameter.Create("ContainerName", SolveContainerName(session, request.RecordName), CimType.String, CimFlags.None),
+                CimMethodParameter.Create("ContainerName", containerName, CimType.String, CimFlags.None),
                 CimMethodParameter.Create("OwnerName", request.RecordName, CimType.String, CimFlags.None),
                 CimMethodParameter.Create("DescriptiveText", request.RecordValue, CimType.String, CimFlags.None)
             };
@@ -182,6 +186,8 @@ namespace Certify.Providers.DNS.MSDNS
                     _customPropagationDelay = customPropDelay;
                 }
             }
+
+            _zoneID = parameters.ContainsKey("zoneid") ? parameters["zoneid"] : null;
 
             return await Task.FromResult(true);
         }
