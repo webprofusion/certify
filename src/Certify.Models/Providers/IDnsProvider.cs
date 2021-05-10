@@ -104,13 +104,22 @@ namespace Certify.Models.Providers
                 }
             }
 
-            // if we don't have a zone Id or the zone wasn't found, try to match domain to zone list
+            // if we don't have a zone Id or the zone wasn't found, try to match domain to zone list, most specific label depth wins
 
             var info = new DnsRecord { RecordType = "TXT" };
+            var recordLabelDepth = recordName.Count(c => c == '.');
 
-            foreach (var z in zones.OrderBy(zn => zn.Name.Length))
+            foreach (var z in zones.OrderBy(zn => zn.Name.Count(c => c == '.')))
             {
-                if (recordName.EndsWith(z.Name) && (info.RootDomain == null || z.Name.Length > info.RootDomain.Length))
+                var zoneLabelDepth = z.Name.Count(c => c == '.');
+                var matchedLabelDepth = info.RootDomain?.Count(c => c == '.') ?? -1;
+
+                if (string.Equals(recordName, z.Name, System.StringComparison.InvariantCultureIgnoreCase))
+                {
+                    info.RootDomain = z.Name;
+                    info.ZoneId = z.ZoneId;
+                }
+                else if (recordName.EndsWith("." + z.Name) && (info.RootDomain == null || zoneLabelDepth > matchedLabelDepth))
                 {
                     info.RootDomain = z.Name;
                     info.ZoneId = z.ZoneId;
