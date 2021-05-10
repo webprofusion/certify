@@ -64,7 +64,7 @@ namespace Certify.UI.Controls.Settings
             }
 
             ThemeSelector.SelectedValue = EditModel.MainViewModel.UISettings?.UITheme ?? EditModel.MainViewModel.DefaultUITheme;
-
+            CultureSelector.SelectedValue = EditModel.MainViewModel.UISettings?.PreferredUICulture ?? "en-US";
 
 
             // re-add property changed tracking for save
@@ -140,6 +140,16 @@ namespace Certify.UI.Controls.Settings
                 Owner = Window.GetWindow(this)
             };
             d.ShowDialog();
+        }
+
+        private void CultureSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (CultureSelector.SelectedValue != null)
+            {
+                var cultureID = CultureSelector.SelectedValue.ToString();
+                ((ICertifyApp)Application.Current).ChangeCulture(cultureID, true);
+                EditModel.MainViewModel.UISettings.PreferredUICulture = cultureID;
+            }
         }
     }
 }

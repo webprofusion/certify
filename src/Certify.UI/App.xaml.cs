@@ -74,8 +74,14 @@ namespace Certify.UI
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            MainViewModel.UISettings = Settings.UISettings.Load();
 
             // Test translations
+            if (MainViewModel.UISettings != null)
+            {
+                ChangeCulture(MainViewModel.UISettings.PreferredUICulture,false);
+            }
+
             //System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("zh-HANS");
 
             // upgrade assembly version of saved settings (if required)
@@ -104,6 +110,25 @@ namespace Certify.UI
 
                 cfg.Dispatcher = Application.Current.Dispatcher;
             });
+        }
+
+        public void ChangeCulture(string culture, bool reopenWindow = true)
+        {
+            var cultureInfo = new System.Globalization.CultureInfo(culture);
+
+            //System.Threading.Thread.CurrentThread.CurrentCulture = cultureInfo;
+            System.Threading.Thread.CurrentThread.CurrentUICulture = cultureInfo;
+
+            if (reopenWindow)
+            {
+               var previousAppWindow = Application.Current.MainWindow;
+                if (previousAppWindow != null)
+                {
+                    Application.Current.MainWindow = new Windows.MainWindow();
+                    Application.Current.MainWindow.Show();
+                    previousAppWindow.Close();
+                }
+            }
         }
 
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)

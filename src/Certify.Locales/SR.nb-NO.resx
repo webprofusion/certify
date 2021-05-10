@@ -295,7 +295,7 @@
     <value>Aktiver funksjonsrapportering (app-telemetri)</value>
   </data>
   <data name="Settings_EnableProxyApiForDomainConfig" xml:space="preserve">
-    <value>Aktiver proxy-API for domenekonfeksjonskontroller</value>
+    <value>Aktiver proxy API for kontroller av domener</value>
   </data>
   <data name="Settings_EnableEFS" xml:space="preserve">
     <value>Aktiver kryptert filsystem (EFS) for sensitive filer. Dette alternativet virker ikke på alle versjoner av Windows.</value>

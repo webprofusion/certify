@@ -72,10 +72,35 @@ namespace Certify.UI
             }
         }
 
+
+        public void ChangeCulture(string culture, bool reopenWindow = true)
+        {
+            var cultureInfo = new System.Globalization.CultureInfo(culture);
+
+            System.Threading.Thread.CurrentThread.CurrentCulture = cultureInfo;
+            System.Threading.Thread.CurrentThread.CurrentUICulture = cultureInfo;
+
+            if (reopenWindow)
+            {
+                var oldAppWindows = Application.Current.MainWindow;
+
+                Application.Current.MainWindow = new Windows.MainWindow();
+                Application.Current.MainWindow.Show();
+                oldAppWindows.Close();
+            }
+        }
+
         protected override void OnStartup(StartupEventArgs e)
         {
 
+            MainViewModel.UISettings = Settings.UISettings.Load();
             // Test translations
+
+            if (MainViewModel.UISettings != null)
+            {
+                ChangeCulture(MainViewModel.UISettings.PreferredUICulture, false);
+            }
+
             //System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("zh-HANS");
 
             // upgrade assembly version of saved settings (if required)

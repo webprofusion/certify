@@ -16,6 +16,7 @@
     public interface ICertifyApp
     {
         string ToggleTheme(string initialTheme = null);
+        void ChangeCulture(string culture, bool reopenWindow = true);
         void ShowNotification(string msg, NotificationType type = NotificationType.Info, bool autoClose = true);
     }
 }

@@ -109,6 +109,16 @@ namespace Certify.UI.ViewModel
 
         public string DefaultUITheme = "Light";
 
+
+        public Dictionary<string, string> UICultures { get; } = new Dictionary<string, string>
+        {
+            {"en-US","English" },
+            {"ja-JP","Japanese/日本語"},
+            {"es-ES","Spanish/Español"},
+            {"nb-NO","Norwegian/Bokmål"},
+            {"zh-Hans","Chinese (Simplified)"}
+        };
+
         public UISettings UISettings { get; set; }
 
         public void RaiseError(Exception exp)

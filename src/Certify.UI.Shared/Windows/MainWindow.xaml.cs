@@ -144,7 +144,7 @@ namespace Certify.UI.Windows
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            var uiSettings = UISettings.Load();
+            var uiSettings = _appViewModel.UISettings;
 
             if (uiSettings != null)
             {

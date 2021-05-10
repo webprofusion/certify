@@ -16,6 +16,8 @@ namespace Certify.UI.Settings
 
         public double? Scaling { get; set; } = 1;
 
+        public string PreferredUICulture { get; set; } = "en-US";
+
         public static UISettings Load()
         {
             var uiSettingsFilePath = Path.Combine(Management.Util.GetAppDataFolder(), SETTINGS_FILE);
