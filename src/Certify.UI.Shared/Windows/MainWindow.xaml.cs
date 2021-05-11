@@ -404,7 +404,7 @@ namespace Certify.UI.Windows
 
         private async void MetroWindow_Closing(object sender, CancelEventArgs e)
         {
-            // allow cancelling exit to save changes
+            // allow canceling exit to save changes
             if (!await _itemViewModel.ConfirmDiscardUnsavedChanges())
             {
                 e.Cancel = true;
