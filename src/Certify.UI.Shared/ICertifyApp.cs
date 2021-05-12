@@ -70,7 +70,7 @@ namespace Certify.UI.Shared
             }
         }
 
-        public static void Startup(ILog log, Notifier notifier, ViewModel.AppViewModel mainViewModel, StartupEventArgs e)
+        public static Notifier Startup(ILog log, ViewModel.AppViewModel mainViewModel, StartupEventArgs e)
         {
             log?.Information("UI Startup");
 
@@ -83,7 +83,7 @@ namespace Certify.UI.Shared
             }
 
             // setup notifications toast handler
-            notifier = new Notifier(cfg =>
+            return new Notifier(cfg =>
             {
                 cfg.PositionProvider = new WindowPositionProvider(
                     parentWindow: Application.Current.MainWindow,

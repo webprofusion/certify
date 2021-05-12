@@ -29,7 +29,7 @@ namespace Certify.UI
             var currentDomain = AppDomain.CurrentDomain;
             currentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
-            AppHelper.Startup(Log, _notifier, MainViewModel, e);
+            _notifier = AppHelper.Startup(Log, MainViewModel, e);
         }
 
         public void ChangeCulture(string culture, bool reopenWindow = true) => AppHelper.ChangeCulture(culture, reopenWindow);
