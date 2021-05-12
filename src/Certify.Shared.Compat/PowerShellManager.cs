@@ -32,7 +32,8 @@ namespace Certify.Management
             string scriptContent = null,
             Dictionary<string, string> credentials = null,
             string logonType = null,
-            string[] ignoredCommandExceptions = null
+            string[] ignoredCommandExceptions = null,
+            int timeoutMinutes = 5
             )
         {
             // argument check for script file existence and .ps1 extension
@@ -113,13 +114,13 @@ namespace Certify.Management
                             return Impersonation.RunAsUser(windowsCredentials, _defaultLogonType, () =>
                           {
                               // run as current user
-                              return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions);
+                              return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes:timeoutMinutes);
                           });
                         }
                         else
                         {
                             // run as current user
-                            return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions);
+                            return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes);
                         }
                     }
                 }
@@ -131,7 +132,7 @@ namespace Certify.Management
             }
         }
 
-        private static ActionResult InvokePowershell(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, string scriptContent, PowerShell shell, bool autoConvertBoolean = true, string[] ignoredCommandExceptions = null)
+        private static ActionResult InvokePowershell(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, string scriptContent, PowerShell shell, bool autoConvertBoolean = true, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5)
         {
             // ensure execution policy will allow the script to run, default to system default, default policy is set in service config object 
 
@@ -231,7 +232,7 @@ namespace Certify.Management
             {
                 var async = shell.BeginInvoke<PSObject, PSObject>(null, outputData);
 
-                var maxWait = 60 * 5; // 5 min timeout
+                var maxWait = 60 * timeoutMinutes; // N min timeout
                 var currentWait = 0;
                 var pollSeconds = 5;
 
