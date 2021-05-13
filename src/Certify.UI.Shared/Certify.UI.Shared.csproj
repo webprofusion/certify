@@ -5,7 +5,7 @@
 		<UseWPF>true</UseWPF>
 		<UseWindowsForms>true</UseWindowsForms>
 		<!--assembly version specified here to allow WPF to load windows via startupUI without version dependency-->
-		<AssemblyVersion>6.0.0</AssemblyVersion>
+		<AssemblyVersion>6.0.0.*</AssemblyVersion>
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
