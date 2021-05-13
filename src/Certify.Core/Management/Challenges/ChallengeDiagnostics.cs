@@ -660,7 +660,15 @@ namespace Certify.Core.Management.Challenges
 
             if (!dnsResult.Result.IsSuccess)
             {
-                log.Error($"DNS update failed: {dnsResult.Result.Message}");
+                if (dnsResult.IsAwaitingUser)
+                {
+                    log.Error($"Action Required: {dnsResult.Result.Message}");
+                }
+                else
+                {
+                    log.Error($"DNS update failed: {dnsResult.Result.Message}");
+                }
+
             }
             else
             {
