@@ -17,9 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Assets\certificate.pfx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <Content Include="Assets\certificate.pfx" />
   </ItemGroup>
 
   <ItemGroup>
