@@ -20,6 +20,7 @@ namespace Certify.Service
             _certifyManager = manager;
         }
 
+        [AllowAnonymous]
         [HttpGet, Route("appversion")]
         public string GetAppVersion()
         {

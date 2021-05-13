@@ -15,9 +15,7 @@ namespace Certify.Service.Controllers
     {
         protected override bool IsAuthorized(HttpActionContext actionContext)
         {
-#if DEBUG_NO_AUTH
-    return true;
-#endif
+
             // check if action is allow anonymous
             if (actionContext.ActionDescriptor.GetCustomAttributes<AllowAnonymousAttribute>().Any()
                || actionContext.ControllerContext.ControllerDescriptor.GetCustomAttributes<AllowAnonymousAttribute>().Any())

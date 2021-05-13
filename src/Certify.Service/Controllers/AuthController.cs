@@ -21,12 +21,14 @@ namespace Certify.Service
         {
             _certifyManager = manager;
         }
-
+#if !RELEASE //feature not production ready
         [HttpGet, Route("windows")]
         public async Task<string> GetWindowsAuthKey()
         {
-            // user is using windows authentication, return an initial secret auth token. TODO: user must be able to invalidate existing auth key
-            var encryptedBytes = System.Security.Cryptography.ProtectedData.Protect(
+
+
+        // user is using windows authentication, return an initial secret auth token. TODO: user must be able to invalidate existing auth key
+        var encryptedBytes = System.Security.Cryptography.ProtectedData.Protect(
                 System.Text.Encoding.UTF8.GetBytes(this.ActionContext.RequestContext.Principal.Identity.Name),
                 System.Text.Encoding.UTF8.GetBytes("authtoken"), System.Security.Cryptography.DataProtectionScope.LocalMachine
                 );
@@ -37,6 +39,8 @@ namespace Certify.Service
 
             // return auth secret as Base64 string suitable for Basic Authorization https://en.wikipedia.org/wiki/Basic_access_authentication
             return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(userIdPlusSecret));
+
+
         }
 
         [HttpPost, Route("token")]
@@ -68,5 +72,6 @@ namespace Certify.Service
             var jwt = GenerateJwt("certifyuser", GetAuthSecretKey());
             return jwt;
         }
+#endif
     }
 }
