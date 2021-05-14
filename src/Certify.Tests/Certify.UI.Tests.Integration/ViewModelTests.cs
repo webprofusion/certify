@@ -168,7 +168,7 @@ namespace Certify.UI.Tests.Integration
             Assert.IsFalse(result.IsValid, result.Message);
             Assert.AreEqual(ManagedCertificateViewModel.ValidationErrorCodes.CHALLENGE_TYPE_INVALID.ToString(), result.ErrorCode);
 
-            // ensure item with dsn challenge type must have challenge provider set
+            // ensure item with dns challenge type must have challenge provider set
             model.SelectedItem = new ManagedCertificate
             {
                 DomainOptions = new System.Collections.ObjectModel.ObservableCollection<DomainOption> {

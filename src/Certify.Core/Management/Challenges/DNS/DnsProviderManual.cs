@@ -27,7 +27,7 @@ namespace Certify.Core.Management.Challenges.DNS
         {
             Id = "DNS01.Manual",
             Title = "(Update DNS Manually)",
-            Description = "When a DSN update is required, wait for manual changes.",
+            Description = "When a DNS update is required, wait for manual changes.",
             HelpUrl = "https://docs.certifytheweb.com/docs/dns-validation/",
             PropagationDelaySeconds = -1,
             ProviderParameters = new List<ProviderParameter>() { new ProviderParameter { Description = "Email address to prompt changes", IsRequired = false, Key = "email", Name = "Email to Notify (optional)", IsCredential = false } },

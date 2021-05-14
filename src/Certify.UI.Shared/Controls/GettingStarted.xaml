@@ -47,7 +47,8 @@
                 <StackPanel
                     x:Name="CommunityEdition"
                     Margin="0,16,16,8"
-                    Background="{DynamicResource InformationColorBrush}">
+                    Background="{DynamicResource InformationColorBrush}"
+                    Visibility="Collapsed">
                     <StackPanel.Style>
                         <Style>
                             <Setter Property="UIElement.Visibility" Value="Collapsed" />
