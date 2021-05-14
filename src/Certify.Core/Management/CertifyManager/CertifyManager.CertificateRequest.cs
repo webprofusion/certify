@@ -341,7 +341,8 @@ namespace Certify.Management
             bool resumePaused = false,
             bool skipRequest = false,
             bool failOnSkip = false,
-            bool skipTasks = false
+            bool skipTasks = false,
+            bool isInteractive = false
             )
         {
             _serviceLog?.Information($"Performing Certificate Request: {managedCertificate.Name} [{managedCertificate.Id}]");
@@ -421,7 +422,7 @@ namespace Certify.Management
                             else
                             {
                                 // perform normal certificate challenge/response/renewal (acme-dns etc)
-                                r = await PerformCertificateRequestProcessing(log, managedCertificate, progress, certRequestResult, config);
+                                r = await PerformCertificateRequestProcessing(log, managedCertificate, progress, certRequestResult, config, isInteractive);
                             }
 
                             // copy result from sub-request, preserve existing logged actions
@@ -437,7 +438,7 @@ namespace Certify.Management
                             if (managedCertificate.Health != ManagedCertificateHealth.AwaitingUser)
                             {
                                 // perform normal certificate challenge/response/renewal
-                                var r = await PerformCertificateRequestProcessing(log, managedCertificate, progress, certRequestResult, config);
+                                var r = await PerformCertificateRequestProcessing(log, managedCertificate, progress, certRequestResult, config, isInteractive);
 
                                 certRequestResult.Message = r.Message;
                                 certRequestResult.IsSuccess = r.IsSuccess;
@@ -569,7 +570,7 @@ namespace Certify.Management
             return Task.FromResult(challengeResponses);
         }
 
-        private async Task<CertificateRequestResult> PerformCertificateRequestProcessing(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, CertificateRequestResult result, CertRequestConfig config)
+        private async Task<CertificateRequestResult> PerformCertificateRequestProcessing(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, CertificateRequestResult result, CertRequestConfig config, bool isInteractive)
         {
             //primary domain and each subject alternative name must now be registered as an identifier with LE and validated
             LogMessage(managedCertificate.Id, $"{Util.GetUserAgent()}");
@@ -645,18 +646,6 @@ namespace Certify.Management
 
                 await PerformAutomatedChallengeResponses(log, managedCertificate, authorizations, result, config, progress);
 
-                if (authorizations.Any(a => a.IsFailure == true))
-                {
-                    result.IsSuccess = false;
-                    result.Abort = true;
-                    result.Message = $"{authorizations.FirstOrDefault(a => a.IsFailure)?.AuthorizationError}";
-
-                    ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result });
-                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
-                    LogMessage(managedCertificate.Id, result.Message, LogItemType.CertficateRequestFailed);
-
-                    return result;
-                }
 
                 // if any challenge responses require a manual step, pause our request here and wait
                 // for user intervention
@@ -681,24 +670,41 @@ namespace Certify.Management
                     {
                         if (_pluginManager.DashboardClient != null)
                         {
-                            //TODO: should only fire if user not interactive?
-
-                            await _pluginManager.DashboardClient.ReportUserActionRequiredAsync(new Models.Shared.ItemActionRequired
+                            // fire notification via API if user not interactive
+                            if (!isInteractive)
                             {
-                                InstanceId = managedCertificate.InstanceId,
-                                ManagedItemId = managedCertificate.Id,
-                                ItemTitle = managedCertificate.Name,
-                                ActionType = "manualdns",
-                                InstanceTitle = Environment.MachineName,
-                                Message = instructions,
-                                NotificationEmail = (await GetAccountDetailsForManagedItem(managedCertificate))?.Email
-                            });
+                                await _pluginManager.DashboardClient.ReportUserActionRequiredAsync(new Models.Shared.ItemActionRequired
+                                {
+                                    InstanceId = managedCertificate.InstanceId,
+                                    ManagedItemId = managedCertificate.Id,
+                                    ItemTitle = managedCertificate.Name,
+                                    ActionType = "manualdns",
+                                    InstanceTitle = Environment.MachineName,
+                                    Message = instructions,
+                                    NotificationEmail = (await GetAccountDetailsForManagedItem(managedCertificate))?.Email
+                                });
+                            }
                         }
                     }
 
                     // return now and let user action the paused request
                     return result;
                 }
+
+
+                if (authorizations.Any(a => a.IsFailure == true))
+                {
+                    result.IsSuccess = false;
+                    result.Abort = true;
+                    result.Message = $"{authorizations.FirstOrDefault(a => a.IsFailure)?.AuthorizationError}";
+
+                    ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result });
+                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
+                    LogMessage(managedCertificate.Id, result.Message, LogItemType.CertficateRequestFailed);
+
+                    return result;
+                }
+
 
                 // if any of our authorizations require a delay for challenge response propagation, wait now.
                 var propagationSecondsRequired = authorizations.Max(a => a.AttemptedChallenge?.PropagationSeconds);

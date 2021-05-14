@@ -765,8 +765,8 @@ namespace Certify.UI.ViewModel
 
                 TrackProgress(managedCertificate);
 
-                // start request
-                return await CertifyClient.BeginCertificateRequest(managedCertificate.Id, resumePaused);
+                // start request (interactive)
+                return await CertifyClient.BeginCertificateRequest(managedCertificate.Id, resumePaused, true);
             }
             else
             {

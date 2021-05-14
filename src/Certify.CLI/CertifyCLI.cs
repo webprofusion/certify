@@ -344,7 +344,7 @@ namespace Certify.CLI
 
                 if (updatedManagedCert != null && performRequestNow)
                 {
-                    await _certifyClient.BeginCertificateRequest(updatedManagedCert.Id, true);
+                    await _certifyClient.BeginCertificateRequest(updatedManagedCert.Id, true, false);
                 }
 
             }
@@ -409,7 +409,7 @@ namespace Certify.CLI
 
                     if (updatedManagedCert != null && performRequestNow)
                     {
-                        await _certifyClient.BeginCertificateRequest(updatedManagedCert.Id, true);
+                        await _certifyClient.BeginCertificateRequest(updatedManagedCert.Id, true, true);
                     }
                 }
 

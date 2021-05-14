@@ -342,11 +342,11 @@ namespace Certify.Client
             }
         }
 
-        public async Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused)
+        public async Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused, bool isInteractive)
         {
             try
             {
-                var response = await FetchAsync($"managedcertificates/renewcert/{managedItemId}/{resumePaused}");
+                var response = await FetchAsync($"managedcertificates/renewcert/{managedItemId}/{resumePaused}/{isInteractive}");
                 return JsonConvert.DeserializeObject<CertificateRequestResult>(response);
             }
             catch (Exception exp)

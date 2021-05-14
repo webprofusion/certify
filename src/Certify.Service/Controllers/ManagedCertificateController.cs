@@ -139,8 +139,8 @@ namespace Certify.Service
             return await _certifyManager.PerformRenewalAllManagedCertificates(settings, null);
         }
 
-        [HttpGet, Route("renewcert/{managedItemId}/{resumePaused}")]
-        public async Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused)
+        [HttpGet, Route("renewcert/{managedItemId}/{resumePaused}/{isInteractive}")]
+        public async Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused, bool isInteractive)
         {
             DebugLog();
 
@@ -158,7 +158,8 @@ namespace Certify.Service
                                                                            null,
                                                                             managedCertificate,
                                                                             progressIndicator,
-                                                                            resumePaused
+                                                                            resumePaused,
+                                                                            isInteractive: isInteractive
                                                                             );
             return result;
         }

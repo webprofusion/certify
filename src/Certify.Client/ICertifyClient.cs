@@ -82,7 +82,7 @@ namespace Certify.Client
 
         Task<CertificateRequestResult> RefetchCertificate(string managedItemId);
 
-        Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused);
+        Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused, bool isInteractive);
 
         Task<RequestProgressState> CheckCertificateRequest(string managedItemId);
 
