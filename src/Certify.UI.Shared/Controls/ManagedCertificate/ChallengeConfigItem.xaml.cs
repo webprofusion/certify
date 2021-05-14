@@ -93,6 +93,12 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private async Task SetChallengeProvider(string challengeProviderType)
         {
+            var previousSelection = EditModel.SelectedItem.ChallengeProvider;
+            if (previousSelection != null && previousSelection != challengeProviderType)
+            {
+                EditModel.SelectedItem.Parameters.Clear();
+            }
+
             EditModel.SelectedItem.ChallengeProvider = challengeProviderType;
 
             EditModel.SelectedItem.ChallengeCredentialKey = null;
