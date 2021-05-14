@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net.Http;
-using System.Text.RegularExpressions;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
-using Newtonsoft.Json;
 
 namespace Certify.Providers.DNS.CertifyDns
 {
@@ -32,7 +26,7 @@ namespace Certify.Providers.DNS.CertifyDns
                         new ProviderParameter{ Key="api",Name="API Url", IsRequired=true, IsCredential=false, IsPassword=false, Value="https://certify-dns.certifytheweb.com", Description="Base URL for a managed version of acme-dns" },
                         new ProviderParameter{ Key="user",Name="API Username", IsRequired=true, IsCredential=true, IsPassword=false,  Description="API Username" },
                         new ProviderParameter{ Key="key",Name="API Key", IsRequired=true, IsCredential=true, IsPassword=false,  Description="API Key" },
-                       
+
                     },
                     ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                     Config = "Provider=Certify.Providers.DNS.CertifyDns",
@@ -41,7 +35,7 @@ namespace Certify.Providers.DNS.CertifyDns
             }
         }
 
-        public DnsProviderCertifyDns(): base()
+        public DnsProviderCertifyDns() : base()
         {
 
         }

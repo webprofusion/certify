@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Windows;
 using Certify.UI.Shared;
-using ControlzEx.Theming;
 using ToastNotifications;
-using ToastNotifications.Lifetime;
-using ToastNotifications.Messages;
-using ToastNotifications.Position;
 
 namespace Certify.UI
 {

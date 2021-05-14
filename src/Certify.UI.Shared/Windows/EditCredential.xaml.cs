@@ -164,7 +164,7 @@ namespace Certify.UI.Windows
             if (ProviderTypes.SelectedItem != null)
             {
 
-                var selectedType = JsonConvert.DeserializeObject<ProviderDefinition>(JsonConvert.SerializeObject( ProviderTypes.SelectedItem as ProviderDefinition));
+                var selectedType = JsonConvert.DeserializeObject<ProviderDefinition>(JsonConvert.SerializeObject(ProviderTypes.SelectedItem as ProviderDefinition));
                 if (selectedType != null)
                 {
                     EditViewModel.CredentialSet = new ObservableCollection<ProviderParameter>(selectedType.ProviderParameters.Where(p => p.IsCredential));

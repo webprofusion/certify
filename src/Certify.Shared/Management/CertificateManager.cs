@@ -208,7 +208,7 @@ namespace Certify.Management
         {
             try
             {
-                
+
                 var cert = new X509Certificate2(filename, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
                 return cert;
             }

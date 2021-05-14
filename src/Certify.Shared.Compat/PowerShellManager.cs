@@ -114,7 +114,7 @@ namespace Certify.Management
                             return Impersonation.RunAsUser(windowsCredentials, _defaultLogonType, () =>
                           {
                               // run as current user
-                              return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes:timeoutMinutes);
+                              return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes);
                           });
                         }
                         else
