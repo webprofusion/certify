@@ -73,7 +73,7 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
                 {
                     Id = "DNS01.API.SimpleDNSPlus",
                     Title = "SimpleDNSPlus DNS API",
-                    Description = "Validates via SimpleDNSPlus DNS APIs (use /v2/ endpoint) using basic authenticaton credentials",
+                    Description = "Validates via SimpleDNSPlus DNS APIs (use /v2/ endpoint) using basic authentication credentials",
                     HelpUrl = "https://simpledns.com/swagger-ui/",
                     PropagationDelaySeconds = 120,
                     ProviderParameters = new List<ProviderParameter>{
