@@ -35,29 +35,29 @@
  <ItemGroup> 
     <PackageReference Include="LightInject" Version="6.4.0" /> 
     <PackageReference Include="LightInject.WebApi" Version="2.0.0" /> 
-    <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.1" /> 
-    <PackageReference Include="Microsoft.AspNet.SignalR.Core" Version="2.4.1" /> 
-    <PackageReference Include="Microsoft.AspNet.SignalR.SelfHost" Version="2.4.1" /> 
+    <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.2" /> 
+    <PackageReference Include="Microsoft.AspNet.SignalR.Core" Version="2.4.2" /> 
+    <PackageReference Include="Microsoft.AspNet.SignalR.SelfHost" Version="2.4.2" /> 
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.7" /> 
     <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.7" /> 
     <PackageReference Include="Microsoft.AspNet.WebApi.Cors" Version="5.2.7" /> 
     <PackageReference Include="Microsoft.AspNet.WebApi.Owin" Version="5.2.7" /> 
     <PackageReference Include="Microsoft.AspNet.WebApi.OwinSelfHost" Version="5.2.7" /> 
     <PackageReference Include="Microsoft.Bcl" Version="1.1.10" /> 
-    <PackageReference Include="Microsoft.Owin" Version="4.1.1" /> 
-    <PackageReference Include="Microsoft.Owin.Cors" Version="4.1.1" /> 
-    <PackageReference Include="Microsoft.Owin.Diagnostics" Version="4.1.1" /> 
-    <PackageReference Include="Microsoft.Owin.Host.HttpListener" Version="4.1.1" /> 
-    <PackageReference Include="Microsoft.Owin.Hosting" Version="4.1.1" /> 
-    <PackageReference Include="Microsoft.Owin.Security" Version="4.1.1" /> 
-    <PackageReference Include="Microsoft.Owin.SelfHost" Version="4.1.1" /> 
+    <PackageReference Include="Microsoft.Owin" Version="4.2.0" /> 
+    <PackageReference Include="Microsoft.Owin.Cors" Version="4.2.0" /> 
+    <PackageReference Include="Microsoft.Owin.Diagnostics" Version="4.2.0" /> 
+    <PackageReference Include="Microsoft.Owin.Host.HttpListener" Version="4.2.0" /> 
+    <PackageReference Include="Microsoft.Owin.Hosting" Version="4.2.0" /> 
+    <PackageReference Include="Microsoft.Owin.Security" Version="4.2.0" /> 
+    <PackageReference Include="Microsoft.Owin.SelfHost" Version="4.2.0" /> 
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" /> 
     <PackageReference Include="Owin" Version="1.0.0" /> 
     <PackageReference Include="Serilog" Version="2.10.0" /> 
     <PackageReference Include="Serilog.Sinks.ListOfString" Version="4.1.4.3" /> 
     <PackageReference Include="Swashbuckle.Core" Version="5.6.0" /> 
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="5.0.0" /> 
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.10.0" /> 
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.11.0" /> 
     <PackageReference Include="System.ValueTuple" Version="4.5.0" /> 
     <PackageReference Include="Topshelf" Version="4.3.0" /> 
     <PackageReference Include="Topshelf.Serilog" Version="4.3.0" /> 
