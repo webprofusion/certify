@@ -222,7 +222,7 @@
                         <TextBlock Style="{StaticResource Subheading}">User Interface Settings</TextBlock>
 
 
-                        <StackPanel Margin="0,8" Orientation="Horizontal">
+                        <StackPanel Margin="0,4" Orientation="Horizontal">
                             <Label Width="100" Content="Language" />
                             <ComboBox
                                 x:Name="CultureSelector"
@@ -233,7 +233,7 @@
 
                         </StackPanel>
 
-                        <StackPanel Margin="0,8" Orientation="Horizontal">
+                        <StackPanel Margin="0,4" Orientation="Horizontal">
                             <Label Width="100" Content="UI Theme" />
                             <ComboBox
                                 x:Name="ThemeSelector"
