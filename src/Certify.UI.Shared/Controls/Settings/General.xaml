@@ -220,13 +220,7 @@
                     IsSelected="true">
                     <StackPanel Margin="16,0" DockPanel.Dock="Top">
                         <TextBlock Style="{StaticResource Subheading}">User Interface Settings</TextBlock>
-                        <StackPanel Margin="0,8">
-                            <CheckBox
-                                x:Name="EnableTelematicsCheckbox"
-                                Content="{x:Static res:SR.Settings_EnableTelemetry}"
-                                IsChecked="{Binding Prefs.EnableAppTelematics}" />
 
-                        </StackPanel>
 
                         <StackPanel Margin="0,8" Orientation="Horizontal">
                             <Label Width="100" Content="Language" />
@@ -234,10 +228,11 @@
                                 x:Name="CultureSelector"
                                 DisplayMemberPath="Value"
                                 ItemsSource="{Binding MainViewModel.UICultures}"
-                                SelectedValuePath="Key" SelectionChanged="CultureSelector_SelectionChanged" />
+                                SelectedValuePath="Key"
+                                SelectionChanged="CultureSelector_SelectionChanged" />
 
                         </StackPanel>
-                        
+
                         <StackPanel Margin="0,8" Orientation="Horizontal">
                             <Label Width="100" Content="UI Theme" />
                             <ComboBox
@@ -248,7 +243,7 @@
                                 SelectionChanged="ThemeSelector_Selected" />
 
                         </StackPanel>
-                       
+
 
                         <StackPanel Margin="0,4" Orientation="Horizontal">
                             <Label Width="100" Content="Text/UI Size" />
@@ -260,6 +255,14 @@
                                 Minimum="1"
                                 NumericInputMode="Decimal"
                                 Value="{Binding MainViewModel.UIScaleFactor}" />
+
+                        </StackPanel>
+
+                        <StackPanel Margin="0,8">
+                            <CheckBox
+                                x:Name="EnableTelematicsCheckbox"
+                                Content="{x:Static res:SR.Settings_EnableTelemetry}"
+                                IsChecked="{Binding Prefs.EnableAppTelematics}" />
 
                         </StackPanel>
 
