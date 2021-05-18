@@ -263,6 +263,12 @@ namespace Certify.CLI
         /// <returns></returns>
         internal async Task AddIdentifiers(string[] args)
         {
+            if (args.Length < 3)
+            {
+                Console.WriteLine("Not enough arguments");
+                return;
+            }
+
             var managedCertId = args[1];
             var domains = args[2]?.Split(";, ".ToCharArray());
 
@@ -357,6 +363,13 @@ namespace Certify.CLI
         /// <returns></returns>
         internal async Task RemoveIdentifiers(string[] args)
         {
+
+            if (args.Length < 3)
+            {
+                Console.WriteLine("Not enough arguments");
+                return;
+            }
+
             var managedCertId = args[1];
             var domains = args[2]?.Split(";, ".ToCharArray());
 
