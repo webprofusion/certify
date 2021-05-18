@@ -77,7 +77,7 @@ namespace Certify.Service.Tests.Integration
         }
 
         [TestMethod]
-
+        [Ignore]
         public async Task TestManagedCertificatesVersioning()
         {
             var list = GetTestManagedCerts();
