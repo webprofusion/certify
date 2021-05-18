@@ -499,7 +499,7 @@ namespace Certify.UI.ViewModel
                 item.Id = Guid.NewGuid().ToString();
 
                 // optionally append webserver site ID (if used)
-                if (SelectedWebSite != null)
+                if (SelectedWebSite != null && !string.IsNullOrEmpty(SelectedWebSite.SiteId))
                 {
                     item.Id += ":" + SelectedWebSite.SiteId;
                     item.GroupId = SelectedWebSite.SiteId;
