@@ -185,13 +185,19 @@ namespace Certify.UI.Controls
 
             if (e.Key == Key.Delete && lvManagedCertificates.SelectedItem != null)
             {
-                await _appViewModel.DeleteManagedCertificate(_appViewModel.SelectedItem);
-
-                if (lvManagedCertificates.Items.Count > 0)
+                var itemToDelete = lvManagedCertificates.SelectedItem as Certify.Models.ManagedCertificate;
+                if (itemToDelete != null)
                 {
-                    SelectAndFocus(lvManagedCertificates.SelectedItem);
-                }
+                    await _appViewModel.DeleteManagedCertificate(itemToDelete);
 
+                    if (lvManagedCertificates.Items.Count > 0)
+                    {
+                        if (lvManagedCertificates.SelectedItem != null)
+                        {
+                            SelectAndFocus(lvManagedCertificates.SelectedItem);
+                        }
+                    }
+                }
                 return;
             }
 
