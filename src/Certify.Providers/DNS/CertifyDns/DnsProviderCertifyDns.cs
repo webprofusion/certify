@@ -28,6 +28,7 @@ namespace Certify.Providers.DNS.CertifyDns
                         new ProviderParameter{ Key="key",Name="API Key", IsRequired=true, IsCredential=true, IsPassword=false,  Description="API Key" },
 
                     },
+                    IsTestModeSupported=false,
                     ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                     Config = "Provider=Certify.Providers.DNS.CertifyDns",
                     HandlerType = ChallengeHandlerType.INTERNAL
@@ -37,7 +38,7 @@ namespace Certify.Providers.DNS.CertifyDns
 
         public DnsProviderCertifyDns() : base()
         {
-
+            this.EnableExtensions = true;
         }
 
         public new async Task<ActionResult> Test()

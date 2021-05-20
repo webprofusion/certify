@@ -23,6 +23,7 @@ namespace Certify.Providers.DNS.AcmeDns
         public string subdomain { get; set; }
         public string password { get; set; }
         public string username { get; set; }
+        public string subject { get; set; }
 
     }
 
@@ -45,6 +46,11 @@ namespace Certify.Providers.DNS.AcmeDns
         private ILog _log;
 
         private int? _customPropagationDelay = null;
+
+        /// <summary>
+        /// if true, enable extensions to the base standard
+        /// </summary>
+        public bool EnableExtensions = false;
 
         public int PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
 
@@ -157,6 +163,11 @@ namespace Certify.Providers.DNS.AcmeDns
                 {
                     registration.allowfrom.Add(r.Trim().ToLower());
                 }
+            }
+
+            if (EnableExtensions)
+            {
+                registration.subject = domainId;
             }
 
             var json = JsonConvert.SerializeObject(registration, _serializerSettings);
