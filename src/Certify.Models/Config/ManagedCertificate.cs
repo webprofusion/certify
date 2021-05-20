@@ -11,7 +11,7 @@ namespace Certify.Models
     {
         SSL_ACME = 1,
         SSL_Manual = 2,
-        SSL_ExternallyManaged = 2
+        SSL_ExternallyManaged = 3
     }
 
     public enum RequiredActionType
