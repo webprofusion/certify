@@ -267,78 +267,72 @@ namespace Certify.Management
                 )
                 {
                     // deploying to single or multiple Site
-                    if (item.ItemType == ManagedCertificateType.SSL_ACME)
+
+                    if (item.RequestConfig.DeploymentBindingMatchHostname)
                     {
-                        if (item.RequestConfig.DeploymentBindingMatchHostname)
-                        {
-                            deploymentDescription.AppendLine(
-                                "* Deploy to hostname bindings matching certificate domains.");
-                        }
+                        deploymentDescription.AppendLine(
+                            "* Deploy to hostname bindings matching certificate domains.");
+                    }
 
-                        if (item.RequestConfig.DeploymentBindingBlankHostname)
-                        {
-                            deploymentDescription.AppendLine("* Deploy to bindings with blank hostname.");
-                        }
+                    if (item.RequestConfig.DeploymentBindingBlankHostname)
+                    {
+                        deploymentDescription.AppendLine("* Deploy to bindings with blank hostname.");
+                    }
 
-                        if (item.RequestConfig.DeploymentBindingReplacePrevious)
-                        {
-                            deploymentDescription.AppendLine("* Deploy to bindings with previous certificate.");
-                        }
+                    if (item.RequestConfig.DeploymentBindingReplacePrevious)
+                    {
+                        deploymentDescription.AppendLine("* Deploy to bindings with previous certificate.");
+                    }
 
-                        if (item.RequestConfig.DeploymentBindingOption == DeploymentBindingOption.AddOrUpdate)
-                        {
-                            deploymentDescription.AppendLine("* Add or Update https bindings as required");
-                        }
+                    if (item.RequestConfig.DeploymentBindingOption == DeploymentBindingOption.AddOrUpdate)
+                    {
+                        deploymentDescription.AppendLine("* Add or Update https bindings as required");
+                    }
 
-                        if (item.RequestConfig.DeploymentBindingOption == DeploymentBindingOption.UpdateOnly)
-                        {
-                            deploymentDescription.AppendLine("* Update https bindings as required (no auto-created https bindings)");
-                        }
+                    if (item.RequestConfig.DeploymentBindingOption == DeploymentBindingOption.UpdateOnly)
+                    {
+                        deploymentDescription.AppendLine("* Update https bindings as required (no auto-created https bindings)");
+                    }
 
-                        if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.SingleSite)
+                    if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.SingleSite)
+                    {
+                        if (!string.IsNullOrEmpty(item.ServerSiteId))
                         {
-                            if (!string.IsNullOrEmpty(item.ServerSiteId))
+                            try
                             {
-                                try
-                                {
-                                    var siteInfo = await serverProvider.GetSiteById(item.ServerSiteId);
-                                    deploymentDescription.AppendLine($"## Deploying to Site" + newLine + newLine +
-                                                             $"`{siteInfo.Name}`" + newLine);
-                                }
-                                catch (Exception exp)
-                                {
-                                    deploymentDescription.AppendLine($"Error: **cannot identify selected site.** {exp.Message} ");
-                                }
+                                var siteInfo = await serverProvider.GetSiteById(item.ServerSiteId);
+                                deploymentDescription.AppendLine($"## Deploying to Site" + newLine + newLine +
+                                                         $"`{siteInfo.Name}`" + newLine);
                             }
-                        }
-                        else
-                        {
-                            deploymentDescription.AppendLine($"## Deploying to all matching sites:");
-                        }
-
-                        // add deployment sub-steps (if any)
-                        var bindingRequest = await certifyManager.DeployCertificate(item, null, true);
-
-                        if (bindingRequest.Actions == null || !bindingRequest.Actions.Any())
-                        {
-                            deploymentStep.Substeps = new List<ActionStep>
-                        {
-                            new ActionStep {Description = newLine + "**There are no matching targets to deploy to. Certificate will be stored but currently no bindings will be updated.**"}
-                        };
-                        }
-                        else
-                        {
-                            deploymentStep.Substeps = bindingRequest.Actions;
-
-                            deploymentDescription.AppendLine(" Action | Site | Binding ");
-                            deploymentDescription.Append(" ------ | ---- | ------- ");
+                            catch (Exception exp)
+                            {
+                                deploymentDescription.AppendLine($"Error: **cannot identify selected site.** {exp.Message} ");
+                            }
                         }
                     }
                     else
                     {
-                        // no website selected, maybe validating http with a manually specified path
-                        deploymentDescription.AppendLine($"Manual deployment to site.");
+                        deploymentDescription.AppendLine($"## Deploying to all matching sites:");
                     }
+
+                    // add deployment sub-steps (if any)
+                    var bindingRequest = await certifyManager.DeployCertificate(item, null, true);
+
+                    if (bindingRequest.Actions == null || !bindingRequest.Actions.Any())
+                    {
+                        deploymentStep.Substeps = new List<ActionStep>
+                        {
+                            new ActionStep {Description = newLine + "**There are no matching targets to deploy to. Certificate will be stored but currently no bindings will be updated.**"}
+                        };
+                    }
+                    else
+                    {
+                        deploymentStep.Substeps = bindingRequest.Actions;
+
+                        deploymentDescription.AppendLine(" Action | Site | Binding ");
+                        deploymentDescription.Append(" ------ | ---- | ------- ");
+                    }
+
                 }
                 else if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.DeploymentStoreOnly)
                 {
