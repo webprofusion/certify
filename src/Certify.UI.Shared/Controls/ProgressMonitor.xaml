@@ -87,6 +87,25 @@
                                 Visibility="{Binding IsRunning, Converter={StaticResource BooleanToVisibilityConverter}}" />
                         </DockPanel>
 
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style>
+                                    <Setter Property="StackPanel.Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding CurrentState}" Value="Paused">
+                                            <Setter Property="StackPanel.Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBox Background="Transparent"
+                             BorderThickness="0" FontWeight="SemiBold" TextWrapping="WrapWithOverflow"
+                             Text="{Binding ManagedCertificate.RenewalFailureMessage, Mode=OneWay}"
+                             IsReadOnly="True" IsTabStop="False"
+                          />
+
+                        </StackPanel>
+
                         <TextBlock
                             Margin="8,8,8,8"
                             HorizontalAlignment="Stretch"
@@ -95,6 +114,7 @@
                             Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundChromeGray}"
                             Text="{Binding Message}"
                             TextWrapping="WrapWithOverflow" />
+
                     </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>

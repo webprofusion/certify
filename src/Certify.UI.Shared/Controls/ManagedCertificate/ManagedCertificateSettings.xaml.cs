@@ -49,7 +49,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 if (_lastSelectedItemId != ItemViewModel.SelectedItem?.Id)
                 {
-                    // switch tab to defaultif the selected item has changed
+                    // switch tab to default if the selected item has changed
 
                     _lastSelectedItemId = ItemViewModel.SelectedItem?.Id;
 
@@ -66,33 +66,31 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 ItemViewModel.RaiseSelectedItemChanges();
 
+                if (!ItemViewModel.IsEditable)
+                {
+                    this.TabDeployment.Visibility = Visibility.Collapsed;
+                    this.TabDomains.Visibility = Visibility.Collapsed;
+                    this.TabAuthorization.Visibility = Visibility.Collapsed;
+                    this.TabTasks.Visibility = Visibility.Collapsed;
+                    this.TabPreview.Visibility = Visibility.Collapsed;
+
+                }
+                else
+                {
+                    this.TabDeployment.Visibility = Visibility.Visible;
+                    this.TabDomains.Visibility = Visibility.Visible;
+                    this.TabAuthorization.Visibility = Visibility.Visible;
+                    this.TabTasks.Visibility = Visibility.Visible;
+                    this.TabPreview.Visibility = Visibility.Visible;
+                }
+
                 if (ItemViewModel.SelectedItem?.Id == null)
                 {
                     // show name in edit mode when starting a new item
                     ItemViewModel.IsNameEditMode = true;
                     EditName.Focus();
                 }
-                else
-                {
-                    if (!ItemViewModel.IsEditable)
-                    {
-                        this.TabDeployment.Visibility = Visibility.Collapsed;
-                        this.TabDomains.Visibility = Visibility.Collapsed;
-                        this.TabAuthorization.Visibility = Visibility.Collapsed;
-                        this.TabTasks.Visibility = Visibility.Collapsed;
-                        this.TabPreview.Visibility = Visibility.Collapsed;
-
-                    }
-                    else
-                    {
-                        this.TabDeployment.Visibility = Visibility.Visible;
-                        this.TabDomains.Visibility = Visibility.Visible;
-                        this.TabAuthorization.Visibility = Visibility.Visible;
-                        this.TabTasks.Visibility = Visibility.Visible;
-                        this.TabPreview.Visibility = Visibility.Visible;
-                    }
-                }
-
+                
                 AppViewModel.IsChanged = false;
 
             }
