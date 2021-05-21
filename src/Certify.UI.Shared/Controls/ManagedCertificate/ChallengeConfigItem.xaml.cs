@@ -112,6 +112,11 @@ namespace Certify.UI.Controls.ManagedCertificate
                     "Warning", MessageBoxButton.OK, MessageBoxImage.Exclamation
                     );
             }
+
+            if (ChallengeAPIProviderList.SelectedValue != challengeProviderType)
+            {
+                ChallengeAPIProviderList.SelectedValue = challengeProviderType;
+            }
         }
 
         private void ParameterInput_KeyUp(object sender, System.Windows.Input.KeyEventArgs e) => EditModel.SelectedItem.IsChanged = true;
@@ -212,9 +217,8 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 if (string.IsNullOrEmpty(EditModel.SelectedItem.ChallengeProvider))
                 {
-                    // default dns challenges to acme-dns
-                    await SetChallengeProvider("DNS01.API.AcmeDns");
-
+                    // default dns challenges to certify-dns
+                    await SetChallengeProvider("DNS01.API.CertifyDns");
                 }
             }
 
