@@ -146,9 +146,17 @@ namespace Certify.UI.Controls.Settings
         {
             if (CultureSelector.SelectedValue != null)
             {
-                var cultureID = CultureSelector.SelectedValue.ToString();
-                ((ICertifyApp)Application.Current).ChangeCulture(cultureID, true);
-                EditModel.MainViewModel.UISettings.PreferredUICulture = cultureID;
+                try
+                {
+                    var cultureID = CultureSelector.SelectedValue?.ToString();
+                    ((ICertifyApp)Application.Current).ChangeCulture(cultureID, true);
+                    EditModel.MainViewModel.UISettings.PreferredUICulture = cultureID;
+                }
+                catch
+                {
+                    // some locales may have trouble selecting the new culture
+                    MessageBox.Show("Language selection could not be completed.");
+                }
             }
         }
     }
