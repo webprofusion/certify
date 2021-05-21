@@ -39,7 +39,7 @@ namespace Certify.Providers.DNS.Azure
             Id = "DNS01.API.Azure",
             Title = "Azure DNS API",
             Description = "Validates via Azure DNS APIs using credentials",
-            HelpUrl = "http://docs.certifytheweb.com/docs/dns-azuredns",
+            HelpUrl = "https://docs.certifytheweb.com/docs/dns/providers/azuredns",
             PropagationDelaySeconds = 60,
             ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{ Key="service",Name="Azure Service", IsRequired=true, IsPassword=false, IsCredential=true, Value="global", OptionsList="global=Azure Cloud; china=Azure China; germany=Azure Germany; usgov=Azure US Government" },

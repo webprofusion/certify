@@ -130,7 +130,7 @@ namespace Certify.Core.Management.Challenges.DNS
             Id = "DNS01.Powershell",
             Title = "Powershell/PoshACME DNS",
             Description = "Validates DNS challenges via a user provided custom powershell script",
-            HelpUrl = "http://docs.certifytheweb.com/",
+            HelpUrl = "https://docs.certifytheweb.com/docs/dns/validation",
             PropagationDelaySeconds = DefaultPropagationDelay,
             ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{ Key="args",Name="Script arguments", IsRequired=false, IsPassword=false, Value=DefaultPropagationDelay.ToString(), IsCredential=false },

@@ -28,7 +28,7 @@ namespace Certify.Core.Management.Challenges.DNS
             Id = "DNS01.Manual",
             Title = "(Update DNS Manually)",
             Description = "When a DNS update is required, wait for manual changes.",
-            HelpUrl = "https://docs.certifytheweb.com/docs/dns-validation/",
+            HelpUrl = "https://docs.certifytheweb.com/docs/dns/validation",
             PropagationDelaySeconds = -1,
             ProviderParameters = new List<ProviderParameter>() { new ProviderParameter { Description = "Email address to prompt changes", IsRequired = false, Key = "email", Name = "Email to Notify (optional)", IsCredential = false } },
             ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
@@ -46,7 +46,7 @@ namespace Certify.Core.Management.Challenges.DNS
         public async Task<ActionResult> CreateRecord(DnsRecord request) => new ActionResult
         {
             IsSuccess = true,
-            Message = $"Please login to your DNS control panel for the domain '{request.TargetDomainName}' and create a new TXT record named: \r\n{request.RecordName} \r\nwith the value:\r\n{request.RecordValue}"
+            Message = $"Please login to your DNS control panel for the domain '{request.TargetDomainName}' and create a new TXT record named: \r\n\t{request.RecordName} \r\nwith the value:\r\n\t{request.RecordValue}"
         };
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously

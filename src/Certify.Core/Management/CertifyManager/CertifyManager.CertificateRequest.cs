@@ -360,6 +360,9 @@ namespace Certify.Management
             var certRequestResult = new CertificateRequestResult { ManagedItem = managedCertificate, IsSuccess = false, Message = "", Actions = new List<ActionStep>() };
 
             var config = managedCertificate.RequestConfig;
+            
+            managedCertificate.RenewalFailureMessage = ""; // clear any previous renewal error or instructions
+
             try
             {
 
@@ -976,108 +979,97 @@ namespace Certify.Management
                         LogMessage(managedCertificate.Id, "Failed to parse certificate dates", LogItemType.GeneralError);
                     }
 
-                    if (managedCertificate.ItemType == ManagedCertificateType.SSL_ACME)
+                    // deploy certificate as required
+                    ReportProgress(progress,
+                        new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding,
+                            managedCertificate));
+
+                    // Install certificate into certificate store and bind to matching sites on server
+                    var deploymentManager = new BindingDeploymentManager();
+
+                    var actions = await deploymentManager.StoreAndDeploy(
+                            _serverProvider.GetDeploymentTarget(),
+                            managedCertificate,
+                            pfxPath,
+                            pfxPwd,
+                            isPreviewOnly: false
+                        );
+
+                    if (!actions.Any(a => a.HasError))
                     {
+                        //all done
+                        LogMessage(managedCertificate.Id, CoreSR.CertifyManager_CompleteRequestAndUpdateBinding,
+                            LogItemType.CertificateRequestSuccessful);
+
+                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Success);
+
+                        result.IsSuccess = true;
+
+                        // depending on the deployment type the final result will vary
+                        // string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
+                        result.Message = "Request completed";
                         ReportProgress(progress,
-                            new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding,
-                                managedCertificate));
+                            new RequestProgressState(RequestState.Success, result.Message, managedCertificate, false));
 
-                        // Install certificate into certificate store and bind to matching sites on server
-                        var deploymentManager = new BindingDeploymentManager();
-
-                        var actions = await deploymentManager.StoreAndDeploy(
-                                _serverProvider.GetDeploymentTarget(),
-                                managedCertificate,
-                                pfxPath,
-                                pfxPwd,
-                                isPreviewOnly: false
-                            );
-
-                        if (!actions.Any(a => a.HasError))
+                        // perform cert cleanup (if enabled)
+                        if (_useWindowsNativeFeatures && CoreAppSettings.Current.EnableCertificateCleanup && !string.IsNullOrEmpty(managedCertificate.CertificateThumbprintHash))
                         {
-                            //all done
-                            LogMessage(managedCertificate.Id, CoreSR.CertifyManager_CompleteRequestAndUpdateBinding,
-                                LogItemType.CertificateRequestSuccessful);
-
-                            await UpdateManagedCertificateStatus(managedCertificate, RequestState.Success);
-
-                            result.IsSuccess = true;
-
-                            // depending on the deployment type the final result will vary
-                            // string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
-                            result.Message = "Request completed";
-                            ReportProgress(progress,
-                                new RequestProgressState(RequestState.Success, result.Message, managedCertificate, false));
-
-                            // perform cert cleanup (if enabled)
-                            if (_useWindowsNativeFeatures && CoreAppSettings.Current.EnableCertificateCleanup && !string.IsNullOrEmpty(managedCertificate.CertificateThumbprintHash))
+                            try
                             {
-                                try
+                                var mode = CoreAppSettings.Current.CertificateCleanupMode;
+
+                                // default to After Expiry cleanup if no preference specified
+                                if (mode == null)
                                 {
-                                    var mode = CoreAppSettings.Current.CertificateCleanupMode;
-
-                                    // default to After Expiry cleanup if no preference specified
-                                    if (mode == null)
-                                    {
-                                        mode = CertificateCleanupMode.AfterExpiry;
-                                    }
-
-                                    // if pref is for full cleanup, use After Renewal just for this renewal cleanup
-                                    if (mode == CertificateCleanupMode.FullCleanup)
-                                    {
-                                        mode = CertificateCleanupMode.AfterRenewal;
-                                    }
-
-                                    // cleanup certs based on the given cleanup mode
-                                    var certsRemoved = CertificateManager.PerformCertificateStoreCleanup(
-                                       (CertificateCleanupMode)mode,
-                                        DateTime.Now,
-                                        matchingName: certCleanupName,
-                                        excludedThumbprints: new List<string> { managedCertificate.CertificateThumbprintHash },
-                                        log: _serviceLog
-                                    );
-
-                                    if (certsRemoved.Any())
-                                    {
-                                        foreach (var c in certsRemoved)
-                                        {
-                                            _serviceLog.Information($"Cleanup removed cert: {c}");
-                                        }
-                                    }
+                                    mode = CertificateCleanupMode.AfterExpiry;
                                 }
-                                catch (Exception exp)
+
+                                // if pref is for full cleanup, use After Renewal just for this renewal cleanup
+                                if (mode == CertificateCleanupMode.FullCleanup)
                                 {
-                                    // log exception
-                                    _serviceLog.Error("Failed to perform certificate cleanup: " + exp.ToString());
+                                    mode = CertificateCleanupMode.AfterRenewal;
+                                }
+
+                                // cleanup certs based on the given cleanup mode
+                                var certsRemoved = CertificateManager.PerformCertificateStoreCleanup(
+                                   (CertificateCleanupMode)mode,
+                                    DateTime.Now,
+                                    matchingName: certCleanupName,
+                                    excludedThumbprints: new List<string> { managedCertificate.CertificateThumbprintHash },
+                                    log: _serviceLog
+                                );
+
+                                if (certsRemoved.Any())
+                                {
+                                    foreach (var c in certsRemoved)
+                                    {
+                                        _serviceLog.Information($"Cleanup removed cert: {c}");
+                                    }
                                 }
                             }
-                        }
-                        else
-                        {
-                            // we failed to install this cert or create/update the https binding
-                            var msg = string.Join("\r\n",
-                                actions.Where(s => s.HasError)
-                               .Select(s => s.Description).ToArray()
-                               );
-
-                            result.Message = msg;
-
-                            await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
-
-                            LogMessage(managedCertificate.Id, result.Message, LogItemType.GeneralError);
+                            catch (Exception exp)
+                            {
+                                // log exception
+                                _serviceLog.Error("Failed to perform certificate cleanup: " + exp.ToString());
+                            }
                         }
                     }
                     else
                     {
-                        //user has opted for manual binding of certificate
+                        // we failed to install this cert or create/update the https binding
+                        var msg = string.Join("\r\n",
+                            actions.Where(s => s.HasError)
+                           .Select(s => s.Description).ToArray()
+                           );
 
-                        result.IsSuccess = true;
-                        result.Message = string.Format(CoreSR.CertifyManager_CertificateCreatedForBinding, pfxPath);
-                        LogMessage(managedCertificate.Id, result.Message, LogItemType.CertificateRequestSuccessful);
-                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Success, result.Message);
-                        ReportProgress(progress,
-                            new RequestProgressState(RequestState.Success, result.Message, managedCertificate));
+                        result.Message = msg;
+
+                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
+
+                        LogMessage(managedCertificate.Id, result.Message, LogItemType.GeneralError);
                     }
+
+
                 }
                 else
                 {
@@ -1328,66 +1320,62 @@ namespace Certify.Management
             var config = managedCertificate.RequestConfig;
             var pfxPath = managedCertificate.CertificatePath;
 
-
-
-
-            if (managedCertificate.ItemType == ManagedCertificateType.SSL_ACME)
+            // perform required deployment
+            if (!isPreviewOnly)
             {
+
+                if (!System.IO.File.Exists(pfxPath))
+                {
+                    return new CertificateRequestResult { IsSuccess = false, Message = $"[{managedCertificate.Name}] Certificate path is invalid or file does not exist. Cannot deploy certificate." };
+                }
+
+                ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding, managedCertificate));
+            }
+
+            var pfxPwd = await GetPfxPassword(managedCertificate);
+
+            // Install certificate into certificate store and bind to IIS site
+            var deploymentManager = new BindingDeploymentManager();
+
+            var actions = await deploymentManager.StoreAndDeploy(
+                    _serverProvider.GetDeploymentTarget(),
+                    managedCertificate,
+                    pfxPath,
+                    pfxPwd,
+                    isPreviewOnly: isPreviewOnly
+                );
+
+            result.Actions = actions;
+
+            if (!actions.Any(a => a.HasError))
+            {
+                //all done
+                LogMessage(managedCertificate.Id, logPrefix + CoreSR.CertifyManager_CompleteRequestAndUpdateBinding, LogItemType.CertificateRequestSuccessful);
+
                 if (!isPreviewOnly)
                 {
-
-                    if (!System.IO.File.Exists(pfxPath))
-                    {
-                        return new CertificateRequestResult { IsSuccess = false, Message = $"[{managedCertificate.Name}] Certificate path is invalid or file does not exist. Cannot deploy certificate." };
-                    }
-
-                    ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding, managedCertificate));
+                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Success);
                 }
 
-                var pfxPwd = await GetPfxPassword(managedCertificate);
-
-                // Install certificate into certificate store and bind to IIS site
-                var deploymentManager = new BindingDeploymentManager();
-
-                var actions = await deploymentManager.StoreAndDeploy(
-                        _serverProvider.GetDeploymentTarget(),
-                        managedCertificate,
-                        pfxPath,
-                        pfxPwd,
-                        isPreviewOnly: isPreviewOnly
-                    );
-
-                result.Actions = actions;
-
-                if (!actions.Any(a => a.HasError))
+                result.IsSuccess = true;
+                result.Message = logPrefix + string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
+                if (!isPreviewOnly)
                 {
-                    //all done
-                    LogMessage(managedCertificate.Id, logPrefix + CoreSR.CertifyManager_CompleteRequestAndUpdateBinding, LogItemType.CertificateRequestSuccessful);
-
-                    if (!isPreviewOnly)
-                    {
-                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Success);
-                    }
-
-                    result.IsSuccess = true;
-                    result.Message = logPrefix + string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
-                    if (!isPreviewOnly)
-                    {
-                        ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedCertificate));
-                    }
-                }
-                else
-                {
-                    // certificate install failed
-                    result.Message = logPrefix + string.Format(CoreSR.CertifyManager_CertificateInstallFailed, pfxPath);
-                    if (!isPreviewOnly)
-                    {
-                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
-                    }
-
-                    LogMessage(managedCertificate.Id, result.Message, LogItemType.GeneralError);
+                    ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedCertificate));
                 }
             }
+            else
+            {
+                // certificate install failed
+                result.Message = logPrefix + string.Format(CoreSR.CertifyManager_CertificateInstallFailed, pfxPath);
+                if (!isPreviewOnly)
+                {
+                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
+                }
+
+                LogMessage(managedCertificate.Id, result.Message, LogItemType.GeneralError);
+            }
+
             return result;
         }
 

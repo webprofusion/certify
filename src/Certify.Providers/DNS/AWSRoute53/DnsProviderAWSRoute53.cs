@@ -39,7 +39,7 @@ namespace Certify.Providers.DNS.AWSRoute53
             Id = "DNS01.API.Route53",
             Title = "Amazon Route 53 DNS API",
             Description = "Validates via Route 53 APIs using IAM service credentials",
-            HelpUrl = "https://docs.certifytheweb.com/docs/dns-awsroute53",
+            HelpUrl = "https://docs.certifytheweb.com/docs/dns/providers/awsroute53",
             PropagationDelaySeconds = 60,
             ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{ Key="accesskey",Name="Access Key", IsRequired=true, IsPassword=false },
