@@ -149,8 +149,11 @@ namespace Certify.UI.Controls.Settings
                 try
                 {
                     var cultureID = CultureSelector.SelectedValue?.ToString();
-                    ((ICertifyApp)Application.Current).ChangeCulture(cultureID, true);
-                    EditModel.MainViewModel.UISettings.PreferredUICulture = cultureID;
+                    if (!string.IsNullOrEmpty(cultureID))
+                    {
+                        ((ICertifyApp)Application.Current).ChangeCulture(cultureID, true);
+                        EditModel.MainViewModel.UISettings.PreferredUICulture = cultureID;
+                    }
                 }
                 catch
                 {

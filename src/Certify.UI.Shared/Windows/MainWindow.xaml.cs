@@ -199,6 +199,8 @@ namespace Certify.UI.Windows
             }
             else
             {
+                _appViewModel.UISettings = new UISettings();
+
                 // default theme
                 ((ICertifyApp)_appViewModel.GetApplication()).ToggleTheme(_appViewModel.DefaultUITheme);
             }

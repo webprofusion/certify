@@ -119,7 +119,7 @@ namespace Certify.UI.ViewModel
             {"zh-Hans","Chinese (Simplified)"}
         };
 
-        public UISettings UISettings { get; set; }
+        public UISettings UISettings { get; set; } = new  UI.Settings.UISettings();
 
         public void RaiseError(Exception exp)
         {
