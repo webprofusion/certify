@@ -207,7 +207,7 @@ namespace Certify.UI.ViewModel
 
                     if (!SelectedItem.Parameters.Any(p => p.Key == pa.Key))
                     {
-                        SelectedItem.Parameters.Add(pa);
+                        SelectedItem.Parameters.Add(pa.Clone() as ProviderParameter);
                     }
                 }
 

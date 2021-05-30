@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Certify.Models.Config
@@ -31,7 +32,7 @@ namespace Certify.Models.Config
         public string Value { get; set; }
     }
 
-    public class ProviderParameter
+    public class ProviderParameter : ICloneable
     {
         public string Key { get; set; }
         public string Name { get; set; }
@@ -54,6 +55,8 @@ namespace Certify.Models.Config
         /// used to store metadata such as a credential type for credential option selection
         /// </summary>
         public string ExtendedConfig { get; set; }
+
+        // NOTE: this object is cloneable, so any new properties have to be added to Clone()
 
         /// <summary>
         /// Returns a parsed version of OptionsList converted into a key/value dictionary
@@ -88,6 +91,26 @@ namespace Certify.Models.Config
 
                 return options;
             }
+        }
+
+        public object Clone()
+        {
+            return new ProviderParameter
+            {
+                Key = Key,
+                Name = Name,
+                Description = Description,
+                IsPassword = IsPassword,
+                IsHidden = IsHidden,
+                Value = Value,
+                IsCredential = IsCredential,
+                OptionsList = OptionsList,
+                Type = Type,
+                ExtendedConfig = ExtendedConfig,
+                IsMultiLine = IsMultiLine,
+                IsRequired = IsRequired
+            };
+
         }
     }
 }

@@ -297,12 +297,13 @@ namespace Certify.UI.ViewModel
                 {
                     if (SelectedItem?.Parameters.Exists(p => p.Key == pa.Key) == true)
                     {
-                        pa.Value = SelectedItem.Parameters.FirstOrDefault(p => p.Key == pa.Key)?.Value;
-                        EditableParameters.Add(pa);
+                        var paramCopy = pa.Clone() as ProviderParameter;
+                        paramCopy.Value = SelectedItem.Parameters.FirstOrDefault(p => p.Key == pa.Key)?.Value;
+                        EditableParameters.Add(paramCopy);
                     }
                     else
                     {
-                        EditableParameters.Add(pa);
+                        EditableParameters.Add(pa.Clone() as ProviderParameter);
                     }
                 }
 
