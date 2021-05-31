@@ -50,7 +50,7 @@ namespace Certify.Providers.DNS.CertifyDns
                 {
                     Id = "DNS01.API.CertifyDns",
                     Title = "Certify DNS",
-                    Description = "A managed acme-dns service. Validates via an Certify DNS (managed acme-dns) based server using CNAME redirection to an alternative DNS service dedicated to ACME challenge responses.",
+                    Description = "Validates DNS Challenges via Certify DNS (a cloud based service provided by certifytheweb.com). This requires the one-time creation of CNAME records per domain.",
                     HelpUrl = "https://docs.certifytheweb.com/docs/dns/providers/certifydns",
                     PropagationDelaySeconds = 5,
                     ProviderParameters = new List<ProviderParameter>{
