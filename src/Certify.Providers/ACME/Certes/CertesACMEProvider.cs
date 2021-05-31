@@ -113,6 +113,7 @@ namespace Certify.Providers.ACME.Certes
 
         private ACMECompatibilityMode _compatibilityMode = ACMECompatibilityMode.Standard;
 
+        private string _pfxBuildStrategy = "native"; // native .net or bouncy castle
         public CertesACMEProvider(string acmeBaseUri, string settingsBasePath, string settingsPath, string userAgentName, bool allowInvalidTls = false)
         {
             _settingsFolder = settingsPath;
@@ -722,6 +723,8 @@ namespace Certify.Providers.ACME.Certes
 
                     var orderAuthorizations = await order.Authorizations();
 
+                    var useAuthzForChallengeStatus = true;
+
                     // get the challenges for each authorization
                     foreach (var authContext in orderAuthorizations)
                     {
@@ -736,6 +739,7 @@ namespace Certify.Providers.ACME.Certes
                         try
                         {
                             var res = await authContext.Resource();
+
                             authzDomain = res?.Identifier.Value;
 
                             if (res.Wildcard == true)
@@ -795,7 +799,18 @@ namespace Certify.Providers.ACME.Certes
                             {
                                 try
                                 {
-                                    var httpChallengeStatus = await httpChallenge.Resource();
+                                    Challenge httpChallengeStatus;
+                                    if (useAuthzForChallengeStatus)
+                                    {
+                                        // some ACME providers don't support /challenge/ to get challenge status so retrieve all from the /authz/ instead
+                                        httpChallengeStatus = allIdentifierChallenges.FirstOrDefault(c => c.Type == ChallengeTypes.Http01);
+                                    }
+                                    else
+                                    {
+                                        // fetch status directly from /challenge/ api
+                                        httpChallengeStatus = await httpChallenge.Resource();
+                                    }
+
 
                                     log.Information($"Got http-01 challenge {httpChallengeStatus.Url}");
 
@@ -841,7 +856,18 @@ namespace Certify.Providers.ACME.Certes
 
                             if (dnsChallenge != null)
                             {
-                                var dnsChallengeStatus = await dnsChallenge.Resource();
+                                Challenge dnsChallengeStatus;
+                                if (useAuthzForChallengeStatus)
+                                {
+                                    // some ACME providers don't support /challenge/ to get challenge status so retrieve all from the /authz/ instead
+                                    dnsChallengeStatus = allIdentifierChallenges.FirstOrDefault(c => c.Type == ChallengeTypes.Dns01);
+                                }
+                                else
+                                {
+                                    // fetch status directly from /challenge/ api
+                                    dnsChallengeStatus = await dnsChallenge.Resource();
+                                }
+
 
                                 log.Information($"Got dns-01 challenge {dnsChallengeStatus.Url}");
 
@@ -925,9 +951,9 @@ namespace Certify.Providers.ACME.Certes
         /// <param name="challengeType">  </param>
         /// <param name="attemptedChallenge">  </param>
         /// <returns>  </returns>
-        public async Task<StatusMessage> SubmitChallenge(ILog log, string challengeType, AuthorizationChallengeItem attemptedChallenge)
+        public async Task<StatusMessage> SubmitChallenge(ILog log, string challengeType, PendingAuthorization pendingAuthorization)
         {
-            if (attemptedChallenge == null)
+            if (pendingAuthorization.AttemptedChallenge == null)
             {
                 return new StatusMessage
                 {
@@ -936,7 +962,7 @@ namespace Certify.Providers.ACME.Certes
                 };
             }
 
-            if (!attemptedChallenge.IsValidated)
+            if (!pendingAuthorization.AttemptedChallenge.IsValidated)
             {
                 try
                 {
@@ -951,69 +977,17 @@ namespace Certify.Providers.ACME.Certes
                     };
                 }
 
-                var challenge = (IChallengeContext)attemptedChallenge.ChallengeData;
+                var challenge = (IChallengeContext)pendingAuthorization.AttemptedChallenge.ChallengeData;
                 try
                 {
+                    // submit challenge to ACME CA to validate
                     var result = await challenge.Validate();
 
-                    var maxAttempts = 10;
-                    var attempts = maxAttempts;
-
-                    while (attempts > 0 && (result.Status == ChallengeStatus.Pending || result.Status == ChallengeStatus.Processing) && result.Error?.Detail == null)
+                    return new StatusMessage
                     {
-                        log?.Warning($"Challenge response validation still pending. Re-checking [{attempts}]..");
-
-                        // wait an increasing amount of time before checking again
-                        var waitMs = 1000 + (((maxAttempts + 1) - attempts) * 500);
-                        await Task.Delay(waitMs);
-
-                        try
-                        {
-                            result = await challenge.Resource();
-                        }
-                        catch (TaskCanceledException)
-                        {
-                            // failed to fetch resource
-                            log?.Warning("Failed to check challenge status because the request to the CAs ACME API timed out. API is unavailable or inaccessible.");
-                        }
-
-                        attempts--;
-                    }
-
-                    if (result.Status == ChallengeStatus.Valid)
-                    {
-                        return new StatusMessage
-                        {
-                            IsOK = true,
-                            Message = "Submitted"
-                        };
-                    }
-                    else
-                    {
-                        var defaultError = "Validation failed - unknown failure reason";
-
-                        if (result.Status == ChallengeStatus.Pending)
-                        {
-                            defaultError = "Validation failed to complete within the time allowed.";
-                        }
-
-                        var msg = result.Error?.Detail ?? defaultError;
-
-                        if (result.Error?.Subproblems?.Any() == true)
-                        {
-                            var subproblems = string.Join(", ", result.Error.Subproblems
-                                .GroupBy(s => $"{s.Detail}:{s.Identifier}")
-                                .Select(e => $"{e.FirstOrDefault().Identifier} : {e.FirstOrDefault().Detail}"));
-
-                            msg = $"{result.Error?.Detail} :: {subproblems}";
-                        }
-
-                        return new StatusMessage
-                        {
-                            IsOK = false,
-                            Message = msg
-                        };
-                    }
+                        IsOK = result.Status != ChallengeStatus.Invalid,
+                        Message = "Challenge Submitted for Validation"
+                    };
                 }
                 catch (AcmeRequestException exp)
                 {
@@ -1050,6 +1024,8 @@ namespace Certify.Providers.ACME.Certes
         {
             var authz = (IAuthorizationContext)pendingAuthorization.AuthorizationContext;
 
+            await _acme.HttpClient.ConsumeNonce();
+
             var res = await authz.Resource();
 
             var attempts = 20;
@@ -1075,16 +1051,19 @@ namespace Certify.Providers.ACME.Certes
             else
             {
                 pendingAuthorization.Identifier.Status = "invalid";
-
+                
                 //determine error
                 try
                 {
                     var challenge = res.Challenges.FirstOrDefault(c => c.Type == challengeType);
                     if (challenge != null)
                     {
-                        var r = await _acme.HttpClient.Get<AcmeResponse<Challenge>>(challenge.Url);
+                        if (challenge.Error != null)
+                        {
 
-                        pendingAuthorization.AuthorizationError = $"{r.Resource.Error.Detail} {r.Resource.Error.Status} {r.Resource.Error.Type}";
+                            pendingAuthorization.AuthorizationError = $"{challenge.Error.Detail} {challenge.Error.Status} {challenge.Error.Type}";
+                        }
+                      
                     }
                 }
                 catch
@@ -1320,7 +1299,7 @@ namespace Certify.Providers.ACME.Certes
 
                 var x509CertificateParser = new X509CertificateParser();
 
-                var discoveredCerts = new List<X509Certificate>();
+                var discoveredCerts = new List<Org.BouncyCastle.X509.X509Certificate>();
 
                 if (System.IO.Directory.Exists(customCertPemPath))
                 {
@@ -1455,7 +1434,7 @@ namespace Certify.Providers.ACME.Certes
                     }
                 }
 
-                // attempt to build pfx cert chain issing known issuers and known roots, if this fails it throws an AcmeException
+                // attempt to build pfx cert chain using known issuers and known roots, if this fails it throws an AcmeException
                 pfxBytes = pfx.Build(certFriendlyName, pwd);
                 System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
             }
@@ -1486,6 +1465,7 @@ namespace Certify.Providers.ACME.Certes
             }
 
             return pfxPath;
+
         }
 
         private string ExportFullCertPEM(IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)

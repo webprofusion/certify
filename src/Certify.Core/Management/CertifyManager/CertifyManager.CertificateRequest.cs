@@ -816,8 +816,7 @@ namespace Certify.Management
                                         authorization.AttemptedChallenge = authorization.Challenges.FirstOrDefault(c => c.ChallengeType == challengeConfig.ChallengeType);
                                     }
 
-                                    var submissionStatus = await _acmeClientProvider.SubmitChallenge(log, challengeConfig.ChallengeType,
-                                    authorization.AttemptedChallenge);
+                                    var submissionStatus = await _acmeClientProvider.SubmitChallenge(log, challengeConfig.ChallengeType, authorization);
 
                                     if (submissionStatus.IsOK)
                                     {
