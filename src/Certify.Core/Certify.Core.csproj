@@ -64,7 +64,7 @@
   <ItemGroup>
     <PackageReference Include="Polly" Version="7.2.2" />
     <PackageReference Include="Portable.BouncyCastle" Version="1.8.10" />
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.113.7" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.114.2" />
   </ItemGroup>
   
   <ItemGroup>
