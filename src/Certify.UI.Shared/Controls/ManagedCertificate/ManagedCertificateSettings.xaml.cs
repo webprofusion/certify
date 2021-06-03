@@ -90,7 +90,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                     ItemViewModel.IsNameEditMode = true;
                     EditName.Focus();
                 }
-                
+
                 AppViewModel.IsChanged = false;
 
             }

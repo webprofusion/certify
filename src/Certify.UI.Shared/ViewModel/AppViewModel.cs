@@ -119,7 +119,7 @@ namespace Certify.UI.ViewModel
             {"zh-Hans","Chinese (Simplified)"}
         };
 
-        public UISettings UISettings { get; set; } = new  UI.Settings.UISettings();
+        public UISettings UISettings { get; set; } = new UI.Settings.UISettings();
 
         public void RaiseError(Exception exp)
         {
@@ -858,6 +858,11 @@ namespace Certify.UI.ViewModel
                     {
                         ManagedCertificates.Add(newItem);
                     }
+                }
+
+                if (SelectedItem != null && SelectedItem.Id == newItem.Id)
+                {
+                    SelectedItem = newItem;
                 }
 
                 return newItem;

@@ -360,7 +360,7 @@ namespace Certify.Management
             var certRequestResult = new CertificateRequestResult { ManagedItem = managedCertificate, IsSuccess = false, Message = "", Actions = new List<ActionStep>() };
 
             var config = managedCertificate.RequestConfig;
-            
+
             managedCertificate.RenewalFailureMessage = ""; // clear any previous renewal error or instructions
 
             try

@@ -207,31 +207,6 @@ namespace Certify.Management
 
         public async Task<UpdateCheck> CheckForUpdates()
         {
-            // attempt cleanup of all old setup files
-            string updatePath;
-
-            try
-            {
-                updatePath = CreateLocalAppDataPath("updates");
-            }
-            catch (Exception)
-            {
-                throw new Exception("Update failed to download. Could not create temp folder under %APPDATA%");
-            }
-
-            var dirInfo = new DirectoryInfo(updatePath);
-            var setupFiles = dirInfo.GetFiles("*.exe")
-                                 .Where(p => p.Extension == ".exe")
-                                 .ToArray();
-            foreach (var file in setupFiles)
-            {
-                try
-                {
-                    File.Delete(file.FullName);
-                }
-                catch { }
-            }
-
             var v = GetAppVersion();
             return await CheckForUpdates(v);
         }
