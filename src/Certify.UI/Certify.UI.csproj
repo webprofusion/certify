@@ -160,7 +160,7 @@
       <Version>4.7.0.9</Version>
     </PackageReference>
     <PackageReference Include="MahApps.Metro">
-      <Version>2.4.5</Version>
+      <Version>2.4.6</Version>
     </PackageReference>
     <PackageReference Include="Markdig.Wpf">
       <Version>0.5.0.1</Version>
@@ -175,7 +175,7 @@
       <Version>13.0.1</Version>
     </PackageReference>
     <PackageReference Include="PropertyChanged.Fody">
-      <Version>3.3.3</Version>
+      <Version>3.4.0</Version>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Serilog">
