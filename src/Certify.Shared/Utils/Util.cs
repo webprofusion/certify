@@ -323,7 +323,7 @@ namespace Certify.Management
 
             //verify file SHA256
             string computedSHA256 = null;
-            using (Stream stream = new FileStream(tempFile, FileMode.Open, FileAccess.Read, FileShare.None, 8192, true))
+            using (Stream stream = new FileStream(tempFile, FileMode.Open, FileAccess.Read, FileShare.Read, 8192, true))
             {
                 computedSHA256 = GetFileSHA256(stream);
             }
