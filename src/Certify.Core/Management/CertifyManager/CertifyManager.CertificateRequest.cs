@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -113,14 +113,15 @@ namespace Certify.Management
 
                 BeginTrackingProgress(progressState);
 
-                // determine if this site requires renewal for auto mode
-                var isRenewalRequired = settings.Mode != RenewalMode.Auto || IsRenewalRequired(managedCertificate, renewalIntervalDays);
+                // determine if this site currently requires renewal for auto mode (or renewals due mode)
+                // In auto mode we skip if recent failures, in Renewals Due mode we ignore recent failures
+                var isRenewalRequired = (settings.Mode != RenewalMode.Auto && settings.Mode != RenewalMode.RenewalsDue) || IsRenewalRequired(managedCertificate, renewalIntervalDays, checkFailureStatus: false);
 
                 var isRenewalOnHold = false;
 
                 if (isRenewalRequired && settings.Mode == RenewalMode.Auto)
                 {
-                    //check if we have renewal failures, if so wait a bit longer
+                    //check if we have renewal failures, if so wait a bit longer.
                     isRenewalOnHold = !IsRenewalRequired(managedCertificate, renewalIntervalDays, checkFailureStatus: true);
 
                     if (isRenewalOnHold)
