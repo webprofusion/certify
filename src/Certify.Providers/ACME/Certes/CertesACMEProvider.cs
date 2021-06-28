@@ -1051,7 +1051,7 @@ namespace Certify.Providers.ACME.Certes
             else
             {
                 pendingAuthorization.Identifier.Status = "invalid";
-                
+
                 //determine error
                 try
                 {
@@ -1063,7 +1063,7 @@ namespace Certify.Providers.ACME.Certes
 
                             pendingAuthorization.AuthorizationError = $"{challenge.Error.Detail} {challenge.Error.Status} {challenge.Error.Type}";
                         }
-                      
+
                     }
                 }
                 catch
@@ -1184,11 +1184,11 @@ namespace Certify.Providers.ACME.Certes
                         // some CAs enter the processing state while they generate the final certificate, so we may need to check the status a few times
                         // https://tools.ietf.org/html/rfc8555#section-7.1.6
 
-                        attempts = 3;
+                        attempts = 5;
 
                         while (attempts > 0 && order.Status == OrderStatus.Processing)
                         {
-                            await Task.Delay(TimeSpan.FromSeconds(Math.Max(orderContext.RetryAfter, 1)));
+                            await Task.Delay(TimeSpan.FromSeconds(Math.Max(orderContext.RetryAfter, 2)));
                             order = await orderContext.Resource();
                             attempts--;
                         }
@@ -1196,7 +1196,7 @@ namespace Certify.Providers.ACME.Certes
 
                     if (order.Status != OrderStatus.Valid)
                     {
-                        throw new AcmeException("Failed to finalise certificate order.");
+                        throw new AcmeException("Failed to finalise certificate order. Final order status was " + order.Status.ToString());
                     }
 
                     certificateChain = await orderContext.Download(preferredChain);
@@ -1227,7 +1227,7 @@ namespace Certify.Providers.ACME.Certes
 
             var domainAsPath = config.PrimaryDomain.Replace("*", "_");
 
-            var pfxPath = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath);
+            var pfxPath = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath, includeCleanup: true) ;
 
             return new ProcessStepResult
             {
@@ -1408,13 +1408,46 @@ namespace Certify.Providers.ACME.Certes
             }
         }
 
-        private string ExportFullCertPFX(string certFriendlyName, string pwd, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
+        private string ExportFullCertPFX(string certFriendlyName, string pwd, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath, bool includeCleanup = true)
         {
             var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..", "assets", primaryDomainPath }));
 
             if (!System.IO.Directory.Exists(storePath))
             {
                 System.IO.Directory.CreateDirectory(storePath);
+            }
+            else
+            {
+                // attempt old pfx asset cleanup
+                if (includeCleanup)
+                {
+                    try
+                    {
+                        var dirInfo = new DirectoryInfo(storePath);
+
+                        var pfxFiles = dirInfo.GetFiles("*.pfx")
+                                             .Where(p => p.Extension == ".pfx")
+                                             .OrderByDescending(f => f.CreationTimeUtc)
+                                             .ToArray();
+
+                        // keep last 3 pfx in order of most recent first
+                        var pfxToKeep = pfxFiles.Take(3);
+
+                        foreach (var file in pfxFiles)
+                        {
+                            // remove pfx assets not in top 3 list
+                            if (!pfxToKeep.Any(f => f.FullName == file.FullName))
+                            {
+                                try
+                                {
+                                    File.Delete(file.FullName);
+                                }
+                                catch { }
+                            }
+                        }
+                    }
+                    catch { }
+                }
             }
 
             var pfxFile = certId + ".pfx";
@@ -1426,13 +1459,13 @@ namespace Certify.Providers.ACME.Certes
             {
                 var pfx = certificateChain.ToPfx(csrKey);
 
-                if (_issuerCertCache.Any())
-                {
-                    foreach (var c in _issuerCertCache)
-                    {
-                        pfx.AddIssuers(c);
-                    }
-                }
+                /* if (_issuerCertCache.Any())
+                 {
+                     foreach (var c in _issuerCertCache)
+                     {
+                         pfx.AddIssuers(c);
+                     }
+                 }*/
 
                 // attempt to build pfx cert chain using known issuers and known roots, if this fails it throws an AcmeException
                 pfxBytes = pfx.Build(certFriendlyName, pwd);
@@ -1467,6 +1500,68 @@ namespace Certify.Providers.ACME.Certes
             return pfxPath;
 
         }
+
+        /* private string ExportPFX_AnyRoot()
+         {
+
+             var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..", "assets", primaryDomainPath }));
+
+             if (!System.IO.Directory.Exists(storePath))
+             {
+                 System.IO.Directory.CreateDirectory(storePath);
+             }
+
+             var pfxFile = certId + ".pfx";
+             var pfxPath = Path.Combine(storePath, pfxFile);
+             var failedBuildMsg = "Failed to build certificate as PFX. Check system date/time is correct and that the issuing CA is a trusted root CA on this machine (or in custom_ca_certs). :";
+
+             byte[] pfxBytes;
+             try
+             {
+
+                 var pfx = certificateChain.ToPfx(csrKey);
+
+                 if (_issuerCertCache.Any())
+                 {
+                     foreach (var c in _issuerCertCache)
+                     {
+                         pfx.AddIssuers(c);
+                     }
+                 }
+
+                 // attempt to build pfx cert chain using known issuers and known roots, if this fails it throws an AcmeException
+                 pfxBytes = pfx.Build(certFriendlyName, pwd);
+                 System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
+             }
+             catch (Exception)
+             {
+                 // if build failed, try refreshing issuer certs
+                 RefreshIssuerCertCache();
+
+                 var pfx = certificateChain.ToPfx(csrKey);
+
+                 if (_issuerCertCache.Any())
+                 {
+                     foreach (var c in _issuerCertCache)
+                     {
+                         pfx.AddIssuers(c);
+                     }
+                 }
+
+                 try
+                 {
+                     pfxBytes = pfx.Build(certFriendlyName, pwd);
+                     System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
+                 }
+                 catch (Exception ex)
+                 {
+                     throw new Exception(failedBuildMsg + ex.Message);
+                 }
+             }
+
+             return pfxPath;
+
+         }*/
 
         private string ExportFullCertPEM(IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
         {
