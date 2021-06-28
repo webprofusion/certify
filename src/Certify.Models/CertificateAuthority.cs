@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace Certify.Models
 {
@@ -24,6 +24,12 @@ namespace Certify.Models
         public static string ZEROSSL = "zerossl.com";
     }
 
+    public static class StandardKeyTypes
+    {
+        public static string ALL = "ALL";
+        public static string RSA = "RSA";
+        public static string ECDSA = "ECDSA";
+    }
     public class CertificateAuthority
     {
         public static List<CertificateAuthority> CoreCertificateAuthorities = new List<CertificateAuthority> {
@@ -85,6 +91,48 @@ namespace Certify.Models
                     CertAuthoritySupportedRequests.DOMAIN_WILDCARD.ToString()
                 },
                 EabInstructions="To use ZeroSSL, Create a free account on ZeroSSL.com then navigate to Developer > EAB Credentials for ACME Clients > Generate. Save your EAB KID and EAB HMAC Key. Enter these in the Advanced tab (Add/Edit Account)."
+            },
+                new CertificateAuthority{
+                Id="rsa.ssl.com",
+                Title ="SSL.com (RSA)",
+                Description="SSL.com offer free and paid certificate services. Free certificates are valid for 90 days and can contain a single domain plus www.",
+                APIType = CertAuthorityAPIType.ACME_V2.ToString(),
+                WebsiteUrl ="https://ssl.com/",
+                PrivacyPolicyUrl ="https://www.ssl.com/privacy-policy/",
+                ProductionAPIEndpoint = "https://acme.ssl.com/sslcom-dv-rsa",
+                SupportedKeyTypes = StandardKeyTypes.RSA,
+                StagingAPIEndpoint = null,
+                IsEnabled=true,
+                IsCustom = false,
+                SANLimit = 2,
+                RequiresEmailAddress = true,
+                RequiresExternalAccountBinding = true,
+                SupportedFeatures = new List<string>{
+                    CertAuthoritySupportedRequests.DOMAIN_SINGLE.ToString(),
+                    CertAuthoritySupportedRequests.DOMAIN_SINGLE_PLUS_WWW.ToString()
+                },
+                EabInstructions="To use SSL.com, Create a free account on SSL.com (https://secure.ssl.com/users/new) then navigate to Dashboard > Developers and Integrations > API and ACME Credentials > Add Credential. Save your Account/ACME Key and HMAC Key. Enter these in the Advanced tab (Add/Edit Account)."
+            },
+                 new CertificateAuthority{
+                Id="ecdsa.ssl.com",
+                Title ="SSL.com (ECDSA)",
+                Description="SSL.com offer free and paid certificate services. Free certificates are valid for 90 days and can contain a single domain plus www.",
+                APIType = CertAuthorityAPIType.ACME_V2.ToString(),
+                WebsiteUrl ="https://ssl.com/",
+                PrivacyPolicyUrl ="https://www.ssl.com/privacy-policy/",
+                ProductionAPIEndpoint = "https://acme.ssl.com/sslcom-dv-ecc",
+                SupportedKeyTypes = StandardKeyTypes.ECDSA,
+                StagingAPIEndpoint = null,
+                IsEnabled=true,
+                IsCustom = false,
+                SANLimit = 2,
+                RequiresEmailAddress = true,
+                RequiresExternalAccountBinding = true,
+                SupportedFeatures = new List<string>{
+                    CertAuthoritySupportedRequests.DOMAIN_SINGLE.ToString(),
+                    CertAuthoritySupportedRequests.DOMAIN_SINGLE_PLUS_WWW.ToString()
+                },
+                EabInstructions="To use SSL.com, Create a free account on SSL.com (https://secure.ssl.com/users/new) then navigate to Dashboard > Developers and Integrations > API and ACME Credentials > Add Credential. Save your Account/ACME Key and HMAC Key. Enter these in the Advanced tab (Add/Edit Account)."
             }
         };
 
@@ -98,6 +146,7 @@ namespace Certify.Models
         public string TermsAndConditionsUrl { get; set; }
         public string ProductionAPIEndpoint { get; set; }
         public string StagingAPIEndpoint { get; set; }
+
         public bool IsEnabled { get; set; }
         public bool IsCustom { get; set; } = true;
         public int SANLimit { get; set; }
@@ -106,6 +155,7 @@ namespace Certify.Models
         public bool AllowUntrustedTls { get; set; } = false;
 
         public string EabInstructions { get; set; }
+        public string SupportedKeyTypes { get; set; } = StandardKeyTypes.ALL;
 
     }
 }
