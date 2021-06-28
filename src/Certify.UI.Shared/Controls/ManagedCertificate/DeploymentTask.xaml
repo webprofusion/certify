@@ -403,7 +403,7 @@
                             x:Name="DeploymentTaskParams"
                             BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderColor}}"
                             DockPanel.Dock="Top"
-                            ItemsSource="{Binding DeploymentProvider.ProviderParameters}">
+                            ItemsSource="{Binding EditableParameters}">
                             <ItemsControl.ItemTemplateSelector>
                                 <local:ControlTemplateSelector />
                             </ItemsControl.ItemTemplateSelector>
