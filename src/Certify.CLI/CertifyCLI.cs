@@ -41,9 +41,12 @@ namespace Certify.CLI
 
         private void InitPlugins()
         {
-            _pluginManager = new Management.PluginManager();
+            if (_pluginManager == null)
+            {
+                _pluginManager = new Management.PluginManager();
 
-            _pluginManager.LoadPlugins(new List<string> { "Licensing" });
+                _pluginManager.LoadPlugins(new List<string> { "Licensing" });
+            }
         }
 
         private bool IsRegistered()
@@ -316,28 +319,87 @@ namespace Certify.CLI
 
                 if (managedCertId == "new")
                 {
+                    InitPlugins();
+
                     if (!IsRegistered())
                     {
                         Console.WriteLine("CLI automation is only available in the registered version of this application.");
                         return;
                     }
 
-                    // create a new managed cert with http validation and auto deployment
-                    managedCert = new ManagedCertificate
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        Name = domains[0],
-                        IncludeInAutoRenew = true,
-                        ItemType = ManagedCertificateType.SSL_ACME
-                    };
-                    managedCert.RequestConfig.Challenges = new System.Collections.ObjectModel.ObservableCollection<CertRequestChallengeConfig>(
-                                    new List<CertRequestChallengeConfig> {
-                                new CertRequestChallengeConfig {
-                                    ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP
-                            }
-                                });
+                    // optional load a single managed certificate tempalte from json
+                    ManagedCertificate templateCert = null;
 
-                    managedCert.RequestConfig.DeploymentSiteOption = DeploymentOption.Auto;
+                    var jsonArgIndex = Array.IndexOf(args, "--template");
+
+                    if (jsonArgIndex != -1)
+                    {
+
+                        if (args.Length + 1 >= jsonArgIndex + 1)
+                        {
+                            var pathArg = args[jsonArgIndex + 1];
+
+                            try
+                            {
+                                var jsonTemplate = System.IO.File.ReadAllText(pathArg);
+                                templateCert = JsonConvert.DeserializeObject<ManagedCertificate>(jsonTemplate);
+
+                            }
+                            catch (Exception)
+                            {
+                                Console.WriteLine($"Failed to read or parse managed certificate template json. " + pathArg);
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Input file path argument is required for json template.");
+                        }
+                    }
+
+                    // create a new managed cert with http validation and auto deployment
+                    if (templateCert == null)
+                    {
+                        managedCert = new ManagedCertificate
+                        {
+                            Id = Guid.NewGuid().ToString(),
+                            Name = domains[0],
+                            IncludeInAutoRenew = true,
+                            ItemType = ManagedCertificateType.SSL_ACME
+                        };
+
+                        managedCert.RequestConfig.Challenges = new System.Collections.ObjectModel.ObservableCollection<CertRequestChallengeConfig>(
+                                        new List<CertRequestChallengeConfig> {
+                                        new CertRequestChallengeConfig {
+                                            ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP
+                                        }
+                                    });
+
+                        managedCert.RequestConfig.DeploymentSiteOption = DeploymentOption.Auto;
+                    }
+                    else
+                    {
+                        managedCert = templateCert;
+
+                        // reset fields we dont want to re-use from another template
+                        managedCert.Id = Guid.NewGuid().ToString();
+                        managedCert.RequestConfig.SubjectAlternativeNames = new string[] { };
+                        managedCert.RequestConfig.SubjectIPAddresses = new string[] { };
+                        managedCert.RequestConfig.PrimaryDomain = null;
+                        managedCert.DomainOptions = new System.Collections.ObjectModel.ObservableCollection<DomainOption>();
+                        managedCert.DateLastRenewalAttempt = null;
+                        managedCert.DateStart = null;
+                        managedCert.DateRenewed = null;
+                        managedCert.DateExpiry = null;
+                        managedCert.CertificateThumbprintHash = null;
+                        managedCert.CertificatePreviousThumbprintHash = null;
+                        managedCert.CurrentOrderUri = null;
+
+                        // if no managed cert name specifed, use first domain
+                        if (string.IsNullOrEmpty(managedCert.Name))
+                        {
+                            managedCert.Name = domains[0];
+                        }
+                    }
                 }
                 else
                 {
