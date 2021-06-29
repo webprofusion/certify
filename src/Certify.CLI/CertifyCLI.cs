@@ -6,6 +6,7 @@ using Certify.Client;
 using Certify.Management;
 using Certify.Models;
 using Microsoft.ApplicationInsights;
+using Newtonsoft.Json;
 
 namespace Certify.CLI
 {
@@ -244,15 +245,46 @@ namespace Certify.CLI
             }
         }
 
-        internal void ListManagedCertificates()
+        internal void ListManagedCertificates(string[] args)
         {
             var managedCertificates = _certifyClient.GetManagedCertificates(new ManagedCertificateFilter()).Result;
 
-            foreach (var site in managedCertificates)
-            {
-                Console.ForegroundColor = ConsoleColor.White;
+            // check for path argument and if present output json file
+            var jsonArgIndex = Array.IndexOf(args, "--json");
 
-                Console.WriteLine($"{site.Name},{site.DateExpiry}");
+            if (jsonArgIndex != -1)
+            {
+
+                if (args.Length + 1 >= jsonArgIndex + 1)
+                {
+                    var pathArg = args[jsonArgIndex + 1];
+
+                    try
+                    {
+                        var jsonOutput = JsonConvert.SerializeObject(managedCertificates, Formatting.Indented);
+
+                        System.IO.File.WriteAllText(pathArg, jsonOutput);
+                    }
+                    catch (Exception)
+                    {
+                        Console.WriteLine($"Failed to write output to file. Check folder exists and permissions allow write. " + pathArg);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"Output file path argument is required for json output.");
+                }
+
+            }
+            else
+            {
+                // output list to console
+                foreach (var site in managedCertificates)
+                {
+                    Console.ForegroundColor = ConsoleColor.White;
+
+                    Console.WriteLine($"{site.Name},{site.DateExpiry}");
+                }
             }
         }
 

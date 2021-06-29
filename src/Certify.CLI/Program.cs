@@ -96,7 +96,7 @@ namespace Certify.CLI
                 if (command == "list")
                 {
                     // list managed sites and status
-                    p.ListManagedCertificates();
+                    p.ListManagedCertificates(args);
                 }
 
                 if (command == "diag")
