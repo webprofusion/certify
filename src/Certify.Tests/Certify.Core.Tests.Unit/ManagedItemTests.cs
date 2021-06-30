@@ -121,6 +121,7 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Ensure managed site can be created, retrieved and deleted")]
+        [Ignore]
         public async Task TestCreateManyManagedCertificates()
         {
             var itemManager = new ItemManager(TEST_PATH);
