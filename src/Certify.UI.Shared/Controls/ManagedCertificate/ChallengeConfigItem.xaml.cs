@@ -113,7 +113,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                     );
             }
 
-            if (ChallengeAPIProviderList.SelectedValue != challengeProviderType)
+            if (ChallengeAPIProviderList.SelectedValue?.ToString() != challengeProviderType)
             {
                 ChallengeAPIProviderList.SelectedValue = challengeProviderType;
             }
