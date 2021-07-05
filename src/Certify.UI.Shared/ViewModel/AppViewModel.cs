@@ -39,14 +39,14 @@ namespace Certify.UI.ViewModel
         public AppViewModel()
         {
             _configManager = new ServiceConfigManager();
-            CertifyClient = new CertifyServiceClient(_configManager, GetDefaultServerConnection(_configManager));
+            _certifyClient = new CertifyServiceClient(_configManager, GetDefaultServerConnection(_configManager));
 
             Init();
         }
 
         public AppViewModel(ICertifyClient certifyClient)
         {
-            CertifyClient = certifyClient;
+            _certifyClient = certifyClient;
 
             Init();
         }
@@ -72,12 +72,12 @@ namespace Certify.UI.ViewModel
 
         internal async Task<Preferences> GetPreferences()
         {
-            return await CertifyClient.GetPreferences();
+            return await _certifyClient.GetPreferences();
         }
 
         public const int ProductTypeId = 1;
 
-        internal ICertifyClient CertifyClient = null;
+        internal ICertifyClient _certifyClient = null;
 
         public PluginManager PluginManager { get; set; }
 
@@ -88,7 +88,6 @@ namespace Certify.UI.ViewModel
         public bool IsUpdateInProgress { get; set; } = false;
 
         public double UIScaleFactor { get; set; } = 1;
-
 
         /// <summary>
         /// Feature toggled items which no longer require a feature flag
@@ -108,7 +107,6 @@ namespace Certify.UI.ViewModel
         };
 
         public string DefaultUITheme = "Light";
-
 
         public Dictionary<string, string> UICultures { get; } = new Dictionary<string, string>
         {
@@ -131,12 +129,19 @@ namespace Certify.UI.ViewModel
 
         public Preferences Preferences { get; set; } = new Preferences();
 
+        /// <summary>
+        /// UI message describing a current system diagnostics warning (low disk space etc)
+        /// </summary>
         public string SystemDiagnosticWarning { get; set; }
+
+        /// <summary>
+        /// UI message describing a current system diagnostics error (no disk space etc)
+        /// </summary>
         public string SystemDiagnosticError { get; set; }
 
         internal async Task SetPreferences(Preferences prefs)
         {
-            await CertifyClient.SetPreferences(prefs);
+            await _certifyClient.SetPreferences(prefs);
             Preferences = prefs;
         }
 
@@ -159,14 +164,14 @@ namespace Certify.UI.ViewModel
 
         internal async Task<List<BindingInfo>> GetServerSiteList(StandardServerTypes serverType)
         {
-            return await CertifyClient.GetServerSiteList(serverType);
+            return await _certifyClient.GetServerSiteList(serverType);
         }
 
         internal async Task SetInstanceRegistered()
         {
-            var prefs = await CertifyClient.GetPreferences();
+            var prefs = await _certifyClient.GetPreferences();
             prefs.IsInstanceRegistered = true;
-            await CertifyClient.SetPreferences(prefs);
+            await _certifyClient.SetPreferences(prefs);
             Preferences = prefs;
         }
 
@@ -210,7 +215,6 @@ namespace Certify.UI.ViewModel
         /// If true, import from vault/iis scan will merge multi domain sites into one managed site 
         /// </summary>
         public bool IsImportSANMergeMode { get; set; }
-
         public bool HasDeprecatedChallengeTypes { get; set; } = false;
 
         public ObservableCollection<AccountDetails> AccountDetails = new ObservableCollection<AccountDetails>();
@@ -219,7 +223,7 @@ namespace Certify.UI.ViewModel
 
         public async Task RefreshCertificateAuthorityList()
         {
-            var list = await CertifyClient.GetCertificateAuthorities();
+            var list = await _certifyClient.GetCertificateAuthorities();
 
             CertificateAuthorities.Clear();
 
@@ -233,7 +237,7 @@ namespace Certify.UI.ViewModel
 
         public async Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority ca)
         {
-            var result = await CertifyClient.UpdateCertificateAuthority(ca);
+            var result = await _certifyClient.UpdateCertificateAuthority(ca);
 
             if (result.IsSuccess)
             {
@@ -244,7 +248,7 @@ namespace Certify.UI.ViewModel
 
         public async Task<ActionResult> DeleteCertificateAuthority(string id)
         {
-            var result = await CertifyClient.DeleteCertificateAuthority(id);
+            var result = await _certifyClient.DeleteCertificateAuthority(id);
 
             if (result.IsSuccess)
             {
@@ -255,7 +259,7 @@ namespace Certify.UI.ViewModel
 
         public async Task RefreshAccountsList()
         {
-            var list = await CertifyClient.GetAccounts();
+            var list = await _certifyClient.GetAccounts();
 
             AccountDetails.Clear();
 
@@ -271,13 +275,13 @@ namespace Certify.UI.ViewModel
 
         public async Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly, bool forceTaskExecute)
         {
-            var results = await CertifyClient.PerformDeployment(managedCertificateId, taskId, isPreviewOnly, forceTaskExecute);
+            var results = await _certifyClient.PerformDeployment(managedCertificateId, taskId, isPreviewOnly, forceTaskExecute);
             return results;
         }
 
         public async Task<List<ActionResult>> PerformServiceDiagnostics()
         {
-            return await CertifyClient.PerformServiceDiagnostics();
+            return await _certifyClient.PerformServiceDiagnostics();
         }
 
         public ManagedCertificate SelectedItem
@@ -296,6 +300,8 @@ namespace Certify.UI.ViewModel
         private ManagedCertificate selectedItem;
 
         public bool IsRegisteredVersion { get; set; }
+
+        [DependsOn(nameof(ManagedCertificates))]
         public int NumManagedCerts
         {
             get
@@ -304,12 +310,12 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        [DependsOn(nameof(ManagedCertificates), nameof(IsRegisteredVersion))]
+        [DependsOn(nameof(NumManagedCerts), nameof(IsRegisteredVersion))]
         public bool IsLicenseUpgradeRecommended
         {
             get
             {
-                if (!IsRegisteredVersion && NumManagedCerts >= 3)
+                if (!IsRegisteredVersion && NumManagedCerts >= 1)
                 {
                     return true;
                 }
@@ -320,11 +326,37 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        [DependsOn(nameof(IsRegisteredVersion), nameof(IsLicenseExpired))]
+        public bool IsEvaluationMode
+        {
+            get
+            {
+                if (!IsRegisteredVersion)
+                {
+                    return true;
+                }
+                else if (IsRegisteredVersion && IsLicenseExpired)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            }
+        }
+
+        /// <summary>
+        /// If true, the current registered license check has failed and is not currently active
+        /// </summary>
+        public bool IsLicenseExpired { get; set; }
+
         internal async Task<ActionResult> AddContactRegistration(ContactRegistration reg)
         {
             try
             {
-                var result = await CertifyClient.AddAccount(reg);
+                var result = await _certifyClient.AddAccount(reg);
 
                 RaisePropertyChangedEvent(nameof(HasRegisteredContacts));
                 return result;
@@ -336,7 +368,7 @@ namespace Certify.UI.ViewModel
         }
         internal async Task<ActionResult> RemoveAccount(string storageKey)
         {
-            var result = await CertifyClient.RemoveAccount(storageKey);
+            var result = await _certifyClient.RemoveAccount(storageKey);
 
             await RefreshAccountsList();
             RaisePropertyChangedEvent(nameof(HasRegisteredContacts));
@@ -355,14 +387,6 @@ namespace Certify.UI.ViewModel
         public bool HasRequestsInProgress => (ProgressResults != null && ProgressResults.Any());
 
         public ObservableCollection<RequestProgressState> ProgressResults { get; set; }
-
-        public List<VaultItem> VaultTree { get; set; }
-
-        [DependsOn(nameof(VaultTree))]
-        public string ACMESummary { get; set; }
-
-        [DependsOn(nameof(VaultTree))]
-        public string VaultSummary { get; set; }
 
         public string PrimaryContactEmail { get; set; }
 
@@ -386,7 +410,6 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        // FIXME: async blocking
         public virtual bool IsIISAvailable { get; set; }
 
         public virtual Version IISVersion { get; set; }
@@ -398,11 +421,11 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task<bool> CheckServerAvailability(StandardServerTypes serverType)
         {
-            IsIISAvailable = await CertifyClient.IsServerAvailable(serverType);
+            IsIISAvailable = await _certifyClient.IsServerAvailable(serverType);
 
             if (IsIISAvailable)
             {
-                IISVersion = await CertifyClient.GetServerVersion(serverType);
+                IISVersion = await _certifyClient.GetServerVersion(serverType);
             }
 
             RaisePropertyChangedEvent(nameof(IISVersion));
@@ -413,7 +436,7 @@ namespace Certify.UI.ViewModel
 
         public async Task<UpdateCheck> CheckForUpdates()
         {
-            return await CertifyClient.CheckForUpdates();
+            return await _certifyClient.CheckForUpdates();
         }
 
         /// <summary>
@@ -437,7 +460,7 @@ namespace Certify.UI.ViewModel
 
         public async Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo deploymentTaskValidationInfo)
         {
-            return await CertifyClient.ValidateDeploymentTask(deploymentTaskValidationInfo);
+            return await _certifyClient.ValidateDeploymentTask(deploymentTaskValidationInfo);
         }
 
         public ServerConnection GetDefaultServerConnection(IServiceConfigProvider configProvider)
@@ -464,15 +487,28 @@ namespace Certify.UI.ViewModel
             return connections;
         }
 
+        /// <summary>
+        /// UI Message for the current service connection state
+        /// </summary>
         public string ConnectionState { get; set; } = "Not Connected";
 
+        /// <summary>
+        /// UI title for the current service connection
+        /// </summary>
         public string ConnectionTitle
         {
             get
             {
-                return $"{CertifyClient.GetConnectionInfo()}";
+                return $"{_certifyClient.GetConnectionInfo()}";
             }
         }
+
+        /// <summary>
+        /// Perform a connection to the given service
+        /// </summary>
+        /// <param name="conn">service to connect to</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public async Task ConnectToServer(ServerConnection conn, CancellationToken cancellationToken)
         {
             Mouse.OverrideCursor = System.Windows.Input.Cursors.AppStarting;
@@ -509,13 +545,13 @@ namespace Certify.UI.ViewModel
             if (conn == null)
             {
                 // check default connection
-                IsServiceAvailable = await CheckServiceAvailable(CertifyClient);
+                IsServiceAvailable = await CheckServiceAvailable(_certifyClient);
             }
 
             var maxAttempts = 3;
             var attemptsRemaining = maxAttempts;
 
-            ICertifyClient clientConnection = CertifyClient;
+            ICertifyClient clientConnection = _certifyClient;
 
             while (!IsServiceAvailable && attemptsRemaining > 0 && cancellationToken.IsCancellationRequested != true)
             {
@@ -577,7 +613,7 @@ namespace Certify.UI.ViewModel
             }
 
             // replace active connection
-            CertifyClient = clientConnection;
+            _certifyClient = clientConnection;
 
 
             ConnectionState = IsServiceAvailable ? "Connected" : "Not Connected";
@@ -586,7 +622,7 @@ namespace Certify.UI.ViewModel
 
         public async Task<List<DnsZone>> GetDnsProviderZones(string challengeProvider, string challengeCredentialKey)
         {
-            return await CertifyClient.GetDnsProviderZones(challengeProvider, challengeCredentialKey);
+            return await _certifyClient.GetDnsProviderZones(challengeProvider, challengeCredentialKey);
         }
 
         private async void CertifyClient_OnManagedCertificateUpdated(ManagedCertificate obj) => await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
@@ -646,7 +682,7 @@ namespace Certify.UI.ViewModel
             await _prefLock.WaitAsync(500);
             try
             {
-                await this.CertifyClient.SetPreferences(Preferences);
+                await this._certifyClient.SetPreferences(Preferences);
             }
             catch
             {
@@ -668,7 +704,7 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public virtual async Task LoadSettingsAsync()
         {
-            Preferences = await CertifyClient.GetPreferences();
+            Preferences = await _certifyClient.GetPreferences();
 
             await RefreshManagedCertificates();
 
@@ -691,7 +727,7 @@ namespace Certify.UI.ViewModel
             // include external managed certs
             filter.IncludeExternal = IsFeatureEnabled(FeatureFlags.EXTERNAL_CERT_MANAGERS);
 
-            var list = await CertifyClient.GetManagedCertificates(filter);
+            var list = await _certifyClient.GetManagedCertificates(filter);
 
             foreach (var i in list)
             {
@@ -710,7 +746,7 @@ namespace Certify.UI.ViewModel
 
         public async Task<bool> AddOrUpdateManagedCertificate(ManagedCertificate item)
         {
-            var updatedManagedCertificate = await CertifyClient.UpdateManagedCertificate(item);
+            var updatedManagedCertificate = await _certifyClient.UpdateManagedCertificate(item);
             updatedManagedCertificate.IsChanged = false;
 
             // add/update site in our local cache
@@ -734,7 +770,7 @@ namespace Certify.UI.ViewModel
                 if (MessageBox.Show(SR.ManagedCertificateSettings_ConfirmDelete, SR.ConfirmDelete, MessageBoxButton.OKCancel, MessageBoxImage.Warning) == MessageBoxResult.OK)
                 {
                     existing.Deleted = true;
-                    var deletedOK = await CertifyClient.DeleteManagedCertificate(selectedItem.Id);
+                    var deletedOK = await _certifyClient.DeleteManagedCertificate(selectedItem.Id);
                     if (deletedOK)
                     {
                         await _managedCertCacheSemaphore.WaitAsync();
@@ -766,7 +802,7 @@ namespace Certify.UI.ViewModel
                 TrackProgress(managedCertificate);
 
                 // start request (interactive)
-                return await CertifyClient.BeginCertificateRequest(managedCertificate.Id, resumePaused, true);
+                return await _certifyClient.BeginCertificateRequest(managedCertificate.Id, resumePaused, true);
             }
             else
             {
@@ -810,7 +846,7 @@ namespace Certify.UI.ViewModel
 
             try
             {
-                await CertifyClient.BeginAutoRenewal(settings);
+                await _certifyClient.BeginAutoRenewal(settings);
             }
             catch (TaskCanceledException exp)
             {
@@ -833,7 +869,7 @@ namespace Certify.UI.ViewModel
                 // optional reload managed site details (for refresh)
                 if (reload)
                 {
-                    newItem = await CertifyClient.GetManagedCertificate(managedCertificate.Id);
+                    newItem = await _certifyClient.GetManagedCertificate(managedCertificate.Id);
                 }
 
                 if (newItem != null)
@@ -873,7 +909,7 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public async Task<List<ActionStep>> GetPreviewActions(ManagedCertificate item) => await CertifyClient.PreviewActions(item);
+        public async Task<List<ActionStep>> GetPreviewActions(ManagedCertificate item) => await _certifyClient.PreviewActions(item);
 
         private void UpdateRequestTrackingProgress(RequestProgressState state)
         {
@@ -899,7 +935,7 @@ namespace Certify.UI.ViewModel
 
         internal async Task<List<DomainOption>> GetServerSiteDomains(StandardServerTypes serverType, string siteId)
         {
-            return await CertifyClient.GetServerSiteDomains(serverType, siteId);
+            return await _certifyClient.GetServerSiteDomains(serverType, siteId);
         }
 
         public void ClearRequestProgressResults()
@@ -911,14 +947,14 @@ namespace Certify.UI.ViewModel
 
         internal async Task<CertificateRequestResult> RefetchCertificate(string managedItemId)
         {
-            return await CertifyClient.RefetchCertificate(managedItemId);
+            return await _certifyClient.RefetchCertificate(managedItemId);
         }
 
         internal async Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate managedCertificate)
         {
             try
             {
-                return await CertifyClient.TestChallengeConfiguration(managedCertificate);
+                return await _certifyClient.TestChallengeConfiguration(managedCertificate);
             }
             catch (TaskCanceledException)
             {
@@ -928,12 +964,12 @@ namespace Certify.UI.ViewModel
 
         internal async Task<StatusMessage> RevokeManageSiteCertificate(string id)
         {
-            var result = await CertifyClient.RevokeManageSiteCertificate(id);
+            var result = await _certifyClient.RevokeManageSiteCertificate(id);
 
             if (result.IsOK)
             {
                 // refresh managed cert in UI
-                var updatedManagedCertificate = await CertifyClient.GetManagedCertificate(id);
+                var updatedManagedCertificate = await _certifyClient.GetManagedCertificate(id);
                 updatedManagedCertificate.IsChanged = false;
 
                 // add/update site in our local cache
@@ -945,7 +981,7 @@ namespace Certify.UI.ViewModel
 
         internal async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly)
         {
-            return await CertifyClient.ReapplyCertificateBindings(managedItemId, isPreviewOnly);
+            return await _certifyClient.ReapplyCertificateBindings(managedItemId, isPreviewOnly);
         }
 
         /* Stored Credentials */
@@ -955,7 +991,7 @@ namespace Certify.UI.ViewModel
 
         public async Task<StoredCredential> UpdateCredential(StoredCredential credential)
         {
-            var result = await CertifyClient.UpdateCredentials(credential);
+            var result = await _certifyClient.UpdateCredentials(credential);
             await RefreshStoredCredentialsList();
 
             return result;
@@ -968,7 +1004,7 @@ namespace Certify.UI.ViewModel
                 return false;
             }
 
-            var result = await CertifyClient.DeleteCredential(credentialKey);
+            var result = await _certifyClient.DeleteCredential(credentialKey);
             await RefreshStoredCredentialsList();
 
             return result;
@@ -976,14 +1012,14 @@ namespace Certify.UI.ViewModel
 
         public async Task<ActionResult> TestCredentials(string credentialKey)
         {
-            var result = await CertifyClient.TestCredentials(credentialKey);
+            var result = await _certifyClient.TestCredentials(credentialKey);
 
             return result;
         }
 
         public async Task RefreshStoredCredentialsList()
         {
-            var list = await CertifyClient.GetCredentials();
+            var list = await _certifyClient.GetCredentials();
 
             if (StoredCredentials == null)
             {
@@ -1005,7 +1041,7 @@ namespace Certify.UI.ViewModel
 
         public async Task RefreshChallengeAPIList()
         {
-            var list = await CertifyClient.GetChallengeAPIList();
+            var list = await _certifyClient.GetChallengeAPIList();
             System.Windows.Application.Current.Dispatcher.Invoke(delegate
             {
                 ChallengeAPIProviders = new ObservableCollection<ChallengeProviderDefinition>(list);
@@ -1017,7 +1053,7 @@ namespace Certify.UI.ViewModel
 
         public async Task RefreshDeploymentTaskProviderList()
         {
-            var list = await CertifyClient.GetDeploymentProviderList();
+            var list = await _certifyClient.GetDeploymentProviderList();
             System.Windows.Application.Current.Dispatcher.Invoke(delegate
             {
                 DeploymentTaskProviders = new ObservableCollection<DeploymentProviderDefinition>(list.OrderBy(l => l.Title));
@@ -1030,7 +1066,7 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task<DeploymentProviderDefinition> GetDeploymentTaskProviderDefinition(string id, Config.DeploymentTaskConfig config = null)
         {
-            var definition = await CertifyClient.GetDeploymentProviderDefinition(id, config);
+            var definition = await _certifyClient.GetDeploymentProviderDefinition(id, config);
             if (definition != null)
             {
                 System.Windows.Application.Current.Dispatcher.Invoke(delegate
@@ -1055,13 +1091,13 @@ namespace Certify.UI.ViewModel
 
         public async Task<ImportExportPackage> GetSettingsExport(ManagedCertificateFilter filter, ExportSettings settings, bool isPreview)
         {
-            var pkg = await CertifyClient.PerformExport(new ExportRequest { Filter = filter, Settings = settings, IsPreviewMode = isPreview });
+            var pkg = await _certifyClient.PerformExport(new ExportRequest { Filter = filter, Settings = settings, IsPreviewMode = isPreview });
             return pkg;
         }
 
         public async Task<List<ActionStep>> PerformSettingsImport(ImportExportPackage package, ImportSettings settings, bool isPreviewMode)
         {
-            var results = await CertifyClient.PerformImport(new ImportRequest { Package = package, Settings = settings, IsPreviewMode = isPreviewMode });
+            var results = await _certifyClient.PerformImport(new ImportRequest { Package = package, Settings = settings, IsPreviewMode = isPreviewMode });
             return results;
         }
 
@@ -1073,7 +1109,7 @@ namespace Certify.UI.ViewModel
         }
         public async Task<string[]> GetItemLog(string id, int limit)
         {
-            var result = await CertifyClient.GetItemLog(id, limit);
+            var result = await _certifyClient.GetItemLog(id, limit);
             return result;
         }
 
@@ -1087,5 +1123,18 @@ namespace Certify.UI.ViewModel
             app.ShowNotification(msg, type, autoClose);
         }
 
+        public async Task<bool> CheckLicenseIsActive()
+        {
+            var licensingManager = PluginManager?.LicensingManager;
+
+            if (licensingManager != null && !await licensingManager.IsInstallActive(ProductTypeId, Management.Util.GetAppDataFolder()))
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
     }
 }

@@ -123,9 +123,9 @@
                                     Margin="8,0"
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Top"
-                                    FontFamily="Segoe UI Semibold"
-                                    FontWeight="Bold"
-                                    Foreground="#FFEA1010"
+                                  
+                                   
+                                    Foreground="{DynamicResource WarningColorBrush}"
                                     TextWrapping="WrapWithOverflow"><Run Text="{x:Static Resources:SR.ManagedCertificateSettings_NoHostNameBindingWarning}" /></TextBlock>
                             </StackPanel>
                             <DockPanel

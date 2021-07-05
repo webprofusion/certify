@@ -25,11 +25,7 @@
                 <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
             </DockPanel.Resources>
 
-
-
-            <StackPanel>
-
-
+            <StackPanel DockPanel.Dock="Top">
                 <TextBlock
                     Margin="0,0,0,8"
                     FontFamily="Segoe UI"
@@ -43,25 +39,29 @@
 
                 </TextBlock>
 
+                <StackPanel
+                    x:Name="ExpiredLicense"
+                    Margin="0,16,16,8"
+                    Background="{StaticResource ErrorColorBrush}"
+                    Visibility="{Binding IsLicenseExpired, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}">
+
+                    <TextBlock
+                        Margin="8"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        FontSize="12" Foreground="{StaticResource MahApps.Brushes.IdealForeground}" FontWeight="Bold"
+                        Text="Your license key has expired. Some features will be reduced or unavailable. Please Sign In to https://certifytheweb.com and renew your license key, then re-open the app."
+                        TextWrapping="Wrap" />
+
+                </StackPanel>
 
                 <StackPanel
                     x:Name="CommunityEdition"
                     Margin="0,16,16,8"
                     Background="{DynamicResource InformationColorBrush}"
-                    Visibility="Collapsed">
-                    <StackPanel.Style>
-                        <Style>
-                            <Setter Property="UIElement.Visibility" Value="Collapsed" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsLicenseUpgradeRecommended}" Value="True">
-                                    <Setter Property="UIElement.Visibility" Value="Visible" />
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding IsLicenseUpgradeRecommended}" Value="False">
-                                    <Setter Property="UIElement.Visibility" Value="Collapsed" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </StackPanel.Style>
+                    Visibility="{Binding IsLicenseUpgradeRecommended, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}"
+                    Orientation="Vertical">
+
                     <TextBlock
                         Margin="8"
                         Foreground="{DynamicResource MahApps.Brushes.IdealForeground}"
@@ -71,10 +71,25 @@
                     <TextBlock
                         Margin="8"
                         Foreground="{DynamicResource MahApps.Brushes.IdealForeground}"
-                        Style="{StaticResource Instructions}"><Run Text="You are using the community edition. Upgrading to a licensed (supported) version is recommended. Visit https://certifytheweb.com/register for more information." /></TextBlock>
+                        Style="{StaticResource Instructions}">
+                        <Run Text="You are using the Community Edition. If you are using this application within a business or funded organisation (beyond a temporary evaluation) you are required to purchase a license key. Visit https://certifytheweb.com/register for more information." />
+                       <LineBreak></LineBreak><LineBreak></LineBreak> <Run Text="The number of certificates which can be managed in the Community Edition will be reduced in a future update."></Run>
+                    </TextBlock>
                 </StackPanel>
 
-                <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Vertical" Visibility="Collapsed">
+
+                    <StackPanel.Style>
+                        <Style>
+                            <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding NumManagedCerts}" Value="0">
+                                    <Setter Property="UIElement.Visibility" Value="Visible" />
+                                </DataTrigger>
+                              
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
                     <TextBlock
                         Margin="0,16,0,8"
                         HorizontalAlignment="Left"
@@ -134,7 +149,7 @@
                         Margin="8"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Top"
-                        FontSize="12"
+                        FontSize="12" Foreground="{StaticResource MahApps.Brushes.IdealForeground}"
                         Text="{Binding SystemDiagnosticError}"
                         TextWrapping="Wrap" />
 

@@ -94,7 +94,7 @@
             </DockPanel>
 
 
-            <ListView
+            <ListView 
                 Name="lvManagedCertificates"
                 AutomationProperties.Name="Managed Certificates List"
                 Background="{DynamicResource MahApps.Brushes.Control.Background}"

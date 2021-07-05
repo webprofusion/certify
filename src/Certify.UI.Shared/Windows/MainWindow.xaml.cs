@@ -64,28 +64,25 @@ namespace Certify.UI.Windows
                 return;
             }
 
-            var managedCertCount = _appViewModel.ManagedCertificates?.Where(c => string.IsNullOrEmpty(c.SourceId)).Count() ?? 0;
-
-            if (!_appViewModel.IsRegisteredVersion && managedCertCount >= NUM_ITEMS_FOR_REMINDER)
+         
+            if (!_appViewModel.IsRegisteredVersion && _appViewModel.NumManagedCerts >= NUM_ITEMS_FOR_REMINDER)
             {
                 MessageBox.Show(SR.MainWindow_TrialLimitationReached);
 
-                if (managedCertCount >= NUM_ITEMS_FOR_LIMIT)
+                if (_appViewModel.NumManagedCerts >= NUM_ITEMS_FOR_LIMIT)
                 {
                     return;
                 }
             }
             else
             {
-                if (_appViewModel.IsRegisteredVersion && managedCertCount >= 1)
+                if (_appViewModel.IsRegisteredVersion && _appViewModel.NumManagedCerts >= 1)
                 {
-                    var licensingManager = ViewModel.AppViewModel.Current.PluginManager?.LicensingManager;
-
-                    if (licensingManager != null && !await licensingManager.IsInstallActive(ViewModel.AppViewModel.ProductTypeId, Management.Util.GetAppDataFolder()))
+                    if (await _appViewModel.CheckLicenseIsActive() == false)
                     {
                         MessageBox.Show(Certify.Locales.SR.MainWindow_KeyExpired);
 
-                        if (managedCertCount >= NUM_ITEMS_FOR_LIMIT)
+                        if (_appViewModel.NumManagedCerts >= NUM_ITEMS_FOR_LIMIT)
                         {
                             return;
                         }
@@ -216,7 +213,22 @@ namespace Certify.UI.Windows
             Mouse.OverrideCursor = Cursors.AppStarting;
             _appViewModel.IsLoading = true;
 
+            // setup plugins
 
+            _appViewModel.PluginManager = new Management.PluginManager();
+
+            _appViewModel.PluginManager.LoadPlugins(new List<string> { "Licensing", "DashboardClient" });
+
+            var licensingManager = _appViewModel.PluginManager.LicensingManager;
+            if (licensingManager != null)
+            {
+                if (licensingManager.IsInstallRegistered(ViewModel.AppViewModel.ProductTypeId, Certify.Management.Util.GetAppDataFolder()))
+                {
+                    _appViewModel.IsRegisteredVersion = true;
+                }
+            }
+
+            // setup connection to background service
 
             var cts = new CancellationTokenSource();
 
@@ -271,36 +283,21 @@ namespace Certify.UI.Windows
                 return;
             }
 
-
-
             // init telemetry if enabled
             InitTelemetry();
-
-            // setup plugins
-
-            _appViewModel.PluginManager = new Management.PluginManager();
-
-            _appViewModel.PluginManager.LoadPlugins(new List<string> { "Licensing", "DashboardClient" });
-
-            var licensingManager = _appViewModel.PluginManager.LicensingManager;
-            if (licensingManager != null)
-            {
-                if (licensingManager.IsInstallRegistered(ViewModel.AppViewModel.ProductTypeId, Certify.Management.Util.GetAppDataFolder()))
-                {
-                    _appViewModel.IsRegisteredVersion = true;
-                }
-            }
 
             // check if IIS is available, if so also populates IISVersion
             await _appViewModel.CheckServerAvailability(Models.StandardServerTypes.IIS);
 
             _appViewModel.IsLoading = false;
 
-
-
             if (!_appViewModel.IsRegisteredVersion)
             {
                 Title += SR.MainWindow_TitleTrialPostfix;
+            }
+            else
+            {
+                _appViewModel.IsLicenseExpired = await _appViewModel.CheckLicenseIsActive() == false;
             }
 
             //check for updates and report result to view model

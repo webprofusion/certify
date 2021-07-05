@@ -153,7 +153,6 @@ namespace Certify.UI.Controls
 
         private void SelectAndFocus(object obj)
         {
-
             var managedCert = obj as Models.ManagedCertificate;
 
             lvManagedCertificates.Items.Refresh();
@@ -171,8 +170,6 @@ namespace Certify.UI.Controls
             }
 
             this.Dispatcher.Invoke(new Action(() => { _appViewModel.SelectedItem = managedCert; }));
-
-
         }
 
         private async void ListViewItem_PreviewKeyDown(object sender, KeyEventArgs e)
