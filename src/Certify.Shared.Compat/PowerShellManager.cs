@@ -1,9 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
+using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 using Certify.Models;
@@ -33,7 +35,8 @@ namespace Certify.Management
             Dictionary<string, string> credentials = null,
             string logonType = null,
             string[] ignoredCommandExceptions = null,
-            int timeoutMinutes = 5
+            int timeoutMinutes = 5,
+            bool launchNewProcess = false
             )
         {
             // argument check for script file existence and .ps1 extension
@@ -51,84 +54,240 @@ namespace Certify.Management
                 }
             }
 
-            try
+            if (launchNewProcess)
             {
-                // create a new runspace to isolate the scripts
-                using (var runspace = RunspaceFactory.CreateRunspace())
+                // spawn new process as the given user
+                return ExecutePowershellAsProcess(result, powershellExecutionPolicy, scriptFile, parameters, credentials, scriptContent, null, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes);
+            }
+            else
+            {
+                // run powershell script in-process, optionally with impersonation
+                try
                 {
-                    runspace.Open();
-
-                    // set working directory to the script file's directory
-                    if (scriptInfo != null)
+                    // create a new runspace to isolate the scripts
+                    using (var runspace = RunspaceFactory.CreateRunspace())
                     {
-                        runspace.SessionStateProxy.Path.SetLocation(scriptInfo.DirectoryName);
+                        runspace.Open();
+
+                        // set working directory to the script file's directory
+                        if (scriptInfo != null)
+                        {
+                            runspace.SessionStateProxy.Path.SetLocation(scriptInfo.DirectoryName);
+                        }
+
+                        using (var shell = PowerShell.Create())
+                        {
+                            shell.Runspace = runspace;
+
+                            if (credentials != null && credentials.Any())
+                            {
+                                // run as windows user
+                                UserCredentials windowsCredentials = null;
+
+                                if (credentials != null && credentials.Count > 0)
+                                {
+                                    try
+                                    {
+                                        windowsCredentials = GetWindowsCredentials(credentials);
+                                    }
+                                    catch
+                                    {
+                                        var err = "Command with Windows Credentials requires username and password.";
+
+                                        return new ActionResult(err, false);
+                                    }
+                                }
+
+                                // logon type affects the range of abilities the impersonated user has
+                                var _defaultLogonType = LogonType.NewCredentials;
+
+                                if (logonType == "network")
+                                {
+                                    _defaultLogonType = LogonType.Network;
+                                }
+                                else if (logonType == "batch")
+                                {
+                                    _defaultLogonType = LogonType.Batch;
+                                }
+                                else if (logonType == "service")
+                                {
+                                    _defaultLogonType = LogonType.Service;
+                                }
+                                else if (logonType == "interactive")
+                                {
+                                    _defaultLogonType = LogonType.Interactive;
+                                }
+                                else if (logonType == "newcredentials")
+                                {
+                                    _defaultLogonType = LogonType.NewCredentials;
+                                }
+
+                                return Impersonation.RunAsUser(windowsCredentials, _defaultLogonType, () =>
+                              {
+                                  // run as current user
+                                  return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes);
+                              });
+                            }
+                            else
+                            {
+                                // run as current user
+                                return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes);
+                            }
+                        }
                     }
 
-                    using (var shell = PowerShell.Create())
-                    {
-                        shell.Runspace = runspace;
+                }
+                catch (Exception ex)
+                {
+                    return await Task.FromResult(new ActionResult($"Error - {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}", false));
+                }
+            }
+        }
 
-                        if (credentials != null && credentials.Any())
-                        {
-                            // run as windows user
-                            UserCredentials windowsCredentials = null;
+        private static string GetPowershellExePath()
+        {
+            var searchPaths = new List<string>() {
+                "%WINDIR%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+                "%PROGRAMFILES%\\PowerShell\\7\\pwsh.exe"
+            };
 
-                            if (credentials != null && credentials.Count > 0)
-                            {
-                                try
-                                {
-                                    windowsCredentials = GetWindowsCredentials(credentials);
-                                }
-                                catch
-                                {
-                                    var err = "Command with Windows Credentials requires username and password.";
+            // if powershell exe path supplied, use that (with expansion) and check exe exists
+            // otherwise detect powershell exe location
+            foreach (var exePath in searchPaths)
+            {
+                var filePath = Environment.ExpandEnvironmentVariables(exePath);
+                if (File.Exists(filePath))
+                {
+                    return filePath;
+                }
+            }
+            return null;
+        }
 
-                                    return new ActionResult(err, false);
-                                }
-                            }
+        private static ActionResult ExecutePowershellAsProcess(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, Dictionary<string, string> credentials, string scriptContent, PowerShell shell, bool autoConvertBoolean = true, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5)
+        {
+            
+            var _log = new StringBuilder();
 
-                            // logon type affects the range of abilities the impersonated user has
-                            var _defaultLogonType = LogonType.NewCredentials;
+            var commandExe = GetPowershellExePath();
+            if (commandExe == null)
+            {
+                return new ActionResult("Failed to locate powershell exe. Cannot launch as new process.", false);
+            }
 
-                            if (logonType == "network")
-                            {
-                                _defaultLogonType = LogonType.Network;
-                            }
-                            else if (logonType == "batch")
-                            {
-                                _defaultLogonType = LogonType.Batch;
-                            }
-                            else if (logonType == "service")
-                            {
-                                _defaultLogonType = LogonType.Service;
-                            }
-                            else if (logonType == "interactive")
-                            {
-                                _defaultLogonType = LogonType.Interactive;
-                            }
-                            else if (logonType == "newcredentials")
-                            {
-                                _defaultLogonType = LogonType.NewCredentials;
-                            }
+            if (!string.IsNullOrEmpty(scriptContent))
+            {
+                // script content would need to be run from a file, for that we need to run encrypted script content otherwise credentials would appear in temp file
+                return new ActionResult("Script content is not yet supported when used with launch as new process.", false);
+            }
 
-                            return Impersonation.RunAsUser(windowsCredentials, _defaultLogonType, () =>
-                          {
-                              // run as current user
-                              return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes);
-                          });
-                        }
-                        else
-                        {
-                            // run as current user
-                            return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes);
-                        }
-                    }
+            var arguments = scriptFile;
+
+            if (!string.IsNullOrEmpty(executionPolicy))
+            {
+                arguments = $"-ExecutionPolicy {executionPolicy} "+arguments;
+            }
+            
+            var scriptProcessInfo = new ProcessStartInfo()
+            {
+                RedirectStandardInput = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                FileName = commandExe,
+                Arguments = arguments
+            };
+
+            // launch process with user credentials set
+            if (credentials != null && credentials.ContainsKey("username") && credentials.ContainsKey("password"))
+            {
+                var username = credentials["username"];
+                var pwd = credentials["password"];
+
+                credentials.TryGetValue("domain", out var domain);
+
+                if (domain == null && !username.Contains(".\\") && !username.Contains("@"))
+                {
+                    domain = ".";
                 }
 
+                scriptProcessInfo.UserName = username;
+                scriptProcessInfo.Domain = domain;
+
+                var sPwd = new SecureString();
+                foreach (char c in pwd)
+                {
+                    sPwd.AppendChar(c);
+                }
+                sPwd.MakeReadOnly();
+
+                scriptProcessInfo.Password = sPwd;
+
+                _log.AppendLine($"Launching Process {commandExe} as User: {domain}\\{username}");
             }
-            catch (Exception ex)
+
+            try
             {
-                return await Task.FromResult(new ActionResult($"Error - {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}", false));
+                var process = new Process { StartInfo = scriptProcessInfo };
+
+                var logMessages = new StringBuilder();
+
+                // capture output streams and add to log
+                process.OutputDataReceived += (obj, a) =>
+                {
+                    if (a.Data != null)
+                    {
+                        logMessages.AppendLine(a.Data);
+                    }
+                };
+
+                process.ErrorDataReceived += (obj, a) =>
+                {
+                    if (!string.IsNullOrWhiteSpace(a.Data))
+                    {
+                        logMessages.AppendLine($"Error: {a.Data}");
+                    }
+                };
+
+                try
+                {
+                    process.Start();
+
+                    process.BeginOutputReadLine();
+                    process.BeginErrorReadLine();
+
+                    process.WaitForExit((timeoutMinutes * 60) * 1000);
+                }
+                catch (Exception exp)
+                {
+                    _log.AppendLine("Error Running Script: " + exp.ToString());
+                }
+
+                // append output to main log
+                _log.Append(logMessages.ToString());
+
+                if (!process.HasExited)
+                {
+                    //process still running, kill task
+                    process.CloseMainWindow();
+
+                    _log.AppendLine("Warning: Script ran but took too long to exit and was closed.");
+                    return new ActionResult { IsSuccess = false, Message = _log.ToString() };
+                }
+                else if (process.ExitCode != 0)
+                {
+                    _log.AppendLine("Warning: Script exited with the following ExitCode: " + process.ExitCode);
+                    return new ActionResult { IsSuccess = false, Message = _log.ToString() };
+                }
+
+                return new ActionResult { IsSuccess = true, Message = _log.ToString() };
+
+            }
+            catch (Exception exp)
+            {
+                _log.AppendLine("Error: " + exp.ToString());
+                return new ActionResult { IsSuccess = false, Message = _log.ToString() };
             }
         }
 
