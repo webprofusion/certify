@@ -144,6 +144,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 var process = new Process { StartInfo = scriptProcessInfo };
 
                 var logMessages = new StringBuilder();
+                var errorLineCount = 0;
 
                 // capture output streams and add to log
                 process.OutputDataReceived += (obj, args) =>
@@ -156,9 +157,14 @@ namespace Certify.Core.Management.Challenges.DNS
 
                 process.ErrorDataReceived += (obj, args) =>
                 {
-                    if (!string.IsNullOrWhiteSpace(args.Data))
+                    // allow up to 4K lines of errors, after that we're probably in some sort of loop and there's no point running out of ram for the log
+                    if (errorLineCount < 4000)
                     {
-                        logMessages.AppendLine($"Error: {args.Data}");
+                        if (!string.IsNullOrWhiteSpace(args.Data))
+                        {
+                            logMessages.AppendLine($"Error: {args.Data}");
+                            errorLineCount++;
+                        }
                     }
                 };
 
