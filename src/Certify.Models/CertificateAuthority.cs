@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Certify.Models
 {
@@ -26,9 +26,40 @@ namespace Certify.Models
 
     public static class StandardKeyTypes
     {
+        /// <summary>
+        /// Support all key types
+        /// </summary>
         public static string ALL = "ALL";
-        public static string RSA = "RSA";
-        public static string ECDSA = "ECDSA";
+
+        /// <summary>
+        /// RSA256 with key size 2048
+        /// </summary>
+        /// 
+        public static string RSA256 = "RS256";
+        /// <summary>
+        /// RSA256 with key size 3072
+        /// </summary>
+        public static string RSA256_3072 = "RS256_3072";
+
+        /// <summary>
+        /// RSA256 with key size 4096
+        /// </summary>
+        public static string RSA256_4096 = "RS256_4096";
+
+        /// <summary>
+        /// ECDSA 256
+        /// </summary>
+        public static string ECDSA256 = "ECDSA256";
+
+        /// <summary>
+        /// ECDSA 384
+        /// </summary>
+        public static string ECDSA384 = "ECDSA384";
+
+        /// <summary>
+        /// ECDSA 521
+        /// </summary>
+        public static string ECDSA521 = "ECDSA521";
     }
     public class CertificateAuthority
     {
@@ -51,6 +82,13 @@ namespace Certify.Models
                     CertAuthoritySupportedRequests.DOMAIN_SINGLE.ToString(),
                     CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN.ToString(),
                     CertAuthoritySupportedRequests.DOMAIN_WILDCARD.ToString()
+                },
+                SupportedKeyTypes =new List<string>{
+                    StandardKeyTypes.RSA256,
+                    StandardKeyTypes.RSA256_3072,
+                    StandardKeyTypes.RSA256_4096,
+                    StandardKeyTypes.ECDSA256,
+                    StandardKeyTypes.ECDSA384
                 }
             },
              new CertificateAuthority{
@@ -69,6 +107,13 @@ namespace Certify.Models
                 SupportedFeatures = new List<string>{
                     CertAuthoritySupportedRequests.DOMAIN_SINGLE.ToString(),
                     CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN.ToString()
+                },
+                SupportedKeyTypes =new List<string>{
+                    StandardKeyTypes.RSA256,
+                    StandardKeyTypes.RSA256_3072,
+                    StandardKeyTypes.RSA256_4096,
+                    StandardKeyTypes.ECDSA256,
+                    StandardKeyTypes.ECDSA384
                 }
             },
                new CertificateAuthority{
@@ -90,6 +135,12 @@ namespace Certify.Models
                     CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN.ToString(),
                     CertAuthoritySupportedRequests.DOMAIN_WILDCARD.ToString()
                 },
+                SupportedKeyTypes =new List<string>{
+                    StandardKeyTypes.RSA256,
+                    StandardKeyTypes.RSA256_3072,
+                    StandardKeyTypes.ECDSA256,
+                    StandardKeyTypes.ECDSA384
+                },
                 EabInstructions="To use ZeroSSL, Create a free account on ZeroSSL.com then navigate to Developer > EAB Credentials for ACME Clients > Generate. Save your EAB KID and EAB HMAC Key. Enter these in the Advanced tab (Add/Edit Account)."
             },
                 new CertificateAuthority{
@@ -100,7 +151,6 @@ namespace Certify.Models
                 WebsiteUrl ="https://ssl.com/",
                 PrivacyPolicyUrl ="https://www.ssl.com/privacy-policy/",
                 ProductionAPIEndpoint = "https://acme.ssl.com/sslcom-dv-rsa",
-                SupportedKeyTypes = StandardKeyTypes.RSA,
                 StagingAPIEndpoint = null,
                 IsEnabled=true,
                 IsCustom = false,
@@ -111,9 +161,15 @@ namespace Certify.Models
                     CertAuthoritySupportedRequests.DOMAIN_SINGLE.ToString(),
                     CertAuthoritySupportedRequests.DOMAIN_SINGLE_PLUS_WWW.ToString()
                 },
+                SupportedKeyTypes =new List<string>{
+                    StandardKeyTypes.RSA256,
+                    StandardKeyTypes.RSA256_3072,
+                    StandardKeyTypes.RSA256_4096
+                },
                 EabInstructions="To use SSL.com, Create a free account on SSL.com (https://secure.ssl.com/users/new) then navigate to Dashboard > Developers and Integrations > API and ACME Credentials > Add Credential. Save your Account/ACME Key and HMAC Key. Enter these in the Advanced tab (Add/Edit Account)."
-            },
-                 new CertificateAuthority{
+            }
+                /* // SSL.com ECDSA currently gives key errors
+            new CertificateAuthority{
                 Id="ecdsa.ssl.com",
                 Title ="SSL.com (ECDSA)",
                 Description="SSL.com offer free and paid certificate services. Free certificates are valid for 90 days and can contain a single domain plus www.",
@@ -121,7 +177,6 @@ namespace Certify.Models
                 WebsiteUrl ="https://ssl.com/",
                 PrivacyPolicyUrl ="https://www.ssl.com/privacy-policy/",
                 ProductionAPIEndpoint = "https://acme.ssl.com/sslcom-dv-ecc",
-                SupportedKeyTypes = StandardKeyTypes.ECDSA,
                 StagingAPIEndpoint = null,
                 IsEnabled=true,
                 IsCustom = false,
@@ -132,8 +187,13 @@ namespace Certify.Models
                     CertAuthoritySupportedRequests.DOMAIN_SINGLE.ToString(),
                     CertAuthoritySupportedRequests.DOMAIN_SINGLE_PLUS_WWW.ToString()
                 },
+                SupportedKeyTypes =new List<string>{
+                    StandardKeyTypes.ECDSA256,
+                    StandardKeyTypes.ECDSA384,
+                    StandardKeyTypes.ECDSA521
+                },
                 EabInstructions="To use SSL.com, Create a free account on SSL.com (https://secure.ssl.com/users/new) then navigate to Dashboard > Developers and Integrations > API and ACME Credentials > Add Credential. Save your Account/ACME Key and HMAC Key. Enter these in the Advanced tab (Add/Edit Account)."
-            }
+            }*/
         };
 
         public string Id { get; set; }
@@ -155,7 +215,7 @@ namespace Certify.Models
         public bool AllowUntrustedTls { get; set; } = false;
 
         public string EabInstructions { get; set; }
-        public string SupportedKeyTypes { get; set; } = StandardKeyTypes.ALL;
+        public List<string> SupportedKeyTypes { get; set; }
 
     }
 }

@@ -263,12 +263,18 @@ namespace Certify.UI.ViewModel
 
             AccountDetails.Clear();
 
+            var tmpList = new List<AccountDetails>();
             foreach (var a in list)
             {
                 var ca = CertificateAuthorities.FirstOrDefault(c => c.Id == a.CertificateAuthorityId);
                 a.Title = $"{ca?.Title ?? "[Unknown CA]"} [{(a.IsStagingAccount ? "Staging" : "Production")}]";
-                AccountDetails.Add(a);
+                tmpList.Add(a);
             }
+
+            tmpList
+                .OrderBy(t=>t.Title)
+                .ToList()
+                .ForEach(a => AccountDetails.Add(a));
         }
 
         public virtual bool HasRegisteredContacts => AccountDetails.Any();

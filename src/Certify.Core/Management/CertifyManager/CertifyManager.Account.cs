@@ -245,7 +245,7 @@ namespace Certify.Management
         {
             LoadCertificateAuthorities();
 
-            return await Task.FromResult(_certificateAuthorities.Values.ToList());
+            return await Task.FromResult(_certificateAuthorities.Values.OrderBy(a => a.Title).ToList());
         }
 
         public async Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority certificateAuthority)
