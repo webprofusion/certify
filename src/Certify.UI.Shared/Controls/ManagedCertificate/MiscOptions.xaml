@@ -132,26 +132,38 @@
                                 <StackPanel Margin="0,0,0,0">
                                     <RadioButton
                                         x:Name="CSROption_RS256"
-                                        Margin="8,4,0,4"
-                                        Content="RSASSA-PKCS1-v1_5 using SHA-256 (Default)"
+                                        Margin="8,0,0,4"
+                                        Content="RSA 2048 (Default)"
                                         GroupName="CSRAlg"
                                         IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=RS256}" />
                                     <RadioButton
+                                        x:Name="CSROption_RS256_3072"
+                                        Margin="8,0,0,4"
+                                        Content="RSA 3072"
+                                        GroupName="CSRAlg"
+                                        IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=RS256_3072}" />
+                                    <RadioButton
+                                        x:Name="CSROption_RS256_4096"
+                                        Margin="8,0,0,4"
+                                        Content="RSA 4096"
+                                        GroupName="CSRAlg"
+                                        IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=RS256_4096}" />
+                                    <RadioButton
                                         x:Name="CSROption_ECDSA256"
                                         Margin="8,0,0,4"
-                                        Content="ECDSA using P-256 and SHA-256"
+                                        Content="ECDSA P-256"
                                         GroupName="CSRAlg"
                                         IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=ECDSA256}" />
                                     <RadioButton
                                         x:Name="CSROption_ECDSA384"
                                         Margin="8,0,0,4"
-                                        Content="ECDSA using P-384 and SHA-384"
+                                        Content="ECDSA P-384"
                                         GroupName="CSRAlg"
                                         IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=ECDSA384}" />
                                     <RadioButton
                                         x:Name="CSROption_ECDSA521"
                                         Margin="8,0,0,4"
-                                        Content="ECDSA using P-521 and SHA-512"
+                                        Content="ECDSA P-521 and SHA-512"
                                         GroupName="CSRAlg"
                                         IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=ECDSA521}" />
                                 </StackPanel>

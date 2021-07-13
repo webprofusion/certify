@@ -1109,31 +1109,39 @@ namespace Certify.Providers.ACME.Certes
 
             // generate temp keypair for signing CSR
             var keyAlg = KeyAlgorithm.RS256;
+            var keySize = 2048;
 
             if (!string.IsNullOrEmpty(config.CSRKeyAlg))
             {
-                if (config.CSRKeyAlg == "RS256")
+                if (config.CSRKeyAlg == StandardKeyTypes.RSA256)
                 {
                     keyAlg = KeyAlgorithm.RS256;
                 }
-
-                if (config.CSRKeyAlg == "ECDSA256")
+                else if (config.CSRKeyAlg == StandardKeyTypes.RSA256_3072)
+                {
+                    keyAlg = KeyAlgorithm.RS256;
+                    keySize = 3072;
+                }
+                else if (config.CSRKeyAlg == StandardKeyTypes.RSA256_4096)
+                {
+                    keyAlg = KeyAlgorithm.RS256;
+                    keySize = 4096;
+                }
+                else if (config.CSRKeyAlg == StandardKeyTypes.ECDSA256)
                 {
                     keyAlg = KeyAlgorithm.ES256;
                 }
-
-                if (config.CSRKeyAlg == "ECDSA384")
+                else if (config.CSRKeyAlg == StandardKeyTypes.ECDSA384)
                 {
                     keyAlg = KeyAlgorithm.ES384;
                 }
-
-                if (config.CSRKeyAlg == "ECDSA521")
+                else if (config.CSRKeyAlg == StandardKeyTypes.ECDSA521)
                 {
                     keyAlg = KeyAlgorithm.ES512;
                 }
             }
 
-            var csrKey = KeyFactory.NewKey(keyAlg);
+            var csrKey = KeyFactory.NewKey(keyAlg, keySize);
 
             if (!string.IsNullOrEmpty(config.CustomPrivateKey))
             {
@@ -1227,7 +1235,7 @@ namespace Certify.Providers.ACME.Certes
 
             var domainAsPath = config.PrimaryDomain.Replace("*", "_");
 
-            var pfxPath = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath, includeCleanup: true) ;
+            var pfxPath = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath, includeCleanup: true);
 
             return new ProcessStepResult
             {
