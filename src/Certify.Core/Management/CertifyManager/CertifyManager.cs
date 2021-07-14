@@ -351,6 +351,7 @@ namespace Certify.Management
 
                 SettingsManager.LoadAppSettings();
 
+                // perform pending renewals
                 await PerformRenewalAllManagedCertificates(new RenewalSettings { }, null);
             }
             catch (Exception exp)
@@ -385,6 +386,9 @@ namespace Certify.Management
                     await PerformCertificateCleanup();
                 }
 
+                // perform diagnostics and status notifications if required
+                await PerformScheduledDiagnostics();
+
                 // perform item db maintenance
                 await _itemManager.PerformMaintenance();
             }
@@ -398,6 +402,62 @@ namespace Certify.Management
             }
 
             return await Task.FromResult(true);
+        }
+
+        /// <summary>
+        /// Perform a subset of diagnostics, report failures if status reporting is enabled.
+        /// </summary>
+        /// <returns></returns>
+        public async Task PerformScheduledDiagnostics()
+        {
+            try
+            {
+                _serviceLog.Information("Performing system diagnostics.");
+
+                var diagnosticResults = await PerformServiceDiagnostics();
+                if (diagnosticResults.Any(d => d.IsSuccess == false))
+                {
+                    var reportingEmail = (await GetAccountDetailsForManagedItem(null))?.Email;
+
+                    foreach (var d in diagnosticResults.Where(di => di.IsSuccess == false && di.Result != null))
+                    {
+                        _serviceLog.Warning("Diagnostic Check Failed: " + d.Message);
+
+                        // report diagnostic failures (if enabled)
+                        if (reportingEmail != null && CoreAppSettings.Current.EnableStatusReporting && _pluginManager.DashboardClient != null)
+                        {
+
+                            try
+                            {
+                                await _pluginManager.DashboardClient.ReportUserActionRequiredAsync(new Models.Shared.ItemActionRequired
+                                {
+                                    InstanceId = null,
+                                    ManagedItemId = null,
+                                    ItemTitle = "Diagnostic Check Failed",
+                                    ActionType = "diagnostic:" + d.Result.ToString(),
+                                    InstanceTitle = Environment.MachineName,
+                                    Message = d.Message,
+                                    NotificationEmail = reportingEmail,
+                                    AppVersion = Util.GetAppVersion().ToString() + ";" + Environment.OSVersion.ToString()
+                                });
+                            }
+                            catch (Exception)
+                            {
+                                _serviceLog.Warning("Failed to send diagnostic status report to API.");
+                            }
+                        }
+
+                    }
+                }
+                else
+                {
+                    _serviceLog.Information("Diagnostics - OK.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _serviceLog.Error(ex, "Diagnostics Error");
+            }
         }
 
         public async Task PerformCertificateCleanup()
@@ -520,9 +580,7 @@ namespace Certify.Management
 
         public async Task<List<ActionResult>> PerformServiceDiagnostics()
         {
-
-            var diag = await Certify.Management.Util.PerformAppDiagnostics(ntpServer: CoreAppSettings.Current.NtpServer);
-            return diag;
+            return await Certify.Management.Util.PerformAppDiagnostics(ntpServer: CoreAppSettings.Current.NtpServer);
         }
 
         public async Task<string[]> GetLog(string type, int limit)

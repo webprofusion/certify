@@ -26,5 +26,7 @@
         /// Required action details
         /// </summary>
         public string Message { get; set; }
+
+        public string AppVersion { get; set; }
     }
 }

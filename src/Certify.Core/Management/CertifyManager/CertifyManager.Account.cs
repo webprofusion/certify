@@ -19,15 +19,37 @@ namespace Certify.Management
         /// <returns>Account Details or null if there is no matching account</returns>
         private async Task<AccountDetails> GetAccountDetailsForManagedItem(ManagedCertificate item)
         {
-            // determine the current current contact
-            string currentCA = CoreAppSettings.Current.DefaultCertificateAuthority ?? StandardCertAuthorities.LETS_ENCRYPT;
+   
+            var accounts = await GetAccountRegistrations();
 
-            if (!string.IsNullOrEmpty(item.CertificateAuthorityId))
+            if (item == null)
             {
-                currentCA = item.CertificateAuthorityId;
+                // if not using a specific managed item, get first account details we have
+                var a = accounts
+                    .Where(ac => ac.IsStagingAccount == false && !string.IsNullOrEmpty(ac.Email))
+                    .FirstOrDefault();
+
+                if (a != null)
+                {
+                    return a;
+                }
+                else
+                {
+                    // fallback to first staging account
+                    return accounts.Where(ac => ac.IsStagingAccount == true).FirstOrDefault();
+                }
             }
 
-            var accounts = await GetAccountRegistrations();
+            // determine the current current contact
+            var currentCA = CoreAppSettings.Current.DefaultCertificateAuthority ?? StandardCertAuthorities.LETS_ENCRYPT;
+
+            if (item != null)
+            {
+                if (!string.IsNullOrEmpty(item.CertificateAuthorityId))
+                {
+                    currentCA = item.CertificateAuthorityId;
+                }
+            }
 
             // get current account details for this CA (depending on whether this managed certificate uses staging mode or not)
             var matchingAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == currentCA && a.IsStagingAccount == item.UseStagingMode);

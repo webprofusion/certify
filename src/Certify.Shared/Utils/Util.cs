@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -49,7 +49,7 @@ namespace Certify.Management
                 }
                 catch (Exception exp)
                 {
-                    results.Add(new ActionResult { IsSuccess = false, Message = $"Could not create a temp file ({tempFilePath}). Windows has a limit of 65535 files in the temp folder ({tempFolder}). Clear temp files before proceeding. {exp.Message}" });
+                    results.Add(new ActionResult { Result = "tempfail", IsSuccess = false, Message = $"Could not create a temp file ({tempFilePath}). Windows has a limit of 65535 files in the temp folder ({tempFolder}). Clear temp files before proceeding. {exp.Message}" });
                 }
             }
 
@@ -62,10 +62,10 @@ namespace Certify.Management
                 {
                     var freeSpaceBytes = cDrive.AvailableFreeSpace;
 
-                    // Check disk has at least 128MB free
+                    // Check disk has at least <limit>MB free
                     if (freeSpaceBytes < (1024L * 1024 * limit))
                     {
-                        results.Add(new ActionResult { IsSuccess = false, Message = $"Drive C: has less than {limit}MB of disk space free. The application may not run correctly." });
+                        results.Add(new ActionResult { Result="lowdiskspace", IsSuccess = false, Message = $"Drive C: has less than {limit}MB of disk space free. The application may not run correctly." });
                     }
                     else
                     {
@@ -75,7 +75,7 @@ namespace Certify.Management
             }
             catch (Exception)
             {
-                results.Add(new ActionResult { IsSuccess = false, Message = $"Could not check how much disk space is left on drive C:" });
+                results.Add(new ActionResult { Result = "lowdiskspace", IsSuccess = false, Message = $"Could not check how much disk space is left on drive C:" });
             }
 
             // check internet time service, unless ntpServer pref set to ""
