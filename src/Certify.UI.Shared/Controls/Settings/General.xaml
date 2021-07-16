@@ -15,7 +15,7 @@
     mc:Ignorable="d">
 
     <UserControl.Resources />
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <ScrollViewer Margin="0,0,0,-113" VerticalScrollBarVisibility="Auto">
         <DockPanel Margin="0,8,0,8">
             <TabControl
                 x:Name="GeneralSettingsTab"
@@ -31,7 +31,7 @@
                     Height="32"
                     MinWidth="140"
                     Controls:HeaderedControlHelper.HeaderFontSize="12"
-                    Header="Renewal Settings"
+                    Header="General Settings"
                     IsSelected="true">
                     <StackPanel
                         Margin="16,0,0,0"
@@ -39,35 +39,81 @@
                         Orientation="Vertical">
                         <TextBlock Style="{StaticResource Subheading}">Renewal Settings</TextBlock>
 
+                        <DockPanel>
+                            <StackPanel
+                                Width="348                                 "
+                                Margin="0,0"
+                                DockPanel.Dock="Left"
+                                Orientation="Vertical">
 
-                        <StackPanel Margin="0,8" Orientation="Horizontal">
-                            <Controls:NumericUpDown
-                                x:Name="RenewalIntervalDays"
-                                Width="100"
-                                Interval="1"
-                                Maximum="60"
-                                Minimum="1"
-                                Value="{Binding Prefs.RenewalIntervalDays}" />
-                            <Label
-                                Width="340"
-                                Margin="4,0,0,0"
-                                Content="{x:Static res:SR.Settings_AutoRenewalInterval}" />
-                        </StackPanel>
-                        <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+                                <Label
+                                    Width="280"
+                                    Margin="0,0,0,0"
+                                    HorizontalAlignment="Left"
+                                    Content="{x:Static res:SR.Settings_AutoRenewalInterval}" />
+
+                                <Controls:NumericUpDown
+                                    x:Name="RenewalIntervalDays"
+                                    Width="100"
+                                    Margin="4,0,0,0"
+                                    HorizontalAlignment="Left"
+                                    Interval="1"
+                                    Maximum="60"
+                                    Minimum="1"
+                                    Value="{Binding Prefs.RenewalIntervalDays}" />
+
+                            </StackPanel>
+                            <StackPanel
+                                Margin="0,0,0,0"
+                                DockPanel.Dock="Right"
+                                Orientation="Vertical">
+                                <Label
+                                    Width="180"
+                                    HorizontalAlignment="Left"
+                                    Content="Renewal Mode" />
+                                <RadioButton
+                                    x:Name="RenewalIntervalMode_DaysAfterLastRenewal"
+                                    Margin="8,0,0,4"
+                                    Checked="SettingsUpdated"
+                                    Content="Days After Last Renewal"
+                                    GroupName="RenewalIntervalMode"
+                                    Unchecked="SettingsUpdated" />
+                                <RadioButton
+                                    x:Name="RenewalIntervalMode_DaysBeforeExpiry"
+                                    Margin="8,0,0,4"
+                                    Checked="SettingsUpdated"
+                                    Content="Days Before Expiry"
+                                    GroupName="RenewalIntervalMode"
+                                    Unchecked="SettingsUpdated" />
+                            </StackPanel>
+                        </DockPanel>
+
+
+                        <StackPanel Orientation="Vertical">
+                            <Label HorizontalAlignment="Left" Content="{x:Static res:SR.Settings_AutoRenewalRequestLimit}" />
                             <Controls:NumericUpDown
                                 x:Name="RenewalMaxRequests"
                                 Width="100"
+                                Margin="4,0,0,0"
+                                HorizontalAlignment="Left"
                                 Interval="1"
                                 Maximum="100"
                                 Minimum="0"
                                 Value="{Binding Prefs.MaxRenewalRequests}" />
-                            <Label
-                                Width="340"
-                                Margin="4,0,0,0"
-                                Content="{x:Static res:SR.Settings_AutoRenewalRequestLimit}" />
+
                         </StackPanel>
-                        <DockPanel>
-                            <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
+                        <DockPanel Margin="0,0,0,0">
+                            <TextBlock
+                                Margin="0,8,0,8"
+                                DockPanel.Dock="Top"
+                                Style="{StaticResource SubheadingWithMargin}">
+                                Other Settings
+                            </TextBlock>
+                            <StackPanel
+                                Width="348"
+                                Margin="4,0,0,0"
+                                DockPanel.Dock="Left"
+                                Orientation="Vertical">
 
                                 <CheckBox
                                     x:Name="EnableProxyAPICheckbox"
@@ -103,11 +149,11 @@
 
                             <!--  Cert Cleanup Options  -->
                             <StackPanel
-                                Margin="32,0,0,0"
+                                Margin="0,0,0,0"
                                 DockPanel.Dock="Right"
                                 Orientation="Vertical">
-                                <Label Content="Certificate Store Cleanup:" />
-                                <StackPanel Margin="16,0,0,0">
+                                <Label Content="Certificate Store Cleanup" />
+                                <StackPanel Margin="0,0,0,0">
                                     <RadioButton
                                         x:Name="CertCleanup_None"
                                         Margin="8,0,0,4"
@@ -144,7 +190,12 @@
 
                         <DockPanel LastChildFill="False">
                             <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">Diagnostics</TextBlock>
-                            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">On startup the app runs basic diagnostic checks such as system drive disk space and system time, to help ensure the system keeps running normally:</TextBlock>
+                            <TextBlock
+                                Margin="4,0,0,0"
+                                DockPanel.Dock="Top"
+                                Style="{StaticResource Instructions}">
+                                On startup the app runs basic diagnostic checks such as system drive disk space and system time, to help ensure the system keeps running normally:
+                            </TextBlock>
 
                             <StackPanel
                                 Margin="0,4"

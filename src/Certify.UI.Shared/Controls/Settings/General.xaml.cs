@@ -46,22 +46,33 @@ namespace Certify.UI.Controls.Settings
                 return;
             }
 
-            if (EditModel.Prefs.CertificateCleanupMode == Models.CertificateCleanupMode.None)
+            if (EditModel.Prefs.CertificateCleanupMode == CertificateCleanupMode.None)
             {
                 CertCleanup_None.IsChecked = true;
             }
-            else if (EditModel.Prefs.CertificateCleanupMode == Models.CertificateCleanupMode.AfterExpiry)
+            else if (EditModel.Prefs.CertificateCleanupMode == CertificateCleanupMode.AfterExpiry)
             {
                 CertCleanup_AfterExpiry.IsChecked = true;
             }
-            else if (EditModel.Prefs.CertificateCleanupMode == Models.CertificateCleanupMode.AfterRenewal)
+            else if (EditModel.Prefs.CertificateCleanupMode == CertificateCleanupMode.AfterRenewal)
             {
                 CertCleanup_AfterRenewal.IsChecked = true;
             }
-            else if (EditModel.Prefs.CertificateCleanupMode == Models.CertificateCleanupMode.FullCleanup)
+            else if (EditModel.Prefs.CertificateCleanupMode == CertificateCleanupMode.FullCleanup)
             {
                 CertCleanup_FullCleanup.IsChecked = true;
             }
+
+            if (EditModel.Prefs.RenewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
+            {
+                RenewalIntervalMode_DaysBeforeExpiry.IsChecked = true;
+            }
+            else
+            {
+                RenewalIntervalMode_DaysAfterLastRenewal.IsChecked = true;
+            }
+
+            RefreshRewalIntervalLimits();
 
             ThemeSelector.SelectedValue = EditModel.MainViewModel.UISettings?.UITheme ?? EditModel.MainViewModel.DefaultUITheme;
             CultureSelector.SelectedValue = EditModel.MainViewModel.UISettings?.PreferredUICulture ?? "en-US";
@@ -86,28 +97,66 @@ namespace Certify.UI.Controls.Settings
                 // cert cleanup mode
                 if (CertCleanup_None.IsChecked == true)
                 {
-                    EditModel.Prefs.CertificateCleanupMode = Models.CertificateCleanupMode.None;
+                    EditModel.Prefs.CertificateCleanupMode = CertificateCleanupMode.None;
                     EditModel.Prefs.EnableCertificateCleanup = false;
                 }
                 else if (CertCleanup_AfterExpiry.IsChecked == true)
                 {
-                    EditModel.Prefs.CertificateCleanupMode = Models.CertificateCleanupMode.AfterExpiry;
+                    EditModel.Prefs.CertificateCleanupMode = CertificateCleanupMode.AfterExpiry;
                     EditModel.Prefs.EnableCertificateCleanup = true;
                 }
                 else if (CertCleanup_AfterRenewal.IsChecked == true)
                 {
-                    EditModel.Prefs.CertificateCleanupMode = Models.CertificateCleanupMode.AfterRenewal;
+                    EditModel.Prefs.CertificateCleanupMode = CertificateCleanupMode.AfterRenewal;
                     EditModel.Prefs.EnableCertificateCleanup = true;
                 }
                 else if (CertCleanup_FullCleanup.IsChecked == true)
                 {
-                    EditModel.Prefs.CertificateCleanupMode = Models.CertificateCleanupMode.FullCleanup;
+                    EditModel.Prefs.CertificateCleanupMode = CertificateCleanupMode.FullCleanup;
                     EditModel.Prefs.EnableCertificateCleanup = true;
+                }
+
+                // renewal mode
+                if (RenewalIntervalMode_DaysAfterLastRenewal.IsChecked == true)
+                {
+                    EditModel.Prefs.RenewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+                    RefreshRewalIntervalLimits();
+                }
+                else
+                {
+                    EditModel.Prefs.RenewalIntervalMode = RenewalIntervalModes.DaysBeforeExpiry;
+                    RefreshRewalIntervalLimits();
                 }
 
                 // save settings
                 await EditModel.MainViewModel.SavePreferences();
 
+            }
+        }
+
+        /// <summary>
+        /// Apply min/max setting to interval days input for the given mode
+        /// </summary>
+        private void RefreshRewalIntervalLimits()
+        {
+            if (EditModel.Prefs.RenewalIntervalMode == RenewalIntervalModes.DaysAfterLastRenewal)
+            {
+                RenewalIntervalDays.Minimum = 1;
+                RenewalIntervalDays.Maximum = 60;
+            }
+            else if (EditModel.Prefs.RenewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
+            {
+                RenewalIntervalDays.Minimum = 14;
+                RenewalIntervalDays.Maximum = 180;
+            }
+
+            if (EditModel.Prefs.RenewalIntervalDays < RenewalIntervalDays.Minimum)
+            {
+                EditModel.Prefs.RenewalIntervalDays = (int)RenewalIntervalDays.Minimum;
+            }
+            else if (EditModel.Prefs.RenewalIntervalDays > RenewalIntervalDays.Maximum)
+            {
+                EditModel.Prefs.RenewalIntervalDays = (int)RenewalIntervalDays.Maximum;
             }
         }
 

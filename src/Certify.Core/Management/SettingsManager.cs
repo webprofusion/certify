@@ -22,6 +22,7 @@ namespace Certify.Management
             EnableEFS = false;
             EnableDNSValidationChecks = false;
             RenewalIntervalDays = 30;
+            RenewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
             MaxRenewalRequests = 0;
             EnableHttpChallengeServer = true;
             LegacySettingsUpgraded = false;
@@ -76,8 +77,16 @@ namespace Certify.Management
 
         public bool EnableDNSValidationChecks { get; set; }
 
+
+        /// <summary>
+        /// Number of days between renewals
+        /// </summary>
         public int RenewalIntervalDays { get; set; }
 
+        /// <summary>
+        /// Renewal interval mode DaysAfterLastRenewal (default), DaysBeforeExpiry
+        /// </summary>
+        public string RenewalIntervalMode { get; set; }
         public int MaxRenewalRequests { get; set; }
 
         public bool EnableHttpChallengeServer { get; set; }
@@ -157,6 +166,7 @@ namespace Certify.Management
             CoreAppSettings.Current.EnableValidationProxyAPI = prefs.EnableValidationProxyAPI;
             CoreAppSettings.Current.IgnoreStoppedSites = prefs.IgnoreStoppedSites;
             CoreAppSettings.Current.MaxRenewalRequests = prefs.MaxRenewalRequests;
+            CoreAppSettings.Current.RenewalIntervalMode = prefs.RenewalIntervalMode;
             CoreAppSettings.Current.RenewalIntervalDays = prefs.RenewalIntervalDays;
             CoreAppSettings.Current.EnableEFS = prefs.EnableEFS;
             CoreAppSettings.Current.IsInstanceRegistered = prefs.IsInstanceRegistered;
@@ -200,6 +210,7 @@ namespace Certify.Management
                 EnableValidationProxyAPI = CoreAppSettings.Current.EnableValidationProxyAPI,
                 IgnoreStoppedSites = CoreAppSettings.Current.IgnoreStoppedSites,
                 MaxRenewalRequests = CoreAppSettings.Current.MaxRenewalRequests,
+                RenewalIntervalMode = CoreAppSettings.Current.RenewalIntervalMode,
                 RenewalIntervalDays = CoreAppSettings.Current.RenewalIntervalDays,
                 EnableEFS = CoreAppSettings.Current.EnableEFS,
                 InstanceId = CoreAppSettings.Current.InstanceId,

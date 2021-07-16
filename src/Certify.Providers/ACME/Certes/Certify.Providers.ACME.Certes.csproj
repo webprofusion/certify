@@ -14,7 +14,7 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Portable.BouncyCastle" Version="1.8.10" />
-    <PackageReference Include="Webprofusion.Certes" Version="2.3.5" />
+    <PackageReference Include="Webprofusion.Certes" Version="2.3.6" />
   </ItemGroup>
 
   <ItemGroup>

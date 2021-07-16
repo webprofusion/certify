@@ -17,6 +17,19 @@
         FullCleanup = 3
     }
 
+    public static class RenewalIntervalModes
+    {
+        /// <summary>
+        /// Renew certs N days after last renewal
+        /// </summary>
+        public static string DaysAfterLastRenewal = "DaysAfterLastRenewal";
+
+        /// <summary>
+        /// Renew certs N days before expiry
+        /// </summary>
+        public static string DaysBeforeExpiry = "DaysBeforeExpiry";
+    }
+
     /// <summary>
     /// Note the settings specified here are mapped to CoreAppSettings
     /// </summary>
@@ -31,6 +44,8 @@
         public bool EnableEFS { get; set; } = false;
 
         public bool EnableDNSValidationChecks { get; set; } = false;
+
+        public string RenewalIntervalMode { get; set; } = RenewalIntervalModes.DaysAfterLastRenewal;
 
         public int RenewalIntervalDays { get; set; } = 0;
 

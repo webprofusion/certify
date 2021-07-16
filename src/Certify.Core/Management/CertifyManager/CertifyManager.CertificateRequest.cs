@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -89,6 +89,7 @@ namespace Certify.Management
             // old, don't attempt to renew it
             var sitesToRenew = new List<ManagedCertificate>();
             var renewalIntervalDays = CoreAppSettings.Current.RenewalIntervalDays;
+            var renewalIntervalMode = CoreAppSettings.Current.RenewalIntervalMode ?? RenewalIntervalModes.DaysAfterLastRenewal;
 
             var numRenewalTasks = 0;
             var maxRenewalTasks = CoreAppSettings.Current.MaxRenewalRequests;
@@ -115,14 +116,14 @@ namespace Certify.Management
 
                 // determine if this site currently requires renewal for auto mode (or renewals due mode)
                 // In auto mode we skip if recent failures, in Renewals Due mode we ignore recent failures
-                var isRenewalRequired = (settings.Mode != RenewalMode.Auto && settings.Mode != RenewalMode.RenewalsDue) || IsRenewalRequired(managedCertificate, renewalIntervalDays, checkFailureStatus: false);
+                var isRenewalRequired = (settings.Mode != RenewalMode.Auto && settings.Mode != RenewalMode.RenewalsDue) || IsRenewalRequired(managedCertificate, renewalIntervalDays, renewalIntervalMode, checkFailureStatus: false);
 
                 var isRenewalOnHold = false;
 
                 if (isRenewalRequired && settings.Mode == RenewalMode.Auto)
                 {
                     //check if we have renewal failures, if so wait a bit longer.
-                    isRenewalOnHold = !IsRenewalRequired(managedCertificate, renewalIntervalDays, checkFailureStatus: true);
+                    isRenewalOnHold = !IsRenewalRequired(managedCertificate, renewalIntervalDays, renewalIntervalMode, checkFailureStatus: true);
 
                     if (isRenewalOnHold)
                     {
@@ -262,11 +263,26 @@ namespace Certify.Management
         /// <param name="renewalIntervalDays">  </param>
         /// <param name="checkFailureStatus">  </param>
         /// <returns>  </returns>
-        public static bool IsRenewalRequired(ManagedCertificate s, int renewalIntervalDays, bool checkFailureStatus = false)
+        public static bool IsRenewalRequired(ManagedCertificate s, int renewalIntervalDays, string renewalIntervalMode, bool checkFailureStatus = false)
         {
-            var timeSinceLastRenewal = (s.DateRenewed ?? DateTime.Now.AddDays(-30)) - DateTime.Now;
+            var timeNow = DateTime.Now;
 
-            var isRenewalRequired = Math.Abs(timeSinceLastRenewal.TotalDays) > renewalIntervalDays;
+            var timeSinceLastRenewal = (s.DateRenewed ?? timeNow.AddDays(-30)) - timeNow;
+
+            var timeToExpiry = (s.DateExpiry ?? timeNow) - timeNow;
+
+            var isRenewalRequired = false;
+
+            if (renewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
+            {
+                // is item expiring within N days
+                isRenewalRequired = Math.Abs(timeToExpiry.TotalDays) <= renewalIntervalDays;
+            }
+            else
+            {
+                // was item renewed more than N days ago
+                isRenewalRequired = Math.Abs(timeSinceLastRenewal.TotalDays) > renewalIntervalDays;
+            }
 
             // if we have never attempted renewal, renew now
             if (!isRenewalRequired && (s.DateLastRenewalAttempt == null && s.DateRenewed == null))
@@ -685,8 +701,9 @@ namespace Certify.Management
                                     ActionType = "manualdns",
                                     InstanceTitle = Environment.MachineName,
                                     Message = instructions,
-                                    NotificationEmail = (await GetAccountDetailsForManagedItem(managedCertificate))?.Email
-                                });
+                                    NotificationEmail = (await GetAccountDetailsForManagedItem(managedCertificate))?.Email,
+                                    AppVersion = Util.GetAppVersion().ToString() + ";" + Environment.OSVersion.ToString()
+                                }); 
                             }
                         }
                     }
