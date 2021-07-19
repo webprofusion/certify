@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -928,12 +928,6 @@ namespace Certify.Management
                             failureSummaryMessage = $"[{domain}] : {authorization?.AuthorizationError}";
 
                             validationFailed = true;
-                        }
-
-                        // abandon authorization attempts if one of our domains has failed verification
-                        if (validationFailed)
-                        {
-                            break;
                         }
                     }
                 }
