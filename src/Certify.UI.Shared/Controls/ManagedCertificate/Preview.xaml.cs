@@ -60,7 +60,12 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 try
                 {
+                    // save and restore changed flag as validation may autoconfigure defaults.
+                    var isChangedBeforePreview = ItemViewModel.SelectedItem.IsChanged;
+                    
                     var validationResult = ItemViewModel.Validate(applyAutoConfiguration: true);
+                    
+                    ItemViewModel.SelectedItem.IsChanged = isChangedBeforePreview;
 
                     if (!validationResult.IsValid)
                     {
