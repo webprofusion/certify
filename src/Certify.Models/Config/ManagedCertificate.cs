@@ -196,7 +196,7 @@ namespace Certify.Models
             {
                 if (LastRenewalStatus == RequestState.Error)
                 {
-                    if (RenewalFailureCount > 5)
+                    if (RenewalFailureCount > 3 || DateExpiry < DateTime.Now.AddHours(12))
                     {
                         return ManagedCertificateHealth.Error;
                     }
@@ -221,7 +221,20 @@ namespace Certify.Models
                             }
                             else
                             {
-                                return ManagedCertificateHealth.OK;
+                                // if cert is otherwise OK but is expiring soon, report health as warning or error (expired)
+                                if (DateExpiry < DateTime.Now.AddHours(12))
+                                {
+                                    return ManagedCertificateHealth.Error;
+                                }
+                                else if (DateExpiry < DateTime.Now.AddDays(14))
+                                {
+                                    return ManagedCertificateHealth.Warning;
+                                }
+                                else
+                                {
+                                    return ManagedCertificateHealth.OK;
+                                }
+
                             }
                         }
                     }
