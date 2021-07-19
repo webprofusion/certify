@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -183,9 +183,22 @@ namespace Certify.Management
 
             var arguments = scriptFile;
 
+             if(parameters?.Any(p => p.Key.ToLower() == "executionpolicy") == true)
+            {
+                executionPolicy = parameters.FirstOrDefault(p => p.Key.ToLower() == "executionpolicy").Value?.ToString();
+            }
+
             if (!string.IsNullOrEmpty(executionPolicy))
             {
                 arguments = $"-ExecutionPolicy {executionPolicy} " + arguments;
+            }
+
+            if (parameters?.Any() == true)
+            {
+                foreach (var p in parameters)
+                {
+                    arguments = arguments += $" -{p.Key}{(p.Value != null ? " " + p.Value : "")}";
+                }
             }
 
             var scriptProcessInfo = new ProcessStartInfo()
@@ -294,6 +307,12 @@ namespace Certify.Management
         private static ActionResult InvokePowershell(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, string scriptContent, PowerShell shell, bool autoConvertBoolean = true, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5)
         {
             // ensure execution policy will allow the script to run, default to system default, default policy is set in service config object 
+
+            // option to set execution policy as a parameter at task level
+            if (parameters?.Any(p => p.Key.ToLower() == "executionpolicy") == true)
+            {
+                executionPolicy = parameters.FirstOrDefault(p => p.Key.ToLower() == "executionpolicy").Value?.ToString();
+            }
 
             if (!string.IsNullOrEmpty(executionPolicy))
             {
