@@ -203,7 +203,7 @@ namespace Certify.Management
         }
 
 
-        private async Task<IACMEClientProvider> GetACMEProvider(ManagedCertificate managedItem)
+        public async Task<IACMEClientProvider> GetACMEProvider(ManagedCertificate managedItem)
         {
             // determine account to use for the given managed cert
             var acc = await GetAccountDetailsForManagedItem(managedItem);

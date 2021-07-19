@@ -123,8 +123,6 @@
                                     Margin="8,0"
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Top"
-                                  
-                                   
                                     Foreground="{DynamicResource WarningColorBrush}"
                                     TextWrapping="WrapWithOverflow"><Run Text="{x:Static Resources:SR.ManagedCertificateSettings_NoHostNameBindingWarning}" /></TextBlock>
                             </StackPanel>
