@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
@@ -49,6 +49,10 @@ namespace Certify.UI.Controls
                 var filter = txtFilter.Text.Trim();
 
                 return filter == "" || filter.Split(';').Where(f => f.Trim() != "").Any(f =>
+                    (((Models.ManagedCertificate)item).Health == Models.ManagedCertificateHealth.Error && f == "[Status=Error]") ||
+                    (((Models.ManagedCertificate)item).Health == Models.ManagedCertificateHealth.OK && f == "[Status=OK]") ||
+                    (((Models.ManagedCertificate)item).Health == Models.ManagedCertificateHealth.Warning && f == "[Status=Warning]") ||
+                    (((Models.ManagedCertificate)item).Health == Models.ManagedCertificateHealth.AwaitingUser && f == "[Status=AwaitingUser]") ||
                     ((Models.ManagedCertificate)item).Name.IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1 ||
                     (((Models.ManagedCertificate)item).DomainOptions?.Any(d => d.Domain.IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1) ?? false) ||
                     (((Models.ManagedCertificate)item).Comments ?? "").IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1);
@@ -324,6 +328,11 @@ namespace Certify.UI.Controls
             {
                 _appViewModel.ChooseConnection(this);
             }
+        }
+
+        private void GettingStarted_FilterApplied(string filter)
+        {
+            this.txtFilter.Text = filter;
         }
     }
 }

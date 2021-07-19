@@ -1,0 +1,82 @@
+﻿<UserControl
+    x:Class="Certify.UI.Controls.ManagedCertificate.Dashboard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Certify.UI.Controls.ManagedCertificate"
+    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <StackPanel>
+
+        <GroupBox Header="Summary">
+            <StackPanel Margin="16,8,0,8" Orientation="Horizontal">
+
+                <StackPanel Width="160">
+                    <mah:Badged
+                        Margin="0,8,0,0"
+                        Badge="{Binding Path=Total}"
+                        BadgeBackground="Black"
+                        BadgePlacementMode="Right">
+
+                        <Hyperlink Click="Hyperlink_Click" Tag="">
+                            Managed Certificates
+                        </Hyperlink>
+                    </mah:Badged>
+                    <mah:Badged
+                        Margin="0,8,0,0"
+                        Badge="{Binding Path=Healthy}"
+                        BadgePlacementMode="Right">
+
+                        <Hyperlink Click="Hyperlink_Click" Tag="[Status=OK]">
+                            Healthy
+                        </Hyperlink>
+                    </mah:Badged>
+                    <mah:Badged
+                        Margin="0,8,0,0"
+                        Badge="{Binding Path=Error}"
+                        BadgeBackground="IndianRed"
+                        BadgePlacementMode="Right">
+
+                        <Hyperlink Click="Hyperlink_Click" Tag="[Status=Error]">Error</Hyperlink>
+
+                    </mah:Badged>
+                    <mah:Badged
+                        Margin="0,8,0,0"
+                        Badge="{Binding Path=Warning}"
+                        BadgeBackground="DarkOrange"
+                        BadgePlacementMode="Right">
+
+                        <Hyperlink Click="Hyperlink_Click" Tag="[Status=Warning]">Warning</Hyperlink>
+
+                    </mah:Badged>
+                    <mah:Badged
+                        Margin="0,8,0,0"
+                        Badge="{Binding Path=AwaitingUser}"
+                        BadgeBackground="HotPink"
+                        BadgePlacementMode="Right">
+
+                        <Hyperlink Click="Hyperlink_Click" Tag="[Status=AwaitingUser]">Awaiting User</Hyperlink>
+
+                    </mah:Badged>
+                </StackPanel>
+
+
+                <StackPanel Width="120" Margin="64,0,0,0">
+                    <mah:Badged
+                        Margin="0,8,0,0"
+                        Badge="{Binding Path=TotalDomains}"
+                        BadgePlacementMode="Right" BadgeBackground="SlateGray">
+
+                        <TextBlock>Total Domains</TextBlock>
+
+                    </mah:Badged>
+
+                </StackPanel>
+            </StackPanel>
+
+        </GroupBox>
+    </StackPanel>
+</UserControl>

@@ -94,7 +94,7 @@
             </DockPanel>
 
 
-            <ListView 
+            <ListView
                 Name="lvManagedCertificates"
                 AutomationProperties.Name="Managed Certificates List"
                 Background="{DynamicResource MahApps.Brushes.Control.Background}"
@@ -207,7 +207,7 @@
                 Height="Auto"
                 Margin="16,0,0,0"
                 Visibility="{Binding SelectedItem, Converter={StaticResource NullVisibleConverter}}">
-                <local:GettingStarted />
+                <local:GettingStarted FilterApplied="GettingStarted_FilterApplied" />
             </StackPanel>
         </Grid>
     </Grid>

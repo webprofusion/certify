@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fa="http://schemas.fontawesome.io/icons/"
     xmlns:local="clr-namespace:Certify.UI.Controls"
+    xmlns:managed="clr-namespace:Certify.UI.Controls.ManagedCertificate"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     xmlns:utils="clr-namespace:Certify.UI.Utils"
@@ -49,7 +50,9 @@
                         Margin="8"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Top"
-                        FontSize="12" Foreground="{StaticResource MahApps.Brushes.IdealForeground}" FontWeight="Bold"
+                        FontSize="12"
+                        FontWeight="Bold"
+                        Foreground="{StaticResource MahApps.Brushes.IdealForeground}"
                         Text="Your license key has expired. Some features will be reduced or unavailable. Please Sign In to https://certifytheweb.com and renew your license key, then re-open the app."
                         TextWrapping="Wrap" />
 
@@ -59,8 +62,8 @@
                     x:Name="CommunityEdition"
                     Margin="0,16,16,8"
                     Background="{DynamicResource InformationColorBrush}"
-                    Visibility="{Binding IsLicenseUpgradeRecommended, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}"
-                    Orientation="Vertical">
+                    Orientation="Vertical"
+                    Visibility="{Binding IsLicenseUpgradeRecommended, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}">
 
                     <TextBlock
                         Margin="8"
@@ -73,7 +76,7 @@
                         Foreground="{DynamicResource MahApps.Brushes.IdealForeground}"
                         Style="{StaticResource Instructions}">
                         <Run Text="You are using the Community Edition. If you are using this application within a business or funded organisation (beyond a temporary evaluation) you are required to purchase a license key. Visit https://certifytheweb.com/register for more information." />
-                       <LineBreak></LineBreak><LineBreak></LineBreak> <Run Text="The number of certificates which can be managed in the Community Edition will be reduced in a future update."></Run>
+                        <LineBreak /><LineBreak /> <Run Text="The number of certificates which can be managed in the Community Edition will be reduced in a future update." />
                     </TextBlock>
                 </StackPanel>
 
@@ -86,7 +89,7 @@
                                 <DataTrigger Binding="{Binding NumManagedCerts}" Value="0">
                                     <Setter Property="UIElement.Visibility" Value="Visible" />
                                 </DataTrigger>
-                              
+
                             </Style.Triggers>
                         </Style>
                     </StackPanel.Style>
@@ -149,7 +152,8 @@
                         Margin="8"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Top"
-                        FontSize="12" Foreground="{StaticResource MahApps.Brushes.IdealForeground}"
+                        FontSize="12"
+                        Foreground="{StaticResource MahApps.Brushes.IdealForeground}"
                         Text="{Binding SystemDiagnosticError}"
                         TextWrapping="Wrap" />
 
@@ -237,6 +241,8 @@
                 </StackPanel>
 
                 <StackPanel x:Name="Dashboard" Margin="0,16,0,0">
+
+                    <managed:Dashboard FilterApplied="Dashboard_FilterApplied" />
 
                     <TextBlock
                         Margin="0,8,0,8"

@@ -3,6 +3,9 @@ using System.Windows.Controls;
 
 namespace Certify.UI.Controls
 {
+    public delegate void FilterNotify(string filter);  // delegate
+
+
     /// <summary>
     /// Interaction logic for GettingStarted.xaml 
     /// </summary>
@@ -11,6 +14,7 @@ namespace Certify.UI.Controls
         protected Certify.UI.ViewModel.AppViewModel AppViewModel => UI.ViewModel.AppViewModel.Current;
         protected Certify.UI.ViewModel.ManagedCertificateViewModel ItemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
 
+        public event FilterNotify FilterApplied; // filter notification event
 
         public GettingStarted()
         {
@@ -31,6 +35,12 @@ namespace Certify.UI.Controls
         {
             var d = new Windows.GettingStartedGuide { Owner = Window.GetWindow(this) };
             d.Show();
+        }
+
+        private void Dashboard_FilterApplied(string filter)
+        {
+            // event bubble filter applied notification 
+            FilterApplied?.Invoke(filter);
         }
     }
 }
