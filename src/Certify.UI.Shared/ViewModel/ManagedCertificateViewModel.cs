@@ -336,7 +336,17 @@ namespace Certify.UI.ViewModel
                 // number of attempts so far etc
                 if (SelectedItem != null && SelectedItem.DateRenewed.HasValue)
                 {
-                    return SelectedItem.DateRenewed.Value.AddDays(Preferences.RenewalIntervalDays);
+                    if (SelectedItem.DateExpiry != null && _appViewModel.Preferences?.RenewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
+                    {
+                        // Start renewing N days before expiry 
+                        return SelectedItem.DateExpiry.Value.AddDays(-Preferences.RenewalIntervalDays);
+                    }
+                    else
+                    {
+                        // days since last renewal + preferred interval
+                        return SelectedItem.DateRenewed.Value.AddDays(Preferences.RenewalIntervalDays);
+                    }
+
                 }
                 return null;
             }
