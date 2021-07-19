@@ -296,7 +296,7 @@ namespace Certify.CLI
                             {
                                 if (!auth.IsFailure && !auth.IsValidated)
                                 {
-                                    System.Console.WriteLine("Submitting challenge for validation " +auth.Identifier);
+                                    System.Console.WriteLine("Submitting challenge for validation " + auth.Identifier);
                                     auth.AttemptedChallenge = auth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP || c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
                                     await acmeClient.SubmitChallenge(logger, auth.AttemptedChallenge.ChallengeType, auth);
                                 }

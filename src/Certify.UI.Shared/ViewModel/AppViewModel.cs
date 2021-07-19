@@ -272,7 +272,7 @@ namespace Certify.UI.ViewModel
             }
 
             tmpList
-                .OrderBy(t=>t.Title)
+                .OrderBy(t => t.Title)
                 .ToList()
                 .ForEach(a => AccountDetails.Add(a));
         }

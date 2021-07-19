@@ -19,7 +19,7 @@ namespace Certify.Management
         /// <returns>Account Details or null if there is no matching account</returns>
         private async Task<AccountDetails> GetAccountDetailsForManagedItem(ManagedCertificate item)
         {
-   
+
             var accounts = await GetAccountRegistrations();
 
             if (item == null)

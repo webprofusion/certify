@@ -166,7 +166,7 @@ namespace Certify.Management
 
         private static ActionResult ExecutePowershellAsProcess(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, Dictionary<string, string> credentials, string scriptContent, PowerShell shell, bool autoConvertBoolean = true, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5)
         {
-            
+
             var _log = new StringBuilder();
 
             var commandExe = GetPowershellExePath();
@@ -185,9 +185,9 @@ namespace Certify.Management
 
             if (!string.IsNullOrEmpty(executionPolicy))
             {
-                arguments = $"-ExecutionPolicy {executionPolicy} "+arguments;
+                arguments = $"-ExecutionPolicy {executionPolicy} " + arguments;
             }
-            
+
             var scriptProcessInfo = new ProcessStartInfo()
             {
                 RedirectStandardInput = false,

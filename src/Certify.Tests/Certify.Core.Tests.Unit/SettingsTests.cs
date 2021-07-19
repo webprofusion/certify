@@ -109,7 +109,7 @@ namespace Certify.Core.Tests.Unit
         public void TestCheckAutoRenewal30DaysBeforeExpiry(int renewalPeriodDays, int daysSinceRenewed, int daysUntilExpiry, string renewalIntervalMode)
         {
             // setup 
-        
+
             var dateLastRenewed = DateTime.Now.AddDays(-daysSinceRenewed);
 
             var managedCertificate = new ManagedCertificate

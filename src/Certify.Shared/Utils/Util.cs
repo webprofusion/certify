@@ -65,7 +65,7 @@ namespace Certify.Management
                     // Check disk has at least <limit>MB free
                     if (freeSpaceBytes < (1024L * 1024 * limit))
                     {
-                        results.Add(new ActionResult { Result="lowdiskspace", IsSuccess = false, Message = $"Drive C: has less than {limit}MB of disk space free. The application may not run correctly." });
+                        results.Add(new ActionResult { Result = "lowdiskspace", IsSuccess = false, Message = $"Drive C: has less than {limit}MB of disk space free. The application may not run correctly." });
                     }
                     else
                     {

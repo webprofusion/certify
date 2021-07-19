@@ -64,7 +64,7 @@ namespace Certify.UI.Windows
                 return;
             }
 
-         
+
             if (!_appViewModel.IsRegisteredVersion && _appViewModel.NumManagedCerts >= NUM_ITEMS_FOR_REMINDER)
             {
                 MessageBox.Show(SR.MainWindow_TrialLimitationReached);
