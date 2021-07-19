@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models;
+using Serilog;
 
 namespace Certify.CLI
 {
@@ -209,5 +211,107 @@ namespace Certify.CLI
             Console.WriteLine("-----------");
         }
 
+
+        public async Task FindPendingAuthorizations(bool autoFix)
+        {
+            // scan log files for authz URLs, check status of each
+            var logFolder = Management.Util.GetAppDataFolder("logs");
+            var files = System.IO.Directory.GetFiles(logFolder, "log_*.txt");
+            var orderUrls = new List<string>();
+
+            foreach (var logFile in files)
+            {
+                try
+                {
+                    // Identify last N order URLs in each log file
+
+                    System.Console.WriteLine("Parsing log: " + logFile);
+                    var file = System.IO.File.ReadAllLines(logFile).Reverse();
+                    var orderCount = 5;
+
+                    foreach (var line in file)
+                    {
+
+                        bool foundLastOrder = false;
+                        if (line.Contains("https://acme-v02.api.letsencrypt.org/acme/order"))
+                        {
+                            var components = line.Split(' ');
+                            var orderUrl = components.FirstOrDefault(c => c.Contains("https://"));
+                            if (orderUrl != null)
+                            {
+
+                                orderUrls.Add(orderUrl.Trim());
+                                foundLastOrder = true;
+                                orderCount--;
+                            }
+                        }
+
+                        if (orderCount == 0)
+                        {
+                            break;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine("Could not parse order URLs from log: " + logFile);
+                }
+            }
+
+            System.Console.WriteLine($"Orders to check for pending authz [{orderUrls.Count}]:");
+            foreach (var url in orderUrls)
+            {
+                System.Console.WriteLine(url);
+            }
+
+            if (autoFix)
+            {
+                System.Console.WriteLine("Auto fixing:");
+
+                CertifyManager c = new CertifyManager();
+
+                var log = new LoggerConfiguration()
+                  .WriteTo.Debug()
+                  .CreateLogger();
+
+
+                var logger = new Loggy(log);
+
+                foreach (var url in orderUrls)
+                {
+
+                    System.Console.WriteLine("Checking Pending Challenges for " + url);
+
+                    var dummyManagedCert = (new ManagedCertificate { CurrentOrderUri = url, UseStagingMode = false });
+                    // get 
+                    var acmeClient = await c.GetACMEProvider(dummyManagedCert);
+
+                    var pendingOrder = await acmeClient.BeginCertificateOrder(logger, dummyManagedCert.RequestConfig, url);
+
+                    //if (pendingOrder.IsPendingAuthorizations)
+                    {
+                        foreach (var auth in pendingOrder.Authorizations)
+                        {
+                            try
+                            {
+                                if (!auth.IsFailure && !auth.IsValidated)
+                                {
+                                    System.Console.WriteLine("Submitting challenge for validation " +auth.Identifier);
+                                    auth.AttemptedChallenge = auth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP || c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
+                                    await acmeClient.SubmitChallenge(logger, auth.AttemptedChallenge.ChallengeType, auth);
+                                }
+                            }
+                            catch (Exception exp)
+                            {
+                                System.Console.WriteLine("Failed to complete pending authz for  " + url);
+
+                            }
+                            await Task.Delay(250);
+                        }
+
+                    }
+                }
+            }
+        }
     }
 }

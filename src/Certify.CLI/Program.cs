@@ -117,6 +117,19 @@ namespace Certify.CLI
                     await p.RunCertDiagnostics(autoFix, forceAutoDeploy);
                 }
 
+
+                if (command == "pending")
+                {
+                    var autoFix = false;
+                
+                    if (args.Contains("autofix"))
+                    {
+                        autoFix = true;
+                    }
+
+                    await p.FindPendingAuthorizations(autoFix);
+                }
+
                 if (command == "importcsv")
                 {
                     await p.ImportCSV(args);
