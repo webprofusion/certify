@@ -58,27 +58,22 @@
 
                 </StackPanel>
 
-                <StackPanel
+                <GroupBox
                     x:Name="CommunityEdition"
-                    Margin="0,16,16,8"
                     Background="{DynamicResource InformationColorBrush}"
-                    Orientation="Vertical"
+                    Header="License Upgrade Recommended"
                     Visibility="{Binding IsLicenseUpgradeRecommended, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}">
+                    <StackPanel>
 
-                    <TextBlock
-                        Margin="8"
-                        Foreground="{DynamicResource MahApps.Brushes.IdealForeground}"
-                        Style="{StaticResource Subheading}">
-                        License Upgrade Recommended
-                    </TextBlock>
-                    <TextBlock
-                        Margin="8"
-                        Foreground="{DynamicResource MahApps.Brushes.IdealForeground}"
-                        Style="{StaticResource Instructions}">
-                        <Run Text="You are using the Community Edition. If you are using this application within a business or funded organisation (beyond a temporary evaluation) you are required to purchase a license key. Visit https://certifytheweb.com/register for more information." />
-                        <LineBreak /><LineBreak /> <Run Text="The number of certificates which can be managed in the Community Edition will be reduced in a future update." />
-                    </TextBlock>
-                </StackPanel>
+                        <TextBlock
+                            Margin="8"
+                            Foreground="{DynamicResource MahApps.Brushes.IdealForeground}"
+                            Style="{StaticResource Instructions}">
+                            <Run Text="You are using the Community Edition. If you are using this application within a business or funded organisation (beyond a temporary evaluation) you are required to purchase a license key. Visit https://certifytheweb.com/register for more information." />
+                            <LineBreak /><LineBreak /> <Run Text="The number of certificates which can be managed in the Community Edition will be reduced in a future update." />
+                        </TextBlock>
+                    </StackPanel>
+                </GroupBox>
 
                 <StackPanel Orientation="Vertical" Visibility="Collapsed">
 
@@ -240,57 +235,55 @@
                         Style="{StaticResource Instructions}"><Run Text="One or more managed certificates is still using the unsupported tls-sni-01 challenge type. You must change these to a different challenge under Authorization or they will fail to renew." /></TextBlock>
                 </StackPanel>
 
-                <StackPanel x:Name="Dashboard" Margin="0,16,0,0">
+                <managed:Dashboard Margin="0,16,0,0" FilterApplied="Dashboard_FilterApplied" />
 
-                    <managed:Dashboard FilterApplied="Dashboard_FilterApplied" />
+                <GroupBox
+                    x:Name="Dashboard"
+                    Margin="0,16,0,0"
+                    Header="{x:Static res:SR.GettingStarted_Dashboard}">
 
-                    <TextBlock
-                        Margin="0,8,0,8"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Top"
-                        FontSize="20"
-                        TextWrapping="Wrap"><Run Text="{x:Static res:SR.GettingStarted_Dashboard}" /></TextBlock>
+                    <StackPanel>
+                        <TextBlock Margin="0,0,8,8" Style="{StaticResource Instructions}"><Run Text="{x:Static res:SR.GettingStarted_DashboardIntro}" /></TextBlock>
+                        <StackPanel Orientation="Horizontal">
 
-                    <TextBlock Margin="0,0,8,8" Style="{StaticResource Instructions}"><Run Text="{x:Static res:SR.GettingStarted_DashboardIntro}" /></TextBlock>
-                    <StackPanel Orientation="Horizontal">
-
-                        <Button
-                            x:Name="AddToDashboard"
-                            Width="200"
-                            Margin="0,0,16,0"
-                            HorizontalAlignment="Left"
-                            Click="AddToDashboard_Click"
-                            Visibility="{Binding Preferences.IsInstanceRegistered, Converter={StaticResource ResourceKey=InvBoolVisConverter}}">
-                            <StackPanel Orientation="Horizontal">
-                                <fa:ImageAwesome
-                                    Height="16"
-                                    Margin="0"
-                                    HorizontalAlignment="Left"
-                                    VerticalAlignment="Center"
-                                    Foreground="#FF6BB039"
-                                    Icon="PlusCircle" />
-                                <TextBlock Margin="8,0,0,0" HorizontalAlignment="Center"><Run Text="{x:Static res:SR.GettingStarted_AddToDashboard}" /></TextBlock>
-                            </StackPanel>
-                        </Button>
-                        <Button
-                            x:Name="ViewDashboard"
-                            Width="180"
-                            Margin="0,0,0,0"
-                            HorizontalAlignment="Left"
-                            Click="ViewDashboard_Click">
-                            <StackPanel Orientation="Horizontal">
-                                <fa:ImageAwesome
-                                    Height="16"
-                                    Margin="0"
-                                    HorizontalAlignment="Left"
-                                    VerticalAlignment="Center"
-                                    Foreground="#FF6BB039"
-                                    Icon="Leaf" />
-                                <TextBlock Margin="8,0,0,0" HorizontalAlignment="Center"><Run Text="{x:Static res:SR.GettingStarted_ViewDashboard}" /></TextBlock>
-                            </StackPanel>
-                        </Button>
+                            <Button
+                                x:Name="AddToDashboard"
+                                Width="200"
+                                Margin="0,0,16,0"
+                                HorizontalAlignment="Left"
+                                Click="AddToDashboard_Click"
+                                Visibility="{Binding Preferences.IsInstanceRegistered, Converter={StaticResource ResourceKey=InvBoolVisConverter}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <fa:ImageAwesome
+                                        Height="16"
+                                        Margin="0"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Foreground="#FF6BB039"
+                                        Icon="PlusCircle" />
+                                    <TextBlock Margin="8,0,0,0" HorizontalAlignment="Center"><Run Text="{x:Static res:SR.GettingStarted_AddToDashboard}" /></TextBlock>
+                                </StackPanel>
+                            </Button>
+                            <Button
+                                x:Name="ViewDashboard"
+                                Width="180"
+                                Margin="0,0,0,0"
+                                HorizontalAlignment="Left"
+                                Click="ViewDashboard_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <fa:ImageAwesome
+                                        Height="16"
+                                        Margin="0"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Foreground="#FF6BB039"
+                                        Icon="Leaf" />
+                                    <TextBlock Margin="8,0,0,0" HorizontalAlignment="Center"><Run Text="{x:Static res:SR.GettingStarted_ViewDashboard}" /></TextBlock>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
                     </StackPanel>
-                </StackPanel>
+                </GroupBox>
             </StackPanel>
 
         </DockPanel>

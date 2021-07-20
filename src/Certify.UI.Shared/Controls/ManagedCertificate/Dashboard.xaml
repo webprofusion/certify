@@ -9,70 +9,129 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <Style x:Key="SummaryBadge" TargetType="Border">
+
+                <Setter Property="Padding" Value="4,6,4,4" />
+
+                <Setter Property="HorizontalAlignment" Value="Center" />
+                <Setter Property="VerticalAlignment" Value="Bottom" />
+
+                <Setter Property="MaxWidth" Value="128" />
+                <Setter Property="MinWidth" Value="28" />
+
+                <Setter Property="MinHeight" Value="28" />
+                <Setter Property="CornerRadius" Value="32" />
+
+                <Setter Property="DockPanel.Dock" Value="Right" />
+
+            </Style>
+
+            <Style x:Key="SummaryBadgeText" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="HorizontalAlignment" Value="Center" />
+                <Setter Property="Foreground" Value="White" />
+
+            </Style>
+            <Style x:Key="SummaryPanel" TargetType="DockPanel">
+                <Setter Property="LastChildFill" Value="false" />
+                <Setter Property="Margin" Value="0,4,0,0" />
+
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
     <StackPanel>
 
         <GroupBox Header="Summary">
             <StackPanel Margin="16,8,0,8" Orientation="Horizontal">
 
-                <StackPanel Width="160">
-                    <mah:Badged
-                        Margin="0,8,0,0"
-                        Badge="{Binding Path=Total}"
-                        BadgeBackground="Black"
-                        BadgePlacementMode="Right">
+                <StackPanel Width="220">
+                    <DockPanel x:Name="PanelTotal" Style="{StaticResource SummaryPanel}">
 
-                        <Hyperlink Click="Hyperlink_Click" Tag="">
-                            Managed Certificates
-                        </Hyperlink>
-                    </mah:Badged>
-                    <mah:Badged
-                        Margin="0,8,0,0"
-                        Badge="{Binding Path=Healthy}"
-                        BadgePlacementMode="Right">
+                        <TextBlock DockPanel.Dock="Left">
+                            <Hyperlink Click="Hyperlink_Click" Tag="">
+                                Managed Certificates
+                            </Hyperlink>
+                        </TextBlock>
+                        <Border Background="Black" Style="{StaticResource SummaryBadge}">
+                            <TextBlock Style="{StaticResource SummaryBadgeText}" Text="{Binding Path=Total}" />
+                        </Border>
+                    </DockPanel>
 
-                        <Hyperlink Click="Hyperlink_Click" Tag="[Status=OK]">
-                            Healthy
-                        </Hyperlink>
-                    </mah:Badged>
-                    <mah:Badged
-                        Margin="0,8,0,0"
-                        Badge="{Binding Path=Error}"
-                        BadgeBackground="IndianRed"
-                        BadgePlacementMode="Right">
+                    <DockPanel x:Name="PanelHealthy" Style="{StaticResource SummaryPanel}">
+                        <TextBlock DockPanel.Dock="Left">
+                            <Hyperlink Click="Hyperlink_Click" Tag="[Status=OK]">
+                                Healthy
+                            </Hyperlink>
+                        </TextBlock>
+                        <Border
+                            Background="Green"
+                            DockPanel.Dock="Right"
+                            Style="{StaticResource SummaryBadge}">
+                            <TextBlock Style="{StaticResource SummaryBadgeText}" Text="{Binding Path=Healthy}" />
+                        </Border>
+                    </DockPanel>
 
-                        <Hyperlink Click="Hyperlink_Click" Tag="[Status=Error]">Error</Hyperlink>
+                    <DockPanel x:Name="PanelError" Style="{StaticResource SummaryPanel}">
+                        <TextBlock DockPanel.Dock="Left">
+                            <Hyperlink Click="Hyperlink_Click" Tag="[Status=Error]">
+                                Errors
+                            </Hyperlink>
+                        </TextBlock>
+                        <Border
+                            Background="IndianRed"
+                            DockPanel.Dock="Right"
+                            Style="{StaticResource SummaryBadge}">
+                            <TextBlock Style="{StaticResource SummaryBadgeText}" Text="{Binding Path=Error}" />
+                        </Border>
+                    </DockPanel>
 
-                    </mah:Badged>
-                    <mah:Badged
-                        Margin="0,8,0,0"
-                        Badge="{Binding Path=Warning}"
-                        BadgeBackground="DarkOrange"
-                        BadgePlacementMode="Right">
+                    <DockPanel x:Name="PanelWarning" Style="{StaticResource SummaryPanel}">
+                        <TextBlock DockPanel.Dock="Left">
+                            <Hyperlink Click="Hyperlink_Click" Tag="[Status=Warning]">
+                                Warning
+                            </Hyperlink>
+                        </TextBlock>
+                        <Border
+                            Background="DarkOrange"
+                            DockPanel.Dock="Right"
+                            Style="{StaticResource SummaryBadge}">
+                            <TextBlock Style="{StaticResource SummaryBadgeText}" Text="{Binding Path=Warning}" />
+                        </Border>
+                    </DockPanel>
 
-                        <Hyperlink Click="Hyperlink_Click" Tag="[Status=Warning]">Warning</Hyperlink>
+                    <DockPanel x:Name="PanelAwaitingUser" Style="{StaticResource SummaryPanel}">
+                        <TextBlock DockPanel.Dock="Left">
+                            <Hyperlink Click="Hyperlink_Click" Tag="[Status=AwaitingUser]">
+                                Awaiting User
+                            </Hyperlink>
+                        </TextBlock>
+                        <Border
+                            Background="HotPink"
+                            DockPanel.Dock="Right"
+                            Style="{StaticResource SummaryBadge}">
+                            <TextBlock Style="{StaticResource SummaryBadgeText}" Text="{Binding Path=AwaitingUser}" />
+                        </Border>
+                    </DockPanel>
 
-                    </mah:Badged>
-                    <mah:Badged
-                        Margin="0,8,0,0"
-                        Badge="{Binding Path=AwaitingUser}"
-                        BadgeBackground="HotPink"
-                        BadgePlacementMode="Right">
-
-                        <Hyperlink Click="Hyperlink_Click" Tag="[Status=AwaitingUser]">Awaiting User</Hyperlink>
-
-                    </mah:Badged>
                 </StackPanel>
 
 
-                <StackPanel Width="120" Margin="64,0,0,0">
-                    <mah:Badged
-                        Margin="0,8,0,0"
-                        Badge="{Binding Path=TotalDomains}"
-                        BadgePlacementMode="Right" BadgeBackground="SlateGray">
+                <StackPanel Width="220" Margin="64,0,0,0">
+                    <DockPanel Style="{StaticResource SummaryPanel}">
+                        <TextBlock DockPanel.Dock="Left">
+                            Total Domains
+                        </TextBlock>
+                        <Border
+                            Background="DarkSlateGray"
+                            DockPanel.Dock="Right"
+                            Style="{StaticResource SummaryBadge}">
+                            <TextBlock Style="{StaticResource SummaryBadgeText}" Text="{Binding Path=TotalDomains}" />
+                        </Border>
+                    </DockPanel>
 
-                        <TextBlock>Total Domains</TextBlock>
-
-                    </mah:Badged>
 
                 </StackPanel>
             </StackPanel>

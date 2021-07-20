@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using System.Windows.Controls;
 using System.Drawing;
 using Certify.UI.ViewModel;
@@ -71,6 +71,12 @@ namespace Certify.UI.Controls.ManagedCertificate
                 ViewModel.AwaitingUser = ms.Count(c => c.Health == ManagedCertificateHealth.AwaitingUser);
 
                 ViewModel.TotalDomains = ms.Sum(s => s.RequestConfig.SubjectAlternativeNames.Count());
+
+                PanelTotal.Visibility = ViewModel.Total == 0 ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
+                PanelHealthy.Visibility = ViewModel.Healthy == 0 ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
+                PanelError.Visibility = ViewModel.Error == 0 ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
+                PanelWarning.Visibility = ViewModel.Warning == 0 ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
+                PanelAwaitingUser.Visibility = ViewModel.AwaitingUser == 0 ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
 
                 this.Visibility = System.Windows.Visibility.Visible;
             }
