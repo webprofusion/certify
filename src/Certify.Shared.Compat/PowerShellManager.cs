@@ -183,7 +183,7 @@ namespace Certify.Management
 
             var arguments = scriptFile;
 
-             if(parameters?.Any(p => p.Key.ToLower() == "executionpolicy") == true)
+            if (parameters?.Any(p => p.Key.ToLower() == "executionpolicy") == true)
             {
                 executionPolicy = parameters.FirstOrDefault(p => p.Key.ToLower() == "executionpolicy").Value?.ToString();
             }

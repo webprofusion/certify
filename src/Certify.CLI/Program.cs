@@ -121,7 +121,7 @@ namespace Certify.CLI
                 if (command == "pending")
                 {
                     var autoFix = false;
-                
+
                     if (args.Contains("autofix"))
                     {
                         autoFix = true;
