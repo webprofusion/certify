@@ -74,6 +74,7 @@ namespace Certify.Models
                 TermsAndConditionsUrl="https://letsencrypt.org/repository/",
                 ProductionAPIEndpoint = "https://acme-v02.api.letsencrypt.org/directory",
                 StagingAPIEndpoint = "https://acme-staging-v02.api.letsencrypt.org/directory",
+                StatusUrl = "https://letsencrypt.status.io/",
                 IsEnabled = true,
                 IsCustom = false,
                 SANLimit=100,
@@ -204,6 +205,7 @@ namespace Certify.Models
         public string WebsiteUrl { get; set; }
         public string PrivacyPolicyUrl { get; set; }
         public string TermsAndConditionsUrl { get; set; }
+        public string StatusUrl { get; set; }
         public string ProductionAPIEndpoint { get; set; }
         public string StagingAPIEndpoint { get; set; }
 
