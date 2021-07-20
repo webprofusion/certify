@@ -443,6 +443,8 @@ namespace Certify.Providers.ACME.Certes
         /// <returns>  </returns>
         public async Task<ActionResult<AccountDetails>> AddNewAccountAndAcceptTOS(ILog log, string email, string eabKeyId, string eabKey, string eabKeyAlg)
         {
+
+
             try
             {
                 IKey accKey = null;
@@ -454,6 +456,16 @@ namespace Certify.Providers.ACME.Certes
 
                 // start new account context, create new account (with new key, if not enabled)
                 _acme = new AcmeContext(_serviceUri, accKey, _httpClient);
+
+                try
+                {
+                    _ = await _acme.GetDirectory(throwOnError: true);
+                }
+                catch
+                {
+                    return new ActionResult<AccountDetails>("Failed to communicate with the Certificate Authority. Check their status page for service announcements and ensure your system can make outgoing https requests.", false);
+                }
+
                 var account = await _acme.NewAccount(email, true, eabKeyId, eabKey, eabKeyAlg);
 
                 _settings.AccountEmail = email;
