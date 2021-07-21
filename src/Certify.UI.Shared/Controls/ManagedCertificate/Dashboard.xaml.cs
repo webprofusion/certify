@@ -1,11 +1,9 @@
-﻿using System.Linq;
-using System.Windows.Controls;
-using System.Drawing;
-using Certify.UI.ViewModel;
-using System.ComponentModel;
-using Certify.Models;
-using System.Collections.Generic;
+﻿
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
+using System.Windows.Controls;
+using Certify.Models;
 using Certify.UI.ViewModel;
 
 namespace Certify.UI.Controls.ManagedCertificate

@@ -242,7 +242,7 @@
                     Margin="0,16,0,0"
                     Header="{x:Static res:SR.GettingStarted_Dashboard}">
 
-                    <StackPanel>
+                    <StackPanel Margin="16">
                         <TextBlock Margin="0,0,8,8" Style="{StaticResource Instructions}"><Run Text="{x:Static res:SR.GettingStarted_DashboardIntro}" /></TextBlock>
                         <StackPanel Orientation="Horizontal">
 
