@@ -173,23 +173,27 @@ namespace Certify.Providers.DNS.OVH
 
             //ApplicationKey
             if (string.IsNullOrWhiteSpace(applicationKey))
+            {
                 throw new ArgumentException("ApplicationKey is required.", nameof(applicationKey));
-
+            }
 
             ApplicationKey = applicationKey;
 
-
             //SecretKey
             if (string.IsNullOrWhiteSpace(applicationSecret))
+            {
                 throw new ArgumentException("ApplicationSecret is required.", nameof(applicationSecret));
+            }
 
             ApplicationSecret = applicationSecret;
 
             //ConsumerKey
             if (string.IsNullOrWhiteSpace(consumerKey))
+            {
                 throw new ArgumentException("ConsumerKey is required.", nameof(consumerKey));
-            ConsumerKey = consumerKey;
+            }
 
+            ConsumerKey = consumerKey;
 
             //Timeout
             Timeout = timeout;
@@ -443,6 +447,7 @@ namespace Certify.Providers.DNS.OVH
                 {
                     throw new InvalidOperationException("Application secret is missing.");
                 }
+
                 if (ConsumerKey == null)
                 {
                     throw new InvalidOperationException("ConsumerKey is missing.");
