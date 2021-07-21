@@ -171,6 +171,16 @@ namespace Certify.UI.Controls.ManagedCertificate
                 }
 
                 //begin request
+                var renewalCheckWindow = ItemViewModel.SelectedItem.DateRenewed?.AddDays(2);
+                if (ItemViewModel.SelectedItem.LastRenewalStatus == RequestState.Success && renewalCheckWindow > DateTime.Now)
+                {
+                    // cert was recently renewed. confirm user intent
+                    var msg = "This managed certificate was recently renewed. Are you sure you wish to request it again now? \r\n\r\nThe Certificate Authority may impose rate limits on the number of duplicate certificates which can be issued, so requesting duplicate certificates should be avoided. ";
+                    if (MessageBox.Show(msg, "Request certificate again?", MessageBoxButton.OKCancel) == MessageBoxResult.Cancel)
+                    {
+                        return;
+                    }
+                }
 
                 var result = await AppViewModel.BeginCertificateRequest(ItemViewModel.SelectedItem.Id);
                 if (result != null)
