@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -98,7 +98,8 @@ namespace Certify.Management
                 }
                 else
                 {
-                    results.Add(new ActionResult { IsSuccess = false, Message = $"Note: Could not confirm system time is correct using NTP server ({ntpServer ?? "pool.ntp.org (default, UDP port 123)"}). You should ensure the system time is always correct to avoid certificate request errors." });
+                    // could not perform test, assume firewall limitation and assume user is syncing their time.
+                    results.Add(new ActionResult { IsSuccess = true, Message = $"Note: Could not confirm system time is correct using NTP server ({ntpServer ?? "pool.ntp.org (default, UDP port 123)"}). You should ensure the system time is always correct to avoid certificate request errors." });
                 }
             }
 
