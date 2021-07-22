@@ -90,22 +90,20 @@ namespace Certify.UI.Windows
                 }
             }
 
-            // check user has registered a contact with LE first
-            if (!_appViewModel.HasRegisteredContacts)
+            // check user has registered a contact with ACME CA first
+            if (EnsureContactRegistered())
             {
-                EnsureContactRegistered();
-                return;
+
+                //present new managed item (certificate request) UI
+                //select tab Managed Items
+                _appViewModel.MainUITabIndex = (int)PrimaryUITabs.ManagedCertificates;
+
+                _appViewModel.SelectedItem = null; // deselect site list item
+                _appViewModel.SelectedItem = new Certify.Models.ManagedCertificate();
+
+                //default to auto deploy for new managed certs
+                _appViewModel.SelectedItem.RequestConfig.DeploymentSiteOption = Models.DeploymentOption.Auto;
             }
-
-            //present new managed item (certificate request) UI
-            //select tab Managed Items
-            _appViewModel.MainUITabIndex = (int)PrimaryUITabs.ManagedCertificates;
-
-            _appViewModel.SelectedItem = null; // deselect site list item
-            _appViewModel.SelectedItem = new Certify.Models.ManagedCertificate();
-
-            //default to auto deploy for new managed certs
-            _appViewModel.SelectedItem.RequestConfig.DeploymentSiteOption = Models.DeploymentOption.Auto;
         }
 
         private async void Button_RenewAll(object sender, RoutedEventArgs e)
@@ -315,7 +313,7 @@ namespace Certify.UI.Windows
             }
         }
 
-        private void EnsureContactRegistered()
+        private bool EnsureContactRegistered()
         {
             if (!_appViewModel.HasRegisteredContacts)
             {
@@ -325,6 +323,8 @@ namespace Certify.UI.Windows
 
                 d.ShowDialog();
             }
+
+            return _appViewModel.HasRegisteredContacts;
         }
 
         private void InitTelemetry()
