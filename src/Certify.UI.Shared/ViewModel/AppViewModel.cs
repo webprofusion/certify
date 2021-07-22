@@ -904,7 +904,8 @@ namespace Certify.UI.ViewModel
                     }
                 }
 
-                if (SelectedItem != null && SelectedItem.Id == newItem.Id)
+                // refresh SelectedItem value if it matches our updated item
+                if (SelectedItem != null && newItem!=null && SelectedItem.Id == newItem.Id)
                 {
                     SelectedItem = newItem;
                 }
