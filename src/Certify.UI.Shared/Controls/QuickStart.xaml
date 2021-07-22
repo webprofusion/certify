@@ -33,7 +33,7 @@
                         Height="500"
                         Margin="14"
                         DockPanel.Dock="Top"
-                        Source="/Certify.UI;component/Assets/Images/QuickStart/ChooseDomains.png" />
+                        Source="/Certify.UI.Shared;component/Assets/Images/QuickStart/ChooseDomains.png" />
 
                 </DockPanel>
             </controls:FlipViewItem>
@@ -54,7 +54,7 @@
                         Height="500"
                         Margin="0,16,0,0"
                         DockPanel.Dock="Top"
-                        Source="/Certify.UI;component/Assets/Images/QuickStart/ChooseAuth.png" />
+                        Source="/Certify.UI.Shared;component/Assets/Images/QuickStart/ChooseAuth.png" />
                 </DockPanel>
             </controls:FlipViewItem>
             <controls:FlipViewItem>
@@ -74,7 +74,7 @@
                         Height="500"
                         Margin="0,16,0,0"
                         DockPanel.Dock="Top"
-                        Source="/Certify.UI;component/Assets/Images/QuickStart/PreviewDeployment.png" />
+                        Source="/Certify.UI.Shared;component/Assets/Images/QuickStart/PreviewDeployment.png" />
                 </DockPanel>
             </controls:FlipViewItem>
 
