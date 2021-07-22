@@ -82,7 +82,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 Owner = Window.GetWindow(this)
             };
-            dialog.Show();
+            dialog.ShowDialog();
         }
 
         private void AddPreRequestTask_Click(object sender, System.Windows.RoutedEventArgs e)
@@ -91,7 +91,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 Owner = Window.GetWindow(this)
             };
-            dialog.Show();
+            dialog.ShowDialog();
         }
 
     }

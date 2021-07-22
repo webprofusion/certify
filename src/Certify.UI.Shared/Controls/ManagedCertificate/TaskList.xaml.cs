@@ -21,6 +21,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             InitializeComponent();
         }
 
+
         private void EditDeploymentTask_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             var config = (sender as Button).DataContext as DeploymentTaskConfig;
@@ -31,7 +32,8 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 Owner = Window.GetWindow(this)
             };
-            dialog.Show();
+
+            dialog.ShowDialog();
         }
 
         private async void RunDeploymentTask_Click(object sender, RoutedEventArgs e)

@@ -240,7 +240,20 @@
                 <GroupBox
                     x:Name="Dashboard"
                     Margin="0,16,0,0"
-                    Header="{x:Static res:SR.GettingStarted_Dashboard}">
+                    Header="{x:Static res:SR.GettingStarted_Dashboard}"
+                    Visibility="Visible">
+
+                    <GroupBox.Style>
+                        <Style>
+                            <Setter Property="UIElement.Visibility" Value="Visible" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding NumManagedCerts}" Value="0">
+                                    <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                                </DataTrigger>
+
+                            </Style.Triggers>
+                        </Style>
+                    </GroupBox.Style>
 
                     <StackPanel Margin="16">
                         <TextBlock Margin="0,0,8,8" Style="{StaticResource Instructions}"><Run Text="{x:Static res:SR.GettingStarted_DashboardIntro}" /></TextBlock>
