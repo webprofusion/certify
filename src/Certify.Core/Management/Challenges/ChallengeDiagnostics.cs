@@ -439,68 +439,75 @@ namespace Certify.Core.Management.Challenges
 
             log.Information("Using website path {path}", websiteRootPath ?? "[Auto]");
 
+            var performFilesystemBasedValidation = false;
+            string destPath = "";
+
             if (string.IsNullOrEmpty(websiteRootPath) || !Directory.Exists(websiteRootPath))
             {
-                // our website no longer appears to exist on disk, continuing would potentially
-                // create unwanted folders, so it's time for us to give up
+                // Our website root path is unknown. Log as warning. This is ok if http challenge server is running but will fail if we had to fallback to filesystem validation
 
-                var msg = $"The website root path for {managedCertificate.Name} could not be determined. Request cannot continue.";
-                log.Error(msg);
-                return new ActionResult { IsSuccess = false, Message = msg };
+                var msg = $"The website root path for {managedCertificate.Name} could not be determined. Fileysystem based http validation will not be possible.";
+                log.Warning(msg);
+                performFilesystemBasedValidation = false;
             }
-
-            // copy temp file to path challenge expects in web folder
-            var destFile = Path.Combine(websiteRootPath, httpChallenge.ResourcePath);
-            var destPath = Path.GetDirectoryName(destFile);
-
-            if (!Directory.Exists(destPath))
+            else
             {
-                try
-                {
-                    Directory.CreateDirectory(destPath);
-                }
-                catch (Exception exp)
-                {
-                    // failed to create directory, probably permissions or may be invalid config
 
-                    var msg = $"Pre-config check failed: Could not create directory: {destPath}";
-                    log.Error(exp, msg);
-                    return new ActionResult { IsSuccess = false, Message = msg };
-                }
-            }
+                // copy temp file to path challenge expects in web folder
+                var destFile = Path.Combine(websiteRootPath, httpChallenge.ResourcePath);
+                destPath = Path.GetDirectoryName(destFile);
 
-            // copy challenge response to web folder /.well-known/acme-challenge. Check if it already
-            // exists (as in 'configcheck' file) as can cause conflicts.
-            if (!File.Exists(destFile) || !destFile.EndsWith("configcheck"))
-            {
-                try
+                if (!Directory.Exists(destPath))
                 {
-                    File.WriteAllText(destFile, httpChallenge.Value);
-                }
-                catch (Exception exp)
-                {
-                    // failed to create configcheck file, probably permissions or may be invalid config
-
-                    var msg = $"Pre-config check failed: Could not create file: {destFile}";
-                    log.Error(exp, msg);
-                    return new ActionResult { IsSuccess = false, Message = msg };
-                }
-            }
-
-            // prepare cleanup - should this be configurable? Because in some case many sites
-            // renewing may all point to the same web root, we keep the configcheck file
-            pendingAuth.Cleanup = () =>
-            {
-                if (!destFile.EndsWith("configcheck") && File.Exists(destFile))
-                {
-                    log.Debug("Challenge Cleanup: Removing {file}", destFile);
                     try
                     {
-                        File.Delete(destFile);
+                        Directory.CreateDirectory(destPath);
                     }
-                    catch { }
+                    catch (Exception exp)
+                    {
+                        // failed to create directory, probably permissions or may be invalid config
+
+                        var msg = $"Pre-config check failed: Could not create directory: {destPath}";
+                        log.Error(exp, msg);
+                        return new ActionResult { IsSuccess = false, Message = msg };
+                    }
                 }
-            };
+
+                // copy challenge response to web folder /.well-known/acme-challenge. Check if it already
+                // exists (as in 'configcheck' file) as can cause conflicts.
+                if (!File.Exists(destFile) || !destFile.EndsWith("configcheck"))
+                {
+                    try
+                    {
+                        File.WriteAllText(destFile, httpChallenge.Value);
+                    }
+                    catch (Exception exp)
+                    {
+                        // failed to create configcheck file, probably permissions or may be invalid config
+
+                        var msg = $"Pre-config check failed: Could not create file: {destFile}";
+                        log.Error(exp, msg);
+                        return new ActionResult { IsSuccess = false, Message = msg };
+                    }
+                }
+
+                // prepare cleanup - should this be configurable? Because in some case many sites
+                // renewing may all point to the same web root, we keep the configcheck file
+                pendingAuth.Cleanup = () =>
+                {
+                    if (!destFile.EndsWith("configcheck") && File.Exists(destFile))
+                    {
+                        log.Debug("Challenge Cleanup: Removing {file}", destFile);
+                        try
+                        {
+                            File.Delete(destFile);
+                        }
+                        catch { }
+                    }
+                };
+
+                performFilesystemBasedValidation = true;
+            }
 
             // if config checks are enabled but our last renewal was successful, skip auto config
             // until we have failed twice
@@ -518,7 +525,7 @@ namespace Certify.Core.Management.Challenges
                 }
 
                 // initial check didn't work, if auto config enabled attempt to find a working config
-                if (requestConfig.PerformAutoConfig)
+                if (requestConfig.PerformAutoConfig && performFilesystemBasedValidation)
                 {
                     // FIXME: need to only overwrite config we have auto populated, not user
                     // specified config, compare to our preconfig and only overwrite if same as ours?
