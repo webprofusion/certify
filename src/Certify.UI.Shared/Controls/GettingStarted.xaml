@@ -75,7 +75,7 @@
                     </StackPanel>
                 </GroupBox>
 
-                <StackPanel Orientation="Vertical" Visibility="Collapsed">
+                <StackPanel Orientation="Vertical">
 
                     <StackPanel.Style>
                         <Style>

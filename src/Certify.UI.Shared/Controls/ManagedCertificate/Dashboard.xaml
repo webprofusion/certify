@@ -119,7 +119,7 @@
                 </StackPanel>
 
 
-                <StackPanel Width="220" Margin="64,0,0,0">
+                <StackPanel Width="120" Margin="64,0,0,0">
                     <DockPanel Style="{StaticResource SummaryPanel}">
                         <TextBlock DockPanel.Dock="Left">
                             Total Domains
