@@ -1174,6 +1174,10 @@ namespace Certify.Management
                             }
                         }
                     }
+                    else
+                    {
+                        LogMessage(managedCertificate.Id, $"Http Challenge Server process is disabled. Only filesystem based validation via system web server will be possible.", LogItemType.CertificateRequestStarted);
+                    }
                 }
 
                 if (authorization?.Identifier != null)
