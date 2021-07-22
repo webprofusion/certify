@@ -10,6 +10,7 @@
         }
 
         public bool IsSuccess { get; set; }
+        public bool IsWarning { get; set; }
         public string Message { get; set; }
 
         /// <summary>
