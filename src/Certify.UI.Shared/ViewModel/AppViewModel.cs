@@ -758,6 +758,7 @@ namespace Certify.UI.ViewModel
             // add/update site in our local cache
             await UpdatedCachedManagedCertificate(updatedManagedCertificate);
 
+            RaisePropertyChangedEvent(nameof(ManagedCertificates));
             return true;
         }
 
@@ -784,6 +785,7 @@ namespace Certify.UI.ViewModel
                         try
                         {
                             ManagedCertificates.Remove(existing);
+                            RaisePropertyChangedEvent(nameof(ManagedCertificates));
                         }
                         finally
                         {

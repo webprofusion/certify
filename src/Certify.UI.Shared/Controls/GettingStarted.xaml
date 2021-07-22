@@ -58,22 +58,7 @@
 
                 </StackPanel>
 
-                <GroupBox
-                    x:Name="CommunityEdition"
-                    Background="{DynamicResource InformationColorBrush}"
-                    Header="License Upgrade Recommended"
-                    Visibility="{Binding IsLicenseUpgradeRecommended, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}">
-                    <StackPanel>
 
-                        <TextBlock
-                            Margin="8"
-                            Foreground="{DynamicResource MahApps.Brushes.IdealForeground}"
-                            Style="{StaticResource Instructions}">
-                            <Run Text="You are using the Community Edition. If you are using this application within a business or funded organisation (beyond a temporary evaluation) you are required to purchase a license key. Visit https://certifytheweb.com/register for more information." />
-                            <LineBreak /><LineBreak /> <Run Text="The number of certificates which can be managed in the Community Edition will be reduced in a future update." />
-                        </TextBlock>
-                    </StackPanel>
-                </GroupBox>
 
                 <StackPanel Orientation="Vertical">
 
@@ -236,6 +221,24 @@
                 </StackPanel>
 
                 <managed:Dashboard Margin="0,16,0,0" FilterApplied="Dashboard_FilterApplied" />
+
+                <GroupBox
+                    x:Name="CommunityEdition"
+                    Margin="0,16,0,0"
+                    Background="{DynamicResource InformationColorBrush}"
+                    Header="License Upgrade Recommended"
+                    Visibility="{Binding IsLicenseUpgradeRecommended, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}">
+                    <StackPanel>
+
+                        <TextBlock
+                            Margin="8"
+                            Foreground="{DynamicResource MahApps.Brushes.IdealForeground}"
+                            Style="{StaticResource Instructions}">
+                            <Run Text="You are using the Community Edition. If you are using this application within a business or funded organisation (beyond a temporary evaluation) you are required to purchase a license key. Visit https://certifytheweb.com/register for more information." />
+                            <LineBreak /><LineBreak /> <Run Text="The number of certificates which can be managed in the Community Edition will be reduced in a future update." />
+                        </TextBlock>
+                    </StackPanel>
+                </GroupBox>
 
                 <GroupBox
                     x:Name="Dashboard"
