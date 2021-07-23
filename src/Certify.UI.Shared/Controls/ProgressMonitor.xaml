@@ -98,11 +98,14 @@
                                     </Style.Triggers>
                                 </Style>
                             </StackPanel.Style>
-                            <TextBox Background="Transparent"
-                             BorderThickness="0" FontWeight="SemiBold" TextWrapping="WrapWithOverflow"
-                             Text="{Binding ManagedCertificate.RenewalFailureMessage, Mode=OneWay}"
-                             IsReadOnly="True" IsTabStop="False"
-                          />
+                            <TextBox
+                                Background="Transparent"
+                                BorderThickness="0"
+                                FontWeight="SemiBold"
+                                IsReadOnly="True"
+                                IsTabStop="False"
+                                Text="{Binding ManagedCertificate.RenewalFailureMessage, Mode=OneWay}"
+                                TextWrapping="WrapWithOverflow" />
 
                         </StackPanel>
 
