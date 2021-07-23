@@ -247,7 +247,7 @@
                     Visibility="Visible">
 
                     <GroupBox.Style>
-                        <Style>
+                        <Style BasedOn="{StaticResource {x:Type GroupBox}}" TargetType="GroupBox">
                             <Setter Property="UIElement.Visibility" Value="Visible" />
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding NumManagedCerts}" Value="0">
