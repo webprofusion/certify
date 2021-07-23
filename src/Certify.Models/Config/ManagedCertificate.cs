@@ -415,6 +415,67 @@ namespace Certify.Models
             }
         }
 
+        public ManagedCertificate CopyAsTemplate(bool preserveAttributes = false)
+        {
+
+            // clone current object
+            var managedCert = JsonConvert.DeserializeObject<ManagedCertificate>(JsonConvert.SerializeObject(this));
+
+
+            // reset fields we don't want to re-use from the original
+            managedCert.Id = Guid.NewGuid().ToString();
+
+            managedCert.DateLastRenewalAttempt = null;
+            managedCert.DateStart = null;
+            managedCert.DateRenewed = null;
+            managedCert.DateExpiry = null;
+            managedCert.CertificateThumbprintHash = null;
+            managedCert.CertificatePreviousThumbprintHash = null;
+            managedCert.CurrentOrderUri = null;
+            managedCert.SourceId = null;
+            managedCert.SourceName = null;
+            managedCert.RenewalFailureCount = 0;
+            managedCert.RenewalFailureMessage = null;
+
+            managedCert.LastRenewalStatus = null;
+            managedCert.CurrentOrderUri = null;
+            managedCert.CertificatePath = null;
+            managedCert.CertificateId = null;
+            managedCert.CertificateFriendlyName = null;
+            managedCert.ItemType = ManagedCertificateType.SSL_ACME;
+
+            if (!preserveAttributes)
+            {
+                managedCert.RequestConfig.SubjectAlternativeNames = new string[] { };
+                managedCert.RequestConfig.SubjectIPAddresses = new string[] { };
+                managedCert.RequestConfig.PrimaryDomain = null;
+                managedCert.DomainOptions = new System.Collections.ObjectModel.ObservableCollection<DomainOption>();
+                managedCert.Name = null;
+            }
+            else
+            {
+                managedCert.Name = (managedCert.Name ?? "") + " (Copy)";
+            }
+
+            if (managedCert.PreRequestTasks != null)
+            {
+                foreach (var t in managedCert.PreRequestTasks)
+                {
+                    t.Id = Guid.NewGuid().ToString();
+                }
+            }
+
+            if (managedCert.PostRequestTasks != null)
+            {
+                foreach (var t in managedCert.PostRequestTasks)
+                {
+                    t.Id = Guid.NewGuid().ToString();
+                }
+            }
+
+            return managedCert;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="dnsNames">  </param>

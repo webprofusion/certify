@@ -181,7 +181,10 @@
                 Controls:HeaderedControlHelper.HeaderForeground="Blue"
                 Header="{x:Static res:SR.Managed_Certificates}"
                 IsSelected="True">
-                <CustomControls:ManagedCertificates Width="Auto" Height="Auto" />
+                <CustomControls:ManagedCertificates
+                    Width="Auto"
+                    Height="Auto"
+                    OnDuplicate="ManagedCertificates_OnDuplicate" />
             </TabItem>
             <TabItem
                 MinWidth="80"

@@ -378,21 +378,9 @@ namespace Certify.CLI
                     }
                     else
                     {
-                        managedCert = templateCert;
+                        managedCert = templateCert.CopyAsTemplate();
 
-                        // reset fields we dont want to re-use from another template
-                        managedCert.Id = Guid.NewGuid().ToString();
-                        managedCert.RequestConfig.SubjectAlternativeNames = new string[] { };
-                        managedCert.RequestConfig.SubjectIPAddresses = new string[] { };
-                        managedCert.RequestConfig.PrimaryDomain = null;
-                        managedCert.DomainOptions = new System.Collections.ObjectModel.ObservableCollection<DomainOption>();
-                        managedCert.DateLastRenewalAttempt = null;
-                        managedCert.DateStart = null;
-                        managedCert.DateRenewed = null;
-                        managedCert.DateExpiry = null;
-                        managedCert.CertificateThumbprintHash = null;
-                        managedCert.CertificatePreviousThumbprintHash = null;
-                        managedCert.CurrentOrderUri = null;
+
 
                         // if no managed cert name specifed, use first domain
                         if (string.IsNullOrEmpty(managedCert.Name))

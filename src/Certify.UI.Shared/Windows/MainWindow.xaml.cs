@@ -48,22 +48,14 @@ namespace Certify.UI.Windows
             this.Activate();
         }
 
-        private async void Button_NewCertificate(object sender, RoutedEventArgs e)
+        private async Task NewCertificate(ManagedCertificate original = null)
         {
-#if ALPHA
-            MessageBox.Show("You are using an alpha version of Certify The Web. You should only use this version for testing and should not consider it suitable for use on production servers.");
-#endif
-
-#if BETA
-            MessageBox.Show("You are using a beta version of Certify The Web. Please report any issues you find.");
-#endif
 
             // save or discard site changes before creating a new site/certificate
             if (!await _itemViewModel.ConfirmDiscardUnsavedChanges())
             {
                 return;
             }
-
 
             if (!_appViewModel.IsRegisteredVersion && _appViewModel.NumManagedCerts >= NUM_ITEMS_FOR_REMINDER)
             {
@@ -99,11 +91,31 @@ namespace Certify.UI.Windows
                 _appViewModel.MainUITabIndex = (int)PrimaryUITabs.ManagedCertificates;
 
                 _appViewModel.SelectedItem = null; // deselect site list item
-                _appViewModel.SelectedItem = new Certify.Models.ManagedCertificate();
 
-                //default to auto deploy for new managed certs
-                _appViewModel.SelectedItem.RequestConfig.DeploymentSiteOption = Models.DeploymentOption.Auto;
+                if (original != null)
+                {
+                    // start new from duplicate
+                    var duplicate = original.CopyAsTemplate(preserveAttributes: true);
+                    duplicate.Id = null;
+
+                    _appViewModel.SelectedItem = duplicate;
+
+                }
+                else
+                {
+                    // start new
+                    _appViewModel.SelectedItem = new Certify.Models.ManagedCertificate();
+
+                    //default to auto deploy for new managed certs
+                    _appViewModel.SelectedItem.RequestConfig.DeploymentSiteOption = Models.DeploymentOption.Auto;
+                }
             }
+        }
+
+        private async void Button_NewCertificate(object sender, RoutedEventArgs e)
+        {
+            await this.NewCertificate();
+
         }
 
         private async void Button_RenewAll(object sender, RoutedEventArgs e)
@@ -421,6 +433,14 @@ namespace Certify.UI.Windows
             _appViewModel.UISettings.Scaling = _appViewModel.UIScaleFactor;
 
             UISettings.Save(_appViewModel.UISettings);
+        }
+
+        private void ManagedCertificates_OnDuplicate(ManagedCertificate original)
+        {
+            Application.Current.Dispatcher.Invoke(delegate
+            {
+                this.NewCertificate(original);
+            });
         }
     }
 }

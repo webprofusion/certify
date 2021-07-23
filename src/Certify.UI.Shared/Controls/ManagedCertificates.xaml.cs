@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
@@ -8,6 +8,10 @@ using System.Windows.Input;
 
 namespace Certify.UI.Controls
 {
+
+    public delegate void OnDuplicateManagedCertificate(Certify.Models.ManagedCertificate original);  // delegate
+
+
     /// <summary>
     /// Interaction logic for ManagedCertificates.xaml 
     /// </summary>
@@ -17,6 +21,11 @@ namespace Certify.UI.Controls
         protected ViewModel.ManagedCertificateViewModel _itemViewModel => ViewModel.ManagedCertificateViewModel.Current;
 
         private string _sortOrder { get; set; } = "NameAsc";
+
+        /// <summary>
+        /// event for Duplicate option
+        /// </summary>
+        public event OnDuplicateManagedCertificate OnDuplicate;
 
         public ManagedCertificates()
         {
@@ -320,6 +329,18 @@ namespace Certify.UI.Controls
         private async void Refresh_Click(object sender, RoutedEventArgs e)
         {
             await _appViewModel.RefreshManagedCertificates();
+        }
+
+        private async void Duplicate_Click(object sender, RoutedEventArgs e)
+        {
+            if (OnDuplicate != null)
+            {
+                var selectedItem = lvManagedCertificates.SelectedItem;
+                if (selectedItem != null && selectedItem is Certify.Models.ManagedCertificate)
+                {
+                    OnDuplicate.Invoke(selectedItem as Certify.Models.ManagedCertificate);
+                }
+            }
         }
 
         private void Connect_Click(object sender, RoutedEventArgs e)

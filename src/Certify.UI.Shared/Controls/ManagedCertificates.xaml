@@ -121,6 +121,10 @@
                             Click="Refresh_Click"
                             Header="Refresh"
                             Tag="Refresh" />
+                        <MenuItem
+                            Click="Duplicate_Click"
+                            Header="Duplicate"
+                            Tag="Duplicate" />
                     </ContextMenu>
                 </ListView.ContextMenu>
                 <ListView.ItemContainerStyle>
