@@ -116,12 +116,15 @@ namespace Certify.UI.ViewModel
             await RefreshCredentialOptions(storedCredentialsList);
 
             // if we need to migrate WebsiteRootPath, apply it here
-            var config = ParentManagedCertificate.RequestConfig;
-
-            if (config.WebsiteRootPath != null && SelectedItem.ChallengeRootPath == null && SelectedItem.ChallengeType == Models.SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
+            if (ParentManagedCertificate != null)
             {
-                SelectedItem.ChallengeRootPath = config.WebsiteRootPath;
-                config.WebsiteRootPath = null;
+                var config = ParentManagedCertificate.RequestConfig;
+
+                if (config.WebsiteRootPath != null && SelectedItem.ChallengeRootPath == null && SelectedItem.ChallengeType == Models.SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
+                {
+                    SelectedItem.ChallengeRootPath = config.WebsiteRootPath;
+                    config.WebsiteRootPath = null;
+                }
             }
 
             RaisePropertyChangedEvent(nameof(SelectedChallengeProvider));
