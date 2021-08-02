@@ -114,6 +114,11 @@ namespace Certify.Management
                         if (!string.IsNullOrEmpty(taskConfig.ChallengeCredentialKey))
                         {
                             credentials = await _credentialsManager.GetUnlockedCredentialsDictionary(taskConfig.ChallengeCredentialKey);
+
+                            if (credentials == null)
+                            {
+                                return new List<ActionStep> { new ActionStep { HasError = true, Title = taskConfig.TaskName, Description = "Failed to decrypt selected credentials for this task." } };
+                            }
                         }
 
                         var deploymentTask = new DeploymentTask(provider, taskConfig, credentials);
