@@ -1479,14 +1479,6 @@ namespace Certify.Providers.ACME.Certes
             {
                 var pfx = certificateChain.ToPfx(csrKey);
 
-                /* if (_issuerCertCache.Any())
-                 {
-                     foreach (var c in _issuerCertCache)
-                     {
-                         pfx.AddIssuers(c);
-                     }
-                 }*/
-
                 // attempt to build pfx cert chain using known issuers and known roots, if this fails it throws an AcmeException
                 pfxBytes = pfx.Build(certFriendlyName, pwd);
                 System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
