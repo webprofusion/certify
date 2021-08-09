@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 using Certify.Models;
 
 namespace Certify.UI.Controls.ManagedCertificate
@@ -136,6 +137,12 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-
+        private void ManualDomains_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == Key.Return)
+            {
+                AddDomains_Click(sender, e);
+            }
+        }
     }
 }

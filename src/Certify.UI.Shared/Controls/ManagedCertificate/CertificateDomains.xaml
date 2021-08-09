@@ -95,7 +95,7 @@
                                         Width="240"
                                         Controls:TextBoxHelper.Watermark="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsHelpText}"
                                         AutomationProperties.HelpText="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsHelpText}"
-                                        AutomationProperties.Name="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsToCertificate}" />
+                                        AutomationProperties.Name="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsToCertificate}" KeyUp="ManualDomains_KeyUp" />
 
                                     <Button
                                         x:Name="AddDomains"
