@@ -249,6 +249,11 @@ namespace Certify.Management
 
         public async Task<string> GetUnlockedCredential(string storageKey)
         {
+            if (string.IsNullOrEmpty(storageKey))
+            {
+                return null;
+            }
+
             string protectedString = null;
 
             var path = GetDbPath();

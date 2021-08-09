@@ -113,7 +113,12 @@ namespace Certify.Core.Management
                     {
                         if (!usedCredentials.Any(u => u.StorageKey == c.CertificatePasswordCredentialId))
                         {
-                            usedCredentials.Add(allCredentials.Find(a => a.StorageKey == c.CertificatePasswordCredentialId));
+                            var usedCredential = allCredentials.FirstOrDefault(a => a.StorageKey == c.CertificatePasswordCredentialId);
+                            if (usedCredential != null)
+                            {
+                                usedCredentials.Add(usedCredential);
+                            }
+                            
                         }
                     }
 
@@ -158,7 +163,7 @@ namespace Certify.Core.Management
             // decrypt each used stored credential, re-encrypt and base64 encode secret
             foreach (var c in usedCredentials)
             {
-                var decrypted = await _credentialsManager.GetUnlockedCredential(c.StorageKey);
+                var decrypted = await _credentialsManager.GetUnlockedCredential(c?.StorageKey);
                 if (decrypted != null)
                 {
                     var encBytes = EncryptBytes(Encoding.UTF8.GetBytes(decrypted), settings.EncryptionSecret, export.EncryptionSalt);
