@@ -64,7 +64,22 @@ namespace Certify.Client
                 // TODO: auth: https://docs.microsoft.com/en-us/aspnet/core/signalr/authn-and-authz?view=aspnetcore-3.1
 
                 connection = new HubConnectionBuilder()
-                .WithUrl(_statusHubUri)
+                .WithUrl(_statusHubUri, opts =>
+                {
+                    opts.HttpMessageHandlerFactory = (message) =>
+                    {
+                        if (message is System.Net.Http.HttpClientHandler clientHandler)
+                        {
+                            if (_connectionConfig.AllowUntrusted)
+                            {
+                                // allow invalid tls cert
+                                clientHandler.ServerCertificateCustomValidationCallback +=
+                                    (sender, certificate, chain, sslPolicyErrors) => { return true; };
+                            }
+                        }
+                        return message;
+                    };
+                })
                 .WithAutomaticReconnect()
                 .AddMessagePackProtocol()
                 .Build();
