@@ -46,7 +46,7 @@ namespace Certify.Core.Management
             {
                 SourceName = Environment.MachineName,
                 ExportDate = DateTime.Now,
-                SystemVersion = Certify.Management.Util.GetAppVersion(),
+                SystemVersion = new SerializableVersion(Certify.Management.Util.GetAppVersion()),
                 EncryptionSalt = salt,
                 EncryptionValidation = new EncryptedContent
                 {
@@ -118,7 +118,7 @@ namespace Certify.Core.Management
                             {
                                 usedCredentials.Add(usedCredential);
                             }
-                            
+
                         }
                     }
 
@@ -163,11 +163,21 @@ namespace Certify.Core.Management
             // decrypt each used stored credential, re-encrypt and base64 encode secret
             foreach (var c in usedCredentials)
             {
-                var decrypted = await _credentialsManager.GetUnlockedCredential(c?.StorageKey);
-                if (decrypted != null)
+                try
                 {
-                    var encBytes = EncryptBytes(Encoding.UTF8.GetBytes(decrypted), settings.EncryptionSecret, export.EncryptionSalt);
-                    c.Secret = Convert.ToBase64String(encBytes);
+                    var decrypted = await _credentialsManager.GetUnlockedCredential(c?.StorageKey);
+                    if (decrypted != null)
+                    {
+                        var encBytes = EncryptBytes(Encoding.UTF8.GetBytes(decrypted), settings.EncryptionSecret, export.EncryptionSalt);
+                        c.Secret = Convert.ToBase64String(encBytes);
+                    }
+                }
+                catch (Exception)
+                {
+                    // decryption failed
+                    c.Title += " [Update Required. Decryption Failed]";
+                    c.Secret = "";
+                    export.Errors.Add($"Stored Credential [{c.Title}] could not be decrypted for export. It may be owned by a different user.");
                 }
             }
 
@@ -282,13 +292,14 @@ namespace Certify.Core.Management
             var steps = new List<ActionStep>();
 
             // import managed certs, certificate files, stored credentials, CAs
+
             var currentAppVersion = Certify.Management.Util.GetAppVersion();
 
-            if (currentAppVersion != package.SystemVersion)
+            if (currentAppVersion != package.SystemVersion.ToVersion())
             {
-                if (package.SystemVersion == null || AppVersion.IsOtherVersionNewer(AppVersion.FromVersion(package.SystemVersion), AppVersion.FromVersion(currentAppVersion)))
+                if (package.SystemVersion == null || AppVersion.IsOtherVersionNewer(AppVersion.FromVersion(package.SystemVersion.ToVersion()), AppVersion.FromVersion(currentAppVersion)))
                 {
-                    steps.Add(new ActionStep { Title = "Version Check", Category = "Import", Key = "Version", HasWarning = true, Description = "Migration to an older app version is not supported. Results may be unreliable." });
+                    steps.Add(new ActionStep { Title = "Version Check", Category = "Import", Key = "Version", HasWarning = true, Description = "This import uses a different app/system version." });
 
                 }
             }
@@ -330,39 +341,47 @@ namespace Certify.Core.Management
             var credentialImportSteps = new List<ActionStep>();
             foreach (var c in package.Content.StoredCredentials)
             {
-                var decodedBytes = Convert.FromBase64String(c.Secret);
-                var decryptedBytes = DecryptBytes(decodedBytes, settings.EncryptionSecret, package.EncryptionSalt);
-
-                // convert decrypted bytes to UTF8 string and trim NUL 
-                c.Secret = UTF8Encoding.UTF8.GetString(decryptedBytes).Trim('\0');
-
-                var existing = await _credentialsManager.GetCredential(c.StorageKey);
-
-                if (existing == null)
+                try
                 {
-                    if (!isPreviewMode)
+                    var decodedBytes = Convert.FromBase64String(c.Secret);
+                    var decryptedBytes = DecryptBytes(decodedBytes, settings.EncryptionSecret, package.EncryptionSalt);
+
+                    // convert decrypted bytes to UTF8 string and trim NUL 
+                    c.Secret = UTF8Encoding.UTF8.GetString(decryptedBytes).Trim('\0');
+
+                    var existing = await _credentialsManager.GetCredential(c.StorageKey);
+
+                    if (existing == null)
                     {
-                        // perform import
-                        var result = await _credentialsManager.Update(c);
-                        if (result != null)
+                        if (!isPreviewMode)
                         {
-                            credentialImportSteps.Add(new ActionStep { Title = c.Title, Key = c.StorageKey });
+                            // perform import
+                            var result = await _credentialsManager.Update(c);
+                            if (result != null)
+                            {
+                                credentialImportSteps.Add(new ActionStep { Title = c.Title, Key = c.StorageKey });
+                            }
+                            else
+                            {
+                                credentialImportSteps.Add(new ActionStep { Title = c.Title, Key = c.StorageKey, HasWarning = true, Description = $"Failed to store this credential. Items which depend on it may not function." });
+                            }
                         }
                         else
                         {
-                            credentialImportSteps.Add(new ActionStep { Title = c.Title, Key = c.StorageKey, HasWarning = true, Description = $"Failed to store this credential. Items which depend on it may not function." });
+                            // preview only
+                            credentialImportSteps.Add(new ActionStep { Title = c.Title, Key = c.StorageKey });
                         }
                     }
                     else
                     {
-                        // preview only
-                        credentialImportSteps.Add(new ActionStep { Title = c.Title, Key = c.StorageKey });
+                        // credential already exists
+                        credentialImportSteps.Add(new ActionStep { Title = c.Title, Key = c.StorageKey, HasWarning = true, Description = $"Credential already exists, it will not be re-imported." });
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    // credential already exists
-                    credentialImportSteps.Add(new ActionStep { Title = c.Title, Key = c.StorageKey, HasWarning = true, Description = $"Credential already exists, it will not be re-imported." });
+                    credentialImportSteps.Add(new ActionStep { Title = c.Title, Key = c.StorageKey, HasWarning = true, Description = $"Credential could not be decrypted. Any items relying on this credential will fail until the credential is replaced." });
+                    c.Secret = "";
                 }
 
             }
