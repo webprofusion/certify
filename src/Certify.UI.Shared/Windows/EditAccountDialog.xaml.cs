@@ -41,7 +41,13 @@ namespace Certify.UI.Windows
         {
             //add/update contact
 
-            var ca = MainViewModel.CertificateAuthorities.FirstOrDefault(c => c.Id == Item.CertificateAuthorityId);
+            var ca = MainViewModel.CertificateAuthorities.FirstOrDefault(c => c.Id == Item?.CertificateAuthorityId);
+
+            if (ca == null)
+            {
+                MessageBox.Show("Certificate authority not selected - cannot proceed. Ensure the app has loaded correctly and the Certify background service is running.");
+                return;
+            }
 
             // if ca requires email address, check that first
             if (ca.RequiresEmailAddress)
