@@ -1159,6 +1159,16 @@ namespace Certify.Providers.ACME.Certes
             {
                 csrKey = KeyFactory.FromPem(config.CustomPrivateKey);
             }
+            else if (config.ReusePrivateKey)
+            {
+                // check if we have a stored private key already and want to use it again
+                var savedKey = LoadSavedPrivateKey(config);
+
+                if (savedKey != null)
+                {
+                    csrKey = savedKey;
+                }
+            }
 
             var certFriendlyName = $"{config.PrimaryDomain} [Certify] ";
 
@@ -1193,7 +1203,8 @@ namespace Certify.Providers.ACME.Certes
                     {
                         order = await orderContext.Finalize(new CsrInfo
                         {
-                            CommonName = _idnMapping.GetAscii(config.PrimaryDomain)
+                            CommonName = _idnMapping.GetAscii(config.PrimaryDomain),
+                            RequireOcspMustStaple = config.RequireOcspMustStaple
                         }, csrKey);
 
                     }
@@ -1245,9 +1256,13 @@ namespace Certify.Providers.ACME.Certes
             // file will be named as {expiration yyyyMMdd}_{guid} e.g. 20290301_4fd1b2ea-7b6e-4dca-b5d9-e0e7254e568b
             var certId = certExpiration.Value.ToString("yyyyMMdd") + "_" + Guid.NewGuid().ToString().Substring(0, 8);
 
-            var domainAsPath = config.PrimaryDomain.Replace("*", "_");
+            var domainAsPath = GetDomainAsPath(config.PrimaryDomain);
 
             var pfxPath = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath, includeCleanup: true);
+            if (config.ReusePrivateKey)
+            {
+                SavePrivateKey(config, csrKey);
+            }
 
             return new ProcessStepResult
             {
@@ -1255,6 +1270,8 @@ namespace Certify.Providers.ACME.Certes
                 Result = pfxPath
             };
         }
+
+        private string GetDomainAsPath(string domain) => domain.Replace("*", "_");
 
         private byte[] GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName storeName)
         {
@@ -1425,6 +1442,61 @@ namespace Certify.Providers.ACME.Certes
             {
                 //TODO: log
                 System.Diagnostics.Debug.WriteLine("Failed to properly cache issuer certs.");
+            }
+        }
+
+        private IKey LoadSavedPrivateKey(CertRequestConfig config)
+        {
+            try
+            {
+                var domainAsPath = GetDomainAsPath(config.PrimaryDomain);
+
+                var storedPrivateKey = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..", "assets", domainAsPath, "privkey.pem" }));
+
+                if (File.Exists(storedPrivateKey))
+                {
+                    string pem = File.ReadAllText(storedPrivateKey);
+                    var key = KeyFactory.FromPem(pem);
+
+                    return key;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                _log?.Error(ex, "Failed to load saved private key. File may have been removed, access denied or is invalid PEM");
+                return null;
+            }
+        }
+
+        private bool SavePrivateKey(CertRequestConfig config, IKey key)
+        {
+            try
+            {
+                var domainAsPath = GetDomainAsPath(config.PrimaryDomain);
+
+                var storedPrivateKey = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..", "assets", domainAsPath, "privkey.pem" }));
+
+                if (!File.Exists(storedPrivateKey))
+                {
+                    var pem = key.ToPem();
+                    File.WriteAllText(storedPrivateKey, pem);
+
+                    return true;
+                }
+                else
+                {
+                    _log?.Information("Saved private key file already exists, key file will not be modified.");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                _log?.Error(ex, "Failed to save private key.");
+                return false;
             }
         }
 

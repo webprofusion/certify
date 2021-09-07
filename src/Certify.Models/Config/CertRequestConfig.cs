@@ -214,6 +214,16 @@ namespace Certify.Models
         public string CustomPrivateKey { get; set; }
 
         /// <summary>
+        /// If enabled, private key is exported on first use and re-used for subsequent certificate renewals
+        /// </summary>
+        public bool ReusePrivateKey { get; set; }
+
+        /// <summary>
+        /// If enabled, CSR will include extension to request OcspMustStaple attribute be included on the certificate
+        /// </summary>
+        public bool RequireOcspMustStaple { get; set; }
+
+        /// <summary>
         /// If set, this is the preferred chain to select if present (e.g. the name of the root cert in the preferred chain)
         /// </summary>
         public string PreferredChain { get; set; }
