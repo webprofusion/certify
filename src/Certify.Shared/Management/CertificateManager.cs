@@ -603,5 +603,79 @@ namespace Certify.Management
 
             return removedCerts;
         }
+
+        /// <summary>
+        /// Disable usage of a given certificate within the store. Used to disabled CA intermediate certificates without deleting them (so they don't just get re-imported and enabled again)
+        /// </summary>
+        /// <param name="thumbprint"></param>
+        /// <param name="sourceStore"></param>
+        /// <returns></returns>
+        public static bool DisableCertificateUsage(string thumbprint, string sourceStore)
+        {
+            var disabled = false;
+            var certsToMove = new List<X509Certificate2>();
+            using (var store = GetStore(sourceStore))
+            {
+                store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
+
+                foreach (var c in store.Certificates)
+                {
+                   
+                    if (c.Thumbprint == thumbprint) {
+                        disabled = Security.WinTrust.WinCrypto.DisableCertificateUsageFlags(c);
+                    }
+                }
+
+                store.Close();
+            }
+
+            return disabled;
+        }
+
+        public static bool MoveCertificate(string thumbprint, string sourceStore, string destStore)
+        {
+            var certsToMove = new List<X509Certificate2>();
+            using (var store = GetStore(sourceStore))
+            {
+                store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
+                foreach (var c in store.Certificates)
+                {
+                    if (c.Thumbprint == thumbprint)
+                    {
+                        certsToMove.Add(c);
+                    }
+                }
+
+                foreach (var c in certsToMove)
+                {
+                    store.Remove(c);
+                }
+                store.Close();
+            }
+
+            if (certsToMove.Any())
+            {
+                using (var store = GetStore(destStore))
+                {
+                    store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
+                    foreach (var c in certsToMove)
+                    {
+                        var foundCerts = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, false);
+                        if (foundCerts.Count == 0)
+                        {
+                            store.Add(c);
+                        }
+                    }
+                    store.Close();
+                }
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+        }
     }
 }

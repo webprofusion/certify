@@ -120,6 +120,8 @@ namespace Certify.Management
 
             PerformManagedCertificateMigrations().Wait();
 
+            PerformCAMaintenance();
+
             // if jwt auth mode is enabled, init auth key for first windows user
         }
 
@@ -391,6 +393,8 @@ namespace Certify.Management
 
                 // perform item db maintenance
                 await _itemManager.PerformMaintenance();
+
+                PerformCAMaintenance();
             }
             catch (Exception exp)
             {
@@ -402,6 +406,51 @@ namespace Certify.Management
             }
 
             return await Task.FromResult(true);
+        }
+
+        private void PerformCAMaintenance()
+        {
+            if (_useWindowsNativeFeatures)
+            {
+                try
+                {
+                    foreach (var ca in _certificateAuthorities.Values)
+                    {
+                        if (ca.DisabledIntermediates?.Any() == true)
+                        {
+                            // check we have disabled usage on all required intermediates
+                            foreach (var i in ca.DisabledIntermediates)
+                            {
+                                try
+                                {
+                                    if (CertificateManager.DisableCertificateUsage(i, "CA"))
+                                    {
+                                        _serviceLog?.Information("CA Maintenance: Intermediate CA certificate usage disabled. {thumb}", i);
+                                    }
+                                    else
+                                    {
+                                        _serviceLog?.Warning("CA Maintenance: Could not disable CA certificate usage, may already be disabled. {thumb}", i);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    _serviceLog?.Error(ex, "CA Maintenance: Failed to disable CA certificate usage. {thumb}", i);
+                                }
+
+                                /*if (CertificateManager.MoveCertificate(i, "CA", "Disallowed"))
+                                {
+                                    _serviceLog?.Information("CA Maintenance: Intermediate CA certificate moved to Disallowed store. {thumb}", i);
+                                }*/
+                            }
+
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _serviceLog?.Error(ex, "Failed to perform CA maintenance");
+                }
+            }
         }
 
         /// <summary>

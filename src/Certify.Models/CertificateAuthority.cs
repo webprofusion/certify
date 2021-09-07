@@ -90,6 +90,9 @@ namespace Certify.Models
                     StandardKeyTypes.RSA256_4096,
                     StandardKeyTypes.ECDSA256,
                     StandardKeyTypes.ECDSA384
+                },
+                DisabledIntermediates = new List<string>{ 
+                    "48504E974C0DAC5B5CD476C8202274B24C8C7172" // old R3 chained to DST Root CA X3
                 }
             },
              new CertificateAuthority{
@@ -218,6 +221,11 @@ namespace Certify.Models
 
         public string EabInstructions { get; set; }
         public List<string> SupportedKeyTypes { get; set; }
+
+        /// <summary>
+        /// If set, lists intermediate cert for this CA which should be disabled or removed
+        /// </summary>
+        public List<string> DisabledIntermediates { get; set; }
 
     }
 }

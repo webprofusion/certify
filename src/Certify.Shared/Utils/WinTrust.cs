@@ -177,4 +177,54 @@ namespace Security.WinTrust
         }
         private WinTrust() { }
     }
+
+    sealed class WinCrypto
+    {
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct CRYPTOAPI_BLOB
+        {
+            public uint cbData;
+            public IntPtr pbData;
+        }
+
+        [DllImport("Crypt32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        internal static extern Boolean CertSetCertificateContextProperty(
+            [In] IntPtr pCertContext,
+            [In] uint dwPropId,
+            [In] uint dwFlags,
+            [In] IntPtr pvData
+        );
+
+        public static bool DisableCertificateUsageFlags(System.Security.Cryptography.X509Certificates.X509Certificate2 cert)
+        {
+            // inspired by https://stackoverflow.com/questions/47481158/disable-a-certificate-in-the-root-using-powershell
+
+            // ASN-encoded empty X509 EKU extension value to explicitly disable EKUs in the property
+            var data = new byte[2] { 0x30, 0 };
+            uint propId = 0x9;
+
+            // allocate pbData
+            var pbData = Marshal.AllocHGlobal(data.Length);
+
+            // copy data to struct
+            Marshal.Copy(data, 0, pbData, data.Length);
+            var blob = new CRYPTOAPI_BLOB
+            {
+                cbData = 2,
+                pbData = pbData
+            };
+            var pvData = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(CRYPTOAPI_BLOB)));
+
+            Marshal.StructureToPtr(blob, pvData, false);
+
+            var result = CertSetCertificateContextProperty(cert.Handle, propId, 0, pvData);
+
+            // release unmanaged memory
+            Marshal.FreeHGlobal(pbData);
+            Marshal.FreeHGlobal(pvData);
+
+            return result;
+        }
+        private WinCrypto() { }
+    }
 }
