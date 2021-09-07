@@ -730,8 +730,8 @@ namespace Certify.UI.ViewModel
         {
             var filter = new ManagedCertificateFilter();
 
-            // include external managed certs
-            filter.IncludeExternal = IsFeatureEnabled(FeatureFlags.EXTERNAL_CERT_MANAGERS);
+            // include external managed certs if enabled
+            filter.IncludeExternal = IsFeatureEnabled(FeatureFlags.EXTERNAL_CERT_MANAGERS) && Preferences.EnableExternalCertManagers;
 
             var list = await _certifyClient.GetManagedCertificates(filter);
 

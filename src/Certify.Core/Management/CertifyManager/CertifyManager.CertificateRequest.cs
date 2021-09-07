@@ -1034,7 +1034,7 @@ namespace Certify.Management
                                     DateTime.Now,
                                     matchingName: certCleanupName,
                                     excludedThumbprints: new List<string> { managedCertificate.CertificateThumbprintHash },
-                                    log: _serviceLog
+                                    log: _serviceLog, CoreAppSettings.Current.DefaultCertificateStore ?? "My"
                                 );
 
                                 if (certsRemoved.Any())

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -50,7 +50,7 @@ namespace Certify.Core.Management
             }
 
             //store cert in default store against primary domain
-            var certStoreName = CertificateManager.GetStore().Name;
+            var certStoreName = CertificateManager.GetStore(CoreAppSettings.Current.DefaultCertificateStore ?? CertificateManager.DEFAULT_STORE_NAME).Name;
             X509Certificate2 storedCert = null;
             byte[] certHash = null;
 

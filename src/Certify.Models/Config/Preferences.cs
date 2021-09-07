@@ -1,4 +1,4 @@
-﻿namespace Certify.Models
+namespace Certify.Models
 {
     public enum CertificateCleanupMode
     {
@@ -63,6 +63,8 @@
 
         public CertificateCleanupMode? CertificateCleanupMode { get; set; }
 
+        public string DefaultCertificateStore { get; set; } 
+
         public bool EnableStatusReporting { get; set; } = true;
 
         /// <summary>
@@ -93,6 +95,11 @@
         /// Server to use for Ntp time diagnostics
         /// </summary>
         public string NtpServer { get; set; }
+
+        /// <summary>
+        /// If enabled, certificate manager plugins are used to check for ACME certificates managed outside of Certify on same machine
+        /// </summary>
+        public bool EnableExternalCertManagers { get; set; }
     }
 
     public static class FeatureFlags

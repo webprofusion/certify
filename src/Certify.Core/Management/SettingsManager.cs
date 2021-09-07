@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Certify.Models;
@@ -32,6 +32,7 @@ namespace Certify.Management
             CertificateAuthorityFallback = null;
             DefaultCertificateAuthority = "letsencrypt.org";
             EnableAutomaticCAFailover = false;
+            EnableExternalCertManagers = true;
             NtpServer = "pool.ntp.org";
         }
 
@@ -153,6 +154,8 @@ namespace Certify.Management
         /// Server to use for Ntp time diagnostics
         /// </summary>
         public string NtpServer { get; set; }
+        public string DefaultCertificateStore { get; set; }
+        public bool EnableExternalCertManagers { get; set; }
     }
 
     public class SettingsManager
@@ -173,6 +176,7 @@ namespace Certify.Management
             CoreAppSettings.Current.Language = prefs.Language;
             CoreAppSettings.Current.EnableHttpChallengeServer = prefs.EnableHttpChallengeServer;
             CoreAppSettings.Current.EnableCertificateCleanup = prefs.EnableCertificateCleanup;
+            CoreAppSettings.Current.DefaultCertificateStore = prefs.DefaultCertificateStore;
 
             CoreAppSettings.Current.DefaultCertificateAuthority = prefs.DefaultCertificateAuthority;
             CoreAppSettings.Current.EnableAutomaticCAFailover = prefs.EnableAutomaticCAFailover;
@@ -196,6 +200,8 @@ namespace Certify.Management
 
             CoreAppSettings.Current.NtpServer = prefs.NtpServer;
 
+            CoreAppSettings.Current.EnableExternalCertManagers = prefs.EnableExternalCertManagers;
+
             return true;
         }
 
@@ -218,6 +224,7 @@ namespace Certify.Management
                 Language = CoreAppSettings.Current.Language,
                 EnableHttpChallengeServer = CoreAppSettings.Current.EnableHttpChallengeServer,
                 EnableCertificateCleanup = CoreAppSettings.Current.EnableCertificateCleanup,
+                DefaultCertificateStore = CoreAppSettings.Current.DefaultCertificateStore,
                 EnableStatusReporting = CoreAppSettings.Current.EnableStatusReporting,
                 CertificateCleanupMode = CoreAppSettings.Current.CertificateCleanupMode,
                 DefaultCertificateAuthority = CoreAppSettings.Current.DefaultCertificateAuthority,
@@ -225,7 +232,8 @@ namespace Certify.Management
                 EnableAutomaticCAFailover = CoreAppSettings.Current.EnableAutomaticCAFailover,
                 IncludeExternalPlugins = CoreAppSettings.Current.IncludeExternalPlugins,
                 FeatureFlags = CoreAppSettings.Current.FeatureFlags,
-                NtpServer = CoreAppSettings.Current.NtpServer
+                NtpServer = CoreAppSettings.Current.NtpServer,
+                EnableExternalCertManagers = CoreAppSettings.Current.EnableExternalCertManagers
             };
 
             return prefs;
