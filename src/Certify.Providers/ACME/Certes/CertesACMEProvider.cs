@@ -113,7 +113,6 @@ namespace Certify.Providers.ACME.Certes
 
         private ACMECompatibilityMode _compatibilityMode = ACMECompatibilityMode.Standard;
 
-        private string _pfxBuildStrategy = "native"; // native .net or bouncy castle
         public CertesACMEProvider(string acmeBaseUri, string settingsBasePath, string settingsPath, string userAgentName, bool allowInvalidTls = false)
         {
             _settingsFolder = settingsPath;
