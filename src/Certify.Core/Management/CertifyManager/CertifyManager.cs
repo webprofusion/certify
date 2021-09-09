@@ -423,24 +423,24 @@ namespace Certify.Management
                             {
                                 try
                                 {
-                                    if (CertificateManager.DisableCertificateUsage(i, "CA"))
-                                    {
-                                        _serviceLog?.Information("CA Maintenance: Intermediate CA certificate usage disabled. {thumb}", i);
-                                    }
-                                    else
-                                    {
-                                        _serviceLog?.Warning("CA Maintenance: Could not disable CA certificate usage, may already be disabled. {thumb}", i);
-                                    }
+                                    CertificateManager.DisableCertificateUsage(i, "CA");
                                 }
                                 catch (Exception ex)
                                 {
                                     _serviceLog?.Error(ex, "CA Maintenance: Failed to disable CA certificate usage. {thumb}", i);
                                 }
 
-                                /*if (CertificateManager.MoveCertificate(i, "CA", "Disallowed"))
+                                try
                                 {
-                                    _serviceLog?.Information("CA Maintenance: Intermediate CA certificate moved to Disallowed store. {thumb}", i);
-                                }*/
+                                    if (CertificateManager.MoveCertificate(i, "CA", "Disallowed"))
+                                    {
+                                        _serviceLog?.Information("CA Maintenance: Intermediate CA certificate moved to Disallowed store. {thumb}", i);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    _serviceLog?.Error(ex, "CA Maintenance: Failed to move intermediate to Disallowed store. {thumb}", i);
+                                }
                             }
 
                         }
