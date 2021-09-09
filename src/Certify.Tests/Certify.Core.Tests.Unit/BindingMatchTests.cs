@@ -103,39 +103,39 @@ namespace Certify.Core.Tests.Unit
 
             managedCertificate.ServerSiteId = "ShouldNotMatch";
             var preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
-            Assert.IsFalse(preview.Any(), " Should not match any bindings");
+            Assert.IsFalse(preview.Any(b => b.Category.EndsWith("Binding")), " Should not match any bindings");
 
             managedCertificate.ServerSiteId = "1.1";
             preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
-            Assert.IsFalse(preview.Any(), "Should not match any bindings (same domain, different sudomains no wildcard)");
+            Assert.IsFalse(preview.Any(b => b.Category.EndsWith("Binding")), "Should not match any bindings (same domain, different sudomains no wildcard)");
 
             managedCertificate.ServerSiteId = "1";
             preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
-            Assert.IsTrue(preview.Count == 1, "Should match one binding");
+            Assert.IsTrue(preview.Count(b => b.Category.EndsWith("Binding")) == 1, "Should match one binding");
 
             managedCertificate.ServerSiteId = "1";
             managedCertificate.RequestConfig.PrimaryDomain = "*.test.com";
             preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
-            Assert.IsTrue(preview.Count == 1, "Should match 1 binding (root level domain should be ignored using wildcard)");
+            Assert.IsTrue(preview.Count(b => b.Category.EndsWith("Binding")) == 1, "Should match 1 binding (root level domain should be ignored using wildcard)");
 
             managedCertificate.ServerSiteId = "1";
             managedCertificate.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
             managedCertificate.RequestConfig.PrimaryDomain = "test.com";
             preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
-            Assert.IsTrue(preview.Count == 1, "Should match 1 binding");
+            Assert.IsTrue(preview.Count(b => b.Category.EndsWith("Binding")) == 1, "Should match 1 binding");
 
             managedCertificate.ServerSiteId = "1";
             managedCertificate.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
             managedCertificate.RequestConfig.PrimaryDomain = "*.test.com";
             preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
-            Assert.IsTrue(preview.Count == 3, "Should match 3 bindings across all sites");
+            Assert.IsTrue(preview.Count(b => b.Category.EndsWith("Binding")) == 3, "Should match 3 bindings across all sites");
 
             managedCertificate.ServerSiteId = "5";
             managedCertificate.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
             managedCertificate.RequestConfig.PrimaryDomain = "altport.com";
 
             preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
-            Assert.IsTrue(preview.Count == 2, "Should match 2 bindings across all sites");
+            Assert.IsTrue(preview.Count(b => b.Category.EndsWith("Binding")) == 2, "Should match 2 bindings across all sites");
             Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9000")) == 1, "Should have 1 port 9000 binding");
             Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9001")) == 1, "Should have 1 port 9001 binding");
 
@@ -145,7 +145,7 @@ namespace Certify.Core.Tests.Unit
             managedCertificate.RequestConfig.SubjectAlternativeNames = new string[] { "*.wildtest.com", "wildtest.com" };
 
             preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
-            Assert.IsTrue(preview.Count == 3, "Should match 3 bindings across all sites");
+            Assert.IsTrue(preview.Count(b => b.Category.EndsWith("Binding")) == 3, "Should match 3 bindings across all sites");
             Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9000")) == 1, "Should have 1 port 9000 binding");
             Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9001")) == 2, "Should have 2 port 9001 bindings");
 
