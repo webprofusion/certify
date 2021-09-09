@@ -46,7 +46,6 @@ namespace Certify.UI.Controls.Settings
                 return;
             }
 
-            EditModel.Prefs.PauseChangeEvents();
             if (EditModel.Prefs.CertificateCleanupMode == CertificateCleanupMode.None)
             {
                 CertCleanup_None.IsChecked = true;
@@ -82,12 +81,8 @@ namespace Certify.UI.Controls.Settings
                 RenewalIntervalMode_DaysAfterLastRenewal.IsChecked = true;
             }
 
-          
-
             ThemeSelector.SelectedValue = EditModel.MainViewModel.UISettings?.UITheme ?? EditModel.MainViewModel.DefaultUITheme;
             CultureSelector.SelectedValue = EditModel.MainViewModel.UISettings?.PreferredUICulture ?? "en-US";
-
-            EditModel.ResumeChangeEvents();
 
             RefreshRewalIntervalLimits();
 
