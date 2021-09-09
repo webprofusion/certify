@@ -36,8 +36,7 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ SiteName="Test.com.au", Host="www.test.com.au", IP="*", HasCertificate=true, Protocol="http", Port=80, SiteId="3"},
                 new BindingInfo{ SiteName="Test.com.au", Host="dev.www.test.com.au", IP="*", HasCertificate=true, Protocol="http", Port=80, SiteId="3"},
 
-                // Site 4 : 1 one deeply nested subdomain and an alt domain, wilcard should match on
-                // one item
+                // Site 4 : 1 one deeply nested subdomain and an alt domain, wilcard should match on one item
                 new BindingInfo{ SiteName="Test", Host="test.com.hk", IP="*", HasCertificate=true, Protocol="https", Port=443, SiteId="4"},
                 new BindingInfo{ SiteName="Test", Host="dev.test.com", IP="*", HasCertificate=true, Protocol="http", Port=80, SiteId="4"},
                 new BindingInfo{ SiteName="Test", Host="dev.sub.test.com", IP="*", HasCertificate=true, Protocol="http", Port=80, SiteId="4"},
@@ -45,7 +44,14 @@ namespace Certify.Core.Tests.Unit
                 // Site 5 : alternative https port
                 // one item
                 new BindingInfo{ SiteName="TestAltPort", Host="altport.com", IP="*", HasCertificate=true, Protocol="https", Port=9000, SiteId="5"},
-                new BindingInfo{ SiteName="TestAltPort", Host="altport.com", IP="*", HasCertificate=true, Protocol="https", Port=9001, SiteId="5"}
+                new BindingInfo{ SiteName="TestAltPort", Host="altport.com", IP="*", HasCertificate=true, Protocol="https", Port=9001, SiteId="5"},
+
+                // Site 6 : mixed with wildcard host match
+                new BindingInfo{ SiteName="TestWild", Host="*.wildtest.com", IP="*", HasCertificate=true, Protocol="https", Port=9000, SiteId="6"},
+                new BindingInfo{ SiteName="TestWild", Host="wildtest.com", IP="*", HasCertificate=true, Protocol="https", Port=9001, SiteId="6"},
+                new BindingInfo{ SiteName="TestWild", Host="sub.wildtest.com", IP="*", HasCertificate=true, Protocol="https", Port=9001, SiteId="6"},
+                new BindingInfo{ SiteName="TestWild", Host="subsub.*.wildtest.com", IP="*", HasCertificate=true, Protocol="https", Port=9001, SiteId="6"},
+                new BindingInfo{ SiteName="TestWild", Host="subsub.sub.wildtest.com", IP="*", HasCertificate=true, Protocol="https", Port=9001, SiteId="6"}
             };
         }
 
@@ -93,48 +99,78 @@ namespace Certify.Core.Tests.Unit
 
             deploymentTarget.AllBindings = _allSites;
 
+            var certStoreName = Certify.Management.CertificateManager.DEFAULT_STORE_NAME;
+
             managedCertificate.ServerSiteId = "ShouldNotMatch";
-            var preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true);
+            var preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
             Assert.IsFalse(preview.Any(), " Should not match any bindings");
 
             managedCertificate.ServerSiteId = "1.1";
-            preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true);
+            preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
             Assert.IsFalse(preview.Any(), "Should not match any bindings (same domain, different sudomains no wildcard)");
 
             managedCertificate.ServerSiteId = "1";
-            preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true);
+            preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
             Assert.IsTrue(preview.Count == 1, "Should match one binding");
 
             managedCertificate.ServerSiteId = "1";
             managedCertificate.RequestConfig.PrimaryDomain = "*.test.com";
-            preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true);
+            preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
             Assert.IsTrue(preview.Count == 1, "Should match 1 binding (root level domain should be ignored using wildcard)");
 
             managedCertificate.ServerSiteId = "1";
             managedCertificate.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
             managedCertificate.RequestConfig.PrimaryDomain = "test.com";
-            preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true);
+            preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
             Assert.IsTrue(preview.Count == 1, "Should match 1 binding");
 
             managedCertificate.ServerSiteId = "1";
             managedCertificate.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
             managedCertificate.RequestConfig.PrimaryDomain = "*.test.com";
-            preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true);
+            preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
             Assert.IsTrue(preview.Count == 3, "Should match 3 bindings across all sites");
 
             managedCertificate.ServerSiteId = "5";
             managedCertificate.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
             managedCertificate.RequestConfig.PrimaryDomain = "altport.com";
 
-            preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true);
+            preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
             Assert.IsTrue(preview.Count == 2, "Should match 2 bindings across all sites");
             Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9000")) == 1, "Should have 1 port 9000 binding");
             Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9001")) == 1, "Should have 1 port 9001 binding");
+
+            managedCertificate.ServerSiteId = "6";
+            managedCertificate.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
+            managedCertificate.RequestConfig.PrimaryDomain = "*.wildtest.com";
+            managedCertificate.RequestConfig.SubjectAlternativeNames = new string[] { "*.wildtest.com", "wildtest.com" };
+
+            preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
+            Assert.IsTrue(preview.Count == 3, "Should match 3 bindings across all sites");
+            Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9000")) == 1, "Should have 1 port 9000 binding");
+            Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9001")) == 2, "Should have 2 port 9001 bindings");
 
             foreach (var a in preview)
             {
                 System.Diagnostics.Debug.WriteLine(a.Description);
             }
+        }
+
+        [TestMethod, Description("Ensure domains match wildcards on first level matches and wildcard binding host")]
+        public void WildcardMatchesWithHostnameWildcard()
+        {
+            var domains = new List<string>
+            {
+                "*.wildtest.com","wildtest.com"
+            };
+
+            Assert.IsFalse(ManagedCertificate.IsDomainOrWildcardMatch(domains, "test.com"));
+
+            Assert.IsTrue(ManagedCertificate.IsDomainOrWildcardMatch(domains, "www.wildtest.com"));
+
+            Assert.IsTrue(ManagedCertificate.IsDomainOrWildcardMatch(domains, "*.wildtest.com"));
+
+            Assert.IsFalse(ManagedCertificate.IsDomainOrWildcardMatch(domains, "sub.*.wildtest.com"));
+
         }
 
         [TestMethod, Description("Ensure domains match wildcards on first level matches")]
@@ -294,7 +330,7 @@ namespace Certify.Core.Tests.Unit
             mockTarget.AllBindings = bindings;
 
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, "test.pfx", pfxPwd: "", true);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, "test.pfx", pfxPwd: "", true, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
         }
