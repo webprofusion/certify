@@ -35,7 +35,7 @@ namespace Certify.Core.Management
         /// <param name="pfxPath">  </param>
         /// <param name="cleanupCertStore">  </param>
         /// <returns>  </returns>
-        public async Task<List<ActionStep>> StoreAndDeploy(IBindingDeploymentTarget deploymentTarget, ManagedCertificate managedCertificate, string pfxPath, string pfxPwd, bool isPreviewOnly)
+        public async Task<List<ActionStep>> StoreAndDeploy(IBindingDeploymentTarget deploymentTarget, ManagedCertificate managedCertificate, string pfxPath, string pfxPwd, bool isPreviewOnly, string certStoreName)
         {
             var actions = new List<ActionStep>();
 
@@ -50,7 +50,11 @@ namespace Certify.Core.Management
             }
 
             //store cert in default store against primary domain
-            var certStoreName = CertificateManager.GetStore(CoreAppSettings.Current.DefaultCertificateStore ?? CertificateManager.DEFAULT_STORE_NAME).Name;
+            if (string.IsNullOrEmpty(certStoreName))
+            {
+                certStoreName = CertificateManager.DEFAULT_STORE_NAME;
+            }
+
             X509Certificate2 storedCert = null;
             byte[] certHash = null;
 
@@ -61,7 +65,7 @@ namespace Certify.Core.Management
                 {
                     try
                     {
-                        storedCert = await CertificateManager.StoreCertificate(requestConfig.PrimaryDomain, pfxPath, isRetry: false, enableRetryBehaviour: _enableCertDoubleImportBehaviour, pwd: pfxPwd);
+                        storedCert = await CertificateManager.StoreCertificate(requestConfig.PrimaryDomain, pfxPath, isRetry: false, enableRetryBehaviour: _enableCertDoubleImportBehaviour, pwd: pfxPwd, storeName: certStoreName);
                         if (storedCert != null)
                         {
                             certHash = storedCert.GetCertHash();
@@ -70,12 +74,12 @@ namespace Certify.Core.Management
                             // TODO: move setting friendly name to cert request manager
                             managedCertificate.CertificateFriendlyName = storedCert.FriendlyName;
 
-                            actions.Add(new ActionStep { HasError = false, Title = "Certificate Stored", Category = "Certificate Storage", Description = "Certificate stored OK" });
+                            actions.Add(new ActionStep { HasError = false, Title = "Certificate Stored", Category = "CertificateStorage", Description = "Certificate stored OK" });
                         }
                     }
                     catch (Exception exp)
                     {
-                        actions.Add(new ActionStep { HasError = true, Title = "Certificate Storage Failed", Category = "Certificate Storage", Description = "Error storing certificate." + exp.Message });
+                        actions.Add(new ActionStep { HasError = true, Title = "Certificate Storage Failed", Category = "CertificateStorage", Description = "Error storing certificate." + exp.Message });
                         return actions;
                     }
                 }
@@ -85,6 +89,7 @@ namespace Certify.Core.Management
                     storedCert = new X509Certificate2();
                     certHash = new byte[] { 0x00, 0x01, 0x02 };
 
+                    actions.Add(new ActionStep { HasError = true, Title = "Certificate Storage", Category = "CertificateStorage", Description = $"Certificate will be stored in the computer certificate store [{certStoreName}]" });
                 }
             }
 
@@ -452,7 +457,7 @@ namespace Certify.Core.Management
                 {
                     Title = "Install Certificate For Binding",
                     Category = "Deployment.UpdateBinding",
-                    Description = $"Update {bindingSpec.Protocol} binding | {site.Name} | **{bindingSpecString} {(useSNI ? "SNI" : "Non-SNI")}**"
+                    Description = $"Update {bindingSpec.Protocol} binding | {site.Name} | **{bindingSpecString.Replace("*", "\\*")} {(useSNI ? "SNI" : "Non-SNI")}**"
                 };
 
                 if (!isPreviewOnly)

@@ -383,7 +383,7 @@ namespace Certify.Core.Tests
             var actions = await new BindingDeploymentManager().StoreAndDeploy(
                 iisManager.GetDeploymentTarget(),
                 managedCertificate, dummyCertPath, "",
-                false);
+                false, CertificateManager.DEFAULT_STORE_NAME);
 
             foreach (var a in actions)
             {

@@ -992,7 +992,8 @@ namespace Certify.Management
                             managedCertificate,
                             pfxPath,
                             pfxPwd,
-                            isPreviewOnly: false
+                            isPreviewOnly: false,
+                            CoreAppSettings.Current.DefaultCertificateStore
                         );
 
                     if (!actions.Any(a => a.HasError))
@@ -1336,7 +1337,8 @@ namespace Certify.Management
                     managedCertificate,
                     pfxPath,
                     pfxPwd,
-                    isPreviewOnly: isPreviewOnly
+                    isPreviewOnly: isPreviewOnly,
+                    CoreAppSettings.Current.DefaultCertificateStore
                 );
 
             result.Actions = actions;

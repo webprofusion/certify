@@ -46,6 +46,7 @@ namespace Certify.UI.Controls.Settings
                 return;
             }
 
+            EditModel.Prefs.PauseChangeEvents();
             if (EditModel.Prefs.CertificateCleanupMode == CertificateCleanupMode.None)
             {
                 CertCleanup_None.IsChecked = true;
@@ -63,6 +64,15 @@ namespace Certify.UI.Controls.Settings
                 CertCleanup_FullCleanup.IsChecked = true;
             }
 
+            if (EditModel.Prefs.DefaultCertificateStore == "WebHosting")
+            {
+                CertStoreSelector.SelectedIndex = 1;
+            }
+            else
+            {
+                CertStoreSelector.SelectedIndex = 0;
+            }
+
             if (EditModel.Prefs.RenewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
             {
                 RenewalIntervalMode_DaysBeforeExpiry.IsChecked = true;
@@ -72,11 +82,14 @@ namespace Certify.UI.Controls.Settings
                 RenewalIntervalMode_DaysAfterLastRenewal.IsChecked = true;
             }
 
-            RefreshRewalIntervalLimits();
+          
 
             ThemeSelector.SelectedValue = EditModel.MainViewModel.UISettings?.UITheme ?? EditModel.MainViewModel.DefaultUITheme;
             CultureSelector.SelectedValue = EditModel.MainViewModel.UISettings?.PreferredUICulture ?? "en-US";
 
+            EditModel.ResumeChangeEvents();
+
+            RefreshRewalIntervalLimits();
 
             // re-add property changed tracking for save
             EditModel.Prefs.AfterPropertyChanged -= Prefs_AfterPropertyChanged;
@@ -114,6 +127,16 @@ namespace Certify.UI.Controls.Settings
                 {
                     EditModel.Prefs.CertificateCleanupMode = CertificateCleanupMode.FullCleanup;
                     EditModel.Prefs.EnableCertificateCleanup = true;
+                }
+
+                // cert store
+                if (CertStoreSelector.SelectedIndex == 0)
+                {
+                    EditModel.Prefs.DefaultCertificateStore = null;
+                }
+                else
+                {
+                    EditModel.Prefs.DefaultCertificateStore = "WebHosting";
                 }
 
                 // renewal mode

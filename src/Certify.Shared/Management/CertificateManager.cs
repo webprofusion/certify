@@ -26,6 +26,7 @@ namespace Certify.Management
     public static class CertificateManager
     {
         public const string DEFAULT_STORE_NAME = "My";
+        public const string WEBHOSTING_STORE_NAME = "WebHosting";
 
         public static X509Certificate2 GenerateSelfSignedCertificate(string domain, DateTime? dateFrom = null, DateTime? dateTo = null, string suffix = "[Certify]", string subject = null)
         {

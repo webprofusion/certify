@@ -102,7 +102,7 @@
                                 Value="{Binding Prefs.MaxRenewalRequests}" />
 
                         </StackPanel>
-                        <DockPanel Margin="0,0,0,0">
+                        <DockPanel Margin="0,0,0,0" LastChildFill="False">
                             <TextBlock
                                 Margin="0,8,0,8"
                                 DockPanel.Dock="Top"
@@ -111,7 +111,7 @@
                             </TextBlock>
                             <StackPanel
                                 Width="348"
-                                Margin="4,0,0,0"
+                                Margin="4,0,32,0"
                                 DockPanel.Dock="Left"
                                 Orientation="Vertical">
 
@@ -147,10 +147,25 @@
 
                             </StackPanel>
 
+                            <!--  Cert Store Options  -->
+                            <StackPanel
+                                Margin="0,0,32,0"
+                                DockPanel.Dock="Left"
+                                Orientation="Vertical">
+                                <Label Content="Certificate Store " />
+                                <StackPanel Margin="8,0,0,0">
+                                    <ComboBox x:Name="CertStoreSelector" SelectionChanged="SettingsUpdated">
+                                        <ComboBoxItem Name="My">Default (My)</ComboBoxItem>
+                                        <ComboBoxItem Name="WebHosting">Web Hosting</ComboBoxItem>
+                                    </ComboBox>
+
+                                </StackPanel>
+                            </StackPanel>
+
                             <!--  Cert Cleanup Options  -->
                             <StackPanel
                                 Margin="0,0,0,0"
-                                DockPanel.Dock="Right"
+                                DockPanel.Dock="Left"
                                 Orientation="Vertical">
                                 <Label Content="Certificate Store Cleanup" />
                                 <StackPanel Margin="0,0,0,0">
@@ -185,7 +200,10 @@
                                         Unchecked="SettingsUpdated" />
 
                                 </StackPanel>
+
+
                             </StackPanel>
+
                         </DockPanel>
 
                         <DockPanel LastChildFill="False">
