@@ -570,15 +570,27 @@ namespace Certify.UI.ViewModel
                     );
                 }
 
-                if (SelectedItem.DomainOptions.Any(d => d.IsSelected && d.Type == "dns" && (!d.Domain.Contains(".") || d.Domain.ToLower().EndsWith(".local"))))
+                var caId = Preferences.DefaultCertificateAuthority ?? StandardCertAuthorities.LETS_ENCRYPT;
+                if (SelectedItem.CertificateAuthorityId != null)
                 {
-                    // one or more selected domains does not include a label seperator (is an internal host name) or end in .local
+                    caId = SelectedItem.CertificateAuthorityId;
+                }
 
-                    return new ValidationResult(
-                        false,
-                        "One or more domains specified are internal hostnames. Certificates for internal host names are not supported by the Certificate Authority.",
-                        ValidationErrorCodes.INVALID_HOSTNAME.ToString()
-                    );
+                var ca = AppViewModel.Current.CertificateAuthorities.FirstOrDefault(c => c.Id == caId);
+
+                if (!(ca != null && ca.AllowInternalHostnames))
+                {
+                    // validate hostnames
+                    if (SelectedItem.DomainOptions.Any(d => d.IsSelected && d.Type == "dns" && (!d.Domain.Contains(".") || d.Domain.ToLower().EndsWith(".local"))))
+                    {
+                        // one or more selected domains does not include a label seperator (is an internal host name) or end in .local
+
+                        return new ValidationResult(
+                            false,
+                            "One or more domains specified are internal hostnames. Certificates for internal host names are not supported by the Certificate Authority.",
+                            ValidationErrorCodes.INVALID_HOSTNAME.ToString()
+                        );
+                    }                 
                 }
 
                 // if title still set to the default, automatically use the primary domain instead

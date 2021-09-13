@@ -91,7 +91,7 @@ namespace Certify.Models
                     StandardKeyTypes.ECDSA256,
                     StandardKeyTypes.ECDSA384
                 },
-                DisabledIntermediates = new List<string>{ 
+                DisabledIntermediates = new List<string>{
                     "48504E974C0DAC5B5CD476C8202274B24C8C7172" // old R3 chained to DST Root CA X3
                 }
             },
@@ -218,7 +218,7 @@ namespace Certify.Models
         public bool RequiresEmailAddress { get; set; }
         public bool RequiresExternalAccountBinding { get; set; } = false;
         public bool AllowUntrustedTls { get; set; } = false;
-
+        public bool AllowInternalHostnames { get; set; } = false;
         public string EabInstructions { get; set; }
         public List<string> SupportedKeyTypes { get; set; }
 
