@@ -32,7 +32,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Fody" Version="6.5.2" PrivateAssets="All" />
+		<PackageReference Include="Fody" Version="6.5.3" PrivateAssets="All" />
 		<PackageReference Include="FontAwesome.WPF" Version="4.7.0.9" />
 		<PackageReference Include="MahApps.Metro" Version="2.4.7" />
 		<PackageReference Include="Markdig.Wpf" Version="0.5.0.1" />
