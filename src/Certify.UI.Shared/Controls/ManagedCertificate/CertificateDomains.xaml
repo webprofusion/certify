@@ -64,7 +64,21 @@
                                     DisplayMemberPath="SiteName"
                                     ItemsSource="{Binding WebSiteList, UpdateSourceTrigger=PropertyChanged}"
                                     SelectedItem="{Binding SelectedWebSite}"
-                                    SelectionChanged="Website_SelectionChanged" />
+                                    SelectionChanged="Website_SelectionChanged">
+
+                                    <ComboBox.ItemContainerStyle>
+                                        <Style TargetType="ComboBoxItem">
+                                            <Setter Property="ToolTip" Value="Site currently has no https bindings" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasCertificate}" Value="true">
+                                                    <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.Highlight}" />
+                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                    <Setter Property="ToolTip" Value="Site already has one or more https bindings" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ComboBox.ItemContainerStyle>
+                                </ComboBox>
                                 <Button
                                     Width="32"
                                     Margin="0,0,4,0"
@@ -95,7 +109,8 @@
                                         Width="240"
                                         Controls:TextBoxHelper.Watermark="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsHelpText}"
                                         AutomationProperties.HelpText="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsHelpText}"
-                                        AutomationProperties.Name="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsToCertificate}" KeyUp="ManualDomains_KeyUp" />
+                                        AutomationProperties.Name="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsToCertificate}"
+                                        KeyUp="ManualDomains_KeyUp" />
 
                                     <Button
                                         x:Name="AddDomains"

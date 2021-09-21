@@ -294,7 +294,8 @@ namespace Certify.Management.Servers
                                         b.IsEnabled = (site.State == ObjectState.Started);
                                     }
 
-
+                                    // if any binding has a certificate hash assigned, assume this site has one or more certificates
+                                    b.HasCertificate = site.Bindings?.Any(bi => bi.CertificateHash != null) ?? false;
                                 }
                                 catch (Exception exp)
                                 {
