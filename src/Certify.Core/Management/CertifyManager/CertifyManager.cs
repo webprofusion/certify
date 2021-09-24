@@ -423,7 +423,11 @@ namespace Certify.Management
                             {
                                 try
                                 {
-                                    CertificateManager.DisableCertificateUsage(i, "CA");
+                                    // local machine store
+                                    CertificateManager.DisableCertificateUsage(i, "CA", useMachineStore: true);
+
+                                    // local user store (service user)
+                                    CertificateManager.DisableCertificateUsage(i, "CA", useMachineStore: false);
                                 }
                                 catch (Exception ex)
                                 {
@@ -432,9 +436,15 @@ namespace Certify.Management
 
                                 try
                                 {
-                                    if (CertificateManager.MoveCertificate(i, "CA", "Disallowed"))
+                                    // local machine store
+                                    if (CertificateManager.MoveCertificate(i, "CA", "Disallowed", useMachineStore: true))
                                     {
-                                        _serviceLog?.Information("CA Maintenance: Intermediate CA certificate moved to Disallowed store. {thumb}", i);
+                                        _serviceLog?.Information("CA Maintenance: Intermediate CA certificate moved to Disallowed (machine) store. {thumb}", i);
+                                    }
+
+                                    if (CertificateManager.MoveCertificate(i, "CA", "Disallowed", useMachineStore: false))
+                                    {
+                                        _serviceLog?.Information("CA Maintenance: Intermediate CA certificate moved to Disallowed (user) store. {thumb}", i);
                                     }
                                 }
                                 catch (Exception ex)
