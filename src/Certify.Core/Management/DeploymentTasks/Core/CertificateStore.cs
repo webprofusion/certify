@@ -61,7 +61,7 @@ namespace Certify.Providers.DeploymentTasks.Core
             }
             else
             {
-                certStoreName = "My";
+                certStoreName = CertificateManager.DEFAULT_STORE_NAME;
             }
 
             X509Certificate2 storedCert = null;

@@ -416,6 +416,7 @@ namespace Certify.Management
                 {
                     foreach (var ca in _certificateAuthorities.Values)
                     {
+                        // check for any intermediate to disable (by thumbprint)
                         if (ca.DisabledIntermediates?.Any() == true)
                         {
                             // check we have disabled usage on all required intermediates
@@ -424,10 +425,10 @@ namespace Certify.Management
                                 try
                                 {
                                     // local machine store
-                                    CertificateManager.DisableCertificateUsage(i, "CA", useMachineStore: true);
+                                    CertificateManager.DisableCertificateUsage(i, CertificateManager.CA_STORE_NAME, useMachineStore: true);
 
                                     // local user store (service user)
-                                    CertificateManager.DisableCertificateUsage(i, "CA", useMachineStore: false);
+                                    CertificateManager.DisableCertificateUsage(i, CertificateManager.CA_STORE_NAME, useMachineStore: false);
                                 }
                                 catch (Exception ex)
                                 {
@@ -437,12 +438,12 @@ namespace Certify.Management
                                 try
                                 {
                                     // local machine store
-                                    if (CertificateManager.MoveCertificate(i, "CA", "Disallowed", useMachineStore: true))
+                                    if (CertificateManager.MoveCertificate(i, CertificateManager.CA_STORE_NAME, CertificateManager.DISALLOWED_STORE_NAME, useMachineStore: true))
                                     {
                                         _serviceLog?.Information("CA Maintenance: Intermediate CA certificate moved to Disallowed (machine) store. {thumb}", i);
                                     }
 
-                                    if (CertificateManager.MoveCertificate(i, "CA", "Disallowed", useMachineStore: false))
+                                    if (CertificateManager.MoveCertificate(i, CertificateManager.CA_STORE_NAME, CertificateManager.DISALLOWED_STORE_NAME, useMachineStore: false))
                                     {
                                         _serviceLog?.Information("CA Maintenance: Intermediate CA certificate moved to Disallowed (user) store. {thumb}", i);
                                     }
@@ -453,6 +454,30 @@ namespace Certify.Management
                                 }
                             }
 
+                        }
+
+                        // check for any trusted roots to add
+                        if (ca.TrustedRoots?.Any() == true)
+                        {
+                            foreach (var root in ca.TrustedRoots)
+                            {
+                                if (CertificateManager.GetCertificateByThumbprint(root.Key, CertificateManager.ROOT_STORE_NAME, useMachineStore: true) == null)
+                                {
+                                    CertificateManager.StoreCertificateFromPem(root.Value, CertificateManager.ROOT_STORE_NAME, useMachineStore: true);
+                                }
+                            }
+                        }
+
+                        // check for any intermediates to add
+                        if (ca.Intermediates?.Any() == true)
+                        {
+                            foreach (var intermediate in ca.Intermediates)
+                            {
+                                if (CertificateManager.GetCertificateByThumbprint(intermediate.Key, CertificateManager.CA_STORE_NAME, useMachineStore: true) == null)
+                                {
+                                    CertificateManager.StoreCertificateFromPem(intermediate.Value, CertificateManager.CA_STORE_NAME, useMachineStore: true);
+                                }
+                            }
                         }
                     }
                 }

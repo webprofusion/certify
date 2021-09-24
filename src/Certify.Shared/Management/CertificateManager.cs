@@ -25,8 +25,11 @@ namespace Certify.Management
 {
     public static class CertificateManager
     {
+        public const string ROOT_STORE_NAME = "Root";
+        public const string CA_STORE_NAME = "CA";
         public const string DEFAULT_STORE_NAME = "My";
         public const string WEBHOSTING_STORE_NAME = "WebHosting";
+        public const string DISALLOWED_STORE_NAME = "Disallowed";
 
         public static X509Certificate2 GenerateSelfSignedCertificate(string domain, DateTime? dateFrom = null, DateTime? dateTo = null, string suffix = "[Certify]", string subject = null)
         {
@@ -228,14 +231,37 @@ namespace Certify.Management
             return cert;
         }
 
+        public static bool StoreCertificateFromPem(string pem, string storeName, bool useMachineStore = true)
+        {
+            try
+            {
+                var x509CertificateParser = new X509CertificateParser();
+                var cert = x509CertificateParser.ReadCertificate(System.Text.UTF8Encoding.UTF8.GetBytes(pem));
+
+                var certToStore = new X509Certificate2(DotNetUtilities.ToX509Certificate(cert));
+                using (var store = useMachineStore ? GetMachineStore(storeName) : GetUserStore(storeName))
+                {
+                    store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
+                    store.Add(certToStore);
+                    store.Close();
+                    return true;
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+
         public static async Task<X509Certificate2> StoreCertificate(
-            string host,
-            string pfxFile,
-            bool isRetry = false,
-            bool enableRetryBehaviour = true,
-            string storeName = DEFAULT_STORE_NAME,
-            string customFriendlyName = null,
-            string pwd = "")
+        string host,
+        string pfxFile,
+        bool isRetry = false,
+        bool enableRetryBehaviour = true,
+        string storeName = DEFAULT_STORE_NAME,
+        string customFriendlyName = null,
+        string pwd = "")
         {
             // https://support.microsoft.com/en-gb/help/950090/installing-a-pfx-file-using-x509certificate-from-a-standard--net-appli
             X509Certificate2 certificate;
@@ -357,11 +383,11 @@ namespace Certify.Management
             return cert;
         }
 
-        public static X509Certificate2 GetCertificateByThumbprint(string thumbprint, string storeName = DEFAULT_STORE_NAME)
+        public static X509Certificate2 GetCertificateByThumbprint(string thumbprint, string storeName = DEFAULT_STORE_NAME, bool useMachineStore = true)
         {
             X509Certificate2 cert = null;
 
-            using (var store = GetMachineStore(storeName))
+            using (var store = useMachineStore ? GetMachineStore(storeName) : GetUserStore(storeName))
             {
                 store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
 
@@ -616,7 +642,7 @@ namespace Certify.Management
         {
             var disabled = false;
             var certsToMove = new List<X509Certificate2>();
-            using (var store =  useMachineStore ? GetMachineStore(sourceStore) : GetUserStore(sourceStore))
+            using (var store = useMachineStore ? GetMachineStore(sourceStore) : GetUserStore(sourceStore))
             {
                 store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
 
