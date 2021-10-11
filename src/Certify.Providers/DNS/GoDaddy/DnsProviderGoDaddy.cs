@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
@@ -44,7 +45,7 @@ namespace Certify.Providers.DNS.GoDaddy
         private const string _listZonesUri = _baseUri + "domains?limit=1000";
         private const string _createRecordUri = _baseUri + "domains/{0}/records";
         private const string _listRecordsUri = _baseUri + "domains/{0}/records/{1}";
-        private const string _deleteRecordUri = _baseUri + "domains/{0}/records/{1}";
+        private const string _deleteRecordUri = _baseUri + "domains/{0}/records/{1}/{2}";
         private const string _updateRecordUri = _baseUri + "domains/{0}/records/{1}/{2}";
 
         private int? _customPropagationDelay = null;
@@ -230,6 +231,7 @@ namespace Certify.Providers.DNS.GoDaddy
 
             var root = await DetermineZoneDomainRoot(request.RecordName, request.ZoneId);
             var recordName = NormaliseRecordName(root, request.RecordName);
+
             var domainrecords = await GetDnsRecords(root.RootDomain);
 
             if (!domainrecords.Any())
@@ -243,23 +245,10 @@ namespace Certify.Providers.DNS.GoDaddy
                 return new ActionResult { IsSuccess = true, Message = "DNS record does not exist, nothing to delete." };
             }
 
-            foreach (var r in recordsToRemove)
-            {
-                domainrecords.Remove(r);
-            }
-
-            // as the api does not support record delete, this is actually replacing the list of TXT records with the ones we no longer need removed
-            var req = CreateRequest(HttpMethod.Put, string.Format(_deleteRecordUri, root.RootDomain, "TXT"));
-
-            // send back list of record we are keeping, in their original format
-            req.Content = new StringContent(
-                JsonConvert.SerializeObject(domainrecords.Select(d => d.Data))
-                );
-
-            req.Content.Headers.ContentType.MediaType = "application/json";
-
+            // API now supports a delete method
+            var req = CreateRequest(HttpMethod.Delete, string.Format(_deleteRecordUri, root.RootDomain, "TXT", recordName));
             var result = await _client.SendAsync(req);
-
+        
             if (result.IsSuccessStatusCode)
             {
                 return new ActionResult { IsSuccess = true, Message = "DNS record deleted." };
@@ -309,6 +298,7 @@ namespace Certify.Providers.DNS.GoDaddy
             _authSecret = credentials["authsecret"];
 
             _client = new HttpClient();
+            _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
