@@ -11,12 +11,12 @@ namespace Certify.UI
     /// <summary>
     /// Mock data view model for use in the XAML designer in Visual Studio 
     /// </summary>
-    public class AppDesignViewModel : ViewModel.AppViewModel
+    public class AppViewModelDesign
+        : ViewModel.AppViewModel
     {
-        public AppDesignViewModel()
+        public AppViewModelDesign()
         {
             // create mock registration
-            PrimaryContactEmail = "username@example.org";
 
             // generate mock data starting point
             GenerateMockData();
@@ -102,9 +102,7 @@ namespace Certify.UI
 
             StoredCredentials = new ObservableCollection<Models.Config.StoredCredential>();
         }
-
         private string MockDataStore;
-
         public void LoadSettings()
         {
             var mockSites = JsonConvert.DeserializeObject<List<ManagedCertificate>>(MockDataStore);
@@ -116,7 +114,6 @@ namespace Certify.UI
             ManagedCertificates = new ObservableCollection<ManagedCertificate>(mockSites);
             ImportedManagedCertificates = new ObservableCollection<ManagedCertificate>();
         }
-
         public override bool IsIISAvailable => true;
         public override Version IISVersion => new Version(10, 0);
         public override bool HasRegisteredContacts => true;

@@ -374,7 +374,7 @@ namespace Certify.UI.ViewModel
             }
             else
             {
-                return new ManagedCertificateDesignViewModel();
+                return new ManagedCertificateViewModelDesign();
             }
         }
 

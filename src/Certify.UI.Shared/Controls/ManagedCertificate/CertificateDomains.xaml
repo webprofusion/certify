@@ -10,7 +10,7 @@
     xmlns:managedcertificate="clr-namespace:Certify.UI.Controls.ManagedCertificate"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:utils="clr-namespace:Certify.UI.Utils"
-    d:DataContext="{d:DesignInstance Type=certifyui:ManagedCertificateDesignViewModel,
+    d:DataContext="{d:DesignInstance Type=certifyui:ManagedCertificateViewModelDesign,
                                      IsDesignTimeCreatable=True}"
     mc:Ignorable="d">
     <UserControl.Resources>

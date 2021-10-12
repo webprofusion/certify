@@ -9,11 +9,11 @@ namespace Certify.UI
     /// <summary>
     /// Mock data item view model for use in the XAML designer in Visual Studio 
     /// </summary>
-    public class ManagedCertificateDesignViewModel : ViewModel.ManagedCertificateViewModel
+    public class ManagedCertificateViewModelDesign : ViewModel.ManagedCertificateViewModel
     {
-        private AppDesignViewModel _appViewModel => (AppDesignViewModel)AppDesignViewModel.Current;
+        private AppViewModelDesign _appViewModel => (AppViewModelDesign)AppViewModelDesign.Current;
 
-        public ManagedCertificateDesignViewModel()
+        public ManagedCertificateViewModelDesign()
         {
             // auto-load data if in WPF designer
 
