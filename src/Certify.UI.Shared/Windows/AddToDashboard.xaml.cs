@@ -60,7 +60,7 @@ namespace Certify.UI.Windows
 
                     if (resultOK)
                     {
-                        await ViewModel.AppViewModel.Current.SetInstanceRegistered();
+                        await ViewModel.AppViewModel.Current.SetInstanceRegisteredOnDashboard();
                         MessageBox.Show("Server registration completed.");
                         Close();
                     }
