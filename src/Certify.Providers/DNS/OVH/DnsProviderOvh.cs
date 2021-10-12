@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,14 +11,16 @@ namespace Certify.Providers.DNS.OVH
     public class DnsProviderOvhProvider : PluginProviderBase<IDnsProvider, ChallengeProviderDefinition>, IDnsProviderProviderPlugin { }
 
     /// <summary>
-    /// OVH DNS API Provider contributed by contributed by https://github.com/laugel
+    /// OVH DNS API Provider contributed by contributed by https://github.com/laugel and https://github.com/nuklon
     /// </summary>
     public class DnsProviderOvh : DnsProviderBase, IDnsProvider
     {
+        private static List<(string, string)> _createdRecords = new List<(string, string)>();
+
         private ILog _log;
         private Dictionary<string, string> credentials;
-
         private int? _customPropagationDelay = null;
+
         public int PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
 
         public string ProviderId => Definition.Id;
@@ -99,8 +101,11 @@ namespace Certify.Providers.DNS.OVH
                 var recordCreationResult = await ovh.Post<OvhDnsRecord>($"/domain/zone/{request.ZoneId}/record", content);
                 creationId = recordCreationResult.Id;
                 request.RecordId = creationId.ToString();
-                var zoneRefreshResult = ovh.Post($"/domain/zone/{request.ZoneId}/refresh", string.Empty);
 
+                _createdRecords.Add((request.RecordValue, request.RecordId));
+
+                var zoneRefreshResult = ovh.Post($"/domain/zone/{request.ZoneId}/refresh", string.Empty);
+                
                 return new ActionResult { IsSuccess = true, Message = $"DNS record \"{request.RecordName}\" added. OVH id : {creationId} ." };
             }
             catch (Exception ex)
@@ -115,9 +120,25 @@ namespace Certify.Providers.DNS.OVH
             try
             {
                 var ovh = CreateOvhClient();
+
+                foreach (var createdRecord in _createdRecords)
+                {
+                    if (createdRecord.Item1.Equals(request.RecordValue, StringComparison.OrdinalIgnoreCase))
+                    {
+                        request.RecordId = createdRecord.Item2;
+
+                        break;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(request.RecordId))
+                {
+                    _createdRecords.RemoveAll(record => record.Item1 == request.RecordValue);
+                }
+                
                 var recordDeletionResult = await ovh.Delete<object>($"/domain/zone/{request.ZoneId}/record/{request.RecordId}");
                 var zoneRefreshResult = await ovh.Post($"/domain/zone/{request.ZoneId}/refresh", string.Empty);
-
+                
                 return new ActionResult { IsSuccess = true, Message = $"DNS record {request.RecordName} successfully deleted and zone was refreshed." };
             }
             catch (Exception ex)
