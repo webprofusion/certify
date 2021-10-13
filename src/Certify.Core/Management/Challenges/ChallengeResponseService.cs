@@ -12,11 +12,11 @@ using Certify.Models.Shared;
 
 namespace Certify.Core.Management.Challenges
 {
-    public class ChallengeDiagnostics : ActionLogCollector
+    public class ChallengeResponseService : ActionLogCollector
     {
         private NetworkUtils _netUtil;
 
-        public ChallengeDiagnostics(bool enableProxyAPI)
+        public ChallengeResponseService(bool enableProxyAPI)
         {
             _netUtil = new NetworkUtils(enableProxyAPI)
             {
@@ -329,7 +329,7 @@ namespace Certify.Core.Management.Challenges
             return $"{hash}";
         }
 
-        public async Task<PendingAuthorization> PerformAutomatedChallengeResponse(ILog log, ICertifiedServer iisManager, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, ICredentialsManager credentialsManager)
+        public async Task<PendingAuthorization> PrepareAutomatedChallengeResponse(ILog log, ICertifiedServer iisManager, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, ICredentialsManager credentialsManager)
         {
             var requestConfig = managedCertificate.RequestConfig;
             var domain = pendingAuth.Identifier.Dns;

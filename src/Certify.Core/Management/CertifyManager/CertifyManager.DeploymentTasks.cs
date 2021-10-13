@@ -15,10 +15,15 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
+        /// <summary>
+        /// Get list of deployment task providers (from plugins)
+        /// </summary>
+        /// <returns></returns>
         public async Task<List<DeploymentProviderDefinition>> GetDeploymentProviders()
         {
             return await Core.Management.DeploymentTasks.DeploymentTaskProviderFactory.GetDeploymentTaskProviders(_pluginManager.DeploymentTaskProviders);
         }
+
         /// <summary>
         /// Get the current definition for a provider including dynamic elements affected by the given config
         /// </summary>
@@ -31,6 +36,16 @@ namespace Certify.Management
             return await Task.FromResult(provider.GetDefinition());
         }
 
+        /// <summary>
+        /// Perform a specific deployment task for the given managed certificate
+        /// </summary>
+        /// <param name="log"></param>
+        /// <param name="managedCertificateId"></param>
+        /// <param name="taskId"></param>
+        /// <param name="isPreviewOnly"></param>
+        /// <param name="skipDeferredTasks"></param>
+        /// <param name="forceTaskExecution"></param>
+        /// <returns></returns>
         public async Task<List<ActionStep>> PerformDeploymentTask(ILog log, string managedCertificateId, string taskId, bool isPreviewOnly, bool skipDeferredTasks, bool forceTaskExecution)
         {
             var managedCert = await GetManagedCertificate(managedCertificateId);
@@ -80,6 +95,16 @@ namespace Certify.Management
             return result;
         }
 
+        /// <summary>
+        /// Perform a set of deployment tasks based on the given certificate request result (managed certificate + status information)
+        /// </summary>
+        /// <param name="log"></param>
+        /// <param name="isPreviewOnly"></param>
+        /// <param name="skipDeferredTasks"></param>
+        /// <param name="result"></param>
+        /// <param name="taskList"></param>
+        /// <param name="forceTaskExecute"></param>
+        /// <returns></returns>
         private async Task<List<ActionStep>> PerformTaskList(ILog log, bool isPreviewOnly, bool skipDeferredTasks, CertificateRequestResult result, IEnumerable<DeploymentTaskConfig> taskList, bool forceTaskExecute = false)
         {
             if (taskList == null || !taskList.Any())
@@ -321,6 +346,12 @@ namespace Certify.Management
             return steps;
         }
 
+        /// <summary>
+        /// Perform validation for a specific deployment task configuration
+        /// </summary>
+        /// <param name="managedCertificate"></param>
+        /// <param name="taskConfig"></param>
+        /// <returns></returns>
         public async Task<List<ActionResult>> ValidateDeploymentTask(ManagedCertificate managedCertificate, DeploymentTaskConfig taskConfig)
         {
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Core.Management;
@@ -18,6 +19,13 @@ namespace Certify.Management
         /// The maximum number of certificate requests which will be attempted in a batch (Renew All)
         /// </summary>
         private const int MAX_CERTIFICATE_REQUEST_TASKS = 50;
+
+        /// <summary>
+        /// Internet domain name ASCII > Unicode mapping provider
+        /// </summary>
+        private IdnMapping _idnMapping = new IdnMapping();
+
+        private bool _isRenewAllInProgress { get; set; }
 
         /// <summary>
         /// Perform Renew All: identify all items to renew then initiate renewal process
@@ -581,6 +589,12 @@ namespace Certify.Management
             return certRequestResult;
         }
 
+        /// <summary>
+        /// Get (cached) list of expected challenges and responses, used for dynamic challenge response services
+        /// </summary>
+        /// <param name="challengeType"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallengeResponses(string challengeType, string key = null)
         {
             var challengeResponses = _currentChallenges
@@ -590,9 +604,19 @@ namespace Certify.Management
             return Task.FromResult(challengeResponses);
         }
 
+        /// <summary>
+        /// Begin or resume an certificate order request
+        /// </summary>
+        /// <param name="log"></param>
+        /// <param name="managedCertificate"></param>
+        /// <param name="progress"></param>
+        /// <param name="result"></param>
+        /// <param name="config"></param>
+        /// <param name="isInteractive"></param>
+        /// <returns></returns>
         private async Task<CertificateRequestResult> PerformCertificateRequestProcessing(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, CertificateRequestResult result, CertRequestConfig config, bool isInteractive)
         {
-            //primary domain and each subject alternative name must now be registered as an identifier with LE and validated
+            //primary domain and each subject alternative name must now be registered as an identifier with ACEM CA and validated
             LogMessage(managedCertificate.Id, $"{Util.GetUserAgent()}");
 
             var _acmeClientProvider = await GetACMEProvider(managedCertificate);
@@ -665,7 +689,7 @@ namespace Certify.Management
                 // sites or creating DNS TXT records, depending on the challenge types)
                 // the challenge is not yet submitted for checking by the CA
 
-                await PerformAutomatedChallengeResponses(log, managedCertificate, authorizations, result, config, progress);
+                await PrepareAutomatedChallengeResponses(log, managedCertificate, authorizations, result, config, progress);
 
 
                 // if any challenge responses require a manual step, pause our request here and wait
@@ -1098,6 +1122,11 @@ namespace Certify.Management
             return result;
         }
 
+        /// <summary>
+        /// Get the decrypted PFX password for a given managed certificate (may be blank or a specific string from a stored credential)
+        /// </summary>
+        /// <param name="managedCertificate"></param>
+        /// <returns></returns>
         private async Task<string> GetPfxPassword(ManagedCertificate managedCertificate)
         {
             var pfxPwd = "";
@@ -1116,11 +1145,21 @@ namespace Certify.Management
             return pfxPwd;
         }
 
-        private async Task PerformAutomatedChallengeResponses(ILog log, ManagedCertificate managedCertificate, List<PendingAuthorization> authorizations, CertificateRequestResult result, CertRequestConfig config, IProgress<RequestProgressState> progress)
+        /// <summary>
+        /// For each identifier in the current certificate order, prepare/implement the required automated challenge responses (DNS updates, http challenge responses)
+        /// </summary>
+        /// <param name="log"></param>
+        /// <param name="managedCertificate"></param>
+        /// <param name="authorizations"></param>
+        /// <param name="result"></param>
+        /// <param name="config"></param>
+        /// <param name="progress"></param>
+        /// <returns></returns>
+        private async Task PrepareAutomatedChallengeResponses(ILog log, ManagedCertificate managedCertificate, List<PendingAuthorization> authorizations, CertificateRequestResult result, CertRequestConfig config, IProgress<RequestProgressState> progress)
         {
             var failureSummaryMessage = "";
 
-            List<IdentifierItem> identifiers = new List<IdentifierItem>();
+            var identifiers = new List<IdentifierItem>();
 
             var distinctDomains = managedCertificate.GetCertificateDomains();
 
@@ -1194,7 +1233,7 @@ namespace Certify.Management
                         ReportProgress(progress,
                             new RequestProgressState(
                                 RequestState.Running,
-                                $"Performing automated challenge responses ({identifier.Name})",
+                                $"Preparing automated challenge responses ({identifier.Name})",
                                 managedCertificate
                             )
                         );
@@ -1222,7 +1261,7 @@ namespace Certify.Management
                         // ask LE to check our answer to their authorization challenge (http-01 or
                         // tls-sni-01), LE will then attempt to fetch our answer, if all accessible
                         // and correct (authorized) LE will then allow us to request a certificate
-                        authorization = await _challengeDiagnostics.PerformAutomatedChallengeResponse(log, _serverProvider, managedCertificate, authorization, _credentialsManager);
+                        authorization = await _challengeResponseService.PrepareAutomatedChallengeResponse(log, _serverProvider, managedCertificate, authorization, _credentialsManager);
 
                         // if we had automated checks configured and they failed more than twice in a
                         // row, fail and report error here
@@ -1374,7 +1413,6 @@ namespace Certify.Management
 
             return result;
         }
-
 
         /// <summary>
         /// Fetch an existing certificate from the certificate authority

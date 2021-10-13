@@ -24,34 +24,91 @@ namespace Certify.Management
 {
     public partial class CertifyManager : ICertifyManager, IDisposable
     {
+        /// <summary>
+        /// Storage service for managed certificates
+        /// </summary>
         private IItemManager _itemManager = null;
-        private MigrationManager _migrationManager = null;
+
+        /// <summary>
+        /// Server target for this service (currently a single target e.g. local IIS)
+        /// </summary>
         private ICertifiedServer _serverProvider = null;
-        private ChallengeDiagnostics _challengeDiagnostics = null;
-        private IdnMapping _idnMapping = new IdnMapping();
+
+        /// <summary>
+        /// Provider for general challenge responses
+        /// </summary>
+        private ChallengeResponseService _challengeResponseService = null;
+
+        /// <summary>
+        /// Service to load and use available plugins (deployment tasks etc)
+        /// </summary>
         private PluginManager _pluginManager { get; set; }
+
+        /// <summary>
+        /// Stored Credentials service
+        /// </summary>
         private ICredentialsManager _credentialsManager { get; set; }
 
+        /// <summary>
+        /// Application Insights logging
+        /// </summary>
         private TelemetryClient _tc = null;
-        private bool _isRenewAllInProgress { get; set; }
+
+        /// <summary>
+        /// Service (text file) logging
+        /// </summary>
         private ILog _serviceLog { get; set; }
+
+        /// <summary>
+        /// Current service log level setting
+        /// </summary>
         private Serilog.Core.LoggingLevelSwitch _loggingLevelSwitch { get; set; }
 
+        /// <summary>
+        /// If true, http challenge service is started
+        /// </summary>
         private bool _httpChallengeServerAvailable = false;
 
+        /// <summary>
+        /// Set of ACME clients, one per ACME account
+        /// </summary>
         private ConcurrentDictionary<string, IACMEClientProvider> _acmeClientProviders = new ConcurrentDictionary<string, IACMEClientProvider>();
+
+        /// <summary>
+        /// Cache of current known challenges and responses, used for dynamic challenge responses
+        /// </summary>
         private ConcurrentDictionary<string, SimpleAuthorizationChallengeItem> _currentChallenges = new ConcurrentDictionary<string, SimpleAuthorizationChallengeItem>();
+        
+        /// <summary>
+        /// Set of current in-progress renewals
+        /// </summary>
         private ObservableCollection<RequestProgressState> _progressResults { get; set; }
+
+        /// <summary>
+        /// Service for reporting status/progress results back to client(s)
+        /// </summary>
         private IStatusReporting _statusReporting { get; set; }
 
+        /// <summary>
+        /// Set of (cached) known ACME Certificate Authorities
+        /// </summary>
         private ConcurrentDictionary<string, CertificateAuthority> _certificateAuthorities = new ConcurrentDictionary<string, CertificateAuthority>();
+        
+        /// <summary>
+        /// If true, we are running on Windows and can use windows specific features (cert store, IIS etc)
+        /// </summary>
         private bool _useWindowsNativeFeatures = true;
+
+        /// <summary>
+        ///  Config info/preferences such as log level, challenge service config, powershell execution policy etc
+        /// </summary>
         private Shared.ServiceConfig _serverConfig;
 
         public CertifyManager() : this(true)
         {
 
         }
+
         public CertifyManager(bool useWindowsNativeFeatures = true)
         {
             _useWindowsNativeFeatures = useWindowsNativeFeatures;
@@ -86,13 +143,12 @@ namespace Certify.Management
             _pluginManager.EnableExternalPlugins = CoreAppSettings.Current.IncludeExternalPlugins;
             _pluginManager.LoadPlugins(new List<string> { "Licensing", "DashboardClient", "DeploymentTasks", "CertificateManagers", "DnsProviders" });
 
-            _migrationManager = new MigrationManager(_itemManager, _credentialsManager, _serverProvider);
 
             LoadCertificateAuthorities();
 
 
             // init remaining utilities and optionally enable telematics
-            _challengeDiagnostics = new ChallengeDiagnostics(CoreAppSettings.Current.EnableValidationProxyAPI);
+            _challengeResponseService = new ChallengeResponseService(CoreAppSettings.Current.EnableValidationProxyAPI);
 
             if (CoreAppSettings.Current.EnableAppTelematics)
             {
@@ -125,6 +181,53 @@ namespace Certify.Management
             // if jwt auth mode is enabled, init auth key for first windows user
         }
 
+
+        /// <summary>
+        /// Setup service logging
+        /// </summary>
+        /// <param name="serverConfig"></param>
+        private void InitLogging(Shared.ServiceConfig serverConfig)
+        {
+            _loggingLevelSwitch = new Serilog.Core.LoggingLevelSwitch(Serilog.Events.LogEventLevel.Information);
+
+            SetLoggingLevel(serverConfig?.LogLevel);
+
+            _serviceLog = new Loggy(
+                new LoggerConfiguration()
+               .MinimumLevel.ControlledBy(_loggingLevelSwitch)
+               .WriteTo.Debug()
+               .WriteTo.File(Path.Combine(Util.GetAppDataFolder("logs"), "session.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10), rollOnFileSizeLimit: true, fileSizeLimitBytes: 5 * 1024 * 1024)
+               .CreateLogger()
+               );
+
+            _serviceLog?.Information($"Logging started: {_loggingLevelSwitch.MinimumLevel}");
+        }
+
+        /// <summary>
+        /// Update the current service log level
+        /// </summary>
+        /// <param name="logLevel"></param>
+        public void SetLoggingLevel(string logLevel)
+        {
+            switch (logLevel?.ToLower())
+            {
+                case "debug":
+                    _loggingLevelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Debug;
+                    break;
+
+                case "verbose":
+                    _loggingLevelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Verbose;
+                    break;
+
+                default:
+                    _loggingLevelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Information;
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Load cached set of ACME Certificate authorities
+        /// </summary>
         private void LoadCertificateAuthorities()
         {
             _certificateAuthorities.Clear();
@@ -151,60 +254,20 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// Set the status reporting provider to report back to client(s) (UI etc)
+        /// </summary>
+        /// <param name="statusReporting"></param>
         public void SetStatusReporting(IStatusReporting statusReporting)
         {
             _statusReporting = statusReporting;
         }
 
-        private async Task PerformManagedCertificateMigrations()
-        {
-
-            IEnumerable<ManagedCertificate> list = await GetManagedCertificates();
-
-            list = list.Where(i => !string.IsNullOrEmpty(i.RequestConfig.WebhookUrl) || !string.IsNullOrEmpty(i.RequestConfig.PreRequestPowerShellScript) || !string.IsNullOrEmpty(i.RequestConfig.PostRequestPowerShellScript)
-            || i.PostRequestTasks?.Any(t => t.TaskTypeId == StandardTaskTypes.POWERSHELL && t.Parameters?.Any(p => p.Key == "url") == true) == true);
-
-            foreach (var i in list)
-            {
-                var result = MigrateDeploymentTasks(i);
-                if (result.Item2 == true)
-                {
-                    // save change
-                    await UpdateManagedCertificate(result.Item1);
-                }
-            }
-        }
-
         /// <summary>
-        /// If required, migrate legacy setting for this managed certicate related to pre/post deployment tasks
+        /// Get the ACME client applicable for the given managed certificate
         /// </summary>
-        /// <param name="managedCert">The source managed certificate to be migrated</param>
-        /// <returns>The updated managed certificate to be stored</returns>
-        private ManagedCertificate MigrateManagedCertificateSettings(ManagedCertificate managedCert)
-        {
-            if (
-                !string.IsNullOrEmpty(managedCert.RequestConfig.WebhookUrl)
-                || !string.IsNullOrEmpty(managedCert.RequestConfig.PreRequestPowerShellScript)
-                || !string.IsNullOrEmpty(managedCert.RequestConfig.PostRequestPowerShellScript)
-                || managedCert.PostRequestTasks?.Any(t => t.TaskTypeId == StandardTaskTypes.POWERSHELL && t.Parameters?.Any(p => p.Key == "url") == true) == true)
-            {
-                var result = MigrateDeploymentTasks(managedCert);
-                if (result.Item2 == true)
-                {
-                    return result.Item1;
-                }
-                else
-                {
-                    return managedCert;
-                }
-            }
-            else
-            {
-                return managedCert;
-            }
-        }
-
-
+        /// <param name="managedItem"></param>
+        /// <returns></returns>
         public async Task<IACMEClientProvider> GetACMEProvider(ManagedCertificate managedItem)
         {
             // determine account to use for the given managed cert
@@ -231,6 +294,14 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// Get the ACME client for the given storage key or create and add a new one
+        /// </summary>
+        /// <param name="storageKey"></param>
+        /// <param name="acmeApiEndpoint"></param>
+        /// <param name="account"></param>
+        /// <param name="allowUntrustedTsl"></param>
+        /// <returns></returns>
         private async Task<IACMEClientProvider> GetACMEProvider(string storageKey, string acmeApiEndpoint = null, AccountDetails account = null, bool allowUntrustedTsl = false)
         {
             // get or init acme provider required for the given account
@@ -254,41 +325,10 @@ namespace Certify.Management
             }
         }
 
-        private void InitLogging(Shared.ServiceConfig serverConfig)
-        {
-            _loggingLevelSwitch = new Serilog.Core.LoggingLevelSwitch(Serilog.Events.LogEventLevel.Information);
-
-            SetLoggingLevel(serverConfig?.LogLevel);
-
-            _serviceLog = new Loggy(
-                new LoggerConfiguration()
-               .MinimumLevel.ControlledBy(_loggingLevelSwitch)
-               .WriteTo.Debug()
-               .WriteTo.File(Path.Combine(Util.GetAppDataFolder("logs"), "session.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10), rollOnFileSizeLimit: true, fileSizeLimitBytes: 5 * 1024 * 1024)
-               .CreateLogger()
-               );
-
-            _serviceLog?.Information($"Logging started: {_loggingLevelSwitch.MinimumLevel}");
-        }
-
-        public void SetLoggingLevel(string logLevel)
-        {
-            switch (logLevel?.ToLower())
-            {
-                case "debug":
-                    _loggingLevelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Debug;
-                    break;
-
-                case "verbose":
-                    _loggingLevelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Verbose;
-                    break;
-
-                default:
-                    _loggingLevelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Information;
-                    break;
-            }
-        }
-
+        /// <summary>
+        /// Begin/restart progress tracking for renewal requests of a given managed certificate
+        /// </summary>
+        /// <param name="state"></param>
         public void BeginTrackingProgress(RequestProgressState state)
         {
             lock (_progressResults)
@@ -302,6 +342,12 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// Update progress tracking and send status report to client(s). optionally logging to service log
+        /// </summary>
+        /// <param name="progress"></param>
+        /// <param name="state"></param>
+        /// <param name="logThisEvent"></param>
         public void ReportProgress(IProgress<RequestProgressState> progress, RequestProgressState state, bool logThisEvent = true)
         {
             if (progress != null)
@@ -313,14 +359,18 @@ namespace Certify.Management
 
             _statusReporting?.ReportRequestProgress(state);
 
-
-
             if (state.ManagedCertificate != null && logThisEvent)
             {
                 LogMessage(state.ManagedCertificate.Id, state.Message, LogItemType.GeneralInfo);
             }
         }
 
+        /// <summary>
+        /// Append to log for given managed certificate id
+        /// </summary>
+        /// <param name="managedItemId"></param>
+        /// <param name="msg"></param>
+        /// <param name="logType"></param>
         private void LogMessage(string managedItemId, string msg, LogItemType logType = LogItemType.GeneralInfo) => ManagedCertificateLog.AppendLog(managedItemId, new ManagedCertificateLogItem
         {
             EventDate = DateTime.UtcNow,
@@ -328,6 +378,11 @@ namespace Certify.Management
             Message = msg
         }, _loggingLevelSwitch);
 
+        /// <summary>
+        /// Get current progress result for the given managed certificate id
+        /// </summary>
+        /// <param name="managedItemId"></param>
+        /// <returns></returns>
         public RequestProgressState GetRequestProgressState(string managedItemId)
         {
             var progress = _progressResults.FirstOrDefault(p => p.ManagedCertificate.Id == managedItemId);
@@ -365,6 +420,10 @@ namespace Certify.Management
             return await Task.FromResult(true);
         }
 
+        /// <summary>
+        /// When called, perform daily cache cleanup, cert cleanup, diagnostics and maintenance
+        /// </summary>
+        /// <returns></returns>
         public async Task<bool> PerformDailyTasks()
         {
             try
@@ -408,6 +467,9 @@ namespace Certify.Management
             return await Task.FromResult(true);
         }
 
+        /// <summary>
+        /// If applicable, perform CA trust store maintenance relevant to our supported set of certificate authorities
+        /// </summary>
         private void PerformCAMaintenance()
         {
             if (_useWindowsNativeFeatures)
@@ -544,6 +606,10 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// Perform certificate cleanup (files and store) as per cleanup preferences
+        /// </summary>
+        /// <returns></returns>
         public async Task PerformCertificateCleanup()
         {
             try
@@ -605,8 +671,11 @@ namespace Certify.Management
             }
         }
 
-        public void Dispose() => ManagedCertificateLog.DisposeLoggers();
-
+        /// <summary>
+        /// Perform cleanup of old certificate asset files
+        /// </summary>
+        /// <param name="assetPath"></param>
+        /// <param name="ext"></param>
         private static void DeleteOldCertificateFiles(string assetPath, List<string> ext)
         {
             // performs a simple delete of certificate files under the assets path where the file creation time is more than 1 year ago
@@ -629,9 +698,18 @@ namespace Certify.Management
             }
         }
 
+        public void Dispose() => ManagedCertificateLog.DisposeLoggers();
+
+        /// <summary>
+        /// Perform (or preview) an import of settings from another instance
+        /// </summary>
+        /// <param name="importRequest"></param>
+        /// <returns></returns>
         public async Task<List<ActionStep>> PerformImport(ImportRequest importRequest)
         {
-            var importResult = await _migrationManager.PerformImport(importRequest.Package, importRequest.Settings, importRequest.IsPreviewMode);
+            var migrationManager = new MigrationManager(_itemManager, _credentialsManager, _serverProvider);
+
+            var importResult = await migrationManager.PerformImport(importRequest.Package, importRequest.Settings, importRequest.IsPreviewMode);
 
             // store and apply certs if we have no errors
             if (!importResult.Any(i => i.HasError))
@@ -657,16 +735,32 @@ namespace Certify.Management
             return importResult;
         }
 
+        /// <summary>
+        /// Perform (or preview) and export of settings from this instance
+        /// </summary>
+        /// <param name="exportRequest"></param>
+        /// <returns></returns>
         public async Task<ImportExportPackage> PerformExport(ExportRequest exportRequest)
         {
-            return await _migrationManager.PerformExport(exportRequest.Filter, exportRequest.Settings, exportRequest.IsPreviewMode);
+            var migrationManager = new MigrationManager(_itemManager, _credentialsManager, _serverProvider);
+            return await migrationManager.PerformExport(exportRequest.Filter, exportRequest.Settings, exportRequest.IsPreviewMode);
         }
 
+        /// <summary>
+        /// Perform basic service diagnostics to check host machine configuration
+        /// </summary>
+        /// <returns></returns>
         public async Task<List<ActionResult>> PerformServiceDiagnostics()
         {
             return await Certify.Management.Util.PerformAppDiagnostics(ntpServer: CoreAppSettings.Current.NtpServer);
         }
 
+        /// <summary>
+        /// Get the current service log (per line)
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="limit"></param>
+        /// <returns></returns>
         public async Task<string[]> GetLog(string type, int limit)
         {
             string logPath = null;

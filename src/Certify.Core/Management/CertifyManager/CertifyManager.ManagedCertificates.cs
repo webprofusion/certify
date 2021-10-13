@@ -10,12 +10,21 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
+        /// <summary>
+        /// Get managed certificate details by ID
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public async Task<ManagedCertificate> GetManagedCertificate(string id) => await _itemManager.GetById(id);
 
+        /// <summary>
+        /// Get list of managed certificates based on then given filter criteria
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
         public async Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter = null)
         {
             var list = await _itemManager.GetAll(filter);
-
 
             if (filter?.IncludeExternal == true)
             {
@@ -51,6 +60,11 @@ namespace Certify.Management
             return list;
         }
 
+        /// <summary>
+        /// Update the stored details for the given managed certificate and report update to client(s)
+        /// </summary>
+        /// <param name="managedCert"></param>
+        /// <returns></returns>
         public async Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate managedCert)
         {
             // migrate item settings as source can include legacy settings (e.g. CSV import) - TODO: remove when legacy sources no longer supported
@@ -65,6 +79,11 @@ namespace Certify.Management
             return managedCert;
         }
 
+        /// <summary>
+        /// After a renewal attempt, update the "final" stored details and status for the given managed certificate and report update to client(s)
+        /// </summary>
+        /// <param name="managedCert"></param>
+        /// <returns></returns>
         private async Task UpdateManagedCertificateStatus(ManagedCertificate managedCertificate, RequestState status,
             string msg = null)
         {
@@ -117,6 +136,11 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// Optionally send current managed certificate status to the reporting dashboard
+        /// </summary>
+        /// <param name="managedCertificate"></param>
+        /// <returns></returns>
         private async Task ReportManagedCertificateStatus(ManagedCertificate managedCertificate)
         {
             if (CoreAppSettings.Current.EnableStatusReporting)
@@ -152,6 +176,11 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// Delete a given managed certificate
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public async Task DeleteManagedCertificate(string id)
         {
             var site = await _itemManager.GetById(id);
@@ -161,118 +190,6 @@ namespace Certify.Management
             }
         }
 
-        private ProcessStartInfo _httpChallengeProcessInfo;
-        private Process _httpChallengeProcess;
-        private string _httpChallengeControlKey = Guid.NewGuid().ToString();
-        private string _httpChallengeCheckKey = "configcheck";
-        private System.Net.Http.HttpClient _httpChallengeServerClient = new System.Net.Http.HttpClient();
-        private int _httpChallengePort = 80;
-
-        private async Task<bool> IsHttpChallengeProcessStarted()
-        {
-            if (_httpChallengeServerClient != null)
-            {
-                var testUrl = $"http://127.0.0.1:{_httpChallengePort}/.well-known/acme-challenge/{_httpChallengeCheckKey}";
-
-                try
-                {
-                    var response = await _httpChallengeServerClient.GetAsync(testUrl);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var status = await _httpChallengeServerClient.GetStringAsync(testUrl);
-
-                        if (status == "OK")
-                        {
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-                catch
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        private async Task<bool> StartHttpChallengeServer()
-        {
-            if (!await IsHttpChallengeProcessStarted())
-            {
-                var cliPath = $"{AppContext.BaseDirectory}certify.exe";
-                _httpChallengeProcessInfo = new ProcessStartInfo(cliPath, $"httpchallenge keys={_httpChallengeControlKey},{_httpChallengeCheckKey}")
-                {
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = false,
-
-                    WorkingDirectory = AppContext.BaseDirectory
-                };
-
-                try
-                {
-                    _httpChallengeProcess = new Process { StartInfo = _httpChallengeProcessInfo };
-                    _httpChallengeProcess.Start();
-                    await Task.Delay(1000);
-                }
-                catch (Exception)
-                {
-                    // failed to start process
-                    _httpChallengeProcess = null;
-                    return false;
-                }
-
-                if (_httpChallengeServerClient == null)
-                {
-                    _httpChallengeServerClient = new System.Net.Http.HttpClient();
-                    _httpChallengeServerClient.DefaultRequestHeaders.Add("User-Agent", Util.GetUserAgent() + " CertifyManager");
-                }
-
-                return await IsHttpChallengeProcessStarted();
-            }
-            else
-            {
-                await StopHttpChallengeServer();
-                return false;
-            }
-        }
-
-        private async Task<bool> StopHttpChallengeServer()
-        {
-            if (_httpChallengeServerClient != null)
-            {
-                try
-                {
-                    var response = await _httpChallengeServerClient.GetAsync($"http://127.0.0.1:{_httpChallengePort}/.well-known/acme-challenge/{_httpChallengeControlKey}");
-                    if (response.IsSuccessStatusCode)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        try
-                        {
-                            if (_httpChallengeProcess != null && !_httpChallengeProcess.HasExited)
-                            {
-                                _httpChallengeProcess.CloseMainWindow();
-                            }
-                        }
-                        catch { }
-                    }
-                }
-                catch
-                {
-                    return true;
-                }
-            }
-            return true;
-        }
 
         /// <summary>
         /// Perform set of test challenges and configuration checks to determine if site appears
@@ -312,7 +229,7 @@ namespace Certify.Management
             }
 
             results.AddRange(
-            await _challengeDiagnostics.TestChallengeResponse(
+            await _challengeResponseService.TestChallengeResponse(
                     log,
                     _serverProvider,
                     managedCertificate,
@@ -422,5 +339,186 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// Perform any one-time migrations of legacy managed certificate settings and deployment tasks etc
+        /// </summary>
+        /// <returns></returns>
+        private async Task PerformManagedCertificateMigrations()
+        {
+
+            IEnumerable<ManagedCertificate> list = await GetManagedCertificates();
+
+            list = list.Where(i => !string.IsNullOrEmpty(i.RequestConfig.WebhookUrl) || !string.IsNullOrEmpty(i.RequestConfig.PreRequestPowerShellScript) || !string.IsNullOrEmpty(i.RequestConfig.PostRequestPowerShellScript)
+            || i.PostRequestTasks?.Any(t => t.TaskTypeId == StandardTaskTypes.POWERSHELL && t.Parameters?.Any(p => p.Key == "url") == true) == true);
+
+            foreach (var i in list)
+            {
+                var result = MigrateDeploymentTasks(i);
+                if (result.Item2 == true)
+                {
+                    // save change
+                    await UpdateManagedCertificate(result.Item1);
+                }
+            }
+        }
+
+        /// <summary>
+        /// If required, migrate legacy setting for this managed certicate related to pre/post deployment tasks
+        /// </summary>
+        /// <param name="managedCert">The source managed certificate to be migrated</param>
+        /// <returns>The updated managed certificate to be stored</returns>
+        private ManagedCertificate MigrateManagedCertificateSettings(ManagedCertificate managedCert)
+        {
+            if (
+                !string.IsNullOrEmpty(managedCert.RequestConfig.WebhookUrl)
+                || !string.IsNullOrEmpty(managedCert.RequestConfig.PreRequestPowerShellScript)
+                || !string.IsNullOrEmpty(managedCert.RequestConfig.PostRequestPowerShellScript)
+                || managedCert.PostRequestTasks?.Any(t => t.TaskTypeId == StandardTaskTypes.POWERSHELL && t.Parameters?.Any(p => p.Key == "url") == true) == true)
+            {
+                var result = MigrateDeploymentTasks(managedCert);
+                if (result.Item2 == true)
+                {
+                    return result.Item1;
+                }
+                else
+                {
+                    return managedCert;
+                }
+            }
+            else
+            {
+                return managedCert;
+            }
+        }
+
+        /* http challenge response controls */
+
+        /// <summary>
+        /// process information for temporary http challenge response service
+        /// </summary>
+        private ProcessStartInfo _httpChallengeProcessInfo;
+        private Process _httpChallengeProcess;
+        private string _httpChallengeControlKey = Guid.NewGuid().ToString();
+        private string _httpChallengeCheckKey = "configcheck";
+        private System.Net.Http.HttpClient _httpChallengeServerClient = new System.Net.Http.HttpClient();
+        private int _httpChallengePort = 80;
+
+        /// <summary>
+        /// Check if our temporary http challenge response service is running locally
+        /// </summary>
+        /// <returns></returns>
+        private async Task<bool> IsHttpChallengeProcessStarted()
+        {
+            if (_httpChallengeServerClient != null)
+            {
+                var testUrl = $"http://127.0.0.1:{_httpChallengePort}/.well-known/acme-challenge/{_httpChallengeCheckKey}";
+
+                try
+                {
+                    var response = await _httpChallengeServerClient.GetAsync(testUrl);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var status = await _httpChallengeServerClient.GetStringAsync(testUrl);
+
+                        if (status == "OK")
+                        {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Start our temporary http challenge response server process
+        /// </summary>
+        /// <returns></returns>
+        private async Task<bool> StartHttpChallengeServer()
+        {
+            if (!await IsHttpChallengeProcessStarted())
+            {
+                var cliPath = $"{AppContext.BaseDirectory}certify.exe";
+                _httpChallengeProcessInfo = new ProcessStartInfo(cliPath, $"httpchallenge keys={_httpChallengeControlKey},{_httpChallengeCheckKey}")
+                {
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = false,
+
+                    WorkingDirectory = AppContext.BaseDirectory
+                };
+
+                try
+                {
+                    _httpChallengeProcess = new Process { StartInfo = _httpChallengeProcessInfo };
+                    _httpChallengeProcess.Start();
+                    await Task.Delay(1000);
+                }
+                catch (Exception)
+                {
+                    // failed to start process
+                    _httpChallengeProcess = null;
+                    return false;
+                }
+
+                if (_httpChallengeServerClient == null)
+                {
+                    _httpChallengeServerClient = new System.Net.Http.HttpClient();
+                    _httpChallengeServerClient.DefaultRequestHeaders.Add("User-Agent", Util.GetUserAgent() + " CertifyManager");
+                }
+
+                return await IsHttpChallengeProcessStarted();
+            }
+            else
+            {
+                await StopHttpChallengeServer();
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Stop our temporary http challenge response service
+        /// </summary>
+        /// <returns></returns>
+        private async Task<bool> StopHttpChallengeServer()
+        {
+            if (_httpChallengeServerClient != null)
+            {
+                try
+                {
+                    var response = await _httpChallengeServerClient.GetAsync($"http://127.0.0.1:{_httpChallengePort}/.well-known/acme-challenge/{_httpChallengeControlKey}");
+                    if (response.IsSuccessStatusCode)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        try
+                        {
+                            if (_httpChallengeProcess != null && !_httpChallengeProcess.HasExited)
+                            {
+                                _httpChallengeProcess.CloseMainWindow();
+                            }
+                        }
+                        catch { }
+                    }
+                }
+                catch
+                {
+                    return true;
+                }
+            }
+            return true;
+        }
     }
 }

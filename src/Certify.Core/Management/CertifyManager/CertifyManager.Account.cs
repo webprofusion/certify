@@ -63,6 +63,11 @@ namespace Certify.Management
             return matchingAccount;
         }
 
+        /// <summary>
+        /// Get decrypted ACME accounts details
+        /// </summary>
+        /// <param name="credential"></param>
+        /// <returns></returns>
         private async Task<AccountDetails> GetAccountDetailsFromCredential(Models.Config.StoredCredential credential)
         {
             var json = await _credentialsManager.GetUnlockedCredential(credential.StorageKey);
@@ -84,6 +89,10 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// Get decrypted list of all ACME accounts
+        /// </summary>
+        /// <returns></returns>
         public async Task<List<AccountDetails>> GetAccountRegistrations()
         {
             var list = new List<AccountDetails>();
@@ -119,6 +128,11 @@ namespace Certify.Management
             return list;
         }
 
+        /// <summary>
+        /// Perform an ACME account registration and store the new account as a stored credential
+        /// </summary>
+        /// <param name="reg"></param>
+        /// <returns></returns>
         public async Task<Models.Config.ActionResult> AddAccount(ContactRegistration reg)
         {
             // there is one registered contact per account type (per CA, Prod or Staging)
@@ -168,6 +182,11 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// Store an ACME account as a Stored Credential
+        /// </summary>
+        /// <param name="account"></param>
+        /// <returns></returns>
         private async Task StoreAccountAsCredential(AccountDetails account)
         {
             await _credentialsManager.Update(new Models.Config.StoredCredential
@@ -179,6 +198,11 @@ namespace Certify.Management
             });
         }
 
+        /// <summary>
+        /// Delete an ACME account from stored credentials
+        /// </summary>
+        /// <param name="storageKey"></param>
+        /// <returns></returns>
         public async Task<ActionResult> RemoveAccount(string storageKey)
         {
 
@@ -197,6 +221,10 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// Upgrade legacy storage of ACME account details and convert to stored credentials
+        /// </summary>
+        /// <returns></returns>
         private async Task PerformAccountUpgrades()
         {
             // check if there are no registered contacts, if so see if we are upgrading from a vault
@@ -263,6 +291,10 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// Refresh cached list of known certificate authorities ands return the current list
+        /// </summary>
+        /// <returns></returns>
         public async Task<List<CertificateAuthority>> GetCertificateAuthorities()
         {
             LoadCertificateAuthorities();
@@ -270,6 +302,11 @@ namespace Certify.Management
             return await Task.FromResult(_certificateAuthorities.Values.OrderBy(a => a.Title).ToList());
         }
 
+        /// <summary>
+        /// Add/Update details of a custom ACME CA
+        /// </summary>
+        /// <param name="certificateAuthority"></param>
+        /// <returns></returns>
         public async Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority certificateAuthority)
         {
 
@@ -318,6 +355,11 @@ namespace Certify.Management
 
         }
 
+        /// <summary>
+        /// Remove a custom ACME CA
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public async Task<ActionResult> RemoveCertificateAuthority(string id)
         {
             var customCAs = SettingsManager.GetCustomCertificateAuthorities();

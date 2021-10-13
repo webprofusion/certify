@@ -14,12 +14,8 @@ using Polly.Retry;
 
 namespace Certify.Management
 {
-
-
     /// <summary>
-    /// SiteManager encapsulates settings and operations on the list of Sites we manage certificates
-    /// for using Certify and is additional to the ACMESharp Vault. These could be Local IIS,
-    /// Manually Configured, DNS driven etc
+    /// ItemManager is the storage service implem,entation (SQLLite) for Managed Certificate information
     /// </summary>
     public class ItemManager : IItemManager
     {

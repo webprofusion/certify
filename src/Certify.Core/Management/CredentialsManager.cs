@@ -12,8 +12,6 @@ using Newtonsoft.Json;
 
 namespace Certify.Management
 {
-
-
     public class CredentialsManager : ICredentialsManager
     {
         public const string CREDENTIALSTORE = "cred";
@@ -287,7 +285,6 @@ namespace Certify.Management
                 throw new AggregateException($"Failed to decrypt Credential [{storageKey}] - it was most likely created by a different user account.", exp);
             }
         }
-
 
         public async Task<Dictionary<string, string>> GetUnlockedCredentialsDictionary(string storageKey)
         {

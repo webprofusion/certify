@@ -8,8 +8,18 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
+        /// <summary>
+        /// Returbn list of websites or hosted services (provided by the target service provider)
+        /// </summary>
+        /// <param name="ignoreStoppedSites"></param>
+        /// <returns></returns>
         public async Task<List<BindingInfo>> GetPrimaryWebSites(bool ignoreStoppedSites) => await _serverProvider.GetPrimarySites(ignoreStoppedSites);
 
+        /// <summary>
+        /// Get list of domains/identifiers used by a specific hosted service (provided by the target service provider)
+        /// </summary>
+        /// <param name="siteId"></param>
+        /// <returns></returns>
         public async Task<List<DomainOption>> GetDomainOptionsFromSite(string siteId)
         {
             var defaultNoDomainHost = "";
@@ -78,6 +88,11 @@ namespace Certify.Management
             return domainOptions.OrderByDescending(d => d.IsPrimaryDomain).ThenBy(d => d.Domain).ToList();
         }
 
+        /// <summary>
+        /// Check if the target service provider is available on the host machine
+        /// </summary>
+        /// <param name="serverType"></param>
+        /// <returns></returns>
         public async Task<bool> IsServerTypeAvailable(StandardServerTypes serverType)
         {
             if (serverType == StandardServerTypes.IIS)
@@ -96,8 +111,19 @@ namespace Certify.Management
             return false;
         }
 
+        /// <summary>
+        /// Get version of the current target service
+        /// </summary>
+        /// <param name="serverType"></param>
+        /// <returns></returns>
         public async Task<Version> GetServerTypeVersion(StandardServerTypes serverType) => await _serverProvider.GetServerVersion();
 
+        /// <summary>
+        /// Run diagnostics on the current target service
+        /// </summary>
+        /// <param name="serverType"></param>
+        /// <param name="siteId"></param>
+        /// <returns></returns>
         public async Task<List<ActionStep>> RunServerDiagnostics(StandardServerTypes serverType, string siteId) => await _serverProvider.RunConfigurationDiagnostics(siteId);
     }
 }
