@@ -16,7 +16,7 @@ namespace Certify.CLI
 
             if (!IsRegistered())
             {
-                Console.WriteLine("Import is only available in the registered version of this application.");
+                Console.WriteLine("Import is only available in the licensed version of this application.");
                 return;
             }
 

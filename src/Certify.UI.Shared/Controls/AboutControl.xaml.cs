@@ -31,7 +31,7 @@ namespace Certify.UI.Controls
                 ValidateKey.IsEnabled = false;
                 DeactivateInstall.IsEnabled = true;
 
-                lblRegistrationType.Text = "Registered Version";
+                lblRegistrationType.Text = "Licensed Version";
                 lblRegistrationDetails.Text = "";
             }
             else
