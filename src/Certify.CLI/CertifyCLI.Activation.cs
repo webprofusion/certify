@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Certify.Client;
-using Certify.Management;
-using Certify.Models;
-using Microsoft.ApplicationInsights;
-using Newtonsoft.Json;
+﻿using System.Threading.Tasks;
 
 namespace Certify.CLI
 {

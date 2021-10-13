@@ -2,10 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Certify.Client;
-using Certify.Management;
 using Certify.Models;
-using Microsoft.ApplicationInsights;
 using Newtonsoft.Json;
 
 namespace Certify.CLI
@@ -210,9 +207,9 @@ namespace Certify.CLI
                     {
                         defaultIdentifier.IsPrimaryDomain = true;
                         managedCert.RequestConfig.PrimaryDomain = defaultIdentifier.Domain;
-                    } 
+                    }
                 }
-                
+
                 if (!managedCert.DomainOptions.Any(d => d.IsSelected))
                 {
                     // there are no domains selected on this certificate anymore

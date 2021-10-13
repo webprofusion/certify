@@ -590,7 +590,7 @@ namespace Certify.UI.ViewModel
                             "One or more domains specified are internal hostnames. Certificates for internal host names are not supported by the Certificate Authority.",
                             ValidationErrorCodes.INVALID_HOSTNAME.ToString()
                         );
-                    }                 
+                    }
                 }
 
                 // if title still set to the default, automatically use the primary domain instead

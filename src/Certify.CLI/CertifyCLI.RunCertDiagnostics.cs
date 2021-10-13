@@ -211,7 +211,6 @@ namespace Certify.CLI
             Console.WriteLine("-----------");
         }
 
-
         public async Task FindPendingAuthorizations(bool autoFix)
         {
             // scan log files for authz URLs, check status of each
@@ -268,12 +267,11 @@ namespace Certify.CLI
             {
                 System.Console.WriteLine("Auto fixing:");
 
-                CertifyManager c = new CertifyManager();
+                var c = new CertifyManager();
 
                 var log = new LoggerConfiguration()
                   .WriteTo.Debug()
                   .CreateLogger();
-
 
                 var logger = new Loggy(log);
 
@@ -288,27 +286,24 @@ namespace Certify.CLI
 
                     var pendingOrder = await acmeClient.BeginCertificateOrder(logger, dummyManagedCert.RequestConfig, url);
 
-                    //if (pendingOrder.IsPendingAuthorizations)
+
+                    foreach (var auth in pendingOrder.Authorizations)
                     {
-                        foreach (var auth in pendingOrder.Authorizations)
+                        try
                         {
-                            try
+                            if (!auth.IsFailure && !auth.IsValidated)
                             {
-                                if (!auth.IsFailure && !auth.IsValidated)
-                                {
-                                    System.Console.WriteLine("Submitting challenge for validation " + auth.Identifier);
-                                    auth.AttemptedChallenge = auth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP || c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
-                                    await acmeClient.SubmitChallenge(logger, auth.AttemptedChallenge.ChallengeType, auth);
-                                }
+                                System.Console.WriteLine("Submitting challenge for validation " + auth.Identifier);
+                                auth.AttemptedChallenge = auth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP || c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
+                                await acmeClient.SubmitChallenge(logger, auth.AttemptedChallenge.ChallengeType, auth);
                             }
-                            catch (Exception exp)
-                            {
-                                System.Console.WriteLine("Failed to complete pending authz for  " + url);
-
-                            }
-                            await Task.Delay(250);
                         }
+                        catch (Exception)
+                        {
+                            System.Console.WriteLine("Failed to complete pending authz for  " + url);
 
+                        }
+                        await Task.Delay(250);
                     }
                 }
             }

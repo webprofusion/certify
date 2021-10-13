@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace Certify.CertificateAuthorities
 {
@@ -39,7 +37,7 @@ namespace Certify.CertificateAuthorities
         /// <summary>
         /// RSA, ECDSA
         /// </summary>
-        public string ChainGroup { get; set; } 
+        public string ChainGroup { get; set; }
 
         /// <summary>
         /// List of trust store actions required to select this chain

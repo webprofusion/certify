@@ -63,7 +63,7 @@ namespace Certify.Models
 
         public CertificateCleanupMode? CertificateCleanupMode { get; set; }
 
-        public string DefaultCertificateStore { get; set; } 
+        public string DefaultCertificateStore { get; set; }
 
         public bool EnableStatusReporting { get; set; } = true;
 

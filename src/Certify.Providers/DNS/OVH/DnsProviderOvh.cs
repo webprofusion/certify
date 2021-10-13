@@ -105,7 +105,7 @@ namespace Certify.Providers.DNS.OVH
                 _createdRecords.Add((request.RecordValue, request.RecordId));
 
                 var zoneRefreshResult = ovh.Post($"/domain/zone/{request.ZoneId}/refresh", string.Empty);
-                
+
                 return new ActionResult { IsSuccess = true, Message = $"DNS record \"{request.RecordName}\" added. OVH id : {creationId} ." };
             }
             catch (Exception ex)
@@ -135,10 +135,10 @@ namespace Certify.Providers.DNS.OVH
                 {
                     _createdRecords.RemoveAll(record => record.Item1 == request.RecordValue);
                 }
-                
+
                 var recordDeletionResult = await ovh.Delete<object>($"/domain/zone/{request.ZoneId}/record/{request.RecordId}");
                 var zoneRefreshResult = await ovh.Post($"/domain/zone/{request.ZoneId}/refresh", string.Empty);
-                
+
                 return new ActionResult { IsSuccess = true, Message = $"DNS record {request.RecordName} successfully deleted and zone was refreshed." };
             }
             catch (Exception ex)

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Models;
-using Certify.Models.Config;
 
 namespace Certify.UI.ViewModel
 {

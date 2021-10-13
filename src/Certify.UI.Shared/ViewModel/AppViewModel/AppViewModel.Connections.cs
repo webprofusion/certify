@@ -104,7 +104,7 @@ namespace Certify.UI.ViewModel
             IsLoading = false;
             Mouse.OverrideCursor = System.Windows.Input.Cursors.Arrow;
         }
-        
+
         /// <summary>
         /// Attempt connection to the given service, or default if none supplied.
         /// </summary>

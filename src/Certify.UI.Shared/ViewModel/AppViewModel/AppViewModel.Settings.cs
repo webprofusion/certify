@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Certify.Config.Migration;
 using Certify.Models;
-using Certify.Shared;
 using Certify.UI.Settings;
 
 namespace Certify.UI.ViewModel

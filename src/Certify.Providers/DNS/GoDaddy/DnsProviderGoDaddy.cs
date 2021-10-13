@@ -248,7 +248,7 @@ namespace Certify.Providers.DNS.GoDaddy
             // API now supports a delete method
             var req = CreateRequest(HttpMethod.Delete, string.Format(_deleteRecordUri, root.RootDomain, "TXT", recordName));
             var result = await _client.SendAsync(req);
-        
+
             if (result.IsSuccessStatusCode)
             {
                 return new ActionResult { IsSuccess = true, Message = "DNS record deleted." };

@@ -378,7 +378,7 @@ namespace Certify.Core.Management
                         credentialImportSteps.Add(new ActionStep { Title = c.Title, Key = c.StorageKey, HasWarning = true, Description = $"Credential already exists, it will not be re-imported." });
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     credentialImportSteps.Add(new ActionStep { Title = c.Title, Key = c.StorageKey, HasWarning = true, Description = $"Credential could not be decrypted. Any items relying on this credential will fail until the credential is replaced." });
                     c.Secret = "";

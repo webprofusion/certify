@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using Certify.Models;
 
 namespace Certify.CertificateAuthorities.Definitions
@@ -27,7 +25,7 @@ namespace Certify.CertificateAuthorities.Definitions
                 IsEnabled = true,
                 IsCustom = false,
                 SANLimit = 100,
-                StandardExpiryDays =90,
+                StandardExpiryDays = 90,
                 RequiresEmailAddress = true,
                 SupportedFeatures = new List<string>{
                     CertAuthoritySupportedRequests.DOMAIN_SINGLE.ToString(),
