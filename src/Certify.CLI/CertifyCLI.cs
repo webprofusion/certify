@@ -119,6 +119,7 @@ namespace Certify.CLI
             System.Console.WriteLine("certify importcsv : import managed certificates from a CSV file.");
             System.Console.WriteLine("certify add <managed cert id or new> <domain1;domain2> : add domains to a managed cert using the default validation, use --perform-request to immediately attempt cert request");
             System.Console.WriteLine("certify remove <managed cert id> <domain1;domain2> : remove domains from managed cert, use --perform-request to immediately attempt cert request");
+            System.Console.WriteLine("certify activate <email address> <key> : activate your Certify The Web install using your license key");
             System.Console.WriteLine("\n\n");
             System.Console.WriteLine("For help, see the docs at https://docs.certifytheweb.com");
 

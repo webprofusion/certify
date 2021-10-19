@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace Certify.CLI
 {
@@ -19,12 +20,39 @@ namespace Certify.CLI
             return false;
         }
 
+        internal async Task Activate(string[] args)
+        {
+            if (args.Length < 3)
+            {
+                Console.WriteLine("Not enough arguments");
+                return;
+            }
+
+            var email = args[1];
+            var key = args[2];
+
+            var result = await this.Activate(email, key);
+
+            if (result.IsSuccess)
+            {
+                Console.WriteLine("License Activated");
+            }
+            else
+            {
+                Console.WriteLine(result.Message);
+            }
+        }
+
         private async Task<Models.Shared.LicenseKeyInstallResult> Activate(string email, string key)
         {
+            InitPlugins();
+
             var licensingManager = _pluginManager.LicensingManager;
             if (licensingManager != null)
             {
-                var activated = await licensingManager.IsInstallActive(ProductTypeID, Certify.Management.Util.GetAppDataFolder());
+                var settingsPath = Management.Util.GetAppDataFolder();
+
+                var activated = await licensingManager.IsInstallActive(ProductTypeID, settingsPath);
                 if (!activated)
                 {
                     var validationResult = await licensingManager.Validate(ProductTypeID, email, key);
@@ -39,6 +67,10 @@ namespace Certify.CLI
                         // activate install
                         var result = await licensingManager.RegisterInstall(ProductTypeID, email, key, instance);
 
+                        if (result.IsSuccess) {
+                            licensingManager.FinaliseInstall(ProductTypeID, result, settingsPath);
+                        }
+                       
                         return result;
                     }
                     else
@@ -57,8 +89,33 @@ namespace Certify.CLI
             }
         }
 
+
+        internal async Task Deactivate(string[] args)
+        {
+            if (args.Length < 2)
+            {
+                Console.WriteLine("Not enough arguments");
+                return;
+            }
+
+            var email = args[1];
+
+            var deactivated = await this.Deactivate(email);
+
+            if (deactivated)
+            {
+                Console.WriteLine("License Deactivated");
+            }
+            else
+            {
+                Console.WriteLine("Failed to deactivate license");
+            }
+        }
+
         private async Task<bool> Deactivate(string email)
         {
+            InitPlugins();
+
             var licensingManager = _pluginManager.LicensingManager;
             if (licensingManager != null)
             {

@@ -144,6 +144,16 @@ namespace Certify.CLI
                 {
                     await p.RemoveIdentifiers(args);
                 }
+
+                if (command == "activate")
+                {
+                    await p.Activate(args);
+                }
+
+                if (command == "deactivate")
+                {
+                    await p.Deactivate(args);
+                }
             }
 #if DEBUG
             System.Console.WriteLine("CLI: Completed (DEBUG)");
