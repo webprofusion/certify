@@ -1,11 +1,11 @@
 # Certify The Web - Certificate Manager UI for Windows
 
+The TLS/SSL Certificate Management GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/) and other ACME certificate authorities. This app makes it easy to automatically request, install and continuously renew free certificates for Windows/IIS or for any other services which requires a domain certificate.  
+
 - Home page for downloads, info and support : [https://certifytheweb.com/](https://certifytheweb.com/)
 - Documentation: [https://docs.certifytheweb.com](https://docs.certifytheweb.com)
 - Community Discussions: [https://community.certifytheweb.com](https://community.certifytheweb.com)
 - Changelog (release notes): https://certifytheweb.com/home/changelog
-
-The SSL/TLS Certificate Management GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/) and other ACME certificate authorities. This app makes it easy to automatically request, install and continuously renew free certificates for Windows/IIS or for any other services which requires a domain certificate.  
 
 **Certify The Web is used by hundreds of thousands of organisations to manage millions of certificates each month** and is the perfect solution for administrators who want visibility of certificate management for their domains. Centralised dashboard status reporting is also available.
 
