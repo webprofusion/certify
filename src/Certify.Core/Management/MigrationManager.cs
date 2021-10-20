@@ -524,7 +524,13 @@ namespace Certify.Core.Management
                             // perform actual import, TODO: re-map cert PFX storage location
                             try
                             {
+                                // create path if we need to
+                                var pathInfo= new System.IO.FileInfo(c.Filename);
+                                pathInfo.Directory.Create();
+                                
+                                // write cert file
                                 System.IO.File.WriteAllBytes(c.Filename, c.Content);
+
                                 certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = !isVerified, Description = isVerified ? null : "Certificate did not pass verify check." });
                             }
                             catch (Exception exp)
