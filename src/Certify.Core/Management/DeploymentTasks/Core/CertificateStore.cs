@@ -20,11 +20,11 @@ namespace Certify.Providers.DeploymentTasks.Core
             Definition = new DeploymentProviderDefinition
             {
                 Id = "Certify.Providers.DeploymentTasks.CertificateStore",
-                Title = "Certificate Store (Local Machine)",
+                Title = "Deploy to Certificate Store (Local Machine)",
                 DefaultTitle = "Store Certificate",
                 IsExperimental = false,
                 UsageType = DeploymentProviderUsage.PostRequest,
-                Description = "Store certificate in the local Certificate Store with custom name. Note that standard Deployment already includes storing the certificate in the local computer store. ",
+                Description = "Store certificate in the local Certificate Store with custom name. Note that standard Deployment already includes storing the certificate in the local computer store so this task is normally not required. ",
                 SupportedContexts = DeploymentContextType.LocalAsService | DeploymentContextType.LocalAsUser,
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
                 {
