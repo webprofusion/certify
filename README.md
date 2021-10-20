@@ -25,7 +25,9 @@ https://img.shields.io/github/stars/webprofusion/certify.svg)
 - Single domains, multiple-domains (SAN) and wildcard certificates (*.example.com)
 - Http or DNS challenge validation.
 	- Built-in Http Challenge Server for easier configuration of challenge responses
-	- DNS Validation via over 26 supported APIs (including Azure DNS, Alibaba Cloud, AWS Route53, Cloudflare, DnsMadeEasy, GoDaddy, OVH, SimpleDNSPlus)
+	- DNS Validation via over 26 supported APIs (including Azure DNS, Alibaba Cloud, AWS Route53, Cloudflare, DnsMadeEasy, GoDaddy, OVH, SimpleDNSPlus). Some providers are implemented via the [Posh-ACME project](https://github.com/rmbolger/Posh-ACME/tree/main/Posh-ACME)
+	- Support for the *Certify DNS* cloud managed dns challenge validation service, allowing DNS validation via any DNS provider.
+	- Multiple authorizations supported, allowing a mix of domain validation settings per managed certificate
 - Stored Credentials (API access keys etc. protected by the Windows Data Protection API)
 - Optional pre/post request Deployment Tasks and scripting for advanced deployment (**Exchange, RDS, multi-server, CCS, Apache, nginx, export, webhooks, Azure KeyVault etc**)
 
