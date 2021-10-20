@@ -752,7 +752,7 @@ namespace Certify.Management
         /// <returns></returns>
         public async Task<List<ActionResult>> PerformServiceDiagnostics()
         {
-            return await Certify.Management.Util.PerformAppDiagnostics(ntpServer: CoreAppSettings.Current.NtpServer);
+            return await Certify.Management.Util.PerformAppDiagnostics(includeTempFileCheck:true, ntpServer: CoreAppSettings.Current.NtpServer);
         }
 
         /// <summary>

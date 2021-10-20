@@ -257,12 +257,11 @@ namespace Certify.UI.Windows
                 }
             }
 
-            var diagnostics = await Management.Util.PerformAppDiagnostics(_appViewModel.Preferences.NtpServer);
+            var diagnostics = await Management.Util.PerformAppDiagnostics(includeTempFileCheck:false, _appViewModel.Preferences.NtpServer);
             if (diagnostics.Any(d => d.IsSuccess == false))
             {
                 _appViewModel.SystemDiagnosticWarning = diagnostics.First(d => d.IsSuccess == false).Message;
             }
-
 
             Mouse.OverrideCursor = Cursors.Arrow;
 

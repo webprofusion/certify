@@ -23,7 +23,7 @@ namespace Certify.Management
         /// check for problems which could affect app use
         /// </summary>
         /// <returns>  </returns>
-        public static async Task<List<ActionResult>> PerformAppDiagnostics(string ntpServer = null)
+        public static async Task<List<ActionResult>> PerformAppDiagnostics(bool includeTempFileCheck, string ntpServer = null)
         {
             var results = new List<ActionResult>();
 
@@ -31,7 +31,7 @@ namespace Certify.Management
             var tempFolder = Path.GetTempPath();
 
             // if current user can create temp files, attempt to create a 1MB temp file, detect if it fails
-            if (!string.IsNullOrEmpty(tempFolder))
+            if (includeTempFileCheck && !string.IsNullOrEmpty(tempFolder))
             {
                 try
                 {
