@@ -223,6 +223,8 @@ namespace Certify.Providers.DNS.NameCheap
                 {
                     break;
                 }
+
+                await Task.Delay(1000); // wait 1 second before querying next batch in case there is a rate limit
             }
 
             return result;
