@@ -1,11 +1,11 @@
 # Certify The Web - Certificate Manager UI for Windows
 
+The TLS/SSL Certificate Management GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/) and other ACME certificate authorities. This app makes it easy to automatically request, install and continuously renew free certificates for Windows/IIS or for any other services which requires a domain certificate.  
+
 - Home page for downloads, info and support : [https://certifytheweb.com/](https://certifytheweb.com/)
 - Documentation: [https://docs.certifytheweb.com](https://docs.certifytheweb.com)
 - Community Discussions: [https://community.certifytheweb.com](https://community.certifytheweb.com)
 - Changelog (release notes): https://certifytheweb.com/home/changelog
-
-The SSL/TLS Certificate Management GUI for Windows, powered by [Let's Encrypt](https://letsencrypt.org/) and other ACME certificate authorities. This app makes it easy to automatically request, install and continuously renew free certificates for Windows/IIS or for any other services which requires a domain certificate.  
 
 **Certify The Web is used by hundreds of thousands of organisations to manage millions of certificates each month** and is the perfect solution for administrators who want visibility of certificate management for their domains. Centralised dashboard status reporting is also available.
 
@@ -25,7 +25,9 @@ https://img.shields.io/github/stars/webprofusion/certify.svg)
 - Single domains, multiple-domains (SAN) and wildcard certificates (*.example.com)
 - Http or DNS challenge validation.
 	- Built-in Http Challenge Server for easier configuration of challenge responses
-	- DNS Validation via over 26 supported APIs (including Azure DNS, Alibaba Cloud, AWS Route53, Cloudflare, DnsMadeEasy, GoDaddy, OVH, SimpleDNSPlus)
+	- DNS Validation via over 26 supported APIs (including Azure DNS, Alibaba Cloud, AWS Route53, Cloudflare, DnsMadeEasy, GoDaddy, OVH, SimpleDNSPlus). Some providers are implemented via the [Posh-ACME project](https://github.com/rmbolger/Posh-ACME/tree/main/Posh-ACME)
+	- Support for the *Certify DNS* cloud managed dns challenge validation service, allowing DNS validation via any DNS provider.
+	- Multiple authorizations supported, allowing a mix of domain validation settings per managed certificate
 - Stored Credentials (API access keys etc. protected by the Windows Data Protection API)
 - Optional pre/post request Deployment Tasks and scripting for advanced deployment (**Exchange, RDS, multi-server, CCS, Apache, nginx, export, webhooks, Azure KeyVault etc**)
 
