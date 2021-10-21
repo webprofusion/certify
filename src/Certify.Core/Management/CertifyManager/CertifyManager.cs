@@ -78,7 +78,7 @@ namespace Certify.Management
         /// Cache of current known challenges and responses, used for dynamic challenge responses
         /// </summary>
         private ConcurrentDictionary<string, SimpleAuthorizationChallengeItem> _currentChallenges = new ConcurrentDictionary<string, SimpleAuthorizationChallengeItem>();
-        
+
         /// <summary>
         /// Set of current in-progress renewals
         /// </summary>
@@ -93,7 +93,7 @@ namespace Certify.Management
         /// Set of (cached) known ACME Certificate Authorities
         /// </summary>
         private ConcurrentDictionary<string, CertificateAuthority> _certificateAuthorities = new ConcurrentDictionary<string, CertificateAuthority>();
-        
+
         /// <summary>
         /// If true, we are running on Windows and can use windows specific features (cert store, IIS etc)
         /// </summary>
@@ -454,6 +454,9 @@ namespace Certify.Management
                 await _itemManager.PerformMaintenance();
 
                 PerformCAMaintenance();
+
+                ApplyLatestAutoUpdateScript();
+
             }
             catch (Exception exp)
             {
@@ -465,6 +468,39 @@ namespace Certify.Management
             }
 
             return await Task.FromResult(true);
+        }
+
+        /// <summary>
+        /// //if _AutoUpdate.ps1 file exists, use it to replace AutoUpdate.ps1
+        /// </summary>
+
+        private void ApplyLatestAutoUpdateScript()
+        {
+            if (_useWindowsNativeFeatures)
+            {
+                var updateScriptLocation = Path.Combine(Environment.CurrentDirectory, "Scripts", "AutoUpdate");
+                var pendingUpdateScript = Path.Combine(updateScriptLocation, "_AutoUpdate.ps1");
+                if (File.Exists(pendingUpdateScript))
+                {
+                    try
+                    {
+                        // move update script
+                        var destScript = Path.Combine(updateScriptLocation, "AutoUpdate.ps1");
+                        if (File.Exists(destScript))
+                        {
+                            File.Delete(destScript);
+                        }
+
+                        File.Move(pendingUpdateScript, destScript);
+
+                        _serviceLog.Information($"Pending update script {pendingUpdateScript} was found and moved to destination {updateScriptLocation}");
+                    }
+                    catch
+                    {
+                        _serviceLog.Warning($"Pending update script {pendingUpdateScript} was found but could not be moved to destination {updateScriptLocation}");
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -752,7 +788,7 @@ namespace Certify.Management
         /// <returns></returns>
         public async Task<List<ActionResult>> PerformServiceDiagnostics()
         {
-            return await Certify.Management.Util.PerformAppDiagnostics(includeTempFileCheck:true, ntpServer: CoreAppSettings.Current.NtpServer);
+            return await Certify.Management.Util.PerformAppDiagnostics(includeTempFileCheck: true, ntpServer: CoreAppSettings.Current.NtpServer);
         }
 
         /// <summary>
