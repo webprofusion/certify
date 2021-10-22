@@ -40,18 +40,25 @@ namespace Certify.Management
                             var providers = p.GetProviders(pluginType);
                             foreach (var cp in providers)
                             {
-                                if (cp.IsEnabled)
+                                try
                                 {
-                                    var certManager = p.GetProvider(pluginType, cp.Id);
-                                    var certs = await certManager.GetManagedCertificates(filter);
+                                    if (cp.IsEnabled)
+                                    {
+                                        var certManager = p.GetProvider(pluginType, cp.Id);
+                                        var certs = await certManager.GetManagedCertificates(filter);
 
-                                    list.AddRange(certs);
+                                        list.AddRange(certs);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    _serviceLog.Error($"Failed to query certificate manager plugin {cp.Title} {ex}");
                                 }
                             }
                         }
                         else
                         {
-                            System.Diagnostics.Debug.WriteLine("Failed to create provider from plugin [Certificate Manager] ");
+                            _serviceLog.Error($"Failed to create one or more certificate manager plugins");
                         }
                     }
                 }
