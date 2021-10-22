@@ -78,7 +78,9 @@ namespace Certify.Client
 
         Task<List<CertificateRequestResult>> BeginAutoRenewal(RenewalSettings settings);
 
-        Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly);
+        Task<List<CertificateRequestResult>> RedeployManagedCertificates(bool isPreviewOnly, bool includeDeploymentTasks);
+
+        Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly, bool includeDeploymentTasks);
 
         Task<CertificateRequestResult> RefetchCertificate(string managedItemId);
 
@@ -133,5 +135,6 @@ namespace Certify.Client
         Task ConnectStatusStreamAsync();
 
         Shared.ServerConnection GetConnectionInfo();
+
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Cors;
@@ -193,15 +194,56 @@ namespace Certify.Service
             return result;
         }
 
-        [HttpGet, Route("reapply/{managedItemId}/{isPreviewOnly}")]
-        public async Task<CertificateRequestResult> RedeployCertificate(string managedItemId, bool isPreviewOnly)
+        [HttpGet, Route("reapply/{managedItemId}/{isPreviewOnly}/{includeDeploymentTasks}")]
+        public async Task<CertificateRequestResult> RedeployCertificate(string managedItemId, bool isPreviewOnly, bool includeDeploymentTasks)
         {
             DebugLog();
 
-            var managedCertificate = await _certifyManager.GetManagedCertificate(managedItemId);
+            var filter = new ManagedCertificateFilter { };
 
-            var result = await _certifyManager.DeployCertificate(managedCertificate, null, isPreviewOnly);
-            return result;
+            if (managedItemId != null)
+            {
+                filter.Id = managedItemId;
+
+            }
+
+            var result = await _certifyManager.RedeployManagedCertificates(filter, null, isPreviewOnly, includeDeploymentTasks);
+            return result.FirstOrDefault();
+        }
+
+        private bool _redeployInProgress = false;
+        [HttpGet, Route("redeploy/{isPreviewOnly}/{includeDeploymentTasks}")]
+        public async Task<List<CertificateRequestResult>> RedeployManagedCertificate(bool isPreviewOnly, bool includeDeploymentTasks)
+        {
+            DebugLog();
+
+            if (!_redeployInProgress)
+            {
+                var filter = new ManagedCertificateFilter { };
+
+                _redeployInProgress = true;
+
+                try
+                {
+                    var results = await _certifyManager.RedeployManagedCertificates(filter, null, isPreviewOnly, includeDeploymentTasks);
+
+                    return results;
+                }
+                catch (Exception)
+                {
+                    return new List<CertificateRequestResult>();
+                }
+                finally
+                {
+                    _redeployInProgress = false;
+
+                }
+
+            }
+            else
+            {
+                return new List<CertificateRequestResult>();
+            }
         }
 
         [HttpGet, Route("fetch/{managedItemId}/{isPreviewOnly}")]

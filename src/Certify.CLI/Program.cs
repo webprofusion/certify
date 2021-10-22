@@ -103,6 +103,7 @@ namespace Certify.CLI
                 {
                     var autoFix = false;
                     var forceAutoDeploy = false;
+                    var includeOcspCheck = false;
 
                     if (args.Contains("autofix"))
                     {
@@ -114,7 +115,11 @@ namespace Certify.CLI
                         forceAutoDeploy = true;
                     }
 
-                    await p.RunCertDiagnostics(autoFix, forceAutoDeploy);
+                    if (args.Contains("checkocsp"))
+                    {
+                        includeOcspCheck = true;
+                    }
+                    await p.RunCertDiagnostics(autoFix, forceAutoDeploy, includeOcspCheck: includeOcspCheck);
                 }
 
 

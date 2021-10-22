@@ -229,5 +229,21 @@ namespace Certify.UI.Controls.Settings
                 }
             }
         }
+
+        private async void RedeployCertificates_Click(object sender, RoutedEventArgs e)
+        {
+
+            var msg = "This action will automatically re-apply all managed certificates as per the Deployment option of each item. Additional Deployment Tasks will not be performed. Redeployment can take up to 1hr and progress will be shown on the Progress tab.";
+            if (IncludeDeploymentTasks.IsChecked == true)
+            {
+                msg = "This action will automatically re-apply all managed certificates as per the Deployment option of each item. Additional Deployment Tasks will also be performed where applicable. Redeployment can take up to 1hr and progress will be shown on the Progress tab.";
+            }
+
+            if (MessageBox.Show(msg, "Perform Certificate Redeployment?", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
+            {
+                await ViewModel.AppViewModel.Current.RedeployManagedCertificatess(isPreviewOnly: false, IncludeDeploymentTasks.IsChecked == true);
+            }
+
+        }
     }
 }

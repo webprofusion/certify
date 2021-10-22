@@ -848,7 +848,7 @@ namespace Certify.UI.ViewModel
             return list;
         }
 
-        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly) => await _appViewModel.ReapplyCertificateBindings(managedItemId, isPreviewOnly);
+        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly, bool includeDeploymentTasks) => await _appViewModel.ReapplyCertificateBindings(managedItemId, isPreviewOnly, includeDeploymentTasks);
 
         public async Task<CertificateRequestResult> RefetchCertificate(string managedItemId) => await _appViewModel.RefetchCertificate(managedItemId);
 

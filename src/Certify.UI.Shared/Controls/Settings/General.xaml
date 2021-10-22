@@ -272,10 +272,20 @@
                             <TextBlock Style="{StaticResource Instructions}">You can move managed certificates and their related settings, credentials and certificates to or from another instance:</TextBlock>
                             <Button
                                 x:Name="ImportExport"
-                                Width="120"
+                                Width="140"
                                 HorizontalAlignment="Left"
                                 Click="ImportExport_Click">
                                 Import or Export..
+                            </Button>
+                            <TextBlock Style="{StaticResource SubheadingWithMargin}">Certificate Redeployment</TextBlock>
+                            <TextBlock Style="{StaticResource Instructions}">After performing an import you may re-apply all of your certificates to website bindings (IIS) etc :</TextBlock>
+                            <CheckBox Margin="0,8,0,8" x:Name="IncludeDeploymentTasks">Run All Deployment Tasks</CheckBox>
+                            <Button
+                                x:Name="RedeployCertificates"
+                                Width="140"
+                                HorizontalAlignment="Left" Click="RedeployCertificates_Click"
+                                >
+                                Redeploy Certificates
                             </Button>
                         </StackPanel>
                     </StackPanel>

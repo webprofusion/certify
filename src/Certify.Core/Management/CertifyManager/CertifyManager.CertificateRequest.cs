@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Core.Management;
@@ -1329,13 +1330,43 @@ namespace Certify.Management
         }
 
         /// <summary>
+        /// Perform deployment for one or all managed certificates
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <param name="progress"></param>
+        /// <param name="isPreviewOnly"></param>
+        /// <param name="includeDeploymentTasks"></param>
+        /// <returns></returns>
+        public async Task<List<CertificateRequestResult>> RedeployManagedCertificates(ManagedCertificateFilter filter, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false, bool includeDeploymentTasks = false)
+        {
+            _tc?.TrackEvent("RedeployCertificates");
+
+
+            var managedCerts = await GetManagedCertificates(filter);
+
+            var results = new List<CertificateRequestResult>();
+
+            foreach (var managedCertificate in managedCerts)
+            {
+                if (!string.IsNullOrEmpty(managedCertificate.CertificatePath) && File.Exists(managedCertificate.CertificatePath))
+                {
+                    var result = await this.DeployCertificate(managedCertificate, progress, isPreviewOnly, includeDeploymentTasks);
+
+                    results.Add(result);
+                }
+            }
+
+            return results;
+        }
+
+        /// <summary>
         /// Perform automated deployment (if any)
         /// </summary>
         /// <param name="managedCertificate"></param>
         /// <param name="progress"></param>
         /// <param name="isPreviewOnly"></param>
         /// <returns></returns>
-        public async Task<CertificateRequestResult> DeployCertificate(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false)
+        public async Task<CertificateRequestResult> DeployCertificate(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false, bool includeDeploymentTasks = false)
         {
             var logPrefix = "";
 
@@ -1394,9 +1425,51 @@ namespace Certify.Management
 
                 result.IsSuccess = true;
                 result.Message = logPrefix + string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
+
                 if (!isPreviewOnly)
                 {
                     ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedCertificate));
+                }
+
+                // optionally perform deployment tasks
+                if (includeDeploymentTasks && managedCertificate.PostRequestTasks?.Any() == true)
+                {
+
+                    // run applicable deployment tasks (whether success or failed), powershell
+                    LogMessage(managedCertificate.Id, $"Performing Post-Request (Deployment) Tasks..");
+
+                    var log = ManagedCertificateLog.GetLogger(managedCertificate.Id, _loggingLevelSwitch);
+
+                    var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, result, managedCertificate.PostRequestTasks);
+
+                    // log results
+                    var postRequestTasks = new ActionStep
+                    {
+                        Category = "Post-Request Tasks",
+                        Key = "PostRequestTasks",
+                        Substeps = new List<ActionStep>(),
+                        HasError = results.Any(r => r.HasError),
+                        HasWarning = results.Any(r => r.HasWarning),
+                    };
+
+                    foreach (var r in results)
+                    {
+                        LogMessage(managedCertificate.Id, $"{r.Title} :: {r.Description}", (r.HasError || r.HasWarning) ? LogItemType.CertficateRequestAttentionRequired : LogItemType.GeneralInfo);
+
+                        r.Category = "Post-Request Tasks";
+                        postRequestTasks.Substeps.Add(r);
+
+                    }
+                    result.Actions.Add(postRequestTasks);
+
+                    // certificate may already be deployed to some extent so this counts a completed with warnings
+                    if (results.Any(r => r.HasError))
+                    {
+                        result.IsSuccess = false;
+
+                        var msg = $"Deployment Tasks did not complete successfully.";
+                        result.Message = msg;
+                    }
                 }
             }
             else

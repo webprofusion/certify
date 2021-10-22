@@ -427,14 +427,25 @@ namespace Certify.UI.ViewModel
         }
 
         /// <summary>
+        /// Re-deploy all managed certificates to any applicable bindings (re-store etc as applicable), optionally including Tasks
+        /// </summary>
+
+        /// <param name="isPreviewOnly"></param>
+        /// <returns></returns>
+        internal async Task<List<CertificateRequestResult>> RedeployManagedCertificatess(bool isPreviewOnly, bool includeDeploymentTasks)
+        {
+            return await _certifyClient.RedeployManagedCertificates(isPreviewOnly, includeDeploymentTasks);
+        }
+
+        /// <summary>
         /// Re-apply the current certificate to any applicable bindings (re-store etc as applicable)
         /// </summary>
         /// <param name="managedItemId"></param>
         /// <param name="isPreviewOnly"></param>
         /// <returns></returns>
-        internal async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly)
+        internal async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly, bool includeDeploymentTasks)
         {
-            return await _certifyClient.ReapplyCertificateBindings(managedItemId, isPreviewOnly);
+            return await _certifyClient.ReapplyCertificateBindings(managedItemId, isPreviewOnly, includeDeploymentTasks);
         }
 
         /// <summary>

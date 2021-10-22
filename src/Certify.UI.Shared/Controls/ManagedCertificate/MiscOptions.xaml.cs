@@ -88,7 +88,9 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 if (MessageBox.Show("Re-apply certificate to website bindings?", "Confirm Re-Apply?", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
                 {
-                    await ItemViewModel.ReapplyCertificateBindings(ItemViewModel.SelectedItem.Id, false);
+                    await ItemViewModel.ReapplyCertificateBindings(ItemViewModel.SelectedItem.Id, false, false);
+
+                    ViewModel.AppViewModel.Current.ShowNotification("Certificate Redeployment Completed");
                 }
             }
             else

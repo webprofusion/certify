@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Management;
@@ -15,7 +16,7 @@ namespace Certify.CLI
         /// </summary>
         /// <param name="autoFix">Attempt to re-apply current certificate</param>
         /// <param name="forceAutoDeploy">Change all deployment modes to Auto</param>
-        public async Task RunCertDiagnostics(bool autoFix = false, bool forceAutoDeploy = false)
+        public async Task RunCertDiagnostics(bool autoFix = false, bool forceAutoDeploy = false, bool includeOcspCheck = true)
         {
             static string stripNonNumericFromString(string input)
             {
@@ -60,9 +61,14 @@ namespace Certify.CLI
 
             var countSiteIdsFixed = 0;
             var countBindingRedeployments = 0;
+            Stopwatch totalTime = Stopwatch.StartNew();
+            Stopwatch itemTiming = Stopwatch.StartNew();
 
             foreach (var site in managedCertificates)
             {
+
+                itemTiming.Restart();
+
                 var redeployRequired = false;
 
                 if (autoFix)
@@ -129,26 +135,29 @@ namespace Certify.CLI
                                 }
                             }
 
-                            var chainResults = CertificateManager.CheckCertChain(fileCert);
-
-                            foreach (var result in chainResults)
+                            if (includeOcspCheck)
                             {
-                                Console.WriteLine($"\t Cert Ocsp Status Check: {fileCert.Subject} " + result);
-                            }
+                                var chainResults = CertificateManager.CheckCertChain(fileCert);
+
+                                foreach (var result in chainResults)
+                                {
+                                    Console.WriteLine($"\t Cert Ocsp Status Check: {fileCert.Subject} " + result);
+                                }
 
 
-                            var ocspCheck = await CertificateManager.CheckOcspRevokedStatus(site.CertificatePath);
-                            Console.ForegroundColor = ConsoleColor.White;
-
-                            if (ocspCheck == Models.Certify.Models.CertificateStatusType.Revoked || ocspCheck == Models.Certify.Models.CertificateStatusType.Expired)
-                            {
-                                Console.ForegroundColor = ConsoleColor.Red;
-                                Console.WriteLine($"\t Ocsp Status Check: {fileCert.Subject} " + ocspCheck);
+                                var ocspCheck = await CertificateManager.CheckOcspRevokedStatus(site.CertificatePath);
                                 Console.ForegroundColor = ConsoleColor.White;
-                            }
-                            else
-                            {
-                                Console.WriteLine($"\t Ocsp Status Check: {fileCert.Subject} " + ocspCheck);
+
+                                if (ocspCheck == Models.Certify.Models.CertificateStatusType.Revoked || ocspCheck == Models.Certify.Models.CertificateStatusType.Expired)
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Red;
+                                    Console.WriteLine($"\t Ocsp Status Check: {fileCert.Subject} " + ocspCheck);
+                                    Console.ForegroundColor = ConsoleColor.White;
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"\t Ocsp Status Check: {fileCert.Subject} " + ocspCheck);
+                                }
                             }
 
 
@@ -159,7 +168,7 @@ namespace Certify.CLI
                                 //re-apply current certificate file to store and bindings
                                 if (!string.IsNullOrEmpty(site.CertificateThumbprintHash))
                                 {
-                                    var result = await _certifyClient.ReapplyCertificateBindings(site.Id, false);
+                                    var result = await _certifyClient.ReapplyCertificateBindings(site.Id, false, false);
 
                                     countBindingRedeployments++;
 
@@ -176,7 +185,8 @@ namespace Certify.CLI
                                         Console.ForegroundColor = ConsoleColor.White;
                                     }
 
-                                    System.Threading.Thread.Sleep(5000);
+
+                                    System.Threading.Thread.Sleep(500);
                                 }
                                 else
                                 {
@@ -204,9 +214,12 @@ namespace Certify.CLI
                         }
                     }
                 }
+
+                Debug.WriteLine($"Item update took {itemTiming.Elapsed.TotalSeconds}s");
             }
 
             // TODO: get refresh of managed certs and for each current cert thumbprint, verify binding thumbprint match
+            Debug.WriteLine($"Batch update took {totalTime.Elapsed.TotalSeconds}s. 500 items would take {((totalTime.Elapsed.TotalSeconds / managedCertificates.Count) * 500) / 60}mins");
 
             Console.WriteLine("-----------");
         }

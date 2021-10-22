@@ -384,9 +384,15 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<List<ActionStep>>(await response.Content.ReadAsStringAsync());
         }
 
-        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly)
+        public async Task<List<CertificateRequestResult>> RedeployManagedCertificates(bool isPreviewOnly, bool includeDeploymentTasks)
         {
-            var response = await FetchAsync($"managedcertificates/reapply/{managedItemId}/{isPreviewOnly}");
+            var response = await FetchAsync($"managedcertificates/redeploy/{isPreviewOnly}/{includeDeploymentTasks}");
+            return JsonConvert.DeserializeObject<List<CertificateRequestResult>>(response);
+        }
+
+        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly, bool includeDeploymentTasks)
+        {
+            var response = await FetchAsync($"managedcertificates/reapply/{managedItemId}/{isPreviewOnly}/{includeDeploymentTasks}");
             return JsonConvert.DeserializeObject<CertificateRequestResult>(response);
         }
 
