@@ -8,7 +8,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Certify.Models.Certify.Models;
 using Certify.Models.Providers;
-using Certify.Utils;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;

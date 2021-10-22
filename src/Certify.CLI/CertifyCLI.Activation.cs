@@ -67,10 +67,11 @@ namespace Certify.CLI
                         // activate install
                         var result = await licensingManager.RegisterInstall(ProductTypeID, email, key, instance);
 
-                        if (result.IsSuccess) {
+                        if (result.IsSuccess)
+                        {
                             licensingManager.FinaliseInstall(ProductTypeID, result, settingsPath);
                         }
-                       
+
                         return result;
                     }
                     else

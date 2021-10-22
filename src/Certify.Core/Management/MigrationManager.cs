@@ -525,9 +525,9 @@ namespace Certify.Core.Management
                             try
                             {
                                 // create path if we need to
-                                var pathInfo= new System.IO.FileInfo(c.Filename);
+                                var pathInfo = new System.IO.FileInfo(c.Filename);
                                 pathInfo.Directory.Create();
-                                
+
                                 // write cert file
                                 System.IO.File.WriteAllBytes(c.Filename, c.Content);
 

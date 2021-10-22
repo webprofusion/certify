@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Web.Http;
 using LightInject;
 using Microsoft.AspNet.SignalR;
