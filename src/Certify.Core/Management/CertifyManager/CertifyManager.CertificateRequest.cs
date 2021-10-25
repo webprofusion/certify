@@ -1440,7 +1440,7 @@ namespace Certify.Management
 
                     var log = ManagedCertificateLog.GetLogger(managedCertificate.Id, _loggingLevelSwitch);
 
-                    var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, result, managedCertificate.PostRequestTasks);
+                    var results = await PerformTaskList(log, isPreviewOnly: isPreviewOnly, skipDeferredTasks: true, result, managedCertificate.PostRequestTasks);
 
                     // log results
                     var postRequestTasks = new ActionStep

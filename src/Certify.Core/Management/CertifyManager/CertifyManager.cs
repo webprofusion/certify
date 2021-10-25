@@ -764,7 +764,7 @@ namespace Certify.Management
 
                 }
 
-                importResult.Add(new ActionStep { Title = "Deployment" + (importRequest.IsPreviewMode ? "[Preview]" : ""), Substeps = deploySteps });
+                importResult.Add(new ActionStep { Title = "Deployment" + (importRequest.IsPreviewMode ? " [Preview]" : ""), Substeps = deploySteps });
             }
 
             return importResult;

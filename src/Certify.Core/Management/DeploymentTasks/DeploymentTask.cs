@@ -40,8 +40,15 @@ namespace Certify.Providers.DeploymentTasks
                 try
                 {
                     var execParams = new DeploymentTaskExecutionParams(log, credentialsManager, subject, TaskConfig, _credentials, isPreviewOnly, null, cancellationToken, deploymentContext);
+                    if (!isPreviewOnly)
+                    {
+                        return await TaskProvider.Execute(execParams);
+                    }
+                    else
+                    {
+                        return new List<ActionResult> { new ActionResult { IsSuccess = true, Message = "Task is review mode only. Not action performed." } };
+                    }
 
-                    return await TaskProvider.Execute(execParams);
                 }
                 catch (Exception exp)
                 {
