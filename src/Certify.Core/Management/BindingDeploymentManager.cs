@@ -89,7 +89,7 @@ namespace Certify.Core.Management
                     storedCert = new X509Certificate2();
                     certHash = new byte[] { 0x00, 0x01, 0x02 };
 
-                    actions.Add(new ActionStep { HasError = true, Title = "Certificate Storage", Category = "CertificateStorage", Description = $"Certificate will be stored in the computer certificate store [{certStoreName}]" });
+                    actions.Add(new ActionStep { HasError = false, Title = "Certificate Storage", Category = "CertificateStorage", Description = $"Certificate will be stored in the computer certificate store [{certStoreName}]" });
                 }
             }
 
