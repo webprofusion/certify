@@ -67,6 +67,9 @@
                 </Button>
             </StackPanel>
 
+            <Controls:MetroProgressBar DockPanel.Dock="Top" Width="250" Height="32"
+                      Margin="4"
+                      IsIndeterminate="True" HorizontalAlignment="Left"   Visibility="{Binding InProgress, Converter={StaticResource ResourceKey=BoolToVisConverter}}" />
 
             <DockPanel
                 DockPanel.Dock="Top"

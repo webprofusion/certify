@@ -21,6 +21,7 @@ namespace Certify.UI.Windows
 
         public class ImportExportModel : BindableBase
         {
+            public bool InProgress { get; set; } = false;
             public bool IsImportReady { get; set; } = false;
             public bool IsPreviewReady { get; set; } = false;
             public ManagedCertificateFilter Filter { get; set; } = new ManagedCertificateFilter { };
@@ -68,8 +69,12 @@ namespace Certify.UI.Windows
                 }
 
                 Model.ImportSettings.EncryptionSecret = txtSecret.Password;
+                Model.InProgress = true;
+                
                 var results = await MainViewModel.PerformSettingsImport(Model.Package, Model.ImportSettings, isPreview);
+                
                 PrepareImportSummary(isPreview, results);
+                Model.InProgress = false;
             }
         }
 
@@ -99,9 +104,11 @@ namespace Certify.UI.Windows
         {
             if (MessageBox.Show("Are you sure you wish to perform the import as shown in the preview? The import cannot be reverted once complete.", "Perform Import?", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
             {
+                Model.InProgress = true;
                 var results = await MainViewModel.PerformSettingsImport(Model.Package, Model.ImportSettings, false);
 
                 PrepareImportSummary(false, results);
+                Model.InProgress = false;
             }
         }
 
