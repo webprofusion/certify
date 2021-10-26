@@ -1,9 +1,12 @@
-﻿# $PoshACMERoot = "\Posh-ACME"
+﻿# Posh-ACME Wrapper script to allow direct use of DNS Plugins
+
+# $PoshACMERoot = "\Posh-ACME"
 $Public  = @( Get-ChildItem -Path $PoshACMERoot\Public\*.ps1 -ErrorAction Ignore )
 $Private = @( Get-ChildItem -Path $PoshACMERoot\Private\*.ps1 -ErrorAction Ignore )
 
-
-Add-Type -Path "$($PoshACMERoot)\..\..\..\BouncyCastle.Crypto.dll"
+# Load Assembly without using Add-Type to avoid locking assembly dll
+$assemblyBytes = [System.IO.File]::ReadAllBytes("$($PoshACMERoot)\..\..\..\BouncyCastle.Crypto.dll")
+[System.Reflection.Assembly]::Load($assemblyBytes) | out-null
 
 # Dot source the files (in the same manner as Posh-ACME would)
 Foreach($import in @($Public + $Private))
@@ -16,16 +19,8 @@ Foreach($import in @($Public + $Private))
 }
 
 # Replace Posh-ACME specific methods which don't apply when we're using them
-function Export-PluginVar {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory,Position=0)]
-        [string]$VarName,
-        [Parameter(Mandatory,Position=1)]
-        [object]$VarValue
-    )
- }
-
+function Export-PluginVar { param([Parameter(ValueFromRemainingArguments)]$DumpArgs) }
+function Import-PluginVar { param([Parameter(ValueFromRemainingArguments)]$DumpArgs) }
 
 $script:UseBasic = @{} 
 if ('UseBasicParsing' -in (Get-Command Invoke-WebRequest).Parameters.Keys) {  $script:UseBasic.UseBasicParsing = $true } 
