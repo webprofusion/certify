@@ -47,7 +47,14 @@ namespace Certify.Core.Management
 
         public async Task<List<BindingInfo>> GetBindings(string targetItemId)
         {
-            return await Task.FromResult(AllBindings.Where(b => b.SiteId == targetItemId).ToList());
+            var bindings = AllBindings;
+            
+            if (!string.IsNullOrEmpty(targetItemId))
+            {
+                bindings = bindings.Where(b => b.SiteId == targetItemId).ToList();
+            }
+
+            return await Task.FromResult(bindings);
         }
 
         public ICertifiedServer GetDeploymentManager()

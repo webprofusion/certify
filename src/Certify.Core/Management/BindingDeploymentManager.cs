@@ -164,12 +164,25 @@ namespace Certify.Core.Management
                 targetSites.AddRange(await deploymentTarget.GetAllTargetItems());
             }
 
-            // for each sites we want to target, identify bindings to add/update as required
+            // get all bindings for all potentially applicable sites
+            var allBindings = new List<BindingInfo>();
+            if (targetSites.Count == 1)
+            {
+                allBindings = await deploymentTarget.GetBindings(targetSites.FirstOrDefault()?.Id);
+            }
+            else
+            {
+                // get all bindings for all sites
+                allBindings = await deploymentTarget.GetBindings(null);
+            }
+
+            // for each sites we want to target, identify the bindings to add/update as required
             foreach (var site in targetSites)
             {
                 try
                 {
-                    var existingBindings = await deploymentTarget.GetBindings(site.Id);
+                    //var existingBindings = await deploymentTarget.GetBindings(site.Id);
+                    var existingBindings = allBindings.Where(b => b.SiteId == site.Id).ToList();
 
                     var existingHttps = existingBindings.Where(e => e.Protocol == "https").ToList();
 
