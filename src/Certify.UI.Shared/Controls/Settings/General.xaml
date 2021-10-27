@@ -278,7 +278,7 @@
                                 Import or Export..
                             </Button>
                             <TextBlock Style="{StaticResource SubheadingWithMargin}">Certificate Redeployment</TextBlock>
-                            <TextBlock Style="{StaticResource Instructions}">After performing an import you may re-apply all of your certificates to website bindings (IIS) etc :</TextBlock>
+                            <TextBlock Style="{StaticResource Instructions}">In some cases you may want to re-apply all of your certificates to website bindings (IIS) etc :</TextBlock>
                             <CheckBox Margin="0,8,0,8" x:Name="IncludeDeploymentTasks">Run All Deployment Tasks</CheckBox>
                             <Button
                                 x:Name="RedeployCertificates"
