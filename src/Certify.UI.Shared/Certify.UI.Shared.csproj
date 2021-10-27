@@ -33,7 +33,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="ControlzEx" Version="5.0.1" />
-		<PackageReference Include="Fody" Version="6.5.4" PrivateAssets="All" />
+		<PackageReference Include="Fody" Version="6.6.0" PrivateAssets="All" />
 		<PackageReference Include="FontAwesome.WPF" Version="4.7.0.9" />
 		<PackageReference Include="MahApps.Metro" Version="2.4.9" />
 		<PackageReference Include="Markdig.Wpf" Version="0.5.0.1" />
