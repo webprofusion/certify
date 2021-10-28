@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Certify.Locales;
+using Certify.Management;
 using Certify.Models;
 using Certify.UI.Settings;
 using Certify.UI.Shared;
-using Microsoft.ApplicationInsights;
 
 namespace Certify.UI.Windows
 {
@@ -18,7 +18,7 @@ namespace Certify.UI.Windows
     /// </summary>
     public partial class MainWindow
     {
-        private TelemetryClient tc = null;
+        private TelemetryManager tc = null;
 
         protected Certify.UI.ViewModel.AppViewModel _appViewModel => UI.ViewModel.AppViewModel.Current;
         protected Certify.UI.ViewModel.ManagedCertificateViewModel _itemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
@@ -342,7 +342,7 @@ namespace Certify.UI.Windows
         {
             if (_appViewModel.Preferences.EnableAppTelematics)
             {
-                tc = new Certify.Management.Util().InitTelemetry(Certify.Locales.ConfigResources.AIInstrumentationKey);
+                tc = new TelemetryManager(Certify.Locales.ConfigResources.AIInstrumentationKey);
                 tc.TrackEvent("Start");
             }
             else

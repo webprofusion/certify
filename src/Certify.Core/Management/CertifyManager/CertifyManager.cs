@@ -16,7 +16,6 @@ using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Certify.Providers;
 using Certify.Providers.ACME.Certes;
-using Microsoft.ApplicationInsights;
 using Serilog;
 
 namespace Certify.Management
@@ -51,7 +50,7 @@ namespace Certify.Management
         /// <summary>
         /// Application Insights logging
         /// </summary>
-        private TelemetryClient _tc = null;
+        private TelemetryManager _tc = null;
 
         /// <summary>
         /// Service (text file) logging
@@ -151,7 +150,7 @@ namespace Certify.Management
 
             if (CoreAppSettings.Current.EnableAppTelematics)
             {
-                _tc = new Util().InitTelemetry(Locales.ConfigResources.AIInstrumentationKey);
+                _tc = new TelemetryManager(Locales.ConfigResources.AIInstrumentationKey);
             }
 
             _httpChallengePort = _serverConfig.HttpChallengeServerPort;

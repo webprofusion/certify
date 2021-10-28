@@ -4,13 +4,12 @@ using System.Threading.Tasks;
 using Certify.Client;
 using Certify.Management;
 using Certify.Models;
-using Microsoft.ApplicationInsights;
 
 namespace Certify.CLI
 {
     public partial class CertifyCLI
     {
-        private TelemetryClient _tc = null;
+        private TelemetryManager _tc = null;
         private ICertifyClient _certifyClient = null;
         private Preferences _prefs = new Preferences();
         private PluginManager _pluginManager { get; set; }
@@ -71,15 +70,7 @@ namespace Certify.CLI
         {
             if (IsTelematicsEnabled())
             {
-                _tc = new TelemetryClient();
-                _tc.Context.InstrumentationKey = GetInstrumentationKey();
-                _tc.InstrumentationKey = GetInstrumentationKey();
-
-                // Set session data:
-
-                _tc.Context.Session.Id = Guid.NewGuid().ToString();
-                _tc.Context.Component.Version = GetAppVersion().Result;
-                _tc.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
+                _tc = new TelemetryManager(GetInstrumentationKey());
                 _tc.TrackEvent("StartCLI");
             }
         }

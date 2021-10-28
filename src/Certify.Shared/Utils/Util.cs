@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Win32;
 
 namespace Certify.Management
@@ -174,22 +175,6 @@ namespace Certify.Management
             return path;
         }
 
-
-        public TelemetryClient InitTelemetry(string key)
-        {
-            var tc = new TelemetryClient();
-
-            tc.Context.InstrumentationKey = key;
-            tc.InstrumentationKey = key;
-
-            // Set session data:
-
-            tc.Context.Session.Id = Guid.NewGuid().ToString();
-            tc.Context.Component.Version = GetAppVersion().ToString();
-            tc.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
-
-            return tc;
-        }
 
         public static string GetUserAgent()
         {
@@ -662,6 +647,58 @@ namespace Certify.Management
                 // fail
                 return null;
             }
+        }
+    }
+
+    public class TelemetryManager : IDisposable
+    {
+        TelemetryConfiguration _config = TelemetryConfiguration.CreateDefault();
+        TelemetryClient _tc = null;
+
+        public TelemetryManager(string key)
+        {
+            this.InitTelemetry(key);
+        }
+
+        ~TelemetryManager()
+        {
+            if (this._config != null)
+            {
+                this.Dispose();
+            }
+        }
+
+        public void Dispose()
+        {
+            _config?.Dispose();
+            _config = null;
+            _tc = null;
+        }
+
+        public void InitTelemetry(string key)
+        {
+            _config = TelemetryConfiguration.CreateDefault();
+
+            _tc = new TelemetryClient(_config);
+
+            _tc.Context.InstrumentationKey = key;
+            _tc.InstrumentationKey = key;
+
+            // Set session data:
+
+            _tc.Context.Session.Id = Guid.NewGuid().ToString();
+            _tc.Context.Component.Version = Util.GetAppVersion().ToString();
+            _tc.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
+        }
+
+        public void TrackEvent(string eventName, IDictionary<string, string> properties = null)
+        {
+            _tc?.TrackEvent(eventName, properties);
+        }
+
+        public void TrackException(Exception exp, IDictionary<string, string> properties = null)
+        {
+            _tc?.TrackException(exp, properties);
         }
     }
 }
