@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -1243,6 +1243,15 @@ namespace Certify.Providers.ACME.Certes
                 var msg = $"Failed to finalize certificate order:  {exp.Error?.Detail}";
                 log.Error(msg);
 
+                var subproblems = "";
+                if (exp.Error.Subproblems?.Any() == true)
+                {
+                    foreach (var sub in exp.Error.Subproblems)
+                    {
+                        subproblems += $"[{sub.Type}] {sub.Detail}; ";
+                    }
+                    msg += " [Subproblem Details] " + subproblems;
+                }
                 return new ProcessStepResult { ErrorMessage = msg, IsSuccess = false, Result = exp.Error };
             }
             catch (TaskCanceledException exp)
