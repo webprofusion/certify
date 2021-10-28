@@ -102,7 +102,7 @@ namespace Certify.Core.Tests.Unit
             var certStoreName = Certify.Management.CertificateManager.DEFAULT_STORE_NAME;
 
             var allBindings = await deploymentTarget.GetBindings(null);
-            Assert.AreEqual(allBindings.Count, _allSites.Count,"Null target id should return all bindings on all target sites");
+            Assert.AreEqual(allBindings.Count, _allSites.Count, "Null target id should return all bindings on all target sites");
             allBindings = await deploymentTarget.GetBindings("1");
             Assert.AreEqual(allBindings.Count, 2, "Specific target id should return subset of all bindings");
 

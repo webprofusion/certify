@@ -48,7 +48,7 @@ namespace Certify.Core.Management
         public async Task<List<BindingInfo>> GetBindings(string targetItemId)
         {
             var bindings = AllBindings;
-            
+
             if (!string.IsNullOrEmpty(targetItemId))
             {
                 bindings = bindings.Where(b => b.SiteId == targetItemId).ToList();

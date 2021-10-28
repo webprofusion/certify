@@ -244,16 +244,13 @@ namespace Certify.CLI
                     foreach (var line in file)
                     {
 
-                        bool foundLastOrder = false;
                         if (line.Contains("https://acme-v02.api.letsencrypt.org/acme/order"))
                         {
                             var components = line.Split(' ');
                             var orderUrl = components.FirstOrDefault(c => c.Contains("https://"));
                             if (orderUrl != null)
                             {
-
                                 orderUrls.Add(orderUrl.Trim());
-                                foundLastOrder = true;
                                 orderCount--;
                             }
                         }
@@ -264,7 +261,7 @@ namespace Certify.CLI
                         }
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     System.Console.WriteLine("Could not parse order URLs from log: " + logFile);
                 }

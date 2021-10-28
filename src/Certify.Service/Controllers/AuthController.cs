@@ -38,14 +38,14 @@ namespace Certify.Service
             var userIdPlusSecret = ActionContext.RequestContext.Principal.Identity.Name + ":" + secret;
 
             // return auth secret as Base64 string suitable for Basic Authorization https://en.wikipedia.org/wiki/Basic_access_authentication
-            return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(userIdPlusSecret));
+            return await Task.FromResult(Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(userIdPlusSecret)));
 
 
         }
 
         [HttpPost, Route("token")]
         [AllowAnonymous]
-        public async Task<string> AcquireToken(AuthModel model)
+        public async Task<IHttpActionResult> AcquireToken(AuthModel model)
         {
             DebugLog();
 
@@ -54,11 +54,11 @@ namespace Certify.Service
             if (model.Key == "windows123")
             {
                 var jwt = GenerateJwt("certifyuser", GetAuthSecretKey());
-                return jwt;
+                return await Task.FromResult(Ok(jwt));
             }
             else
             {
-                return null;
+                return await Task.FromResult(Unauthorized());
             }
         }
 
@@ -70,7 +70,7 @@ namespace Certify.Service
             // TODO: validate refresh token and return new JWT
 
             var jwt = GenerateJwt("certifyuser", GetAuthSecretKey());
-            return jwt;
+            return await Task.FromResult(jwt);
         }
 #endif
     }

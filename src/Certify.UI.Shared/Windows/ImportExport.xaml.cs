@@ -70,9 +70,9 @@ namespace Certify.UI.Windows
 
                 Model.ImportSettings.EncryptionSecret = txtSecret.Password;
                 Model.InProgress = true;
-                
+
                 var results = await MainViewModel.PerformSettingsImport(Model.Package, Model.ImportSettings, isPreview);
-                
+
                 PrepareImportSummary(isPreview, results);
                 Model.InProgress = false;
             }

@@ -63,7 +63,7 @@ namespace Certify.UI.Tests.Integration
         }
 
         [TestMethod]
-        public async Task TestManagedCertViewModelValidationWithDomains()
+        public void TestManagedCertViewModelValidationWithDomains()
         {
             var model = new ManagedCertificateViewModel();
 
@@ -236,7 +236,7 @@ namespace Certify.UI.Tests.Integration
         }
 
         [TestMethod]
-        public async Task TestManagedCertViewModelValidationWithIPs()
+        public void TestManagedCertViewModelValidationWithIPs()
         {
             var model = new ManagedCertificateViewModel();
 
