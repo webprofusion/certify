@@ -7,6 +7,11 @@ $installAfterNDays = $Days
 $forceInstall = $Force
 $scriptName = "[Certify The Web - App Update Script]"
 
+
+# default to TLS 1.2
+
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+
 $updateInfo = Invoke-WebRequest -Uri https://api.certifytheweb.com/v1/update -UseBasicParsing | ConvertFrom-Json
 $versionMajor = $updateInfo.version.major
 $versionMinor = $updateInfo.version.minor

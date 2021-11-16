@@ -4,6 +4,9 @@
 $Public  = @( Get-ChildItem -Path $PoshACMERoot\Public\*.ps1 -ErrorAction Ignore )
 $Private = @( Get-ChildItem -Path $PoshACMERoot\Private\*.ps1 -ErrorAction Ignore )
 
+# default to TLS 1.2
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+
 # Load Assembly without using Add-Type to avoid locking assembly dll
 $assemblyBytes = [System.IO.File]::ReadAllBytes("$($PoshACMERoot)\..\..\..\BouncyCastle.Crypto.dll")
 [System.Reflection.Assembly]::Load($assemblyBytes) | out-null
