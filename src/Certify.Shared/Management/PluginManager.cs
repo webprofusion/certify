@@ -104,12 +104,12 @@ namespace Certify.Management
             }
         }
 
-        private T LoadPlugin<T>(string dllFileName)
+        private T LoadPlugin<T>(string dllFileName, string pluginFolder = null)
         {
             Type interfaceType = typeof(T);
             try
             {
-                var pluginPath = Path.Combine(GetPluginFolderPath(), dllFileName);
+                var pluginPath = pluginFolder != null ? Path.Combine(pluginFolder, dllFileName) : Path.Combine(GetPluginFolderPath(), dllFileName);
 
                 if (!File.Exists(pluginPath))
                 {
@@ -128,9 +128,16 @@ namespace Certify.Management
                         .Any(inter => inter.IsAssignableFrom(interfaceType)))
                         .FirstOrDefault();
 
-                    var obj = (T)Activator.CreateInstance(pluginType);
+                    if (pluginType != null)
+                    {
+                        var obj = (T)Activator.CreateInstance(pluginType);
 
-                    return obj;
+                        return obj;
+                    }
+                    else
+                    {
+                        _log?.Debug($"Plugin Load Skipped [{interfaceType}] File does not contain a matching interface: {dllFileName}");
+                    }
                 }
                 else
                 {
@@ -172,42 +179,57 @@ namespace Certify.Management
 
             if (includeSet.Contains("DeploymentTasks"))
             {
-                var deploymentTaskProviders = new List<IDeploymentTaskProviderPlugin>();
-
-                DeploymentTaskProviders = deploymentTaskProviders;
+                DeploymentTaskProviders = new List<IDeploymentTaskProviderPlugin>();
 
                 var taskPlugins = LoadPlugins<IDeploymentTaskProviderPlugin>("Plugin.DeploymentTasks.*.dll", usePluginSubfolder: usePluginSubfolder);
+                DeploymentTaskProviders.AddRange(taskPlugins);
 
-                deploymentTaskProviders.AddRange(taskPlugins);
+                // load custom
+                if (EnableExternalPlugins)
+                {
+                    var customPlugins = LoadPlugins<IDeploymentTaskProviderPlugin>("*.dll", loadFromAppData: true);
+                    DeploymentTaskProviders.AddRange(customPlugins);
+                }
+
             }
 
             if (includeSet.Contains("CertificateManagers"))
             {
-                var certManagerProviders = LoadPlugins<ICertificateManagerProviderPlugin>("Plugin.CertificateManagers.*.dll", usePluginSubfolder: usePluginSubfolder);
-
                 CertificateManagerProviders = new List<ICertificateManagerProviderPlugin>();
 
-                if (certManagerProviders?.Any() == true)
+                var certManagerProviders = LoadPlugins<ICertificateManagerProviderPlugin>("Plugin.CertificateManagers.*.dll", usePluginSubfolder: usePluginSubfolder);
+                CertificateManagerProviders.AddRange(certManagerProviders);
+
+                // load custom
+                if (EnableExternalPlugins)
                 {
-                    CertificateManagerProviders.AddRange(certManagerProviders);
+                    var customPlugins = LoadPlugins<ICertificateManagerProviderPlugin>("*.dll", loadFromAppData: true);
+                    CertificateManagerProviders.AddRange(customPlugins);
                 }
             }
 
             if (includeSet.Contains("DnsProviders"))
             {
-                var dnsProviderProviders = new List<IDnsProviderProviderPlugin>();
-                DnsProviderProviders = dnsProviderProviders;
+                DnsProviderProviders = new List<IDnsProviderProviderPlugin>();
 
-                // TODO: convert core providers to plugins
+                // load core providers as plugins
                 var builtInProvider = (IDnsProviderProviderPlugin)Activator.CreateInstance(Type.GetType("Certify.Core.Management.Challenges.ChallengeProviders+BuiltinDnsProviderProvider, Certify.Core"));
-                dnsProviderProviders.Add(builtInProvider);
+                DnsProviderProviders.Add(builtInProvider);
 
                 var poshAcmeProvider = (IDnsProviderProviderPlugin)Activator.CreateInstance(Type.GetType("Certify.Core.Management.Challenges.DNS.DnsProviderPoshACME+PoshACMEDnsProviderProvider, Certify.Core"));
-                dnsProviderProviders.Add(poshAcmeProvider);
+                DnsProviderProviders.Add(poshAcmeProvider);
 
-                var dnsPlugins = LoadPlugins<IDnsProviderProviderPlugin>("Plugin.DNS.*.dll", usePluginSubfolder: usePluginSubfolder);
+                var otherProviders = LoadPlugins<IDnsProviderProviderPlugin>("Plugin.DNS.*.dll", usePluginSubfolder: usePluginSubfolder);
+                DnsProviderProviders.AddRange(otherProviders);
 
-                dnsProviderProviders.AddRange(dnsPlugins);
+                if (EnableExternalPlugins)
+                {
+                    var customPlugins = LoadPlugins<IDnsProviderProviderPlugin>("*.dll", loadFromAppData: true);
+                    if (customPlugins.Any())
+                    {
+                        DnsProviderProviders.AddRange(customPlugins);
+                    }
+                }
             }
 
             s.Stop();
@@ -223,16 +245,7 @@ namespace Certify.Management
 
             if (loadFromAppData)
             {
-                pluginDir = new DirectoryInfo(GetPluginFolderPath(usePluginSubfolder: usePluginSubfolder, useAppData: true));
-            }
-            else
-            {
-                // if loading main plugins, load external plugins first
-                var otherPlugins = LoadPlugins<T>(fileMatch, loadFromAppData: true, usePluginSubfolder: usePluginSubfolder);
-                if (otherPlugins?.Any() == true)
-                {
-                    plugins.AddRange(otherPlugins);
-                }
+                pluginDir = new DirectoryInfo(GetPluginFolderPath(useAppData: true));
             }
 
             if (!pluginDir.Exists)
@@ -247,7 +260,7 @@ namespace Certify.Management
 
                 try
                 {
-                    var result = LoadPlugin<T>(assem.Name);
+                    var result = LoadPlugin<T>(assem.Name, pluginDir.FullName);
 
                     if (result != null)
                     {

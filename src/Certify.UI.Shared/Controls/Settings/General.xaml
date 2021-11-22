@@ -139,11 +139,19 @@
                                     Content="{x:Static res:SR.Settings_EnableHttpChallengeServer}"
                                     IsChecked="{Binding Prefs.EnableHttpChallengeServer}" />
 
+                              
+                                <CheckBox
+                                    x:Name="EnableExternalPlugins"
+                                    Margin="0,4,0,0"
+                                    Content="Enable Custom Plugin Loading"
+                                    IsChecked="{Binding Prefs.IncludeExternalPlugins}" />
+                                
                                 <CheckBox
                                     x:Name="EnableStatusReporting"
                                     Margin="0,4,0,0"
                                     Content="{x:Static res:SR.Settings_EnableStatusReporting}"
                                     IsChecked="{Binding Prefs.EnableStatusReporting}" />
+
 
                             </StackPanel>
 
