@@ -25,33 +25,38 @@ namespace Certify.Core.Management.Challenges
         {
             _credentialsManager = credentialsManager;
         }
-        public async Task<DnsChallengeHelperResult> GetDnsProvider(string providerTypeId, string credentialsId, Dictionary<string, string> parameters, ICredentialsManager credentialsManager)
+        public async Task<DnsChallengeHelperResult> GetDnsProvider(string providerTypeId, string credentialsId, Dictionary<string, string> parameters, ICredentialsManager credentialsManager, ILog log = null)
         {
             var credentials = new Dictionary<string, string>();
-
-            IDnsProvider dnsAPIProvider = null;
-
             if (!string.IsNullOrEmpty(credentialsId))
             {
+                var failureResult = new DnsChallengeHelperResult
+                {
+                    Result = new ActionResult { IsSuccess = false, Message = "DNS Challenge API Credentials could not be decrypted or no longer exists. The original user must be used for decryption." },
+                    PropagationSeconds = 0,
+                    IsAwaitingUser = false
+                };
+
                 // decode credentials string array
                 try
                 {
                     credentials = await credentialsManager.GetUnlockedCredentialsDictionary(credentialsId);
-                }
-                catch (Exception)
-                {
-                    return new DnsChallengeHelperResult
+                    if (credentials == null)
                     {
-                        Result = new ActionResult { IsSuccess = false, Message = "DNS Challenge API Credentials could not be decrypted. The original user must be used for decryption." },
-                        PropagationSeconds = 0,
-                        IsAwaitingUser = false
-                    };
+                        return failureResult;
+                    }
+                }
+                catch (Exception exp)
+                {
+                    log?.Error(exp, $"The required stored credential {credentialsId} could not be found or could not be decrypted.");
+                    return failureResult;
                 }
             }
 
+            IDnsProvider dnsAPIProvider;
             try
             {
-                dnsAPIProvider = await ChallengeProviders.GetDnsProvider(providerTypeId, credentials, parameters);
+                dnsAPIProvider = await ChallengeProviders.GetDnsProvider(providerTypeId, credentials, parameters, log);
             }
             catch (ChallengeProviders.CredentialsRequiredException)
             {

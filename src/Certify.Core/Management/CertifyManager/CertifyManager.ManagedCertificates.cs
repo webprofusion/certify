@@ -305,7 +305,8 @@ namespace Certify.Management
         {
 
             var dnsHelper = new Core.Management.Challenges.DnsChallengeHelper(_credentialsManager);
-            var result = await dnsHelper.GetDnsProvider(providerTypeId, credentialsId, null, _credentialsManager);
+            
+            var result = await dnsHelper.GetDnsProvider(providerTypeId, credentialsId, null, _credentialsManager, _serviceLog);
 
             if (result.Provider != null)
             {
