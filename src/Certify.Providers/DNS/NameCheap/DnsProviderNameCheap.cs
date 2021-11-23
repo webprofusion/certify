@@ -36,7 +36,7 @@ namespace Certify.Providers.DNS.NameCheap
         private const string PARAM_IP = "ip";
 
         private const string API_URL = "https://api.namecheap.com/xml.response";
-        private const int BATCH_SIZE = 100;
+        private const int BATCH_SIZE = 99;
 
         private static XNamespace _ns;
 
@@ -45,10 +45,11 @@ namespace Certify.Providers.DNS.NameCheap
             Definition = new ChallengeProviderDefinition
             {
                 Id = "DNS01.API.NameCheap",
-                Title = "NameCheap DNS API",
+                Title = "NameCheap DNS API (Deprecated)",
                 Description = "Validates via NameCheap APIs",
                 HelpUrl = "https://www.namecheap.com/support/api/intro/",
                 PropagationDelaySeconds = 120,
+                
                 ProviderParameters = new List<ProviderParameter>
                 {
                     new ProviderParameter { Key = PARAM_API_USER, Name = "API User", IsRequired = true, IsPassword = false },
