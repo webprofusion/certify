@@ -456,13 +456,13 @@ namespace Certify.Management.Servers
                                             {
                                                 try
                                                 {
-                                                    binding["sslFlags"] = 1; // enable SNI
+                                                    binding.SslFlags = binding.SslFlags | SslFlags.Sni;
+                                                   
                                                 }
                                                 catch (Exception)
                                                 {
                                                     //failed to set requested SNI flag
-                                                    //TODO: log
-
+      
                                                     return new ActionStep { HasError = true, Description = $"Failed to set SNI flag on IIS Binding: {bindingSpec}" };
                                                 }
                                             }
