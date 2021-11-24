@@ -22,7 +22,9 @@ namespace Certify.Core.Management.Challenges.DNS
             Implemented providers (Posh-ACME: https://github.com/rmbolger/Posh-ACME)
             [Akamai](https://poshac.me/docs/v4/Plugins/Akamai),
             [AutoDNS](https://poshac.me/docs/v4/Plugins/AutoDNS),
+            [All-Inkl](https://poshac.me/docs/v4/Plugins/All-Inkl),
             [ClouDNS](https://poshac.me/docs/v4/Plugins/ClouDNS),
+            [Constellix](https://poshac.me/docs/v4/Plugins/Constellix),
             [DNSPod](https://poshac.me/docs/v4/Plugins/DNSPod),
             [DNSimple](https://poshac.me/docs/v4/Plugins/DNSimple),
             [DomainOffensive](https://poshac.me/docs/v4/Plugins/DomainOffensive),
@@ -37,6 +39,7 @@ namespace Certify.Core.Management.Challenges.DNS
             [Hurricane Electric](https://poshac.me/docs/v4/Plugins/HurricaneElectric),
             [Infoblox](https://poshac.me/docs/v4/Plugins/Infoblox),
             [IBM Cloud/SoftLayer](https://poshac.me/docs/v4/Plugins/IBMSoftLayer),
+            [ISPConfig](https://poshac.me/docs/v4/Plugins/ISPConfig),
             [Linode](https://poshac.me/docs/v4/Plugins/Linode),
             [Loopia](https://poshac.me/docs/v4/Plugins/Loopia),
             [LuaDns](https://poshac.me/docs/v4/Plugins/LuaDns),
@@ -48,6 +51,7 @@ namespace Certify.Core.Management.Challenges.DNS
             [RFC2136](https://poshac.me/docs/v4/Plugins/RFC2136),
             [Selectel](https://poshac.me/docs/v4/Plugins/Selectel),
             [Simply](https://poshac.me/docs/v4/Plugins/Simply),
+            [UKFast](https://poshac.me/docs/v4/Plugins/UKFast/),
             [Yandex](https://poshac.me/docs/v4/Plugins/Yandex),
             [Zilore](https://poshac.me/docs/v4/Plugins/Zilore/)
             [Zonomi](https://poshac.me/docs/v4/Plugins/Zonomi)
@@ -375,7 +379,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
-                    new ProviderParameter { Key = "DomOffTokenInsecure ", Name = "Token", IsRequired = true, IsCredential = true, ExtendedConfig = _paramIsSecureStringAltKeyConfig.Replace("PARAMKEY","DomOffToken") },
+                    new ProviderParameter { Key = "DomOffTokenInsecure", Name = "Token", IsRequired = true, IsCredential = true, ExtendedConfig = _paramIsSecureStringAltKeyConfig.Replace("PARAMKEY","DomOffToken") },
                     _defaultPropagationDelayParam
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
@@ -662,7 +666,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ProviderParameters = new List<ProviderParameter>
                 {
                     new ProviderParameter { Key = "NCUsername", Name = "Username", IsRequired = true, IsCredential = true },
-                    new ProviderParameter { Key = "NCApiKey ", Name = "API Key", IsRequired = true, IsCredential = true, ExtendedConfig= _paramIsSecureStringConfig },
+                    new ProviderParameter { Key = "NCApiKey", Name = "API Key", IsRequired = true, IsCredential = true, ExtendedConfig= _paramIsSecureStringConfig },
                     _defaultPropagationDelayParam
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
@@ -771,6 +775,24 @@ namespace Certify.Core.Management.Challenges.DNS
             },
             new ChallengeProviderDefinition
             {
+                Id = "DNS01.API.PoshACME.UKFast",
+                Title = "UKFast DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://poshac.me/docs/v4/Plugins/UKFast/",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters = new List<ProviderParameter>
+                {
+                    new ProviderParameter { Key = "UKFastApiKey", Name = "API Key", IsRequired = true, IsCredential = true, ExtendedConfig= _paramIsSecureStringConfig},
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=UKFast",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
+            new ChallengeProviderDefinition
+            {
                 Id = "DNS01.API.PoshACME.Yandex",
                 Title = "Yandex DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
@@ -815,7 +837,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ProviderParameters = new List<ProviderParameter>
                 {
                     new ProviderParameter { Key = "ZonomiApiKey", Name = "API Key", IsRequired = true, IsCredential = true, ExtendedConfig = _paramIsSecureStringAltKeyConfig.Replace("PARAMKEY","ZonomiKey") },
-                    new ProviderParameter { Key = "ZonomiApiUrl ", Name = "API Url", IsRequired = true, IsCredential = false, Value="https://rimuhosting.com/dns/dyndns.jsp" },
+                    new ProviderParameter { Key = "ZonomiApiUrl", Name = "API Url", IsRequired = true, IsCredential = false, Value="https://rimuhosting.com/dns/dyndns.jsp" },
                     _defaultPropagationDelayParam
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
@@ -824,7 +846,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 IsTestModeSupported = true,
                 IsExperimental = true
             },
-                new ChallengeProviderDefinition
+            new ChallengeProviderDefinition
             {
                 Id = "DNS01.API.PoshACME.Zilore",
                 Title = "Zilore DNS API (using Posh-ACME)",
@@ -862,7 +884,7 @@ namespace Certify.Core.Management.Challenges.DNS
             }
 
             var val = paramKeyValue.Value;
-            var key = paramKeyValue.Key ?? parameterDefinition.Key;
+            var key = paramKeyValue.Key?.Trim() ?? parameterDefinition.Key?.Trim();
 
             if (paramKeyValue.Value == null)
             {
@@ -944,15 +966,15 @@ namespace Certify.Core.Management.Challenges.DNS
                     cfg = Newtonsoft.Json.JsonConvert.DeserializeObject<ExtendedParamConfig>(s.ExtendedConfig);
                 }
 
-                // check if we have a parameter value in our configuration for this key
-                if (_parameters?.Keys.Contains(s.Key) == true)
+                // check if we have a parameter value in our configuration for this key, we also need to allow for old stored keys incorrectly having whitespace
+                if (_parameters?.Keys.Any(k => k.Trim() == s.Key.Trim()) == true)
                 {
-                    var pa = _parameters.FirstOrDefault(p => p.Key == s.Key);
+                    var pa = _parameters.FirstOrDefault(p => p.Key.Trim() == s.Key.Trim());
 
                     // return parameter value key-pair, using alt key name if present
-                    return new KeyValuePair<string, string>(cfg?.AltParamKey ?? s.Key, pa.Value);
+                    return new KeyValuePair<string, string>(cfg?.AltParamKey.Trim() ?? s.Key.Trim(), pa.Value);
                 }
-                else if (_credentials?.Keys.Contains(s.Key) == true)
+                else if (_credentials?.Keys.Any(k => k.Trim() == s.Key.Trim()) == true)
                 {
 
                     if (cfg != null)
@@ -961,28 +983,28 @@ namespace Certify.Core.Management.Challenges.DNS
                         if (cfg.IsSecureString == true)
                         {
                             // check if we have a credential value in our configuration for this key
-                            var originalCredential = _credentials.FirstOrDefault(c => c.Key == s.Key);
+                            var originalCredential = _credentials.FirstOrDefault(c => c.Key.Trim() == s.Key.Trim());
                             if (originalCredential.Value != null)
                             {
-                                var kv = new KeyValuePair<string, string>(cfg.AltParamKey ?? s.Key, "(ConvertTo-SecureString \"" + originalCredential.Value + "\" -asPlainText -force)");
+                                var kv = new KeyValuePair<string, string>(cfg.AltParamKey ?? s.Key.Trim(), "(ConvertTo-SecureString \"" + originalCredential.Value + "\" -asPlainText -force)");
                                 return kv;
                             }
                         }
                         else if (cfg.AltParamKey != null)
                         {
                             //migrate raw credential to new parameter name
-                            var cred = _credentials.FirstOrDefault(c => c.Key == s.Key);
+                            var cred = _credentials.FirstOrDefault(c => c.Key.Trim() == s.Key.Trim());
                             return new KeyValuePair<string, string>(cfg.AltParamKey, cred.Value);
                         }
                     }
 
                     // by default return credential value in our configuration for this key
-                    return _credentials.FirstOrDefault(c => c.Key == s.Key);
+                    return _credentials.FirstOrDefault(c => c.Key.Trim() == s.Key.Trim());
                 }
                 else
                 {
                     // use the default value for this parameter if we have no other value in our config
-                    return new KeyValuePair<string, string>(s.Key, s.Value);
+                    return new KeyValuePair<string, string>(s.Key.Trim(), s.Value);
                 }
             }
 
