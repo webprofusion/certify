@@ -24,6 +24,7 @@ namespace Certify.Core.Management.Challenges.DNS
             [AutoDNS](https://poshac.me/docs/v4/Plugins/AutoDNS),
             [All-Inkl](https://poshac.me/docs/v4/Plugins/All-Inkl),
             [ClouDNS](https://poshac.me/docs/v4/Plugins/ClouDNS),
+            [Combell](https://poshac.me/docs/v4/Plugins/Combell),
             [Constellix](https://poshac.me/docs/v4/Plugins/Constellix),
             [DNSPod](https://poshac.me/docs/v4/Plugins/DNSPod),
             [DNSimple](https://poshac.me/docs/v4/Plugins/DNSimple),
@@ -44,16 +45,17 @@ namespace Certify.Core.Management.Challenges.DNS
             [Loopia](https://poshac.me/docs/v4/Plugins/Loopia),
             [LuaDns](https://poshac.me/docs/v4/Plugins/LuaDns),
             [name.com](https://poshac.me/docs/v4/Plugins/NameCom),
-            [Namecheap](https://poshac.me/docs/v4/Plugins/Namecheap/)
+            [Namecheap](https://poshac.me/docs/v4/Plugins/Namecheap)
             [NS1](https://poshac.me/docs/v4/Plugins/NS1),
             [PointDNS](https://poshac.me/docs/v4/Plugins/PointDNS),
             [Rackspace](https://poshac.me/docs/v4/Plugins/Rackspace),
             [RFC2136](https://poshac.me/docs/v4/Plugins/RFC2136),
             [Selectel](https://poshac.me/docs/v4/Plugins/Selectel),
             [Simply](https://poshac.me/docs/v4/Plugins/Simply),
-            [UKFast](https://poshac.me/docs/v4/Plugins/UKFast/),
+            [TotalUptime](https://poshac.me/docs/v4/Plugins/TotalUptime),
+            [UKFast](https://poshac.me/docs/v4/Plugins/UKFast),
             [Yandex](https://poshac.me/docs/v4/Plugins/Yandex),
-            [Zilore](https://poshac.me/docs/v4/Plugins/Zilore/)
+            [Zilore](https://poshac.me/docs/v4/Plugins/Zilore)
             [Zonomi](https://poshac.me/docs/v4/Plugins/Zonomi)
         */
 
@@ -253,6 +255,25 @@ namespace Certify.Core.Management.Challenges.DNS
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=ClouDNS",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
+            new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.Combell",
+                Title = "Combell API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://poshac.me/docs/v4/Plugins/Combell/",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters = new List<ProviderParameter>
+                {
+                    new ProviderParameter { Key = "CombellApiKey", Name = "API Key", IsRequired = true, IsCredential = true, ExtendedConfig= _paramIsSecureStringConfig },
+                    new ProviderParameter { Key = "CombellApiSecret", Name = "API Secret", IsRequired = true, IsCredential = true, ExtendedConfig= _paramIsSecureStringConfig },
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Combell",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = true,
                 IsExperimental = true
@@ -541,6 +562,30 @@ namespace Certify.Core.Management.Challenges.DNS
             },
             new ChallengeProviderDefinition
             {
+                Id = "DNS01.API.PoshACME.ISPConfig",
+                Title = "ISPConfig DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://poshac.me/docs/v4/Plugins/ISPConfig/",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters = new List<ProviderParameter>
+                {
+                    // IBCred is a PS Credential constructed from IBUsername and IBPassword
+                    
+                    new ProviderParameter { Key = "ISPConfigUsername", Name = "Username", IsRequired = true, IsCredential = true },
+                    new ProviderParameter { Key = "ISPConfigPassword", Name = "Password", IsRequired = true, IsCredential = true, IsPassword=true },
+                    new ProviderParameter { Key = "ISPConfigEndpoint", Name = "Server", IsRequired = true, IsCredential = false, Description="e.g. https://ispc.example.com:8080/remote/json.php"  },
+                    new ProviderParameter { Key = "ISPConfigIgnoreCert", Name = "Skip Cert Validation", Type= OptionType.Boolean,  Value="true", IsCredential=false, IsHidden=false },
+
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=ISPConfig;Credential=ISPConfigCredential,ISPConfigUsername,ISPConfigPassword;",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
+            new ChallengeProviderDefinition
+            {
                 Id = "DNS01.API.PoshACME.Infoblox",
                 Title = "Infoblox DDI DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
@@ -769,6 +814,26 @@ namespace Certify.Core.Management.Challenges.DNS
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Simply",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
+            new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.TotalUptime",
+                Title = "TotalUptime Cloud DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://poshac.me/docs/v4/Plugins/TotalUptime/",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters = new List<ProviderParameter>
+                {
+                    // PS Credential constructed from Username and Password
+                    new ProviderParameter { Key = "TotalUptimeUsername", Name = "API Username", IsRequired = true, IsCredential = true },
+                    new ProviderParameter { Key = "TotalUptimePassword", Name = "API Password", IsRequired = true, IsCredential = true, IsPassword=true },
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=TotalUptime;Credential=TotalUptimeCredential,TotalUptimeUsername,TotalUptimePassword;",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = true,
                 IsExperimental = true
