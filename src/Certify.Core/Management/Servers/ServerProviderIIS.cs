@@ -457,12 +457,12 @@ namespace Certify.Management.Servers
                                                 try
                                                 {
                                                     binding.SslFlags = binding.SslFlags | SslFlags.Sni;
-                                                   
+
                                                 }
                                                 catch (Exception)
                                                 {
                                                     //failed to set requested SNI flag
-      
+
                                                     return new ActionStep { HasError = true, Description = $"Failed to set SNI flag on IIS Binding: {bindingSpec}" };
                                                 }
                                             }

@@ -49,7 +49,7 @@ namespace Certify.Providers.DNS.NameCheap
                 Description = "Validates via NameCheap APIs",
                 HelpUrl = "https://www.namecheap.com/support/api/intro/",
                 PropagationDelaySeconds = 120,
-                
+
                 ProviderParameters = new List<ProviderParameter>
                 {
                     new ProviderParameter { Key = PARAM_API_USER, Name = "API User", IsRequired = true, IsPassword = false },

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
@@ -434,11 +434,11 @@ namespace Certify.UI.Windows
             UISettings.Save(_appViewModel.UISettings);
         }
 
-        private void ManagedCertificates_OnDuplicate(ManagedCertificate original)
+        private async void ManagedCertificates_OnDuplicate(ManagedCertificate original)
         {
-            Application.Current.Dispatcher.Invoke(delegate
+            await Application.Current.Dispatcher.InvokeAsync(async delegate
             {
-                this.NewCertificate(original);
+                await this.NewCertificate(original);
             });
         }
     }

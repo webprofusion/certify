@@ -331,7 +331,7 @@ namespace Certify.UI.Controls
             await _appViewModel.RefreshManagedCertificates();
         }
 
-        private async void Duplicate_Click(object sender, RoutedEventArgs e)
+        private void Duplicate_Click(object sender, RoutedEventArgs e)
         {
             if (OnDuplicate != null)
             {
