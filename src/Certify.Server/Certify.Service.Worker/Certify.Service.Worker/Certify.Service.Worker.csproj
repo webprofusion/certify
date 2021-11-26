@@ -1,36 +1,24 @@
-<Project Sdk="Microsoft.NET.Sdk.Worker">
-
+<Project Sdk="Microsoft.NET.Sdk.Worker;Microsoft.NET.Sdk.Publish">
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <UserSecretsId>dotnet-Certify.Service.Worker-347A036F-C1EA-4D32-A163-DCB38C3CA53E</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-		<DockerfileRunArguments>-v certifydata:/usr/share/Certify</DockerfileRunArguments>
+    <DockerfileRunArguments>-v certifydata:/usr/share/Certify</DockerfileRunArguments>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
-
+  
   <ItemGroup>
-    <None Remove="Assets\certificate.pfx" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="6.0.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.115.5" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="Assets\certificate.pfx" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="5.0.1" />
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.11.1" />
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.114.3" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\Certify.Server.Core\Certify.Server.Core\Certify.Server.Core.csproj" />
   </ItemGroup>
-
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Command="IF NOT DEFINED _CI_BUILD (&#xD;&#xA; xcopy /i /s /Y /C $(SolutionDir)..\build\plugins\$(ConfigurationName)\Plugin.*.dll $(TargetDir)plugins\&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;&#xD;&#xA;" />
   </Target>

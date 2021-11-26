@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net5.0-windows;net462</TargetFrameworks>
+		<TargetFrameworks>net6.0-windows;net462</TargetFrameworks>
 		<UseWPF>true</UseWPF>
 		<UseWindowsForms>true</UseWindowsForms>
 		<!--assembly version specified here to allow WPF to load windows via startupUI without version dependency-->
@@ -58,6 +58,13 @@
 
 	<ItemGroup>
 		<SplashScreen Include="Assets\Images\splashscreen.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Page Update="Windows\EditConnection.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	    <SubType>Designer</SubType>
+	  </Page>
 	</ItemGroup>
 
 </Project>
