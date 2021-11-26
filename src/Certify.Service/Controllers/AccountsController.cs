@@ -24,7 +24,7 @@ namespace Certify.Service
         }
 
         [HttpPost, Route("")]
-        public async Task<ActionResult> AddAccount(ContactRegistration registration)
+        public async Task<Models.Config.ActionResult> AddAccount(ContactRegistration registration)
         {
             DebugLog();
 
@@ -32,7 +32,7 @@ namespace Certify.Service
         }
 
         [HttpDelete, Route("remove/{storageKey}")]
-        public async Task<ActionResult> RemoveAccount(string storageKey)
+        public async Task<Models.Config.ActionResult> RemoveAccount(string storageKey)
         {
             DebugLog();
             return await _certifyManager.RemoveAccount(storageKey);
@@ -45,14 +45,14 @@ namespace Certify.Service
         }
 
         [HttpPost, Route("authorities")]
-        public async Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority certificateAuthority)
+        public async Task<Models.Config.ActionResult> UpdateCertificateAuthority(CertificateAuthority certificateAuthority)
         {
             DebugLog();
             return await _certifyManager.UpdateCertificateAuthority(certificateAuthority);
         }
 
         [HttpDelete, Route("authorities/{id}")]
-        public async Task<ActionResult> RemoveCertificateAuthority(string id)
+        public async Task<Models.Config.ActionResult> RemoveCertificateAuthority(string id)
         {
             DebugLog();
             return await _certifyManager.RemoveCertificateAuthority(id);

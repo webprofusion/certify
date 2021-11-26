@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Certify.Config.Migration;
 using Certify.Management;
 using Certify.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,6 +21,7 @@ namespace Certify.Service
             _certifyManager = manager;
         }
 
+        [AllowAnonymous]
         [HttpGet, Route("appversion")]
         public string GetAppVersion()
         {

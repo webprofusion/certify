@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Certify.Management;
@@ -9,7 +10,7 @@ namespace Certify.Service
     [RoutePrefix("api/credentials")]
     public class CredentialsController : Controllers.ControllerBase
     {
-        private CredentialsManager credentialsManager = new CredentialsManager();
+        private CredentialsManager credentialsManager = new CredentialsManager(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
 
         [HttpGet, Route("")]
         public async Task<List<StoredCredential>> GetCredentials()
@@ -34,7 +35,7 @@ namespace Certify.Service
         }
 
         [HttpPost, Route("{storageKey}/test")]
-        public async Task<ActionResult> TestCredentials(string storageKey)
+        public async Task<Models.Config.ActionResult> TestCredentials(string storageKey)
         {
             DebugLog();
 

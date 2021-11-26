@@ -47,7 +47,7 @@ namespace Certify.Service
         }
 
         [HttpGet, Route("diagnostics")]
-        public async Task<List<ActionResult>> PerformServiceDiagnostics()
+        public async Task<List<Models.Config.ActionResult>> PerformServiceDiagnostics()
         {
             DebugLog();
 

@@ -1,5 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Certify.Models;
+using Certify.Shared;
 using PropertyChanged;
 
 namespace Certify.UI.ViewModel

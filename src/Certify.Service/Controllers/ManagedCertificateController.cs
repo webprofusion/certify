@@ -122,7 +122,7 @@ namespace Certify.Service
         }
 
         [HttpPost, Route("validatedeploymenttask")]
-        public async Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo info)
+        public async Task<List<Models.Config.ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo info)
         {
             DebugLog();
             return await _certifyManager.ValidateDeploymentTask(info.ManagedCertificate, info.TaskConfig);
@@ -271,6 +271,12 @@ namespace Certify.Service
 
         [HttpGet, Route("currentchallenges/")]
         public async Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallenges() => await _certifyManager.GetCurrentChallengeResponses(SupportedChallengeTypes.CHALLENGE_TYPE_HTTP);
+
+        [HttpGet, Route("currentchallenges/{type}/{key?}")]
+        public async Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallenges(string type, string key)
+        {
+            return await _certifyManager.GetCurrentChallengeResponses(type, key);
+        }
 
         [HttpGet, Route("dnszones/{providerTypeId}/{credentialId}")]
         public async Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialId) => await _certifyManager.GetDnsProviderZones(providerTypeId, credentialId);

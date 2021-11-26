@@ -42,6 +42,7 @@ namespace Certify.Client
             {
                 // older signalr client/server
                 _legacyConnection = new Microsoft.AspNet.SignalR.Client.HubConnection(_statusHubUri);
+
                 _legacyConnection.Credentials = System.Net.CredentialCache.DefaultCredentials;
 
                 var hubProxy = _legacyConnection.CreateHubProxy("StatusHub");
@@ -64,6 +65,7 @@ namespace Certify.Client
                 // TODO: auth: https://docs.microsoft.com/en-us/aspnet/core/signalr/authn-and-authz?view=aspnetcore-3.1
 
                 connection = new HubConnectionBuilder()
+                   
                 .WithUrl(_statusHubUri, opts =>
                 {
                     opts.HttpMessageHandlerFactory = (message) =>
