@@ -30,6 +30,9 @@
             Style="{StaticResource Instructions}"
             Text="You can manage multiple connections to different servers:" />
 
+        <DockPanel DockPanel.Dock="Top">
+            <Button Click="AddConnection_Click">Add Connection</Button>
+        </DockPanel>
         <ScrollViewer DockPanel.Dock="Top">
             <ItemsControl x:Name="ConnectionList" Margin="0,16,0,0">
                 <ItemsControl.ItemTemplate>
@@ -60,13 +63,15 @@
                                 Margin="8,0,0,0"
                                 VerticalAlignment="Top"
                                 CommandParameter="{Binding}"
-                                DockPanel.Dock="Right">
+                                DockPanel.Dock="Right" Click="Edit_Click">
                                 <StackPanel Orientation="Horizontal">
+                                    
                                     <fa:ImageAwesome
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
                                         Foreground="{StaticResource MahApps.Brushes.Accent}"
                                         Icon="Edit" />
+                                    
 
                                 </StackPanel>
                             </Button>

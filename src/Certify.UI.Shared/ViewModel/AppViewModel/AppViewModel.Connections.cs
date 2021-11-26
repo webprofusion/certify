@@ -82,27 +82,35 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task ConnectToServer(ServerConnection conn, CancellationToken cancellationToken)
         {
-            Mouse.OverrideCursor = System.Windows.Input.Cursors.AppStarting;
-            IsLoading = true;
-
-            var connectedOk = await InitServiceConnections(conn, cancellationToken);
-
-            if (connectedOk)
+            try
             {
-                await ViewModel.AppViewModel.Current.LoadSettingsAsync();
-            }
-            else
-            {
-                if (!cancellationToken.IsCancellationRequested)
+                Mouse.OverrideCursor = System.Windows.Input.Cursors.AppStarting;
+                IsLoading = true;
+
+                var connectedOk = await InitServiceConnections(conn, cancellationToken);
+
+                if (connectedOk)
                 {
-                    MessageBox.Show("The server connection could not be completed. Check the service is running and that the connection details are correct.");
+                    await ViewModel.AppViewModel.Current.LoadSettingsAsync();
                 }
+                else
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        MessageBox.Show("The server connection could not be completed. Check the service is running and that the connection details are correct.");
+                    }
+                }
+
+                RaisePropertyChangedEvent(nameof(ConnectionTitle));
+
+                IsLoading = false;
+                Mouse.OverrideCursor = System.Windows.Input.Cursors.Arrow;
             }
-
-            RaisePropertyChangedEvent(nameof(ConnectionTitle));
-
-            IsLoading = false;
-            Mouse.OverrideCursor = System.Windows.Input.Cursors.Arrow;
+            catch (TaskCanceledException)
+            {
+                IsLoading = false;
+                Mouse.OverrideCursor = System.Windows.Input.Cursors.Arrow;
+            }
         }
 
         /// <summary>
@@ -250,6 +258,23 @@ namespace Certify.UI.ViewModel
             var d = new Windows.Connections { Owner = System.Windows.Window.GetWindow(parentWindow) };
 
             d.ShowDialog();
+        }
+
+        internal async Task<bool> SaveServerConnection(ServerConnection item)
+        {
+
+            var serverConnections = GetServerConnections();
+
+            if (serverConnections.Exists(e => e.Id == item.Id))
+            {
+                serverConnections.Remove(serverConnections.Find(c => c.Id == item.Id));
+            }
+
+            serverConnections.Add(item);
+
+            ServerConnectionManager.Save(Log, serverConnections);
+
+            return await Task.FromResult(true);
         }
     }
 }

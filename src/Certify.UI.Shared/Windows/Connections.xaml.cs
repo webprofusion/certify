@@ -18,9 +18,14 @@ namespace Certify.UI.Windows
         {
             InitializeComponent();
 
+            this.RefreshConnections();
+            this.DataContext = AppViewModel.Current;
+        }
+
+        private void RefreshConnections()
+        {
             var list = ViewModel.AppViewModel.Current.GetServerConnections();
             ConnectionList.ItemsSource = list;
-            this.DataContext = AppViewModel.Current;
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
@@ -48,6 +53,22 @@ namespace Certify.UI.Windows
         {
             _cts.Cancel();
 
+        }
+
+        private void AddConnection_Click(object sender, RoutedEventArgs e)
+        {
+            var d = new Windows.EditConnectionDialog { Owner = Window.GetWindow(this) };
+            d.ShowDialog();
+            RefreshConnections();
+        }
+
+        private void Edit_Click(object sender, RoutedEventArgs e)
+        {
+            var editItem = (sender as Button).DataContext as ServerConnection;
+            var d = new Windows.EditConnectionDialog(editItem) { Owner = Window.GetWindow(this) };
+            d.ShowDialog();
+
+            RefreshConnections();
         }
     }
 }
