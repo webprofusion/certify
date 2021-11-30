@@ -58,6 +58,8 @@ namespace Certify.Shared.Core.Utils.PKI
 
         public static List<string> DecodeCsrSubjects(byte[] csrBytes)
         {
+            List<string> identifiers = new List<string>();
+
             // based on https://stackoverflow.com/a/45424266 by https://stackoverflow.com/users/814735/cyril-durand
 
             var pem = new PemObject("CSR", csrBytes);
@@ -82,32 +84,38 @@ namespace Certify.Shared.Core.Utils.PKI
                 //subject alternative names
                 var names = GeneralNames.GetInstance(Asn1Object.FromByteArray(str.GetOctets()));
 
-                return names
+                var allNames = names
                     .GetNames()
                     .Select(n => n.Name.ToString())
                     .ToList();
+
+                identifiers.AddRange(allNames);
             }
-            else
+
+            // check primary subject
+            var oids = requestInfo.Subject.GetOidList();
+
+            string subjectName = "";
+
+            foreach (DerObjectIdentifier o in oids)
             {
-                var oids = requestInfo.Subject.GetOidList();
-
-                string subjectName = "";
-
-                foreach (DerObjectIdentifier o in oids)
+                if (o.Id == X509ObjectIdentifiers.CommonName.Id)
                 {
-                    if (o.Id == X509ObjectIdentifiers.CommonName.Id)
-                    {
-                        subjectName = requestInfo.Subject.GetValueList()[oids.IndexOf(o)].ToString();
-                        break;
-                    }
+                    subjectName = requestInfo.Subject.GetValueList()[oids.IndexOf(o)].ToString();
+                    break;
                 }
-
-                // we just have a single subject
-                return new List<string>
-                {
-                   subjectName
-                };
             }
+
+            if (subjectName != null)
+            {
+                if (!identifiers.Contains(subjectName))
+                {
+                    identifiers.Insert(0, subjectName);
+                }
+            }
+
+            return identifiers;
+
         }
 
         static T GetAsn1ObjectRecursive<T>(DerSequence sequence, String id) where T : Asn1Object
