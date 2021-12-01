@@ -144,7 +144,7 @@
                                     x:Name="EnableExternalPlugins"
                                     Margin="0,4,0,0"
                                     Content="Enable Custom Plugin Loading"
-                                    IsChecked="{Binding Prefs.IncludeExternalPlugins}" />
+                                    IsChecked="{Binding Prefs.IncludeExternalPlugins}" Checked="EnableExternalPlugins_Checked"  />
                                 
                                 <CheckBox
                                     x:Name="EnableStatusReporting"

@@ -245,5 +245,14 @@ namespace Certify.UI.Controls.Settings
             }
 
         }
+
+        private void EnableExternalPlugins_Checked(object sender, RoutedEventArgs e)
+        {
+            if (EditModel.SettingsInitialised)
+            {
+                MessageBox.Show("Enabling custom plugins is a significant security risk. Do not use plugins from unknown third parties.");
+            }
+            
+        }
     }
 }
