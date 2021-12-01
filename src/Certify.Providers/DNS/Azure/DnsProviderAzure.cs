@@ -7,6 +7,7 @@ using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Microsoft.Azure.Management.Dns;
 using Microsoft.Azure.Management.Dns.Models;
+using Microsoft.Azure.Management.ResourceManager.Fluent;
 using Microsoft.Rest.Azure.Authentication;
 
 namespace Certify.Providers.DNS.Azure
@@ -16,11 +17,13 @@ namespace Certify.Providers.DNS.Azure
     public class DnsProviderAzure : DnsProviderBase, IDnsProvider
     {
         private ILog _log;
+
         private DnsManagementClient _dnsClient;
 
         private Dictionary<string, string> _credentials;
 
         private int? _customPropagationDelay = null;
+
         public int PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
 
         public string ProviderId => Definition.Id;
@@ -32,6 +35,7 @@ namespace Certify.Providers.DNS.Azure
         public string ProviderHelpUrl => Definition.HelpUrl;
 
         public bool IsTestModeSupported => Definition.IsTestModeSupported;
+
         public List<ProviderParameter> ProviderParameters => Definition.ProviderParameters;
 
         public static ChallengeProviderDefinition Definition => new ChallengeProviderDefinition
@@ -91,16 +95,21 @@ namespace Certify.Providers.DNS.Azure
 
             _credentials.TryGetValue("service", out var service);
 
+            var azureEnvironment = MapAzureServiceToAzureEnvironment(service);
+            var azureAdSettings = MapAzureEnvironmentToADSettings(azureEnvironment);
+
             var serviceCreds = await ApplicationTokenProvider.LoginSilentAsync(
                 _credentials["tenantid"],
                 _credentials["clientid"],
                 _credentials["secret"],
-                GetAzureServiceSettings(service ?? "global")
+                azureAdSettings
                 );
 
-            _dnsClient = new DnsManagementClient(serviceCreds);
-
-            _dnsClient.SubscriptionId = _credentials["subscriptionid"];
+            _dnsClient = new DnsManagementClient(serviceCreds)
+            {
+                SubscriptionId = _credentials["subscriptionid"],
+                BaseUri = new Uri(azureEnvironment.ResourceManagerEndpoint)
+            };
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
@@ -112,24 +121,63 @@ namespace Certify.Providers.DNS.Azure
             return true;
         }
 
-        private ActiveDirectoryServiceSettings GetAzureServiceSettings(string service = "global")
+        /// <summary>
+        /// Map our service selection to the configuration for an Azure Environment, default is standard Azure Cloud
+        /// </summary>
+        /// <param name="service"></param>
+        /// <returns></returns>
+        private AzureEnvironment MapAzureServiceToAzureEnvironment(string service)
         {
-            if (service == "usgov")
+            if (string.IsNullOrEmpty(service))
+            {
+                return AzureEnvironment.AzureGlobalCloud;
+            }
+
+            switch (service.Trim())
+            {
+                case "global":
+                    return AzureEnvironment.AzureGlobalCloud;
+                case "usgov":
+                    return AzureEnvironment.AzureUSGovernment;
+                case "china":
+                    return AzureEnvironment.AzureChinaCloud;
+                case "germany":
+                    return AzureEnvironment.AzureGermanCloud;
+                default:
+                    return AzureEnvironment.FromName(service);
+            }
+        }
+
+
+        /// <summary>
+        /// Map an Azure environment to the corresponding Active Directory settings
+        /// </summary>
+        /// <param name="env"></param>
+        /// <returns></returns>
+
+        private ActiveDirectoryServiceSettings MapAzureEnvironmentToADSettings(AzureEnvironment env)
+        {
+            if (env == null)
+            {
+                return ActiveDirectoryServiceSettings.Azure;
+            }
+            else if (env.Name == AzureEnvironment.AzureUSGovernment.Name)
             {
                 return ActiveDirectoryServiceSettings.AzureUSGovernment;
             }
-            else if (service == "china")
-            {
-                return ActiveDirectoryServiceSettings.AzureChina;
-            }
-            else if (service == "germany")
+            else if (env.Name == AzureEnvironment.AzureGermanCloud.Name)
             {
                 return ActiveDirectoryServiceSettings.AzureGermany;
+            }
+            else if (env.Name == AzureEnvironment.AzureChinaCloud.Name)
+            {
+                return ActiveDirectoryServiceSettings.AzureChina;
             }
             else
             {
                 return ActiveDirectoryServiceSettings.Azure;
             }
+
         }
 
         public async Task<ActionResult> CreateRecord(DnsRecord request)
