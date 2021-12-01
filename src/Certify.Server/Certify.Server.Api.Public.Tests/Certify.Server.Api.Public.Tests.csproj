@@ -9,7 +9,6 @@
   <ItemGroup>
     <None Remove="appsettings.api.public.test.json" />
     <None Remove="appsettings.worker.test.json" />
-    <None Remove="Assets\certificate.pfx" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,9 +21,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-    <Content Include="Assets\certificate.pfx">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 

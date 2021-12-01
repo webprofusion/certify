@@ -3,11 +3,10 @@
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://localhost:54665",
-      "sslPort": 44331
+      "applicationUrl": "http://localhost:59059/",
+      "sslPort": 44361
     }
   },
-  "$schema": "http://json.schemastore.org/launchsettings.json",
   "profiles": {
     "IIS Express": {
       "commandName": "IISExpress",
@@ -17,10 +16,9 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "Certify.Server.API": {
+    "Certify.Server.Api.Public": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "docs",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
