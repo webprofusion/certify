@@ -65,3 +65,22 @@ e.g.  `https://certify.devops.projectbids.co.uk/api/v1/validation/http-01/abcd13
 curl https://localhost:44331/api/v1/auth/status -H "Accept: application/json"  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIxMjM0NSIsIm5iZiI6MTU5MTY5ODQwOSwiZXhwIjoxNTkxNzg0ODA5LCJpYXQiOjE1OTE2OTg0MDl9.As92l3EHGAMGkrhfXzCLSpUFRpEAyMTwmpMp16-XjhY"
 
 ```
+
+Architecture
+-----------------
+
+## Internal Service 
+Runs by default on `localhost:9696`. 
+
+Expected clients: Desktop UI (WPF), Certify CLI, Certify Server API.
+
+The internal service provides the internal certificate management system. The API it exposes is not intended for general use and can change entirely between system updates.
+
+## Certify Server API 
+This service provides a general API for use by custom clients. It must be configured to connect to internal service and may be optionally hosted on same instance as primary service.
+
+Expected clients: any (including Certify Server App UI).
+
+## API Security
+Exposing either service on the actual public internet should be strictly avoided (there are no external security assurances). Only the Certify Server API is for general client consumption and it should remain internal to an organisation.
+
