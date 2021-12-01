@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 using Certify.Config.Migration;
 using Certify.Models;
@@ -11,6 +12,8 @@ using Certify.Models.Config;
 using Certify.Models.Utils;
 using Certify.Shared;
 using Newtonsoft.Json;
+using Polly;
+using Polly.Retry;
 
 namespace Certify.Client
 {
@@ -33,11 +36,25 @@ namespace Certify.Client
         }
     }
 
+    public class HttpRetryMessageHandler : DelegatingHandler
+    {
+        public HttpRetryMessageHandler(HttpClientHandler handler) : base(handler) { }
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken) =>
+            Policy
+                .Handle<HttpRequestException>()
+                .Or<TaskCanceledException>()
+                .OrResult<HttpResponseMessage>(x => !x.IsSuccessStatusCode)
+                .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(3, retryAttempt)))
+                .ExecuteAsync(() => base.SendAsync(request, cancellationToken));
+    }
+
     // This version of the client communicates with the Certify.Service instance on the local machine
     public class CertifyApiClient : ICertifyInternalApiClient
     {
         private HttpClient _client;
-        private HttpClientHandler _clientHandler;
         private readonly string _baseUri = "/api/";
         internal Shared.ServerConnection _connectionConfig;
         internal Providers.IServiceConfigProvider _configProvider;
@@ -65,25 +82,27 @@ namespace Certify.Client
                 _client = null;
             }
 
-            _clientHandler = new HttpClientHandler();
+            var _httpClientHandler = new HttpClientHandler();
 
             if (_connectionConfig.UseHTTPS && _connectionConfig.AllowUntrusted)
             {
                 // ignore all cert errors when validating URL response
-                _clientHandler.ServerCertificateCustomValidationCallback =
+                _httpClientHandler.ServerCertificateCustomValidationCallback =
                    (message, certificate, chain, sslPolicyErrors) => true;
             }
 
             if (_connectionConfig.Authentication == "default")
             {
                 // use windows authentication
-                _clientHandler.UseDefaultCredentials = true;
-                _client = new HttpClient(_clientHandler);
+                _httpClientHandler.UseDefaultCredentials = true;
+
+
+                _client = new HttpClient(new HttpRetryMessageHandler(_httpClientHandler));
             }
             else
             {
                 //alternative auth (jwt)
-                _client = new HttpClient(_clientHandler);
+                _client = new HttpClient(new HttpRetryMessageHandler(_httpClientHandler));
 
                 if (!string.IsNullOrEmpty(_accessToken))
                 {
