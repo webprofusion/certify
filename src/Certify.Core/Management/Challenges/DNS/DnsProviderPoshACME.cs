@@ -26,6 +26,7 @@ namespace Certify.Core.Management.Challenges.DNS
             [ClouDNS](https://poshac.me/docs/v4/Plugins/ClouDNS),
             [Combell](https://poshac.me/docs/v4/Plugins/Combell),
             [Constellix](https://poshac.me/docs/v4/Plugins/Constellix),
+            [DMEasy](https://poshac.me/docs/v4/Plugins/DMEasy),
             [DNSPod](https://poshac.me/docs/v4/Plugins/DNSPod),
             [DNSimple](https://poshac.me/docs/v4/Plugins/DNSimple),
             [DomainOffensive](https://poshac.me/docs/v4/Plugins/DomainOffensive),
@@ -293,6 +294,25 @@ namespace Certify.Core.Management.Challenges.DNS
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Constellix",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
+            new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.DMEasy",
+                Title = "DNS Made Easy DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://poshac.me/docs/v4/Plugins/DMEasy/",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters = new List<ProviderParameter>
+                {
+                    new ProviderParameter { Key = "DMEKey", Name = "API Key", IsRequired = true, IsCredential = true },
+                    new ProviderParameter { Key = "DMESecret", Name = "API Secret", IsRequired = true, IsCredential = true, ExtendedConfig=_paramIsSecureStringConfig },
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=DMEasy",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = true,
                 IsExperimental = true
