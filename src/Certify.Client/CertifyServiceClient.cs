@@ -65,7 +65,7 @@ namespace Certify.Client
                 // TODO: auth: https://docs.microsoft.com/en-us/aspnet/core/signalr/authn-and-authz?view=aspnetcore-3.1
 
                 connection = new HubConnectionBuilder()
-                   
+
                 .WithUrl(_statusHubUri, opts =>
                 {
                     opts.HttpMessageHandlerFactory = (message) =>

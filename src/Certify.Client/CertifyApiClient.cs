@@ -13,7 +13,6 @@ using Certify.Models.Utils;
 using Certify.Shared;
 using Newtonsoft.Json;
 using Polly;
-using Polly.Retry;
 
 namespace Certify.Client
 {

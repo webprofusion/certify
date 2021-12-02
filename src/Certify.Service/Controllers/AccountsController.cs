@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using Certify.Management;
 using Certify.Models;
-using Certify.Models.Config;
 
 namespace Certify.Service
 {

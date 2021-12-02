@@ -5,7 +5,6 @@ using System.Web.Http.Cors;
 using Certify.Config.Migration;
 using Certify.Management;
 using Certify.Models;
-using Certify.Models.Config;
 
 namespace Certify.Service
 {

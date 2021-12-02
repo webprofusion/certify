@@ -252,7 +252,7 @@ namespace Certify.UI.Controls.Settings
             {
                 MessageBox.Show("Enabling custom plugins is a significant security risk. Do not use plugins from unknown third parties.");
             }
-            
+
         }
     }
 }
