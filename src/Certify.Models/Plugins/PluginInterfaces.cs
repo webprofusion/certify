@@ -31,7 +31,7 @@ namespace Certify.Models.Plugins
 
     public interface IDashboardClient
     {
-        Task<bool> SubmitFeedbackAsync(FeedbackReport feedback);
+        Task<bool> SubmitFeedbackAsync(FeedbackReport feedback, string frameworkVersion);
 
         Task<bool> ReportRenewalStatusAsync(RenewalStatusReport report);
 

@@ -69,7 +69,7 @@ namespace Certify.UI.Windows
             if (MainViewModel.PluginManager.DashboardClient != null)
             {
                 Mouse.OverrideCursor = Cursors.Wait;
-                var submittedOK = await MainViewModel.PluginManager.DashboardClient.SubmitFeedbackAsync(feedbackReport);
+                var submittedOK = await MainViewModel.PluginManager.DashboardClient.SubmitFeedbackAsync(feedbackReport, Certify.Management.Util.GetDotNetVersion());
 
                 Mouse.OverrideCursor = Cursors.Arrow;
 
