@@ -178,7 +178,7 @@ namespace Certify.Management
 
         private string GetDbPath()
         {
-            var appDataPath = Util.GetAppDataFolder(_storageSubFolder);
+            var appDataPath = EnvironmentUtil.GetAppDataFolder(_storageSubFolder);
             return Path.Combine(appDataPath, $"{ITEMMANAGERCONFIG}.db");
         }
 
@@ -350,7 +350,7 @@ namespace Certify.Management
 
         private async Task<bool> UpgradeSettings()
         {
-            var appDataPath = Util.GetAppDataFolder(_storageSubFolder);
+            var appDataPath = EnvironmentUtil.GetAppDataFolder(_storageSubFolder);
 
             var json = Path.Combine(appDataPath, $"{ITEMMANAGERCONFIG}.json");
             var db = Path.Combine(appDataPath, $"{ITEMMANAGERCONFIG}.db");

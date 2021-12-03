@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Certify.Models;
 
 namespace Certify.CLI
 {
@@ -12,7 +13,7 @@ namespace Certify.CLI
             var licensingManager = _pluginManager.LicensingManager;
             if (licensingManager != null)
             {
-                if (licensingManager.IsInstallRegistered(ProductTypeID, Certify.Management.Util.GetAppDataFolder()))
+                if (licensingManager.IsInstallRegistered(ProductTypeID, EnvironmentUtil.GetAppDataFolder()))
                 {
                     return true;
                 }
@@ -50,7 +51,7 @@ namespace Certify.CLI
             var licensingManager = _pluginManager.LicensingManager;
             if (licensingManager != null)
             {
-                var settingsPath = Management.Util.GetAppDataFolder();
+                var settingsPath = EnvironmentUtil.GetAppDataFolder();
 
                 var activated = await licensingManager.IsInstallActive(ProductTypeID, settingsPath);
                 if (!activated)
@@ -126,7 +127,7 @@ namespace Certify.CLI
                     AppVersion = Management.Util.GetAppVersion().ToString()
                 };
 
-                var deactivated = await licensingManager.DeactivateInstall(ProductTypeID, Certify.Management.Util.GetAppDataFolder(), email, instance);
+                var deactivated = await licensingManager.DeactivateInstall(ProductTypeID, EnvironmentUtil.GetAppDataFolder(), email, instance);
 
                 return deactivated;
             }

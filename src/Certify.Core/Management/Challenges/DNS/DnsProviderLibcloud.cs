@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 
@@ -17,7 +18,7 @@ namespace Certify.Core.Management.Challenges
         public LibcloudDNSProvider(Dictionary<string, string> credentials)
         {
             _credentials = credentials;
-            _pythonPath = Certify.Management.Util.GetAppDataFolder("python-embedded") + "\\python.exe";
+            _pythonPath = EnvironmentUtil.GetAppDataFolder("python-embedded") + "\\python.exe";
         }
 
         public int PropagationDelaySeconds => 60;

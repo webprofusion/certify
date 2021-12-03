@@ -45,7 +45,7 @@ namespace Certify.UI.ViewModel
         {
             var licensingManager = PluginManager?.LicensingManager;
 
-            if (licensingManager != null && !await licensingManager.IsInstallActive(ProductTypeId, Management.Util.GetAppDataFolder()))
+            if (licensingManager != null && !await licensingManager.IsInstallActive(ProductTypeId, EnvironmentUtil.GetAppDataFolder()))
             {
                 return false;
             }

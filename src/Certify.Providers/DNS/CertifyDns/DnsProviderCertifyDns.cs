@@ -71,7 +71,7 @@ namespace Certify.Providers.DNS.CertifyDns
         {
             this.EnableExtensions = true;
 
-            _settingsPath = Util.GetAppDataFolder();
+            _settingsPath = EnvironmentUtil.GetAppDataFolder();
 
             _client = new HttpClient();
             _client.DefaultRequestHeaders.Add("User-Agent", "Certify/DnsProviderCertifyDns");

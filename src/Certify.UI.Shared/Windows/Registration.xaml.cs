@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Input;
 using Certify.Models;
+using Certify.Models.Utils;
 
 namespace Certify.UI.Windows
 {
@@ -72,7 +73,7 @@ namespace Certify.UI.Windows
                         Mouse.OverrideCursor = Cursors.Arrow;
                         if (installRegistration.IsSuccess)
                         {
-                            var settingsPath = Management.Util.GetAppDataFolder();
+                            var settingsPath = EnvironmentUtil.GetAppDataFolder();
                             if (licensingManager.FinaliseInstall(productTypeId, installRegistration, settingsPath))
                             {
                                 ViewModel.AppViewModel.Current.IsRegisteredVersion = true;
@@ -139,7 +140,7 @@ namespace Certify.UI.Windows
                     InstanceId = ViewModel.AppViewModel.Current.Preferences.InstanceId,
                     AppVersion = Management.Util.GetAppVersion().ToString()
                 };
-                var resultOK = await licensingManager.DeactivateInstall(productTypeId, Management.Util.GetAppDataFolder(), email, instance);
+                var resultOK = await licensingManager.DeactivateInstall(productTypeId, EnvironmentUtil.GetAppDataFolder(), email, instance);
 
                 Mouse.OverrideCursor = Cursors.Arrow;
 

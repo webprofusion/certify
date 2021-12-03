@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Certify.Core.Management.Challenges;
+using Certify.Models;
 using Certify.Models.Config;
 using Newtonsoft.Json;
 
@@ -26,7 +27,7 @@ namespace Certify.Management
         }
         private string GetDbPath()
         {
-            var appDataPath = Util.GetAppDataFolder(StorageSubfolder);
+            var appDataPath = EnvironmentUtil.GetAppDataFolder(StorageSubfolder);
             return Path.Combine(appDataPath, $"{CREDENTIALSTORE}.db");
         }
 

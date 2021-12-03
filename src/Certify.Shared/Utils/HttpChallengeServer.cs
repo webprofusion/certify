@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
+using Certify.Models.Utils;
 using Certify.Shared;
 
 namespace Certify.Core.Management.Challenges
@@ -39,7 +40,7 @@ namespace Certify.Core.Management.Challenges
 
             try
             {
-                var logPath = Path.Combine(Util.GetAppDataFolder(), "logs", "httpChallengeServer.log");
+                var logPath = Path.Combine(EnvironmentUtil.GetAppDataFolder(), "logs", "httpChallengeServer.log");
                 if (clearLog)
                 {
                     System.IO.File.WriteAllText(logPath, msg);

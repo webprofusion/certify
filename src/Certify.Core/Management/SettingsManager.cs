@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using Certify.Models;
@@ -241,7 +241,7 @@ namespace Certify.Management
 
         public static void SaveAppSettings()
         {
-            var appDataPath = Util.GetAppDataFolder();
+            var appDataPath = EnvironmentUtil.GetAppDataFolder();
             var json = Newtonsoft.Json.JsonConvert.SerializeObject(CoreAppSettings.Current, Newtonsoft.Json.Formatting.Indented);
 
             lock (COREAPPSETTINGSFILE)
@@ -253,7 +253,7 @@ namespace Certify.Management
         public static List<CertificateAuthority> GetCustomCertificateAuthorities()
         {
             var caList = new List<CertificateAuthority>();
-            var appDataPath = Util.GetAppDataFolder();
+            var appDataPath = EnvironmentUtil.GetAppDataFolder();
             var path = Path.Combine(appDataPath, "ca.json");
 
             if (System.IO.File.Exists(path))
@@ -277,7 +277,7 @@ namespace Certify.Management
         public static bool SaveCustomCertificateAuthorities(List<CertificateAuthority> caList)
         {
 
-            var appDataPath = Util.GetAppDataFolder();
+            var appDataPath = EnvironmentUtil.GetAppDataFolder();
             var path = Path.Combine(appDataPath, "ca.json");
 
             try
@@ -297,7 +297,7 @@ namespace Certify.Management
         {
             try
             {
-                var appDataPath = Util.GetAppDataFolder();
+                var appDataPath = EnvironmentUtil.GetAppDataFolder();
                 var path = Path.Combine(appDataPath, COREAPPSETTINGSFILE);
 
                 if (System.IO.File.Exists(path))

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Utils;
 using Certify.Providers.ACME.Certes;
 using Newtonsoft.Json;
 
@@ -238,7 +239,7 @@ namespace Certify.Management
 
                 // create provider pointing to legacy storage
                 var apiEndpoint = _certificateAuthorities[StandardCertAuthorities.LETS_ENCRYPT].ProductionAPIEndpoint;
-                var settingBaseFolder = Management.Util.GetAppDataFolder();
+                var settingBaseFolder = EnvironmentUtil.GetAppDataFolder();
                 var providerPath = System.IO.Path.Combine(settingBaseFolder, "certes");
                 var provider = new CertesACMEProvider(apiEndpoint, settingBaseFolder, providerPath, Util.GetUserAgent());
                 await provider.InitProvider(_serviceLog);

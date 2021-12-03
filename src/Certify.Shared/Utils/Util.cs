@@ -151,31 +151,6 @@ namespace Certify.Management
 
         public static void SetSupportedTLSVersions() => ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
-
-        public static string GetAppDataFolder(string subFolder = null)
-        {
-            var parts = new List<string>()
-            {
-                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-                Models.SharedConstants.APPDATASUBFOLDER
-            };
-
-            if (subFolder != null)
-            {
-                parts.Add(subFolder);
-            }
-
-            var path = Path.Combine(parts.ToArray());
-
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
-
-            return path;
-        }
-
-
         public static string GetUserAgent()
         {
             var versionName = "Certify/" + GetAppVersion().ToString();

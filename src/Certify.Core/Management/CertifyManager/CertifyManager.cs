@@ -194,7 +194,7 @@ namespace Certify.Management
                 new LoggerConfiguration()
                .MinimumLevel.ControlledBy(_loggingLevelSwitch)
                .WriteTo.Debug()
-               .WriteTo.File(Path.Combine(Util.GetAppDataFolder("logs"), "session.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10), rollOnFileSizeLimit: true, fileSizeLimitBytes: 5 * 1024 * 1024)
+               .WriteTo.File(Path.Combine(EnvironmentUtil.GetAppDataFolder("logs"), "session.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10), rollOnFileSizeLimit: true, fileSizeLimitBytes: 5 * 1024 * 1024)
                .CreateLogger()
                );
 
@@ -310,7 +310,7 @@ namespace Certify.Management
             else
             {
                 var userAgent = Util.GetUserAgent();
-                var settingBaseFolder = Management.Util.GetAppDataFolder();
+                var settingBaseFolder = EnvironmentUtil.GetAppDataFolder();
                 var providerPath = Path.Combine(settingBaseFolder, "certes_" + storageKey);
 
                 var newProvider = new CertesACMEProvider(acmeApiEndpoint, settingBaseFolder, providerPath, userAgent, allowUntrustedTsl);
@@ -673,14 +673,14 @@ namespace Certify.Management
                     {
 
                         // cleanup old pfx files in asset store(s), if any
-                        var assetPath = Path.Combine(Util.GetAppDataFolder(), "certes", "assets");
+                        var assetPath = Path.Combine(EnvironmentUtil.GetAppDataFolder(), "certes", "assets");
                         if (Directory.Exists(assetPath))
                         {
                             var ext = new List<string> { ".pfx" };
                             DeleteOldCertificateFiles(assetPath, ext);
                         }
 
-                        assetPath = Path.Combine(Util.GetAppDataFolder(), "assets");
+                        assetPath = Path.Combine(EnvironmentUtil.GetAppDataFolder(), "assets");
                         if (Directory.Exists(assetPath))
                         {
                             var ext = new List<string> { ".pfx", ".key", ".crt", ".pem" };
@@ -801,7 +801,7 @@ namespace Certify.Management
 
             if (type == "session")
             {
-                logPath = Path.Combine(Util.GetAppDataFolder("logs"), "session.log");
+                logPath = Path.Combine(EnvironmentUtil.GetAppDataFolder("logs"), "session.log");
             }
 
             if (logPath != null && System.IO.File.Exists(logPath))
