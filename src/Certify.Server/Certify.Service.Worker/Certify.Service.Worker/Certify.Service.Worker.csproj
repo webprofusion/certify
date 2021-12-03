@@ -19,7 +19,4 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Certify.Server.Core\Certify.Server.Core\Certify.Server.Core.csproj" />
   </ItemGroup>
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="IF NOT DEFINED _CI_BUILD (&#xD;&#xA; xcopy /i /s /Y /C $(SolutionDir)..\build\plugins\$(ConfigurationName)\Plugin.*.dll $(TargetDir)plugins\&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;&#xD;&#xA;" />
-  </Target>
 </Project>

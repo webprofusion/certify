@@ -8,11 +8,5 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\Certify.Models\Certify.Models.csproj" />
-    <ProjectReference Include="..\..\..\..\Certify.Shared\Certify.Shared.Core.csproj" />
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy /i /s /Y &quot;$(TargetPath)&quot; &quot;$(SolutionDir)\..\build\plugins\$(ConfigurationName)\&quot;" />
-  </Target>
-
 </Project>

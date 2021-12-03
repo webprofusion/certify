@@ -71,8 +71,4 @@
     <None Include="App.config" />
     <None Include="app.manifest" />
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="REM IF NOT DEFINED _CI_BUILD (&#xD;&#xA;REM    xcopy /i /s /Y /C $(SolutionDir)..\build\plugins\$(ConfigurationName)\Plugin.*.dll $(TargetDir)Plugins\&#xD;&#xA;REM )" />
-  </Target>
 </Project>

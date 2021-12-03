@@ -4,7 +4,6 @@ using System.IO;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
@@ -98,7 +97,7 @@ namespace Certify.Providers.DNS.AcmeDns
 
         public DnsProviderAcmeDns()
         {
-            _settingsPath = Util.GetAppDataFolder();
+            _settingsPath = EnvironmentUtil.GetAppDataFolder();
 
             _client = new HttpClient();
             _client.DefaultRequestHeaders.Add("User-Agent", "Certify/DnsProviderAcmeDns");
