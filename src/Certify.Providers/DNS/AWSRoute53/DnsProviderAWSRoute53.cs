@@ -163,7 +163,7 @@ namespace Certify.Providers.DNS.AWSRoute53
                     }
                     );
 
-                var targetRecordSet = response.ResourceRecordSets.FirstOrDefault(r => (r.Name == request.RecordName || r.Name == request.RecordName + ".") && r.Type.Value == "TXT");
+                var targetRecordSet = response.ResourceRecordSets.FirstOrDefault(r => (string.Equals(r.Name, request.RecordName, StringComparison.OrdinalIgnoreCase) || string.Equals(r.Name, request.RecordName + ".")) && r.Type.Value.ToUpper() == "TXT");
 
                 if (targetRecordSet != null)
                 {

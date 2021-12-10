@@ -193,7 +193,7 @@ namespace Certify.Core.Management.Challenges
             if (dnsAPIProvider != null)
             {
                 //most DNS providers require domains to by ASCII
-                txtRecordName = _idnMapping.GetAscii(txtRecordName).ToLower();
+                txtRecordName = _idnMapping.GetAscii(txtRecordName).ToLower().Trim();
 
                 log.Information($"DNS: Creating TXT Record '{txtRecordName}' with value '{txtRecordValue}', in Zone Id '{zoneId}' using API provider '{dnsAPIProvider.ProviderTitle}'");
                 try
@@ -201,7 +201,7 @@ namespace Certify.Core.Management.Challenges
                     var result = await dnsAPIProvider.CreateRecord(new DnsRecord
                     {
                         RecordType = "TXT",
-                        TargetDomainName = domain,
+                        TargetDomainName = domain.Trim(),
                         RecordName = txtRecordName,
                         RecordValue = txtRecordValue,
                         ZoneId = zoneId
