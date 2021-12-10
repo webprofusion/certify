@@ -70,7 +70,15 @@ namespace Certify.UI.ViewModel
         {
             get
             {
-                return $"{_certifyClient.GetConnectionInfo()}";
+                if (_certifyClient == null)
+                {
+                    return "(Not Connected)";
+                }
+                else
+                {
+                    return $"{_certifyClient?.GetConnectionInfo()}";
+                }
+
             }
         }
 
@@ -124,16 +132,17 @@ namespace Certify.UI.ViewModel
 
             //check service connection
             IsServiceAvailable = false;
+            bool useInitialConnectionRetry = false;
 
             ConnectionState = "Connecting...";
 
-            if (conn == null)
+            var maxAttempts = 3;
+
+            if (!useInitialConnectionRetry)
             {
-                // check default connection
-                IsServiceAvailable = await CheckServiceAvailable(_certifyClient);
+                maxAttempts = 1;
             }
 
-            var maxAttempts = 3;
             var attemptsRemaining = maxAttempts;
 
             ICertifyClient clientConnection = _certifyClient;
@@ -141,10 +150,12 @@ namespace Certify.UI.ViewModel
             while (!IsServiceAvailable && attemptsRemaining > 0 && cancellationToken.IsCancellationRequested != true)
             {
                 var connectionConfig = conn ?? GetDefaultServerConnection(_configManager);
-                Debug.WriteLine("Service not yet available. Waiting a few seconds..");
+
+                Debug.WriteLine("Attempting connection to management service..");
 
                 if (attemptsRemaining != maxAttempts)
                 {
+                    Debug.WriteLine("Service not yet available. Waiting a few seconds..");
                     // the service could still be starting up or port may be reallocated
                     var waitMS = (maxAttempts - attemptsRemaining) * 1000;
                     await Task.Delay(waitMS, cancellationToken);
@@ -165,15 +176,26 @@ namespace Certify.UI.ViewModel
                         if (attemptsRemaining == 0)
                         {
                             ConnectionState = IsServiceAvailable ? "Connected" : "Not Connected";
+                            RaisePropertyChangedEvent(nameof(ConnectionState));
+                            RaisePropertyChangedEvent(nameof(ConnectionTitle));
+
                             return false;
                         }
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Connected to management service.");
                     }
                 }
             }
 
-            if (cancellationToken.IsCancellationRequested == true)
+            if (cancellationToken.IsCancellationRequested == true || IsServiceAvailable == false)
             {
                 ConnectionState = IsServiceAvailable ? "Connected" : "Not Connected";
+
+                RaisePropertyChangedEvent(nameof(ConnectionState));
+                RaisePropertyChangedEvent(nameof(ConnectionTitle));
+
                 return false;
             }
 
@@ -194,14 +216,21 @@ namespace Certify.UI.ViewModel
                 Log?.Error($"Failed to connect to status hub: {exp}");
 
                 ConnectionState = IsServiceAvailable ? "Connected" : "Not Connected";
+
+                RaisePropertyChangedEvent(nameof(ConnectionState));
+                RaisePropertyChangedEvent(nameof(ConnectionTitle));
+
                 return false;
             }
 
             // replace active connection
             _certifyClient = clientConnection;
 
-
             ConnectionState = IsServiceAvailable ? "Connected" : "Not Connected";
+
+            RaisePropertyChangedEvent(nameof(ConnectionState));
+            RaisePropertyChangedEvent(nameof(ConnectionTitle));
+
             return true;
         }
 

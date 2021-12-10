@@ -46,8 +46,10 @@ namespace Certify.Client
                 .Handle<HttpRequestException>()
                 .Or<TaskCanceledException>()
                 .OrResult<HttpResponseMessage>(x => !x.IsSuccessStatusCode)
-                .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(3, retryAttempt)))
-                .ExecuteAsync(() => base.SendAsync(request, cancellationToken));
+                .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1))
+                .ExecuteAsync(() => 
+                    base.SendAsync(request, cancellationToken)
+                );
     }
 
     // This version of the client communicates with the Certify.Service instance on the local machine
