@@ -139,13 +139,14 @@
                                     Content="{x:Static res:SR.Settings_EnableHttpChallengeServer}"
                                     IsChecked="{Binding Prefs.EnableHttpChallengeServer}" />
 
-                              
+
                                 <CheckBox
                                     x:Name="EnableExternalPlugins"
                                     Margin="0,4,0,0"
+                                    Click="EnableExternalPlugins_Click"
                                     Content="Enable Custom Plugin Loading"
-                                    IsChecked="{Binding Prefs.IncludeExternalPlugins}" Checked="EnableExternalPlugins_Checked"  />
-                                
+                                    IsChecked="{Binding Prefs.IncludeExternalPlugins}" />
+
                                 <CheckBox
                                     x:Name="EnableStatusReporting"
                                     Margin="0,4,0,0"
@@ -287,12 +288,12 @@
                             </Button>
                             <TextBlock Style="{StaticResource SubheadingWithMargin}">Certificate Redeployment</TextBlock>
                             <TextBlock Style="{StaticResource Instructions}">In some cases you may want to re-apply all of your certificates to website bindings (IIS) etc :</TextBlock>
-                            <CheckBox Margin="0,8,0,8" x:Name="IncludeDeploymentTasks">Run All Deployment Tasks</CheckBox>
+                            <CheckBox x:Name="IncludeDeploymentTasks" Margin="0,8,0,8">Run All Deployment Tasks</CheckBox>
                             <Button
                                 x:Name="RedeployCertificates"
                                 Width="140"
-                                HorizontalAlignment="Left" Click="RedeployCertificates_Click"
-                                >
+                                HorizontalAlignment="Left"
+                                Click="RedeployCertificates_Click">
                                 Redeploy Certificates
                             </Button>
                         </StackPanel>
