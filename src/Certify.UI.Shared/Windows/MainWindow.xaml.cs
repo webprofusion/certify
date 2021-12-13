@@ -243,6 +243,7 @@ namespace Certify.UI.Windows
             var cts = new CancellationTokenSource();
 
             var connectedOk = await _appViewModel.InitServiceConnections(null, cts.Token);
+            
 
             if (_appViewModel.IsServiceAvailable)
             {
