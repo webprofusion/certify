@@ -59,6 +59,7 @@ namespace Certify.UI.Windows
             {
                 try
                 {
+
                     var validationResult = await licensingManager.Validate(productTypeId, email, key);
                     if (validationResult.IsValid)
                     {
@@ -92,6 +93,11 @@ namespace Certify.UI.Windows
                     {
                         MessageBox.Show(validationResult.ValidationMessage);
                     }
+                }
+                catch (System.Net.Http.HttpRequestException exp)
+                {
+                    Log?.Information("ValidateKey:" + exp.ToString());
+                    MessageBox.Show("Communication with the Certify The Web API failed. Check your system can communication with https://api.certifytheweb.com/v1/update using a web browser. \r\n\r\nIf your system is a few years old check https://docs.certifytheweb.com for 'TLS Cipher', updated registry settings may be required.");
                 }
                 catch (Exception exp)
                 {
