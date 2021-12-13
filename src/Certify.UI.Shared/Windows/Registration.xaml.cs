@@ -97,7 +97,7 @@ namespace Certify.UI.Windows
                 catch (System.Net.Http.HttpRequestException exp)
                 {
                     Log?.Information("ValidateKey:" + exp.ToString());
-                    MessageBox.Show("Communication with the Certify The Web API failed. Check your system can communication with https://api.certifytheweb.com/v1/update using a web browser. \r\n\r\nIf your system is a few years old check https://docs.certifytheweb.com for 'TLS Cipher', updated registry settings may be required.");
+                    MessageBox.Show("Communication with the Certify The Web API failed. Check your system can communicate with https://api.certifytheweb.com/v1/update using a web browser. \r\n\r\nIf your system is running an older version of Windows, check https://docs.certifytheweb.com for 'TLS Cipher', as updated registry settings may be required.");
                 }
                 catch (Exception exp)
                 {
