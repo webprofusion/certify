@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" GroupingSetting="Access" MembersFormat="NameAndType">
+  <Class Name="Certify.Models.ManagedCertificate">
+    <Position X="6.25" Y="0.75" Width="3" />
+    <TypeIdentifier>
+      <HashCode>JAACKACUAAAIAiDEAABBugRwJIggBBCAAkAgAEAAZwA=</HashCode>
+      <FileName>Config\ManagedCertificate.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="RequestConfig" />
+      <Property Name="ItemType" />
+      <Property Name="Health" />
+    </ShowAsAssociation>
+    <ShowAsCollectionAssociation>
+      <Property Name="DomainOptions" />
+      <Property Name="PreRequestTasks" />
+      <Property Name="PostRequestTasks" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="Certify.Models.CertRequestChallengeConfig">
+    <Position X="14.5" Y="9" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAECAAAAAACAAAAAAAAAIAAAAAAAAIAAAABAAQA=</HashCode>
+      <FileName>Config\CertRequestConfig.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="Parameters" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="Certify.Models.CertRequestConfig">
+    <Position X="10" Y="6.5" Width="3.5" />
+    <TypeIdentifier>
+      <HashCode>ABgAIQCCKAiAICgAAgAAgGKQAAAAOCAAiSAAAAEIASA=</HashCode>
+      <FileName>Config\CertRequestConfig.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="Challenges" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="Certify.Models.DomainOption">
+    <Position X="11" Y="0.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>IAAAAAAAAAAAkEAAAAAAAAAAAgAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Config\DomainOption.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Certify.Config.DeploymentTaskConfig">
+    <Position X="2.75" Y="2.75" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AFACAAAAAAAgAACABAJBAAAAAIEBAgAAAIAAAADAAAA=</HashCode>
+      <FileName>Config\DeploymentTaskConfig.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="TaskTrigger" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Certify.Models.Config.ProviderParameter">
+    <Position X="18.5" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>GAAAAAAAAAAgAAQABAAIAAQgAAAAAAAAAQAhAABAEBA=</HashCode>
+      <FileName>Config\ProviderParameter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Enum Name="Certify.Models.ManagedCertificateType">
+    <Position X="11" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAEAAAAAAAAAAgAAAAAAAQAAAAAA=</HashCode>
+      <FileName>Config\ManagedCertificate.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="Certify.Models.ManagedCertificateHealth">
+    <Position X="3" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAQAAAAAAABAAAAAAAAAAAAABABAAABA=</HashCode>
+      <FileName>Config\ManagedCertificate.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="Certify.Config.TaskTriggerType">
+    <Position X="0.5" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAEAAAAAAAAAAAQAAAAAAAAIAAAgAAAA=</HashCode>
+      <FileName>Config\DeploymentTaskConfig.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
