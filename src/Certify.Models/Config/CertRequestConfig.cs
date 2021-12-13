@@ -37,6 +37,13 @@ namespace Certify.Models
         /// </summary>
         public string ZoneId { get; set; }
 
+        /// <summary>
+        /// If set, DNS validation will work with the target domain/zone in place of the original
+        /// e.g. _acme-challenge.www.example.com delegated to _acme-challenge.www.acme.example.co.uk would be specified as "*.example.com:acme.example.co.uk"
+        /// Note: Zone ID/Zone Lookup, Credentials etc would be for the delegated domain, not the original domain. 
+        /// </summary>
+        public string ChallengeDelegationRule { get; set; }
+
         public ObservableCollection<ProviderParameter> Parameters { get; set; }
     }
 

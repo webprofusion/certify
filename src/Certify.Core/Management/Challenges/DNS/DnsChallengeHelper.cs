@@ -195,6 +195,14 @@ namespace Certify.Core.Management.Challenges
                 //most DNS providers require domains to by ASCII
                 txtRecordName = _idnMapping.GetAscii(txtRecordName).ToLower().Trim();
 
+                if (!string.IsNullOrEmpty(challengeConfig.ChallengeDelegationRule))
+                {
+                    var delegatedTXTRecordName = ApplyChallengeDelegationRule(domain, txtRecordName, challengeConfig.ChallengeDelegationRule);
+                    log.Information($"DNS: Challenge Delegation Domain enabled, using {delegatedTXTRecordName} in place of {txtRecordName}.");
+
+                    txtRecordName = delegatedTXTRecordName;
+                }
+
                 log.Information($"DNS: Creating TXT Record '{txtRecordName}' with value '{txtRecordValue}', in Zone Id '{zoneId}' using API provider '{dnsAPIProvider.ProviderTitle}'");
                 try
                 {
@@ -275,6 +283,59 @@ namespace Certify.Core.Management.Challenges
                     IsAwaitingUser = false
                 };
             }
+        }
+
+        /// <summary>
+        /// For a given identifier (domain) and source TXT record name, apply rule *.source.domain:*.delegate.domain to return new TXT record fully qualified name
+        /// </summary>
+        /// <param name="identifier"></param>
+        /// <param name="sourceChallengeTXTRecordName"></param>
+        /// <param name="challengeDelegationRule"></param>
+        /// <returns></returns>
+        public static string ApplyChallengeDelegationRule(string identifier, string sourceChallengeTXTRecordName, string challengeDelegationRule)
+        {
+            if (challengeDelegationRule == null)
+            {
+                return sourceChallengeTXTRecordName;
+            }
+
+            var rules = challengeDelegationRule.Split(';');
+            foreach (var r in rules)
+            {
+                if (!string.IsNullOrWhiteSpace(r))
+                {
+                    // rule format is sourceDomain:targetDomain (one to one), *.sourceDomain:*.targetDomain (many to many) or *.sourceDomain:targetDomain (many to one)
+
+                    var ruleComponents = r.Split(':');
+                    if (ruleComponents.Length == 2)
+                    {
+                        var ruleSourceDomain = ruleComponents[0].ToLower().Trim();
+                        var ruleTargetDomain = ruleComponents[1].ToLower().Trim();
+
+                        // if rule source domain matches our domain identifier, apply this rule
+                        if (identifier == ruleSourceDomain || (ruleSourceDomain.StartsWith("*.") && identifier.EndsWith(ruleSourceDomain.Replace("*.", ""))))
+                        {
+                            // if wildcard rule matches on both sides, substitute record name value, e.g.  _acme-challenge.www.[test.com] becomes _acme-challenge.www.[auth.exmaple.com]
+
+                            if (ruleTargetDomain.StartsWith("*.") && identifier.EndsWith(ruleSourceDomain.Replace("*.", "")))
+                            {
+                                return sourceChallengeTXTRecordName.Replace(ruleSourceDomain.Replace("*.", ""), ruleTargetDomain.Replace("*.", ""));
+
+                            }
+                            else if (!ruleTargetDomain.StartsWith("*."))
+                            {
+                                // non wildcard substitution, all source variants point to same level
+                                // eg. _acme-challenge.[test.com] and _acme-challenge.[www.test.com] point directly to _acme-challenge.[auth.example.com]
+                                var recordName = sourceChallengeTXTRecordName.Split('.')[0];
+                                return $"{recordName}.{ruleTargetDomain}";
+                            }
+                        }
+                    }
+                }
+            }
+
+            // no match, fallback to original
+            return sourceChallengeTXTRecordName;
         }
 
         public async Task<DnsChallengeHelperResult> DeleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, string domain, string txtRecordName, string txtRecordValue)
@@ -381,7 +442,15 @@ namespace Certify.Core.Management.Challenges
             if (dnsAPIProvider != null)
             {
                 //most DNS providers require domains to by ASCII
-                txtRecordName = _idnMapping.GetAscii(txtRecordName).ToLower();
+                txtRecordName = _idnMapping.GetAscii(txtRecordName).ToLower().Trim();
+
+                if (!string.IsNullOrEmpty(challengeConfig.ChallengeDelegationRule))
+                {
+                    var delegatedTXTRecordName = ApplyChallengeDelegationRule(domain, txtRecordName, challengeConfig.ChallengeDelegationRule);
+                    log.Information($"DNS: Challenge Delegation Domain enabled, using {delegatedTXTRecordName} in place of {txtRecordName}.");
+
+                    txtRecordName = delegatedTXTRecordName;
+                }
 
                 log.Information($"DNS: Deleting TXT Record '{txtRecordName}', in Zone Id '{zoneId}' using API provider '{dnsAPIProvider.ProviderTitle}'");
                 try

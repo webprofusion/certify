@@ -98,5 +98,47 @@ namespace Certify.Core.Tests.Unit
             configMatch = managedCertificate.GetChallengeConfig("www.microsoft.com");
             Assert.AreEqual("config-default", configMatch.ChallengeCredentialKey, "Should match default");
         }
+
+
+        [TestMethod, Description("Ensure correct challenge config selected based on domain")]
+        public void ChallengeDelgationRuleTests()
+        {
+            // wildcard rule tests [any subdomain source, any subdomain target]
+            var testRule = "*.test.com:*.auth.test.co.uk";
+            var result = Management.Challenges.DnsChallengeHelper.ApplyChallengeDelegationRule("test.com", "_acme-challenge.test.com", testRule);
+            Assert.AreEqual("_acme-challenge.auth.test.co.uk", result);
+
+            result = Management.Challenges.DnsChallengeHelper.ApplyChallengeDelegationRule("www.test.com", "_acme-challenge.www.test.com", testRule);
+            Assert.AreEqual("_acme-challenge.www.auth.test.co.uk", result);
+
+            result = Management.Challenges.DnsChallengeHelper.ApplyChallengeDelegationRule("www.subdomain.test.com", "_acme-challenge.www.subdomain.test.com", testRule);
+            Assert.AreEqual("_acme-challenge.www.subdomain.auth.test.co.uk", result);
+
+            // non-wildcard rule tests [specific subdomain source matches specific subdomain target]
+
+            testRule = "test.com:auth.test.co.uk";
+
+            result = Management.Challenges.DnsChallengeHelper.ApplyChallengeDelegationRule("test.com", "_acme-challenge.test.com", testRule);
+            Assert.AreEqual("_acme-challenge.auth.test.co.uk", result);
+
+            result = Management.Challenges.DnsChallengeHelper.ApplyChallengeDelegationRule("www.test.com", "_acme-challenge.www.test.com", testRule);
+            Assert.AreEqual("_acme-challenge.www.test.com", result);
+
+            // wildcard source matched to specific subdomain target
+            testRule = "*.test.com : auth.test.co.uk ";
+
+            result = Management.Challenges.DnsChallengeHelper.ApplyChallengeDelegationRule("www.test.com", "_acme-challenge.www.test.com", testRule);
+            Assert.AreEqual("_acme-challenge.auth.test.co.uk", result);
+
+            result = Management.Challenges.DnsChallengeHelper.ApplyChallengeDelegationRule("www.subdomain.test.com", "_acme-challenge.www.subdomain.test.com", testRule);
+            Assert.AreEqual("_acme-challenge.auth.test.co.uk", result);
+
+            // multi rule tests (first matching rule is used)
+            testRule = "*.test.com:*.auth.test.co.uk;*.example.com:*.auth.example.co.uk";
+
+            result = Management.Challenges.DnsChallengeHelper.ApplyChallengeDelegationRule("www.subdomain.example.com", "_acme-challenge.www.subdomain.example.com", testRule);
+            Assert.AreEqual("_acme-challenge.www.subdomain.auth.example.co.uk", result);
+        }
+
     }
 }
