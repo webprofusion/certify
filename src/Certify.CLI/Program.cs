@@ -159,6 +159,11 @@ namespace Certify.CLI
                 {
                     await p.Deactivate(args);
                 }
+
+                if (command == "acmeaccount" && args.Contains("add"))
+                {
+                    await p.AddACMEAccount(args);
+                }
             }
 #if DEBUG
             System.Console.WriteLine("CLI: Completed (DEBUG)");
