@@ -59,7 +59,7 @@ namespace Certify.UI.Tests.Integration
             Assert.AreEqual(System.Windows.Media.Brushes.DarkRed, color);
 
             // still plenty of time remaining, should be green
-            color = ExpiryDateColourConverter.GetColour(DateTime.Now.AddDays(30));
+            color = ExpiryDateColourConverter.GetColour(DateTime.Now.AddDays(30.1));
 
             Assert.AreEqual(System.Windows.Media.Brushes.Green, color);
 
