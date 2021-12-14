@@ -33,12 +33,17 @@
             Style="{StaticResource SubheadingWithMargin}">
             New Update Available
         </TextBlock>
+        <TextBlock
+            x:Name="CurrentVersionInfo"
+            DockPanel.Dock="Top"
+            Style="{StaticResource Instructions}">
+            Current installed version:
+        </TextBlock>
 
         <WebBrowser
             x:Name="MarkdownView"
-            Height="284"
+            Height="260"
             DockPanel.Dock="Top" />
-
 
         <DockPanel
             Height="32"

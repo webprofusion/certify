@@ -50,6 +50,7 @@ namespace Certify.UI.Windows
             bool showAllChanges = false;
 
             UpdateMessage.Text = _update.Message.Body;
+            CurrentVersionInfo.Text = "Current installed version: " + _update.InstalledVersion.ToString();
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("**Release Notes**\n");
