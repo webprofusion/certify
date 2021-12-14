@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Web.Http;
 using LightInject;
 using Microsoft.AspNet.SignalR;
@@ -78,6 +78,7 @@ namespace Certify.Service
                 return AuthenticationSchemes.Anonymous;
             }
 
+#if DEBUG   // feature not in production yet
             // allow JWT pass through if provided
             if (request.Headers["Authorization"] != null && request.Headers["Authorization"].Contains("Bearer "))
             {
@@ -89,6 +90,7 @@ namespace Certify.Service
             {
                 return AuthenticationSchemes.Anonymous;
             }
+#endif
 
             // for windows auth require windows credentials
             return AuthenticationSchemes.IntegratedWindowsAuthentication;

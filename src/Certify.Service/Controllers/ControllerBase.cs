@@ -27,6 +27,7 @@ namespace Certify.Service.Controllers
             var request = actionContext.Request;
             var authorization = request.Headers.Authorization;
 
+#if DEBUG   // feature not in production
             if (authorization != null && authorization.Scheme == "Bearer")
             {
                 //bearer token presented, validate principle
@@ -47,6 +48,7 @@ namespace Certify.Service.Controllers
                     return true;
                 }
             }
+#endif
 
             var user = actionContext.RequestContext.Principal as System.Security.Principal.WindowsPrincipal;
             if (user.IsInRole(WindowsBuiltInRole.Administrator))
@@ -102,12 +104,13 @@ namespace Certify.Service.Controllers
             username = null;
 
             var simplePrinciple = GetPrincipal(token, secret);
-            var identity = simplePrinciple.Identity as ClaimsIdentity;
 
-            if (identity == null)
+            if (simplePrinciple?.Identity == null)
             {
                 return false;
             }
+
+            var identity = simplePrinciple.Identity as ClaimsIdentity;
 
             if (!identity.IsAuthenticated)
             {
@@ -122,7 +125,7 @@ namespace Certify.Service.Controllers
                 return false;
             }
 
-            // More validate to check whether username exists in system
+            // More validation to check whether username exists in system etc
 
             return true;
         }
@@ -136,10 +139,10 @@ namespace Certify.Service.Controllers
                 // based on username to get more information from database 
                 // in order to build local identity
                 var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, username)
-            // Add more claims if needed: Roles, ...
-        };
+                {
+                    new Claim(ClaimTypes.Name, username)
+                    // Add more claims if needed: Roles, ...
+                };
 
                 var identity = new ClaimsIdentity(claims, "Jwt");
                 IPrincipal user = new ClaimsPrincipal(identity);
