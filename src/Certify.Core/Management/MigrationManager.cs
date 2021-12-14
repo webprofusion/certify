@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -232,20 +232,21 @@ namespace Certify.Core.Management
             var key = new Rfc2898DeriveBytes(secret, saltBytes);
 
             var aesAlg = Aes.Create();
+            aesAlg.Mode = CipherMode.CBC;
+            aesAlg.Padding = PaddingMode.PKCS7;
+
             aesAlg.Key = key.GetBytes(aesAlg.KeySize / 8);
             aesAlg.IV = key.GetBytes(aesAlg.BlockSize / 8);
 
             return aesAlg;
         }
 
-        private byte[] EncryptBytes(byte[] source, string secret, string salt)
+        public byte[] EncryptBytes(byte[] source, string secret, string salt)
         {
             using (var rmCrypto = GetAlg(secret, salt))
             {
-
-                rmCrypto.Padding = PaddingMode.PKCS7;
                 using (var memoryStream = new MemoryStream())
-                using (var cryptoStream = new CryptoStream(memoryStream, rmCrypto.CreateEncryptor(rmCrypto.Key, rmCrypto.IV), CryptoStreamMode.Write))
+                using (var cryptoStream = new CryptoStream(memoryStream, rmCrypto.CreateEncryptor(), CryptoStreamMode.Write))
                 {
                     cryptoStream.Write(source, 0, source.Length);
                     cryptoStream.FlushFinalBlock();
@@ -255,20 +256,28 @@ namespace Certify.Core.Management
             }
         }
 
-        private byte[] DecryptBytes(byte[] source, string secret, string salt)
+        public byte[] DecryptBytes(byte[] source, string secret, string salt)
         {
             using (var rmCrypto = GetAlg(secret, salt))
             {
-                rmCrypto.Padding = PaddingMode.PKCS7;
-
-                using (var decryptor = rmCrypto.CreateDecryptor(rmCrypto.Key, rmCrypto.IV))
+                using (var decryptor = rmCrypto.CreateDecryptor())
                 {
                     using (var memoryStream = new MemoryStream(source))
                     {
                         using (var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read))
                         {
                             var decryptedBytes = new byte[source.Length];
-                            var decryptedByteCount = cryptoStream.Read(decryptedBytes, 0, decryptedBytes.Length);
+
+                            int totalRead = 0;
+                            while (totalRead < source.Length)
+                            {
+                                int bytesRead = cryptoStream.Read(decryptedBytes, totalRead, source.Length-totalRead);
+                                if (bytesRead == 0)
+                                {
+                                    break;
+                                }
+                                totalRead += bytesRead;
+                            }
                             memoryStream.Close();
                             cryptoStream.Close();
 
