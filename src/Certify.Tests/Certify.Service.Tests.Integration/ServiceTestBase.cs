@@ -18,7 +18,7 @@ namespace Certify.Service.Tests.Integration
             if (_svc == null)
             {
                 _svc = new Certify.Service.OwinService();
-                _svc.Start();
+                _svc.Start(96969);
 
                 await Task.Delay(2000);
 

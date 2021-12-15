@@ -44,12 +44,17 @@ namespace Certify.Service
             return $"System HTTP Service: {httpStatus}";
         }
 
-        public void Start()
+        public void Start(int? portOverride = null)
         {
 
             var serviceConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
             serviceConfig.ServiceFaultMsg = "";
+
+            if (portOverride != null)
+            {
+                serviceConfig.Port = (int)portOverride;
+            }
 
             if (serviceConfig.UseHTTPS)
             {
