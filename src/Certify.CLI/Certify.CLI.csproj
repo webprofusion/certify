@@ -63,7 +63,6 @@
     <ProjectReference Include="..\Certify.Core\Certify.Core.csproj" />
     <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />
     <ProjectReference Include="..\Certify.Models\Certify.Models.csproj" />
-    <ProjectReference Include="..\Certify.Shared.Compat\Certify.Shared.Compat.csproj" />
     <ProjectReference Include="..\Certify.Shared\Certify.Shared.Core.csproj" />
   </ItemGroup>
 

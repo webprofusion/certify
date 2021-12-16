@@ -277,6 +277,7 @@ namespace Certify.CLI
             {
                 System.Console.WriteLine("Auto fixing:");
 
+                // TODO: move this into certify manager and use client to call into service, removing dependency on certify core lib
                 var c = new CertifyManager();
 
                 var log = new LoggerConfiguration()
