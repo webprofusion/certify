@@ -32,7 +32,7 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public ServerConnection GetDefaultServerConnection(IServiceConfigProvider configProvider)
         {
-            var defaultConfig = new ServerConnection(GetAppServiceConfig());
+            var defaultConfig = new ServerConnection(configProvider.GetServiceConfig());
 
             var connections = ServerConnectionManager.GetServerConnections(Log, defaultConfig);
 

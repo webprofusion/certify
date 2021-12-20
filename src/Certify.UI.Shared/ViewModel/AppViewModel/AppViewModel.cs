@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -40,6 +40,8 @@ namespace Certify.UI.ViewModel
         public AppViewModel(ICertifyClient certifyClient)
         {
             _certifyClient = certifyClient;
+
+            _configManager = new ServiceConfigManager();
 
             Init();
         }
