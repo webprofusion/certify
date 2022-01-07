@@ -2,7 +2,6 @@
 using System.Windows;
 using System.Windows.Input;
 using Certify.Models;
-using Certify.Models.Utils;
 
 namespace Certify.UI.Windows
 {

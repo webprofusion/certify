@@ -44,7 +44,7 @@ namespace Certify.Core.Tests.Unit
 
             var sourceString = "The /cat/ sat on the {mat}. The /cat/ sat on the {mat}. The /cat/ sat on the {mat} 12345.";
 
-            var encrypted = migrationManager.EncryptBytes(System.Text.Encoding.ASCII.GetBytes(sourceString),"secretstringthing", "salty123");
+            var encrypted = migrationManager.EncryptBytes(System.Text.Encoding.ASCII.GetBytes(sourceString), "secretstringthing", "salty123");
 
             var decrypted = migrationManager.DecryptBytes(encrypted, "secretstringthing", "salty123");
 

@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
-using Certify.Models.Utils;
 using Certify.Shared;
 
 namespace Certify.Core.Management.Challenges

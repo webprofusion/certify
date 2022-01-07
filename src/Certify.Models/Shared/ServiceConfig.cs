@@ -27,7 +27,7 @@ namespace Certify.Shared
 
         [JsonIgnore]
         public ConfigStatus ConfigStatus { get; set; }
-        
+
         /// <summary>
         /// If true, allow service to negotitate it's own port and update required config.
         /// </summary>
