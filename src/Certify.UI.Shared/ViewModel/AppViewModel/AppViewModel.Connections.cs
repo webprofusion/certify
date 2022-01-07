@@ -185,6 +185,7 @@ namespace Certify.UI.ViewModel
                     else
                     {
                         Debug.WriteLine("Connected to management service.");
+                        _certifyClient = clientConnection;
                     }
                 }
             }
@@ -204,11 +205,13 @@ namespace Certify.UI.ViewModel
             clientConnection.OnRequestProgressStateUpdated += UpdateRequestTrackingProgress;
             clientConnection.OnManagedCertificateUpdated += CertifyClient_OnManagedCertificateUpdated;
 
+            // replace active connection
+            _certifyClient = clientConnection;
+
             // connect to status api stream & handle events
             try
             {
                 await clientConnection.ConnectStatusStreamAsync();
-
             }
             catch (Exception exp)
             {
@@ -222,9 +225,6 @@ namespace Certify.UI.ViewModel
 
                 return false;
             }
-
-            // replace active connection
-            _certifyClient = clientConnection;
 
             ConnectionState = IsServiceAvailable ? "Connected" : "Not Connected";
 

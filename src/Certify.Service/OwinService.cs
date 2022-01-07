@@ -80,34 +80,49 @@ namespace Certify.Service
             {
                 var httpSysStatus = DiagnoseServices();
 
-                var msg = $"Service failed to listen on {serviceUri}. :: {httpSysStatus} :: Attempting to reallocate port. {exp.ToString()}";
+                var msg = $"Service failed to listen on {serviceUri}. :: {httpSysStatus}";
+
 
                 Program.LogEvent(exp, msg, false);
 
-                // failed to listen on service uri, attempt reconfiguration of port.
-                serviceConfig.UseHTTPS = false;
-                var currentPort = serviceConfig.Port;
 
-                var newPort = currentPort += 2;
-
-                var reconfiguredServiceUri = $"{(serviceConfig.UseHTTPS ? "https" : "http")}://{serviceConfig.Host}:{newPort}";
-
-                try
+                if (serviceConfig.EnableAutoPortNegotiation)
                 {
-                    // if the http listener cannot bind here then the entire service will fail to start
-                    _webApp = WebApp.Start<APIHost>(reconfiguredServiceUri);
+                    msg = $"Attempting to reallocate service port.";
 
-                    Program.LogEvent(null, $"Service API bound OK to {reconfiguredServiceUri}", false);
+                    Program.LogEvent(exp, msg, false);
 
-                    // if that worked, save the new port setting
-                    serviceConfig.Port = newPort;
+                    // failed to listen on service uri, attempt reconfiguration of port.
+                    serviceConfig.UseHTTPS = false;
+                    var currentPort = serviceConfig.Port;
 
-                    System.Diagnostics.Debug.WriteLine($"Service started on {reconfiguredServiceUri}.");
+                    var newPort = currentPort += 2;
+
+                    var reconfiguredServiceUri = $"{(serviceConfig.UseHTTPS ? "https" : "http")}://{serviceConfig.Host}:{newPort}";
+
+                    try
+                    {
+                        // if the http listener cannot bind here then the entire service will fail to start
+                        _webApp = WebApp.Start<APIHost>(reconfiguredServiceUri);
+
+                        Program.LogEvent(null, $"Service API bound OK to {reconfiguredServiceUri}", false);
+
+                        // if that worked, save the new port setting
+                        serviceConfig.Port = newPort;
+
+                        System.Diagnostics.Debug.WriteLine($"Service started on {reconfiguredServiceUri}.");
+                    }
+                    catch (Exception)
+                    {
+                        serviceConfig.ServiceFaultMsg = $"Service failed to listen on {serviceUri}. \r\n\r\n{httpSysStatus} \r\n\r\nEnsure the windows HTTP service is available using 'sc config http start= demand' then 'net start http' commands.";
+                        throw;
+                    }
                 }
-                catch (Exception)
+                else
                 {
-                    serviceConfig.ServiceFaultMsg = $"Service failed to listen on {serviceUri}. \r\n\r\n{httpSysStatus} \r\n\r\nEnsure the windows HTTP service is available using 'sc config http start= demand' then 'net start http' commands.";
-                    throw;
+
+                    // port is in use, service not listening.
+                    Program.LogEvent(null, $"Port negotiation not enabled. Service API failed to bind to {serviceUri}", false);
                 }
             }
             finally

@@ -243,7 +243,18 @@ namespace Certify.UI.Windows
             var cts = new CancellationTokenSource();
 
             var connectedOk = await _appViewModel.InitServiceConnections(null, cts.Token);
-            
+
+            if (_appViewModel.IsServiceAvailable && !connectedOk)
+            {
+                // on some slower systems the service may connect but the status hub stream might fail (not yet started), try again
+                await Task.Delay(2000);
+                connectedOk = await _appViewModel.InitServiceConnections(null, cts.Token);
+
+                if (!connectedOk)
+                {
+                    _appViewModel.Log.Error("Service connected, but status stream failed.");
+                }
+            }
 
             if (_appViewModel.IsServiceAvailable)
             {
