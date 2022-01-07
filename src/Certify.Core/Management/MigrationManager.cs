@@ -271,7 +271,7 @@ namespace Certify.Core.Management
                             int totalRead = 0;
                             while (totalRead < source.Length)
                             {
-                                int bytesRead = cryptoStream.Read(decryptedBytes, totalRead, source.Length-totalRead);
+                                int bytesRead = cryptoStream.Read(decryptedBytes, totalRead, source.Length - totalRead);
                                 if (bytesRead == 0)
                                 {
                                     break;
