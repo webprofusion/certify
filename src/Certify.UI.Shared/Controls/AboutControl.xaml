@@ -36,7 +36,7 @@
                 x:Name="lblAbout"
                 Margin="0,8"
                 DockPanel.Dock="Top"
-                TextWrapping="Wrap"><Run Text="Copyright Webprofusion Pty Ltd 2015 - 2021" /><LineBreak /><Run Text="https://certifytheweb.com" /></TextBlock>
+                TextWrapping="Wrap"><Run Text="Copyright Webprofusion Pty Ltd 2015 - 2022" /><LineBreak /><Run Text="https://certifytheweb.com" /></TextBlock>
 
             <TextBlock
                 x:Name="lblRegistrationType"
