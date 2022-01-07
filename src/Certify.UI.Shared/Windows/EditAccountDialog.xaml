@@ -124,6 +124,7 @@
                     <StackPanel DockPanel.Dock="Top">
                         <TextBlock Style="{StaticResource Instructions}">If you need to test certificate requests without affecting your CA rate limit you can use an account which only issues test (staging) certificates:</TextBlock>
                         <CheckBox
+                            x:Name="IsStagingMode"
                             Margin="4,4,0,4"
                             Content="Use Staging (Test) Mode"
                             IsChecked="{Binding Item.IsStaging}" />

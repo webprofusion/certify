@@ -30,6 +30,13 @@ namespace Certify.Service
             return await _certifyManager.AddAccount(registration);
         }
 
+        [HttpPost, Route("update/{storageKey}")]
+        public async Task<Models.Config.ActionResult> UpdateAccountContact(string storageKey, [FromBody] ContactRegistration registration)
+        {
+            DebugLog();
+            return await _certifyManager.UpdateAccountContact(storageKey, registration);
+        }
+
         [HttpDelete, Route("remove/{storageKey}")]
         public async Task<Models.Config.ActionResult> RemoveAccount(string storageKey)
         {

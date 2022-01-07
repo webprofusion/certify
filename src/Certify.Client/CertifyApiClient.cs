@@ -47,7 +47,7 @@ namespace Certify.Client
                 .Or<TaskCanceledException>()
                 .OrResult<HttpResponseMessage>(x => !x.IsSuccessStatusCode)
                 .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1))
-                .ExecuteAsync(() => 
+                .ExecuteAsync(() =>
                     base.SendAsync(request, cancellationToken)
                 );
     }
@@ -518,6 +518,12 @@ namespace Certify.Client
         public async Task<ActionResult> AddAccount(ContactRegistration contact)
         {
             var result = await PostAsync("accounts", contact);
+            return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
+        }
+
+        public async Task<ActionResult> UpdateAccountContact(ContactRegistration contact)
+        {
+            var result = await PostAsync($"accounts/update/{contact.StorageKey}", contact);
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
 

@@ -121,6 +121,21 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        internal async Task<ActionResult> UpdateContactRegistration(ContactRegistration reg)
+        {
+            try
+            {
+                var result = await _certifyClient.UpdateAccountContact(reg);
+
+                RaisePropertyChangedEvent(nameof(HasRegisteredContacts));
+                return result;
+            }
+            catch (Exception exp)
+            {
+                return new ActionResult("Account update could not be completed. [" + exp.Message + "]", false);
+            }
+        }
+
         /// <summary>
         /// Remove stored ACME account registration and refresh cached list
         /// </summary>

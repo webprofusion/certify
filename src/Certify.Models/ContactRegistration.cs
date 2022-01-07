@@ -2,6 +2,8 @@
 {
     public class ContactRegistration
     {
+        public string StorageKey { get; set; }
+
         public string EmailAddress { get; set; }
 
         public bool AgreedToTermsAndConditions { get; set; } = false;

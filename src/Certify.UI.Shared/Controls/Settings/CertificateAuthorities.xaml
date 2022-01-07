@@ -102,6 +102,12 @@
                                 DockPanel.Dock="Right">
                                 Delete
                             </Button>
+                            <Button
+                                Margin="0,0,8,0"
+                                Click="Button_Edit"
+                                DockPanel.Dock="Right">
+                                Edit
+                            </Button>
                         </DockPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>

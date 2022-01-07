@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
-using Certify.Models.Utils;
 using Certify.Providers.ACME.Certes;
 using Newtonsoft.Json;
 
@@ -175,6 +174,50 @@ namespace Certify.Management
                 }
 
                 return addedAccount;
+            }
+            else
+            {
+                // did not agree to terms
+                return new ActionResult("You must agree to the terms and conditions of the Certificate Authority to register with them.", false);
+            }
+        }
+
+        /// <summary>
+        /// Perform an ACME account registration and store the new account as a stored credential
+        /// </summary>
+        /// <param name="reg"></param>
+        /// <returns></returns>
+        public async Task<Models.Config.ActionResult> UpdateAccountContact(string storageKey, ContactRegistration reg)
+        {
+            // there is one registered contact per account type (per CA, Prod or Staging)
+
+            // attempt to register the new contact
+            if (reg.AgreedToTermsAndConditions)
+            {
+                _certificateAuthorities.TryGetValue(reg.CertificateAuthorityId, out var certAuthority);
+
+                if (certAuthority == null)
+                {
+                    return new ActionResult("Invalid Certificate Authority specified.", false);
+                }
+                var existingAccounts = await GetAccountRegistrations();
+                var existingAccount = existingAccounts.FirstOrDefault(a => a.StorageKey == storageKey);
+
+                var acmeProvider = await GetACMEProvider(storageKey, reg.IsStaging ? certAuthority.StagingAPIEndpoint : certAuthority.ProductionAPIEndpoint, existingAccount, certAuthority.AllowUntrustedTls);
+
+                _serviceLog?.Information($"Updating account with ACME CA {acmeProvider.GetAcmeBaseURI()}]: {reg.EmailAddress}");
+
+                var updatedAccount = await acmeProvider.UpdateAccount(_serviceLog, reg.EmailAddress, reg.AgreedToTermsAndConditions);
+
+                if (existingAccount != null && updatedAccount.IsSuccess)
+                {
+                    // store new account details as credentials
+                    existingAccount.Email = reg.EmailAddress;
+                    existingAccount.AccountKey = updatedAccount.Result.AccountKey;
+                    await StoreAccountAsCredential(existingAccount);
+                }
+
+                return updatedAccount;
             }
             else
             {

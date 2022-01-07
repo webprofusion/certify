@@ -110,5 +110,32 @@ namespace Certify.UI.Controls.Settings
                 }
             }
         }
+
+        private async void Button_Edit(object sender, RoutedEventArgs e)
+        {
+            if (sender != null)
+            {
+                var button = sender as Button;
+                var account = button.DataContext as AccountDetails;
+
+                //present edit contact dialog
+                var d = new Windows.EditAccountDialog(new ContactRegistration
+                {
+                    StorageKey = account.StorageKey,
+                    AgreedToTermsAndConditions = true,
+                    CertificateAuthorityId = account.CertificateAuthorityId,
+                    EmailAddress = account.Email,
+                    IsStaging = account.IsStagingAccount,
+                    PreferredChain = account.PreferredChain,
+                    EabKey = account.EabKey,
+                    EabKeyAlgorithm = account.EabKeyAlgorithm,
+                    EabKeyId = account.EabKeyId
+                })
+                {
+                    Owner = Window.GetWindow(this)
+                };
+                d.ShowDialog();
+            }
+        }
     }
 }

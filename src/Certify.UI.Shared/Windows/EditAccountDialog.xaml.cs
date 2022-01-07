@@ -19,16 +19,29 @@ namespace Certify.UI.Windows
 
         public IEnumerable<CertificateAuthority> CertificateAuthorities => MainViewModel.CertificateAuthorities;
 
-        public EditAccountDialog()
+        public EditAccountDialog(ContactRegistration editItem = null)
         {
             InitializeComponent();
 
-            Item = new ContactRegistration();
+            Item = editItem ?? new ContactRegistration();
 
             DataContext = this;
 
             this.Width *= MainViewModel.UIScaleFactor;
             this.Height *= MainViewModel.UIScaleFactor;
+
+            if (Item.StorageKey != null)
+            {
+
+                // edit, disable read only options
+                CertificateAuthorityList.IsEnabled = false;
+                IsStagingMode.IsEnabled = false;
+            }
+            else
+            {
+                CertificateAuthorityList.IsEnabled = true;
+                IsStagingMode.IsEnabled = true;
+            }
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
@@ -95,7 +108,16 @@ namespace Certify.UI.Windows
             {
                 Mouse.OverrideCursor = Cursors.Wait;
 
-                var result = await MainViewModel.AddContactRegistration(Item);
+                Models.Config.ActionResult result;
+                if (Item.StorageKey == null)
+                {
+
+                    result = await MainViewModel.AddContactRegistration(Item);
+                }
+                else
+                {
+                    result = await MainViewModel.UpdateContactRegistration(Item);
+                }
 
                 Mouse.OverrideCursor = Cursors.Arrow;
 

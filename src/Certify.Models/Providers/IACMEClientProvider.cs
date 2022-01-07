@@ -35,7 +35,7 @@ namespace Certify.Models.Plugins
 
         Task<bool> DeactivateAccount(ILog log);
 
-        Task<bool> UpdateAccount(ILog log, string email, bool termsAgreed);
+        Task<ActionResult<AccountDetails>> UpdateAccount(ILog log, string email, bool termsAgreed);
 
         Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config, string orderUri = null);
 

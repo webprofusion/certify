@@ -112,9 +112,9 @@ namespace Certify.Client
         Task<List<CertificateAuthority>> GetCertificateAuthorities();
         Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority ca);
         Task<ActionResult> DeleteCertificateAuthority(string id);
-
         Task<List<AccountDetails>> GetAccounts();
         Task<ActionResult> AddAccount(ContactRegistration contact);
+        Task<ActionResult> UpdateAccountContact(ContactRegistration contact);
         Task<ActionResult> RemoveAccount(string storageKey);
 
         #endregion Accounts
@@ -135,6 +135,5 @@ namespace Certify.Client
         Task ConnectStatusStreamAsync();
 
         Shared.ServerConnection GetConnectionInfo();
-
     }
 }

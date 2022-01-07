@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -318,18 +318,39 @@ namespace Certify.Providers.ACME.Certes
             }
         }
 
-        public async Task<bool> UpdateAccount(ILog log, string email, bool termsAgreed)
+        public async Task<ActionResult<AccountDetails>> UpdateAccount(ILog log, string email, bool termsAgreed)
         {
+
             var acc = await _acme.Account();
 
-            var results = await acc.Update(new string[] { email }, termsAgreed);
+            log?.Information($"Updating account {email} with certificate authority");
+
+            var results = await acc.Update(new string[] { (email.StartsWith("mailto:") ? email : "mailto:" + email) }, termsAgreed);
             if (results.Status == AccountStatus.Valid)
             {
-                return true;
+
+                log?.Information($"Account updated.");
+                await PopulateSettingsFromCurrentAccount();
+                _settings.AccountEmail = email;
+
+
+                return new ActionResult<AccountDetails>
+                {
+                    IsSuccess = true,
+                    Result = new AccountDetails
+                    {
+                        AccountKey = _settings.AccountKey,
+                        Email = _settings.AccountEmail,
+                        AccountURI = _settings.AccountUri,
+                        ID = _settings.AccountUri.Split('/').Last()
+                    }
+                };
             }
             else
             {
-                return false;
+                var msg = $"Failed to update account contact. {results.Status}";
+                log?.Warning(msg);
+                return new ActionResult<AccountDetails> { IsSuccess = false, Message = msg };
             }
         }
 
@@ -1737,5 +1758,6 @@ namespace Certify.Providers.ACME.Certes
         }
 
         public Task<string> GetAcmeAccountStatus() => throw new NotImplementedException();
+
     }
 }
