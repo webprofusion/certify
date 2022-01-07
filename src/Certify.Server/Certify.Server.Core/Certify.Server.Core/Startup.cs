@@ -88,11 +88,16 @@ namespace Certify.Server.Core
             services.AddSingleton<Management.ICertifyManager>(certifyManager);
 
 
-            services.AddHttpsRedirection(options =>
+            var useHttps = bool.Parse(Configuration["API:Service:UseHttps"]);
+
+            if (useHttps)
             {
-                options.RedirectStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status307TemporaryRedirect;
-                options.HttpsPort = 443;
-            });
+                services.AddHttpsRedirection(options =>
+                {
+                    options.RedirectStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status307TemporaryRedirect;
+                    options.HttpsPort = 443;
+                });
+            }
 
         }
 
@@ -120,8 +125,12 @@ namespace Certify.Server.Core
             certifyManager.SetStatusReporting(new Service.StatusHubReporting(statusHubContext));
 
             //
+            var useHttps = bool.Parse(Configuration["API:Service:UseHttps"]);
 
-            app.UseHttpsRedirection();
+            if (useHttps)
+            {
+                app.UseHttpsRedirection();
+            }
 
             app.UseRouting();
 

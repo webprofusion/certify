@@ -53,69 +53,84 @@ namespace Certify.Service.Worker
                         // configuration precedence is secrets first, https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-5.0#default
                         var configuration = (IConfiguration)serverOptions.ApplicationServices.GetService(typeof(IConfiguration));
 
-                        var certPassword = Environment.GetEnvironmentVariable("ASPNETCORE_Kestrel__Certificates__Development__Password");
-                        var certPath = Environment.GetEnvironmentVariable("ASPNETCORE_Kestrel__Certificates__Development__Path");
+                        var useHttps = bool.Parse(configuration["API:Service:UseHttps"]);
 
-                        // if not yet defined load config from usersecrets (development env only) or appsettings
-                        if (certPassword == null)
+                        // default IP to localhost then specify from configuration
+                        var ipSelection = configuration["API:Service:BindingIP"];
+                        var ipBinding = IPAddress.Loopback;
+
+                        if (ipSelection != null)
                         {
-                            certPassword = configuration["Kestrel:Certificates:Default:Password"];
+                            if (ipSelection.ToLower() == "loopback")
+                            {
+                                ipBinding = IPAddress.Loopback;
+                            }
+                            else if (ipSelection.ToLower() == "any")
+                            {
+                                ipBinding = IPAddress.Any;
+                            }
+                            else
+                            {
+                                ipBinding = IPAddress.Parse(ipSelection);
+                            }
                         }
 
-                        if (certPath == null)
+                        if (useHttps)
                         {
-                            certPath = configuration["Kestrel:Certificates:Default:Path"];
-                        }
 
-                        try
-                        {
-                            var certificate = new X509Certificate2(certPath, certPassword);
+                            var certPassword = Environment.GetEnvironmentVariable("ASPNETCORE_Kestrel__Certificates__Development__Password");
+                            var certPath = Environment.GetEnvironmentVariable("ASPNETCORE_Kestrel__Certificates__Development__Path");
 
-                            // if password is wrong at this stage the attempts to use the cert will results in SSL Protocol Error
-
-
-                            var httpsConnectionAdapterOptions = new HttpsConnectionAdapterOptions()
+                            // if not yet defined load config from usersecrets (development env only) or appsettings
+                            if (certPassword == null)
                             {
-                                ClientCertificateMode = ClientCertificateMode.NoCertificate,
-                                SslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13,
-                                ServerCertificate = certificate,
-                            };
-
-                            var httpsPort = Convert.ToInt32(configuration["API:Service:HttpsPort"]);
-
-                            // default IP to localhost then specify from configuration
-                            var ipSelection = configuration["API:Service:BindingIP"];
-                            var ipBinding = IPAddress.Loopback;
-
-                            if (ipSelection != null)
-                            {
-                                if (ipSelection.ToLower() == "loopback")
-                                {
-                                    ipBinding = IPAddress.Loopback;
-                                }
-                                else if (ipSelection.ToLower() == "any")
-                                {
-                                    ipBinding = IPAddress.Any;
-                                }
-                                else
-                                {
-                                    ipBinding = IPAddress.Parse(ipSelection);
-                                }
+                                certPassword = configuration["Kestrel:Certificates:Default:Password"];
                             }
 
-                            serverOptions.Listen(new System.Net.IPEndPoint(ipBinding, httpsPort), listenOptions =>
+                            if (certPath == null)
                             {
-                                listenOptions.UseHttps(httpsConnectionAdapterOptions);
-                            });
+                                certPath = configuration["Kestrel:Certificates:Default:Path"];
+                            }
+
+                            try
+                            {
+                                var certificate = new X509Certificate2(certPath, certPassword);
+
+                                // if password is wrong at this stage the attempts to use the cert will results in SSL Protocol Error
+
+
+                                var httpsConnectionAdapterOptions = new HttpsConnectionAdapterOptions()
+                                {
+                                    ClientCertificateMode = ClientCertificateMode.NoCertificate,
+                                    SslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13,
+                                    ServerCertificate = certificate,
+                                };
+
+                                var httpsPort = Convert.ToInt32(configuration["API:Service:HttpsPort"]);
+
+
+
+                                serverOptions.Listen(new System.Net.IPEndPoint(ipBinding, httpsPort), listenOptions =>
+                                {
+                                    listenOptions.UseHttps(httpsConnectionAdapterOptions);
+                                });
+
+                            }
+                            catch (Exception exp)
+                            {
+                                // TODO: there is no logger yet, need to report this failure to main log once the log exists
+                                System.Diagnostics.Debug.WriteLine("Failed to load PFX certificate for application. Check service certificate config." + exp.ToString());
+                            }
 
                         }
-                        catch (Exception exp)
+                        else
                         {
-                            // TODO: there is no logger yet, need to report this failure to main log once the log exists
-                            System.Diagnostics.Debug.WriteLine("Failed to load PFX certificate for application. Check service certificate config." + exp.ToString());
+                            var httpPort = Convert.ToInt32(configuration["API:Service:HttpPort"]);
+
+                            serverOptions.Listen(new System.Net.IPEndPoint(ipBinding, httpPort), listenOptions =>
+                            {
+                            });
                         }
-
-
 
 
                     });
