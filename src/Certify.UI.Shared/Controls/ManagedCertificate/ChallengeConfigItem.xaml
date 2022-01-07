@@ -255,6 +255,21 @@
                 </StackPanel>
 
             </StackPanel>
+            <StackPanel>
+                <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                    <Label Width="160" Content="CNAME Delegation Rule" />
+                    <TextBox
+                        x:Name="ChallengeDelegationRule"
+                        Width="270"
+                        mah:TextBoxHelper.Watermark="(optional) *.example.com:*.auth.example.org"
+                        Text="{Binding SelectedItem.ChallengeDelegationRule}" />
+                </StackPanel>
+                <StackPanel Margin="160,0,0,0">
+                    <TextBlock Style="{StaticResource Instructions}"><Run Text="Only required if you intend to delegate _acme-challenge TXT records to another domain via CNAME." /></TextBlock>
+                </StackPanel>
+
+            </StackPanel>
+
         </StackPanel>
 
         <StackPanel DockPanel.Dock="Top" Visibility="{Binding HasMultipleChallengeConfigurations, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
@@ -272,20 +287,7 @@
 
         </StackPanel>
 
-        <StackPanel DockPanel.Dock="Top">
-            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
-                <Label Width="160" Content="CNAME Delegation Rule" />
-                <TextBox
-                    x:Name="ChallengeDelegationRule"
-                    Width="270"
-                    mah:TextBoxHelper.Watermark="(optional) *.example.com:*.auth.example.org"
-                    Text="{Binding SelectedItem.ChallengeDelegationRule}" />
-            </StackPanel>
-            <StackPanel Margin="160,0,0,0">
-                <TextBlock Style="{StaticResource Instructions}"><Run Text="Only required if you intend to delegate _acme-challenge TXT records to another domain via CNAME." /></TextBlock>
-            </StackPanel>
 
-        </StackPanel>
         <Button
             x:Name="DeleteAuth"
             MaxWidth="160"
