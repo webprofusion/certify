@@ -1002,7 +1002,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 else
                 {
                     // string
-                    return key + "='" + val + "'";
+                    return key + "='" + val.Replace("'", "''") + "'";
                 }
 
             }
@@ -1071,7 +1071,8 @@ namespace Certify.Core.Management.Challenges.DNS
                             var originalCredential = _credentials.FirstOrDefault(c => c.Key.Trim() == s.Key.Trim());
                             if (originalCredential.Value != null)
                             {
-                                var kv = new KeyValuePair<string, string>(cfg.AltParamKey ?? s.Key.Trim(), "(ConvertTo-SecureString \"" + originalCredential.Value + "\" -asPlainText -force)");
+                                var escapedCred = originalCredential.Value?.Replace("'", "''");
+                                var kv = new KeyValuePair<string, string>(cfg.AltParamKey ?? s.Key.Trim(), $"(ConvertTo-SecureString '{escapedCred}' -asPlainText -force)");
                                 return kv;
                             }
                         }
@@ -1100,14 +1101,14 @@ namespace Certify.Core.Management.Challenges.DNS
                       .Select(p => new { Param = p, KV = GetMostSpecificParameterValue(p) })
                       .ToList();
 
-            // if using PSCredential, convert individual credentials to primary credential argument
+            // if using PSCredential, convert legacy plaintext individual credentials to primary credential argument
             if (psCredentialSpec?.Length == 3)
             {
                 var credKey = psCredentialSpec[0];
                 var credUser = allArgumentKV.FirstOrDefault(a => a.KV.Key == psCredentialSpec[1]).KV.Value;
                 var credPwd = allArgumentKV.FirstOrDefault(a => a.KV.Key == psCredentialSpec[2]).KV.Value;
 
-                var credPSCredentials = "(New-Object System.Management.Automation.PSCredential (\"" + credUser + "\", (ConvertTo-SecureString \"" + credPwd + "\" -asPlainText -force)))";
+                var credPSCredentials = $"(New-Object System.Management.Automation.PSCredential ('{credUser?.Replace("'","''")}', (ConvertTo-SecureString '{credPwd?.Replace("'", "''")}' -asPlainText -force)))";
 
                 // remove username/pwd from our list of used arguments as it will now be provided as a combined credential instead
                 allArgumentKV.RemoveAll(a => a.KV.Key == psCredentialSpec[1]);
