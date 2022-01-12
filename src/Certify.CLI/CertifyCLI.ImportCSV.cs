@@ -355,16 +355,16 @@ namespace Certify.CLI
 
                                     var sanExists = false;
 
-                                    // check for existing SAN entry
+                                    // check for existing (and selected) SAN entry
                                     foreach (var site in currentManagedCertificates)
                                     {
                                         if (!sanExists)
                                         {
-                                            var filtered = site.DomainOptions.Where(options => options.Domain == cleanDomainName);
+                                            var filtered = site.DomainOptions.Where(options => options.Domain == cleanDomainName && options.IsSelected == true);
 
                                             if (filtered.Count() > 0)
                                             {
-                                                Console.WriteLine("Processing Row: " + rowID + " - Domain entry (" + cleanDomainName + ") already exists in certificate (" + site.Name + ")");
+                                                Console.WriteLine("Processing Row: " + rowID + " - Domain entry (" + cleanDomainName + ") already selected in certificate (" + site.Name + ")");
                                                 sanExists = true;
                                             }
                                         }
