@@ -9,11 +9,22 @@ namespace Certify.Management
     public partial class CertifyManager
     {
         /// <summary>
-        /// Returbn list of websites or hosted services (provided by the target service provider)
+        /// Return list of websites or hosted services (provided by the target service provider)
         /// </summary>
         /// <param name="ignoreStoppedSites"></param>
         /// <returns></returns>
-        public async Task<List<BindingInfo>> GetPrimaryWebSites(bool ignoreStoppedSites) => await _serverProvider.GetPrimarySites(ignoreStoppedSites);
+        public async Task<List<SiteInfo>> GetPrimaryWebSites(bool ignoreStoppedSites, string itemId = null)
+        {
+            if (itemId != null)
+            {
+                var item = await _serverProvider.GetSiteById(itemId);
+                return new List<SiteInfo> { item };
+            }
+            else
+            {
+                return await _serverProvider.GetPrimarySites(ignoreStoppedSites);
+            }
+        }
 
         /// <summary>
         /// Get list of domains/identifiers used by a specific hosted service (provided by the target service provider)

@@ -668,4 +668,7 @@
   <data name="ExpiryDateConverter_CertificateExpiredNDaysAgo" xml:space="preserve">
     <value>Expired {0} Days Ago</value>
   </data>
+  <data name="ManagedCertificateSettings_DomainsIntro" xml:space="preserve">
+    <value>Select domains from existing hostname bindings on an website or add the domains manually. You can then select Request Certificate above or modify options as required. To specify a custom CSR see the Advanced tab.</value>
+  </data>
 </root>

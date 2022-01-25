@@ -10,5 +10,6 @@
         public string Name { get; set; }
         public string Path { get; set; }
         public bool IsEnabled { get; set; } = true;
+        public bool HasCertificate { get; set; } = false;
     }
 }

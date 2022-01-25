@@ -255,10 +255,17 @@ namespace Certify.Client
             return bool.Parse(result);
         }
 
-        public async Task<List<BindingInfo>> GetServerSiteList(StandardServerTypes serverType)
+        public async Task<List<SiteInfo>> GetServerSiteList(StandardServerTypes serverType, string itemId =null)
         {
-            var result = await FetchAsync($"server/sitelist/{serverType}");
-            return JsonConvert.DeserializeObject<List<BindingInfo>>(result);
+            if (string.IsNullOrEmpty(itemId))
+            {
+                var result = await FetchAsync($"server/sitelist/{serverType}");
+                return JsonConvert.DeserializeObject<List<SiteInfo>>(result);
+            } else
+            {
+                var result = await FetchAsync($"server/sitelist/{serverType}/{itemId}");
+                return JsonConvert.DeserializeObject<List<SiteInfo>>(result);
+            }
         }
 
         public async Task<System.Version> GetServerVersion(StandardServerTypes serverType)

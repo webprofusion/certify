@@ -10,6 +10,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Certify.Server.API.Controllers
 {
+    /// <summary>
+    /// Provides auth related operations
+    /// </summary>
     [ApiController]
     [Route("api/v1/[controller]")]
     public class AuthController : ControllerBase
@@ -68,6 +71,11 @@ namespace Certify.Server.API.Controllers
             return authResponse;
         }
 
+        /// <summary>
+        /// Refresh users current auth token
+        /// </summary>
+        /// <param name="refreshToken"></param>
+        /// <returns></returns>
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPost]
         [Route("refresh")]

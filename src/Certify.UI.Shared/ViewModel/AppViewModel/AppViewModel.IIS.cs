@@ -22,7 +22,7 @@ namespace Certify.UI.ViewModel
         /// </summary>
         /// <param name="serverType"></param>
         /// <returns></returns>
-        internal async Task<List<BindingInfo>> GetServerSiteList(StandardServerTypes serverType)
+        internal async Task<List<SiteInfo>> GetServerSiteList(StandardServerTypes serverType)
         {
             return await _certifyClient.GetServerSiteList(serverType);
         }

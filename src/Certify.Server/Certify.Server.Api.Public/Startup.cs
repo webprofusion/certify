@@ -66,6 +66,13 @@ namespace Certify.Server.API
                     Version = "v1",
                     Description = "The Certify Server API provides a certificate services API for use in devops, CI/CD, middleware etc. Certificates are managed by Certify The Web (https://certifytheweb.com) on the primary server using ACME, with API access controlled using API tokens."
                 });
+                
+                c.UseAllOfToExtendReferenceSchemas();
+
+                // use the actual method names as the generated operation id
+                c.CustomOperationIds(e =>
+                    $"{e.ActionDescriptor.RouteValues["action"]}"
+                );
 
                 // declare authorization method
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

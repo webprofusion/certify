@@ -32,7 +32,7 @@ namespace Certify.Service
         }
 
         [HttpGet, Route("sitelist/{serverType}")]
-        public async Task<List<BindingInfo>> GetServerSiteList(StandardServerTypes serverType)
+        public async Task<List<SiteInfo>> GetServerSiteList(StandardServerTypes serverType)
         {
             if (serverType == StandardServerTypes.IIS)
             {
@@ -40,7 +40,21 @@ namespace Certify.Service
             }
             else
             {
-                return new List<BindingInfo>();
+                return new List<SiteInfo>();
+            }
+        }
+
+
+        [HttpGet, Route("sitelist/{serverType}/{itemId?}")]
+        public async Task<List<SiteInfo>> GetServerSiteList(StandardServerTypes serverType, string itemId = null)
+        {
+            if (serverType == StandardServerTypes.IIS)
+            {
+                return await _certifyManager.GetPrimaryWebSites(Management.CoreAppSettings.Current.IgnoreStoppedSites, itemId);
+            }
+            else
+            {
+                return new List<SiteInfo>();
             }
         }
 

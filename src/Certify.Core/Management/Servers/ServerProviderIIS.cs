@@ -256,9 +256,9 @@ namespace Certify.Management.Servers
         /// </summary>
         /// <param name="includeOnlyStartedSites">  </param>
         /// <returns>  </returns>
-        public async Task<List<BindingInfo>> GetPrimarySites(bool includeOnlyStartedSites)
+        public async Task<List<SiteInfo>> GetPrimarySites(bool includeOnlyStartedSites)
         {
-            var result = new List<BindingInfo>();
+            var result = new List<SiteInfo>();
 
             try
             {
@@ -272,13 +272,14 @@ namespace Certify.Management.Servers
                         {
                             if (site != null)
                             {
-                                var b = new BindingInfo()
+                                var b = new SiteInfo()
                                 {
-                                    SiteId = site.Id.ToString(),
-                                    SiteName = site.Name
+                                    ServerType = StandardServerTypes.IIS,
+                                    Id = site.Id.ToString(),
+                                    Name = site.Name
                                 };
 
-                                b.PhysicalPath = site.Applications["/"].VirtualDirectories["/"].PhysicalPath;
+                                b.Path = site.Applications["/"].VirtualDirectories["/"].PhysicalPath;
 
                                 try
                                 {
@@ -312,7 +313,7 @@ namespace Certify.Management.Servers
                 //IIS not available
             }
 
-            return result.OrderBy(s => s.SiteName).ToList();
+            return result.OrderBy(s => s.Name).ToList();
         }
 
         public async Task<bool> IsSNISupported()
@@ -679,6 +680,7 @@ namespace Certify.Management.Servers
 
                 return new BindingInfo()
                 {
+                    ServerType = StandardServerTypes.IIS.ToString(),
                     SiteId = siteInfo.Id,
                     SiteName = siteInfo.Name,
                     PhysicalPath = siteInfo.Path,
@@ -732,6 +734,7 @@ namespace Certify.Management.Servers
 
                 return new BindingInfo()
                 {
+                    ServerType = StandardServerTypes.IIS.ToString(),
                     SiteId = siteInfo.Id,
                     SiteName = siteInfo.Name,
                     PhysicalPath = siteInfo.Path,
@@ -1003,8 +1006,8 @@ namespace Certify.Management.Servers
             return sites.Select(s =>
                 (IBindingDeploymentTargetItem)new IISBindingTargetItem
                 {
-                    Id = s.SiteId,
-                    Name = s.SiteName
+                    Id = s.Id,
+                    Name = s.Name
                 }).ToList();
         }
 

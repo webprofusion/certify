@@ -11,6 +11,9 @@ namespace Certify.Server.Api.Public.Services
     // https://www.c-sharpcorner.com/article/implement-jwt-in-asp-net-core-3-1/
     // https://www.blinkingcaret.com/2018/05/30/refresh-tokens-in-asp-net-core-web-api/
 
+    /// <summary>
+    /// Provides JWT related operations
+    /// </summary>
     public class JwtService
     {
         private readonly string _secret;
@@ -24,6 +27,10 @@ namespace Certify.Server.Api.Public.Services
             _expDate = config.GetSection("JwtSettings").GetSection("expirationInDays").Value;
         }
 
+        /// <summary>
+        /// Generate a new refresh token
+        /// </summary>
+        /// <returns></returns>
         public string GenerateRefreshToken()
         {
             var randomNumber = new byte[32];
@@ -33,6 +40,13 @@ namespace Certify.Server.Api.Public.Services
                 return Convert.ToBase64String(randomNumber);
             }
         }
+
+        /// <summary>
+        /// Generate a new auth token
+        /// </summary>
+        /// <param name="identifier"></param>
+        /// <param name="expiryMinutes"></param>
+        /// <returns></returns>
 
         public string GenerateSecurityToken(string identifier, double? expiryMinutes)
         {
@@ -55,7 +69,13 @@ namespace Certify.Server.Api.Public.Services
             return tokenHandler.WriteToken(token);
 
         }
-
+        /// <summary>
+        /// Parse a provided token and extract claims
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="validateTokenLifetime"></param>
+        /// <returns></returns>
+        /// <exception cref="SecurityTokenException"></exception>
         public ClaimsPrincipal GetClaimsPrincipalFromToken(string token, bool validateTokenLifetime)
         {
             var key = Encoding.UTF8.GetBytes(_secret);

@@ -5,6 +5,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Certify.Server.API.Controllers
 {
+    /// <summary>
+    /// Provides general system level information (version etc)
+    /// </summary>
     [ApiController]
     [Route("api/v1/[controller]")]
     public class SystemController : ControllerBase
@@ -14,15 +17,25 @@ namespace Certify.Server.API.Controllers
 
         private readonly ICertifyInternalApiClient _client;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <param name="client"></param>
         public SystemController(ILogger<SystemController> logger, ICertifyInternalApiClient client)
         {
             _logger = logger;
             _client = client;
         }
 
+
+        /// <summary>
+        /// Get the server software version
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Route("version")]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> GetSystemVersion()
         {
             var versionInfo = await _client.GetAppVersion();
 

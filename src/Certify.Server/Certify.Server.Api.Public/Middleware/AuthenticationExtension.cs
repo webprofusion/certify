@@ -6,6 +6,9 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Certify.Server.Api.Public.Middleware
 {
+    /// <summary>
+    /// Provides authentication related extensions
+    /// </summary>
     public static class AuthenticationExtension
     {
         /// <summary>

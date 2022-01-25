@@ -1,15 +1,15 @@
 <UserControl
     x:Class="Certify.UI.Controls.ManagedCertificate.CertificateDomains"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:fa="http://schemas.fontawesome.io/icons/"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
     xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     xmlns:certifyui="clr-namespace:Certify.UI"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fa="http://schemas.fontawesome.io/icons/"
     xmlns:managedcertificate="clr-namespace:Certify.UI.Controls.ManagedCertificate"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:utils="clr-namespace:Certify.UI.Utils"
-    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
     d:DataContext="{d:DesignInstance Type=certifyui:ManagedCertificateViewModelDesign,
                                      IsDesignTimeCreatable=True}"
     mc:Ignorable="d">
@@ -45,7 +45,7 @@
                     <WrapPanel Orientation="Vertical">
                         <DockPanel Margin="8,0,8,8" Visibility="{Binding SelectedItem.RequestConfig.CustomCSR, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
 
-                            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}"><Run Text="Select domains from existing hostname bindings on an website or add the domains manually. You can then select " /><Run FontWeight="Bold" Text="Request Certificate " /><Run Text="above or modify options as required. To specify a custom CSR see the Advanced tab." /></TextBlock>
+                            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}"><Run Text="{x:Static Resources:SR.ManagedCertificateSettings_DomainsIntro}" /></TextBlock>
 
                             <StackPanel
                                 Margin="0,8,0,0"
@@ -61,7 +61,7 @@
                                     Width="240"
                                     AutomationProperties.HelpText="You can optionally select a site hosted on this server to populate the list of domains in your certificate. "
                                     AutomationProperties.Name="{x:Static Resources:SR.ManagedCertificateSettings_SelectWebsite}"
-                                    DisplayMemberPath="SiteName"
+                                    DisplayMemberPath="Name"
                                     ItemsSource="{Binding WebSiteList, UpdateSourceTrigger=PropertyChanged}"
                                     SelectedItem="{Binding SelectedWebSite}"
                                     SelectionChanged="Website_SelectionChanged">
@@ -207,7 +207,7 @@
 
                                 </StackPanel>
                                 <DataGrid
-                                    x:Name="DomainOptionsList" 
+                                    x:Name="DomainOptionsList"
                                     AutoGenerateColumns="False"
                                     CanUserAddRows="False"
                                     EnableRowVirtualization="True"

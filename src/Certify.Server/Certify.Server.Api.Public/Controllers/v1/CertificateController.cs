@@ -9,9 +9,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Certify.Server.API.Controllers
 {
+    /// <summary>
+    /// Provides managed certificate related operations
+    /// </summary>
     [ApiController]
     [Route("api/v1/[controller]")]
     public class CertificateController : ControllerBase
@@ -21,6 +25,11 @@ namespace Certify.Server.API.Controllers
 
         private readonly ICertifyInternalApiClient _client;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <param name="client"></param>
         public CertificateController(ILogger<CertificateController> logger, ICertifyInternalApiClient client)
         {
             _logger = logger;
@@ -37,7 +46,7 @@ namespace Certify.Server.API.Controllers
         [HttpGet]
         [Route("{managedCertId}/download/{format?}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> DownloadCertificate(string managedCertId, string format, string mode)
+        public async Task<IActionResult> Download(string managedCertId, string format, string mode)
         {
             if (format == null)
             {
@@ -111,7 +120,7 @@ namespace Certify.Server.API.Controllers
         /// <returns></returns>
         [HttpGet]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ManagedCertificateInfo>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ManagedCertificateSummary>))]
         public async Task<IActionResult> GetManagedCertificates(string keyword)
         {
 
@@ -119,7 +128,7 @@ namespace Certify.Server.API.Controllers
 
             //TODO: this assumes all identifiers are DNS, may be IPs in the future.
 
-            var list = managedCerts.Select(i => new ManagedCertificateInfo
+            var list = managedCerts.Select(i => new ManagedCertificateSummary
             {
                 Id = WebUtility.UrlEncode(i.Id),
                 Title = i.Name,
@@ -133,6 +142,48 @@ namespace Certify.Server.API.Controllers
             });
 
             return new OkObjectResult(list);
+        }
+
+        /// <summary>
+        /// Gets the full settings for a specific managed certificate
+        /// </summary>
+        /// <param name="managedCertId"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("settings/{managedCertId}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
+        [SwaggerOperation(OperationId = nameof(GetManagedCertificateDetails))]
+        public async Task<IActionResult> GetManagedCertificateDetails(string managedCertId)
+        {
+
+            var managedCert = await _client.GetManagedCertificate(managedCertId);
+
+            return new OkObjectResult(managedCert);
+        }
+
+        /// <summary>
+        /// Add/update the full settings for a specific managed certificate
+        /// </summary>
+        /// <param name="managedCertificate"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("settings/update")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
+        [SwaggerOperation(OperationId = nameof(UpdateManagedCertificateDetails))]
+        public async Task<IActionResult> UpdateManagedCertificateDetails(Models.ManagedCertificate managedCertificate)
+        {
+
+            var result = await _client.UpdateManagedCertificate(managedCertificate);
+            if (result != null)
+            {
+                return new OkObjectResult(result);
+            }
+            else
+            {
+                return new BadRequestResult();
+            }
         }
     }
 }
