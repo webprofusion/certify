@@ -41,8 +41,8 @@
                 Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="Domains"
                 IsSelected="False">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
+               
+                    <WrapPanel Orientation="Vertical">
                         <DockPanel Margin="8,0,8,8" Visibility="{Binding SelectedItem.RequestConfig.CustomCSR, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
 
                             <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}"><Run Text="Select domains from existing hostname bindings on an website or add the domains manually. You can then select " /><Run FontWeight="Bold" Text="Request Certificate " /><Run Text="above or modify options as required. To specify a custom CSR see the Advanced tab." /></TextBlock>
@@ -295,9 +295,9 @@
                                 </DataGrid.Columns>
                             </DataGrid>
                         </DockPanel>
-                    </StackPanel>
+                    </WrapPanel>
 
-                </ScrollViewer>
+             
             </TabItem>
 
             <TabItem
