@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models;
+using Newtonsoft.Json;
 
 namespace Certify.CLI
 {
@@ -48,6 +51,22 @@ namespace Certify.CLI
 
             return result;
 
+        }
+
+
+        internal async Task ListACMEAccounts()
+        {
+            var results = await GetACMEAccounts();
+
+            var output = JsonConvert.SerializeObject(results, Formatting.Indented);
+
+            Console.WriteLine(output);
+
+        }
+        private async Task<List<AccountDetails>> GetACMEAccounts()
+        {
+            var results = await _certifyClient.GetAccounts();
+            return results;
         }
 
     }

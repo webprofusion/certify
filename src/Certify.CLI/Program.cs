@@ -164,6 +164,11 @@ namespace Certify.CLI
                 {
                     await p.AddACMEAccount(args);
                 }
+
+                if (command == "acmeaccount" && args.Contains("list"))
+                {
+                    await p.ListACMEAccounts();
+                }
             }
 #if DEBUG
             System.Console.WriteLine("CLI: Completed (DEBUG)");
