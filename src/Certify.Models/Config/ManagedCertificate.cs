@@ -111,7 +111,7 @@ namespace Certify.Models
         public string ParentId { get; set; }
 
         /// <summary>
-        /// Optional grouping ID, such as where mamaged sites share a common IIS site id
+        /// Deprecated, use Server Site Id
         /// </summary>
 
         public string GroupId { get; set; }
