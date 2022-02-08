@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29009.5
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{B92D2D90-CB9F-4ED7-BA98-EA3E1E4F8C56}"
 	ProjectSection(SolutionItems) = preProject
@@ -36,6 +36,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.UI.Shared", "src\Certify.UI.Shared\Certify.UI.Shared.csproj", "{2F22CB91-04C6-4BF0-A670-91BDBAA65EE1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.UI.Desktop", "src\Certify.UI.Desktop\Certify.UI.Desktop.csproj", "{4553FD40-4BE1-40B8-ADD4-AD715CB87F7E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Providers.ACME.Certes", "src\Certify.Providers\ACME\Certes\Certify.Providers.ACME.Certes.csproj", "{DF16B470-EFFA-470B-9DFD-8722ED080204}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -117,6 +119,14 @@ Global
 		{4553FD40-4BE1-40B8-ADD4-AD715CB87F7E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4553FD40-4BE1-40B8-ADD4-AD715CB87F7E}.Release|x64.ActiveCfg = Release|Any CPU
 		{4553FD40-4BE1-40B8-ADD4-AD715CB87F7E}.Release|x64.Build.0 = Release|Any CPU
+		{DF16B470-EFFA-470B-9DFD-8722ED080204}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{DF16B470-EFFA-470B-9DFD-8722ED080204}.Debug|Any CPU.Build.0 = Debug|x64
+		{DF16B470-EFFA-470B-9DFD-8722ED080204}.Debug|x64.ActiveCfg = Debug|x64
+		{DF16B470-EFFA-470B-9DFD-8722ED080204}.Debug|x64.Build.0 = Debug|x64
+		{DF16B470-EFFA-470B-9DFD-8722ED080204}.Release|Any CPU.ActiveCfg = Release|x64
+		{DF16B470-EFFA-470B-9DFD-8722ED080204}.Release|Any CPU.Build.0 = Release|x64
+		{DF16B470-EFFA-470B-9DFD-8722ED080204}.Release|x64.ActiveCfg = Release|x64
+		{DF16B470-EFFA-470B-9DFD-8722ED080204}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -130,6 +140,7 @@ Global
 		{ABC56ACD-E306-42B1-B5D7-3A3E90FE9A45} = {9A70DEC0-70C4-42A7-B15A-647EC432E7F7}
 		{2F22CB91-04C6-4BF0-A670-91BDBAA65EE1} = {F24166A2-37CB-4FE8-ADCF-8F94141D2E19}
 		{4553FD40-4BE1-40B8-ADD4-AD715CB87F7E} = {F24166A2-37CB-4FE8-ADCF-8F94141D2E19}
+		{DF16B470-EFFA-470B-9DFD-8722ED080204} = {9A70DEC0-70C4-42A7-B15A-647EC432E7F7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D27296BB-12D3-44A5-B5A2-B79EB1AB223D}
