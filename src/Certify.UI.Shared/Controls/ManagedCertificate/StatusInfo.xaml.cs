@@ -81,7 +81,15 @@ namespace Certify.UI.Controls.ManagedCertificate
             if (System.IO.File.Exists(logPath))
             {
                 //open file
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(logPath) { UseShellExecute = true });
+                try
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(logPath) { UseShellExecute = true });
+                }
+                catch
+                {
+                    MessageBox.Show($"The system could not launch the default app for {logPath} - Open the file manually.");
+                }
+
             }
             else
             {
@@ -95,8 +103,17 @@ namespace Certify.UI.Controls.ManagedCertificate
                     System.IO.File.WriteAllLines(tempPath, log);
                     _tempLogFilePath = tempPath;
 
-                    _tempLogViewerProcess = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(tempPath) { UseShellExecute = true });
-                    _tempLogViewerProcess.Exited += Process_Exited;
+
+                    try
+                    {
+                        _tempLogViewerProcess = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(tempPath) { UseShellExecute = true });
+                        _tempLogViewerProcess.Exited += Process_Exited;
+
+                    }
+                    catch
+                    {
+                        MessageBox.Show($"The system could not launch the default app for {logPath} - Open the file manually.");
+                    }
                 }
                 catch (Exception exp)
                 {
