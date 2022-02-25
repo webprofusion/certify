@@ -36,7 +36,7 @@ namespace Certify.Service.Api.Tests
 
             Assert.AreEqual(System.Net.HttpStatusCode.OK, response.StatusCode);
 
-            var managedCerts = System.Text.Json.JsonSerializer.Deserialize<List<ManagedCertificateInfo>>(responseString, _defaultJsonSerializerOptions);
+            var managedCerts = System.Text.Json.JsonSerializer.Deserialize<List<ManagedCertificateSummary>>(responseString, _defaultJsonSerializerOptions);
 
             Assert.IsNotNull(managedCerts);
 
@@ -54,7 +54,7 @@ namespace Certify.Service.Api.Tests
             Assert.IsTrue(response.IsSuccessStatusCode, "Certificate query should be successful");
 
             var responseString = await response.Content.ReadAsStringAsync();
-            var managedCerts = System.Text.Json.JsonSerializer.Deserialize<List<ManagedCertificateInfo>>(responseString, _defaultJsonSerializerOptions);
+            var managedCerts = System.Text.Json.JsonSerializer.Deserialize<List<ManagedCertificateSummary>>(responseString, _defaultJsonSerializerOptions);
 
             var itemWithCert = managedCerts.First(c => c.DateRenewed != null);
 

@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Certify.Client;
+using Certify.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -10,14 +12,14 @@ using Microsoft.Extensions.Logging;
 namespace Certify.Server.API.Controllers
 {
     /// <summary>
-    /// Provides operations related to identifier validation challenges (proof of domain control etc)
+    /// Internal API for extended certificate management. Not intended for general use.
     /// </summary>
     [ApiController]
-    [Route("api/v1/[controller]")]
-    public class ValidationController : ControllerBase
+    [Route("internal/v1/[controller]")]
+    public class DeploymentTaskController : ControllerBase
     {
 
-        private readonly ILogger<ValidationController> _logger;
+        private readonly ILogger<SystemController> _logger;
 
         private readonly ICertifyInternalApiClient _client;
 
@@ -26,32 +28,25 @@ namespace Certify.Server.API.Controllers
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="client"></param>
-        public ValidationController(ILogger<ValidationController> logger, ICertifyInternalApiClient client)
+        public DeploymentTaskController(ILogger<SystemController> logger, ICertifyInternalApiClient client)
         {
             _logger = logger;
             _client = client;
         }
 
         /// <summary>
-        /// get current challenge info fo a given type/key
+        /// Get List of supported deployment tasks
         /// </summary>
-        /// <param name="type"></param>
-        /// <param name="key"></param>
         /// <returns></returns>
         [HttpGet]
-        [Route("{type}/{key?}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Models.SimpleAuthorizationChallengeItem>))]
-        public async Task<IActionResult> GetValidationChallenges(string type, string key)
-        {
-            if (type == null)
-            {
-                type = "http-01";
-            }
 
-            var list = await _client.GetCurrentChallenges(type, key);
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Models.Config.DeploymentProviderDefinition>))]
+        [Route("providers")]
+        public async Task<IActionResult> GetDeploymentProviders()
+        {
+            var list = await _client.GetDeploymentProviderList();
             return new OkObjectResult(list);
         }
-
     }
 }

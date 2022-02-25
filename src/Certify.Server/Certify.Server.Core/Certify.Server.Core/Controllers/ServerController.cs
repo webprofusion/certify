@@ -33,7 +33,7 @@ namespace Certify.Service
         }
 
         [HttpGet, Route("sitelist/{serverType}")]
-        public async Task<List<BindingInfo>> GetServerSiteList(StandardServerTypes serverType)
+        public async Task<List<SiteInfo>> GetServerSiteList(StandardServerTypes serverType)
         {
             if (serverType == StandardServerTypes.IIS)
             {
@@ -41,7 +41,7 @@ namespace Certify.Service
             }
             else
             {
-                return new List<BindingInfo>();
+                return new List<SiteInfo>();
             }
         }
 

@@ -98,7 +98,7 @@ namespace Certify.Core.Management
         {
         }
 
-        public Task<List<BindingInfo>> GetPrimarySites(bool ignoreStoppedSites)
+        public Task<List<SiteInfo>> GetPrimarySites(bool ignoreStoppedSites)
         {
             throw new NotImplementedException();
         }

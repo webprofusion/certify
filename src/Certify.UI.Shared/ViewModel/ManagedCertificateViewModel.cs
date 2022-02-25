@@ -93,17 +93,17 @@ namespace Certify.UI.ViewModel
 
         internal async Task RefreshWebsiteList()
         {
-            var selectedWebsiteId = SelectedWebSite?.SiteId;
+            var selectedWebsiteId = SelectedWebSite?.Id;
 
             IsSiteListQueryProgress = true;
 
             var list = await _appViewModel.GetServerSiteList(StandardServerTypes.IIS);
 
-            list.Insert(0, new BindingInfo { SiteName = "(No IIS Site Selected)", SiteId = "" });
+            list.Insert(0, new SiteInfo { Name = "(No IIS Site Selected)", Id = "" });
 
             if (WebSiteList == null)
             {
-                WebSiteList = new ObservableCollection<BindingInfo>();
+                WebSiteList = new ObservableCollection<SiteInfo>();
             }
 
             WebSiteList.Clear();
@@ -113,7 +113,7 @@ namespace Certify.UI.ViewModel
             IsSiteListQueryProgress = false;
 
             // restore 
-            SelectedWebSite = WebSiteList.FirstOrDefault(s => s.SiteId == selectedWebsiteId);
+            SelectedWebSite = WebSiteList.FirstOrDefault(s => s.Id == selectedWebsiteId);
             RaisePropertyChangedEvent(nameof(WebSiteList));
 
         }
@@ -121,7 +121,7 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// List of websites from the selected web server (if any) 
         /// </summary>
-        public ObservableCollection<BindingInfo> WebSiteList { get; set; } = new ObservableCollection<BindingInfo>();
+        public ObservableCollection<SiteInfo> WebSiteList { get; set; } = new ObservableCollection<SiteInfo>();
 
         public bool HasSelectedItemWebsiteSelection
         {
@@ -288,7 +288,7 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public BindingInfo SelectedWebSite
+        public SiteInfo SelectedWebSite
         {
             get; set;
         }
@@ -511,10 +511,10 @@ namespace Certify.UI.ViewModel
                 item.ItemType = ManagedCertificateType.SSL_ACME;
 
                 // optionally append webserver site ID (if used)
-                if (SelectedWebSite != null && !string.IsNullOrEmpty(SelectedWebSite.SiteId))
+                if (SelectedWebSite != null && !string.IsNullOrEmpty(SelectedWebSite.Id))
                 {
-                    item.Id += ":" + SelectedWebSite.SiteId;
-                    item.GroupId = SelectedWebSite.SiteId;
+                    item.Id += ":" + SelectedWebSite.Id;
+                    item.GroupId = SelectedWebSite.Id;
                 }
             }
 
@@ -693,17 +693,17 @@ namespace Certify.UI.ViewModel
 
             if (SelectedWebSite != null)
             {
-                if (managedCertificate.GroupId != SelectedWebSite.SiteId)
+                if (managedCertificate.GroupId != SelectedWebSite.Id)
                 {
                     // update website association
-                    managedCertificate.GroupId = SelectedWebSite.SiteId;
+                    managedCertificate.GroupId = SelectedWebSite.Id;
 
                     // if not already set, use website name as default name
                     if (managedCertificate.Id == null || string.IsNullOrEmpty(managedCertificate.Name))
                     {
-                        if (!string.IsNullOrEmpty(SelectedWebSite.SiteName))
+                        if (!string.IsNullOrEmpty(SelectedWebSite.Name))
                         {
-                            managedCertificate.Name = SelectedWebSite.SiteName;
+                            managedCertificate.Name = SelectedWebSite.Name;
                         }
                     }
 

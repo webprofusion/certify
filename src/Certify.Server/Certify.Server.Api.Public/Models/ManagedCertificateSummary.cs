@@ -3,7 +3,10 @@ using System.Collections.Generic;
 
 namespace Certify.Server.Api.Public.Models
 {
-    public class ManagedCertificateInfo
+    /// <summary>
+    /// Summary information for a managed certificate
+    /// </summary>
+    public class ManagedCertificateSummary
     {
         /// <summary>
         /// Id for this managed item
@@ -56,7 +59,14 @@ namespace Certify.Server.Api.Public.Models
     /// </summary>
     public class Identifier
     {
+        /// <summary>
+        /// Identifier type (e.g. "dns", "ip")
+        /// </summary>
         public string Type { get; set; } = "dns";
+
+        /// <summary>
+        /// Identifier value
+        /// </summary>
         public string Value { get; set; }
     }
 }

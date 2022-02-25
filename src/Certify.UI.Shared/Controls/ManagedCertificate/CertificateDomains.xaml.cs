@@ -67,7 +67,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                         ItemViewModel.SelectedItem.GroupId = "";
                     }
 
-                    var selectedWebsite = ItemViewModel.WebSiteList.FirstOrDefault(w => w.SiteId == ItemViewModel.SelectedItem.GroupId);
+                    var selectedWebsite = ItemViewModel.WebSiteList.FirstOrDefault(w => w.Id == ItemViewModel.SelectedItem.GroupId);
                     if (selectedWebsite != null)
                     {
                         ItemViewModel.SelectedWebSite = selectedWebsite;
@@ -86,7 +86,7 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             if (ItemViewModel.SelectedWebSite != null)
             {
-                var siteId = ItemViewModel.SelectedWebSite.SiteId;
+                var siteId = ItemViewModel.SelectedWebSite.Id;
 
                 await ItemViewModel.PopulateManagedCertificateSettings(siteId);
             }

@@ -14,7 +14,7 @@ namespace Certify.Models.Providers
             string siteId = null
             );
 
-        Task<List<BindingInfo>> GetPrimarySites(bool ignoreStoppedSites);
+        Task<List<SiteInfo>> GetPrimarySites(bool ignoreStoppedSites);
 
         Task<SiteInfo> GetSiteById(string siteId);
 

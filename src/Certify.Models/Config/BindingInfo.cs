@@ -2,6 +2,7 @@
 {
     public class BindingInfo
     {
+        public string ServerType { get; set; }
         public string SiteId { get; set; }
         public string SiteName { get; set; }
 

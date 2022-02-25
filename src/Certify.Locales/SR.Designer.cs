@@ -19,7 +19,7 @@ namespace Certify.Locales {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class SR {
@@ -787,6 +787,15 @@ namespace Certify.Locales {
         public static string ManagedCertificateSettings_DomainIncluded {
             get {
                 return ResourceManager.GetString("ManagedCertificateSettings_DomainIncluded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select domains from existing hostname bindings on an website or add the domains manually. You can then select Request Certificate above or modify options as required. To specify a custom CSR see the Advanced tab..
+        /// </summary>
+        public static string ManagedCertificateSettings_DomainsIntro {
+            get {
+                return ResourceManager.GetString("ManagedCertificateSettings_DomainsIntro", resourceCulture);
             }
         }
         

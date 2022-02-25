@@ -111,7 +111,7 @@ namespace Certify.UI.Controls.Settings
             }
         }
 
-        private async void Button_Edit(object sender, RoutedEventArgs e)
+        private void Button_Edit(object sender, RoutedEventArgs e)
         {
             if (sender != null)
             {

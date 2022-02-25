@@ -51,7 +51,7 @@ namespace Certify.Management
 
         Task<CertificateRequestResult> PerformDummyCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null);
         Task<ActionResult> RemoveCertificateAuthority(string id);
-        Task<List<BindingInfo>> GetPrimaryWebSites(bool ignoreStoppedSites);
+        Task<List<SiteInfo>> GetPrimaryWebSites(bool ignoreStoppedSites, string itemId = null);
 
         void BeginTrackingProgress(RequestProgressState state);
 
