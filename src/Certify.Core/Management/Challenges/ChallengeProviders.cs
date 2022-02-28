@@ -134,7 +134,7 @@ namespace Certify.Core.Management.Challenges
                         Id = "ExternalAuth.Azure.ClientSecret",
                         Title = "Azure AD Application Client Secret",
                         Description = "Azure AD Application user and client secret",
-
+                        HelpUrl="https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal",
                         ProviderParameters = new List<ProviderParameter>{
                             new ProviderParameter{Key="tenantid", Name="Directory (tenant) Id", IsRequired=true, IsCredential=true },
                             new ProviderParameter{Key="clientid", Name="Application (client) Id", IsRequired=true, IsCredential=true },
