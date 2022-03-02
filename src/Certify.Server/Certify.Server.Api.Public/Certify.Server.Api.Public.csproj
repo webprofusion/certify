@@ -26,5 +26,9 @@
     <ProjectReference Include="..\..\Certify.Shared.Compat\Certify.Shared.Compat.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\" />
+  </ItemGroup>
+
 
 </Project>

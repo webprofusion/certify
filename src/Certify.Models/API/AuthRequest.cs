@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace Certify.Server.Api.Public.Models
+﻿namespace Certify.Models.API
 {
     /// <summary>
     /// Required info to begin auth
@@ -10,13 +8,12 @@ namespace Certify.Server.Api.Public.Models
         /// <summary>
         /// Username to authenticate with
         /// </summary>
-        [Required]
+
         public string Username { get; set; }
 
         /// <summary>
         /// Password to authenticate with
         /// </summary>
-        [Required]
         public string Password { get; set; }
 
     }

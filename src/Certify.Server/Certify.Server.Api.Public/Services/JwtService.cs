@@ -20,6 +20,10 @@ namespace Certify.Server.Api.Public.Services
         private readonly string _issuer;
         private readonly string _expDate;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="config"></param>
         public JwtService(IConfiguration config)
         {
             _secret = config.GetSection("JwtSettings").GetSection("secret").Value;
