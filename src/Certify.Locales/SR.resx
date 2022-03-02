@@ -671,4 +671,7 @@
   <data name="ManagedCertificateSettings_DomainsIntro" xml:space="preserve">
     <value>Select domains from existing hostname bindings on an website or add the domains manually. You can then select Request Certificate above or modify options as required. To specify a custom CSR see the Advanced tab.</value>
   </data>
+  <data name="Credentials_Intro" xml:space="preserve">
+    <value>Stored credentials are required to make automated calls to APIs and other resources during certificate renewal and deployment. These credentials are protected using the Windows Data Protection APIs and stored on this machine.</value>
+  </data>
 </root>

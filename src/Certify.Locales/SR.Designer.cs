@@ -232,6 +232,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Stored credentials are required to make automated calls to APIs and other resources during certificate renewal and deployment. These credentials are protected using the Windows Data Protection APIs and stored on this machine..
+        /// </summary>
+        public static string Credentials_Intro {
+            get {
+                return ResourceManager.GetString("Credentials_Intro", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to To add this server to your dashboard, provide your https://certifytheweb.com/profile sign in details or register a new account:.
         /// </summary>
         public static string Dashboard_AddIntro {
