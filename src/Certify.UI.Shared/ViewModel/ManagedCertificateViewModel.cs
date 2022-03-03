@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Input;
 using Certify.Locales;
 using Certify.Models;
+using Certify.Models.Shared.Validation;
 using Certify.Shared.Utils;
 using PropertyChanged;
 
@@ -689,51 +690,16 @@ namespace Certify.UI.ViewModel
         public async Task PopulateManagedCertificateSettings(string siteId)
         {
             ValidationError = null;
-            var managedCertificate = SelectedItem;
+            var domainOptions = await GetDomainOptionsFromSite(siteId);
+            
+            var result = await CertificateDomainsService.PopulateFromSiteInfo(SelectedItem, SelectedWebSite, domainOptions);
 
-            if (SelectedWebSite != null)
+            if (!result.IsSuccess)
             {
-                if (managedCertificate.GroupId != SelectedWebSite.Id)
-                {
-                    // update website association
-                    managedCertificate.GroupId = SelectedWebSite.Id;
-
-                    // if not already set, use website name as default name
-                    if (managedCertificate.Id == null || string.IsNullOrEmpty(managedCertificate.Name))
-                    {
-                        if (!string.IsNullOrEmpty(SelectedWebSite.Name))
-                        {
-                            managedCertificate.Name = SelectedWebSite.Name;
-                        }
-                    }
-
-                    // remove domain options not manually added
-                    foreach (var d in managedCertificate.DomainOptions.ToList())
-                    {
-                        if (!d.IsManualEntry)
-                        {
-                            managedCertificate.DomainOptions.Remove(d);
-                        }
-                    }
-
-                    var domainOptions = await GetDomainOptionsFromSite(siteId);
-                    foreach (var option in domainOptions)
-                    {
-                        managedCertificate.DomainOptions.Add(option);
-                    }
-
-                    if (!managedCertificate.DomainOptions.Any())
-                    {
-                        ValidationError = "The selected site has no domain bindings setup. Configure the domains first using Edit Bindings in IIS.";
-                    }
-
-                    RaiseSelectedItemChanges();
-                }
-                else
-                {
-                    RaiseSelectedItemChanges();
-                    // same website selection RaisePropertyChanged(nameof(PrimarySubjectDomain)); RaisePropertyChanged(nameof(HasSelectedItemDomainOptions));
-                }
+                ValidationError = result.Message;
+            } else
+            {
+                SelectedItem = result.Result;
             }
         }
 

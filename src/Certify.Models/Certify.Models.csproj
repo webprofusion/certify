@@ -26,4 +26,7 @@
        <PrivateAssets>all</PrivateAssets>
        </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Shared\Validation\" />
+  </ItemGroup>
 </Project>
