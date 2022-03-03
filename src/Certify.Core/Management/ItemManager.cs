@@ -107,13 +107,21 @@ namespace Certify.Management
                         }
 
                         // create new backup
-                        using (var backupDB = new SQLiteConnection($"Data Source ={ backupFile}"))
+                        try
                         {
-                            backupDB.Open();
-                            db.BackupDatabase(backupDB, "main", "main", -1, null, 1000);
-                            backupDB.Close();
+                            using (var backupDB = new SQLiteConnection($"Data Source ={ backupFile}"))
+                            {
+                                backupDB.Open();
+                                db.BackupDatabase(backupDB, "main", "main", -1, null, 1000);
+                                backupDB.Close();
 
-                            _log?.Information($"Performed db backup to {backupFile}. To switch to the backup, rename the old manageditems.db file and rename the .bak file as manageditems.db, then restart service to recover. ");
+                                _log?.Information($"Performed db backup to {backupFile}. To switch to the backup, rename the old manageditems.db file and rename the .bak file as manageditems.db, then restart service to recover. ");
+                            }
+                        }
+                        catch (Exception exp)
+                        {
+                            _log?.Information($"Failed to performed db backup to {backupFile}. Check file permissions and delete old file if there is a conflict. "+exp.ToString());
+
                         }
                         db.Close();
                     }
