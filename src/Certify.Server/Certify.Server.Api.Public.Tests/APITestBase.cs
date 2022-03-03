@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Certify.Server.Api.Public.Models;
+using Certify.Models.API;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;

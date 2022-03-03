@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
-using Certify.Server.Api.Public.Models;
+using Certify.Models.API;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Service.Api.Tests
