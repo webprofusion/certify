@@ -40,7 +40,7 @@ namespace Certify.Models
 
             DomainOptions = new ObservableCollection<DomainOption>();
             RequestConfig = new CertRequestConfig();
-            RequestConfig.Challenges.Add(new CertRequestChallengeConfig { ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP });
+           
             IncludeInAutoRenew = true;
              
 #if DEBUG
