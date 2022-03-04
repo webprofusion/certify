@@ -7,6 +7,7 @@
     xmlns:fa="http://schemas.fontawesome.io/icons/"
     xmlns:local="clr-namespace:Certify.UI.Controls.ManagedCertificate"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     d:DataContext="{d:DesignInstance Type=certifyui:ManagedCertificateViewModelDesign,
                                      IsDesignTimeCreatable=True}"
     d:DesignHeight="450"
@@ -19,14 +20,14 @@
                 Margin="0,0,0,0"
                 DockPanel.Dock="Top"
                 Style="{StaticResource Instructions}"
-                Text="Tasks are an optional way to work with your latest certificate or trigger other actions before or after renewal. "
+                Text="{x:Static res:SR.ManagedCertificates_Tasks_Intro}"
                 TextWrapping="Wrap" />
 
 
             <StackPanel DockPanel.Dock="Top">
                 <TextBlock Margin="0,16,0,0" Style="{StaticResource Subheading}">Deployment Tasks</TextBlock>
                 <StackPanel Orientation="Vertical">
-                    <TextBlock Style="{StaticResource Instructions}" Text="Deployment Tasks run (in the order shown) after the standard Deployment process has completed (see the Deployment tab). Tasks can be run immediately after the certificate has updated or they can be deferred (to run manually or via a scheduled task etc.). You can also drag tasks to re-order them:" />
+                    <TextBlock Style="{StaticResource Instructions}" Text="{x:Static res:SR.ManagedCertificates_Tasks_DeploymentIntro}" />
 
                     <Button
                         Width="80"
@@ -52,7 +53,7 @@
             <StackPanel DockPanel.Dock="Top">
                 <TextBlock Margin="0,16,0,0" Style="{StaticResource Subheading}">Pre-Request Tasks</TextBlock>
                 <StackPanel Orientation="Vertical">
-                    <TextBlock Style="{StaticResource Instructions}" Text="You can optionally add any number of tasks to run before the certificate request begins:" />
+                    <TextBlock Style="{StaticResource Instructions}" Text="{x:Static res:SR.ManagedCertificates_Tasks_PrerequestIntro}" />
                     <Button
                         Width="80"
                         Height="28"

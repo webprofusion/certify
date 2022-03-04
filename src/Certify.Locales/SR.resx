@@ -674,4 +674,16 @@
   <data name="Credentials_Intro" xml:space="preserve">
     <value>Stored credentials are required to make automated calls to APIs and other resources during certificate renewal and deployment. These credentials are protected using the Windows Data Protection APIs and stored on this machine.</value>
   </data>
+  <data name="ManagedCertificates_Deployment_Intro" xml:space="preserve">
+    <value>  Deployment of your certificate can be automatic or you can perform your own deployment tasks (see the Tasks tab).</value>
+  </data>
+  <data name="ManagedCertificates_Tasks_Intro" xml:space="preserve">
+    <value>Tasks are an optional way to work with your latest certificate or trigger other actions before or after renewal. </value>
+  </data>
+  <data name="ManagedCertificates_Tasks_DeploymentIntro" xml:space="preserve">
+    <value>Deployment Tasks run (in the order shown) after the standard Deployment process has completed (see the Deployment tab). Tasks can be run immediately after the certificate has updated or they can be deferred (to run manually or via a scheduled task etc.). You can also drag tasks to re-order them:</value>
+  </data>
+  <data name="ManagedCertificates_Tasks_PrerequestIntro" xml:space="preserve">
+    <value>You can optionally add any number of tasks to run before the certificate request begins:</value>
+  </data>
 </root>

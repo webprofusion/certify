@@ -565,6 +565,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to   Deployment of your certificate can be automatic or you can perform your own deployment tasks (see the Tasks tab)..
+        /// </summary>
+        public static string ManagedCertificates_Deployment_Intro {
+            get {
+                return ResourceManager.GetString("ManagedCertificates_Deployment_Intro", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Filter....
         /// </summary>
         public static string ManagedCertificates_Filter {
@@ -579,6 +588,33 @@ namespace Certify.Locales {
         public static string ManagedCertificates_NoItemSelectedTip {
             get {
                 return ResourceManager.GetString("ManagedCertificates_NoItemSelectedTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Deployment Tasks run (in the order shown) after the standard Deployment process has completed (see the Deployment tab). Tasks can be run immediately after the certificate has updated or they can be deferred (to run manually or via a scheduled task etc.). You can also drag tasks to re-order them:.
+        /// </summary>
+        public static string ManagedCertificates_Tasks_DeploymentIntro {
+            get {
+                return ResourceManager.GetString("ManagedCertificates_Tasks_DeploymentIntro", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tasks are an optional way to work with your latest certificate or trigger other actions before or after renewal. .
+        /// </summary>
+        public static string ManagedCertificates_Tasks_Intro {
+            get {
+                return ResourceManager.GetString("ManagedCertificates_Tasks_Intro", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You can optionally add any number of tasks to run before the certificate request begins:.
+        /// </summary>
+        public static string ManagedCertificates_Tasks_PrerequestIntro {
+            get {
+                return ResourceManager.GetString("ManagedCertificates_Tasks_PrerequestIntro", resourceCulture);
             }
         }
         

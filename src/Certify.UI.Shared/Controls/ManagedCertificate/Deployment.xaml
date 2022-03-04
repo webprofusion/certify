@@ -43,9 +43,10 @@
                 Certificate Deployment
             </TextBlock>
 
-            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">
-                Deployment of your certificate can be automatic or you can perform your own deployment tasks (see the Tasks tab).
-            </TextBlock>
+            <TextBlock
+                DockPanel.Dock="Top"
+                Style="{StaticResource Instructions}"
+                Text="{x:Static Resources:SR.ManagedCertificates_Deployment_Intro}" />
             <StackPanel
                 Margin="0,8,0,8"
                 DockPanel.Dock="Top"
