@@ -8,7 +8,14 @@ namespace Certify.Models.Shared.Validation
 {
     public class CertificateDomainsService
     {
-        public static async Task<ActionResult<ManagedCertificate>> PopulateFromSiteInfo(ManagedCertificate managedCertificate, SiteInfo SelectedWebSite, IEnumerable<DomainOption> domainOptions)
+        /// <summary>
+        /// For a given website and list of domains, populate the Domain Options of the managed certificate
+        /// </summary>
+        /// <param name="managedCertificate"></param>
+        /// <param name="SelectedWebSite"></param>
+        /// <param name="domainOptions"></param>
+        /// <returns></returns>
+        public static ActionResult<ManagedCertificate> PopulateFromSiteInfo(ManagedCertificate managedCertificate, SiteInfo SelectedWebSite, IEnumerable<DomainOption> domainOptions)
         {
             // 
             if (SelectedWebSite != null)

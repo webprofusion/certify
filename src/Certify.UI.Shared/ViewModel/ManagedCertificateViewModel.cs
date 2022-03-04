@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -692,7 +692,7 @@ namespace Certify.UI.ViewModel
             ValidationError = null;
             var domainOptions = await GetDomainOptionsFromSite(siteId);
             
-            var result = await CertificateDomainsService.PopulateFromSiteInfo(SelectedItem, SelectedWebSite, domainOptions);
+            var result = CertificateDomainsService.PopulateFromSiteInfo(SelectedItem, SelectedWebSite, domainOptions);
 
             if (!result.IsSuccess)
             {
