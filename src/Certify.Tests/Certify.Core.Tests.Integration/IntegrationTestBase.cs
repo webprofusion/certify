@@ -12,7 +12,7 @@ namespace Certify.Core.Tests
     public class IntegrationTestBase
     {
         public string PrimaryTestDomain = "test.certifytheweb.com"; // TODO: get this from debug config as it changes per dev machine
-        public string PrimaryIISRoot = @"c:\inetpub\wwwroot\";
+        public string _primaryWebRoot = @"c:\inetpub\wwwroot\";
         public Dictionary<string, string> ConfigSettings = new Dictionary<string, string>();
         internal ILog _log;
 
