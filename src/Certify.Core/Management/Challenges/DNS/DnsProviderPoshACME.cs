@@ -42,6 +42,7 @@ namespace Certify.Core.Management.Challenges.DNS
             [Infoblox](https://poshac.me/docs/v4/Plugins/Infoblox),
             [IBM Cloud/SoftLayer](https://poshac.me/docs/v4/Plugins/IBMSoftLayer),
             [ISPConfig](https://poshac.me/docs/v4/Plugins/ISPConfig),
+            [Leaseweb](https://poshac.me/docs/v4/Plugins/LeaseWeb/),
             [Linode](https://poshac.me/docs/v4/Plugins/Linode),
             [Loopia](https://poshac.me/docs/v4/Plugins/Loopia),
             [LuaDns](https://poshac.me/docs/v4/Plugins/LuaDns),
@@ -622,6 +623,24 @@ namespace Certify.Core.Management.Challenges.DNS
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Infoblox;Credential=IBCred,IBUsername,IBPassword;",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
+             new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.LeaseWeb",
+                Title = "Leaseweb DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://poshac.me/docs/v4/Plugins/LeaseWeb/",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters = new List<ProviderParameter>
+                {
+                    new ProviderParameter { Key = "LSWApiKey", Name = "API Key", IsRequired = true, IsCredential = true, ExtendedConfig = _paramIsSecureStringConfig },
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=LeaseWeb",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = true,
                 IsExperimental = true
