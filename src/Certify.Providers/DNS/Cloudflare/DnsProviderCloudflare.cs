@@ -277,7 +277,7 @@ namespace Certify.Providers.DNS.Cloudflare
                     {
                         return new ActionResult("Record with required value exists, OK", true);
                     }
-                    else if (records.Any(r => r.Name == request.RecordName && r.Type.ToLower() == request.RecordType.ToLower()))
+                    else if (records.Count(r => r.Name == request.RecordName && r.Type.ToLower() == request.RecordType.ToLower())>=2)
                     {
                         // delete old record with different value before adding
                         _ = await DeleteRecord(request, false);
