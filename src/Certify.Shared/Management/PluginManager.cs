@@ -90,7 +90,7 @@ namespace Certify.Management
 
                 if (usePluginSubfolder)
                 {
-                    var path = Path.Combine(Path.GetDirectoryName(executableLocation), "plugins");
+                    var path = Path.Combine(executableLocation, "plugins");
                     return path;
                 }
                 else
@@ -107,9 +107,11 @@ namespace Certify.Management
         private T LoadPlugin<T>(string dllFileName, string pluginFolder = null)
         {
             Type interfaceType = typeof(T);
+            string pluginPath = String.Empty;
+
             try
             {
-                var pluginPath = pluginFolder != null ? Path.Combine(pluginFolder, dllFileName) : Path.Combine(GetPluginFolderPath(), dllFileName);
+                pluginPath = pluginFolder != null ? Path.Combine(pluginFolder, dllFileName) : Path.Combine(GetPluginFolderPath(), dllFileName);
 
                 if (!File.Exists(pluginPath))
                 {
@@ -136,18 +138,18 @@ namespace Certify.Management
                     }
                     else
                     {
-                        _log?.Debug($"Plugin Load Skipped [{interfaceType}] File does not contain a matching interface: {dllFileName}");
+                        _log?.Debug($"Plugin Load Skipped [{interfaceType}] File does not contain a matching interface: {dllFileName} in {pluginPath}");
                     }
                 }
                 else
                 {
-                    _log?.Warning($"Plugin Load Failed [{interfaceType}] File does not exist: {dllFileName}");
+                    _log?.Warning($"Plugin Load Failed [{interfaceType}] File does not exist: {dllFileName} in {pluginPath}");
                 }
             }
             catch (ReflectionTypeLoadException ex)
             {
 
-                _log?.Warning($"Plugin Load Failed [{interfaceType}] :: {dllFileName} [Reflection or Loader Error]");
+                _log?.Warning($"Plugin Load Failed [{interfaceType}] :: {dllFileName} [Reflection or Loader Error] in {pluginPath}");
 
                 _log.Error(ex.ToString());
                 foreach (var loaderEx in ex.LoaderExceptions)
