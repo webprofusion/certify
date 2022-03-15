@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
 		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
@@ -7,6 +7,11 @@
     <OutputType>Exe</OutputType>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>icon.ico</ApplicationIcon>
+    <Platforms>x64;AnyCPU</Platforms>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <PlatformTarget>x64</PlatformTarget>
@@ -17,6 +22,15 @@
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>bin\Release\</OutputPath>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>bin\Release\</OutputPath>
@@ -24,10 +38,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Certify.CLI\Certify.CLI.csproj" />
     <ProjectReference Include="..\Certify.Core\Certify.Core.csproj" />
-    <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />
-    <ProjectReference Include="..\Certify.Models\Certify.Models.csproj" />
-    <ProjectReference Include="..\Certify.Shared.MultiPlaform\Certify.Shared.MultiPlaform.csproj" />
-    <ProjectReference Include="..\Certify.Shared\Certify.Shared.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

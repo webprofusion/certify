@@ -69,7 +69,7 @@
     <ProjectReference Include="..\..\Certify.Providers\DNS\Azure\Plugin.DNS.Azure.csproj" />
     <ProjectReference Include="..\..\Certify.Providers\DNS\Cloudflare\Plugin.DNS.Cloudflare.csproj" />
     <ProjectReference Include="..\..\Certify.Service\Certify.Service.csproj" />
-    <ProjectReference Include="..\..\Certify.Shared.MultiPlaform\Certify.Shared.MultiPlaform.csproj" />
+    <ProjectReference Include="..\..\Certify.Shared.Extensions\Certify.Shared.Extensions.csproj" />
     <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.Core.csproj" />
   </ItemGroup>
   <ItemGroup>

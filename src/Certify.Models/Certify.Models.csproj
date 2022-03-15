@@ -2,18 +2,11 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Certify</RootNamespace>
-    <Platforms>AnyCPU;x64</Platforms>
+    <Platforms>AnyCPU</Platforms>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Description>Certify SSL Manager API Models</Description>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DefineConstants>TRACE</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>

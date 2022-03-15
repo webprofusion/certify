@@ -88,13 +88,5 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <Content Include="..\..\Certify.Shared\Scripts\Python\dns_helper.py">
-      <Link>Scripts\Python\dns_helper.py</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\Certify.Shared\Scripts\Python\dns_helper_util.py">
-      <Link>Scripts\Python\dns_helper_util.py</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
 </Project>

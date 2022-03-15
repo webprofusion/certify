@@ -7,6 +7,7 @@
 		<UseWindowsForms>true</UseWindowsForms>
 		<ApplicationIcon>icon.ico</ApplicationIcon>
 		<StartupObject>Certify.UI.App</StartupObject>
+		<Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
