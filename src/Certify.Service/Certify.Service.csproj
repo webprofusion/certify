@@ -26,7 +26,7 @@
     <ProjectReference Include="..\Certify.Core\Certify.Core.csproj" />
     <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />
     <ProjectReference Include="..\Certify.Models\Certify.Models.csproj" />
-    <ProjectReference Include="..\Certify.Shared.Compat\Certify.Shared.Compat.csproj" />
+    <ProjectReference Include="..\Certify.Shared.MultiPlaform\Certify.Shared.MultiPlaform.csproj" />
     <ProjectReference Include="..\Certify.Shared\Certify.Shared.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
@@ -34,7 +34,7 @@
     <Content Include="icon.ico" />
   </ItemGroup>
  <ItemGroup> 
-    <PackageReference Include="LightInject" Version="6.4.0" /> 
+    <PackageReference Include="LightInject" Version="6.4.1" /> 
     <PackageReference Include="LightInject.WebApi" Version="2.0.0" /> 
     <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.3" /> 
     <PackageReference Include="Microsoft.AspNet.SignalR.Core" Version="2.4.3" /> 
@@ -58,7 +58,7 @@
     <PackageReference Include="Serilog.Sinks.ListOfString" Version="4.1.4.3" /> 
     <PackageReference Include="Swashbuckle.Core" Version="5.6.0" /> 
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="6.0.0" /> 
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.15.1" /> 
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.16.0" /> 
     <PackageReference Include="System.ValueTuple" Version="4.5.0" /> 
     <PackageReference Include="Topshelf" Version="4.3.0" /> 
     <PackageReference Include="Topshelf.Serilog" Version="4.3.0" /> 

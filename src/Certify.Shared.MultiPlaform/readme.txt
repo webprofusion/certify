@@ -1,0 +1,2 @@
+﻿- Package references from other .net standard components, referenced as .net framework 4.6.2. 
+- Package referenced in core plugins should also be reference here so that their dependencies are bundled.
