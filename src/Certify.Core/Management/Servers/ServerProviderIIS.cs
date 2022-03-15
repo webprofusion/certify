@@ -186,6 +186,48 @@ namespace Certify.Management.Servers
             return srv;
         }
 
+        private bool IsSiteStarted(Site site)
+        {
+            if (site == null)
+            {
+                return false;
+            }
+
+            try
+            {
+                if (site.Bindings?.Any(ftp => ftp.Protocol == "ftp") == true)
+                {
+                    try
+                    {
+                        if (site.State == ObjectState.Started)
+                        {
+                            // site has one or more ftp bindings but overall IIS site state is started
+                            return true;
+                        }
+                    }
+                    catch { }
+
+                    //site is ftp site but may not be started, have to check for state differently
+                    var ftpState = Convert.ToInt32(
+                        site.GetChildElement("ftpServer")
+                        .GetAttributeValue("state")
+                        );
+
+                    return ftpState == (int)ObjectState.Started;
+                }
+
+
+                else
+                {
+                    return site.State == ObjectState.Started;
+                }
+            }
+            catch (Exception)
+            {
+                // if we get an exception testing state, assume site is running
+                return true;
+            }
+        }
         private IEnumerable<Site> GetSites(ServerManager iisManager, bool includeOnlyStartedSites, string siteId = null)
         {
             try
@@ -201,40 +243,7 @@ namespace Certify.Management.Servers
 
                     Func<Site, bool> isSiteStarted = (site) =>
                          {
-                             try
-                             {
-                                 if (site.Bindings?.Any(ftp => ftp.Protocol == "ftp") == true)
-                                 {
-                                     try
-                                     {
-                                         if (site.State == ObjectState.Started)
-                                         {
-                                             // site has one or more ftp bindings but overall IIS site state is started
-                                             return true;
-                                         }
-                                     }
-                                     catch { }
-
-                                     //site is ftp site but may not be started, have to check for state differently
-                                     var ftpState = Convert.ToInt32(
-                                         site.GetChildElement("ftpServer")
-                                         .GetAttributeValue("state")
-                                         );
-
-                                     return ftpState == (int)ObjectState.Started;
-                                 }
-
-
-                                 else
-                                 {
-                                     return site.State == ObjectState.Started;
-                                 }
-                             }
-                             catch (Exception)
-                             {
-                                 // if we get an exception testing state, assume site is running
-                                 return true;
-                             }
+                             return IsSiteStarted(site);
                          };
 
                     return siteList.Where(s => isSiteStarted(s));
@@ -926,14 +935,7 @@ namespace Certify.Management.Servers
             {
                 var siteDetails = iisManager.Sites.FirstOrDefault(s => s.Id.ToString() == id);
 
-                if (siteDetails?.State == ObjectState.Started)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                return IsSiteStarted(siteDetails);
             }
         }
 
