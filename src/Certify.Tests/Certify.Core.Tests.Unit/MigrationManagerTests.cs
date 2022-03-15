@@ -35,7 +35,7 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Ensure basic encrypt/decrypt")]
-        public async Task TestDecryptEncrypt()
+        public void TestDecryptEncrypt()
         {
             // setup
             var migrationManager = new MigrationManager(new ItemManager(), new CredentialsManager(), new ServerProviderMock());
