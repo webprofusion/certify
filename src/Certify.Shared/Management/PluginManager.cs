@@ -218,7 +218,7 @@ namespace Certify.Management
                 var builtInProvider = (IDnsProviderProviderPlugin)Activator.CreateInstance(Type.GetType("Certify.Core.Management.Challenges.ChallengeProviders+BuiltinDnsProviderProvider, Certify.Core"));
                 DnsProviderProviders.Add(builtInProvider);
 
-                var poshAcmeProvider = (IDnsProviderProviderPlugin)Activator.CreateInstance(Type.GetType("Certify.Core.Management.Challenges.DNS.DnsProviderPoshACME+PoshACMEDnsProviderProvider, Certify.Core"));
+                var poshAcmeProvider = (IDnsProviderProviderPlugin)Activator.CreateInstance(Type.GetType("Certify.Core.Management.Challenges.DNS.DnsProviderPoshACME+PoshACMEDnsProviderProvider, Certify.Shared.Extensions"));
                 DnsProviderProviders.Add(poshAcmeProvider);
 
                 var otherProviders = LoadPlugins<IDnsProviderProviderPlugin>("Plugin.DNS.*.dll", usePluginSubfolder: usePluginSubfolder);
