@@ -141,7 +141,7 @@ namespace Certify.Core.Tests
             await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
         }
 
-        [TestMethod, TestCategory("MegaTest")]
+        [TestMethod, TestCategory("MegaTest"), Ignore]
         public async Task TestChallengeRequestHttp01IDN()
         {
             var testIDNDomain = "å🤔." + PrimaryTestDomain;
