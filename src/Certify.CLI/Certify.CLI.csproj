@@ -62,7 +62,11 @@
   </PropertyGroup>
   <PropertyGroup>
     <LangVersion>default</LangVersion>
+    <ApplicationIcon>icon_cli.ico</ApplicationIcon>
   </PropertyGroup>
+  <ItemGroup>
+    <Content Include="icon_cli.ico" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Certify.Client\Certify.Client.csproj" />
     <ProjectReference Include="..\Certify.Core\Certify.Core.csproj" />
