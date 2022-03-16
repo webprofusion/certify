@@ -322,7 +322,7 @@ namespace Certify.Management
         {
             var logPath = ManagedCertificateLog.GetLogPath(id);
 
-            if (System.IO.File.Exists(logPath))
+            if (!string.IsNullOrEmpty(logPath) && System.IO.File.Exists(logPath))
             {
                 try
                 {
