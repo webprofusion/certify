@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -515,7 +515,14 @@ namespace Certify.Core.Management
                         if (cred != null)
                         {
                             var pfxPwd = cred["password"];
-                            cert = new X509Certificate2(pfxBytes, pfxPwd);
+                            try
+                            {
+                                cert = new X509Certificate2(pfxBytes, pfxPwd);
+                            }
+                            catch
+                            {
+                                // failed to load the provided cert, cert will remain null and failure will be reported in the import action step
+                            }
                         }
                     }
                 }
