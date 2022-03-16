@@ -78,7 +78,7 @@ namespace Certify.UI.Windows
             {
                 EditViewModel.Item = new StoredCredential
                 {
-                    ProviderType = EditViewModel.ChallengeProviders.First().Id
+                    ProviderType = EditViewModel.ChallengeProviders.FirstOrDefault()?.Id
                 };
             }
 
