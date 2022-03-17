@@ -51,8 +51,14 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ SiteName="TestWild", Host="wildtest.com", IP="*", HasCertificate=true, Protocol="https", Port=9001, SiteId="6"},
                 new BindingInfo{ SiteName="TestWild", Host="sub.wildtest.com", IP="*", HasCertificate=true, Protocol="https", Port=9001, SiteId="6"},
                 new BindingInfo{ SiteName="TestWild", Host="subsub.*.wildtest.com", IP="*", HasCertificate=true, Protocol="https", Port=9001, SiteId="6"},
-                new BindingInfo{ SiteName="TestWild", Host="subsub.sub.wildtest.com", IP="*", HasCertificate=true, Protocol="https", Port=9001, SiteId="6"}
+                new BindingInfo{ SiteName="TestWild", Host="subsub.sub.wildtest.com", IP="*", HasCertificate=true, Protocol="https", Port=9001, SiteId="6"},
+
+                // Site 7:  cert will be used to match multiple ports with same hostname and one blank hostname
+                new BindingInfo{ SiteName="TestMultiPorts", Host="admin.example.com", IP="*", HasCertificate=true, Protocol="https", Port=443, SiteId="7"},
+                new BindingInfo{ SiteName="TestMultiPorts", Host="admin.example.com", IP="*", HasCertificate=true, Protocol="https", Port=8530, SiteId="7"},
+                new BindingInfo{ SiteName="TestMultiPorts", Host="", IP="*", HasCertificate=true, Protocol="https", Port=8531, SiteId="7"}
             };
+
         }
 
         [TestMethod, Description("Ensure binding add/update decisions are correct based on deployment criteria")]
@@ -153,6 +159,18 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(preview.Count(b => b.Category.EndsWith("Binding")) == 3, "Should match 3 bindings across all sites");
             Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9000")) == 1, "Should have 1 port 9000 binding");
             Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9001")) == 2, "Should have 2 port 9001 bindings");
+
+            managedCertificate.ServerSiteId = "7";
+            managedCertificate.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
+            managedCertificate.RequestConfig.DeploymentBindingBlankHostname = true;
+            managedCertificate.RequestConfig.PrimaryDomain = "*.admin.example.com";
+            managedCertificate.RequestConfig.SubjectAlternativeNames = new string[] { "*.admin.example.com", "admin.example.com" };
+
+            preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
+            Assert.AreEqual(3, preview.Count(b => b.Category.EndsWith("Binding")), "Should match 3 bindings across all sites");
+            Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":443")) == 1, "Should have 1 port 443 binding");
+            Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":8530")) == 1, "Should have 1 port 8530 binding");
+            Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":8531")) == 1, "Should have 1 port 8531 binding");
 
             foreach (var a in preview)
             {
