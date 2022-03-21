@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Models.Config;
 using Certify.Models.Providers;
+#nullable disable
 
 namespace Certify.Models.Plugins
 {

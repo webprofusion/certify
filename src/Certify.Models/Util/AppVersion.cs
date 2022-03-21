@@ -8,7 +8,8 @@
 
         public override string ToString() => $"{Major}.{Minor}.{Patch}";
 
-        public static AppVersion FromString(string version)
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1305:Specify IFormatProvider", Justification = "Not required")]
+        public static AppVersion? FromString(string version)
         {
             try
             {
@@ -24,7 +25,7 @@
             }
             catch
             {
-                return null;
+                return default;
             }
         }
 

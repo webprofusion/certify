@@ -93,7 +93,7 @@ namespace Certify.UI.Windows
             {
                 if (string.IsNullOrEmpty(Item.EabKeyId) || string.IsNullOrEmpty(Item.EabKey))
                 {
-                    MessageBox.Show(ca.EabInstructions ?? "An external account binding Key Id and (HMAC) Key are required and will be provided by your Certificate Authority. You can enter these on the Advanced tab.");
+                    MessageBox.Show(string.IsNullOrEmpty(ca.EabInstructions) ? "An external account binding Key Id and (HMAC) Key are required and will be provided by your Certificate Authority. You can enter these on the Advanced tab." : ca.EabInstructions);
                     return;
                 }
             }

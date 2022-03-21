@@ -8,13 +8,13 @@ namespace Certify.Models
     /// </summary>
     public class AuthorizationChallengeItem
     {
-        public string ChallengeType { get; set; }
-        public object ChallengeData { get; set; }
+        public string? ChallengeType { get; set; }
+        public object? ChallengeData { get; set; }
 
-        public string Key { get; set; }
-        public string Value { get; set; }
-        public string ResourcePath { get; set; }
-        public string ResourceUri { get; set; }
+        public string? Key { get; set; }
+        public string? Value { get; set; }
+        public string? ResourcePath { get; set; }
+        public string? ResourceUri { get; set; }
         public int HashIterationCount { get; set; }
 
         /// <summary>
@@ -35,18 +35,18 @@ namespace Certify.Models
         /// Depending on configuration we may perform a config check confirming we can meet the
         /// validation challenge requirements before performing request against ACME server
         /// </summary>
-        public bool ConfigCheckedOK { get; set; } = false;
+        public bool ConfigCheckedOK { get; set; }
 
-        public string ChallengeResultMsg { get; set; }
+        public string? ChallengeResultMsg { get; set; }
 
-        public bool IsFailure { get; set; } = false;
+        public bool IsFailure { get; set; }
     }
 
     public class SimpleAuthorizationChallengeItem
     {
-        public string ChallengeType { get; set; }
-        public string Key { get; set; }
-        public string Value { get; set; }
+        public string ChallengeType { get; set; } = string.Empty;
+        public string? Key { get; set; }
+        public string? Value { get; set; }
     }
 
     /// <summary>
@@ -57,28 +57,28 @@ namespace Certify.Models
         /// <summary>
         /// List of possible challenge we can attempt for this authorization 
         /// </summary>
-        public List<AuthorizationChallengeItem> Challenges { get; set; }
+        public List<AuthorizationChallengeItem>? Challenges { get; set; }
 
         /// <summary>
         /// Identifier (Dns domain) we are attempting to get authorization for 
         /// </summary>
-        public IdentifierItem Identifier { get; set; }
+        public IdentifierItem? Identifier { get; set; }
 
-        public string TempFilePath { get; set; }
+        public string? TempFilePath { get; set; }
 
         public Action Cleanup { get; set; } = () => { };
-        public List<string> LogItems { get; set; }
-        public string AuthorizationError { get; set; }
+        public List<string>? LogItems { get; set; }
+        public string? AuthorizationError { get; set; }
         public bool IsValidated { get; set; }
         public bool IsFailure { get; set; }
 
         /// <summary>
         /// The challenge we have attempted for this authorization request 
         /// </summary>
-        public AuthorizationChallengeItem AttemptedChallenge { get; set; }
+        public AuthorizationChallengeItem? AttemptedChallenge { get; set; }
 
-        public object AuthorizationContext { get; set; }
+        public object? AuthorizationContext { get; set; }
 
-        public string OrderUri { get; set; }
+        public string? OrderUri { get; set; }
     }
 }

@@ -16,7 +16,7 @@ namespace Certify.Models.Shared
             };
         }
 
-        protected void LogAction(string command, string result = null, string managedItemId = null)
+        protected void LogAction(string command, string? result = null, string? managedItemId = null)
         {
             if (_actionLogs != null)
             {
@@ -24,7 +24,7 @@ namespace Certify.Models.Shared
                 {
                     Command = command,
                     Result = result,
-                    ManagedCertificateId = managedItemId,
+                    ManagedCertificateId = managedItemId ?? string.Empty,
                     DateTime = DateTime.Now
                 });
             }

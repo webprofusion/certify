@@ -40,9 +40,9 @@ namespace Certify.Models
 
             DomainOptions = new ObservableCollection<DomainOption>();
             RequestConfig = new CertRequestConfig();
-           
+
             IncludeInAutoRenew = true;
-             
+
 #if DEBUG
             UseStagingMode = true;
 #else
@@ -53,13 +53,13 @@ namespace Certify.Models
         /// <summary>
         /// If set, managed item is from an external source
         /// </summary>
-        public string SourceId { get; set; }
-        public string SourceName { get; set; }
+        public string? SourceId { get; set; }
+        public string? SourceName { get; set; }
 
         /// <summary>
         /// Default CA to use for this request
         /// </summary>
-        public string CertificateAuthorityId { get; set; }
+        public string? CertificateAuthorityId { get; set; }
 
         /// <summary>
         /// If true, the staging (test) API and account key will be used for orders
@@ -75,7 +75,7 @@ namespace Certify.Models
         /// <summary>
         /// Host or server where this item is based, usually localhost if managing the local server
         /// </summary>
-        public string TargetHost { get; set; }
+        public string? TargetHost { get; set; }
 
         /// <summary>
         /// List of configured domains this managed site will include (primary subject or SAN)
@@ -90,17 +90,17 @@ namespace Certify.Models
         /// <summary>
         /// Optional list of tasks (scripts, webhooks etc) to perform after request/renewal or on demand
         /// </summary>
-        public ObservableCollection<DeploymentTaskConfig> PreRequestTasks { get; set; }
+        public ObservableCollection<DeploymentTaskConfig>? PreRequestTasks { get; set; }
 
         /// <summary>
         /// Optional list of deployment tasks to perform after request/renewal or on demand
         /// </summary>
-        public ObservableCollection<DeploymentTaskConfig> PostRequestTasks { get; set; }
+        public ObservableCollection<DeploymentTaskConfig>? PostRequestTasks { get; set; }
 
         /// <summary>
         /// Unique ID for this managed item
         /// </summary>
-        public string Id { get; set; }
+        public string? Id { get; set; }
         public long Version { get; set; }
 
         /// <summary>
@@ -108,33 +108,33 @@ namespace Certify.Models
         /// When the parent item completes a certificate request the child item will then also be
         /// invoked in order to perform subsequent deployments/scripting etc
         /// </summary>
-        public string ParentId { get; set; }
+        public string? ParentId { get; set; }
 
         /// <summary>
         /// Deprecated, use Server Site Id
         /// </summary>
 
-        public string GroupId { get; set; }
+        public string? GroupId { get; set; }
 
         /// <summary>
         /// Id of specific matching site on server (replaces GroupId)
         /// </summary>
-        public string ServerSiteId { get => GroupId; set => GroupId = value; }
+        public string? ServerSiteId { get => GroupId; set => GroupId = value; }
 
         /// <summary>
         /// If set, this is an identifier for the host to group multiple sets of managed sites across servers
         /// </summary>
-        public string InstanceId { get; set; }
+        public string? InstanceId { get; set; }
 
         /// <summary>
         /// Display name for this item, for easier reference
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// Optional user notes regarding this item
         /// </summary>
-        public string Comments { get; set; }
+        public string? Comments { get; set; }
 
         /// <summary>
         /// Specific type of item we are managing, affects the renewal/rewuest operations required
@@ -163,21 +163,21 @@ namespace Certify.Models
         /// <summary>
         /// Message from last failed renewal attempt
         /// </summary>
-        public string RenewalFailureMessage { get; set; }
+        public string? RenewalFailureMessage { get; set; }
 
-        public string CertificateId { get; set; }
-        public string CertificatePath { get; set; }
-        public string CertificateFriendlyName { get; set; }
-        public string CertificateThumbprintHash { get; set; }
-        public string CertificatePreviousThumbprintHash { get; set; }
+        public string? CertificateId { get; set; }
+        public string? CertificatePath { get; set; }
+        public string? CertificateFriendlyName { get; set; }
+        public string? CertificateThumbprintHash { get; set; }
+        public string? CertificatePreviousThumbprintHash { get; set; }
         public bool CertificateRevoked { get; set; }
 
         /// <summary>
         /// Optional stored credential ID for preferred PFX password (pwd is blank otherwise)
         /// </summary>
-        public string CertificatePasswordCredentialId { get; set; }
+        public string? CertificatePasswordCredentialId { get; set; }
 
-        public string CurrentOrderUri { get; set; }
+        public string? CurrentOrderUri { get; set; }
 
         /// <summary>
         /// If true, pre/post request tasks will run for renewal but the certificate order won't be performed (used for testing).
@@ -254,16 +254,20 @@ namespace Certify.Models
         {
             var allDomains = new List<string>();
 
-            if (!string.IsNullOrEmpty(RequestConfig.PrimaryDomain))
+            if (RequestConfig != null)
             {
-                allDomains.Add(RequestConfig.PrimaryDomain);
-            }
+                if (!string.IsNullOrEmpty(RequestConfig.PrimaryDomain))
+                {
+#pragma warning disable CS8604 // Possible null reference argument.
+                    allDomains.Add(RequestConfig.PrimaryDomain);
+#pragma warning restore CS8604 // Possible null reference argument.
+                }
 
-            if (RequestConfig.SubjectAlternativeNames != null)
-            {
-                allDomains.AddRange(RequestConfig.SubjectAlternativeNames);
+                if (RequestConfig.SubjectAlternativeNames != null)
+                {
+                    allDomains.AddRange(RequestConfig.SubjectAlternativeNames);
+                }
             }
-
             return allDomains.Distinct().ToList();
 
         }
@@ -324,38 +328,41 @@ namespace Certify.Models
                     // start by matching first config with no specific domain
                     var matchedConfig = RequestConfig.Challenges.FirstOrDefault(c => string.IsNullOrEmpty(c.DomainMatch));
 
-                    if (!string.IsNullOrEmpty(domain))
+                    if (domain != null && !string.IsNullOrEmpty(domain))
                     {
                         // expand configs into per domain list
                         var configsPerDomain = new Dictionary<string, CertRequestChallengeConfig>();
                         foreach (var c in RequestConfig.Challenges.Where(config => !string.IsNullOrEmpty(config.DomainMatch)))
                         {
-                            if (c.DomainMatch != null)
+                            if (c != null)
                             {
-                                c.DomainMatch = c.DomainMatch.Replace(",", ";"); // if user has entered comma seperators instead of semicolons, convert now.
-                            }
-
-                            if (!string.IsNullOrEmpty(c.DomainMatch) && !c.DomainMatch.Contains(";"))
-                            {
-                                var domainMatchKey = c.DomainMatch.Trim();
-
-                                // if domain key is test.com for example we only support one matching config
-                                if (!configsPerDomain.ContainsKey(domainMatchKey))
+                                if (c.DomainMatch != null && !string.IsNullOrEmpty(c.DomainMatch))
                                 {
-                                    configsPerDomain.Add(domainMatchKey, c);
-                                }
-                            }
-                            else
-                            {
-                                var domains = c.DomainMatch.Split(';');
-                                foreach (var d in domains)
-                                {
-                                    if (!string.IsNullOrWhiteSpace(d))
+                                    c.DomainMatch = c.DomainMatch.Replace(",", ";"); // if user has entered comma seperators instead of semicolons, convert now.
+
+                                    if (!c.DomainMatch.Contains(";"))
                                     {
-                                        var domainMatchKey = d.Trim().ToLower();
+                                        var domainMatchKey = c.DomainMatch.Trim();
+
+                                        // if domain key is test.com for example we only support one matching config
                                         if (!configsPerDomain.ContainsKey(domainMatchKey))
                                         {
                                             configsPerDomain.Add(domainMatchKey, c);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        var domains = c.DomainMatch.Split(';');
+                                        foreach (var d in domains)
+                                        {
+                                            if (!string.IsNullOrWhiteSpace(d))
+                                            {
+                                                var domainMatchKey = d.Trim().ToLower();
+                                                if (!configsPerDomain.ContainsKey(domainMatchKey))
+                                                {
+                                                    configsPerDomain.Add(domainMatchKey, c);
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -377,7 +384,7 @@ namespace Certify.Models
                         //if a more specific config matches the domain, use that, in order of longest domain name match first
                         var allMatchingConfigKeys = configsPerDomain.Keys.OrderByDescending(l => l.Length);
 
-                        foreach (var wildcard in allMatchingConfigKeys.Where(k => k.StartsWith("*.")))
+                        foreach (var wildcard in allMatchingConfigKeys.Where(k => k.StartsWith("*.", StringComparison.CurrentCultureIgnoreCase)))
                         {
                             if (ManagedCertificate.IsDomainOrWildcardMatch(new List<string> { wildcard }, domain))
                             {
@@ -387,7 +394,7 @@ namespace Certify.Models
 
                         foreach (var configDomain in allMatchingConfigKeys)
                         {
-                            if (configDomain.EndsWith(domain))
+                            if (configDomain.EndsWith(domain, StringComparison.CurrentCultureIgnoreCase))
                             {
                                 // use longest matching domain (so subdomain.test.com takes priority
                                 // over test.com, )
@@ -421,6 +428,10 @@ namespace Certify.Models
             // clone current object
             var managedCert = JsonConvert.DeserializeObject<ManagedCertificate>(JsonConvert.SerializeObject(this));
 
+            if (managedCert == null)
+            {
+                return new ManagedCertificate();
+            }
 
             // reset fields we don't want to re-use from the original
             managedCert.Id = Guid.NewGuid().ToString();
@@ -446,11 +457,11 @@ namespace Certify.Models
 
             if (!preserveAttributes)
             {
-                managedCert.RequestConfig.SubjectAlternativeNames = new string[] { };
-                managedCert.RequestConfig.SubjectIPAddresses = new string[] { };
-                managedCert.RequestConfig.PrimaryDomain = null;
+                managedCert.RequestConfig.SubjectAlternativeNames = Array.Empty<string>();
+                managedCert.RequestConfig.SubjectIPAddresses = Array.Empty<string>();
+                managedCert.RequestConfig.PrimaryDomain = String.Empty;
                 managedCert.DomainOptions = new System.Collections.ObjectModel.ObservableCollection<DomainOption>();
-                managedCert.Name = null;
+                managedCert.Name = String.Empty;
             }
             else
             {
@@ -498,7 +509,7 @@ namespace Certify.Models
                 else
                 {
                     //if any of our dnsHosts are a wildcard, check for a match
-                    var wildcards = dnsNames.Where(d => d.StartsWith("*."));
+                    var wildcards = dnsNames.Where(d => d.StartsWith("*.", StringComparison.CurrentCultureIgnoreCase));
                     foreach (var w in wildcards)
                     {
                         if (string.Equals(w, hostname, StringComparison.OrdinalIgnoreCase))
@@ -520,7 +531,7 @@ namespace Certify.Models
                             else
                             {
                                 //if hostname ends with our domain and is only 1 label longer then it's a match
-                                if (hostname.EndsWith("." + domain))
+                                if (hostname.EndsWith("." + domain, StringComparison.CurrentCultureIgnoreCase))
                                 {
                                     if (hostname.Count(c => c == '.') == domain.Count(c => c == '.') + 1)
                                     {
@@ -546,21 +557,32 @@ namespace Certify.Models
         /// </summary>
         /// <param name="subject"></param>
         /// <returns></returns>
-        public static ManagedCertificate GetManagedCertificate(object subject)
+        public static ManagedCertificate? GetManagedCertificate(object subject)
         {
-            if (subject is CertificateRequestResult)
+            if (subject == null)
             {
-                return (subject as CertificateRequestResult).ManagedItem;
+                return null;
             }
-
-            if (subject is ManagedCertificate)
+            else
             {
-                return (subject as ManagedCertificate);
-            }
 
-            return null;
+                if (subject is CertificateRequestResult)
+                {
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+                    return (subject as CertificateRequestResult).ManagedItem;
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+                }
+                else if (subject is ManagedCertificate)
+                {
+                    return (subject as ManagedCertificate);
+                }
+                else
+                {
+
+                    return default;
+                }
+            }
         }
-
     }
 
 

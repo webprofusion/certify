@@ -18,6 +18,7 @@ namespace Certify.Models.Compat
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1310:Specify StringComparison for correctness", Justification = "Legacy")]
         public string GetContact()
         {
             try
@@ -31,7 +32,7 @@ namespace Certify.Models.Compat
             }
             catch (Exception)
             {
-                return null;
+                return string.Empty;
             }
         }
     }

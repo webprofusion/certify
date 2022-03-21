@@ -33,12 +33,6 @@
         public bool IsPreviewMode { get; set; }
         public ManagedCertificate ManagedCertificate { get; set; }
 
-        public RequestProgressState()
-        {
-            CurrentState = RequestState.NotRunning;
-            Message = "";
-        }
-
         public RequestProgressState(RequestState currentState, string msg, ManagedCertificate item, bool isPreviewMode = false)
         {
             CurrentState = currentState;
@@ -53,7 +47,7 @@
 
         public string Message { get; set; }
 
-        public object Result { get; set; }
+        public object? Result { get; set; }
 
         public string Id
         {
@@ -61,10 +55,12 @@
             {
                 if (ManagedCertificate != null)
                 {
-                    return ManagedCertificate.Id;
+                    return ManagedCertificate?.Id ?? string.Empty;
                 }
-
-                return null;
+                else
+                {
+                    return string.Empty;
+                }
             }
         }
 

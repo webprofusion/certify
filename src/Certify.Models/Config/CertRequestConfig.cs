@@ -10,41 +10,41 @@ namespace Certify.Models
         /// <summary>
         /// In the case of ACME CA, the challenge type this request will use (eg. http-01) 
         /// </summary>
-        public string ChallengeType { get; set; }
+        public string? ChallengeType { get; set; }
 
         /// <summary>
         /// Optional primary domain (e.g. test.com for www.test.com) for auto matching credential to domain
         /// </summary>
-        public string DomainMatch { get; set; }
+        public string? DomainMatch { get; set; }
 
         /// <summary>
         /// Id/key for the provider type we require (such as DNS01.API.ROUTE53) 
         /// </summary>
-        public string ChallengeProvider { get; set; }
+        public string? ChallengeProvider { get; set; }
 
         /// <summary>
         /// Id/key for the stored credential we need to use with the Challenge Provider 
         /// </summary>
-        public string ChallengeCredentialKey { get; set; }
+        public string? ChallengeCredentialKey { get; set; }
 
         /// <summary>
         /// If applicable, path or root path relevant to the challenge (e.g. wwwroot path)
         /// </summary>
-        public string ChallengeRootPath { get; set; }
+        public string? ChallengeRootPath { get; set; }
 
         /// <summary>
         /// Optional, DNS Zone ID if using a DNS challenge provider 
         /// </summary>
-        public string ZoneId { get; set; }
+        public string? ZoneId { get; set; }
 
         /// <summary>
         /// If set, DNS validation will work with the target domain/zone in place of the original
         /// e.g. _acme-challenge.www.example.com delegated to _acme-challenge.www.acme.example.co.uk would be specified as "*.example.com:acme.example.co.uk"
         /// Note: Zone ID/Zone Lookup, Credentials etc would be for the delegated domain, not the original domain. 
         /// </summary>
-        public string ChallengeDelegationRule { get; set; }
+        public string? ChallengeDelegationRule { get; set; }
 
-        public ObservableCollection<ProviderParameter> Parameters { get; set; }
+        public ObservableCollection<ProviderParameter>? Parameters { get; set; }
     }
 
     public class CertRequestConfig : BindableBase
@@ -60,33 +60,33 @@ namespace Certify.Models
         /// <summary>
         /// Primary subject domain for our SSL Cert request 
         /// </summary>
-        public string PrimaryDomain { get; set; }
+        public string? PrimaryDomain { get; set; }
 
         /// <summary>
         /// Optional subject alternative names for our SSL Cert request 
         /// </summary>
-        public string[] SubjectAlternativeNames { get; set; } = new string[] { };
+        public string[] SubjectAlternativeNames { get; set; } = Array.Empty<string>();
 
         /// <summary>
         /// Optional list of IP addresses to include in cert request, primary first
         /// </summary>
-        public string[] SubjectIPAddresses { get; set; } = new string[] { };
+        public string[] SubjectIPAddresses { get; set; } = Array.Empty<string>();
 
         /// <summary>
         /// Root path for our website content, used when responding to file based challenges 
         /// </summary>
         ///
-        public string WebsiteRootPath { get; set; }
+        public string? WebsiteRootPath { get; set; }
 
         /// <summary>
         /// If required, a specific IP address to bind to when creating/updating this binding 
         /// </summary>
-        public string BindingIPAddress { get; set; }
+        public string? BindingIPAddress { get; set; }
 
         /// <summary>
         /// Optional specific port to bind SSL to. Defaults to 443. 
         /// </summary>
-        public string BindingPort { get; set; }
+        public string? BindingPort { get; set; }
 
         /// <summary>
         /// Optionally use SNI when creating bindings (the default us to PerformAutomatedCertBinding,
@@ -125,7 +125,7 @@ namespace Certify.Models
         /// <summary>
         /// If true, existings https bindings for the cert we are renewing will be removed and replaced 
         /// </summary>
-        public bool AlwaysRecreateBindings { get; set; } = false;
+        public bool AlwaysRecreateBindings { get; set; }
 
         /// <summary>
         /// If true, indicates that Certify should attempt to send failure notifications if an
@@ -147,32 +147,32 @@ namespace Certify.Models
         /// <summary>
         /// The http method for the webhook request 
         /// </summary>
-        public string WebhookMethod { get; set; }
+        public string? WebhookMethod { get; set; }
 
         /// <summary>
         /// The http url for the webhook request 
         /// </summary>
-        public string WebhookUrl { get; set; }
+        public string? WebhookUrl { get; set; }
 
         /// <summary>
         /// The http content type header for the webhook request 
         /// </summary>
-        public string WebhookContentType { get; set; }
+        public string? WebhookContentType { get; set; }
 
         /// <summary>
         /// The http body template for the webhook request 
         /// </summary>
-        public string WebhookContentBody { get; set; }
+        public string? WebhookContentBody { get; set; }
 
         /// <summary>
         /// PowerShell script to run before executing certificate request 
         /// </summary>
-        public string PreRequestPowerShellScript { get; set; }
+        public string? PreRequestPowerShellScript { get; set; }
 
         /// <summary>
         /// PowerShell script to run before executing certificate request 
         /// </summary>
-        public string PostRequestPowerShellScript { get; set; }
+        public string? PostRequestPowerShellScript { get; set; }
 
         /// <summary>
         /// Key algorithm type for CSR signing. Default is RS256 
@@ -197,28 +197,28 @@ namespace Certify.Models
         /// <summary>
         /// If true, apply cert where hostname in binding is blank (default = false) 
         /// </summary>
-        public bool DeploymentBindingBlankHostname { get; set; } = false;
+        public bool DeploymentBindingBlankHostname { get; set; }
 
         /// <summary>
         /// If true, apply cert where binding has certificatehash set to the old certificate 
         /// </summary>
-        public bool DeploymentBindingReplacePrevious { get; set; } = false;
+        public bool DeploymentBindingReplacePrevious { get; set; }
 
         /// <summary>
         /// Optional list of challenge configs, used when challenge requires credentials, optionally
         /// varying per domain
         /// </summary>
-        public ObservableCollection<CertRequestChallengeConfig> Challenges { get; set; }
+        public ObservableCollection<CertRequestChallengeConfig>? Challenges { get; set; }
 
         /// <summary>
         /// If set, this is a custom PEM encoded CSR to use for the certificate signing request to the CA
         /// </summary>
-        public string CustomCSR { get; set; }
+        public string? CustomCSR { get; set; }
 
         /// <summary>
         /// If set, this is a custom Private Key to use for certificate signing
         /// </summary>
-        public string CustomPrivateKey { get; set; }
+        public string? CustomPrivateKey { get; set; }
 
         /// <summary>
         /// If enabled, private key is exported on first use and re-used for subsequent certificate renewals
@@ -233,7 +233,7 @@ namespace Certify.Models
         /// <summary>
         /// If set, this is the preferred chain to select if present (e.g. the name of the root cert in the preferred chain)
         /// </summary>
-        public string PreferredChain { get; set; }
+        public string? PreferredChain { get; set; }
         public void ApplyDeploymentOptionDefaults()
         {
             // if the selected mode is auto, discard settings which do not apply

@@ -65,7 +65,7 @@ namespace Certify.CertificateAuthorities.Definitions
             };
         }
 
-        public List<ChainOption> GetChainOptions()
+        public static List<ChainOption> GetChainOptions()
         {
             return new List<ChainOption>
             {
@@ -77,19 +77,20 @@ namespace Certify.CertificateAuthorities.Definitions
                     Description="Switch to this chain in order to serve the shorter chain for modern operating systems which trust ISRG Root X1.",
                     Actions= new List<ChainAction>
                     {
-                        new ChainAction { Action=ChainActions.Delete, CertificateThumbprint="933c6ddee95c9c41a40f9f50493d82be03ad87bf", Description="Remove ISRG Root X1 cross signed by DST Root CA X3" },
-                        new ChainAction { Action=ChainActions.StoreCARoot, CertificateThumbprint="cabd2a79a1076a31f21d253635cb039d4329a5e8", Description="Add ISRG Root X1 self signed" }
+                        new ChainAction (ChainActions.Delete, "933c6ddee95c9c41a40f9f50493d82be03ad87bf", "Remove ISRG Root X1 cross signed by DST Root CA X3"),
+                        new ChainAction (ChainActions.StoreCARoot, "cabd2a79a1076a31f21d253635cb039d4329a5e8", "Add ISRG Root X1 self signed")
                     }
                 },
-                new ChainOption {
-                    Id="letsencrypt-rsa-legacy",
-                    Name="Legacy Chain (DST Root CA X3)",
-                    Issuer="DST Root CA X3",
-                    ChainGroup="RSA",
-                    Description="Switch to this chain in order to serve the longer (more compatible) chain to support operating systems which don't trust ISRG Root X1.",
-                    Actions= new List<ChainAction>
+                new ChainOption
+                {
+                    Id = "letsencrypt-rsa-legacy",
+                    Name = "Legacy Chain (DST Root CA X3)",
+                    Issuer = "DST Root CA X3",
+                    ChainGroup = "RSA",
+                    Description = "Switch to this chain in order to serve the longer (more compatible) chain to support operating systems which don't trust ISRG Root X1.",
+                    Actions = new List<ChainAction>
                     {
-                        new ChainAction { Action=ChainActions.StoreCAIntermediate, CertificateThumbprint="933c6ddee95c9c41a40f9f50493d82be03ad87bf", Description="Add ISRG Root X1 cross signed by DST Root CA X3" }
+                        new ChainAction (ChainActions.StoreCAIntermediate, "933c6ddee95c9c41a40f9f50493d82be03ad87bf", "Add ISRG Root X1 cross signed by DST Root CA X3")
                     }
                 }
             };

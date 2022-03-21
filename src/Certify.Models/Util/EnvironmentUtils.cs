@@ -7,7 +7,7 @@ namespace Certify.Models
     public class EnvironmentUtil
     {
 
-        public static string GetAppDataFolder(string subFolder = null)
+        public static string GetAppDataFolder(string? subFolder = null)
         {
             var parts = new List<string>()
             {

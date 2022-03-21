@@ -35,20 +35,20 @@ namespace Certify.Core.Tests.Unit
             domainRoot = await mockDnsProvider.Object.DetermineZoneDomainRoot("www.test.com", null);
             Assert.IsTrue(domainRoot.ZoneId == "123-test.com");
 
-            var normalisedRecordName = mockDnsProvider.Object.NormaliseRecordName(domainRoot, "www.subdomain.test.com");
+            var normalisedRecordName = DnsProviderBase.NormaliseRecordName(domainRoot, "www.subdomain.test.com");
             Assert.IsTrue(normalisedRecordName == "www.subdomain");
 
             domainRoot = await mockDnsProvider.Object.DetermineZoneDomainRoot("www.subdomain.test.com", null);
             Assert.IsTrue(domainRoot.ZoneId == "345-subdomain-test.com");
 
-            normalisedRecordName = mockDnsProvider.Object.NormaliseRecordName(domainRoot, "www.subdomain.test.com");
+            normalisedRecordName = DnsProviderBase.NormaliseRecordName(domainRoot, "www.subdomain.test.com");
             Assert.IsTrue(normalisedRecordName == "www");
 
-            normalisedRecordName = mockDnsProvider.Object.NormaliseRecordName(domainRoot, "www.dev.subdomain.test.com");
+            normalisedRecordName = DnsProviderBase.NormaliseRecordName(domainRoot, "www.dev.subdomain.test.com");
             Assert.IsTrue(normalisedRecordName == "www.dev");
 
             domainRoot = await mockDnsProvider.Object.DetermineZoneDomainRoot("www.test.com", null);
-            normalisedRecordName = mockDnsProvider.Object.NormaliseRecordName(domainRoot, "www.test.com");
+            normalisedRecordName = DnsProviderBase.NormaliseRecordName(domainRoot, "www.test.com");
             Assert.IsTrue(normalisedRecordName == "www");
 
 

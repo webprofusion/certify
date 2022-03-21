@@ -8,9 +8,9 @@ namespace Certify.Shared
     public class ServerConnection
     {
         public string Id { get; set; }
-        public string DisplayName { get; set; }
-        public bool UseHTTPS { get; set; } = false;
-        public bool AllowUntrusted { get; set; } = false;
+        public string DisplayName { get; set; } = string.Empty;
+        public bool UseHTTPS { get; set; }
+        public bool AllowUntrusted { get; set; }
 #if DEBUG
         public int Port { get; set; } = 9695;
 #else
@@ -22,11 +22,11 @@ namespace Certify.Shared
         public string Mode { get; set; } = "direct";
         public string Authentication { get; set; } = "default";
         public string ServerMode { get; set; } = "v1";
-        public bool IsDefault { get; set; } = false;
+        public bool IsDefault { get; set; }
 
         public ServerConnection()
         {
-
+            Id = Guid.NewGuid().ToString();
         }
 
         public ServerConnection(ServiceConfig config)

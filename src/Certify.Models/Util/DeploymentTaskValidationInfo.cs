@@ -6,5 +6,11 @@ namespace Certify.Models.Utils
     {
         public ManagedCertificate ManagedCertificate { get; set; }
         public DeploymentTaskConfig TaskConfig { get; set; }
+
+        public DeploymentTaskValidationInfo(ManagedCertificate managedCertificate, DeploymentTaskConfig taskConfig)
+        {
+            ManagedCertificate = managedCertificate;
+            TaskConfig = taskConfig;
+        }
     }
 }

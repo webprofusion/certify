@@ -1,4 +1,5 @@
-﻿namespace Certify.Models
+﻿#nullable disable
+namespace Certify.Models
 {
     public class ManagedCertificateFilter
     {
@@ -14,7 +15,7 @@
         // filter results to just those sites which will be included in the next auto renewal
         public bool IncludeOnlyNextAutoRenew { get; set; }
 
-        public int MaxResults { get; set; } = 0;
+        public int MaxResults { get; set; }
 
         // filter results to items with the given challenge type
         public string ChallengeType { get; set; }

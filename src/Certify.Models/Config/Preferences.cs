@@ -1,4 +1,4 @@
-namespace Certify.Models
+﻿namespace Certify.Models
 {
     public enum CertificateCleanupMode
     {
@@ -22,12 +22,12 @@ namespace Certify.Models
         /// <summary>
         /// Renew certs N days after last renewal
         /// </summary>
-        public static string DaysAfterLastRenewal = "DaysAfterLastRenewal";
+        public const string DaysAfterLastRenewal = "DaysAfterLastRenewal";
 
         /// <summary>
         /// Renew certs N days before expiry
         /// </summary>
-        public static string DaysBeforeExpiry = "DaysBeforeExpiry";
+        public const string DaysBeforeExpiry = "DaysBeforeExpiry";
     }
 
     /// <summary>
@@ -37,25 +37,25 @@ namespace Certify.Models
     {
         public bool EnableAppTelematics { get; set; } = true;
 
-        public bool IgnoreStoppedSites { get; set; } = false;
+        public bool IgnoreStoppedSites { get; set; }
 
         public bool EnableValidationProxyAPI { get; set; } = true;
 
-        public bool EnableEFS { get; set; } = false;
+        public bool EnableEFS { get; set; }
 
-        public bool EnableDNSValidationChecks { get; set; } = false;
+        public bool EnableDNSValidationChecks { get; set; }
 
-        public string RenewalIntervalMode { get; set; } = RenewalIntervalModes.DaysAfterLastRenewal;
+        public string? RenewalIntervalMode { get; set; } = RenewalIntervalModes.DaysAfterLastRenewal;
 
-        public int RenewalIntervalDays { get; set; } = 0;
+        public int RenewalIntervalDays { get; set; }
 
-        public int MaxRenewalRequests { get; set; } = 0;
+        public int MaxRenewalRequests { get; set; }
 
-        public string InstanceId { get; set; }
+        public string? InstanceId { get; set; }
 
-        public bool IsInstanceRegistered { get; set; } = false;
+        public bool IsInstanceRegistered { get; set; }
 
-        public string Language { get; set; }
+        public string? Language { get; set; }
 
         public bool EnableHttpChallengeServer { get; set; } = true;
 
@@ -63,19 +63,19 @@ namespace Certify.Models
 
         public CertificateCleanupMode? CertificateCleanupMode { get; set; }
 
-        public string DefaultCertificateStore { get; set; }
+        public string? DefaultCertificateStore { get; set; }
 
         public bool EnableStatusReporting { get; set; } = true;
 
         /// <summary>
         /// ID of default CA
         /// </summary>
-        public string DefaultCertificateAuthority { get; set; }
+        public string? DefaultCertificateAuthority { get; set; }
 
         /// <summary>
         /// Id of default credentials (password) to use for private keys etc
         /// </summary>
-        public string DefaultKeyCredentials { get; set; }
+        public string? DefaultKeyCredentials { get; set; }
 
         /// <summary>
         /// If true, the app will decide which Certificate Authority to choose from the list of supported providers.
@@ -88,13 +88,13 @@ namespace Certify.Models
         /// </summary>
         public bool IncludeExternalPlugins { get; set; }
 
-        public string[] FeatureFlags { get; set; }
+        public string[] FeatureFlags { get; set; } = System.Array.Empty<string>();
 
 
         /// <summary>
         /// Server to use for Ntp time diagnostics
         /// </summary>
-        public string NtpServer { get; set; }
+        public string? NtpServer { get; set; }
 
         /// <summary>
         /// If enabled, certificate manager plugins are used to check for ACME certificates managed outside of Certify on same machine
@@ -107,32 +107,32 @@ namespace Certify.Models
         /// <summary>
         /// Enable import/export UI
         /// </summary>
-        public static string IMPORT_EXPORT = "IMPORT_EXPORT";
+        public const string IMPORT_EXPORT = "IMPORT_EXPORT";
 
         /// <summary>
         /// Enable options for PFX pwd (global and per item credentials)
         /// </summary>
-        public static string PRIVKEY_PWD = "PRIVKEY_PWD";
+        public const string PRIVKEY_PWD = "PRIVKEY_PWD";
 
         /// <summary>
         /// Enable editor for custom Certificate Authorities
         /// </summary>
-        public static string CA_EDITOR = "CA_EDITOR";
+        public const string CA_EDITOR = "CA_EDITOR";
 
         /// <summary>
         /// Enable options for auto CA Failover
         /// </summary>
-        public static string CA_FAILOVER = "CA_FAILOVER";
+        public const string CA_FAILOVER = "CA_FAILOVER";
 
         /// <summary>
         /// Enable options for external cert managers
         /// </summary>
-        public static string EXTERNAL_CERT_MANAGERS = "EXTERNAL_CERT_MANAGERS";
+        public const string EXTERNAL_CERT_MANAGERS = "EXTERNAL_CERT_MANAGERS";
 
 
         /// <summary>
         /// Enable server connection UI
         /// </summary>
-        public static string SERVER_CONNECTIONS = "SERVER_CONNECTIONS";
+        public const string SERVER_CONNECTIONS = "SERVER_CONNECTIONS";
     }
 }

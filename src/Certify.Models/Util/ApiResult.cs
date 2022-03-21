@@ -8,9 +8,9 @@ namespace Certify.Models
 
         public bool IsOK { get; set; }
         public bool HasWarning { get; set; }
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
         public List<string> FailedItemSummary { get; set; }
-        public object Result { get; set; }
+        public object? Result { get; set; }
 
         public StatusMessage()
         {

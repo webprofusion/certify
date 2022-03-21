@@ -4,51 +4,55 @@ using System.Linq;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
 
-public class PluginProviderBase<TProviderInterface, TProviderDefinition> : IProviderPlugin<TProviderInterface, TProviderDefinition>
+namespace Certify.Plugins
 {
-
-
-    public TProviderInterface GetProvider(Type provider, string id)
+    public class PluginProviderBase<TProviderInterface, TProviderDefinition> : IProviderPlugin<TProviderInterface, TProviderDefinition>
     {
 
-        id = id?.ToLower();
-
-        var baseAssembly = provider.Assembly;
-
-        // we filter the defined classes according to the interfaces they implement
-        var typeList = baseAssembly.GetTypes().Where(type => type.GetInterfaces().Any(inter => inter == typeof(TProviderInterface))).ToList();
-
-        foreach (var t in typeList)
+        public TProviderInterface GetProvider(Type pluginType, string? id)
         {
-            TProviderDefinition def = (TProviderDefinition)t.GetProperty("Definition").GetValue(null);
-            if (def is ProviderDefinition)
+
+            id = id?.ToLower();
+
+            var baseAssembly = pluginType.Assembly;
+
+            // we filter the defined classes according to the interfaces they implement
+            var typeList = baseAssembly.GetTypes().Where(type => type.GetInterfaces().Any(inter => inter == typeof(TProviderInterface))).ToList();
+
+            foreach (var t in typeList)
             {
-                if ((def as ProviderDefinition).Id.ToLower() == id)
+                var def = (TProviderDefinition)t.GetProperty("Definition").GetValue(null);
+                if (def != null && def is ProviderDefinition)
                 {
-                    return (TProviderInterface)Activator.CreateInstance(t);
+                    if ((def as ProviderDefinition)?.Id.ToLower() == id)
+                    {
+                        return (TProviderInterface)Activator.CreateInstance(t);
+                    }
                 }
             }
+
+            // the requested provider id is not present in this provider plugin, could be in another assembly
+#pragma warning disable CS8603 // Possible null reference return.
+            return default;
+#pragma warning restore CS8603 // Possible null reference return.
         }
 
-        // the requested provider id is not present in this provider plugin, could be in another assembly
-        return default(TProviderInterface);
-    }
-
-    public List<TProviderDefinition> GetProviders(Type provider)
-    {
-        var list = new List<TProviderDefinition>();
-
-        var baseAssembly = provider.Assembly;
-
-        // we filter the defined classes according to the interfaces they implement
-        var typeList = baseAssembly.GetTypes().Where(type => type.GetInterfaces().Any(inter => inter == typeof(TProviderInterface))).ToList();
-
-        foreach (var t in typeList)
+        public List<TProviderDefinition> GetProviders(Type pluginType)
         {
-            var def = (TProviderDefinition)t.GetProperty("Definition").GetValue(null);
-            list.Add(def);
-        }
+            var list = new List<TProviderDefinition>();
 
-        return list;
+            var baseAssembly = pluginType.Assembly;
+
+            // we filter the defined classes according to the interfaces they implement
+            var typeList = baseAssembly.GetTypes().Where(type => type.GetInterfaces().Any(inter => inter == typeof(TProviderInterface))).ToList();
+
+            foreach (var t in typeList)
+            {
+                var def = (TProviderDefinition)t.GetProperty("Definition").GetValue(null);
+                list.Add(def);
+            }
+
+            return list;
+        }
     }
 }

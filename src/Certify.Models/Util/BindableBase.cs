@@ -19,10 +19,10 @@ namespace Certify.Models
         /// <summary>
         /// change notification provide by fody on compile, not that subclasses shouldn't inherit 
         /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
-        public event EventHandler AfterPropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
+        public event EventHandler? AfterPropertyChanged;
 
-        private bool _isChangeDetectionPaused = false;
+        private bool _isChangeDetectionPaused;
 
         public void PauseChangeEvents()
         {

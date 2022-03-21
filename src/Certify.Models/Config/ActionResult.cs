@@ -1,4 +1,5 @@
-﻿namespace Certify.Models.Config
+﻿#nullable disable
+namespace Certify.Models.Config
 {
     public class ActionResult
     {
@@ -21,7 +22,7 @@
 
     public class ActionResult<T> : ActionResult
     {
-        public new T Result;
+        public new T Result { get; set; }
 
         public ActionResult() { }
         public ActionResult(string msg, bool isSuccess)

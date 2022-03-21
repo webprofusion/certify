@@ -106,7 +106,7 @@ namespace Certify.UI.Controls.Settings
 
                 if (MessageBox.Show($"Remove this account? {account.AccountURI}", "Confirm Account Removal", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
                 {
-                    await EditModel.MainViewModel.RemoveAccount(account.StorageKey ?? account.ID);
+                    await EditModel.MainViewModel.RemoveAccount(string.IsNullOrEmpty(account.StorageKey) ? account.ID : account.StorageKey);
                 }
             }
         }

@@ -1,6 +1,6 @@
-﻿using Certify.Models;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
+using Certify.Models;
 
 namespace Certify.UI.Blazor.Core.Models.Services
 {
@@ -27,7 +27,7 @@ namespace Certify.UI.Blazor.Core.Models.Services
                                 // table items
                                 sb.AppendLine(sub.Description);
                             }
-                            else if (sub.Description.StartsWith("\r\n"))
+                            else if (sub.Description.StartsWith("\r\n", System.StringComparison.Ordinal))
                             {
                                 sb.AppendLine(sub.Description);
                             }

@@ -16,7 +16,7 @@ namespace Certify.CertificateAuthorities.Definitions
                 WebsiteUrl = "https://ssl.com/",
                 PrivacyPolicyUrl = "https://www.ssl.com/privacy-policy/",
                 ProductionAPIEndpoint = "https://acme.ssl.com/sslcom-dv-rsa",
-                StagingAPIEndpoint = null,
+                StagingAPIEndpoint = string.Empty,
                 IsEnabled = true,
                 IsCustom = false,
                 SANLimit = 2,

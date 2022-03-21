@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Providers;
 
+#nullable disable
+
 namespace Certify.Providers.CertificateManagers
 {
     public interface ICertificateManager

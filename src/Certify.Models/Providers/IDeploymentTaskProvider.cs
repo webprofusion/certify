@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿#nullable disable
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Certify.Config;
@@ -16,6 +17,7 @@ namespace Certify.Providers.DeploymentTasks
 
     public class DeploymentTaskExecutionParams
     {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Changing would affect custom plugins")]
         public DeploymentTaskExecutionParams(
             ILog log,
             ICredentialsManager credentialsManager,

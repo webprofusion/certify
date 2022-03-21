@@ -4,9 +4,9 @@ namespace Certify.CertificateAuthorities
 {
     public class ChainActions
     {
-        public static string Delete = "Delete";
-        public static string StoreCARoot = "StoreCARoot";
-        public static string StoreCAIntermediate = "StoreCAIntermediate";
+        public const string Delete = "Delete";
+        public const string StoreCARoot = "StoreCARoot";
+        public const string StoreCAIntermediate = "StoreCAIntermediate";
     }
     public class ChainAction
     {
@@ -21,28 +21,35 @@ namespace Certify.CertificateAuthorities
         /// Reference for certificate
         /// </summary>
         public string CertificateThumbprint { get; set; }
+
+        public ChainAction(string action, string thumbprint, string description)
+        {
+            Action = action;
+            Description = description;
+            CertificateThumbprint = thumbprint;
+        }
     }
 
     public class ChainOption
     {
-        public string Id { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
 
         /// <summary>
         /// Preferred Issuer required for this chain end-to-end
         /// </summary>
-        public string Issuer { get; set; }
+        public string Issuer { get; set; } = string.Empty;
 
         /// <summary>
         /// RSA, ECDSA
         /// </summary>
-        public string ChainGroup { get; set; }
+        public string ChainGroup { get; set; } = string.Empty;
 
         /// <summary>
         /// List of trust store actions required to select this chain
         /// </summary>
-        public List<ChainAction> Actions { get; set; }
+        public List<ChainAction> Actions { get; set; } = new();
     }
 
 }

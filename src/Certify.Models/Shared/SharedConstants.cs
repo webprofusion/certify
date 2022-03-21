@@ -3,9 +3,9 @@
     public static class SharedConstants
     {
 #if _DEMO_
-        public static string APPDATASUBFOLDER = "CertifyDemo";
+        public const string APPDATASUBFOLDER = "CertifyDemo";
 #else
-        public static string APPDATASUBFOLDER = "certify";
+        public const string APPDATASUBFOLDER = "certify";
 #endif
     }
 }

@@ -34,8 +34,8 @@ namespace Certify.Models
         public DateTime? EndDate { get; set; }
         public RenewalMode Mode { get; set; }
 
-        public bool IsPreviewMode { get; set; } = false;
+        public bool IsPreviewMode { get; set; }
 
-        public List<string> TargetManagedCertificates { get; set; }
+        public List<string> TargetManagedCertificates { get; set; } = new();
     }
 }

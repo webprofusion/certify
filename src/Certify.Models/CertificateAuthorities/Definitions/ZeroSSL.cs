@@ -18,7 +18,7 @@ namespace Certify.CertificateAuthorities.Definitions
                 WebsiteUrl = "https://zerossl.com/",
                 PrivacyPolicyUrl = "https://zerossl.com/privacy/",
                 ProductionAPIEndpoint = "https://acme.zerossl.com/v2/DV90",
-                StagingAPIEndpoint = null,
+                StagingAPIEndpoint = string.Empty,
                 IsEnabled = true,
                 IsCustom = false,
                 SANLimit = 100,
