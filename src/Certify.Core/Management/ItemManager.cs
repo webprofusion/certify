@@ -120,7 +120,7 @@ namespace Certify.Management
                         }
                         catch (Exception exp)
                         {
-                            _log?.Information($"Failed to performed db backup to {backupFile}. Check file permissions and delete old file if there is a conflict. "+exp.ToString());
+                            _log?.Information($"Failed to performed db backup to {backupFile}. Check file permissions and delete old file if there is a conflict. " + exp.ToString());
 
                         }
                         db.Close();

@@ -1127,7 +1127,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 var credUser = allArgumentKV.FirstOrDefault(a => a.KV.Key == psCredentialSpec[1]).KV.Value;
                 var credPwd = allArgumentKV.FirstOrDefault(a => a.KV.Key == psCredentialSpec[2]).KV.Value;
 
-                var credPSCredentials = $"(New-Object System.Management.Automation.PSCredential ('{credUser?.Replace("'","''")}', (ConvertTo-SecureString '{credPwd?.Replace("'", "''")}' -asPlainText -force)))";
+                var credPSCredentials = $"(New-Object System.Management.Automation.PSCredential ('{credUser?.Replace("'", "''")}', (ConvertTo-SecureString '{credPwd?.Replace("'", "''")}' -asPlainText -force)))";
 
                 // remove username/pwd from our list of used arguments as it will now be provided as a combined credential instead
                 allArgumentKV.RemoveAll(a => a.KV.Key == psCredentialSpec[1]);

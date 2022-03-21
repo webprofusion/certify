@@ -264,13 +264,14 @@ namespace Certify.Client
             return bool.Parse(result);
         }
 
-        public async Task<List<SiteInfo>> GetServerSiteList(StandardServerTypes serverType, string itemId =null)
+        public async Task<List<SiteInfo>> GetServerSiteList(StandardServerTypes serverType, string itemId = null)
         {
             if (string.IsNullOrEmpty(itemId))
             {
                 var result = await FetchAsync($"server/sitelist/{serverType}");
                 return JsonConvert.DeserializeObject<List<SiteInfo>>(result);
-            } else
+            }
+            else
             {
                 var result = await FetchAsync($"server/sitelist/{serverType}/{itemId}");
                 return JsonConvert.DeserializeObject<List<SiteInfo>>(result);

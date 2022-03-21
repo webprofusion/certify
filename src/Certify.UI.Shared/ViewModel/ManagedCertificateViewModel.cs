@@ -691,13 +691,14 @@ namespace Certify.UI.ViewModel
         {
             ValidationError = null;
             var domainOptions = await GetDomainOptionsFromSite(siteId);
-            
+
             var result = CertificateDomainsService.PopulateFromSiteInfo(SelectedItem, SelectedWebSite, domainOptions);
 
             if (!result.IsSuccess)
             {
                 ValidationError = result.Message;
-            } else
+            }
+            else
             {
                 SelectedItem = result.Result;
             }

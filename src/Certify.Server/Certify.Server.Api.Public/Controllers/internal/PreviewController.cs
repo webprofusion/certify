@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Certify.Client;
 using Certify.Models;
@@ -42,7 +41,7 @@ namespace Certify.Server.API.Controllers
         [HttpPost]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ActionStep>))]
-        public async Task<IActionResult> GetPreview([FromBody]ManagedCertificate item)
+        public async Task<IActionResult> GetPreview([FromBody] ManagedCertificate item)
         {
             var previewSteps = await _client.PreviewActions(item);
             return new OkObjectResult(previewSteps);

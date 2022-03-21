@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Certify.Client;
-using Certify.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -42,7 +40,7 @@ namespace Certify.Server.API.Controllers
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Models.Config.StoredCredential>))]
-        
+
         public async Task<IActionResult> GetStoredCredentials()
         {
             var list = await _client.GetCredentials();

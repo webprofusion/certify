@@ -111,7 +111,7 @@ namespace Certify.CLI
             System.Console.WriteLine("certify add <managed cert id or new> <domain1;domain2> : add domains to a managed cert using the default validation, use --perform-request to immediately attempt cert request");
             System.Console.WriteLine("certify remove <managed cert id> <domain1;domain2> : remove domains from managed cert, use --perform-request to immediately attempt cert request");
             System.Console.WriteLine("certify acmeaccount add  <ACME CA ID> <your contact email> <optional EAB key id> <optional EAB Key> : add a new ACME account");
-            System.Console.WriteLine("certify acmeaccount list : list registered acme accounts"); 
+            System.Console.WriteLine("certify acmeaccount list : list registered acme accounts");
             System.Console.WriteLine("certify activate <email address> <key> : activate your Certify The Web install using your license key");
             System.Console.WriteLine("\n\n");
             System.Console.WriteLine("For help, see the docs at https://docs.certifytheweb.com");
