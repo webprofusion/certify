@@ -10,7 +10,7 @@ namespace Certify.Service
     [Route("api/server")]
     public class ServerController : Controllers.ControllerBase
     {
-        private ICertifyManager _certifyManager = null;
+        private ICertifyManager _certifyManager;
 
         public ServerController(Management.ICertifyManager manager)
         {

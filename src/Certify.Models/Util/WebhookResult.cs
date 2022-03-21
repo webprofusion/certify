@@ -8,8 +8,8 @@
             StatusCode = statusCode;
         }
 
-        public bool Success = false;
+        public bool Success { get; set; }
 
-        public int StatusCode = 0;
+        public int StatusCode { get; set; }
     }
 }

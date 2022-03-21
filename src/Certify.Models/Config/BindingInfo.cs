@@ -1,4 +1,4 @@
-﻿namespace Certify.Models
+namespace Certify.Models
 {
     public class BindingInfo
     {
@@ -21,7 +21,7 @@
 
         public bool IsSNIEnabled { get; set; }
         public bool IsEnabled { get; set; }
-        public bool IsFtpSite { get; set; } = false;
+        public bool IsFtpSite { get; set; }
 
         public override string ToString()
         {

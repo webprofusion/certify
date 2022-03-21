@@ -21,7 +21,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         protected Models.Providers.ILog Log => AppViewModel.Log;
 
-        private string _lastSelectedItemId = null;
+        private string _lastSelectedItemId;
 
         public ManagedCertificateSettings()
         {

@@ -86,7 +86,7 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// Log for general app events
         /// </summary>
-        public ILog Log { get; private set; } = null;
+        public ILog Log { get; private set; }
 
         /// <summary>
         /// Internal product reference for registration etc
@@ -96,7 +96,7 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// internal client for the current background service connection
         /// </summary>
-        internal ICertifyClient _certifyClient = null;
+        internal ICertifyClient _certifyClient;
 
         /// <summary>
         /// Provider for current set of plugins
@@ -114,12 +114,12 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// If true, service is connected
         /// </summary>
-        public bool IsServiceAvailable { get; set; } = false;
+        public bool IsServiceAvailable { get; set; }
 
         /// <summary>
         /// If true, app update is currently downloading
         /// </summary>
-        public bool IsUpdateInProgress { get; set; } = false;
+        public bool IsUpdateInProgress { get; set; }
 
         /// <summary>
         /// General exception handling

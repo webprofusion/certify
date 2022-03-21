@@ -360,7 +360,7 @@ namespace Certify.UI.ViewModel
 
         public string ValidationError { get; set; }
 
-        public bool IsAdvancedView { get; set; } = false;
+        public bool IsAdvancedView { get; set; }
 
         public bool IsSelectedItemValid => SelectedItem?.Id != null && !SelectedItem.IsChanged;
 

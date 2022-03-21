@@ -15,7 +15,7 @@ namespace Certify.UI.Controls.Settings
         {
             public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
 
-            public Models.Config.StoredCredential SelectedStoredCredential { get; set; } = null;
+            public Models.Config.StoredCredential SelectedStoredCredential { get; set; }
         }
 
         public EditViewModel EditModel { get; set; } = new EditViewModel();

@@ -16,7 +16,7 @@ namespace Certify.UI.Controls.Settings
             public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
             public Models.Preferences Prefs => MainViewModel.Preferences;
 
-            public bool SettingsInitialised { get; set; } = false;
+            public bool SettingsInitialised { get; set; }
 
         }
         public Model EditModel { get; set; } = new Model();

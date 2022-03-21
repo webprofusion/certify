@@ -9,12 +9,12 @@
         /// Username to authenticate with
         /// </summary>
 
-        public string Username { get; set; }
+        public string Username { get; set; } = string.Empty;
 
         /// <summary>
         /// Password to authenticate with
         /// </summary>
-        public string Password { get; set; }
+        public string Password { get; set; } = string.Empty;
 
     }
 
@@ -26,16 +26,16 @@
         /// <summary>
         /// String providing summary message
         /// </summary>
-        public string Detail { get; set; }
+        public string Detail { get; set; } = string.Empty;
 
         /// <summary>
         /// Access token string
         /// </summary>
-        public string AccessToken { get; set; }
+        public string AccessToken { get; set; } = string.Empty;
 
         /// <summary>
         /// Refresh token string
         /// </summary>
-        public string RefreshToken { get; set; }
+        public string RefreshToken { get; set; } = string.Empty;
     }
 }

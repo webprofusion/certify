@@ -4,7 +4,7 @@ namespace Certify.Shared
 {
     public class ServiceConfig
     {
-        public bool UseHTTPS { get; set; } = false;
+        public bool UseHTTPS { get; set; }
 #if DEBUG
         public int Port { get; set; } = 9695;
 #else
@@ -16,7 +16,7 @@ namespace Certify.Shared
 
         public string LogLevel { get; set; } = "information";
 
-        public string ServiceFaultMsg { get; set; }
+        public string ServiceFaultMsg { get; set; } = string.Empty;
 
         public string PowershellExecutionPolicy { get; set; } = "Unrestricted";
 
@@ -31,7 +31,7 @@ namespace Certify.Shared
         /// <summary>
         /// If true, allow service to negotitate it's own port and update required config.
         /// </summary>
-        public bool EnableAutoPortNegotiation { get; set; } = false;
+        public bool EnableAutoPortNegotiation { get; set; }
     }
 
     public enum ConfigStatus

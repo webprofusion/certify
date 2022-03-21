@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Certify.Models.Config
@@ -28,7 +28,7 @@ namespace Certify.Models.Config
         /// </summary>
         public bool IsEnabled { get; set; } = true;
         public bool IsTestModeSupported { get; set; } = true;
-        public bool HasDynamicParameters { get; set; } = false;
+        public bool HasDynamicParameters { get; set; }
 
         public ProviderDefinition()
         {

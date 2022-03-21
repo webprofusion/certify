@@ -14,7 +14,7 @@ namespace Certify.Service
     [Route("api/system")]
     public class SystemController : Controllers.ControllerBase
     {
-        private ICertifyManager _certifyManager = null;
+        private ICertifyManager _certifyManager;
 
         public SystemController(Management.ICertifyManager manager)
         {

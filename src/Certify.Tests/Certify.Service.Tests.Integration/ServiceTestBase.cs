@@ -6,7 +6,7 @@ namespace Certify.Service.Tests.Integration
 {
     public class ServiceTestBase
     {
-        protected Client.CertifyServiceClient _client = null;
+        protected Client.CertifyServiceClient _client;
         private OwinService _svc;
 
         [TestInitialize]

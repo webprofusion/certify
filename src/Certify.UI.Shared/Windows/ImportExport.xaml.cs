@@ -21,13 +21,13 @@ namespace Certify.UI.Windows
 
         public class ImportExportModel : BindableBase
         {
-            public bool InProgress { get; set; } = false;
-            public bool IsImportReady { get; set; } = false;
-            public bool IsPreviewReady { get; set; } = false;
+            public bool InProgress { get; set; }
+            public bool IsImportReady { get; set; }
+            public bool IsPreviewReady { get; set; }
             public ManagedCertificateFilter Filter { get; set; } = new ManagedCertificateFilter { };
             public ImportSettings ImportSettings { get; set; } = new ImportSettings { };
             public ExportSettings ExportSettings { get; set; } = new ExportSettings { };
-            public ImportExportPackage Package { get; set; } = null;
+            public ImportExportPackage Package { get; set; }
 
         }
 
@@ -205,7 +205,7 @@ namespace Certify.UI.Windows
                             stepSymbol = " " + errorSymbol;
                         }
 
-                        if (!string.IsNullOrEmpty(sub.Title) && sub.Title != s.Title && sub.Title != sub.Description && sub.Description != null)
+                        if (!string.IsNullOrEmpty(sub.Title) && !string.IsNullOrEmpty(sub.Description) && sub.Title != s.Title && sub.Title != sub.Description)
                         {
                             sb.AppendLine(newLine + "### " + sub.Title);
                         }

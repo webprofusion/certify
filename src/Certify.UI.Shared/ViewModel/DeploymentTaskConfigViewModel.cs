@@ -19,9 +19,9 @@ namespace Certify.UI.ViewModel
 
         public DeploymentTaskConfig SelectedItem { get; set; }
 
-        public bool EditAsPostRequestTask { get; set; } = false;
+        public bool EditAsPostRequestTask { get; set; }
 
-        private string _lastCachedDynamicProvider = null;
+        private string _lastCachedDynamicProvider;
 
         public StoredCredential SelectedCredentialItem
         {
@@ -380,9 +380,7 @@ namespace Certify.UI.ViewModel
             }
 
             // validate task provider specific config
-            var results = await _appViewModel.ValidateDeploymentTask(
-                new Models.Utils.DeploymentTaskValidationInfo { ManagedCertificate = _appViewModel.SelectedItem, TaskConfig = SelectedItem }
-                );
+            var results = await _appViewModel.ValidateDeploymentTask(new Models.Utils.DeploymentTaskValidationInfo(_appViewModel.SelectedItem, SelectedItem));
 
             if (results.Any(r => r.IsSuccess == false))
             {

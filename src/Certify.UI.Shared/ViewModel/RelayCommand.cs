@@ -11,9 +11,9 @@ namespace Certify.UI.ViewModel
     {
         #region Fields
 
-        private readonly Action<T> _execute = null;
-        private readonly Predicate<T> _canExecute = null;
-        private UI.ViewModel.AppViewModel _viewModel = null;
+        private readonly Action<T> _execute;
+        private readonly Predicate<T> _canExecute;
+        private UI.ViewModel.AppViewModel _viewModel;
 
         #endregion Fields
 

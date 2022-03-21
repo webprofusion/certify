@@ -24,7 +24,7 @@ namespace Certify.Service.Api.Tests
 
         internal static string _apiBaseUri = "/api/v1";
 
-        internal string _refreshToken = null;
+        internal string _refreshToken;
 
         [AssemblyInitialize]
         public static void Init(TestContext context)

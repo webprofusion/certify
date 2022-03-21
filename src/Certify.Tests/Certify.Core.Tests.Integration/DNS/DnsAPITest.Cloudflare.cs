@@ -13,7 +13,7 @@ namespace Certify.Core.Tests
         protected string _credStorageKey = "";
         protected Dictionary<string, string> _credentials = new Dictionary<string, string>();
         protected string _zoneId = "";
-        protected IDnsProvider _provider = null;
+        protected IDnsProvider _provider;
 
         public async Task<DnsRecord> TestCreateRecord()
         {

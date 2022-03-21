@@ -14,8 +14,8 @@ namespace Certify.UI.Controls.ManagedCertificate
         protected Certify.UI.ViewModel.ManagedCertificateViewModel ItemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
         protected Certify.UI.ViewModel.AppViewModel AppViewModel => UI.ViewModel.AppViewModel.Current;
 
-        private string _tempLogFilePath = null;
-        private System.Diagnostics.Process _tempLogViewerProcess = null;
+        private string _tempLogFilePath;
+        private System.Diagnostics.Process _tempLogViewerProcess;
 
         public StatusInfo()
         {

@@ -102,7 +102,7 @@ namespace Certify.UI.Utils
     public class FeatureBooleanConverter : IValueConverter
     {
         public bool WhenEnabled { get; set; } = true;
-        public bool WhenNotEnabled { get; set; } = false;
+        public bool WhenNotEnabled { get; set; }
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

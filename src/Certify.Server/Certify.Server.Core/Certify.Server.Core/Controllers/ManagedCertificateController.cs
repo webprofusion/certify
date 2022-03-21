@@ -18,7 +18,7 @@ namespace Certify.Service
     [Route("api/managedcertificates")]
     public class ManagedCertificatesController : Controllers.ControllerBase
     {
-        private ICertifyManager _certifyManager = null;
+        private ICertifyManager _certifyManager;
 
         public ManagedCertificatesController(Management.ICertifyManager manager)
         {
@@ -212,7 +212,7 @@ namespace Certify.Service
             return result.FirstOrDefault();
         }
 
-        private bool _redeployInProgress = false;
+        private bool _redeployInProgress;
         [HttpGet, Route("redeploy/{isPreviewOnly}/{includeDeploymentTasks}")]
         public async Task<List<CertificateRequestResult>> RedeployManagedCertificate(bool isPreviewOnly, bool includeDeploymentTasks)
         {

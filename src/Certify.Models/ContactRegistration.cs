@@ -1,4 +1,6 @@
-﻿namespace Certify.Models
+﻿#nullable disable
+
+namespace Certify.Models
 {
     public class ContactRegistration
     {
@@ -6,10 +8,10 @@
 
         public string EmailAddress { get; set; }
 
-        public bool AgreedToTermsAndConditions { get; set; } = false;
+        public bool AgreedToTermsAndConditions { get; set; }
 
         public string CertificateAuthorityId { get; set; } = StandardCertAuthorities.LETS_ENCRYPT;
-        public bool IsStaging { get; set; } = false;
+        public bool IsStaging { get; set; }
 
         public string EabKeyId { get; set; }
         public string EabKey { get; set; }

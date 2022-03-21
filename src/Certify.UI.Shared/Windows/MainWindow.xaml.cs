@@ -18,7 +18,7 @@ namespace Certify.UI.Windows
     /// </summary>
     public partial class MainWindow
     {
-        private TelemetryManager tc = null;
+        private TelemetryManager tc;
 
         protected Certify.UI.ViewModel.AppViewModel _appViewModel => UI.ViewModel.AppViewModel.Current;
         protected Certify.UI.ViewModel.ManagedCertificateViewModel _itemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;

@@ -29,7 +29,7 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// If true, one or more items uses a deprecated or unsupported challenge type
         /// </summary>
-        public bool HasDeprecatedChallengeTypes { get; set; } = false;
+        public bool HasDeprecatedChallengeTypes { get; set; }
 
         private ManagedCertificate _selectedItem;
 

@@ -1,4 +1,4 @@
-﻿namespace Certify.Models
+namespace Certify.Models
 {
     public class AccountDetails
     {
@@ -7,7 +7,7 @@
         public string Title { get; set; }
 
         public string CertificateAuthorityId { get; set; }
-        public bool IsStagingAccount { get; set; } = false;
+        public bool IsStagingAccount { get; set; }
 
         public string Email { get; set; }
         public string AccountURI { get; set; }
