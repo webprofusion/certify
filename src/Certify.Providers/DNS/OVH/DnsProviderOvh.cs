@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
+using Certify.Plugins;
 
 namespace Certify.Providers.DNS.OVH
 {

@@ -8,6 +8,7 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
+using Certify.Plugins;
 using Newtonsoft.Json;
 
 namespace Certify.Providers.DNS.AcmeDns
