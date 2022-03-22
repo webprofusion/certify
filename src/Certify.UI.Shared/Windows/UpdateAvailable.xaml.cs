@@ -45,6 +45,12 @@ namespace Certify.UI.Windows
         }
         private async Task<string> UpdatePreview()
         {
+
+            if (_update == null)
+            {
+                return "Update information unavailable. Do not proceed with the update until this is resolved.";
+            }
+
             // generate release notes
 
             bool showAllChanges = false;
