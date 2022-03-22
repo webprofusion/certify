@@ -88,7 +88,7 @@ namespace Certify.Management
 
             LogMessage(managedCert.Id, $"---- Performing Task [On-Demand or Manual Execution] :: {msg} ----");
 
-            var result = await PerformTaskList(log, isPreviewOnly, skipDeferredTasks, new CertificateRequestResult { ManagedItem = managedCert, IsSuccess = managedCert.LastRenewalStatus == RequestState.Success ? true : false }, taskList, forceTaskExecution);
+            var result = await PerformTaskList(log, isPreviewOnly, skipDeferredTasks, new CertificateRequestResult(managedCert, isSuccess: managedCert.LastRenewalStatus == RequestState.Success ? true : false, ""), taskList, forceTaskExecution);
 
             await UpdateManagedCertificate(managedCert);
 

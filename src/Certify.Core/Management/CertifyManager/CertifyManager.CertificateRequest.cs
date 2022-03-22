@@ -349,7 +349,7 @@ namespace Certify.Management
 
                 ReportProgress(progress, new RequestProgressState(RequestState.Success, CoreSR.Finish, managedCertificate));
 
-                return new CertificateRequestResult { };
+                return new CertificateRequestResult(managedCertificate, true, "OK");
             });
 #pragma warning restore IDE0022 // Use expression body for methods
         }
@@ -383,7 +383,7 @@ namespace Certify.Management
             LogMessage(managedCertificate.Id, $"---- Beginning Request [{managedCertificate.Name}] ----");
 
             // start with a failure result, set to success when succeeding
-            var certRequestResult = new CertificateRequestResult { ManagedItem = managedCertificate, IsSuccess = false, Message = "", Actions = new List<ActionStep>() };
+            var certRequestResult = new CertificateRequestResult(managedCertificate);
 
             var config = managedCertificate.RequestConfig;
 
@@ -793,7 +793,7 @@ namespace Certify.Management
         /// <returns></returns>
         private async Task<CertificateRequestResult> CompleteCertificateRequestProcessing(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, PendingOrder pendingOrder)
         {
-            var result = new CertificateRequestResult { ManagedItem = managedCertificate, IsSuccess = false, Message = "" };
+            var result = new CertificateRequestResult(managedCertificate);
 
             var _acmeClientProvider = await GetACMEProvider(managedCertificate);
 
@@ -932,7 +932,6 @@ namespace Certify.Management
                                     if (authorization?.Identifier != null)
                                     {
                                         errorMsg = authorization.Identifier.ValidationError;
-                                        var errorType = authorization.Identifier.ValidationErrorType;
                                     }
 
                                     failureSummaryMessage = $"Domain validation failed: {domain} \r\n{errorMsg}";
@@ -1381,7 +1380,7 @@ namespace Certify.Management
 
             _serviceLog?.Information($"{(isPreviewOnly ? "Previewing" : "Performing")} Certificate Deployment: {managedCertificate.Name}");
 
-            var result = new CertificateRequestResult { ManagedItem = managedCertificate, IsSuccess = false, Message = "" };
+            var result = new CertificateRequestResult(managedCertificate);
             var config = managedCertificate.RequestConfig;
             var pfxPath = managedCertificate.CertificatePath;
 
@@ -1391,7 +1390,7 @@ namespace Certify.Management
 
                 if (!System.IO.File.Exists(pfxPath))
                 {
-                    return new CertificateRequestResult { IsSuccess = false, Message = $"[{managedCertificate.Name}] Certificate path is invalid or file does not exist. Cannot deploy certificate." };
+                    return new CertificateRequestResult(managedCertificate, isSuccess: false, msg: $"[{managedCertificate.Name}] Certificate path is invalid or file does not exist. Cannot deploy certificate.");
                 }
 
                 ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding, managedCertificate));

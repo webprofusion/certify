@@ -30,7 +30,7 @@ namespace Certify.Core.Tests.Unit
 
             Assert.IsNotNull(export.Content.ManagedCertificates);
 
-            //Assert.IsTrue(export.Content.CertificateFiles.Count > 0);
+            Assert.AreNotEqual(0, export.Content.ManagedCertificates.Count);
 
         }
 

@@ -9,7 +9,7 @@ namespace Certify.Models
         {
         }
 
-        public IEnumerable<string> Contacts { get; set; }
+        public IEnumerable<string> Contacts { get; set; } = new List<string>();
     }
 
     public class IdentifierItem : VaultItem
@@ -18,12 +18,12 @@ namespace Certify.Models
         {
         }
 
-        public string Dns { get; set; }
-        public string Status { get; set; }
+        public string Dns { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
         public DateTime? AuthorizationExpiry { get; set; }
         public bool IsAuthorizationPending { get; set; }
-        public string ValidationError { get; set; }
-        public string ValidationErrorType { get; set; }
+        public string ValidationError { get; set; } = string.Empty;
+        public string ValidationErrorType { get; set; } = string.Empty;
     }
 
     public class CertificateItem : VaultItem
@@ -35,12 +35,10 @@ namespace Certify.Models
 
     public class VaultItem
     {
-        public string Id { get; set; }
-        public string Alias { get; set; }
-        public string Name { get; set; }
-        public string ItemType { get; set; }
-
-        public List<VaultItem> Children { get; set; }
+        public string? Id { get; set; }
+        public string? Alias { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string ItemType { get; set; } = string.Empty;
 
         public VaultItem()
         {

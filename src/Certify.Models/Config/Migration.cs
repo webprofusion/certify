@@ -7,11 +7,11 @@ namespace Certify.Config.Migration
 {
     public class ImportExportContent
     {
-        public List<ManagedCertificate> ManagedCertificates { get; set; }
-        public List<EncryptedContent> CertificateFiles { get; set; }
-        public List<EncryptedContent> Scripts { get; set; }
-        public List<StoredCredential> StoredCredentials { get; set; }
-        public List<CertificateAuthority> CertificateAuthorities { get; set; }
+        public List<ManagedCertificate> ManagedCertificates { get; set; } = new();
+        public List<EncryptedContent> CertificateFiles { get; set; } = new();
+        public List<EncryptedContent> Scripts { get; set; } = new();
+        public List<StoredCredential> StoredCredentials { get; set; } = new();
+        public List<CertificateAuthority> CertificateAuthorities { get; set; } = new();
     }
 
     public class SerializableVersion
@@ -43,7 +43,7 @@ namespace Certify.Config.Migration
 
         public Version ToVersion() => _version;
 
-        public SerializableVersion FromVersion(Version val) => new SerializableVersion(val);
+        public static SerializableVersion FromVersion(Version val) => new SerializableVersion(val);
 
         public override string ToString()
         {
@@ -54,48 +54,48 @@ namespace Certify.Config.Migration
     public class ImportExportPackage
     {
         public int FormatVersion { get; set; } = 1;
-        public SerializableVersion SystemVersion { get; set; }
+        public SerializableVersion? SystemVersion { get; set; }
         public string Description { get; set; } = "Certify The Web - Exported App Settings";
-        public string SourceName { get; set; }
+        public string? SourceName { get; set; }
         public DateTime ExportDate { get; set; }
-        public ImportExportContent Content { get; set; }
+        public ImportExportContent? Content { get; set; }
 
-        public EncryptedContent EncryptionValidation { get; set; }
-        public string EncryptionSalt { get; set; }
+        public EncryptedContent? EncryptionValidation { get; set; }
+        public string EncryptionSalt { get; set; } = string.Empty;
 
-        public List<string> Errors { get; set; } = new List<string>();
+        public List<string> Errors { get; set; } = new();
     }
 
     public class EncryptedContent
     {
-        public string Filename { get; set; }
-        public byte[] Content { get; set; }
-        public string Scheme { get; set; }
+        public string Filename { get; set; } = string.Empty;
+        public byte[] Content { get; set; } = Array.Empty<byte>();
+        public string Scheme { get; set; } = string.Empty;
     }
 
     public class ExportSettings
     {
         public bool ExportAllStoredCredentials { get; set; }
-        public string EncryptionSecret { get; set; }
+        public string EncryptionSecret { get; set; } = string.Empty;
     }
 
     public class ImportSettings
     {
-        public string EncryptionSecret { get; set; }
+        public string EncryptionSecret { get; set; } = string.Empty;
     }
 
     public class ExportRequest
     {
-        public ManagedCertificateFilter Filter { get; set; }
-        public ExportSettings Settings { get; set; }
+        public ManagedCertificateFilter Filter { get; set; } = new();
+        public ExportSettings Settings { get; set; } = new();
         public bool IsPreviewMode { get; set; }
     }
 
 
     public class ImportRequest
     {
-        public ImportExportPackage Package { get; set; }
-        public ImportSettings Settings { get; set; }
+        public ImportExportPackage Package { get; set; } = new();
+        public ImportSettings Settings { get; set; } = new();
         public bool IsPreviewMode { get; set; }
     }
 }

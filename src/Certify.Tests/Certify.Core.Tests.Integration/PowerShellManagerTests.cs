@@ -15,7 +15,7 @@ namespace Certify.Core.Tests.Unit
         {
             var path = AppContext.BaseDirectory;
 
-            await PowerShellManager.RunScript("Unrestricted", new CertificateRequestResult { }, System.IO.Path.Combine(path, "Assets\\Powershell\\Simple.ps1"));
+            await PowerShellManager.RunScript("Unrestricted", new CertificateRequestResult(new ManagedCertificate()), System.IO.Path.Combine(path, "Assets\\Powershell\\Simple.ps1"));
 
             var outputExists = System.IO.File.Exists(@"C:\Temp\Certify\TestOutput\TestPSOutput.txt");
             Assert.IsTrue(outputExists, "Powershell output file should exist");

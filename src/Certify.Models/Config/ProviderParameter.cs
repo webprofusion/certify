@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 
 namespace Certify.Models.Config
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1720:Identifier contains type name", Justification = "Type names are intentional")]
     public enum OptionType
     {
         String = 1,
@@ -34,27 +35,27 @@ namespace Certify.Models.Config
 
     public class ProviderParameter : ICloneable
     {
-        public string Key { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
+        public string Key { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
         public bool IsPassword { get; set; }
         public bool IsMultiLine { get; set; }
         public bool IsRequired { get; set; }
         public bool IsHidden { get; set; }
-        public string Value { get; set; }
+        public string? Value { get; set; }
         public bool IsCredential { get; set; } = true;
 
         /// <summary>
         /// Options list in the format key1=title1;key2=title2;key3;key4;
         /// </summary>
-        public string OptionsList { get; set; }
+        public string? OptionsList { get; set; }
 
         public OptionType? Type { get; set; }
 
         /// <summary>
         /// used to store metadata such as a credential type for credential option selection
         /// </summary>
-        public string ExtendedConfig { get; set; }
+        public string? ExtendedConfig { get; set; }
 
         // NOTE: this object is cloneable, so any new properties have to be added to Clone()
 
