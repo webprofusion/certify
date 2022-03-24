@@ -4,7 +4,7 @@
     {
         public string? StorageKey { get; set; }
 
-        public string EmailAddress { get; set; } = string.Empty;
+        public string? EmailAddress { get; set; } = string.Empty;
 
         public bool AgreedToTermsAndConditions { get; set; }
 

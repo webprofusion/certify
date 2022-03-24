@@ -7,11 +7,11 @@ namespace Certify.Config.Migration
 {
     public class ImportExportContent
     {
-        public List<ManagedCertificate> ManagedCertificates { get; set; } = new();
-        public List<EncryptedContent> CertificateFiles { get; set; } = new();
-        public List<EncryptedContent> Scripts { get; set; } = new();
-        public List<StoredCredential> StoredCredentials { get; set; } = new();
-        public List<CertificateAuthority> CertificateAuthorities { get; set; } = new();
+        public List<ManagedCertificate>? ManagedCertificates { get; set; } = new();
+        public List<EncryptedContent>? CertificateFiles { get; set; } = new();
+        public List<EncryptedContent>? Scripts { get; set; } = new();
+        public List<StoredCredential>? StoredCredentials { get; set; } = new();
+        public List<CertificateAuthority>? CertificateAuthorities { get; set; } = new();
     }
 
     public class SerializableVersion
@@ -61,27 +61,27 @@ namespace Certify.Config.Migration
         public ImportExportContent? Content { get; set; }
 
         public EncryptedContent? EncryptionValidation { get; set; }
-        public string EncryptionSalt { get; set; } = string.Empty;
+        public string? EncryptionSalt { get; set; } = string.Empty;
 
         public List<string> Errors { get; set; } = new();
     }
 
     public class EncryptedContent
     {
-        public string Filename { get; set; } = string.Empty;
-        public byte[] Content { get; set; } = Array.Empty<byte>();
-        public string Scheme { get; set; } = string.Empty;
+        public string? Filename { get; set; } = string.Empty;
+        public byte[]? Content { get; set; } = Array.Empty<byte>();
+        public string? Scheme { get; set; } = string.Empty;
     }
 
     public class ExportSettings
     {
         public bool ExportAllStoredCredentials { get; set; }
-        public string EncryptionSecret { get; set; } = string.Empty;
+        public string? EncryptionSecret { get; set; } = string.Empty;
     }
 
     public class ImportSettings
     {
-        public string EncryptionSecret { get; set; } = string.Empty;
+        public string? EncryptionSecret { get; set; } = string.Empty;
     }
 
     public class ExportRequest

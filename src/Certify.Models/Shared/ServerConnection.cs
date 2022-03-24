@@ -7,8 +7,8 @@ namespace Certify.Shared
     /// </summary>
     public class ServerConnection
     {
-        public string Id { get; set; }
-        public string DisplayName { get; set; } = string.Empty;
+        public string? Id { get; set; }
+        public string? DisplayName { get; set; } = string.Empty;
         public bool UseHTTPS { get; set; }
         public bool AllowUntrusted { get; set; }
 #if DEBUG
@@ -19,9 +19,9 @@ namespace Certify.Shared
         public string Host { get; set; } = "localhost";
         public DateTime? DateLastConnected { get; set; }
 
-        public string Mode { get; set; } = "direct";
-        public string Authentication { get; set; } = "default";
-        public string ServerMode { get; set; } = "v1";
+        public string? Mode { get; set; } = "direct";
+        public string? Authentication { get; set; } = "default";
+        public string? ServerMode { get; set; } = "v1";
         public bool IsDefault { get; set; }
 
         public ServerConnection()

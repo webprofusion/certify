@@ -4,8 +4,8 @@ namespace Certify.Models.Config
 {
     public class StoredCredential
     {
-        public string ProviderType { get; set; } = string.Empty;
-        public string Title { get; set; } = string.Empty;
+        public string? ProviderType { get; set; } = string.Empty;
+        public string? Title { get; set; } = string.Empty;
         public string? StorageKey { get; set; }
         public DateTime DateCreated { get; set; }
 

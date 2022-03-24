@@ -15,11 +15,11 @@ namespace Certify.Models.Config
 
     public class ProviderDefinition
     {
-        public string Id { get; set; } = string.Empty;
-        public string Title { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public string HelpUrl { get; set; } = string.Empty;
-        public List<ProviderParameter> ProviderParameters { get; set; } = new();
+        public string? Id { get; set; } = string.Empty;
+        public string? Title { get; set; } = string.Empty;
+        public string? Description { get; set; } = string.Empty;
+        public string? HelpUrl { get; set; } = string.Empty;
+        public List<ProviderParameter>? ProviderParameters { get; set; } = new();
         public string? Config { get; set; }
         public bool IsExperimental { get; set; }
 
@@ -38,7 +38,7 @@ namespace Certify.Models.Config
 
     public class ChallengeProviderDefinition : ProviderDefinition
     {
-        public string ChallengeType { get; set; } = String.Empty;
+        public string? ChallengeType { get; set; } = String.Empty;
         public ChallengeHandlerType HandlerType { get; set; }
         public int PropagationDelaySeconds { get; set; }
 
@@ -72,7 +72,7 @@ namespace Certify.Models.Config
         /// <summary>
         /// Default title for a new task of this type
         /// </summary>
-        public string DefaultTitle { get; set; } = string.Empty;
+        public string? DefaultTitle { get; set; } = string.Empty;
 
         /// <summary>
         /// Flags for allowed usage types

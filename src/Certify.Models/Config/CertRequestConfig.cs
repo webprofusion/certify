@@ -65,12 +65,12 @@ namespace Certify.Models
         /// <summary>
         /// Optional subject alternative names for our SSL Cert request 
         /// </summary>
-        public string[] SubjectAlternativeNames { get; set; } = Array.Empty<string>();
+        public string[]? SubjectAlternativeNames { get; set; } = Array.Empty<string>();
 
         /// <summary>
         /// Optional list of IP addresses to include in cert request, primary first
         /// </summary>
-        public string[] SubjectIPAddresses { get; set; } = Array.Empty<string>();
+        public string[]? SubjectIPAddresses { get; set; } = Array.Empty<string>();
 
         /// <summary>
         /// Root path for our website content, used when responding to file based challenges 
@@ -177,7 +177,7 @@ namespace Certify.Models
         /// <summary>
         /// Key algorithm type for CSR signing. Default is RS256 
         /// </summary>
-        public string CSRKeyAlg { get; set; } = SupportedCSRKeyAlgs.RS256;
+        public string? CSRKeyAlg { get; set; } = SupportedCSRKeyAlgs.RS256;
 
         /// <summary>
         /// Deployment site options (single/all etc) 

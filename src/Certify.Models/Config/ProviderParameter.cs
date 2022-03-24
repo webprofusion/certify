@@ -29,15 +29,15 @@ namespace Certify.Models.Config
             Value = value;
         }
 
-        public string Key { get; set; }
-        public string Value { get; set; }
+        public string? Key { get; set; }
+        public string? Value { get; set; }
     }
 
     public class ProviderParameter : ICloneable
     {
-        public string Key { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
+        public string? Key { get; set; } = string.Empty;
+        public string? Name { get; set; } = string.Empty;
+        public string? Description { get; set; } = string.Empty;
         public bool IsPassword { get; set; }
         public bool IsMultiLine { get; set; }
         public bool IsRequired { get; set; }

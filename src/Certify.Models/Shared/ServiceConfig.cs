@@ -10,20 +10,20 @@ namespace Certify.Shared
 #else
         public int Port { get; set; } = 9696;
 #endif
-        public string Host { get; set; } = "localhost";
+        public string? Host { get; set; } = "localhost";
 
         public int HttpChallengeServerPort { get; set; } = 80;
 
-        public string LogLevel { get; set; } = "information";
+        public string? LogLevel { get; set; } = "information";
 
-        public string ServiceFaultMsg { get; set; } = string.Empty;
+        public string? ServiceFaultMsg { get; set; } = string.Empty;
 
         public string PowershellExecutionPolicy { get; set; } = "Unrestricted";
 
         /// <summary>
         /// windows;jwt;
         /// </summary>
-        public string AuthenticationModes { get; set; } = "windows";
+        public string? AuthenticationModes { get; set; } = "windows";
 
         [JsonIgnore]
         public ConfigStatus ConfigStatus { get; set; }

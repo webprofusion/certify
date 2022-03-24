@@ -9,6 +9,6 @@
     {
         public bool IsAccessible { get; set; }
         public int? StatusCode { get; set; }
-        public string Message { get; set; } = string.Empty;
+        public string? Message { get; set; } = string.Empty;
     }
 }

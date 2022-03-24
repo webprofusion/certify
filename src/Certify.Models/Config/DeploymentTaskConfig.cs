@@ -62,12 +62,12 @@ namespace Certify.Config
         /// <summary>
         /// Unique task name (id) used in logs and to invoke this deployment task manually
         /// </summary>
-        public string TaskName { get; set; } = string.Empty;
+        public string? TaskName { get; set; } = string.Empty;
 
         /// <summary>
         /// Optional description for this deployment tasks (i.e. what it does and why)
         /// </summary>
-        public string Description { get; set; } = string.Empty;
+        public string? Description { get; set; } = string.Empty;
 
         /// <summary>
         /// if true, deployment will stop at this step and report as an error, deployment is not considered complete
@@ -88,18 +88,18 @@ namespace Certify.Config
         /// <summary>
         /// The challenge provider is the authentication type required (Local, Network, SSH etc)
         /// </summary>
-        public string ChallengeProvider { get; set; } = string.Empty;
-        public string ChallengeCredentialKey { get; set; } = string.Empty;
+        public string? ChallengeProvider { get; set; } = string.Empty;
+        public string? ChallengeCredentialKey { get; set; } = string.Empty;
 
         /// <summary>
         /// hostname or IP of target (if required)
         /// </summary>
-        public string TargetHost { get; set; } = string.Empty;
+        public string? TargetHost { get; set; } = string.Empty;
 
         /// <summary>
         ///Dictionary of provider parameter values
         /// </summary>
-        public List<ProviderParameterSetting> Parameters { get; set; } = new();
+        public List<ProviderParameterSetting>? Parameters { get; set; } = new();
 
         public DateTime? DateLastExecuted { get; set; }
         public string? LastResult { get; set; }

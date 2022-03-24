@@ -44,7 +44,7 @@ namespace Certify.Models
 
     public class SimpleAuthorizationChallengeItem
     {
-        public string ChallengeType { get; set; } = string.Empty;
+        public string? ChallengeType { get; set; } = string.Empty;
         public string? Key { get; set; }
         public string? Value { get; set; }
     }

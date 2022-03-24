@@ -1,5 +1,4 @@
-﻿#nullable disable
-namespace Certify.Models.Config
+﻿namespace Certify.Models.Config
 {
     public class ActionResult
     {

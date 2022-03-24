@@ -5,7 +5,7 @@
         /// <summary>
         /// Domain name we are managing 
         /// </summary>
-        public string Domain { get; set; } = string.Empty;
+        public string? Domain { get; set; } = string.Empty;
 
         /// <summary>
         /// If true, this item is the primary subject for the certificate request 
@@ -23,7 +23,7 @@
         /// </summary>
         public bool IsManualEntry { get; set; }
 
-        public string Title { get; set; } = string.Empty;
+        public string? Title { get; set; } = string.Empty;
 
         public string Type { get; set; } = "dns";
     }
