@@ -218,6 +218,7 @@ namespace Certify.Management
                 results.AddRange(serverCheck.ConvertAll(x => new StatusMessage { IsOK = !x.HasError, HasWarning = x.HasWarning, Message = x.Description }));
             }
 
+            bool httpChallengeServerActive = false;
             if (managedCertificate.GetChallengeConfig(null).ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
             {
                 if (CoreAppSettings.Current.EnableHttpChallengeServer)
@@ -227,6 +228,8 @@ namespace Certify.Management
                     if (_httpChallengeServerAvailable)
                     {
                         results.Add(new StatusMessage { IsOK = true, Message = "Http Challenge Server process available." });
+
+                        httpChallengeServerActive = true;
                     }
                     else
                     {
@@ -263,7 +266,7 @@ namespace Certify.Management
                 }
             }
 
-            if (CoreAppSettings.Current.EnableHttpChallengeServer)
+            if (httpChallengeServerActive)
             {
                 await StopHttpChallengeServer();
             }
