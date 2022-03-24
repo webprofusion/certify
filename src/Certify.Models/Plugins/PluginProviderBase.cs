@@ -24,7 +24,7 @@ namespace Certify.Plugins
                 var def = (TProviderDefinition)t.GetProperty("Definition").GetValue(null);
                 if (def != null && def is ProviderDefinition)
                 {
-                    if ((def as ProviderDefinition)?.Id.ToLower() == id)
+                    if ((def as ProviderDefinition)?.Id?.ToLower() == id)
                     {
                         return (TProviderInterface)Activator.CreateInstance(t);
                     }

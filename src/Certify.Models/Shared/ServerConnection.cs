@@ -32,9 +32,9 @@ namespace Certify.Shared
         public ServerConnection(ServiceConfig config)
         {
             Id = Guid.NewGuid().ToString();
-            UseHTTPS = config.UseHTTPS;
-            Host = config.Host;
-            Port = config.Port;
+            UseHTTPS = config?.UseHTTPS ?? false;
+            Host = config?.Host ?? "localhost";
+            Port = config?.Port ?? 9696;
             DisplayName = "(local)";
             Mode = "direct";
             Authentication = "default";

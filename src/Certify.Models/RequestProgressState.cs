@@ -31,7 +31,7 @@
     public class RequestProgressState : BindableBase
     {
         public bool IsPreviewMode { get; set; }
-        public ManagedCertificate ManagedCertificate { get; set; }
+        public ManagedCertificate? ManagedCertificate { get; set; }
 
         public RequestProgressState(RequestState currentState, string msg, ManagedCertificate item, bool isPreviewMode = false)
         {
@@ -41,11 +41,18 @@
             IsPreviewMode = isPreviewMode;
         }
 
+        public RequestProgressState()
+        {
+            CurrentState = RequestState.NotRunning;
+
+
+        }
+
         public bool IsRunning => CurrentState == RequestState.Running ? true : false;
 
         public RequestState CurrentState { get; set; }
 
-        public string Message { get; set; }
+        public string? Message { get; set; }
 
         public object? Result { get; set; }
 
@@ -71,7 +78,7 @@
             Result = state.Result;
 
 #if DEBUG
-            System.Diagnostics.Debug.WriteLine(ManagedCertificate.Name + ": " + CurrentState.ToString() + (Message != null ? ", " + Message : ""));
+            System.Diagnostics.Debug.WriteLine(ManagedCertificate?.Name + ": " + CurrentState.ToString() + (Message != null ? ", " + Message : ""));
 #endif
         }
     }
