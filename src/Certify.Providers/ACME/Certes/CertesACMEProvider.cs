@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -112,6 +112,8 @@ namespace Certify.Providers.ACME.Certes
         private List<byte[]> _issuerCertCache = new List<byte[]>();
 
         private ACMECompatibilityMode _compatibilityMode = ACMECompatibilityMode.Standard;
+
+        public bool EnableUnknownCARoots { get; set; } = true;
 
         public CertesACMEProvider(string acmeBaseUri, string settingsBasePath, string settingsPath, string userAgentName, bool allowInvalidTls = false)
         {
@@ -1466,6 +1468,28 @@ namespace Certify.Providers.ACME.Certes
                     _issuerCertCache.Add(customCARoots);
                 }
 
+
+                // well known CA certs
+                var knownCAs = Certify.Models.CertificateAuthority.CoreCertificateAuthorities;
+                foreach (var ca in knownCAs)
+                {
+                    foreach (var cert in ca.TrustedRoots)
+                    {
+
+                        using (TextReader textReader = new StringReader(cert.Value))
+                        {
+                            var pemReader = new PemReader(textReader);
+
+                            var pemObj = pemReader.ReadPemObject();
+
+                            var certBytes = pemObj.Content;
+                            _issuerCertCache.Add(certBytes);
+                        }
+
+
+                    }
+                }
+
             }
             catch (Exception)
             {
@@ -1586,6 +1610,26 @@ namespace Certify.Providers.ACME.Certes
             }
             catch (Exception)
             {
+
+                if (EnableUnknownCARoots)
+                {
+                    // unknown CA roots allowed, attempt PFX build without.
+                    try
+                    {
+                        //pfxPath = ExportPFX_AnyRoot(certFriendlyName, pwd, csrKey, certificateChain, certId, primaryDomainPath);
+                        var pfxNoChain = certificateChain.ToPfx(csrKey);
+                        pfxNoChain.FullChain = false;
+                        // attempt to build pfx cert chain using known issuers and known roots, if this fails it throws an AcmeException
+                        pfxBytes = pfxNoChain.Build(certFriendlyName, pwd);
+                        System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
+                        return pfxPath;
+
+                    }
+                    catch
+                    {
+                        // failed to build using unknown root, proceed with normal strategy for refreshing known issuer cache
+                    }
+                }
                 // if build failed, try refreshing issuer certs
                 RefreshIssuerCertCache();
 
@@ -1614,67 +1658,49 @@ namespace Certify.Providers.ACME.Certes
 
         }
 
-        /* private string ExportPFX_AnyRoot()
-         {
+      /*  private string ExportPFX_AnyRoot(string certFriendlyName, string pwd, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
+        {
+            var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..", "assets", primaryDomainPath }));
 
-             var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..", "assets", primaryDomainPath }));
+            if (!System.IO.Directory.Exists(storePath))
+            {
+                System.IO.Directory.CreateDirectory(storePath);
+            }
 
-             if (!System.IO.Directory.Exists(storePath))
-             {
-                 System.IO.Directory.CreateDirectory(storePath);
-             }
+            var pfxFile = certId + ".pfx";
+            var pfxPath = Path.Combine(storePath, pfxFile);
 
-             var pfxFile = certId + ".pfx";
-             var pfxPath = Path.Combine(storePath, pfxFile);
-             var failedBuildMsg = "Failed to build certificate as PFX. Check system date/time is correct and that the issuing CA is a trusted root CA on this machine (or in custom_ca_certs). :";
+            KeyAlgorithmProvider signatureAlgorithmProvider = new KeyAlgorithmProvider();
+            var (_, keyPair) = signatureAlgorithmProvider.GetKeyPair(csrKey.ToDer());
+            var certParser = new X509CertificateParser();
+            var certificate = certParser.ReadCertificate(certificateChain.Certificate.ToDer());
 
-             byte[] pfxBytes;
-             try
-             {
+            var store = new Org.BouncyCastle.Pkcs.Pkcs12StoreBuilder().Build();
 
-                 var pfx = certificateChain.ToPfx(csrKey);
+            var entry = new Org.BouncyCastle.Pkcs.X509CertificateEntry(certificate);
+            store.SetCertificateEntry(certFriendlyName, entry);
 
-                 if (_issuerCertCache.Any())
-                 {
-                     foreach (var c in _issuerCertCache)
-                     {
-                         pfx.AddIssuers(c);
-                     }
-                 }
+            store.SetKeyEntry(certFriendlyName, new Org.BouncyCastle.Pkcs.AsymmetricKeyEntry(keyPair.Private), new[] { entry });
 
-                 // attempt to build pfx cert chain using known issuers and known roots, if this fails it throws an AcmeException
-                 pfxBytes = pfx.Build(certFriendlyName, pwd);
-                 System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
-             }
-             catch (Exception)
-             {
-                 // if build failed, try refreshing issuer certs
-                 RefreshIssuerCertCache();
+            byte[] pfxBytes;
+            using (var buffer = new MemoryStream())
+            {
+                store.Save(buffer, pwd.ToCharArray(), new Org.BouncyCastle.Security.SecureRandom());
+                pfxBytes = buffer.ToArray();
+            }
 
-                 var pfx = certificateChain.ToPfx(csrKey);
+            try
+            {
 
-                 if (_issuerCertCache.Any())
-                 {
-                     foreach (var c in _issuerCertCache)
-                     {
-                         pfx.AddIssuers(c);
-                     }
-                 }
+                System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
+                return pfxPath;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }*/
 
-                 try
-                 {
-                     pfxBytes = pfx.Build(certFriendlyName, pwd);
-                     System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
-                 }
-                 catch (Exception ex)
-                 {
-                     throw new Exception(failedBuildMsg + ex.Message);
-                 }
-             }
-
-             return pfxPath;
-
-         }*/
 
         private string ExportFullCertPEM(IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
         {
