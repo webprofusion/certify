@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
@@ -19,8 +19,8 @@ namespace Certify.Service.Worker
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-                await Task.Delay(10000, stoppingToken);
+                _logger.LogInformation("Certify Service Worker heartbeat: {time}", DateTimeOffset.Now);
+                await Task.Delay(1000*60*60, stoppingToken);
             }
         }
     }
