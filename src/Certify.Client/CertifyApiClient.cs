@@ -45,7 +45,7 @@ namespace Certify.Client
             Policy
                 .Handle<HttpRequestException>()
                 .Or<TaskCanceledException>()
-                .OrResult<HttpResponseMessage>(x => !x.IsSuccessStatusCode)
+                .OrResult<HttpResponseMessage>(x => !x.IsSuccessStatusCode && x.StatusCode != HttpStatusCode.BadRequest)
                 .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1))
                 .ExecuteAsync(() =>
                     base.SendAsync(request, cancellationToken)
@@ -160,24 +160,33 @@ namespace Certify.Client
             {
                 var json = JsonConvert.SerializeObject(data);
                 var content = new StringContent(json, System.Text.UnicodeEncoding.UTF8, "application/json");
-                var response = await _client.PostAsync(_baseUri + endpoint, content);
-                if (response.IsSuccessStatusCode)
+                try
                 {
-                    return response;
-                }
-                else
-                {
-                    var error = await response.Content.ReadAsStringAsync();
 
-                    if (response.StatusCode == HttpStatusCode.Unauthorized)
+
+                    var response = await _client.PostAsync(_baseUri + endpoint, content);
+                    if (response.IsSuccessStatusCode)
                     {
-                        throw new ServiceCommsException($"API Access Denied: {endpoint}: {error}");
+                        return response;
                     }
                     else
                     {
-                        throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
-                    }
+                        var error = await response.Content.ReadAsStringAsync();
 
+                        if (response.StatusCode == HttpStatusCode.Unauthorized)
+                        {
+                            throw new ServiceCommsException($"API Access Denied: {endpoint}: {error}");
+                        }
+                        else
+                        {
+                            throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
+                        }
+
+                    }
+                }
+                catch (HttpRequestException exp)
+                {
+                    throw new ServiceCommsException($"Internal Service Error: {endpoint}: {exp}");
                 }
             }
             else
