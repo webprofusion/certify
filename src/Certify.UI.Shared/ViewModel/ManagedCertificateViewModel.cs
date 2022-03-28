@@ -701,6 +701,8 @@ namespace Certify.UI.ViewModel
             {
                 SelectedItem = result.Result;
             }
+
+            RaiseSelectedItemChanges();
         }
 
         public bool UpdateDomainOptions(string domains)
