@@ -26,7 +26,16 @@ namespace Certify.Management.Servers
 
         private ILog _log;
 
+        public ServerProviderIIS()
+        {
+
+        }
         public ServerProviderIIS(ILog log = null)
+        {
+            Init(log);
+        }
+
+        public void Init(ILog log, string configRoot = null)
         {
             _log = log;
         }

@@ -84,6 +84,7 @@ namespace Certify.Core.Management
 
     public class ServerProviderMock : ICertifiedServer
     {
+        
         public Task<bool> CommitChanges()
         {
             return Task.FromResult(true);
@@ -143,5 +144,7 @@ namespace Certify.Core.Management
         {
             throw new NotImplementedException();
         }
+
+        public void Init(ILog log, string configRoot = null) => throw new NotImplementedException();
     }
 }

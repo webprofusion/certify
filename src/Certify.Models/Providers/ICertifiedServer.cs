@@ -30,5 +30,7 @@ namespace Certify.Models.Providers
         IBindingDeploymentTarget GetDeploymentTarget();
 
         Task<List<ActionStep>> RunConfigurationDiagnostics(string siteId);
+
+        void Init(ILog log, string configRoot = null);
     }
 }

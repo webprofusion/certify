@@ -28,6 +28,7 @@ namespace Certify.Management
         public IDashboardClient DashboardClient { get; set; }
         public List<IDeploymentTaskProviderPlugin> DeploymentTaskProviders { get; set; }
         public List<ICertificateManagerProviderPlugin> CertificateManagerProviders { get; set; }
+        public List<IServerProviderPlugin> ServerProviders { get; set; }
         public List<IDnsProviderProviderPlugin> DnsProviderProviders { get; set; }
         public List<PluginLoadResult> PluginLoadResults { get; private set; } = new List<PluginLoadResult>();
 
@@ -231,6 +232,21 @@ namespace Certify.Management
                     {
                         DnsProviderProviders.AddRange(customPlugins);
                     }
+                }
+            }
+
+            if (includeSet.Contains("ServerProviders"))
+            {
+                ServerProviders = new List<IServerProviderPlugin>();
+
+                var providers = LoadPlugins<IServerProviderPlugin>("Plugin.ServerProviders.*.dll", usePluginSubfolder: usePluginSubfolder);
+                ServerProviders.AddRange(providers);
+
+                // load custom
+                if (EnableExternalPlugins)
+                {
+                    var customPlugins = LoadPlugins<IServerProviderPlugin>("*.dll", loadFromAppData: true);
+                    ServerProviders.AddRange(customPlugins);
                 }
             }
 

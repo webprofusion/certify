@@ -70,4 +70,11 @@ namespace Certify.Models.Plugins
     public interface IDnsProviderProviderPlugin : IProviderPlugin<IDnsProvider, ChallengeProviderDefinition>
     {
     }
+
+    /// <summary>
+    /// Plugins which implement one or more server providers implement this interface for dynamic plugin loading
+    /// </summary>
+    public interface IServerProviderPlugin : IProviderPlugin<ICertifiedServer, ProviderDefinition>
+    {
+    }
 }
