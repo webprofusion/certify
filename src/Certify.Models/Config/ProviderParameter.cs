@@ -68,7 +68,7 @@ namespace Certify.Models.Config
             get
             {
                 var options = new Dictionary<string, string>();
-                if (OptionsList!=null && !string.IsNullOrEmpty(OptionsList))
+                if (OptionsList != null && !string.IsNullOrEmpty(OptionsList))
                 {
                     foreach (var o in OptionsList.Split(';'))
                     {

@@ -26,7 +26,8 @@
     {
         public new T? Result { get; set; }
 
-        public ActionResult() { 
+        public ActionResult()
+        {
 
         }
         public ActionResult(string msg, bool isSuccess)

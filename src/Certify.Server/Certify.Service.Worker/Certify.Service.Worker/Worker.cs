@@ -20,7 +20,7 @@ namespace Certify.Service.Worker
             while (!stoppingToken.IsCancellationRequested)
             {
                 _logger.LogInformation("Certify Service Worker heartbeat: {time}", DateTimeOffset.Now);
-                await Task.Delay(1000*60*60, stoppingToken);
+                await Task.Delay(1000 * 60 * 60, stoppingToken);
             }
         }
     }

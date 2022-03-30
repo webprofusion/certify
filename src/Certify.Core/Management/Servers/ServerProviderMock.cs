@@ -84,7 +84,7 @@ namespace Certify.Core.Management
 
     public class ServerProviderMock : ICertifiedServer
     {
-        
+
         public Task<bool> CommitChanges()
         {
             return Task.FromResult(true);

@@ -1658,48 +1658,48 @@ namespace Certify.Providers.ACME.Certes
 
         }
 
-      /*  private string ExportPFX_AnyRoot(string certFriendlyName, string pwd, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
-        {
-            var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..", "assets", primaryDomainPath }));
+        /*  private string ExportPFX_AnyRoot(string certFriendlyName, string pwd, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
+          {
+              var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..", "assets", primaryDomainPath }));
 
-            if (!System.IO.Directory.Exists(storePath))
-            {
-                System.IO.Directory.CreateDirectory(storePath);
-            }
+              if (!System.IO.Directory.Exists(storePath))
+              {
+                  System.IO.Directory.CreateDirectory(storePath);
+              }
 
-            var pfxFile = certId + ".pfx";
-            var pfxPath = Path.Combine(storePath, pfxFile);
+              var pfxFile = certId + ".pfx";
+              var pfxPath = Path.Combine(storePath, pfxFile);
 
-            KeyAlgorithmProvider signatureAlgorithmProvider = new KeyAlgorithmProvider();
-            var (_, keyPair) = signatureAlgorithmProvider.GetKeyPair(csrKey.ToDer());
-            var certParser = new X509CertificateParser();
-            var certificate = certParser.ReadCertificate(certificateChain.Certificate.ToDer());
+              KeyAlgorithmProvider signatureAlgorithmProvider = new KeyAlgorithmProvider();
+              var (_, keyPair) = signatureAlgorithmProvider.GetKeyPair(csrKey.ToDer());
+              var certParser = new X509CertificateParser();
+              var certificate = certParser.ReadCertificate(certificateChain.Certificate.ToDer());
 
-            var store = new Org.BouncyCastle.Pkcs.Pkcs12StoreBuilder().Build();
+              var store = new Org.BouncyCastle.Pkcs.Pkcs12StoreBuilder().Build();
 
-            var entry = new Org.BouncyCastle.Pkcs.X509CertificateEntry(certificate);
-            store.SetCertificateEntry(certFriendlyName, entry);
+              var entry = new Org.BouncyCastle.Pkcs.X509CertificateEntry(certificate);
+              store.SetCertificateEntry(certFriendlyName, entry);
 
-            store.SetKeyEntry(certFriendlyName, new Org.BouncyCastle.Pkcs.AsymmetricKeyEntry(keyPair.Private), new[] { entry });
+              store.SetKeyEntry(certFriendlyName, new Org.BouncyCastle.Pkcs.AsymmetricKeyEntry(keyPair.Private), new[] { entry });
 
-            byte[] pfxBytes;
-            using (var buffer = new MemoryStream())
-            {
-                store.Save(buffer, pwd.ToCharArray(), new Org.BouncyCastle.Security.SecureRandom());
-                pfxBytes = buffer.ToArray();
-            }
+              byte[] pfxBytes;
+              using (var buffer = new MemoryStream())
+              {
+                  store.Save(buffer, pwd.ToCharArray(), new Org.BouncyCastle.Security.SecureRandom());
+                  pfxBytes = buffer.ToArray();
+              }
 
-            try
-            {
+              try
+              {
 
-                System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
-                return pfxPath;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-        }*/
+                  System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
+                  return pfxPath;
+              }
+              catch (Exception ex)
+              {
+                  throw new Exception(ex.Message);
+              }
+          }*/
 
 
         private string ExportFullCertPEM(IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
