@@ -120,9 +120,6 @@
   <data name="AppName" xml:space="preserve">
     <value>Certify SSL/TLS 证书管理器</value>
   </data>
-  <data name="GettingStartedExistingVault" xml:space="preserve">
-    <value>开始：在左侧浏览证书库以查看当前证书信息。</value>
-  </data>
   <data name="BetaWarning" xml:space="preserve">
     <value>警告：这是一个预发布版本，仅供测试或反馈，可能会遇到问题，不要在重要的生产站点上使用此版本。</value>
   </data>

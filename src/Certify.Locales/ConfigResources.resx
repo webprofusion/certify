@@ -144,9 +144,6 @@ This software uses the following Open Source software (or significant portions o
     <value>https://certifytheweb.com</value>
     <comment>Do not translate</comment>
   </data>
-  <data name="GettingStartedExistingVault" xml:space="preserve">
-    <value>Get Started: Browse the Vault on the left to see current certificate information.</value>
-  </data>
   <data name="BetaWarning" xml:space="preserve">
     <value>Warning: This software is a pre-release version for testing and feedback purposes. You should expect bugs. Do not rely on this software for important production sites.</value>
   </data>

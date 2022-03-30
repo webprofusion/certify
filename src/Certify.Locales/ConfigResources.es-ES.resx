@@ -123,9 +123,6 @@
   <data name="UpdateCheckLatestVersion" xml:space="preserve">
     <value>Estás utilizando la última versión.</value>
   </data>
-  <data name="GettingStartedExistingVault" xml:space="preserve">
-    <value>Comenzar: explore la columna a la izquierda para ver la información actual del certificado.</value>
-  </data>
   <data name="BetaWarning" xml:space="preserve">
     <value>Advertencia: este software es una versión preliminar para fines de prueba y retroalimentación. Deberías esperar errores. No confíe en este software para sitios de producción importantes.</value>
   </data>

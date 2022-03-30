@@ -136,9 +136,6 @@ Denne programvaren bruker følgende Open Source-programvare (eller betydelige de
 - Noen ikoner fra Font Awesome av Dave Gandy - http://fontawesome.io 
 - OpenSSL (https://github.com/ openssl-net / openssl-net)</value>
   </data>
-  <data name="GettingStartedExistingVault" xml:space="preserve">
-    <value> "som det er" "uten garantier av noe slag, enten uttrykkelig eller underforstått, inkludert, uten begrensning, noen underforståtte garantier for tilstand, uavbrutt bruk, salgbarhet, egnethet for et bestemt formål eller ikke-brudd. LetsEncrypt.org-tjenesten for gratis SSL / TLS-sertifikater er underlagt LetsEncrypt.org vilkårene. Denne programvaren er ikke tilknyttet eller godkjent av LetsEncrypt.org Denne programvaren bruker følgende Open Source-programvare (eller betydelige deler av): - ACMESharp av Eugene Bekker (https://github.com/ebekker/ACMESharp) Lisensiert under MPL V 2.0 - Noen ikoner fra Font Awesome av Dave Gandy - http://fontawesome.io - OpenSSL (https://github.com/ openssl-net / openssl-net)"</value>
-  </data>
   <data name="BetaWarning" xml:space="preserve">
     <value>Advarsel: Denne programvaren er en beta-versjon for testing og tilbakemeldingsformål. Du bør forvente feil. Ikke stol på denne programvaren i produksjon.</value>
   </data>

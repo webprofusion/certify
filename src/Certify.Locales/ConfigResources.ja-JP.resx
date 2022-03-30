@@ -139,7 +139,4 @@
 - Some icons from Font Awesome by Dave Gandy - http://fontawesome.io 
 - OpenSSL (https://github.com/openssl-net/openssl-net)</value>
   </data>
-  <data name="GettingStartedExistingVault" xml:space="preserve">
-    <value>はじめに：左のVaultを参照して、現在の証明書情報を確認します。</value>
-  </data>
 </root>
