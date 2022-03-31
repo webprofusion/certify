@@ -36,6 +36,7 @@ namespace Certify.Models
         /// </summary>
         /// 
         public const string RSA256 = "RS256";
+
         /// <summary>
         /// RSA256 with key size 3072
         /// </summary>
@@ -112,6 +113,5 @@ namespace Certify.Models
         /// Optional list of Intermediate certificates to install for chain building and verification
         /// </summary>
         public Dictionary<string, string> Intermediates { get; set; } = new();
-
     }
 }
