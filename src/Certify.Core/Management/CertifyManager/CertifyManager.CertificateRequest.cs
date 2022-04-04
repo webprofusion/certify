@@ -783,10 +783,10 @@ namespace Certify.Management
             return await CompleteCertificateRequestProcessing(log, managedCertificate, progress, pendingOrder);
         }
 
-		private ITargetWebServer GetTargetServerProvider(ManagedCertificate managedCertificate)
-		{
-			return _serverProviders.First();
-		}
+        private ITargetWebServer GetTargetServerProvider(ManagedCertificate managedCertificate)
+        {
+            return _serverProviders.First();
+        }
 
         /// <summary>
         /// Resume processing the current order for a managed certificate, submitting challenges and verifying status. Authorization challenge responses must have been prepared first.
@@ -1016,8 +1016,8 @@ namespace Certify.Management
                     // Install certificate into certificate store and bind to matching sites on server
                     var deploymentManager = new BindingDeploymentManager();
 
-					// select required target service provider (e.g. IIS)
-					var serverProvider = GetTargetServerProvider(managedCertificate);
+                    // select required target service provider (e.g. IIS)
+                    var serverProvider = GetTargetServerProvider(managedCertificate);
 
                     var actions = await deploymentManager.StoreAndDeploy(
                             serverProvider.GetDeploymentTarget(),
@@ -1266,13 +1266,13 @@ namespace Certify.Management
                             _tc.TrackEvent($"PerformChallengeResponse_{providerDesc}");
                         }
 
-						// ask LE to check our answer to their authorization challenge (http-01 or
-						// tls-sni-01), LE will then attempt to fetch our answer, if all accessible
-						// and correct (authorized) LE will then allow us to request a certificate
+                        // ask LE to check our answer to their authorization challenge (http-01 or
+                        // tls-sni-01), LE will then attempt to fetch our answer, if all accessible
+                        // and correct (authorized) LE will then allow us to request a certificate
 
-						var serverProvider = GetTargetServerProvider(managedCertificate);
+                        var serverProvider = GetTargetServerProvider(managedCertificate);
 
-						authorization = await _challengeResponseService.PrepareAutomatedChallengeResponse(log, serverProvider, managedCertificate, authorization, _credentialsManager);
+                        authorization = await _challengeResponseService.PrepareAutomatedChallengeResponse(log, serverProvider, managedCertificate, authorization, _credentialsManager);
 
                         // if we had automated checks configured and they failed more than twice in a
                         // row, fail and report error here
@@ -1412,9 +1412,9 @@ namespace Certify.Management
             // Install certificate into certificate store and bind to IIS site
             var deploymentManager = new BindingDeploymentManager();
 
-			var serverProvider = GetTargetServerProvider(managedCertificate);
+            var serverProvider = GetTargetServerProvider(managedCertificate);
 
-			var actions = await deploymentManager.StoreAndDeploy(
+            var actions = await deploymentManager.StoreAndDeploy(
                     serverProvider.GetDeploymentTarget(),
                     managedCertificate,
                     pfxPath,

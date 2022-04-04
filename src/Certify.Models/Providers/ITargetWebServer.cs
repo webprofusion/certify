@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 namespace Certify.Models.Providers
 {
 
-	public class ServerTypeInfo {
-		public StandardServerTypes ServerType { get; set; } = StandardServerTypes.Other;
-		public string Title { get; set; } = String.Empty;
-	}
+    public class ServerTypeInfo
+    {
+        public StandardServerTypes ServerType { get; set; } = StandardServerTypes.Other;
+        public string Title { get; set; } = String.Empty;
+    }
 
     /// <summary>
     /// An example certified server would be an IIS server 
@@ -39,6 +40,6 @@ namespace Certify.Models.Providers
 
         void Init(ILog log, string configRoot = null);
 
-		ServerTypeInfo GetServerTypeInfo();
+        ServerTypeInfo GetServerTypeInfo();
     }
 }

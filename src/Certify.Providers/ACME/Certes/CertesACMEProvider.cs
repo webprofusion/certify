@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -611,9 +611,9 @@ namespace Certify.Providers.ACME.Certes
                             }
                             else
                             {
-	                            // begin new order, with optional preference for the expiry
-	                            var notAfter = (config.PreferredExpiryDays != null ? (DateTimeOffset?)DateTimeOffset.UtcNow.AddDays((float)config.PreferredExpiryDays) : null);
-	                            order = await _acme.NewOrder(certificateIdentifiers, notAfter: notAfter);
+                                // begin new order, with optional preference for the expiry
+                                var notAfter = (config.PreferredExpiryDays != null ? (DateTimeOffset?)DateTimeOffset.UtcNow.AddDays((float)config.PreferredExpiryDays) : null);
+                                order = await _acme.NewOrder(certificateIdentifiers, notAfter: notAfter);
                             }
 
                             if (order != null)

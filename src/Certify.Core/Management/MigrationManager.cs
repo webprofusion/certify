@@ -399,13 +399,13 @@ namespace Certify.Core.Management
 
 
             var targetSiteBindings = new List<BindingInfo>();
-			foreach(var targetServer in _targetServers)
-			{
-				if (await targetServer?.IsAvailable() == true)
-				{
-					targetSiteBindings.AddRange(await targetServer.GetSiteBindingList(false));
-				}
-			}
+            foreach (var targetServer in _targetServers)
+            {
+                if (await targetServer?.IsAvailable() == true)
+                {
+                    targetSiteBindings.AddRange(await targetServer.GetSiteBindingList(false));
+                }
+            }
 
             // managed certs
             var managedCertImportSteps = new List<ActionStep>();

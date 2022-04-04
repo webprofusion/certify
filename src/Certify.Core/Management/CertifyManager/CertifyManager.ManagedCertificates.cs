@@ -212,10 +212,10 @@ namespace Certify.Management
         {
             var results = new List<StatusMessage>();
 
-			var serverProvider = GetTargetServerProvider(managedCertificate);
+            var serverProvider = GetTargetServerProvider(managedCertificate);
 
-			if (managedCertificate.RequestConfig.PerformAutoConfig && managedCertificate.GetChallengeConfig(null).ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
-            {	
+            if (managedCertificate.RequestConfig.PerformAutoConfig && managedCertificate.GetChallengeConfig(null).ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
+            {
                 var serverCheck = await serverProvider.RunConfigurationDiagnostics(managedCertificate.ServerSiteId);
                 results.AddRange(serverCheck.ConvertAll(x => new StatusMessage { IsOK = !x.HasError, HasWarning = x.HasWarning, Message = x.Description }));
             }
@@ -243,7 +243,7 @@ namespace Certify.Management
             results.AddRange(
             await _challengeResponseService.TestChallengeResponse(
                     log,
-					serverProvider,
+                    serverProvider,
                     managedCertificate,
                     isPreviewMode,
                     CoreAppSettings.Current.EnableDNSValidationChecks,
@@ -283,7 +283,7 @@ namespace Certify.Management
             {
                 if (serverProvider == null)
                 {
-					serverProvider = GetTargetServerProvider(managedCertificate);
+                    serverProvider = GetTargetServerProvider(managedCertificate);
                 }
 
                 try
@@ -304,11 +304,11 @@ namespace Certify.Management
             }
         }
 
-		public async Task<List<ActionStep>> GeneratePreview(ManagedCertificate item)
-		{
-			var serverProvider = GetTargetServerProvider(item);
-			return await new PreviewManager().GeneratePreview(item, serverProvider, this, _credentialsManager);
-		}
+        public async Task<List<ActionStep>> GeneratePreview(ManagedCertificate item)
+        {
+            var serverProvider = GetTargetServerProvider(item);
+            return await new PreviewManager().GeneratePreview(item, serverProvider, this, _credentialsManager);
+        }
 
         public async Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId)
         {

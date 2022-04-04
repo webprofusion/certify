@@ -99,12 +99,12 @@ namespace Certify.Core.Management
         {
         }
 
-		public ServerTypeInfo GetServerTypeInfo()
-		{
-			return new ServerTypeInfo { ServerType = StandardServerTypes.Other, Title = "Mock Server" };
-		}
+        public ServerTypeInfo GetServerTypeInfo()
+        {
+            return new ServerTypeInfo { ServerType = StandardServerTypes.Other, Title = "Mock Server" };
+        }
 
-		public Task<List<SiteInfo>> GetPrimarySites(bool ignoreStoppedSites)
+        public Task<List<SiteInfo>> GetPrimarySites(bool ignoreStoppedSites)
         {
             throw new NotImplementedException();
         }

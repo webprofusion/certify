@@ -234,7 +234,7 @@ namespace Certify.Models
         /// If set, this is the preferred chain to select if present (e.g. the name of the root cert in the preferred chain)
         /// </summary>
         public string? PreferredChain { get; set; }
-        
+
         /// <summary>
         /// If set, the preferred number of days the certificate should expire (e.g. 14 or 0.5). Support for this will vary by CA.
         /// </summary>
