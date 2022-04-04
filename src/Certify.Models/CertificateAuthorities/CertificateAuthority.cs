@@ -64,7 +64,7 @@ namespace Certify.Models
 
     public class CertificateAuthority
     {
-        public static readonly List<CertificateAuthority> CoreCertificateAuthorities = new()
+        public static readonly List<CertificateAuthority> CoreCertificateAuthorities = new List<CertificateAuthority>
         {
             CertificateAuthorities.Definitions.LetsEncrypt.GetDefinition(),
             CertificateAuthorities.Definitions.BuyPass.GetDefinition(),
