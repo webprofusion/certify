@@ -24,13 +24,13 @@ namespace Certify.Core.Management
         private const string EncryptionScheme = "Default";
         private IItemManager _itemManager;
         private ICredentialsManager _credentialsManager;
-        private ICertifiedServer _targetServer;
+        private List<ITargetWebServer> _targetServers;
 
-        public MigrationManager(IItemManager itemManager, ICredentialsManager credentialsManager, ICertifiedServer targetServer)
+        public MigrationManager(IItemManager itemManager, ICredentialsManager credentialsManager, List<ITargetWebServer> targetServers)
         {
             _itemManager = itemManager;
             _credentialsManager = credentialsManager;
-            _targetServer = targetServer;
+            _targetServers = targetServers;
         }
 
         /// <summary>
@@ -399,10 +399,13 @@ namespace Certify.Core.Management
 
 
             var targetSiteBindings = new List<BindingInfo>();
-            if (await _targetServer?.IsAvailable() == true)
-            {
-                targetSiteBindings = await _targetServer.GetSiteBindingList(false);
-            }
+			foreach(var targetServer in _targetServers)
+			{
+				if (await targetServer?.IsAvailable() == true)
+				{
+					targetSiteBindings.AddRange(await targetServer.GetSiteBindingList(false));
+				}
+			}
 
             // managed certs
             var managedCertImportSteps = new List<ActionStep>();

@@ -74,7 +74,7 @@ namespace Certify.Models.Plugins
     /// <summary>
     /// Plugins which implement one or more server providers implement this interface for dynamic plugin loading
     /// </summary>
-    public interface IServerProviderPlugin : IProviderPlugin<ICertifiedServer, ProviderDefinition>
+    public interface IServerProviderPlugin : IProviderPlugin<ITargetWebServer, ProviderDefinition>
     {
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Certify.Config.Migration;
 using Certify.Core.Management;
 using Certify.Core.Management.Challenges;
-using Certify.Management.Servers;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
@@ -28,9 +27,9 @@ namespace Certify.Management
         private IItemManager _itemManager = null;
 
         /// <summary>
-        /// Server target for this service (currently a single target e.g. local IIS)
+		/// Server targets for this service (e.g. local IIS, nginx etc)
         /// </summary>
-        private ICertifiedServer _serverProvider = null;
+		private List<ITargetWebServer> _serverProviders = new List<ITargetWebServer>();
 
         /// <summary>
         /// Provider for general challenge responses
@@ -133,14 +132,17 @@ namespace Certify.Management
             }
 
             _credentialsManager = new CredentialsManager(useWindowsNativeFeatures);
-            _serverProvider = new ServerProviderIIS(_serviceLog);
 
             _progressResults = new ObservableCollection<RequestProgressState>();
 
             _pluginManager = new PluginManager();
             _pluginManager.EnableExternalPlugins = CoreAppSettings.Current.IncludeExternalPlugins;
-            _pluginManager.LoadPlugins(new List<string> { "Licensing", "DashboardClient", "DeploymentTasks", "CertificateManagers", "DnsProviders" });
+			_pluginManager.LoadPlugins(new List<string> { "Licensing", "DashboardClient", "DeploymentTasks", "CertificateManagers", "DnsProviders", "ServerProviders" });
 
+
+			var iisServerProvider = new Servers.ServerProviderIIS();
+			iisServerProvider.Init(_serviceLog);
+			_serverProviders.Add(iisServerProvider);
 
             LoadCertificateAuthorities();
 
@@ -741,7 +743,7 @@ namespace Certify.Management
         /// <returns></returns>
         public async Task<List<ActionStep>> PerformImport(ImportRequest importRequest)
         {
-            var migrationManager = new MigrationManager(_itemManager, _credentialsManager, _serverProvider);
+			var migrationManager = new MigrationManager(_itemManager, _credentialsManager, _serverProviders);
 
             var importResult = await migrationManager.PerformImport(importRequest.Package, importRequest.Settings, importRequest.IsPreviewMode);
 
@@ -776,7 +778,7 @@ namespace Certify.Management
         /// <returns></returns>
         public async Task<ImportExportPackage> PerformExport(ExportRequest exportRequest)
         {
-            var migrationManager = new MigrationManager(_itemManager, _credentialsManager, _serverProvider);
+			var migrationManager = new MigrationManager(_itemManager, _credentialsManager, _serverProviders);
             return await migrationManager.PerformExport(exportRequest.Filter, exportRequest.Settings, exportRequest.IsPreviewMode);
         }
 

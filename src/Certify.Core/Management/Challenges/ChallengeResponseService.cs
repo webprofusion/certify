@@ -38,7 +38,7 @@ namespace Certify.Core.Management.Challenges
         /// </remarks>
         public async Task<List<StatusMessage>> TestChallengeResponse(
             ILog log,
-            ICertifiedServer serverManager,
+            ITargetWebServer serverManager,
             ManagedCertificate managedCertificate,
             bool isPreviewMode,
             bool enableDnsChecks,
@@ -329,7 +329,7 @@ namespace Certify.Core.Management.Challenges
             return $"{hash}";
         }
 
-        public async Task<PendingAuthorization> PrepareAutomatedChallengeResponse(ILog log, ICertifiedServer iisManager, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, ICredentialsManager credentialsManager)
+        public async Task<PendingAuthorization> PrepareAutomatedChallengeResponse(ILog log, ITargetWebServer iisManager, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, ICredentialsManager credentialsManager)
         {
             var requestConfig = managedCertificate.RequestConfig;
             var domain = pendingAuth.Identifier.Dns;
@@ -384,7 +384,7 @@ namespace Certify.Core.Management.Challenges
         /// Prepares IIS to respond to a http-01 challenge
         /// </summary>
         /// <returns> Test the challenge response locally. </returns>
-        private async Task<ActionResult> PerformChallengeResponse_Http01(ILog log, ICertifiedServer iisManager, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
+        private async Task<ActionResult> PerformChallengeResponse_Http01(ILog log, ITargetWebServer iisManager, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
         {
             var requestConfig = managedCertificate.RequestConfig;
             var httpChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP);
@@ -577,7 +577,7 @@ namespace Certify.Core.Management.Challenges
             }
         }
 
-        private Func<bool> PrepareChallengeResponse_TlsSni01(ILog log, ICertifiedServer iisManager, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
+        private Func<bool> PrepareChallengeResponse_TlsSni01(ILog log, ITargetWebServer iisManager, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
         {
             var requestConfig = managedCertificate.RequestConfig;
 

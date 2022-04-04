@@ -51,7 +51,7 @@ namespace Certify.Management
 
         Task<CertificateRequestResult> PerformDummyCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null);
         Task<ActionResult> RemoveCertificateAuthority(string id);
-        Task<List<SiteInfo>> GetPrimaryWebSites(bool ignoreStoppedSites, string itemId = null);
+        Task<List<SiteInfo>> GetPrimaryWebSites(StandardServerTypes serverType, bool ignoreStoppedSites, string itemId = null);
 
         void BeginTrackingProgress(RequestProgressState state);
 
@@ -63,7 +63,7 @@ namespace Certify.Management
 
         Task<CertificateRequestResult> PerformCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool resumePaused = false, bool skipRequest = false, bool failOnSkip = false, bool skipTasks = false, bool isInteractive = false);
 
-        Task<List<DomainOption>> GetDomainOptionsFromSite(string siteId);
+        Task<List<DomainOption>> GetDomainOptionsFromSite(StandardServerTypes serverType, string siteId);
 
         Task<List<CertificateRequestResult>> PerformRenewalAllManagedCertificates(RenewalSettings settings, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null);
 

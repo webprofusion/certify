@@ -57,7 +57,7 @@ namespace Certify.Core.Management
             return await Task.FromResult(bindings);
         }
 
-        public ICertifiedServer GetDeploymentManager()
+        public ITargetWebServer GetDeploymentManager()
         {
             return new ServerProviderMock();
         }
@@ -82,7 +82,7 @@ namespace Certify.Core.Management
         }
     }
 
-    public class ServerProviderMock : ICertifiedServer
+    public class ServerProviderMock : ITargetWebServer
     {
 
         public Task<bool> CommitChanges()
@@ -99,7 +99,12 @@ namespace Certify.Core.Management
         {
         }
 
-        public Task<List<SiteInfo>> GetPrimarySites(bool ignoreStoppedSites)
+		public ServerTypeInfo GetServerTypeInfo()
+		{
+			return new ServerTypeInfo { ServerType = StandardServerTypes.Other, Title = "Mock Server" };
+		}
+
+		public Task<List<SiteInfo>> GetPrimarySites(bool ignoreStoppedSites)
         {
             throw new NotImplementedException();
         }

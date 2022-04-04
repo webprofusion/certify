@@ -21,7 +21,7 @@ namespace Certify.Management
         /// <returns></returns>
         public async Task<List<ActionStep>> GeneratePreview(
                     ManagedCertificate item,
-                    ICertifiedServer serverProvider,
+                    ITargetWebServer serverProvider,
                     ICertifyManager certifyManager,
                     ICredentialsManager credentialsManager
             )
@@ -399,7 +399,7 @@ namespace Certify.Management
         /// </summary>
         /// <returns></returns>
         public async Task<List<ManagedCertificate>> PreviewManagedCertificates(StandardServerTypes serverType,
-            ICertifiedServer serverProvider, ICertifyManager certifyManager)
+            ITargetWebServer serverProvider, ICertifyManager certifyManager)
         {
             var sites = new List<ManagedCertificate>();
 
