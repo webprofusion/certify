@@ -185,5 +185,53 @@ namespace Certify.Server.API.Controllers
                 return new BadRequestResult();
             }
         }
+
+        /// <summary>
+        /// Begin the managed certificate request/renewal process for the given managed certificate id (on demand)
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("order")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
+        [SwaggerOperation(OperationId = nameof(BeginOrder))]
+        public async Task<IActionResult> BeginOrder(string id)
+        {
+
+            var result = await _client.BeginCertificateRequest(id, true, false);
+            if (result != null)
+            {
+                return new OkObjectResult(result);
+            }
+            else
+            {
+                return new BadRequestResult();
+            }
+        }
+
+        /// <summary>
+        /// Begin the managed certificate request/renewal process a set of managed certificates
+        /// </summary>
+        /// <param name="settings"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("renew")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
+        [SwaggerOperation(OperationId = nameof(BeginOrder))]
+        public async Task<IActionResult> PerformRenewal(Models.RenewalSettings settings)
+        {
+
+            var results = await _client.BeginAutoRenewal(settings);
+            if (results != null)
+            {
+                return new OkObjectResult(results);
+            }
+            else
+            {
+                return new BadRequestResult();
+            }
+        }
     }
 }
