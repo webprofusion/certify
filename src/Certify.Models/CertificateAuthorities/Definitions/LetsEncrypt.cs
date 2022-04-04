@@ -27,6 +27,7 @@ namespace Certify.CertificateAuthorities.Definitions
                 SANLimit = 100,
                 StandardExpiryDays = 90,
                 RequiresEmailAddress = true,
+                SupportsCachedValidations = true,
                 SupportedFeatures = new List<string>{
                     CertAuthoritySupportedRequests.DOMAIN_SINGLE.ToString(),
                     CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN.ToString(),

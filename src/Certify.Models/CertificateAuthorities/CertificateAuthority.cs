@@ -61,13 +61,16 @@ namespace Certify.Models
         /// </summary>
         public static string ECDSA521 = "ECDSA521";
     }
+
     public class CertificateAuthority
     {
-        public static List<CertificateAuthority> CoreCertificateAuthorities = new List<CertificateAuthority> {
-                CertificateAuthorities.Definitions.LetsEncrypt.GetDefinition(),
-                CertificateAuthorities.Definitions.BuyPass.GetDefinition(),
-                CertificateAuthorities.Definitions.ZeroSSL.GetDefinition(),
-                CertificateAuthorities.Definitions.SSLDotcom.GetDefinition()
+        public static readonly List<CertificateAuthority> CoreCertificateAuthorities = new()
+        {
+            CertificateAuthorities.Definitions.LetsEncrypt.GetDefinition(),
+            CertificateAuthorities.Definitions.BuyPass.GetDefinition(),
+            CertificateAuthorities.Definitions.ZeroSSL.GetDefinition(),
+            CertificateAuthorities.Definitions.SSLDotcom.GetDefinition(),
+            CertificateAuthorities.Definitions.Google.GetDefinition()
         };
 
         public string Id { get; set; }
