@@ -112,6 +112,7 @@ namespace Certify.Providers.ACME.Certes
         private List<byte[]> _issuerCertCache = new List<byte[]>();
 
         private ACMECompatibilityMode _compatibilityMode = ACMECompatibilityMode.Standard;
+        private bool _allowInvalidTls = false;
 
         public bool EnableUnknownCARoots { get; set; } = true;
 
@@ -126,6 +127,7 @@ namespace Certify.Providers.ACME.Certes
 
             _serviceUri = new Uri(acmeBaseUri);
 
+            _allowInvalidTls = allowInvalidTls; ;
 
 #pragma warning disable SCS0004 // Certificate Validation has been disabled
             if (allowInvalidTls)
@@ -166,7 +168,12 @@ namespace Certify.Providers.ACME.Certes
         {
             _lastInitDateTime = DateTime.Now;
 
-            _loggingHandler = new LoggingHandler(new HttpClientHandler(), _log);
+            var httpHandler = new HttpClientHandler();
+#if NETSTANDARD2_1_OR_GREATER
+            httpHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+#endif
+
+            _loggingHandler = new LoggingHandler(httpHandler, _log);
             var customHttpClient = new System.Net.Http.HttpClient(_loggingHandler);
 
             customHttpClient.DefaultRequestHeaders.UserAgent.ParseAdd(_userAgentName);
