@@ -641,14 +641,13 @@ namespace Certify.Management
         public static bool DisableCertificateUsage(string thumbprint, string sourceStore, bool useMachineStore = true)
         {
             var disabled = false;
-            var certsToMove = new List<X509Certificate2>();
+
             using (var store = useMachineStore ? GetMachineStore(sourceStore) : GetUserStore(sourceStore))
             {
                 store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
 
                 foreach (var c in store.Certificates)
                 {
-
                     if (c.Thumbprint == thumbprint)
                     {
                         disabled = Security.WinTrust.WinCrypto.DisableCertificateUsageFlags(c);

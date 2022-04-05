@@ -311,7 +311,7 @@ namespace Certify.Client
 
         public async Task<bool> SetPreferences(Preferences preferences)
         {
-            var response = await PostAsync("preferences/", preferences);
+            _ = await PostAsync("preferences/", preferences);
             return true;
         }
 

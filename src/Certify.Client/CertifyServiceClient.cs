@@ -41,9 +41,10 @@ namespace Certify.Client
             if (_connectionConfig.ServerMode == "v1")
             {
                 // older signalr client/server
-                _legacyConnection = new Microsoft.AspNet.SignalR.Client.HubConnection(_statusHubUri);
-
-                _legacyConnection.Credentials = System.Net.CredentialCache.DefaultCredentials;
+                _legacyConnection = new Microsoft.AspNet.SignalR.Client.HubConnection(_statusHubUri)
+                {
+                    Credentials = System.Net.CredentialCache.DefaultCredentials
+                };
 
                 var hubProxy = _legacyConnection.CreateHubProxy("StatusHub");
 

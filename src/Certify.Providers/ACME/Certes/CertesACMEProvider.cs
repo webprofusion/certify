@@ -29,7 +29,6 @@ namespace Certify.Providers.ACME.Certes
         public string AccountKey { get; set; }
     }
 
-#pragma warning disable IDE1006 // Naming Styles
     public class DiagEcKey
     {
         public string kty { get; set; }
@@ -37,7 +36,6 @@ namespace Certify.Providers.ACME.Certes
         public string x { get; set; }
         public string y { get; set; }
     }
-#pragma warning restore IDE1006 // Naming Styles
 
     // used to diagnose account key faults
     public class DiagAccountInfo
@@ -127,7 +125,7 @@ namespace Certify.Providers.ACME.Certes
 
             _serviceUri = new Uri(acmeBaseUri);
 
-            _allowInvalidTls = allowInvalidTls; ;
+            _allowInvalidTls = allowInvalidTls;
 
 #pragma warning disable SCS0004 // Certificate Validation has been disabled
             if (allowInvalidTls)
@@ -140,7 +138,7 @@ namespace Certify.Providers.ACME.Certes
             }
 #pragma warning restore SCS0004 // Certificate Validation has been disabled
 
-            this.RefreshIssuerCertCache();
+            RefreshIssuerCertCache();
         }
 
         public string GetProviderName() => "Certes";
@@ -169,18 +167,18 @@ namespace Certify.Providers.ACME.Certes
             _lastInitDateTime = DateTime.Now;
 
             var httpHandler = new HttpClientHandler();
+
 #if NETSTANDARD2_1_OR_GREATER
-            httpHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+            if (_allowInvalidTls)
+            {
+                httpHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+            }
 #endif
 
             _loggingHandler = new LoggingHandler(httpHandler, _log);
             var customHttpClient = new System.Net.Http.HttpClient(_loggingHandler);
 
             customHttpClient.DefaultRequestHeaders.UserAgent.ParseAdd(_userAgentName);
-
-#if DEBUG
-            //  customHttpClient.Timeout = TimeSpan.FromSeconds(10);
-#endif
 
             _httpClient = new AcmeHttpClient(_serviceUri, customHttpClient);
         }
@@ -393,26 +391,7 @@ namespace Certify.Providers.ACME.Certes
             _settings.AccountUri = (await _acme.Account()).Location.ToString();
         }
 
-        private async Task<bool> WriteAllTextAsync(string path, string content)
-        {
-            try
-            {
-                using (var fs = File.CreateText(path))
-                {
-                    await fs.WriteAsync(content);
-                    await fs.FlushAsync();
-                }
 
-                // artificial delay for flush to really complete (just begin superstitious)
-                await Task.Delay(250);
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            return true;
-        }
 
         /// <summary>
         /// Determine if we have a currently registered account with the ACME CA (e.g. Let's Encrypt)
@@ -740,7 +719,7 @@ namespace Certify.Providers.ACME.Certes
                 _currentOrders.Add(orderUri, order);
 
                 // handle order status 'Ready' if all authorizations are already valid
-                bool requireAuthzFetch = true;
+                var requireAuthzFetch = true;
                 var orderDetails = await order.Resource();
 
                 if (orderDetails.Status == OrderStatus.Ready)
@@ -773,7 +752,7 @@ namespace Certify.Providers.ACME.Certes
                     {
 
                         string authzDomain = null;
-                        IdentifierType authIdentifierType = IdentifierType.Dns;
+                        var authIdentifierType = IdentifierType.Dns;
 
                         log.Debug($"Fetching Authz Challenges: {authContext.Location}");
 
@@ -966,25 +945,6 @@ namespace Certify.Providers.ACME.Certes
 
                 return new PendingOrder(msg);
             }
-        }
-
-        private string GetExceptionMessage(Exception exp)
-        {
-            var msg = exp.Message;
-
-            if (exp.InnerException != null)
-            {
-                if (exp.InnerException is AcmeRequestException)
-                {
-                    msg += ":: " + ((AcmeRequestException)exp.InnerException).Error.Detail;
-                }
-                else
-                {
-                    msg += ":: " + exp.InnerException.Message;
-                }
-            }
-
-            return msg;
         }
 
         /// <summary>
@@ -1226,7 +1186,7 @@ namespace Certify.Providers.ACME.Certes
                                 .Where(s => !s.Contains("BEGIN ") && !s.Contains("END ")).ToArray()
                                 );
 
-                        byte[] csrBytes = Convert.FromBase64String(pemString);
+                        var csrBytes = Convert.FromBase64String(pemString);
 
                         order = await orderContext.Finalize(csrBytes);
                     }
@@ -1337,7 +1297,7 @@ namespace Certify.Providers.ACME.Certes
                     {
                         try
                         {
-                            Org.BouncyCastle.X509.X509Certificate parsedCert = certParser.ReadCertificate(c.GetRawCertData());
+                            var parsedCert = certParser.ReadCertificate(c.GetRawCertData());
                             pemWriter.WriteObject(parsedCert);
                             certAdded = true;
                         }
@@ -1517,7 +1477,7 @@ namespace Certify.Providers.ACME.Certes
 
                 if (File.Exists(storedPrivateKey))
                 {
-                    string pem = File.ReadAllText(storedPrivateKey);
+                    var pem = File.ReadAllText(storedPrivateKey);
                     var key = KeyFactory.FromPem(pem);
 
                     return key;
