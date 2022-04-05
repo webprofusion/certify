@@ -382,13 +382,20 @@ namespace Certify.Providers.DNS.Cloudflare
 
             _client = new HttpClient();
 
+            var credentialError = $"{ProviderTitle} requires either an API Token or an Email Address + AuthKey";
+
+            if (!credentials?.Any() == true)
+            {
+                throw new ArgumentException(credentialError);
+            };
+
             _authKey = credentials.ContainsKey("authkey") ? credentials["authkey"] : null;
             _apiToken = credentials.ContainsKey("apitoken") ? credentials["apitoken"] : null;
             _emailAddress = credentials.ContainsKey("emailaddress") ? credentials["emailaddress"] : null;
 
             if (string.IsNullOrEmpty(_apiToken) && (string.IsNullOrEmpty(_emailAddress) || string.IsNullOrEmpty(_authKey)))
             {
-                throw new ArgumentException($"{ProviderTitle} requires either an API Token or an Email Address + AuthKey");
+                throw new ArgumentException(credentialError);
             }
 
             if (parameters?.ContainsKey("propagationdelay") == true)
