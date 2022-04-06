@@ -249,7 +249,6 @@ namespace Certify.Management
                 });
                 stepIndex++;
 
-
                 // deployment & binding steps
 
                 var deploymentDescription = new StringBuilder();
@@ -331,7 +330,6 @@ namespace Certify.Management
                         };
                     }
 
-
                     if (!bindingRequest.Actions?.Any(b => b.Category.StartsWith("Deployment")) == true)
                     {
                         deploymentStep.Substeps = new List<ActionStep>
@@ -361,7 +359,6 @@ namespace Certify.Management
 
                 steps.Add(deploymentStep);
                 stepIndex++;
-
 
                 // post request deployment tasks
                 if (item.PostRequestTasks?.Any() == true)

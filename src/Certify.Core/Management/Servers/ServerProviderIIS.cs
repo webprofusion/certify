@@ -225,7 +225,6 @@ namespace Certify.Management.Servers
                     return ftpState == (int)ObjectState.Started;
                 }
 
-
                 else
                 {
                     return site.State == ObjectState.Started;
@@ -530,7 +529,6 @@ namespace Certify.Management.Servers
             return result;
         }
 
-
         public async Task<ActionStep> AddOrUpdateFtpSiteBinding(BindingInfo bindingSpec, bool addNew)
         {
             if (string.IsNullOrEmpty(bindingSpec.SiteId))
@@ -718,7 +716,6 @@ namespace Certify.Management.Servers
                 return null;
             }
         }
-
 
         private BindingInfo GetFtpSiteBinding(Site site, Binding binding)
         {

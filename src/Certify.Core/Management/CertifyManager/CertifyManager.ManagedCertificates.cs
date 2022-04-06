@@ -197,7 +197,6 @@ namespace Certify.Management
             }
         }
 
-
         /// <summary>
         /// Perform set of test challenges and configuration checks to determine if site appears
         /// valid for certificate requests

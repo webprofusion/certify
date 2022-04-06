@@ -692,7 +692,6 @@ namespace Certify.Management
 
                 await PrepareAutomatedChallengeResponses(log, managedCertificate, authorizations, result, config, progress);
 
-
                 // if any challenge responses require a manual step, pause our request here and wait
                 // for user intervention
                 if (authorizations.Any(a => a.AttemptedChallenge?.IsAwaitingUser == true))
@@ -738,7 +737,6 @@ namespace Certify.Management
                     return result;
                 }
 
-
                 if (authorizations.Any(a => a.IsFailure == true))
                 {
                     result.IsSuccess = false;
@@ -751,7 +749,6 @@ namespace Certify.Management
 
                     return result;
                 }
-
 
                 // if any of our authorizations require a delay for challenge response propagation, wait now.
                 var propagationSecondsRequired = authorizations.Max(a => a.AttemptedChallenge?.PropagationSeconds);
@@ -1100,7 +1097,6 @@ namespace Certify.Management
                         LogMessage(managedCertificate.Id, result.Message, LogItemType.GeneralError);
                     }
 
-
                 }
                 else
                 {
@@ -1350,7 +1346,6 @@ namespace Certify.Management
         public async Task<List<CertificateRequestResult>> RedeployManagedCertificates(ManagedCertificateFilter filter, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false, bool includeDeploymentTasks = false)
         {
             _tc?.TrackEvent("RedeployCertificates");
-
 
             var managedCerts = await GetManagedCertificates(filter);
 

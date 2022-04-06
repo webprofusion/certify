@@ -70,7 +70,6 @@ namespace Certify.Core.Management
                         {
                             certHash = storedCert.GetCertHash();
 
-
                             // TODO: move setting friendly name to cert request manager
                             managedCertificate.CertificateFriendlyName = storedCert.FriendlyName;
 
@@ -501,7 +500,6 @@ namespace Certify.Core.Management
             return steps;
         }
 
-
         /// <summary>
         /// creates or updates the https binding for the dns host name specified, assigning the given
         /// certificate selected from the certificate store
@@ -544,8 +542,8 @@ namespace Certify.Core.Management
 
             if (!HasExistingBinding(existingBindings, bindingSpec))
             {
-                //there are no existing applicable bindings to update for this domain
-                //add new ftp binding at default port "<ip>:port:hostDnsName";
+                // there are no existing applicable bindings to update for this domain
+                // add new ftp binding at default port "<ip>:port:hostDnsName";
 
                 var action = new ActionStep
                 {
@@ -614,5 +612,4 @@ namespace Certify.Core.Management
             return steps;
         }
     }
-
 }

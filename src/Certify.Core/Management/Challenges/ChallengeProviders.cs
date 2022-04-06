@@ -180,8 +180,6 @@ namespace Certify.Core.Management.Challenges
         {
             IDnsProvider dnsAPIProvider = null;
 
-
-
             if (!string.IsNullOrEmpty(providerType))
             {
                 List<IDnsProviderProviderPlugin> providerPlugins = PluginManager.CurrentInstance.DnsProviderProviders;

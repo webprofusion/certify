@@ -70,7 +70,6 @@ namespace Certify.Core.Management
                 StoredCredentials = new List<StoredCredential>()
             };
 
-
             // for each managed cert, export the current certificate files (if present)
             foreach (var c in managedCerts)
             {
@@ -94,7 +93,6 @@ namespace Certify.Core.Management
                     export.Content.Scripts.AddRange(GetTaskScriptsAndContent(c.PostRequestTasks, settings.EncryptionSecret, export.EncryptionSalt));
                 }
             }
-
 
             // for each managed cert, check used stored credentials (DNS challenges or deployment tasks)
             var allCredentials = await _credentialsManager.GetCredentials();
@@ -345,7 +343,6 @@ namespace Certify.Core.Management
 
             }
 
-
             // stored credentials
             var credentialImportSteps = new List<ActionStep>();
             foreach (var c in package.Content.StoredCredentials)
@@ -396,7 +393,6 @@ namespace Certify.Core.Management
             }
 
             steps.Add(new ActionStep { Title = "Import Stored Credentials", Category = "Import", Substeps = credentialImportSteps, Key = "StoredCredentials" });
-
 
             var targetSiteBindings = new List<BindingInfo>();
             foreach (var targetServer in _targetServers)
@@ -577,7 +573,6 @@ namespace Certify.Core.Management
             }
 
             steps.Add(new ActionStep { Title = "Import Certificate Files", Category = "Import", Substeps = certFileImportSteps, Key = "CertFiles" });
-
 
             return steps;
         }

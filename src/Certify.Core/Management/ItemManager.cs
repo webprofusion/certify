@@ -244,7 +244,6 @@ namespace Certify.Management
                 }
             }
 
-
             Debug.WriteLine($"StoreSettings[SQLite] took {watch.ElapsedMilliseconds}ms for {list.Count()} records");
         }
 

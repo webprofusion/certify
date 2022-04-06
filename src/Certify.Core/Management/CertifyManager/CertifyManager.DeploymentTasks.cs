@@ -59,7 +59,6 @@ namespace Certify.Management
 
             var taskList = managedCert.PostRequestTasks.AsEnumerable();
 
-
             // if task id provided, determine if task is from pre-request task list or post-request task list
             if (taskId != null)
             {
@@ -282,7 +281,6 @@ namespace Certify.Management
                         Category = "Task Step"
                     });
 
-
                     if (r.IsSuccess)
                     {
                         log?.Information(r.Message);
@@ -294,7 +292,6 @@ namespace Certify.Management
 
                     stepIndex++;
                 }
-
 
                 var overallTaskResult = "Unknown";
 
@@ -333,7 +330,6 @@ namespace Certify.Management
                     HasWarning = !shouldRunCurrentTask,
                     Substeps = subSteps
                 };
-
 
                 task.TaskConfig.LastRunStatus = hasError ? RequestState.Error : RequestState.Success;
                 task.TaskConfig.LastResult = overallTaskResult;

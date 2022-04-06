@@ -78,7 +78,6 @@ namespace Certify.Management
 
         public bool EnableDNSValidationChecks { get; set; }
 
-
         /// <summary>
         /// Number of days between renewals
         /// </summary>

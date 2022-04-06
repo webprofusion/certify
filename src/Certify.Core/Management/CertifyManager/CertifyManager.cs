@@ -140,12 +140,11 @@ namespace Certify.Management
 			_pluginManager.LoadPlugins(new List<string> { "Licensing", "DashboardClient", "DeploymentTasks", "CertificateManagers", "DnsProviders", "ServerProviders" });
 
 
-			var iisServerProvider = new Servers.ServerProviderIIS();
-			iisServerProvider.Init(_serviceLog);
-			_serverProviders.Add(iisServerProvider);
+            var iisServerProvider = new Servers.ServerProviderIIS();
+            iisServerProvider.Init(_serviceLog);
+            _serverProviders.Add(iisServerProvider);
 
             LoadCertificateAuthorities();
-
 
             // init remaining utilities and optionally enable telematics
             _challengeResponseService = new ChallengeResponseService(CoreAppSettings.Current.EnableValidationProxyAPI);
@@ -180,7 +179,6 @@ namespace Certify.Management
 
             // if jwt auth mode is enabled, init auth key for first windows user
         }
-
 
         /// <summary>
         /// Setup service logging
@@ -743,7 +741,7 @@ namespace Certify.Management
         /// <returns></returns>
         public async Task<List<ActionStep>> PerformImport(ImportRequest importRequest)
         {
-			var migrationManager = new MigrationManager(_itemManager, _credentialsManager, _serverProviders);
+            var migrationManager = new MigrationManager(_itemManager, _credentialsManager, _serverProviders);
 
             var importResult = await migrationManager.PerformImport(importRequest.Package, importRequest.Settings, importRequest.IsPreviewMode);
 
@@ -778,7 +776,7 @@ namespace Certify.Management
         /// <returns></returns>
         public async Task<ImportExportPackage> PerformExport(ExportRequest exportRequest)
         {
-			var migrationManager = new MigrationManager(_itemManager, _credentialsManager, _serverProviders);
+            var migrationManager = new MigrationManager(_itemManager, _credentialsManager, _serverProviders);
             return await migrationManager.PerformExport(exportRequest.Filter, exportRequest.Settings, exportRequest.IsPreviewMode);
         }
 
