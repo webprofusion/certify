@@ -400,31 +400,22 @@ namespace Certify.Management
         {
             var sites = new List<ManagedCertificate>();
 
-
             try
             {
                 var allSites = await serverProvider.GetSiteBindingList(CoreAppSettings.Current.IgnoreStoppedSites);
-                var iisSites = allSites
+                var targetSites = allSites
                     .OrderBy(s => s.SiteId)
                     .ThenBy(s => s.Host);
 
-                var siteIds = iisSites.GroupBy(x => x.SiteId);
+                var siteIds = targetSites.GroupBy(x => x.SiteId);
 
                 foreach (var s in siteIds)
                 {
                     var managedCertificate = new ManagedCertificate { Id = s.Key };
                     managedCertificate.ItemType = ManagedCertificateType.SSL_ACME;
                     managedCertificate.TargetHost = "localhost";
-                    managedCertificate.Name = iisSites.First(i => i.SiteId == s.Key).SiteName;
+                    managedCertificate.Name = targetSites.First(i => i.SiteId == s.Key).SiteName;
 
-                    //TODO: replace site binding with domain options
-                    //managedCertificate.SiteBindings = new List<ManagedCertificateBinding>();
-
-                    /* foreach (var binding in s)
-                     {
-                         var managedBinding = new ManagedCertificateBinding { Hostname = binding.Host, IP = binding.IP, Port = binding.Port, UseSNI = true, CertName = "Certify_" + binding.Host };
-                         // managedCertificate.SiteBindings.Add(managedBinding);
-                     }*/
                     sites.Add(managedCertificate);
                 }
             }

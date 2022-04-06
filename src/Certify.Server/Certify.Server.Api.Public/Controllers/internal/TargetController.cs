@@ -45,19 +45,33 @@ namespace Certify.Server.API.Controllers
 
         public async Task<IActionResult> GetTargetServiceItems(string serverType)
         {
+            var knownServerType = GetServerTypeFromString(serverType);
+            if (knownServerType == null)
+            {
+                return new NotFoundResult();
+            }
+
             var targetList = new List<Models.SiteInfo>();
 
-            if (string.Equals(StandardServerTypes.IIS.ToString(), serverType, System.StringComparison.OrdinalIgnoreCase))
+            if (await _client.IsServerAvailable((StandardServerTypes)knownServerType))
             {
-                if (await _client.IsServerAvailable(StandardServerTypes.IIS))
-                {
-                    targetList.AddRange(await _client.GetServerSiteList(StandardServerTypes.IIS));
-                }
+                targetList.AddRange(await _client.GetServerSiteList((StandardServerTypes)knownServerType));
             }
 
             return new OkObjectResult(targetList);
         }
 
+        private StandardServerTypes? GetServerTypeFromString(string value)
+        {
+            if (System.Enum.TryParse<StandardServerTypes>(value, out StandardServerTypes result))
+            {
+                return result;
+            }
+            else
+            {
+                return null;
+            }
+        }
 
         /// <summary>
         /// Return details of single target server item (e.g. 1 site)
@@ -77,12 +91,13 @@ namespace Certify.Server.API.Controllers
                 return new BadRequestResult();
             }
 
-            var results = new List<SiteInfo>();
-
-            if (serverType == StandardServerTypes.IIS.ToString())
+            var knownServerType = GetServerTypeFromString(serverType);
+            if (knownServerType == null)
             {
-                results = await _client.GetServerSiteList(StandardServerTypes.IIS, itemId);
+                return new NotFoundResult();
             }
+
+            var results = await _client.GetServerSiteList((StandardServerTypes)knownServerType, itemId);
 
             if (results.Count == 0)
             {
@@ -107,14 +122,17 @@ namespace Certify.Server.API.Controllers
         {
             var targetList = new List<Models.DomainOption>();
 
-            if (string.Equals(StandardServerTypes.IIS.ToString(), serverType, System.StringComparison.OrdinalIgnoreCase))
+            var knownServerType = GetServerTypeFromString(serverType);
+            if (knownServerType == null)
             {
-                targetList.AddRange(await _client.GetServerSiteDomains(StandardServerTypes.IIS, itemId));
+                return new NotFoundResult();
             }
 
-            return new OkObjectResult(targetList);
-        }
+            targetList.AddRange(await _client.GetServerSiteDomains((StandardServerTypes)knownServerType, itemId));
 
+            return new OkObjectResult(targetList);
+
+        }
         /// <summary>
         /// Get list of target services this server supports (e.g. IIS etc)
         /// </summary>
@@ -127,11 +145,16 @@ namespace Certify.Server.API.Controllers
         {
             var list = new List<string>();
 
+            // TODO: make dynamic from service
             if (await _client.IsServerAvailable(StandardServerTypes.IIS))
             {
                 list.Add(StandardServerTypes.IIS.ToString());
             };
 
+            if (await _client.IsServerAvailable(StandardServerTypes.Nginx))
+            {
+                list.Add(StandardServerTypes.Nginx.ToString());
+            };
             return new OkObjectResult(list);
         }
     }

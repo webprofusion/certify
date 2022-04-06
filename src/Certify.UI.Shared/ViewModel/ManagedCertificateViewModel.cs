@@ -100,7 +100,7 @@ namespace Certify.UI.ViewModel
 
             var list = await _appViewModel.GetServerSiteList(TargetServerType);
 
-            list.Insert(0, new SiteInfo { Name = "(No IIS Site Selected)", Id = "" });
+            list.Insert(0, new SiteInfo { Name = "(No Site Selected)", Id = "" });
 
             if (WebSiteList == null)
             {

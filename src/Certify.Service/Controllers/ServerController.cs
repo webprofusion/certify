@@ -21,14 +21,7 @@ namespace Certify.Service
         {
             DebugLog();
 
-            if (serverType == StandardServerTypes.IIS)
-            {
-                return await _certifyManager.IsServerTypeAvailable(serverType);
-            }
-            else
-            {
-                return false;
-            }
+            return await _certifyManager.IsServerTypeAvailable(serverType);
         }
 
         [HttpGet, Route("sitelist/{serverType}")]
@@ -54,28 +47,14 @@ namespace Certify.Service
         [HttpGet, Route("version/{serverType}")]
         public async Task<string> GetServerVersion(StandardServerTypes serverType)
         {
-            if (serverType == StandardServerTypes.IIS)
-            {
-                var version = await _certifyManager.GetServerTypeVersion(serverType);
-                return version.ToString();
-            }
-            else
-            {
-                return null;
-            }
+            var version = await _certifyManager.GetServerTypeVersion(serverType);
+            return version.ToString();
         }
 
         [HttpGet, Route("diagnostics/{serverType}/{siteId?}")]
         public async Task<List<ActionStep>> RunServerDiagnostics(StandardServerTypes serverType, string siteId)
         {
-            if (serverType == StandardServerTypes.IIS)
-            {
-                return await _certifyManager.RunServerDiagnostics(serverType, siteId);
-            }
-            else
-            {
-                return null;
-            }
+            return await _certifyManager.RunServerDiagnostics(serverType, siteId);
         }
     }
 }

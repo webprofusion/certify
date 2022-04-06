@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -137,9 +137,24 @@ namespace Certify.Management
 
             _pluginManager = new PluginManager();
             _pluginManager.EnableExternalPlugins = CoreAppSettings.Current.IncludeExternalPlugins;
-			_pluginManager.LoadPlugins(new List<string> { "Licensing", "DashboardClient", "DeploymentTasks", "CertificateManagers", "DnsProviders", "ServerProviders" });
+            _pluginManager.LoadPlugins(new List<string> { "Licensing", "DashboardClient", "DeploymentTasks", "CertificateManagers", "DnsProviders", "ServerProviders" });
 
+            // setup supported target server types for default deployment
+            foreach (var p in _pluginManager.ServerProviders)
+            {
+                var providers = p.GetProviders(p.GetType());
+                foreach (var provider in providers)
+                {
+                    var pr = p.GetProvider(p.GetType(), provider.Id);
+                    if (pr != null)
+                    {
+                        pr.Init(_serviceLog);
+                        _serverProviders.Add(pr);
+                    }
+                }
+            }
 
+            // add default IIS target server provider
             var iisServerProvider = new Servers.ServerProviderIIS();
             iisServerProvider.Init(_serviceLog);
             _serverProviders.Add(iisServerProvider);
