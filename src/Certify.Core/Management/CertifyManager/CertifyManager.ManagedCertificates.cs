@@ -137,10 +137,7 @@ namespace Certify.Management
                 await ReportManagedCertificateStatus(managedCertificate);
             }
 
-            if (_tc != null)
-            {
-                _tc.TrackEvent("UpdateManagedCertificatesStatus_" + status.ToString());
-            }
+            _tc?.TrackEvent("UpdateManagedCertificatesStatus_" + status.ToString());
         }
 
         /// <summary>

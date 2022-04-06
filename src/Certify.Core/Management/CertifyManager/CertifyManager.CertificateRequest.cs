@@ -1198,10 +1198,7 @@ namespace Certify.Management
                         {
                             _httpChallengeServerAvailable = await StartHttpChallengeServer();
 
-                            if (_tc != null)
-                            {
-                                _tc.TrackEvent("ChallengeResponse_HttpChallengeServer_Start");
-                            }
+                            _tc?.TrackEvent("ChallengeResponse_HttpChallengeServer_Start");
                         }
 
                         if (_httpChallengeServerAvailable)
@@ -1212,10 +1209,7 @@ namespace Certify.Management
                         {
                             LogMessage(managedCertificate.Id, $"Http Challenge Server process unavailable.", LogItemType.CertificateRequestStarted);
 
-                            if (_tc != null)
-                            {
-                                _tc.TrackEvent("ChallengeResponse_HttpChallengeServer_Unavailable");
-                            }
+                            _tc?.TrackEvent("ChallengeResponse_HttpChallengeServer_Unavailable");
                         }
                     }
                     else
@@ -1257,10 +1251,7 @@ namespace Certify.Management
 
                         var providerDesc = challengeConfig.ChallengeProvider ?? challengeConfig.ChallengeType;
 
-                        if (_tc != null)
-                        {
-                            _tc.TrackEvent($"PerformChallengeResponse_{providerDesc}");
-                        }
+                        _tc?.TrackEvent($"PerformChallengeResponse_{providerDesc}");
 
                         // ask LE to check our answer to their authorization challenge (http-01 or
                         // tls-sni-01), LE will then attempt to fetch our answer, if all accessible
@@ -1529,10 +1520,7 @@ namespace Certify.Management
                 log = ManagedCertificateLog.GetLogger(managedCertificate.Id, _loggingLevelSwitch);
             }
 
-            if (_tc != null)
-            {
-                _tc.TrackEvent("RevokeCertificate");
-            }
+            _tc?.TrackEvent("RevokeCertificate");
 
             log?.Warning($"Revoking certificate: {managedCertificate.Name}");
 

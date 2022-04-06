@@ -157,10 +157,7 @@ namespace Certify.Management
             _httpChallengePort = _serverConfig.HttpChallengeServerPort;
             _httpChallengeServerClient.Timeout = new TimeSpan(0, 0, 20);
 
-            if (_tc != null)
-            {
-                _tc.TrackEvent("ServiceStarted");
-            }
+            _tc?.TrackEvent("ServiceStarted");
 
             _serviceLog?.Information("Certify Manager Started");
 
@@ -428,10 +425,7 @@ namespace Certify.Management
             {
                 _serviceLog?.Information($"Checking for daily tasks..");
 
-                if (_tc != null)
-                {
-                    _tc.TrackEvent("ServiceDailyTaskCheck");
-                }
+                _tc?.TrackEvent("ServiceDailyTaskCheck");
 
                 // clear old cache of challenge responses
                 _currentChallenges = new ConcurrentDictionary<string, SimpleAuthorizationChallengeItem>();
