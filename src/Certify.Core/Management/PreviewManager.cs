@@ -400,41 +400,40 @@ namespace Certify.Management
         {
             var sites = new List<ManagedCertificate>();
 
-            if (serverType == StandardServerTypes.IIS)
+
+            try
             {
-                try
+                var allSites = await serverProvider.GetSiteBindingList(CoreAppSettings.Current.IgnoreStoppedSites);
+                var iisSites = allSites
+                    .OrderBy(s => s.SiteId)
+                    .ThenBy(s => s.Host);
+
+                var siteIds = iisSites.GroupBy(x => x.SiteId);
+
+                foreach (var s in siteIds)
                 {
-                    var allSites = await serverProvider.GetSiteBindingList(CoreAppSettings.Current.IgnoreStoppedSites);
-                    var iisSites = allSites
-                        .OrderBy(s => s.SiteId)
-                        .ThenBy(s => s.Host);
+                    var managedCertificate = new ManagedCertificate { Id = s.Key };
+                    managedCertificate.ItemType = ManagedCertificateType.SSL_ACME;
+                    managedCertificate.TargetHost = "localhost";
+                    managedCertificate.Name = iisSites.First(i => i.SiteId == s.Key).SiteName;
 
-                    var siteIds = iisSites.GroupBy(x => x.SiteId);
+                    //TODO: replace site binding with domain options
+                    //managedCertificate.SiteBindings = new List<ManagedCertificateBinding>();
 
-                    foreach (var s in siteIds)
-                    {
-                        var managedCertificate = new ManagedCertificate { Id = s.Key };
-                        managedCertificate.ItemType = ManagedCertificateType.SSL_ACME;
-                        managedCertificate.TargetHost = "localhost";
-                        managedCertificate.Name = iisSites.First(i => i.SiteId == s.Key).SiteName;
-
-                        //TODO: replace site binding with domain options
-                        //managedCertificate.SiteBindings = new List<ManagedCertificateBinding>();
-
-                        /* foreach (var binding in s)
-                         {
-                             var managedBinding = new ManagedCertificateBinding { Hostname = binding.Host, IP = binding.IP, Port = binding.Port, UseSNI = true, CertName = "Certify_" + binding.Host };
-                             // managedCertificate.SiteBindings.Add(managedBinding);
-                         }*/
-                        sites.Add(managedCertificate);
-                    }
-                }
-                catch (Exception)
-                {
-                    //can't read sites
-                    Debug.WriteLine("Can't get IIS site list.");
+                    /* foreach (var binding in s)
+                     {
+                         var managedBinding = new ManagedCertificateBinding { Hostname = binding.Host, IP = binding.IP, Port = binding.Port, UseSNI = true, CertName = "Certify_" + binding.Host };
+                         // managedCertificate.SiteBindings.Add(managedBinding);
+                     }*/
+                    sites.Add(managedCertificate);
                 }
             }
+            catch (Exception)
+            {
+                //can't read sites
+                Debug.WriteLine("Can't get target server site list.");
+            }
+
 
             return sites;
         }

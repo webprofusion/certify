@@ -98,7 +98,7 @@ namespace Certify.UI.ViewModel
 
             IsSiteListQueryProgress = true;
 
-            var list = await _appViewModel.GetServerSiteList(StandardServerTypes.IIS);
+            var list = await _appViewModel.GetServerSiteList(TargetServerType);
 
             list.Insert(0, new SiteInfo { Name = "(No IIS Site Selected)", Id = "" });
 
@@ -138,6 +138,8 @@ namespace Certify.UI.ViewModel
                 }
             }
         }
+
+        public StandardServerTypes TargetServerType { get; set; } = StandardServerTypes.Nginx;
 
         [DependsOn(nameof(SelectedItem))]
         public bool HasSelectedItemDomainOptions
@@ -428,7 +430,7 @@ namespace Certify.UI.ViewModel
             //requery list of domains from IIS and refresh Domain Options in Selected Item, leave existing items checked
             if (SelectedItem != null)
             {
-                var opts = await GetDomainOptionsFromSite(SelectedItem.GroupId);
+                var opts = await GetDomainOptionsFromSite(SelectedItem.ServerSiteId);
 
                 if (opts != null && opts.Any())
                 {
@@ -809,7 +811,7 @@ namespace Certify.UI.ViewModel
                 return new List<DomainOption>();
             }
 
-            var list = await _appViewModel.GetServerSiteDomains(StandardServerTypes.IIS, siteId);
+            var list = await _appViewModel.GetServerSiteDomains(TargetServerType, siteId);
 
             // discard no-specific host wildcards for cert domain options
             list.RemoveAll(d => d.Domain?.Trim() == "*");
