@@ -34,7 +34,6 @@ namespace Certify.Service.Tests.Integration
             Assert.IsNotNull(site, $"Fetched single managed site details");
         }
 
-
         [TestMethod]
         [Ignore]
         public async Task TestCreateManagedCertificates()

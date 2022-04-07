@@ -114,7 +114,6 @@ namespace Certify.Providers.DNS.Aliyun
         FORWARD_URL
     }
 
-
     public class DomainRecord
     {
         public string RequestId { get; set; }

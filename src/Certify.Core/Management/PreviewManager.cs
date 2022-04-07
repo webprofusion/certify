@@ -425,7 +425,6 @@ namespace Certify.Management
                 Debug.WriteLine("Can't get target server site list.");
             }
 
-
             return sites;
         }
     }

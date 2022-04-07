@@ -41,7 +41,6 @@ namespace Certify.Service.Tests.Integration
             throw new NotImplementedException("Implement Update Account");
             //var result = await _client.Update(new Models.ContactRegistration { EmailAddress = "certify@certifytheweb.com", AgreedToTermsAndConditions = true });
 
-
         }
     }
 }

@@ -35,5 +35,4 @@ namespace Certify.UI.Controls
         }
     }
 
-
 }

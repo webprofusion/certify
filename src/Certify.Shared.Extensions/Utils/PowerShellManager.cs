@@ -393,7 +393,6 @@ namespace Certify.Management
             shell.Streams.Debug.DataAdded += (sender, args) => output.AppendLine(shell.Streams.Debug[args.Index].Message);
             shell.Streams.Verbose.DataAdded += (sender, args) => output.AppendLine(shell.Streams.Verbose[args.Index].Message);
 
-
             var outputData = new PSDataCollection<PSObject>();
 
             outputData.DataAdded += (sender, args) =>

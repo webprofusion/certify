@@ -26,7 +26,6 @@ namespace Certify.Service
         public async Task<string> GetWindowsAuthKey()
         {
 
-
             // user is using windows authentication, return an initial secret auth token. TODO: user must be able to invalidate existing auth key
             var encryptedBytes = System.Security.Cryptography.ProtectedData.Protect(
                     System.Text.Encoding.UTF8.GetBytes(this.ActionContext.RequestContext.Principal.Identity.Name),
@@ -39,7 +38,6 @@ namespace Certify.Service
 
             // return auth secret as Base64 string suitable for Basic Authorization https://en.wikipedia.org/wiki/Basic_access_authentication
             return await Task.FromResult(Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(userIdPlusSecret)));
-
 
         }
 

@@ -15,7 +15,6 @@ namespace Certify.UI.Controls.ManagedCertificate
             DataContext = ItemViewModel;
         }
 
-
         private async Task<bool> WaitForClipboard(string text)
         {
             // if running under terminal services etc the clipboard can take multiple attempts to set

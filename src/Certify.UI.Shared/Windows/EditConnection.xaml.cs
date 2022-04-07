@@ -14,7 +14,6 @@ namespace Certify.UI.Windows
 
         public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
 
-
         public EditConnectionDialog(ServerConnection editItem = null)
         {
             InitializeComponent();

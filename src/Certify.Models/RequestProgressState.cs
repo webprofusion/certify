@@ -45,7 +45,6 @@
         {
             CurrentState = RequestState.NotRunning;
 
-
         }
 
         public bool IsRunning => CurrentState == RequestState.Running ? true : false;

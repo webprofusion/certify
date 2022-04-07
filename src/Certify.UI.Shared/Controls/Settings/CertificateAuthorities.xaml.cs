@@ -18,7 +18,6 @@ namespace Certify.UI.Controls.Settings
 
             public bool SettingsInitialised { get; set; }
 
-
         }
         public Model EditModel { get; set; } = new Model();
 

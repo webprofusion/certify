@@ -134,7 +134,6 @@ namespace Certify.Shared.Utils
                     value = objValue?.ToString() ?? "";
                 }
 
-
                 if (url_encode)
                 {
                     value = WebUtility.UrlEncode(value);

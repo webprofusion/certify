@@ -58,8 +58,6 @@ namespace Certify.UI.ViewModel
 
             RaisePropertyChangedEvent(nameof(IsSelectedItemValid));
 
-
-
             RaisePropertyChangedEvent(nameof(SelectedItem));
             RaisePropertyChangedEvent(nameof(HasSelectedItemDomainOptions));
             RaisePropertyChangedEvent(nameof(HasSelectedItemWebsiteSelection));

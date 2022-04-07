@@ -159,7 +159,6 @@ namespace Certify.Providers.DNS.Cloudflare
                 request.Headers.Add("X-AUTH-EMAIL", _emailAddress);
             }
 
-
             return request;
         }
 

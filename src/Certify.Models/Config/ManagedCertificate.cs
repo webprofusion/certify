@@ -585,6 +585,5 @@ namespace Certify.Models
         }
     }
 
-
 }
 

@@ -5,7 +5,6 @@ namespace Certify.UI.Controls
 {
     public delegate void FilterNotify(string filter);  // delegate
 
-
     /// <summary>
     /// Interaction logic for GettingStarted.xaml 
     /// </summary>

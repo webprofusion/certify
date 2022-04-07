@@ -41,7 +41,6 @@ namespace Certify.Models.Shared.Validation
                         }
                     }
 
-
                     foreach (var option in domainOptions)
                     {
                         managedCertificate.DomainOptions.Add(option);
@@ -58,7 +57,6 @@ namespace Certify.Models.Shared.Validation
             return new ActionResult<ManagedCertificate>("OK", true, managedCertificate);
 
         }
-
 
     }
 }

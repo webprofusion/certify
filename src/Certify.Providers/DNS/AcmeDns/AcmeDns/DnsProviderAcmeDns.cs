@@ -180,7 +180,6 @@ namespace Certify.Providers.DNS.AcmeDns
                 req.Headers.Add("Authorization", basicCredentials);
             }
 
-
             req.Content = new StringContent(json);
 
             var response = await _client.SendAsync(req);

@@ -85,7 +85,6 @@ namespace Certify.Providers.DNS.CertifyDns
             };
         }
 
-
         private Dictionary<string, string> _credentials;
 
         private ILog _log;
@@ -111,7 +110,6 @@ namespace Certify.Providers.DNS.CertifyDns
 
         public List<ProviderParameter> ProviderParameters => Definition.ProviderParameters;
 
-
         private HttpClient _client;
 
         private Dictionary<string, string> _parameters = new Dictionary<string, string>();
@@ -119,8 +117,6 @@ namespace Certify.Providers.DNS.CertifyDns
         private JsonSerializerSettings _serializerSettings;
 
         private string _settingsPath { get; set; }
-
-
 
         private async Task<ValueTuple<AcmeDnsRegistration, bool>> Register(string settingsPath, string domainId)
         {
@@ -189,7 +185,6 @@ namespace Certify.Providers.DNS.CertifyDns
                 var basicCredentials = "Basic " + ToUrlSafeBase64String(_credentials["user"] + ":" + _credentials["key"]);
                 req.Headers.Add("Authorization", basicCredentials);
             }
-
 
             req.Content = new StringContent(json);
 

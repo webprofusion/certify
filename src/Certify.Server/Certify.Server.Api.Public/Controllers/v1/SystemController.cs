@@ -28,7 +28,6 @@ namespace Certify.Server.API.Controllers
             _client = client;
         }
 
-
         /// <summary>
         /// Get the server software version
         /// </summary>

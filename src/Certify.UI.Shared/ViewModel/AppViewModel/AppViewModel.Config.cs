@@ -217,7 +217,6 @@ namespace Certify.UI.ViewModel
                 System.Windows.Data.BindingOperations.EnableCollectionSynchronization(StoredCredentials, _storedCredentialsLock);
             }
 
-
             StoredCredentials.Clear();
             foreach (var c in list)
             {

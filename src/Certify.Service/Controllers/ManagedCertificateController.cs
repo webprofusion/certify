@@ -17,7 +17,7 @@ namespace Certify.Service
     [RoutePrefix("api/managedcertificates")]
     public class ManagedCertificatesController : Controllers.ControllerBase
     {
-        private ICertifyManager _certifyManager = null;
+        private ICertifyManager _certifyManager;
 
         public ManagedCertificatesController(Management.ICertifyManager manager)
         {

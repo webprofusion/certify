@@ -258,7 +258,6 @@ namespace Certify.Core.Management.Challenges
                             Log($"Requested key not found: {key}");
                         }
 
-
                     }
                     else
                     {

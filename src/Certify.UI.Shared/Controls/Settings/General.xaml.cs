@@ -90,7 +90,6 @@ namespace Certify.UI.Controls.Settings
             EditModel.Prefs.AfterPropertyChanged -= Prefs_AfterPropertyChanged;
             EditModel.Prefs.AfterPropertyChanged += Prefs_AfterPropertyChanged;
 
-
             EditModel.SettingsInitialised = true;
 
             EditModel.RaisePropertyChangedEvent(null);

@@ -222,7 +222,6 @@ namespace Certify.Core.Tests
                 expected = $"Add https binding | {testPreviewSiteName} | ***:443:{hostname} SNI**";
                 Assert.AreEqual(expected, deployStep.Substeps[0].Description);
 
-
             }
             finally
             {

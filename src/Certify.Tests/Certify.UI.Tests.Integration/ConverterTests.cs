@@ -18,7 +18,6 @@ namespace Certify.UI.Tests.Integration
 
             Assert.AreEqual(string.Format(SR.ExpiryDateConverter_CertificateExpiresIn, 8), description);
 
-
             // expired 1 days ago
 
             description = ExpiryDateConverter.GetDescription(DateTime.Now.AddDays(-1));
@@ -33,7 +32,6 @@ namespace Certify.UI.Tests.Integration
 
         }
 
-
         [TestMethod]
         public void ExpiryDateConvertColour()
         {
@@ -46,7 +44,6 @@ namespace Certify.UI.Tests.Integration
             color = ExpiryDateColourConverter.GetColour(DateTime.Now.AddDays(6.1));
 
             Assert.AreEqual(System.Windows.Media.Brushes.IndianRed, color);
-
 
             // 0 days to go (less than 1), should be red
             color = ExpiryDateColourConverter.GetColour(DateTime.Now.AddDays(1.1));

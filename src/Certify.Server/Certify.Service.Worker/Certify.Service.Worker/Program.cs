@@ -98,7 +98,6 @@ namespace Certify.Service.Worker
 
                                 // if password is wrong at this stage the attempts to use the cert will results in SSL Protocol Error
 
-
                                 var httpsConnectionAdapterOptions = new HttpsConnectionAdapterOptions()
                                 {
                                     ClientCertificateMode = ClientCertificateMode.NoCertificate,
@@ -107,8 +106,6 @@ namespace Certify.Service.Worker
                                 };
 
                                 var httpsPort = Convert.ToInt32(configuration["API:Service:HttpsPort"]);
-
-
 
                                 serverOptions.Listen(new System.Net.IPEndPoint(ipBinding, httpsPort), listenOptions =>
                                 {
@@ -131,7 +128,6 @@ namespace Certify.Service.Worker
                             {
                             });
                         }
-
 
                     });
 

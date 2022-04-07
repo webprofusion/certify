@@ -16,7 +16,6 @@ namespace Certify.CLI
 
             var renewalMode = Models.RenewalMode.Auto;
 
-
             if (args.Contains("--force-renew-all"))
             {
                 renewalMode = RenewalMode.All;

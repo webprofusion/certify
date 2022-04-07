@@ -214,9 +214,7 @@ namespace Certify.UI.Windows
 
             await PerformAppStartupChecks();
 
-
         }
-
 
         private async Task PerformAppStartupChecks()
         {

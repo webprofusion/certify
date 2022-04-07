@@ -83,7 +83,6 @@ namespace Certify.Providers.ACME.Certes
         }
     }
 
-
     /// <summary>
     /// ACME Provider using certes https://github.com/fszlin/certes
     /// </summary>
@@ -315,7 +314,6 @@ namespace Certify.Providers.ACME.Certes
             }
         }
 
-
         public async Task<bool> DeactivateAccount(ILog log)
         {
             var acc = await _acme.Account();
@@ -345,7 +343,6 @@ namespace Certify.Providers.ACME.Certes
                 log?.Information($"Account updated.");
                 await PopulateSettingsFromCurrentAccount();
                 _settings.AccountEmail = email;
-
 
                 return new ActionResult<AccountDetails>
                 {
@@ -396,8 +393,6 @@ namespace Certify.Providers.ACME.Certes
             _settings.AccountKey = pem;
             _settings.AccountUri = (await _acme.Account()).Location.ToString();
         }
-
-
 
         /// <summary>
         /// Determine if we have a currently registered account with the ACME CA (e.g. Let's Encrypt)
@@ -457,7 +452,6 @@ namespace Certify.Providers.ACME.Certes
         /// <returns>  </returns>
         public async Task<ActionResult<AccountDetails>> AddNewAccountAndAcceptTOS(ILog log, string email, string eabKeyId, string eabKey, string eabKeyAlg)
         {
-
 
             try
             {
@@ -839,7 +833,6 @@ namespace Certify.Providers.ACME.Certes
                                         httpChallengeStatus = await httpChallenge.Resource();
                                     }
 
-
                                     log.Information($"Got http-01 challenge {httpChallengeStatus.Url}");
 
                                     if (httpChallengeStatus.Status == ChallengeStatus.Invalid)
@@ -895,7 +888,6 @@ namespace Certify.Providers.ACME.Certes
                                     // fetch status directly from /challenge/ api
                                     dnsChallengeStatus = await dnsChallenge.Resource();
                                 }
-
 
                                 log.Information($"Got dns-01 challenge {dnsChallengeStatus.Url}");
 
@@ -1086,7 +1078,6 @@ namespace Certify.Providers.ACME.Certes
             return pendingAuthorization;
         }
 
-
         /// <summary>
         /// Once validation has completed for our requested domains we can complete the certificate
         /// request by submitting a Certificate Signing Request (CSR) to the CA
@@ -1172,7 +1163,6 @@ namespace Certify.Providers.ACME.Certes
             // generate cert
             CertificateChain certificateChain = null;
             DateTime? certExpiration = null;
-
 
             try
             {
@@ -1459,7 +1449,6 @@ namespace Certify.Providers.ACME.Certes
                     _issuerCertCache.Add(customCARoots);
                 }
 
-
                 // well known CA certs
                 var knownCAs = Certify.Models.CertificateAuthority.CoreCertificateAuthorities;
                 foreach (var ca in knownCAs)
@@ -1476,7 +1465,6 @@ namespace Certify.Providers.ACME.Certes
                             var certBytes = pemObj.Content;
                             _issuerCertCache.Add(certBytes);
                         }
-
 
                     }
                 }
@@ -1690,7 +1678,6 @@ namespace Certify.Providers.ACME.Certes
                   throw new Exception(ex.Message);
               }
           }*/
-
 
         private string ExportFullCertPEM(IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
         {

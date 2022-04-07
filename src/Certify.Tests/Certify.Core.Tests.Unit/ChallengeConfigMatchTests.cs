@@ -70,7 +70,6 @@ namespace Certify.Core.Tests.Unit
             var configMatch = managedCertificate.GetChallengeConfig(null);
             Assert.AreEqual("config-default", configMatch.ChallengeCredentialKey, "Blank domain should match blank domain match config");
 
-
             configMatch = managedCertificate.GetChallengeConfig("*.fred.com");
             Assert.AreEqual("config-wildcard", configMatch.ChallengeCredentialKey, "Should match on wildcard");
 
@@ -98,7 +97,6 @@ namespace Certify.Core.Tests.Unit
             configMatch = managedCertificate.GetChallengeConfig("www.microsoft.com");
             Assert.AreEqual("config-default", configMatch.ChallengeCredentialKey, "Should match default");
         }
-
 
         [TestMethod, Description("Ensure correct challenge config selected based on domain")]
         public void ChallengeDelgationRuleTests()

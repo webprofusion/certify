@@ -407,7 +407,6 @@ namespace Certify.Providers.DNS.OVH
 
         #endregion
 
-
         /// <summary>
         /// Lowest level call helper. If "consumerKey" is not "null", inject
         /// authentication headers and sign the request.
@@ -493,7 +492,6 @@ namespace Certify.Providers.DNS.OVH
         {
             return JsonConvert.DeserializeObject<T>(await Call(method, path, JsonConvert.SerializeObject(data), needAuth));
         }
-
 
         private async Task<long> ComputeTimeDelta()
         {

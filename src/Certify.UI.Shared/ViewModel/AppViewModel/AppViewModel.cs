@@ -46,7 +46,6 @@ namespace Certify.UI.ViewModel
             Init();
         }
 
-
         /// <summary>
         /// Get app model (real mode or design mode depending on context)
         /// </summary>

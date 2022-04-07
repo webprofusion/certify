@@ -23,7 +23,6 @@ namespace Certify.UI.Windows
         {
             InitializeComponent();
 
-
             this.DataContext = EditModel;
 
             this.Width *= EditModel.MainViewModel.UIScaleFactor;
@@ -126,13 +125,11 @@ namespace Certify.UI.Windows
 
             var email = DeactivateEmail.Text?.Trim().ToLower();
 
-
             if (string.IsNullOrEmpty(email))
             {
                 MessageBox.Show(Certify.Locales.SR.Registration_NeedEmail);
                 return;
             }
-
 
             Mouse.OverrideCursor = Cursors.Wait;
 

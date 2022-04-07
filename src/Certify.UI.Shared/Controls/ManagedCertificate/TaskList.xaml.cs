@@ -21,7 +21,6 @@ namespace Certify.UI.Controls.ManagedCertificate
             InitializeComponent();
         }
 
-
         private void EditDeploymentTask_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             var config = (sender as Button).DataContext as DeploymentTaskConfig;
@@ -47,7 +46,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return;
             }
 
-
             // check if last status was a error
             var msg = "Run task '" + task.TaskName + "' now? The most recent certificate details will be used.";
             var requiresForcedTaskExecute = false;
@@ -58,7 +56,6 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 msg = "Force task '" + task.TaskName + "' to run now? " + (ItemViewModel.SelectedItem.LastRenewalStatus == null ? "The certificate has not yet been requested and the task will likely fail with errors." : "The last certificate request failed with one or more errors, task run may fail depending on certificate status.");
             }
-
 
             if (MessageBox.Show(msg, "Run Task?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
@@ -78,7 +75,6 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 }
 
-
                 ItemViewModel.SelectedItem = await UI.ViewModel.AppViewModel.Current.UpdatedCachedManagedCertificate(ItemViewModel.SelectedItem, true);
             }
         }
@@ -93,7 +89,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                 ItemViewModel.SelectedItem.PostRequestTasks?.Remove(task);
             }
         }
-
 
         private void TaskStartDrop(object sender, MouseButtonEventArgs e)
         {
@@ -155,7 +150,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                 // re-order task list
 
                 e.Effects = DragDropEffects.Move;
-
 
             }
             e.Handled = true;

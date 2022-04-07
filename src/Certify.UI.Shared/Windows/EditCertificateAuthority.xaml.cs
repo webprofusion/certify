@@ -104,8 +104,6 @@ namespace Certify.UI.Windows
                     var ca = MainViewModel.CertificateAuthorities.FirstOrDefault(a => a.Id == Model.SelectedCertificateAuthorityId);
                     Model.Item = Newtonsoft.Json.JsonConvert.DeserializeObject<CertificateAuthority>(Newtonsoft.Json.JsonConvert.SerializeObject(ca));
 
-
-
                 }
                 else
                 {
@@ -127,7 +125,6 @@ namespace Certify.UI.Windows
                 DOMAIN_SINGLE_PLUS_WWW.IsOn = Model.IsFeatureEnabled(CertAuthoritySupportedRequests.DOMAIN_SINGLE_PLUS_WWW);
                 DOMAIN_WILDCARD.IsOn = Model.IsFeatureEnabled(CertAuthoritySupportedRequests.DOMAIN_WILDCARD);
                 DOMAIN_MULTIPLE_SAN.IsOn = Model.IsFeatureEnabled(CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN);
-
 
             }
         }

@@ -51,7 +51,6 @@ namespace Certify.Core.Tests.Unit
             normalisedRecordName = DnsProviderBase.NormaliseRecordName(domainRoot, "www.test.com");
             Assert.IsTrue(normalisedRecordName == "www");
 
-
             domainRoot = await mockDnsProvider.Object.DetermineZoneDomainRoot("test.bar.co.uk", null);
             Assert.IsTrue(domainRoot.ZoneId == "lengthtest-1", "Incorrect zone matched for length test");
         }

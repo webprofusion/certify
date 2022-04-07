@@ -91,7 +91,6 @@ namespace Certify.Config.Migration
         public bool IsPreviewMode { get; set; }
     }
 
-
     public class ImportRequest
     {
         public ImportExportPackage Package { get; set; } = new();

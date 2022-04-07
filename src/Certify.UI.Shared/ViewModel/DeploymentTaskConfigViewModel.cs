@@ -39,7 +39,6 @@ namespace Certify.UI.ViewModel
             }
         }
 
-
         public DeploymentProviderDefinition DeploymentProvider { get; set; }
         public ObservableCollection<ProviderParameter> EditableParameters { get; set; }
 
@@ -49,7 +48,6 @@ namespace Certify.UI.ViewModel
         {
             get
             {
-
 
                 Dictionary<string, string> list = new Dictionary<string, string>();
                 if (this.DeploymentProvider != null)
@@ -86,7 +84,6 @@ namespace Certify.UI.ViewModel
                         }
                     }
 
-
                 }
                 return list;
             }
@@ -108,7 +105,6 @@ namespace Certify.UI.ViewModel
                 };
             }
             SelectedItem = item;
-
 
         }
 
@@ -138,7 +134,6 @@ namespace Certify.UI.ViewModel
                 }
             }
         }
-
 
         public bool UsesRemoteOptions
         {
@@ -219,7 +214,6 @@ namespace Certify.UI.ViewModel
 
                 await RefreshCredentialOptions();
 
-
                 // pre-populate task title with a default
                 if (string.IsNullOrEmpty(SelectedItem.TaskName))
                 {
@@ -241,9 +235,7 @@ namespace Certify.UI.ViewModel
             await _appViewModel.RefreshStoredCredentialsList();
             _filteredCredentials.Refresh();
 
-
             RaisePropertyChangedEvent(nameof(FilteredCredentials));
-
 
         }
 
@@ -356,7 +348,6 @@ namespace Certify.UI.ViewModel
                 }
             }
 
-
             if (DeploymentProvider?.ExternalCredentialType == null)
             {
                 // if remote target, check target specified. TODO: Could also check host resolves.
@@ -428,7 +419,6 @@ namespace Certify.UI.ViewModel
                     _appViewModel.SelectedItem.PreRequestTasks[_appViewModel.SelectedItem.PreRequestTasks.IndexOf(original)] = SelectedItem;
                 }
             }
-
 
             return new ActionResult("OK", true);
         }

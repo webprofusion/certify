@@ -137,7 +137,6 @@ namespace Certify.Core.Tests
             }
         }
 
-
         [TestMethod]
         public async Task TestCertCleanupFull()
         {

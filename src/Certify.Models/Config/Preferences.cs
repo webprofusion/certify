@@ -90,7 +90,6 @@
 
         public string[] FeatureFlags { get; set; } = System.Array.Empty<string>();
 
-
         /// <summary>
         /// Server to use for Ntp time diagnostics
         /// </summary>
@@ -128,7 +127,6 @@
         /// Enable options for external cert managers
         /// </summary>
         public const string EXTERNAL_CERT_MANAGERS = "EXTERNAL_CERT_MANAGERS";
-
 
         /// <summary>
         /// Enable server connection UI

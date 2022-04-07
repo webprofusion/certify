@@ -55,7 +55,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                     // will fail in design mode
                 }
 
-
                 var steps = new List<ActionStep>();
 
                 try
@@ -80,7 +79,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                 }
 
                 Steps = new ObservableCollection<ActionStep>(steps);
-
 
                 var markdown = GetStepsAsMarkdown(Steps);
 

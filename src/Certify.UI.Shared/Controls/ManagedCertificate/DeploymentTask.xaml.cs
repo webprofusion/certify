@@ -36,7 +36,6 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         protected ViewModel.DeploymentTaskConfigViewModel EditModel;
 
-
         public DeploymentTask()
         {
             InitializeComponent();
@@ -133,8 +132,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                 await RefreshEditModelOptions();
             }
         }
-
-
 
         public async Task<bool> Save()
         {

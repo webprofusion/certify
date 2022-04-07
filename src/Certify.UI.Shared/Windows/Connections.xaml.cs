@@ -13,7 +13,6 @@ namespace Certify.UI.Windows
     {
         private CancellationTokenSource _cts = new CancellationTokenSource();
 
-
         public Connections()
         {
             InitializeComponent();

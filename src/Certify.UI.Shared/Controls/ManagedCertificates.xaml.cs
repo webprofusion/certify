@@ -11,7 +11,6 @@ namespace Certify.UI.Controls
 
     public delegate void OnDuplicateManagedCertificate(Certify.Models.ManagedCertificate original);  // delegate
 
-
     /// <summary>
     /// Interaction logic for ManagedCertificates.xaml 
     /// </summary>

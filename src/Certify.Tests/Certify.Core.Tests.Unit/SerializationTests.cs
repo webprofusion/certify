@@ -34,7 +34,5 @@ namespace Certify.Core.Tests.Unit
 
         }
 
-
-
     }
 }

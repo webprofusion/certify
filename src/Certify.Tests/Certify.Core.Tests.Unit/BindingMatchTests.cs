@@ -316,7 +316,6 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(BindingDeploymentManager.HasExistingBinding(bindings, spec));
         }
 
-
         [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled")]
         public async Task MixedIPBindingChecks()
         {
@@ -351,7 +350,6 @@ namespace Certify.Core.Tests.Unit
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
-
 
             var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, "test.pfx", pfxPwd: "", true, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 

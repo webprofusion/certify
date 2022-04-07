@@ -53,7 +53,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                         RenewalPaused.Visibility = Visibility.Collapsed;
                     }
 
-
                     if (!string.IsNullOrEmpty(ItemViewModel?.SelectedItem.SourceId))
                     {
                         // hide log option if from external source
@@ -102,7 +101,6 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                     System.IO.File.WriteAllLines(tempPath, log);
                     _tempLogFilePath = tempPath;
-
 
                     try
                     {

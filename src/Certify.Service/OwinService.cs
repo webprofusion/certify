@@ -82,9 +82,7 @@ namespace Certify.Service
 
                 var msg = $"Service failed to listen on {serviceUri}. :: {httpSysStatus}";
 
-
                 Program.LogEvent(exp, msg, false);
-
 
                 if (serviceConfig.EnableAutoPortNegotiation)
                 {

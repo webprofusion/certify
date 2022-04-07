@@ -57,8 +57,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                     WebsiteDropdown.Text = "(No IIS Sites Found)";
                 }
 
-
-
                 if (ItemViewModel.SelectedItem != null)
                 {
                     // if website previously selected, preselect in dropdown
@@ -76,7 +74,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                     {
                         ItemViewModel.SelectedWebSite = null;
                     }
-
 
                 }
             }

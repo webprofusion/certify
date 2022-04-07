@@ -105,7 +105,6 @@ namespace Certify.UI.Controls.Settings
 
                 Mouse.OverrideCursor = Cursors.Arrow;
 
-
                 EditModel.MainViewModel.ShowNotification(result.Message);
 
             }

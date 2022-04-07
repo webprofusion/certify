@@ -35,7 +35,6 @@ namespace Certify.Core.Tests
             PrimaryTestDomain = ConfigSettings["Cloudflare_TestDomain"];
         }
 
-
         private DeploymentTaskConfig GetMockTaskConfig(
             string name,
             string msg = "Hello World",
@@ -60,7 +59,6 @@ namespace Certify.Core.Tests
                         }
             };
         }
-
 
         [TestMethod, TestCategory("Tasks")]
         public async Task TestRunPreAndPostTasks()
@@ -108,8 +106,6 @@ namespace Certify.Core.Tests
                                                                             GetMockTaskConfig("Post Task 1"),
                                                                             GetMockTaskConfig("Post Task 2")
                                                                         };
-
-
 
             try
             {

@@ -34,7 +34,6 @@ namespace Certify.Server.API.Controllers
             _config = config;
         }
 
-
         /// <summary>
         /// Operations to check current auth status for the given presented authentication tokens
         /// </summary>

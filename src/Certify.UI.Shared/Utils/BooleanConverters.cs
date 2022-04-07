@@ -63,7 +63,6 @@ namespace Certify.UI.Utils
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 
-
     /// <summary>
     /// If given feature (string) is enabled return the required Visibility
     /// </summary>
@@ -94,7 +93,6 @@ namespace Certify.UI.Utils
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
-
 
     /// <summary>
     /// If given feature (string) is enabled return true

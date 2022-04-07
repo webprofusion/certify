@@ -54,7 +54,6 @@ namespace Certify.UI.Windows
             this.Width *= MainViewModel.UIScaleFactor;
             this.Height *= MainViewModel.UIScaleFactor;
 
-
             DataContext = EditViewModel;
 
             // TODO: move to async

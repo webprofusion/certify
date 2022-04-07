@@ -99,7 +99,6 @@ namespace Certify.UI.Tests.Integration
             Assert.IsFalse(result.IsValid, result.Message);
             Assert.AreEqual(ManagedCertificateViewModel.ValidationErrorCodes.REQUIRED_NAME.ToString(), result.ErrorCode);
 
-
             // ensure item with no identifiers is invalid
             model.SelectedItem = new ManagedCertificate();
 
@@ -147,7 +146,6 @@ namespace Certify.UI.Tests.Integration
             Assert.IsFalse(result.IsValid, result.Message);
             Assert.AreEqual(ManagedCertificateViewModel.ValidationErrorCodes.CHALLENGE_TYPE_INVALID.ToString(), result.ErrorCode);
 
-
             // ensure item with multiple auth config can only have one blank domain match rule
             model.SelectedItem = new ManagedCertificate
             {
@@ -186,7 +184,6 @@ namespace Certify.UI.Tests.Integration
 
             Assert.IsFalse(result.IsValid, result.Message);
             Assert.AreEqual(ManagedCertificateViewModel.ValidationErrorCodes.CHALLENGE_TYPE_INVALID.ToString(), result.ErrorCode);
-
 
             // ensure item with challenge type required parameters has param set
             model.SelectedItem = new ManagedCertificate
@@ -263,8 +260,6 @@ namespace Certify.UI.Tests.Integration
             result = model.Validate(applyAutoConfiguration: true);
 
             Assert.IsTrue(result.IsValid, result.Message);
-
-
 
             // ensure item can have mix of domains and ip
             model.SelectedItem = new ManagedCertificate

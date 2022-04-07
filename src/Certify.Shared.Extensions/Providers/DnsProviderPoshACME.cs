@@ -17,7 +17,6 @@ namespace Certify.Core.Management.Challenges.DNS
     public class DnsProviderPoshACME : IDnsProvider
     {
 
-
         /*
             Implemented providers (Posh-ACME: https://github.com/rmbolger/Posh-ACME)
             [Akamai](https://poshac.me/docs/v4/Plugins/Akamai),

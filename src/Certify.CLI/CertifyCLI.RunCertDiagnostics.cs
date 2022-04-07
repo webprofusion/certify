@@ -144,7 +144,6 @@ namespace Certify.CLI
                                     Console.WriteLine($"\t Cert Ocsp Status Check: {fileCert.Subject} " + result);
                                 }
 
-
                                 var ocspCheck = await CertificateManager.CheckOcspRevokedStatus(site.CertificatePath);
                                 Console.ForegroundColor = ConsoleColor.White;
 
@@ -159,7 +158,6 @@ namespace Certify.CLI
                                     Console.WriteLine($"\t Ocsp Status Check: {fileCert.Subject} " + ocspCheck);
                                 }
                             }
-
 
                             // re-deploy certificate if possible
                             if (redeployRequired && autoFix)
@@ -184,7 +182,6 @@ namespace Certify.CLI
                                         Console.WriteLine("\t Info: re-applied certificate bindings:" + site.Name);
                                         Console.ForegroundColor = ConsoleColor.White;
                                     }
-
 
                                     System.Threading.Thread.Sleep(500);
                                 }
@@ -296,7 +293,6 @@ namespace Certify.CLI
                     var acmeClient = await c.GetACMEProvider(dummyManagedCert);
 
                     var pendingOrder = await acmeClient.BeginCertificateOrder(logger, dummyManagedCert.RequestConfig, url);
-
 
                     foreach (var auth in pendingOrder.Authorizations)
                     {

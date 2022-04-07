@@ -9,7 +9,7 @@ namespace Certify.Service
     [RoutePrefix("api/accounts")]
     public class AccountsController : Controllers.ControllerBase
     {
-        private ICertifyManager _certifyManager = null;
+        private ICertifyManager _certifyManager;
 
         public AccountsController(Management.ICertifyManager manager)
         {

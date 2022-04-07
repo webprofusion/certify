@@ -97,7 +97,6 @@ namespace Certify.Client
                 // use windows authentication
                 _httpClientHandler.UseDefaultCredentials = true;
 
-
                 _client = new HttpClient(new HttpRetryMessageHandler(_httpClientHandler));
             }
             else
@@ -162,7 +161,6 @@ namespace Certify.Client
                 var content = new StringContent(json, System.Text.UnicodeEncoding.UTF8, "application/json");
                 try
                 {
-
 
                     var response = await _client.PostAsync(_baseUri + endpoint, content);
                     if (response.IsSuccessStatusCode)

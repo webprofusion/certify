@@ -91,7 +91,6 @@ namespace Certify.CLI
             }
         }
 
-
         internal async Task Deactivate(string[] args)
         {
             if (args.Length < 2)

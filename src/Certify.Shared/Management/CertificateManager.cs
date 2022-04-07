@@ -122,7 +122,6 @@ namespace Certify.Management
             return cert;
         }
 
-
         /// <summary>
         /// Check validity and revocation status of a certificate chain
         /// </summary>
@@ -212,7 +211,6 @@ namespace Certify.Management
         {
             try
             {
-
                 var cert = new X509Certificate2(filename, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
                 return cert;
             }
@@ -253,7 +251,6 @@ namespace Certify.Management
             }
         }
 
-
         public static async Task<X509Certificate2> StoreCertificate(
         string host,
         string pfxFile,
@@ -287,7 +284,6 @@ namespace Certify.Management
                 else
                 {
                     certificate.GetExpirationDateString();
-
 
                     certificate.FriendlyName = host + " [Certify] - " + certificate.GetEffectiveDateString() + " to " + certificate.GetExpirationDateString();
 

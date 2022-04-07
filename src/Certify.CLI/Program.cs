@@ -122,7 +122,6 @@ namespace Certify.CLI
                     await p.RunCertDiagnostics(autoFix, forceAutoDeploy, includeOcspCheck: includeOcspCheck);
                 }
 
-
                 if (command == "pending")
                 {
                     var autoFix = false;
@@ -189,7 +188,6 @@ namespace Certify.CLI
             //syntax: certify httpchallenge keys=CONTROLKEY,CHECKKEY
 
             var keys = args[1].Replace("keys=", "").Split(',');
-
 
             // start an http challenge server
             var challengeServer = new Core.Management.Challenges.HttpChallengeServer();

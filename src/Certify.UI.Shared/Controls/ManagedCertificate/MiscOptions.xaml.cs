@@ -159,7 +159,6 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                         ItemViewModel.SelectedItem.RequestConfig.CustomCSR = csrContent;
 
-
                         var domainOptions = new System.Collections.ObjectModel.ObservableCollection<Models.DomainOption>();
                         foreach (var d in domains)
                         {
@@ -192,7 +191,6 @@ namespace Certify.UI.Controls.ManagedCertificate
             OpenFileDialog openFileDialog = new OpenFileDialog();
             if (openFileDialog.ShowDialog() == true)
             {
-
 
                 // PEM encoded key
                 // TODO: custom key mean alg can't be selected, validate key is compatible
@@ -270,7 +268,6 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             this.DataContext = this.ItemViewModel;
             this.ItemViewModel.RaisePropertyChangedEvent(null);
-
 
             this.RefreshPfxCredentials();
 

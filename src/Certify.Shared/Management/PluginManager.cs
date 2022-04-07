@@ -78,7 +78,6 @@ namespace Certify.Management
             return path;
         }
 
-
         private string GetPluginFolderPath(bool usePluginSubfolder = true, bool useAppData = false)
         {
             if (!useAppData)

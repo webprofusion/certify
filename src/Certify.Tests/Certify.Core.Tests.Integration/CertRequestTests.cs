@@ -184,14 +184,12 @@ namespace Certify.Core.Tests
                 ItemType = ManagedCertificateType.SSL_ACME
             };
 
-
             try
             {
                 var site = await iisManager.CreateSite(testIDNDomain, testIDNDomain, testSitePath, "DefaultAppPool", port: testSiteHttpPort);
                 dummyManagedCertificate.GroupId = site.Id.ToString();
 
                 Assert.AreEqual(site.Name, testIDNDomain);
-
 
                 var result = await certifyManager.PerformCertificateRequest(_log, dummyManagedCertificate);
 
@@ -423,7 +421,6 @@ namespace Certify.Core.Tests
             CertificateManager.RemoveCertificate(certInfo);
         }
 
-
         [TestMethod, TestCategory("MegaTest")]
         public async Task TestRequestWithRenewal()
         {
@@ -485,7 +482,6 @@ namespace Certify.Core.Tests
 
             var expiresInFuture = (certInfo.NotAfter - DateTime.UtcNow).TotalDays >= 89;
             Assert.IsTrue(expiresInFuture);
-
 
             // test a renewal for this managed cert
 

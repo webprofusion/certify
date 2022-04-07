@@ -87,7 +87,6 @@ namespace Certify.Server.Core
 
             services.AddSingleton<Management.ICertifyManager>(certifyManager);
 
-
             var useHttps = bool.Parse(Configuration["API:Service:UseHttps"]);
 
             if (useHttps)

@@ -14,7 +14,6 @@ namespace Certify.UI.Controls.Settings
         {
             public Models.Preferences Prefs => ViewModel.AppViewModel.Current.Preferences;
 
-
             public bool IsCAEditorEnabled
             {
                 get => ViewModel.AppViewModel.Current.IsFeatureEnabled(FeatureFlags.CA_EDITOR);
@@ -44,7 +43,6 @@ namespace Certify.UI.Controls.Settings
                 get => ViewModel.AppViewModel.Current.IsFeatureEnabled(FeatureFlags.SERVER_CONNECTIONS);
                 set => ToggleFeature(FeatureFlags.SERVER_CONNECTIONS, value);
             }
-
 
             internal void ToggleFeature(string feature, bool isEnabled)
             {

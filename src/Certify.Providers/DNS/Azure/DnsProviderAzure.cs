@@ -149,7 +149,6 @@ namespace Certify.Providers.DNS.Azure
             }
         }
 
-
         /// <summary>
         /// Map an Azure environment to the corresponding Active Directory settings
         /// </summary>
@@ -230,7 +229,6 @@ namespace Certify.Providers.DNS.Azure
                        RecordType.TXT,
                        recordSetParams
                 );
-
 
                 if (result != null)
                 {

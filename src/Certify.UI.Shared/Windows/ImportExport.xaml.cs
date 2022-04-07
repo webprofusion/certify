@@ -117,7 +117,6 @@ namespace Certify.UI.Windows
             Markdig.MarkdownPipeline _markdownPipeline;
             string _css = "";
 
-
             var _markdownPipelineBuilder = new Markdig.MarkdownPipelineBuilder();
             _markdownPipelineBuilder.Extensions.Add(new Markdig.Extensions.Tables.PipeTableExtension());
             _markdownPipeline = _markdownPipelineBuilder.Build();
@@ -143,7 +142,6 @@ namespace Certify.UI.Windows
             var result = Markdig.Markdown.ToHtml(markdown, _markdownPipeline);
             result = "<html><head><meta http-equiv='Content-Type' content='text/html;charset=UTF-8'><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />" +
                     "<style>" + _css + "</style></head><body>" + result + "</body></html>";
-
 
             MarkdownView.NavigateToString(result);
         }
@@ -236,7 +234,6 @@ namespace Certify.UI.Windows
             }
             return sb.ToString();
         }
-
 
         private async void Export_Click(object sender, RoutedEventArgs e)
         {

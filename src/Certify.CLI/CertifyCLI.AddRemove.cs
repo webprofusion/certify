@@ -99,8 +99,6 @@ namespace Certify.CLI
                     {
                         managedCert = templateCert.CopyAsTemplate();
 
-
-
                         // if no managed cert name specifed, use first domain
                         if (string.IsNullOrEmpty(managedCert.Name))
                         {
@@ -113,7 +111,6 @@ namespace Certify.CLI
                     // update an existing managed cert
                     managedCert = await _certifyClient.GetManagedCertificate(managedCertId);
                 }
-
 
                 foreach (var d in domains.Where(i => !string.IsNullOrEmpty(i)).Select(i => i.Trim().ToLower()))
                 {

@@ -32,7 +32,6 @@ namespace Certify.Server.API.Controllers
             _client = client;
         }
 
-
         /// <summary>
         /// Get list of supported challenge providers
         /// </summary>
@@ -47,7 +46,6 @@ namespace Certify.Server.API.Controllers
             var list = await _client.GetChallengeAPIList();
             return new OkObjectResult(list);
         }
-
 
     }
 }

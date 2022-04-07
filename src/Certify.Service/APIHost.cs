@@ -24,7 +24,6 @@ namespace Certify.Service
             owinHttp.Listener.AuthenticationSchemes = AuthenticationSchemes.IntegratedWindowsAuthentication | AuthenticationSchemes.Anonymous;
             owinHttp.Listener.AuthenticationSchemeSelectorDelegate = IdentifyAuthentication;
 
-
 #if DEBUG
             config
               .EnableSwagger(c => c.SingleApiVersion("v1", "Service API for local install of Certify SSL Manager"))
@@ -58,7 +57,6 @@ namespace Certify.Service
 
             // attached handlers for SignalR hub updates
             currentCertifyManager.SetStatusReporting(new StatusHubReporting());
-
 
             // hourly jobs timer (renewal etc)
             _timer = new System.Timers.Timer(60 * 60 * 1000); // every 60 minutes

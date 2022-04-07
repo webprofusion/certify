@@ -9,7 +9,6 @@ namespace Certify.CLI
     public partial class CertifyCLI
     {
 
-
         internal async Task AddACMEAccount(string[] args)
         {
             if (args.Length < 4)
@@ -51,7 +50,6 @@ namespace Certify.CLI
             return result;
 
         }
-
 
         internal async Task ListACMEAccounts()
         {

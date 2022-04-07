@@ -104,7 +104,6 @@ namespace Certify.Management
                 }
             }
 
-
             // check if FIPS is enabled
             try
             {
@@ -115,7 +114,6 @@ namespace Certify.Management
                 // if creating managed SHA256 fails may be FIPS validation
                 results.Add(new ActionResult { IsSuccess = false, Message = $"Your system cannot create a SHA256 Cryptography instance. You may have inadvertently have FIPS enabled, which prevents the use of some standard cryptographic functions in .Net - features such as verifying app updates will not work. " });
             }
-
 
             // check powershell version
             string subkey = @"SOFTWARE\Microsoft\PowerShell\3\PowerShellEngine";
@@ -144,7 +142,6 @@ namespace Certify.Management
             {
                 results.Add(new ActionResult { IsSuccess = true, Message = $"PowerShell 5.0 or higher is available." });
             }
-
 
             return results;
         }
@@ -248,8 +245,6 @@ namespace Certify.Management
             }
         }
 
-
-
         public bool VerifyUpdateFile(string tempFile, string expectedHash, bool throwOnDeviation = true)
         {
             var performCertValidation = true;
@@ -326,7 +321,6 @@ namespace Certify.Management
             }
             return path;
         }
-
 
         /// <summary>
         /// Create a local app data folder. This method will throw an exception if any IO operations fail.
@@ -552,7 +546,6 @@ namespace Certify.Management
             // is installed.
             return "No 4.5 or later version detected";
         }
-
 
         public static string ToUrlSafeBase64String(byte[] data)
         {

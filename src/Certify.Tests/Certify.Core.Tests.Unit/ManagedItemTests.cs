@@ -79,7 +79,6 @@ namespace Certify.Core.Tests.Unit
         {
             var itemManager = new ItemManager(TEST_PATH);
 
-
             var testSite = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
