@@ -1705,7 +1705,7 @@ namespace Certify.Providers.ACME.Certes
 
             // fullchain.pem - full chain without key
             var fullchainPath = Path.GetFullPath(Path.Combine(new string[] { storePath, "fullchain.pem" }));
-            System.IO.File.WriteAllText(csrKey.ToPem(), certificateChain.ToPem());
+            System.IO.File.WriteAllText(fullchainPath, certificateChain.ToPem());
 
             return fullchainPath;
         }
