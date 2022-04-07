@@ -387,7 +387,7 @@
                                 Margin="0,8,32,0"
                                 HorizontalAlignment="Left"
                                 Style="{StaticResource Instructions}"
-                                Text="Current Certificate PFX path (changes after every renewal):" />
+                                Text="Current Certificate file path (changes after every renewal):" />
                             <TextBox
                                 x:Name="CertPath"
                                 MaxWidth="500"
