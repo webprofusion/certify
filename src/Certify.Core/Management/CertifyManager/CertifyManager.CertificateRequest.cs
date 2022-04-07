@@ -982,21 +982,21 @@ namespace Certify.Management
                 {
                     ReportProgress(progress, new RequestProgressState(RequestState.Success, CoreSR.CertifyManager_CompleteRequest, managedCertificate));
 
-                    var pfxPath = certRequestResult.Result.ToString();
+                    var primaryCertFilePath = certRequestResult.Result.ToString();
 
                     var certCleanupName = "";
 
                     // update managed site summary
                     try
                     {
-                        var certInfo = CertificateManager.LoadCertificate(pfxPath, pfxPwd);
+                        var certInfo = CertificateManager.LoadCertificate(primaryCertFilePath, pfxPwd);
 
                         certCleanupName = certInfo.FriendlyName.Substring(0, certInfo.FriendlyName.IndexOf("]") + 1);
                         managedCertificate.DateStart = certInfo.NotBefore;
                         managedCertificate.DateExpiry = certInfo.NotAfter;
                         managedCertificate.DateRenewed = DateTime.Now;
 
-                        managedCertificate.CertificatePath = pfxPath;
+                        managedCertificate.CertificatePath = primaryCertFilePath;
                         managedCertificate.CertificatePreviousThumbprintHash = managedCertificate.CertificateThumbprintHash;
                         managedCertificate.CertificateThumbprintHash = certInfo.Thumbprint;
                         managedCertificate.CertificateRevoked = false;
@@ -1019,7 +1019,7 @@ namespace Certify.Management
                     var actions = await deploymentManager.StoreAndDeploy(
                             serverProvider.GetDeploymentTarget(),
                             managedCertificate,
-                            pfxPath,
+                            primaryCertFilePath,
                             pfxPwd,
                             isPreviewOnly: false,
                             CoreAppSettings.Current.DefaultCertificateStore

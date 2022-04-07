@@ -327,6 +327,11 @@ namespace Certify.Management
 
                 var newProvider = new CertesACMEProvider(acmeApiEndpoint, settingBaseFolder, providerPath, userAgent, allowUntrustedTsl);
 
+                if (!_useWindowsNativeFeatures)
+                {
+                    newProvider.DefaultCertificateFormat = "pem";
+                }
+
                 await newProvider.InitProvider(_serviceLog, account);
 
                 _acmeClientProviders.TryAdd(storageKey, newProvider);

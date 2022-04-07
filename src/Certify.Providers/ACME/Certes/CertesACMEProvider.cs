@@ -14,6 +14,7 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
+using Certify.Shared.Core.Utils.PKI;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.X509;
 
@@ -113,6 +114,11 @@ namespace Certify.Providers.ACME.Certes
         private bool _allowInvalidTls = false;
 
         public bool EnableUnknownCARoots { get; set; } = true;
+
+        /// <summary>
+        /// Default output when finalizing a certificate download: pfx (single file container), pem (multiple files), all (pfx, pem etc)
+        /// </summary>
+        public string DefaultCertificateFormat { get; set; } = "pfx";
 
         public CertesACMEProvider(string acmeBaseUri, string settingsBasePath, string settingsPath, string userAgentName, bool allowInvalidTls = false)
         {
@@ -1167,6 +1173,7 @@ namespace Certify.Providers.ACME.Certes
             CertificateChain certificateChain = null;
             DateTime? certExpiration = null;
 
+
             try
             {
                 if (order.Status == OrderStatus.Valid)
@@ -1258,16 +1265,31 @@ namespace Certify.Providers.ACME.Certes
 
             var domainAsPath = GetDomainAsPath(config.PrimaryDomain);
 
-            var pfxPath = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath, includeCleanup: true);
             if (config.ReusePrivateKey)
             {
                 SavePrivateKey(config, csrKey);
             }
 
+            var primaryCertOutputFile = string.Empty;
+
+            if (DefaultCertificateFormat == "pfx" || DefaultCertificateFormat == "all")
+            {
+                primaryCertOutputFile = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath, includeCleanup: true);
+            }
+
+            if (DefaultCertificateFormat == "pem" || DefaultCertificateFormat == "all")
+            {
+                var pemOutputFile = ExportFullCertPEM(csrKey, certificateChain, certId, domainAsPath);
+                if (string.IsNullOrEmpty(primaryCertOutputFile))
+                {
+                    primaryCertOutputFile = pemOutputFile;
+                }
+            }
+
             return new ProcessStepResult
             {
                 IsSuccess = true,
-                Result = pfxPath
+                Result = primaryCertOutputFile
             };
         }
 
@@ -1592,7 +1614,6 @@ namespace Certify.Providers.ACME.Certes
                         pfxBytes = pfxNoChain.Build(certFriendlyName, pwd);
                         System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
                         return pfxPath;
-
                     }
                     catch
                     {
@@ -1685,17 +1706,21 @@ namespace Certify.Providers.ACME.Certes
                 System.IO.Directory.CreateDirectory(storePath);
             }
 
-            var pemPath = Path.Combine(storePath, certId + ".pem");
+            // output standard components: privkey.pem, fullchain.pem
 
-            // write pem in order of Private .key, primary server .crt, intermediate .crt, issuer.crt
-            // note:
-            // nginx needs combined primary + intermediate.crt as pem (ssl_certificate), plus .key (ssl_certificate_key)
-            // apache needs combined primary.crt (SSLCertificateFile), intermediate.crt (SSLCertificateChainFile), plus private .key (SSLCertificateKeyFile)
-            var pem = certificateChain.ToPem(csrKey);
+            // privkey.pem
+            var privateKeyPath = Path.GetFullPath(Path.Combine(new string[] { storePath, "privkey.pem" }));
 
-            System.IO.File.WriteAllText(pemPath, pem);
+            if (!File.Exists(privateKeyPath))
+            {
+                System.IO.File.WriteAllText(privateKeyPath, csrKey.ToPem());
+            }
 
-            return pemPath;
+            // fullchain.pem - full chain without key
+            var fullchainPath = Path.GetFullPath(Path.Combine(new string[] { storePath, "fullchain.pem" }));
+            System.IO.File.WriteAllText(csrKey.ToPem(), certificateChain.ToPem());
+
+            return fullchainPath;
         }
 
         public async Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate)
