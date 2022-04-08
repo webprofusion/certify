@@ -563,7 +563,6 @@ namespace Certify.Management
                                     _serviceLog?.Error(ex, "CA Maintenance: Failed to move intermediate to Disallowed store. {thumb}", i);
                                 }
                             }
-
                         }
 
                         // check for any trusted roots to add
@@ -640,7 +639,6 @@ namespace Certify.Management
                                 _serviceLog.Warning("Failed to send diagnostic status report to API.");
                             }
                         }
-
                     }
                 }
                 else
@@ -774,7 +772,6 @@ namespace Certify.Management
 
                         deploySteps.Add(new ActionStep { Category = "Deployment", HasError = !deployResult.IsSuccess, Key = managedCert.Id, Description = deployResult.Message });
                     }
-
                 }
 
                 importResult.Add(new ActionStep { Title = "Deployment" + (importRequest.IsPreviewMode ? " [Preview]" : ""), Substeps = deploySteps });
@@ -843,6 +840,5 @@ namespace Certify.Management
                 return new string[] { "" };
             }
         }
-
     }
 }

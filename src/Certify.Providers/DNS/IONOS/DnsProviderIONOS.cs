@@ -224,5 +224,4 @@ namespace Certify.Providers.DNS.IONOS
         public bool IsTestModeSupported => Definition.IsTestModeSupported;
         public List<ProviderParameter> ProviderParameters => Definition.ProviderParameters;
     }
-
 }

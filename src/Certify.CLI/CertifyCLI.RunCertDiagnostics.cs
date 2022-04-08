@@ -194,13 +194,11 @@ namespace Certify.CLI
 
                                 }
                             }
-
                         }
                         catch (Exception exp)
                         {
                             Console.WriteLine(exp.ToString());
                         }
-
                     }
                     else
                     {

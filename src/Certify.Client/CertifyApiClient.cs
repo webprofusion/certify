@@ -179,7 +179,6 @@ namespace Certify.Client
                         {
                             throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
                         }
-
                     }
                 }
                 catch (HttpRequestException exp)

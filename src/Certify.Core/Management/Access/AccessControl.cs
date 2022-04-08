@@ -66,7 +66,6 @@ namespace Certify.Core.Management.Access
     {
         public string PrincipleId { get; set; }
         public string RoleId { get; set; }
-
     }
     /// <summary>
     /// Define a domain or resource and who the controlling users are
@@ -290,6 +289,5 @@ namespace Certify.Core.Management.Access
             _log?.Information($"User {contextUserId} added resource profile [{resourceProfile.Identifier}]");
             return true;
         }
-
     }
 }

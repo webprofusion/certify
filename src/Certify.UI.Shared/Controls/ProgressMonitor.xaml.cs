@@ -34,5 +34,4 @@ namespace Certify.UI.Controls
             catch (Exception) { }
         }
     }
-
 }

@@ -65,6 +65,5 @@ namespace Certify.CLI
             var results = await _certifyClient.GetAccounts();
             return results;
         }
-
     }
 }

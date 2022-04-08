@@ -275,7 +275,6 @@ namespace Certify.UI.ViewModel
                         {
                             ManagedCertificates.Add(newItem);
                         }
-
                     }
                     else
                     {

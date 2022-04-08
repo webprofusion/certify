@@ -39,6 +39,5 @@ namespace Certify.UI.Utils
         {
             return null;
         }
-
     }
 }

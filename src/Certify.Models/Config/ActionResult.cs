@@ -41,6 +41,5 @@
             IsSuccess = isSuccess;
             Result = result;
         }
-
     }
 }

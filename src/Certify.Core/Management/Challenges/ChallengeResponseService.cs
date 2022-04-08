@@ -675,7 +675,6 @@ namespace Certify.Core.Management.Challenges
                 {
                     log.Error($"DNS update failed: {dnsResult.Result.Message}");
                 }
-
             }
             else
             {

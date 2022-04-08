@@ -46,7 +46,6 @@ namespace Certify.Service.Tests.Integration
             {
                 await _client.UpdateManagedCertificate(site);
             }
-
         }
 
         private List<ManagedCertificate> GetTestManagedCerts() => new List<ManagedCertificate>

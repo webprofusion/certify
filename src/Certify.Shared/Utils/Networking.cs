@@ -62,8 +62,8 @@ namespace Certify.Utils
                     {
                         var opt = new IPAddressOption
                         {
-                            Description = $"{ip.Address.ToString()} [{ni.Name}]",
-                            IPAddress = ip.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6 ? $"[{ip.Address.ToString()}]" : ip.Address.ToString(),
+                            Description = $"{ip.Address} [{ni.Name}]",
+                            IPAddress = ip.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6 ? $"[{ip.Address}]" : ip.Address.ToString(),
                             IsIPv6 = (ip.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
                         };
                         list.Add(opt);

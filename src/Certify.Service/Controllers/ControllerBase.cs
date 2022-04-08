@@ -204,6 +204,5 @@ namespace Certify.Service.Controllers
 
             return token;
         }
-
     }
 }

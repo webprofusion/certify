@@ -46,6 +46,5 @@ namespace Certify.Server.API.Controllers
             var previewSteps = await _client.PreviewActions(item);
             return new OkObjectResult(previewSteps);
         }
-
     }
 }

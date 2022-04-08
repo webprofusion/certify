@@ -93,7 +93,6 @@ namespace Certify.UI.Controls.ManagedCertificate
             };
             dialog.ShowDialog();
         }
-
     }
 }
 

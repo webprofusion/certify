@@ -74,7 +74,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                     {
                         ItemViewModel.SelectedWebSite = null;
                     }
-
                 }
             }
         }
@@ -130,7 +129,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                 {
                     ItemViewModel.SelectedItem.DomainOptions.Remove(opt);
                 }
-
             }
         }
 

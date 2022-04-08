@@ -130,7 +130,6 @@ namespace Certify.CLI
                         newSanList.Add(d);
                         managedCert.RequestConfig.SubjectAlternativeNames = newSanList.ToArray();
                     }
-
                 }
 
                 // check we still have a primary domain, if not selected a default one
@@ -150,7 +149,6 @@ namespace Certify.CLI
                 {
                     await _certifyClient.BeginCertificateRequest(updatedManagedCert.Id, true, false);
                 }
-
             }
         }
 
@@ -193,7 +191,6 @@ namespace Certify.CLI
                         // remove domain from list of subject alternative names
                         managedCert.RequestConfig.SubjectAlternativeNames = managedCert.RequestConfig.SubjectAlternativeNames.Where(i => i != d).ToArray();
                     }
-
                 }
 
                 // check we still have a primary domain, if not selected a default one
@@ -229,10 +226,7 @@ namespace Certify.CLI
                         await _certifyClient.BeginCertificateRequest(updatedManagedCert.Id, true, true);
                     }
                 }
-
             }
-
         }
-
     }
 }

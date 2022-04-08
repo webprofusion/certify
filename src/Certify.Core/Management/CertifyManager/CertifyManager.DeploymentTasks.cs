@@ -70,7 +70,6 @@ namespace Certify.Management
                 {
                     taskList = managedCert.PostRequestTasks.Where(t => t.Id == taskId);
                 }
-
             }
 
             if (taskList == null || !taskList.Any())
@@ -192,7 +191,6 @@ namespace Certify.Management
                             shouldRunCurrentTask = false;
                             taskTriggerReason = "Task is enabled but will not run because primary request unsuccessful.";
                         }
-
                     }
                     else if (task.TaskConfig.TaskTrigger == TaskTriggerType.ON_ERROR)
                     {
@@ -206,7 +204,6 @@ namespace Certify.Management
                             shouldRunCurrentTask = true;
                             taskTriggerReason = "Task is enabled and will run because primary request was unsuccessful.";
                         }
-
                     }
                     else if (task.TaskConfig.TaskTrigger == TaskTriggerType.MANUAL)
                     {

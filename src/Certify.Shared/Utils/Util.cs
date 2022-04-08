@@ -95,7 +95,6 @@ namespace Certify.Management
                     {
                         results.Add(new ActionResult { IsSuccess = true, Message = $"System time is correct." });
                     }
-
                 }
                 else
                 {
@@ -625,14 +624,14 @@ namespace Certify.Management
 
         public TelemetryManager(string key)
         {
-            this.InitTelemetry(key);
+            InitTelemetry(key);
         }
 
         ~TelemetryManager()
         {
             if (this._config != null)
             {
-                this.Dispose();
+                Dispose();
             }
         }
 

@@ -582,7 +582,6 @@ namespace Certify.Management
                                 {
                                     certsToRemove.Add(c);
                                 }
-
                             }
                             else if (cleanupMode == Models.CertificateCleanupMode.FullCleanup)
                             {
@@ -595,7 +594,6 @@ namespace Certify.Management
                                 {
                                     certsToRemove.Add(c);
                                 }
-
                             }
                         }
                     }
@@ -699,7 +697,6 @@ namespace Certify.Management
             {
                 return false;
             }
-
         }
     }
 }

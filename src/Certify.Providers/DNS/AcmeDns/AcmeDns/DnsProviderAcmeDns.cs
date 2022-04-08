@@ -24,7 +24,6 @@ namespace Certify.Providers.DNS.AcmeDns
         public string password { get; set; }
         public string username { get; set; }
         public string subject { get; set; }
-
     }
 
     internal class AcmeDnsUpdate

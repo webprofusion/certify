@@ -116,9 +116,7 @@ namespace Certify.Management
                     {
                         _serviceLog.Error($"Failed to decrypt Account Credentials [{c.Title}] {exp.Message}");
                     }
-
                 }
-
             }
             else
             {
@@ -328,7 +326,6 @@ namespace Certify.Management
                             {
                                 _serviceLog?.Information($"Account upgrade failed (vault):{registerResult?.Message}");
                             }
-
                         }
                     }
                 }
@@ -387,7 +384,6 @@ namespace Certify.Management
                 {
                     return new ActionResult("OK", true);
                 }
-
             }
             catch (Exception exp)
             {

@@ -17,7 +17,6 @@ namespace Certify.UI.Controls.Settings
             public Models.Preferences Prefs => MainViewModel.Preferences;
 
             public bool SettingsInitialised { get; set; }
-
         }
         public Model EditModel { get; set; } = new Model();
 
@@ -195,7 +194,6 @@ namespace Certify.UI.Controls.Settings
                 EditModel.MainViewModel.UISettings.UITheme = theme;
                 UI.Settings.UISettings.Save(EditModel.MainViewModel.UISettings);
             }
-
         }
 
         private void ImportExport_Click(object sender, RoutedEventArgs e)
@@ -242,7 +240,6 @@ namespace Certify.UI.Controls.Settings
             {
                 await ViewModel.AppViewModel.Current.RedeployManagedCertificatess(isPreviewOnly: false, IncludeDeploymentTasks.IsChecked == true);
             }
-
         }
 
         private void EnableExternalPlugins_Click(object sender, RoutedEventArgs e)

@@ -4,6 +4,5 @@
     {
         public string Target { get; set; }
         public long Id { get; set; }
-
     }
 }

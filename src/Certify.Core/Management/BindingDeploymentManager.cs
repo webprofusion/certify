@@ -321,7 +321,6 @@ namespace Certify.Core.Management
 
                                 actions.AddRange(stepActions);
                             }
-
                         }
                     }
                 }

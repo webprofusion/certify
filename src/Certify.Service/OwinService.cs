@@ -130,7 +130,6 @@ namespace Certify.Service
                     SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(serviceConfig);
                 }
             }
-
         }
 
         public void Stop()

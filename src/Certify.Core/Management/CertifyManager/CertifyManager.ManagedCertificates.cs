@@ -291,7 +291,6 @@ namespace Certify.Management
                     // by default we assume the site is running
                     return true;
                 }
-
             }
             else
             {

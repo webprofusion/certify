@@ -48,7 +48,6 @@ namespace Certify.Providers.DeploymentTasks
                     {
                         return new List<ActionResult> { new ActionResult { IsSuccess = true, Message = "Task is review mode only. Not action performed." } };
                     }
-
                 }
                 catch (Exception exp)
                 {
@@ -56,7 +55,6 @@ namespace Certify.Providers.DeploymentTasks
                         new ActionResult { IsSuccess = false, Message = $"{TaskConfig.TaskName} ({TaskProvider.GetDefinition()?.Title }) :: Task Failed with Exception :: {exp?.ToString()}" }
                     };
                 }
-
             }
             else
             {

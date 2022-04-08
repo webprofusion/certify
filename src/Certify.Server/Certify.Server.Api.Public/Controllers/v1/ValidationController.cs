@@ -52,6 +52,5 @@ namespace Certify.Server.API.Controllers
             var list = await _client.GetCurrentChallenges(type, key);
             return new OkObjectResult(list);
         }
-
     }
 }

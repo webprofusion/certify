@@ -61,7 +61,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                     {
                         SettingsTab.SelectedItem = TabDomains;
                     }
-
                 }
 
                 ItemViewModel.RaiseSelectedItemChanges();
@@ -126,7 +125,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                 //creating new managed item
                 return await ItemViewModel.SaveManagedCertificateChanges();
             }
-
         }
 
         private async void Button_Save(object sender, RoutedEventArgs e)

@@ -70,7 +70,6 @@ namespace Certify.UI.Controls.Settings
                 // note: pref changes are saved by the property change listener in General settings
 
             }
-
         }
 
         public Model EditModel { get; set; } = new Model();

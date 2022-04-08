@@ -118,7 +118,6 @@ namespace Certify.Service.Worker
                                 // TODO: there is no logger yet, need to report this failure to main log once the log exists
                                 System.Diagnostics.Debug.WriteLine("Failed to load PFX certificate for application. Check service certificate config." + exp.ToString());
                             }
-
                         }
                         else
                         {
@@ -128,7 +127,6 @@ namespace Certify.Service.Worker
                             {
                             });
                         }
-
                     });
 
                     webBuilder.ConfigureLogging(logging =>
@@ -142,6 +140,5 @@ namespace Certify.Service.Worker
 
             return builder;
         }
-
     }
 }

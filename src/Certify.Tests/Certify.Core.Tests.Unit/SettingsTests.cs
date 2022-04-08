@@ -134,7 +134,6 @@ namespace Certify.Core.Tests.Unit
                 {
                     Assert.IsFalse(isRenewalRequired, $"Renewal should not be required.  Renewal mode: {renewalIntervalMode}, renewal interval: {renewalPeriodDays}, days since last renewed: {daysSinceRenewed}");
                 }
-
             }
             else if (renewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
             {
@@ -146,7 +145,6 @@ namespace Certify.Core.Tests.Unit
                 {
                     Assert.IsFalse(isRenewalRequired, $"Renewal should not be required. Renewal mode: {renewalIntervalMode}, renewal interval: {renewalPeriodDays}, days until expiry: {daysUntilExpiry}");
                 }
-
             }
         }
     }

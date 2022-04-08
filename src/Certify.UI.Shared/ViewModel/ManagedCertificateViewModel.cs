@@ -173,7 +173,6 @@ namespace Certify.UI.ViewModel
                     return false;
                 }
             }
-
         }
         public ManagedCertificate SelectedItem
         {
@@ -347,7 +346,6 @@ namespace Certify.UI.ViewModel
                         // days since last renewal + preferred interval
                         return SelectedItem.DateRenewed.Value.AddDays(Preferences.RenewalIntervalDays);
                     }
-
                 }
                 return null;
             }
@@ -538,7 +536,6 @@ namespace Certify.UI.ViewModel
                     SelectedItem.RequestConfig.BindingUseSNI = true;
                 }
             }
-
         }
 
         public ValidationResult Validate(bool applyAutoConfiguration)

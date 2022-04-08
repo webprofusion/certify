@@ -49,7 +49,6 @@ namespace Certify.UI.ViewModel
                     }
                 }
             }
-
         }
 
         public bool HasMultipleChallengeConfigurations

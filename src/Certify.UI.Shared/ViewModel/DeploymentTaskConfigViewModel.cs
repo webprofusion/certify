@@ -80,10 +80,8 @@ namespace Certify.UI.ViewModel
                             {
                                 list.Add(t.Key, t.Value);
                             }
-
                         }
                     }
-
                 }
                 return list;
             }
@@ -226,7 +224,6 @@ namespace Certify.UI.ViewModel
                 RaisePropertyChangedEvent(nameof(UsesCredentials));
                 RaisePropertyChangedEvent(nameof(UsesRemoteOptions));
             }
-
         }
 
         private async Task RefreshCredentialOptions()
@@ -422,6 +419,5 @@ namespace Certify.UI.ViewModel
 
             return new ActionResult("OK", true);
         }
-
     }
 }

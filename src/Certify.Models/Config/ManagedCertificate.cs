@@ -234,7 +234,6 @@ namespace Certify.Models
                                 {
                                     return ManagedCertificateHealth.OK;
                                 }
-
                             }
                         }
                     }
@@ -584,6 +583,5 @@ namespace Certify.Models
             }
         }
     }
-
 }
 

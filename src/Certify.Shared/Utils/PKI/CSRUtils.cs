@@ -58,7 +58,7 @@ namespace Certify.Shared.Core.Utils.PKI
 
         public static List<string> DecodeCsrSubjects(byte[] csrBytes)
         {
-            List<string> identifiers = new List<string>();
+            var identifiers = new List<string>();
 
             // based on https://stackoverflow.com/a/45424266 by https://stackoverflow.com/users/814735/cyril-durand
 
@@ -95,7 +95,7 @@ namespace Certify.Shared.Core.Utils.PKI
             // check primary subject
             var oids = requestInfo.Subject.GetOidList();
 
-            string subjectName = "";
+            var subjectName = "";
 
             foreach (DerObjectIdentifier o in oids)
             {
@@ -118,16 +118,16 @@ namespace Certify.Shared.Core.Utils.PKI
 
         }
 
-        static T GetAsn1ObjectRecursive<T>(DerSequence sequence, String id) where T : Asn1Object
+        private static T GetAsn1ObjectRecursive<T>(DerSequence sequence, string id) where T : Asn1Object
         {
             if (sequence.OfType<DerObjectIdentifier>().Any(o => o.Id == id))
             {
                 return sequence.OfType<T>().First();
             }
 
-            foreach (DerSequence subSequence in sequence.OfType<DerSequence>())
+            foreach (var subSequence in sequence.OfType<DerSequence>())
             {
-                T value = GetAsn1ObjectRecursive<T>(subSequence, id);
+                var value = GetAsn1ObjectRecursive<T>(subSequence, id);
                 if (value != default(T))
                 {
                     return value;
@@ -151,7 +151,6 @@ namespace Certify.Shared.Core.Utils.PKI
                     return false;
                 }
             }
-
         }
     }
 }

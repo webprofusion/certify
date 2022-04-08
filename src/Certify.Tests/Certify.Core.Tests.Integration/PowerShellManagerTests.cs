@@ -25,8 +25,6 @@ namespace Certify.Core.Tests.Unit
                 System.IO.File.Delete(@"C:\Temp\Certify\TestOutput\TestPSOutput.txt");
             }
             catch { }
-
         }
-
     }
 }

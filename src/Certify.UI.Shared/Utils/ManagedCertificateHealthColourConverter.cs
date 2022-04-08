@@ -65,5 +65,4 @@ namespace Certify.UI.Utils
             return GetColour((ManagedCertificateHealth)value, "ex");
         }
     }
-
 }

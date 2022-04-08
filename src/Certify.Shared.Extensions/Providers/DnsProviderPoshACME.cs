@@ -1022,7 +1022,6 @@ namespace Certify.Core.Management.Challenges.DNS
                     // string
                     return key + "='" + val.Replace("'", "''") + "'";
                 }
-
             }
         }
 

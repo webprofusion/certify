@@ -345,7 +345,6 @@ namespace Certify.Management
                         deploymentDescription.AppendLine("\n Action | Site | Binding ");
                         deploymentDescription.Append(" ------ | ---- | ------- ");
                     }
-
                 }
                 else if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.DeploymentStoreOnly)
                 {

@@ -28,7 +28,6 @@ namespace Certify.UI.Windows
             public ImportSettings ImportSettings { get; set; } = new ImportSettings { };
             public ExportSettings ExportSettings { get; set; } = new ExportSettings { };
             public ImportExportPackage Package { get; set; }
-
         }
 
         public ImportExportModel Model { get; set; } = new ImportExportModel();
@@ -97,7 +96,6 @@ namespace Certify.UI.Windows
                 Model.IsImportReady = false;
                 Model.IsPreviewReady = true;
             }
-
         }
 
         private async void CompleteImport_Click(object sender, RoutedEventArgs e)
@@ -259,7 +257,6 @@ namespace Certify.UI.Windows
 
                 MainViewModel.ShowNotification("Export completed OK", NotificationType.Success);
             }
-
         }
     }
 }

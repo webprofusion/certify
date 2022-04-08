@@ -192,7 +192,6 @@ namespace Certify.Management
                     var customPlugins = LoadPlugins<IDeploymentTaskProviderPlugin>("*.dll", loadFromAppData: true);
                     DeploymentTaskProviders.AddRange(customPlugins);
                 }
-
             }
 
             if (includeSet.Contains("CertificateManagers"))
@@ -295,7 +294,6 @@ namespace Certify.Management
                     PluginLoadResults.Add(new PluginLoadResult(assem.Name, $"Failed to load plugin: {assem.Name} {exp}", false));
                     return default;
                 }
-
             })
             .Where(p => p != null)
             .ToList();

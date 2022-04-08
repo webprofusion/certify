@@ -107,6 +107,5 @@ namespace Certify.Server.Api.Public.Services
             // principal.Identity.Name = jwtSecurityToken.Claims.First(c => c.Type == "name").Value;
             return principal;
         }
-
     }
 }

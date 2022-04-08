@@ -137,6 +137,5 @@ namespace Certify.Core.Tests.Unit
             result = Management.Challenges.DnsChallengeHelper.ApplyChallengeDelegationRule("www.subdomain.example.com", "_acme-challenge.www.subdomain.example.com", testRule);
             Assert.AreEqual("_acme-challenge.www.subdomain.auth.example.co.uk", result);
         }
-
     }
 }

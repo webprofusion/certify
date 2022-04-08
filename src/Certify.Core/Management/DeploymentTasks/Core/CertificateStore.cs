@@ -130,6 +130,5 @@ namespace Certify.Providers.DeploymentTasks.Core
 
             return await Task.FromResult(results);
         }
-
     }
 }

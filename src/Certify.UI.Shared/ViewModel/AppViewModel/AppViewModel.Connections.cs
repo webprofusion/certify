@@ -78,7 +78,6 @@ namespace Certify.UI.ViewModel
                 {
                     return $"{_certifyClient?.GetConnectionInfo()}";
                 }
-
             }
         }
 

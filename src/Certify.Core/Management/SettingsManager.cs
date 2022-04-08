@@ -267,7 +267,6 @@ namespace Certify.Management
                 {
                     throw new Exception($"Failed to load custom certificate authorities:: {path} {exp}");
                 }
-
             }
 
             return caList;
@@ -314,7 +313,6 @@ namespace Certify.Management
                         {
                             CoreAppSettings.Current.CertificateCleanupMode = CertificateCleanupMode.AfterExpiry;
                         }
-
                     }
                 }
                 else

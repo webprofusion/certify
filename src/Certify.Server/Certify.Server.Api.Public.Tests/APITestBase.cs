@@ -82,6 +82,5 @@ namespace Certify.Service.Api.Tests
                 }
             }
         }
-
     }
 }

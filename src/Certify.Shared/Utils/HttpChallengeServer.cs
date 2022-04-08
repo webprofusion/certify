@@ -14,7 +14,6 @@ namespace Certify.Core.Management.Challenges
     {
         private HttpListener _httpListener;
         private HttpClient _apiClient;
-        private Task _serverTask;
 
         private string _controlKey = "QUIT123";
         private string _checkKey = "TESTING123";
@@ -98,7 +97,7 @@ namespace Certify.Core.Management.Challenges
                 Log($"Http Challenge Server Started: {uriPrefix}", true);
                 Log($"Control Key: {_controlKey}: Check Key: {_checkKey}");
 
-                _serverTask = Task.Run(ServerTask);
+                _ = Task.Run(ServerTask);
 
                 var stateTimer = new Timer((object stateInfo) =>
                 {
@@ -257,7 +256,6 @@ namespace Certify.Core.Management.Challenges
 
                             Log($"Requested key not found: {key}");
                         }
-
                     }
                     else
                     {

@@ -76,6 +76,5 @@ namespace Certify.UI.ViewModel
         {
             return await _certifyClient.GetServerSiteDomains(serverType, siteId);
         }
-
     }
 }

@@ -26,7 +26,6 @@ namespace Certify.Providers.DNS.CertifyDns
         public string password { get; set; }
         public string username { get; set; }
         public string subject { get; set; }
-
     }
 
     internal class AcmeDnsUpdate
@@ -320,6 +319,5 @@ namespace Certify.Providers.DNS.CertifyDns
             var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(val);
             return ToUrlSafeBase64String(bytes);
         }
-
     }
 }

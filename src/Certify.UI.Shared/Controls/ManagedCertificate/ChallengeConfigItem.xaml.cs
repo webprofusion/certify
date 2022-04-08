@@ -221,7 +221,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                     await SetChallengeProvider("DNS01.API.CertifyDns");
                 }
             }
-
         }
     }
 }

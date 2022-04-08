@@ -135,7 +135,6 @@ namespace Certify.Management
                             }
                         }
                     }
-
                 }
                 catch (Exception ex)
                 {
@@ -356,7 +355,6 @@ namespace Certify.Management
                         {
                             val = false;
                         }
-
                     }
                     shell.AddParameter(a.Key, val);
                 }

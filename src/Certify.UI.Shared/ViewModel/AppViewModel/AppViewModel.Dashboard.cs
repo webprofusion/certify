@@ -99,7 +99,6 @@ namespace Certify.UI.ViewModel
                 {
                     return false;
                 }
-
             }
         }
 

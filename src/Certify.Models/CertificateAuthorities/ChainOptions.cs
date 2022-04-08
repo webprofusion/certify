@@ -51,5 +51,4 @@ namespace Certify.CertificateAuthorities
         /// </summary>
         public List<ChainAction> Actions { get; set; } = new();
     }
-
 }

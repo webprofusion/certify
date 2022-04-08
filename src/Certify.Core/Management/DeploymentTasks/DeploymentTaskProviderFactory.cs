@@ -36,7 +36,6 @@ namespace Certify.Core.Management.DeploymentTasks
                 {
                     list.Add(def);
                 }
-
             }
 
             // add providers from plugins (if any)

@@ -57,7 +57,6 @@ namespace Certify.Core.Tests.Unit
                 }
                 attempts++;
             }
-
         }
 
         [TestMethod, Description("Identify problem key")]
@@ -67,6 +66,5 @@ namespace Certify.Core.Tests.Unit
             Assert.IsNotNull(newKey);
 
         }
-
     }
 }

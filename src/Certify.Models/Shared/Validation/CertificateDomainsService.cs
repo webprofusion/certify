@@ -51,12 +51,10 @@ namespace Certify.Models.Shared.Validation
                         return new ActionResult<ManagedCertificate>("The selected site has no domain bindings setup. Configure the domains first using by editing bindings in your web server configuration (IIS etc).", false);
                     }
                 }
-
             }
 
             return new ActionResult<ManagedCertificate>("OK", true, managedCertificate);
 
         }
-
     }
 }

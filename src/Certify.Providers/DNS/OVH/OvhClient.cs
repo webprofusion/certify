@@ -505,5 +505,4 @@ namespace Certify.Providers.DNS.OVH
             return (long)DateTime.Now.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
         }
     }
-
 }

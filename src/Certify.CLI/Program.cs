@@ -90,7 +90,6 @@ namespace Certify.CLI
                     {
                         var result = await p.PerformDeployment(managedCertId, taskId);
                     }
-
                 }
 
                 if (command == "list")

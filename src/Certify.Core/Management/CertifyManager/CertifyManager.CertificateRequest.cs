@@ -198,7 +198,6 @@ namespace Certify.Management
                     {
                         numRenewalTasks++;
                     }
-
                 }
                 else
                 {
@@ -569,7 +568,6 @@ namespace Certify.Management
                         var msg = $"Deployment Tasks did not complete successfully.";
                         certRequestResult.Message = msg;
                     }
-
                 }
 
                 // final state is either paused, success or error
@@ -1096,7 +1094,6 @@ namespace Certify.Management
 
                         LogMessage(managedCertificate.Id, result.Message, LogItemType.GeneralError);
                     }
-
                 }
                 else
                 {

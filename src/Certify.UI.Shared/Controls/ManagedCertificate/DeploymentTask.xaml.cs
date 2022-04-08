@@ -104,7 +104,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                 EditModel.SelectedItem.ChallengeProvider = credential.ProviderType;
                 EditModel.SelectedItem.ChallengeCredentialKey = credential.StorageKey;
             }
-
         }
 
         private void ParameterInput_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)

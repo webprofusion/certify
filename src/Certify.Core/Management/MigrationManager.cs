@@ -116,7 +116,6 @@ namespace Certify.Core.Management
                             {
                                 usedCredentials.Add(usedCredential);
                             }
-
                         }
                     }
 
@@ -283,7 +282,6 @@ namespace Certify.Core.Management
                         }
                     }
                 }
-
             }
         }
 
@@ -389,7 +387,6 @@ namespace Certify.Core.Management
                     credentialImportSteps.Add(new ActionStep { Title = c.Title, Key = c.StorageKey, HasWarning = true, Description = $"Credential could not be decrypted. Any items relying on this credential will fail until the credential is replaced." });
                     c.Secret = "";
                 }
-
             }
 
             steps.Add(new ActionStep { Title = "Import Stored Credentials", Category = "Import", Substeps = credentialImportSteps, Key = "StoredCredentials" });
@@ -486,7 +483,6 @@ namespace Certify.Core.Management
                 {
                     managedCertImportSteps.Add(new ActionStep { Title = c.Name, Key = c.Id, HasWarning = true, Description = "Item already exists, it will not be re-imported." });
                 }
-
             }
 
             steps.Add(new ActionStep { Title = "Import Managed Certificates", Category = "Import", Substeps = managedCertImportSteps, Key = "ManagedCerts" });
@@ -569,7 +565,6 @@ namespace Certify.Core.Management
                     certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX Failed", Key = c.Filename, HasWarning = true, Description = "Could not create PFX from bytes. Password may be incorrect." });
 
                 }
-
             }
 
             steps.Add(new ActionStep { Title = "Import Certificate Files", Category = "Import", Substeps = certFileImportSteps, Key = "CertFiles" });

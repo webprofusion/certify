@@ -39,7 +39,6 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                         X509Certificate2UI.DisplayCertificate(cert);
                     }
-
                 }
                 catch { }
             }
@@ -97,7 +96,6 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 MessageBox.Show(SR.ManagedCertificateSettings_CertificateNotReady);
             }
-
         }
 
         private async void RefetchCertificate_Click(object sender, RoutedEventArgs e)
@@ -172,7 +170,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                     {
                         isInvalid = true;
                     }
-
                 }
                 else
                 {
@@ -211,7 +208,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                 {
                     MessageBox.Show("The private key could not be processed. Key should be unencrypted and in PEM format [" + exp.ToString() + "]");
                 }
-
             }
         }
 

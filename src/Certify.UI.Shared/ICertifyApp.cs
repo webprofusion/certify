@@ -156,7 +156,6 @@ namespace Certify.UI.Shared
             {
                 notifier.ShowInformation(msg, opts);
             }
-
         }
     }
 }

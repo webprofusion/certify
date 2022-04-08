@@ -120,14 +120,12 @@ namespace Certify.Shared.Utils
                 var objValue = prop.GetValue(config);
 
                 var value = "";
-                if (objValue != null && objValue is Array)
+                if (objValue != null && objValue is Array array)
                 {
-
-                    foreach (var i in ((Array)objValue))
+                    foreach (var i in array)
                     {
                         value += i.ToString() + " ";
                     }
-
                 }
                 else
                 {

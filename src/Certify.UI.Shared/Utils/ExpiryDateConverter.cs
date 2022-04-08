@@ -33,7 +33,6 @@ namespace Certify.UI.Utils
             {
                 return string.Format(SR.ExpiryDateConverter_CertificateExpiresIn, days);
             }
-
         }
     }
 

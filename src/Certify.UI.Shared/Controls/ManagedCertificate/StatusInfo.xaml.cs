@@ -88,7 +88,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                 {
                     MessageBox.Show($"The system could not launch the default app for {logPath} - Open the file manually.");
                 }
-
             }
             else
             {

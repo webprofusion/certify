@@ -80,5 +80,4 @@ namespace Certify.Providers.DeploymentTasks
 
         Task<List<ActionResult>> Validate(DeploymentTaskExecutionParams execParams);
     }
-
 }

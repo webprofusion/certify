@@ -55,7 +55,6 @@ namespace Certify.UI.Windows
                     Item.SupportedFeatures.Add(feature);
                 }
             }
-
         }
 
         public EditModel Model { get; set; } = new EditModel();
@@ -91,7 +90,6 @@ namespace Certify.UI.Windows
             {
                 MessageBox.Show(result.Message);
             }
-
         }
 
         private void CertificateAuthorityList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)

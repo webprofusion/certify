@@ -239,7 +239,6 @@ namespace Certify.Service
                     _redeployInProgress = false;
 
                 }
-
             }
             else
             {

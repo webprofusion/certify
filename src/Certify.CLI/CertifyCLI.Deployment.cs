@@ -69,7 +69,6 @@ namespace Certify.CLI
                 Console.WriteLine("Managed Certificate Id has no matches. Deployment failed.");
                 return false;
             }
-
         }
     }
 }

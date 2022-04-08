@@ -58,8 +58,6 @@ namespace Certify.UI.Windows
             {
                 MessageBox.Show("Failed to save connection details.");
             }
-
         }
-
     }
 }

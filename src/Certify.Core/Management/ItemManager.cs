@@ -206,7 +206,6 @@ namespace Certify.Management
                 }
             }
             catch { }
-
         }
 
         /// <summary>
@@ -298,7 +297,6 @@ namespace Certify.Management
             {
                 await Delete(item);
             }
-
         }
 
         private async Task<IQueryable<ManagedCertificate>> LoadAllManagedCertificates(ManagedCertificateFilter filter)
@@ -348,7 +346,6 @@ namespace Certify.Management
                 {
                     site.IsChanged = false;
                 }
-
             }
 
             Debug.WriteLine($"LoadAllManagedCertificates[SQLite] took {watch.ElapsedMilliseconds}ms for {managedCertificates.Count} records");

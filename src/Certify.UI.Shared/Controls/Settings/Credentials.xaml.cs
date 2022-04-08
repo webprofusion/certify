@@ -121,6 +121,5 @@ namespace Certify.UI.Controls.Settings
                 EditModel.SelectedStoredCredential = null;
             }
         }
-
     }
 }

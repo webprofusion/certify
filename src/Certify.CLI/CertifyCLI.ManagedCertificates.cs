@@ -147,7 +147,6 @@ namespace Certify.CLI
                 {
                     Console.WriteLine($"Output file path argument is required for json output.");
                 }
-
             }
             else
             {

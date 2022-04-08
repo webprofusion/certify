@@ -642,7 +642,6 @@ namespace Certify.Providers.ACME.Certes
                                     return new PendingOrder(orderErrorMsg);
 
                                 }
-
                             }
                             else if (exp.InnerException != null && exp.InnerException is AcmeRequestException)
                             {
@@ -1063,7 +1062,6 @@ namespace Certify.Providers.ACME.Certes
 
                             pendingAuthorization.AuthorizationError = $"{challenge.Error.Detail} {challenge.Error.Status} {challenge.Error.Type}";
                         }
-
                     }
                 }
                 catch
@@ -1464,10 +1462,8 @@ namespace Certify.Providers.ACME.Certes
                             var certBytes = pemObj.Content;
                             _issuerCertCache.Add(certBytes);
                         }
-
                     }
                 }
-
             }
             catch (Exception)
             {

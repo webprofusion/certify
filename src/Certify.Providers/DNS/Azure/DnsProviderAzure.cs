@@ -177,7 +177,6 @@ namespace Certify.Providers.DNS.Azure
             {
                 return ActiveDirectoryServiceSettings.Azure;
             }
-
         }
 
         public async Task<ActionResult> CreateRecord(DnsRecord request)
@@ -213,7 +212,6 @@ namespace Certify.Providers.DNS.Azure
                         recordSetParams.TxtRecords.Add(record);
                     }
                 }
-
             }
             catch
             {
