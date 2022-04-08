@@ -87,8 +87,8 @@ namespace Certify.Core.Management.Access
 
     public class AccessControl
     {
-        IObjectStore _store;
-        ILog _log;
+        private IObjectStore _store;
+        private ILog _log;
 
         public AccessControl(ILog log, IObjectStore store)
         {

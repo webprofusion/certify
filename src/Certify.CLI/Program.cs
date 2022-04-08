@@ -6,7 +6,7 @@ namespace Certify.CLI
 {
     internal class Program
     {
-        const int MAX_CHALLENGE_SERVER_RUNTIME = 1000 * 60 * 30;  // Allow up to 30 mins of run time for the challenge server (normall run time is
+        private const int MAX_CHALLENGE_SERVER_RUNTIME = 1000 * 60 * 30;  // Allow up to 30 mins of run time for the challenge server (normall run time is
 
         private static async Task<int> Main(string[] args)
         {

@@ -106,7 +106,7 @@ namespace Certify.Management
             // check if FIPS is enabled
             try
             {
-                _ = System.Security.Cryptography.SHA256.Create();
+                _ = SHA256.Create();
             }
             catch (Exception)
             {
@@ -115,8 +115,8 @@ namespace Certify.Management
             }
 
             // check powershell version
-            string subkey = @"SOFTWARE\Microsoft\PowerShell\3\PowerShellEngine";
-            bool isPSAvailable = true;
+            var subkey = @"SOFTWARE\Microsoft\PowerShell\3\PowerShellEngine";
+            var isPSAvailable = true;
             try
             {
                 using (var ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey(subkey))
@@ -283,7 +283,7 @@ namespace Certify.Management
                 computedSHA256 = GetFileSHA256(stream);
             }
 
-            var hashVerified = false;
+            bool hashVerified;
 
             if (expectedHash.ToLower() == computedSHA256)
             {
@@ -619,8 +619,8 @@ namespace Certify.Management
 
     public class TelemetryManager : IDisposable
     {
-        TelemetryConfiguration _config = TelemetryConfiguration.CreateDefault();
-        TelemetryClient _tc = null;
+        private TelemetryConfiguration _config = TelemetryConfiguration.CreateDefault();
+        private TelemetryClient _tc = null;
 
         public TelemetryManager(string key)
         {

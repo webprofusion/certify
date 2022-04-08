@@ -134,7 +134,7 @@ namespace Certify.Shared.Core.Utils.PKI
                 }
             }
 
-            return default(T);
+            return default;
         }
 
         public static bool CanParsePrivateKey(string keyContent)

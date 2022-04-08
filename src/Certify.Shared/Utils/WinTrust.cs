@@ -9,7 +9,7 @@ namespace Security.WinTrust
     using System.Runtime.InteropServices;
 
     #region WinTrustData struct field enums
-    enum WinTrustDataUIChoice : uint
+    internal enum WinTrustDataUIChoice : uint
     {
         All = 1,
         None = 2,
@@ -17,13 +17,13 @@ namespace Security.WinTrust
         NoGood = 4
     }
 
-    enum WinTrustDataRevocationChecks : uint
+    internal enum WinTrustDataRevocationChecks : uint
     {
         None = 0x00000000,
         WholeChain = 0x00000001
     }
 
-    enum WinTrustDataChoice : uint
+    internal enum WinTrustDataChoice : uint
     {
         File = 1,
         Catalog = 2,
@@ -32,7 +32,7 @@ namespace Security.WinTrust
         Certificate = 5
     }
 
-    enum WinTrustDataStateAction : uint
+    internal enum WinTrustDataStateAction : uint
     {
         Ignore = 0x00000000,
         Verify = 0x00000001,
@@ -42,7 +42,7 @@ namespace Security.WinTrust
     }
 
     [FlagsAttribute]
-    enum WinTrustDataProvFlags : uint
+    internal enum WinTrustDataProvFlags : uint
     {
         UseIe4TrustFlag = 0x00000001,
         NoIe4ChainFlag = 0x00000002,
@@ -59,7 +59,7 @@ namespace Security.WinTrust
         DisableMD2andMD4 = 0x00002000      // Win7 SP1+: Disallows use of MD2 or MD4 in the chain except for the root
     }
 
-    enum WinTrustDataUIContext : uint
+    internal enum WinTrustDataUIContext : uint
     {
         Execute = 0,
         Install = 1
@@ -68,12 +68,12 @@ namespace Security.WinTrust
 
     #region WinTrust structures
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    class WinTrustFileInfo
+    internal class WinTrustFileInfo
     {
-        UInt32 StructSize = (UInt32)Marshal.SizeOf(typeof(WinTrustFileInfo));
-        IntPtr pszFilePath;                     // required, file name to be verified
-        IntPtr hFile = IntPtr.Zero;             // optional, open handle to FilePath
-        IntPtr pgKnownSubject = IntPtr.Zero;    // optional, subject type if it is known
+        private UInt32 StructSize = (UInt32)Marshal.SizeOf(typeof(WinTrustFileInfo));
+        private IntPtr pszFilePath;                     // required, file name to be verified
+        private IntPtr hFile = IntPtr.Zero;             // optional, open handle to FilePath
+        private IntPtr pgKnownSubject = IntPtr.Zero;    // optional, subject type if it is known
 
         public WinTrustFileInfo(String _filePath)
         {
@@ -90,24 +90,28 @@ namespace Security.WinTrust
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    class WinTrustData
+    internal class WinTrustData
     {
-        UInt32 StructSize = (UInt32)Marshal.SizeOf(typeof(WinTrustData));
-        IntPtr PolicyCallbackData = IntPtr.Zero;
-        IntPtr SIPClientData = IntPtr.Zero;
+        private UInt32 StructSize = (UInt32)Marshal.SizeOf(typeof(WinTrustData));
+        private IntPtr PolicyCallbackData = IntPtr.Zero;
+        private IntPtr SIPClientData = IntPtr.Zero;
+
         // required: UI choice
-        WinTrustDataUIChoice UIChoice = WinTrustDataUIChoice.None;
+        private WinTrustDataUIChoice UIChoice = WinTrustDataUIChoice.None;
+
         // required: certificate revocation check options
-        WinTrustDataRevocationChecks RevocationChecks = WinTrustDataRevocationChecks.None;
+        private WinTrustDataRevocationChecks RevocationChecks = WinTrustDataRevocationChecks.None;
+
         // required: which structure is being passed in?
-        WinTrustDataChoice UnionChoice = WinTrustDataChoice.File;
+        private WinTrustDataChoice UnionChoice = WinTrustDataChoice.File;
+
         // individual file
-        IntPtr FileInfoPtr;
-        WinTrustDataStateAction StateAction = WinTrustDataStateAction.Ignore;
-        IntPtr StateData = IntPtr.Zero;
-        String URLReference = null;
-        WinTrustDataProvFlags ProvFlags = WinTrustDataProvFlags.RevocationCheckChainExcludeRoot;
-        WinTrustDataUIContext UIContext = WinTrustDataUIContext.Execute;
+        private IntPtr FileInfoPtr;
+        private WinTrustDataStateAction StateAction = WinTrustDataStateAction.Ignore;
+        private IntPtr StateData = IntPtr.Zero;
+        private String URLReference = null;
+        private WinTrustDataProvFlags ProvFlags = WinTrustDataProvFlags.RevocationCheckChainExcludeRoot;
+        private WinTrustDataUIContext UIContext = WinTrustDataUIContext.Execute;
 
         // constructor for silent WinTrustDataChoice.File check
         public WinTrustData(WinTrustFileInfo _fileInfo)
@@ -135,7 +139,7 @@ namespace Security.WinTrust
     }
     #endregion
 
-    enum WinVerifyTrustResult : uint
+    internal enum WinVerifyTrustResult : uint
     {
         Success = 0,
         ProviderUnknown = 0x800b0001,           // Trust provider is not recognized on this system
@@ -150,14 +154,14 @@ namespace Security.WinTrust
         UntrustedRoot = 0x800B0109          // CERT_E_UNTRUSTEDROOT - A certification chain processed correctly but terminated in a root certificate that is not trusted by the trust provider.
     }
 
-    sealed class WinTrust
+    internal sealed class WinTrust
     {
         private static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
         // GUID of the action to perform
         private const string WINTRUST_ACTION_GENERIC_VERIFY_V2 = "{00AAC56B-CD44-11d0-8CC2-00C04FC295EE}";
 
         [DllImport("wintrust.dll", ExactSpelling = true, SetLastError = false, CharSet = CharSet.Unicode)]
-        static extern WinVerifyTrustResult WinVerifyTrust(
+        private static extern WinVerifyTrustResult WinVerifyTrust(
             [In] IntPtr hwnd,
             [In][MarshalAs(UnmanagedType.LPStruct)] Guid pgActionID,
             [In] WinTrustData pWVTData
@@ -178,7 +182,7 @@ namespace Security.WinTrust
         private WinTrust() { }
     }
 
-    sealed class WinCrypto
+    internal sealed class WinCrypto
     {
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         public struct CRYPTOAPI_BLOB

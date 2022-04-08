@@ -19,8 +19,6 @@ namespace Certify.Shared.Utils
     {
         // adapted from https://github.com/reisjr/BouncyCastleExamples/blob/master/OcspClient/OcspClient.cs by https://github.com/reisjr
 
-        private static readonly int MaxClockSkew = 36000000;
-
         public static async Task<CertificateStatusType> Query(X509Certificate endEntityCert, X509Certificate issuerCert)
         {
             // Query the first Ocsp Url found in certificate
@@ -114,18 +112,6 @@ namespace Certify.Shared.Utils
             }
 
             return cStatus;
-        }
-
-        private static bool IsCurrent(SingleResp resp)
-        {
-            if (Math.Abs(resp.ThisUpdate.Ticks - DateTime.Now.Ticks) > MaxClockSkew)
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
         }
 
         /// <summary>

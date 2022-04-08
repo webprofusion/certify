@@ -8,7 +8,7 @@ namespace Certify.Providers.DNS.Aliyun
 {
     internal class AliDnsRequest
     {
-        const string DNS_SERVICE_BASE_ADDRESS = "https://alidns.aliyuncs.com";
+        private const string DNS_SERVICE_BASE_ADDRESS = "https://alidns.aliyuncs.com";
 
         public static string CreateTimaStamp() => DateTime.Now.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", System.Globalization.CultureInfo.CreateSpecificCulture("en-US"));
 

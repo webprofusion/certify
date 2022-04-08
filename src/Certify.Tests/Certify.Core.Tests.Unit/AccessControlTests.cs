@@ -12,7 +12,7 @@ namespace Certify.Core.Tests.Unit
 
     public class MemoryObjectStore : IObjectStore
     {
-        ConcurrentDictionary<string, object> _store = new ConcurrentDictionary<string, object>();
+        private ConcurrentDictionary<string, object> _store = new ConcurrentDictionary<string, object>();
 
         public Task<T> Load<T>(string id)
         {

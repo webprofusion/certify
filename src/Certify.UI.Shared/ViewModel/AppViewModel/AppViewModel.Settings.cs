@@ -115,7 +115,7 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// lock used for saving changes to preferences
         /// </summary>
-        static SemaphoreSlim _prefLock = new SemaphoreSlim(1, 1);
+        private static SemaphoreSlim _prefLock = new SemaphoreSlim(1, 1);
 
         /// <summary>
         /// Save preferences via service

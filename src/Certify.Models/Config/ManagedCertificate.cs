@@ -458,9 +458,9 @@ namespace Certify.Models
             {
                 managedCert.RequestConfig.SubjectAlternativeNames = Array.Empty<string>();
                 managedCert.RequestConfig.SubjectIPAddresses = Array.Empty<string>();
-                managedCert.RequestConfig.PrimaryDomain = String.Empty;
+                managedCert.RequestConfig.PrimaryDomain = string.Empty;
                 managedCert.DomainOptions = new System.Collections.ObjectModel.ObservableCollection<DomainOption>();
-                managedCert.Name = String.Empty;
+                managedCert.Name = string.Empty;
             }
             else
             {

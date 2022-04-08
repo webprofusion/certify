@@ -9,7 +9,7 @@ namespace Certify.Service
 {
     public class StatusHubReporting : Providers.IStatusReporting
     {
-        IHubContext<Service.StatusHub> _hubContext;
+        private IHubContext<Service.StatusHub> _hubContext;
         public StatusHubReporting(IHubContext<Service.StatusHub> hubContext)
         {
             _hubContext = hubContext;

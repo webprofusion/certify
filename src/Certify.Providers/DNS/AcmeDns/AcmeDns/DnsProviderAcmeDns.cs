@@ -192,12 +192,16 @@ namespace Certify.Providers.DNS.AcmeDns
                 // save these settings for later
                 System.IO.File.WriteAllText(registrationSettingsPath, JsonConvert.SerializeObject(registration));
 
+                _log?.Information("API registration completed");
+
                 // is a new registration
                 return (registration, true);
             }
             else
             {
                 // failed to register
+                _log?.Information("API registration failed");
+
                 return (null, false);
             }
         }
@@ -290,7 +294,7 @@ namespace Certify.Providers.DNS.AcmeDns
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
-                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                if (int.TryParse(parameters["propagationdelay"], out var customPropDelay))
                 {
                     _customPropagationDelay = customPropDelay;
                 }
