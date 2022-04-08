@@ -14,7 +14,6 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
-using Certify.Shared.Core.Utils.PKI;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.X509;
 
