@@ -81,7 +81,7 @@ namespace Certify.UI.ViewModel
                     }
 
                     var ca = CertificateAuthorities.FirstOrDefault(c => c.Id == SelectedItem.CertificateAuthorityId);
-                    return ca?.Description ?? "(CA Unknown)";
+                    return ca?.Description.AsNullWhenBlank() ?? "(CA Unknown)";
                 }
                 else
                 {
@@ -571,7 +571,7 @@ namespace Certify.UI.ViewModel
                     );
                 }
 
-                var caId = Preferences.DefaultCertificateAuthority ?? StandardCertAuthorities.LETS_ENCRYPT;
+                var caId = Preferences.DefaultCertificateAuthority.WithDefault(StandardCertAuthorities.LETS_ENCRYPT);
                 if (SelectedItem.CertificateAuthorityId != null)
                 {
                     caId = SelectedItem.CertificateAuthorityId;

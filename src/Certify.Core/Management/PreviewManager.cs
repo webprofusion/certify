@@ -61,7 +61,7 @@ namespace Certify.Management
                 var ca = certificateAuthorities.FirstOrDefault(c => c.Id == item.CertificateAuthorityId);
 
                 certDescription.AppendLine(
-                    $"A new certificate will be requested from the *{ca?.Title ?? "Default"}* certificate authority for the following domains:"
+                    $"A new certificate will be requested from the *{ ca?.Title.AsNullWhenBlank() ?? " Default"}* certificate authority for the following domains:"
                     );
 
                 certDescription.AppendLine($"\n**{item.RequestConfig.PrimaryDomain}** (Primary Domain)");
@@ -318,7 +318,8 @@ namespace Certify.Management
                     var bindingRequest = await certifyManager.DeployCertificate(item, null, true);
                     if (bindingRequest.Actions?.Any(b => b.Category == "CertificateStorage") == true)
                     {
-                        deploymentDescription.AppendLine(bindingRequest.Actions.First(b => b.Category == "CertificateStorage")?.Description ?? "Unknown storage");
+                        var defaultValue = "Unknown Storage";
+                        deploymentDescription.AppendLine(bindingRequest.Actions.First(b => b.Category == "CertificateStorage")?.Description.WithDefault(defaultValue) ?? defaultValue);
                     }
                     else
                     {

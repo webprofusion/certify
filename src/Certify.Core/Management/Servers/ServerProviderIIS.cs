@@ -436,7 +436,7 @@ namespace Certify.Management.Servers
                                     }
                                     else
                                     {
-                                        binding.Protocol = bindingSpec.Protocol ?? "http";
+                                        binding.Protocol = bindingSpec.Protocol.WithDefault("http");
                                         binding.BindingInformation = bindingSpecString;
                                     }
 

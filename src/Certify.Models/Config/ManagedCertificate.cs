@@ -465,7 +465,7 @@ namespace Certify.Models
             }
             else
             {
-                managedCert.Name = (managedCert.Name ?? "") + " (Copy)";
+                managedCert.Name = $"{ managedCert.Name.WithDefault("")} (Copy)";
             }
 
             if (managedCert.PreRequestTasks != null)

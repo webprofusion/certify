@@ -6,10 +6,10 @@ using Newtonsoft.Json;
 namespace Certify.Core.Tests.Unit
 {
     [TestClass]
-    public class SerializationTests
+    public class MiscTests
     {
 
-        public SerializationTests()
+        public MiscTests()
         {
 
         }
@@ -34,5 +34,26 @@ namespace Certify.Core.Tests.Unit
 
         }
 
+        [TestMethod, Description("Test null/blank coalesce of string")]
+        public void TestNullOrBlankCoalesce()
+        {
+            string testValue = null;
+
+            var result = testValue.WithDefault("ok");
+            Assert.AreEqual(result, "ok");
+
+            testValue = "test";
+            result = testValue.WithDefault("ok");
+            Assert.AreEqual(result, "test");
+
+            Models.CertificateAuthority ca = new Models.CertificateAuthority();
+            ca.Description = null;
+            result = ca.Description.WithDefault("default");
+            Assert.AreEqual(result, "default");
+
+            ca = null;
+            result = ca?.Description.WithDefault("default");
+            Assert.AreEqual(result, null);
+        }
     }
 }

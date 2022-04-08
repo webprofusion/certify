@@ -86,7 +86,7 @@ namespace Certify.UI.ViewModel
             foreach (var a in list)
             {
                 var ca = CertificateAuthorities.FirstOrDefault(c => c.Id == a.CertificateAuthorityId);
-                a.Title = $"{ca?.Title ?? "[Unknown CA]"} [{(a.IsStagingAccount ? "Staging" : "Production")}]";
+                a.Title = $"{ca?.Title.AsNullWhenBlank() ?? "[Unknown CA]"} [{(a.IsStagingAccount ? "Staging" : "Production")}]";
                 tmpList.Add(a);
             }
 

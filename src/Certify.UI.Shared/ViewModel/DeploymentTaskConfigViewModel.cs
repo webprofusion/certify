@@ -217,7 +217,7 @@ namespace Certify.UI.ViewModel
                 // pre-populate task title with a default
                 if (string.IsNullOrEmpty(SelectedItem.TaskName))
                 {
-                    SelectedItem.TaskName = DeploymentProvider.DefaultTitle ?? DeploymentProvider.Title;
+                    SelectedItem.TaskName = DeploymentProvider.DefaultTitle.WithDefault(DeploymentProvider.Title);
                 }
 
                 RaisePropertyChangedEvent(nameof(SelectedItem));
