@@ -15,10 +15,10 @@ namespace Certify.UI.Windows
         {
             InitializeComponent();
 
-            this.DataContext = AppViewModel;
+            DataContext = AppViewModel;
 
-            this.Width *= AppViewModel.UIScaleFactor;
-            this.Height *= AppViewModel.UIScaleFactor;
+            Width *= AppViewModel.UIScaleFactor;
+            Height *= AppViewModel.UIScaleFactor;
         }
 
         private async void ValidateKey_Click(object sender, RoutedEventArgs e)

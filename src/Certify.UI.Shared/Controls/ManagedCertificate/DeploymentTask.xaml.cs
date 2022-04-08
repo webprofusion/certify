@@ -46,7 +46,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             EditModel = new ViewModel.DeploymentTaskConfigViewModel(config, editAsPostRequestTask);
 
-            this.StoredCredentials.ItemsSource = EditModel.FilteredCredentials;
+            StoredCredentials.ItemsSource = EditModel.FilteredCredentials;
 
             DataContext = EditModel;
 

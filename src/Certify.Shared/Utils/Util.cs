@@ -318,6 +318,7 @@ namespace Certify.Management
             {
                 System.IO.Directory.CreateDirectory(path);
             }
+
             return path;
         }
 
@@ -460,6 +461,7 @@ namespace Certify.Management
                     result.UpdateFilePath = setupFile;
                 }
             }
+
             return result;
         }
 
@@ -629,7 +631,7 @@ namespace Certify.Management
 
         ~TelemetryManager()
         {
-            if (this._config != null)
+            if (_config != null)
             {
                 Dispose();
             }

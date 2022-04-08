@@ -126,6 +126,7 @@ namespace Certify.Providers.DNS.OVH
                 _timeDelta = await ComputeTimeDelta();
                 _isTimeDeltaInitialized = true;
             }
+
             return _timeDelta;
 
         }
@@ -431,6 +432,7 @@ namespace Certify.Providers.DNS.OVH
             {
                 path = path.Substring(1);
             }
+
             var target = Endpoint + path;
             var headers = new WebHeaderCollection();
             headers.Add("X-Ovh-Application", ApplicationKey);
@@ -479,6 +481,7 @@ namespace Certify.Providers.DNS.OVH
             {
                 response = await _webClient.DownloadStringTaskAsync(path);
             }
+
             return response;
         }
 

@@ -100,7 +100,7 @@ namespace Certify.Core.Management.Challenges.DNS
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
-                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                if (int.TryParse(parameters["propagationdelay"], out var customPropDelay))
                 {
                     _customPropagationDelay = customPropDelay;
                 }
@@ -196,6 +196,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 {
                     _log.AppendLine("Warning: Script exited with the following ExitCode: " + process.ExitCode);
                 }
+
                 return await Task.FromResult(new ActionResult { IsSuccess = true, Message = _log.ToString() });
             }
             catch (Exception exp)

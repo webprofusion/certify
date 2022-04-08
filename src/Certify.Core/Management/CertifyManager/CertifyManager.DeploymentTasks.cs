@@ -156,8 +156,8 @@ namespace Certify.Management
             }
 
             ActionStep previousActionStep = null;
-            bool shouldRunCurrentTask = true;
-            string taskTriggerReason = "Task will run for any status";
+            var shouldRunCurrentTask = true;
+            var taskTriggerReason = "Task will run for any status";
 
             foreach (var task in deploymentTasks)
             {
@@ -376,7 +376,7 @@ namespace Certify.Management
         /// <returns></returns>
         public Tuple<ManagedCertificate, bool> MigrateDeploymentTasks(ManagedCertificate managedCertificate)
         {
-            bool requiredMigration = false;
+            var requiredMigration = false;
 
             if (managedCertificate.PreRequestTasks == null)
             {

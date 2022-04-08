@@ -61,9 +61,9 @@ namespace Certify.Server.API.Controllers
             return new OkObjectResult(targetList);
         }
 
-        private StandardServerTypes? GetServerTypeFromString(string value)
+        private static StandardServerTypes? GetServerTypeFromString(string value)
         {
-            if (System.Enum.TryParse<StandardServerTypes>(value, out StandardServerTypes result))
+            if (System.Enum.TryParse<StandardServerTypes>(value, out var result))
             {
                 return result;
             }

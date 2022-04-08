@@ -110,6 +110,7 @@ namespace Certify.Models
                         DetachChangeEventHandlers(obj);
                     }
                 }
+
                 if (ccArgs.Action == NotifyCollectionChangedAction.Add)
                 {
                     foreach (var obj in ccArgs.NewItems)
@@ -167,12 +168,14 @@ namespace Certify.Models
                             UnsetChanged(subObj);
                         }
                     }
+
                     if (val is BindableBase bbSub)
                     {
                         UnsetChanged(bbSub);
                     }
                 }
             }
+
             if (obj is ICollection collection)
             {
                 foreach (var subObj in collection)

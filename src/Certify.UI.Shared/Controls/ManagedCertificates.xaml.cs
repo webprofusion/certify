@@ -101,6 +101,7 @@ namespace Certify.UI.Controls
                     {
                         SelectAndFocus(site);
                     }
+
                     e.Handled = true;
                 }
             }
@@ -181,7 +182,7 @@ namespace Certify.UI.Controls
                 }
             }
 
-            this.Dispatcher.Invoke(new Action(() => { _appViewModel.SelectedItem = managedCert; }));
+            Dispatcher.Invoke(new Action(() => { _appViewModel.SelectedItem = managedCert; }));
         }
 
         private async void ListViewItem_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -207,6 +208,7 @@ namespace Certify.UI.Controls
                         }
                     }
                 }
+
                 return;
             }
 
@@ -291,6 +293,7 @@ namespace Certify.UI.Controls
                     SelectAndFocus(newIndex == -1 ? null : lvManagedCertificates.Items[newIndex]);
                 }
             }
+
             lastSelectedIndex = lvManagedCertificates.SelectedIndex;
         }
 
@@ -352,7 +355,7 @@ namespace Certify.UI.Controls
 
         private void GettingStarted_FilterApplied(string filter)
         {
-            this.txtFilter.Text = filter;
+            txtFilter.Text = filter;
         }
     }
 }

@@ -66,6 +66,7 @@ namespace Certify.Providers.DNS.IONOS
                 result.Message = "Authentication failed";
                 result.IsSuccess = false;
             }
+
             return result;
         }
 
@@ -183,7 +184,7 @@ namespace Certify.Providers.DNS.IONOS
             return records;
         }
 
-        public async override Task<List<DnsZone>> GetZones()
+        public override async Task<List<DnsZone>> GetZones()
         {
             var rawJsonDefinition = new[] { new { name = string.Empty, id = string.Empty, type = string.Empty } };
             var result = await _client.SendAsync(CreateRequest(HttpMethod.Get, baseUri + "zones"));

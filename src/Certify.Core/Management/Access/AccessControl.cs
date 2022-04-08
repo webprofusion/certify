@@ -193,6 +193,7 @@ namespace Certify.Core.Management.Access
                     r.AssignedRoles = newAssignedRoles;
                 }
             }
+
             await _store.Save<List<SecurityPrinciple>>("resourceprofiles", allResourceProfiles);
 
             _log?.Information($"User {contextUserId} deleted security principle [{id}] {existing?.Username}");

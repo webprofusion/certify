@@ -267,6 +267,7 @@ namespace Certify.Models
                     allDomains.AddRange(RequestConfig.SubjectAlternativeNames);
                 }
             }
+
             return allDomains.Distinct().ToList();
 
         }
@@ -289,6 +290,7 @@ namespace Certify.Models
                     matches.Add(d);
                 }
             }
+
             return matches;
         }
 

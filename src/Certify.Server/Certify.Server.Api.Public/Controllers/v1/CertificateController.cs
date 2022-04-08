@@ -103,7 +103,7 @@ namespace Certify.Server.API.Controllers
 
             var bytes = new byte[logByteArrays.Sum(a => a.Length)];
             var offset = 0;
-            foreach (byte[] array in logByteArrays)
+            foreach (var array in logByteArrays)
             {
                 System.Buffer.BlockCopy(array, 0, bytes, offset, array.Length);
                 offset += array.Length;

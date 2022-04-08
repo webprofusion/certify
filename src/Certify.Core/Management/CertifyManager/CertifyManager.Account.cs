@@ -198,6 +198,7 @@ namespace Certify.Management
                 {
                     return new ActionResult("Invalid Certificate Authority specified.", false);
                 }
+
                 var existingAccounts = await GetAccountRegistrations();
                 var existingAccount = existingAccounts.FirstOrDefault(a => a.StorageKey == storageKey);
 

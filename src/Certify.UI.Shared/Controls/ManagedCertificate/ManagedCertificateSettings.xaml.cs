@@ -67,20 +67,20 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 if (!ItemViewModel.IsEditable)
                 {
-                    this.TabDeployment.Visibility = Visibility.Collapsed;
-                    this.TabDomains.Visibility = Visibility.Collapsed;
-                    this.TabAuthorization.Visibility = Visibility.Collapsed;
-                    this.TabTasks.Visibility = Visibility.Collapsed;
-                    this.TabPreview.Visibility = Visibility.Collapsed;
+                    TabDeployment.Visibility = Visibility.Collapsed;
+                    TabDomains.Visibility = Visibility.Collapsed;
+                    TabAuthorization.Visibility = Visibility.Collapsed;
+                    TabTasks.Visibility = Visibility.Collapsed;
+                    TabPreview.Visibility = Visibility.Collapsed;
 
                 }
                 else
                 {
-                    this.TabDeployment.Visibility = Visibility.Visible;
-                    this.TabDomains.Visibility = Visibility.Visible;
-                    this.TabAuthorization.Visibility = Visibility.Visible;
-                    this.TabTasks.Visibility = Visibility.Visible;
-                    this.TabPreview.Visibility = Visibility.Visible;
+                    TabDeployment.Visibility = Visibility.Visible;
+                    TabDomains.Visibility = Visibility.Visible;
+                    TabAuthorization.Visibility = Visibility.Visible;
+                    TabTasks.Visibility = Visibility.Visible;
+                    TabPreview.Visibility = Visibility.Visible;
                 }
 
                 if (ItemViewModel.SelectedItem?.Id == null)

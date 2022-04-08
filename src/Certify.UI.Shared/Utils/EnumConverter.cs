@@ -31,6 +31,7 @@ namespace Certify.UI.Utils
                     return ((DescriptionAttribute)attrs[0]).Description;
                 }
             }
+
             return en.ToString();
         }
     }

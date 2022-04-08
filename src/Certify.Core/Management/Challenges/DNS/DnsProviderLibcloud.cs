@@ -144,6 +144,7 @@ namespace Certify.Core.Management.Challenges
                             failEncountered = true;
                             msg = result;
                         }
+
                         Debug.Write(result);
                     }
                 }

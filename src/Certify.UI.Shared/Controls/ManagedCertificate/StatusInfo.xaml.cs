@@ -56,11 +56,11 @@ namespace Certify.UI.Controls.ManagedCertificate
                     if (!string.IsNullOrEmpty(ItemViewModel?.SelectedItem.SourceId))
                     {
                         // hide log option if from external source
-                        this.OpenLogFile.Visibility = Visibility.Hidden;
+                        OpenLogFile.Visibility = Visibility.Hidden;
                     }
                     else
                     {
-                        this.OpenLogFile.Visibility = Visibility.Visible;
+                        OpenLogFile.Visibility = Visibility.Visible;
                     }
                 }
             }

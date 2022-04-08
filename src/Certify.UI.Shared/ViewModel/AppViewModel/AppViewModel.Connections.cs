@@ -131,7 +131,7 @@ namespace Certify.UI.ViewModel
 
             //check service connection
             IsServiceAvailable = false;
-            bool useInitialConnectionRetry = false;
+            var useInitialConnectionRetry = false;
 
             ConnectionState = "Connecting...";
 
@@ -144,7 +144,7 @@ namespace Certify.UI.ViewModel
 
             var attemptsRemaining = maxAttempts;
 
-            ICertifyClient clientConnection = _certifyClient;
+            var clientConnection = _certifyClient;
 
             while (!IsServiceAvailable && attemptsRemaining > 0 && cancellationToken.IsCancellationRequested != true)
             {

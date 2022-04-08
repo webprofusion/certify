@@ -118,6 +118,7 @@ namespace Certify.CLI
                     {
                         includeOcspCheck = true;
                     }
+
                     await p.RunCertDiagnostics(autoFix, forceAutoDeploy, includeOcspCheck: includeOcspCheck);
                 }
 
@@ -211,6 +212,7 @@ namespace Certify.CLI
             {
                 challengeServer.Stop();
             }
+
             return 0;
         }
     }

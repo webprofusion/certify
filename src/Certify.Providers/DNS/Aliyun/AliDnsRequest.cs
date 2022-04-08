@@ -57,6 +57,7 @@ namespace Certify.Providers.DNS.Aliyun
                     temp[i + 2] = char.ToUpper(temp[i + 2]);
                 }
             }
+
             return new string(temp);
         }
 

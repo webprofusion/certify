@@ -145,6 +145,7 @@ namespace Certify.Providers.DNS.MSDNS
             {
                 _password = null;
             }
+
             _domain = credentials.ContainsKey("domain") ? credentials["domain"] : null;
             _customPropagationDelay = parameters.ContainsKey("propagationdelay") ? Convert.ToInt32(parameters["propagationdelay"]) : (int?)null;
             if (credentials.ContainsKey("protocol") && credentials["protocol"].ToLowerInvariant() == "winrm")
@@ -182,7 +183,7 @@ namespace Certify.Providers.DNS.MSDNS
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
-                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                if (int.TryParse(parameters["propagationdelay"], out var customPropDelay))
                 {
                     _customPropagationDelay = customPropDelay;
                 }
@@ -230,6 +231,7 @@ namespace Certify.Providers.DNS.MSDNS
                     {
                         options.AddDestinationCredentials(new CimCredential(_authMechanism, _domain, _username, _password));
                     }
+
                     break;
                 case WindowsRemotingProtocol.WinRM:
                     var wsmanOptions = new WSManSessionOptions();
@@ -238,9 +240,11 @@ namespace Certify.Providers.DNS.MSDNS
                         wsmanOptions.AddDestinationCredentials(new CimCredential(_authMechanism, _domain, _username, _password));
                         wsmanOptions.UseSsl = true;
                     }
+
                     options = wsmanOptions;
                     break;
             }
+
             return CimSession.Create(_serverConnectionName, options);
         }
 

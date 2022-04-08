@@ -310,6 +310,7 @@ namespace Certify.UI.ViewModel
                         d.IsPrimaryDomain = false;
                     }
                 }
+
                 SelectedItem.IsChanged = true;
             }
         }
@@ -347,6 +348,7 @@ namespace Certify.UI.ViewModel
                         return SelectedItem.DateRenewed.Value.AddDays(Preferences.RenewalIntervalDays);
                     }
                 }
+
                 return null;
             }
         }
@@ -398,6 +400,7 @@ namespace Certify.UI.ViewModel
                     return false;
                 }
             }
+
             return true;
         }
 
@@ -450,6 +453,7 @@ namespace Certify.UI.ViewModel
                     SelectedItem.DomainOptions = new ObservableCollection<DomainOption>(opts);
                 }
             }
+
             return true;
         }
 

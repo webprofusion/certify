@@ -126,6 +126,7 @@ namespace Certify.Models.Providers
                     info.ZoneId = z.ZoneId;
                 }
             }
+
             return info;
         }
 

@@ -46,8 +46,9 @@ namespace Certify.UI.ViewModel
 
             if (result.IsSuccess)
             {
-                await this.RefreshCertificateAuthorityList();
+                await RefreshCertificateAuthorityList();
             }
+
             return result;
         }
 
@@ -62,8 +63,9 @@ namespace Certify.UI.ViewModel
 
             if (result.IsSuccess)
             {
-                await this.RefreshCertificateAuthorityList();
+                await RefreshCertificateAuthorityList();
             }
+
             return result;
         }
 

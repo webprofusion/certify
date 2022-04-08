@@ -78,6 +78,7 @@ namespace Certify.Shared.Core.Utils.PKI
                         var o = c.Certificate.Export(X509ContentType.Cert);
                         pemWriter.WriteObject(certParser.ReadCertificate(o));
                     }
+
                     i++;
                 }
 

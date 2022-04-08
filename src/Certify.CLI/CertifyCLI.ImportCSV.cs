@@ -403,6 +403,7 @@ namespace Certify.CLI
                         Console.WriteLine("There was a problem importing row " + rowID + " - " + exp.ToString());
                     }
                 }
+
                 rowID++;
             }
         }

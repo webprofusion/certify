@@ -72,6 +72,7 @@ namespace Certify.UI
                         IsSelected = j <= 3
                     });
                 }
+
                 ManagedCertificates.Add(site);
             }
 

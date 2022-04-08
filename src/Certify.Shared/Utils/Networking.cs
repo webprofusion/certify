@@ -75,6 +75,7 @@ namespace Certify.Utils
                 ;
                 ; // could not retrieve networking information
             }
+
             return list;
         }
     }

@@ -326,6 +326,7 @@ namespace Certify.Core.Management.Challenges
                 hash = Certify.Management.Util.ToUrlSafeBase64String(keyAuthzDig);
 
             }
+
             return $"{hash}";
         }
 
@@ -377,6 +378,7 @@ namespace Certify.Core.Management.Challenges
                     }
                 }
             }
+
             return pendingAuth;
         }
 
@@ -440,7 +442,7 @@ namespace Certify.Core.Management.Challenges
             log.Information("Using website path {path}", websiteRootPath ?? "[Auto]");
 
             var performFilesystemBasedValidation = false;
-            string destPath = "";
+            var destPath = "";
 
             if (string.IsNullOrEmpty(websiteRootPath) || !Directory.Exists(websiteRootPath))
             {

@@ -174,6 +174,7 @@ namespace Certify.CLI
             {
                 performRequestNow = true;
             }
+
             var managedCert = await _certifyClient.GetManagedCertificate(managedCertId);
             if (domains != null && domains.Any())
             {

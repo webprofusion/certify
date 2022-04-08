@@ -132,7 +132,7 @@ namespace Certify.Providers.ACME.Certes
             _allowInvalidTls = allowInvalidTls;
 
 #pragma warning disable SCS0004 // Certificate Validation has been disabled
-            if (allowInvalidTls)
+            if (_allowInvalidTls)
             {
                 ServicePointManager.ServerCertificateValidationCallback += (obj, cert, chain, errors) =>
                 {
@@ -222,6 +222,7 @@ namespace Certify.Providers.ACME.Certes
                             //remove legacy key info
                             System.IO.File.Delete(Path.Combine(_settingsFolder, "c-acc.key"));
                         }
+
                         SetAcmeContextAccountKey(_settings.AccountKey);
                     }
                     else
@@ -1068,10 +1069,12 @@ namespace Certify.Providers.ACME.Certes
                 {
                     log.Warning("Failed to determine error message for failed authorization.");
                 }
+
                 pendingAuthorization.Identifier.ValidationError = "Failed";
                 pendingAuthorization.Identifier.ValidationErrorType = "Error";
                 pendingAuthorization.IsValidated = false;
             }
+
             return pendingAuthorization;
         }
 
@@ -1236,8 +1239,10 @@ namespace Certify.Providers.ACME.Certes
                     {
                         subproblems += $"[{sub.Type}] {sub.Detail}; ";
                     }
+
                     msg += " [Subproblem Details] " + subproblems;
                 }
+
                 return new ProcessStepResult { ErrorMessage = msg, IsSuccess = false, Result = exp.Error };
             }
             catch (TaskCanceledException exp)
@@ -1266,7 +1271,8 @@ namespace Certify.Providers.ACME.Certes
 
             if (DefaultCertificateFormat == "pem" || DefaultCertificateFormat == "all")
             {
-                var pemOutputFile = ExportFullCertPEM(csrKey, certificateChain, certId, domainAsPath);
+                var pemOutputFile = ExportFullCertPEM(csrKey, certificateChain, domainAsPath);
+
                 if (string.IsNullOrEmpty(primaryCertOutputFile))
                 {
                     primaryCertOutputFile = pemOutputFile;
@@ -1674,7 +1680,7 @@ namespace Certify.Providers.ACME.Certes
               }
           }*/
 
-        private string ExportFullCertPEM(IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
+        private string ExportFullCertPEM(IKey csrKey, CertificateChain certificateChain, string primaryDomainPath)
         {
             var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..", "assets", primaryDomainPath }));
 
@@ -1751,6 +1757,7 @@ namespace Certify.Providers.ACME.Certes
             {
                 list.Add(new RegistrationItem { Name = _settings.AccountEmail });
             }
+
             return list;
         }
 

@@ -54,6 +54,7 @@ namespace Certify.Management
                 {
                     allDomains.AddRange(item.RequestConfig.SubjectAlternativeNames);
                 }
+
                 allDomains = allDomains.Distinct().OrderBy(d => d).ToList();
 
                 // certificate summary

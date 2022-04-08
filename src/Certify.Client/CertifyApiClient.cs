@@ -329,6 +329,7 @@ namespace Certify.Client
                 {
                     s.IsChanged = false;
                 }
+
                 return managedCertificateList;
             }
         }
@@ -619,6 +620,7 @@ namespace Certify.Client
             {
                 SetClientAuthorizationBearerToken();
             }
+
             return _refreshToken;
         }
 

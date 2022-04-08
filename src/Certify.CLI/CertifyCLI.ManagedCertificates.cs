@@ -40,7 +40,7 @@ namespace Certify.CLI
                 renewalMode = RenewalMode.RenewalsDue;
             }
 
-            List<string> targetItemIds = new List<string> { };
+            var targetItemIds = new List<string> { };
 
             if (args.Any(a => a.StartsWith("id=")))
             {
@@ -107,6 +107,7 @@ namespace Certify.CLI
                     }
                 }
             }
+
             Console.ForegroundColor = ConsoleColor.White;
 
             System.Console.WriteLine("Completed:" + results.Where(r => r.IsSuccess == true).Count());

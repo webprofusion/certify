@@ -47,6 +47,7 @@ namespace Certify.Management.Servers
             {
                 _iisBindingDeploymentTarget = new IISBindingDeploymentTarget(this);
             }
+
             return _iisBindingDeploymentTarget;
         }
 
@@ -71,6 +72,7 @@ namespace Certify.Management.Servers
                     return Task.FromResult(false);
                 }
             }
+
             return Task.FromResult(_isIISAvailable);
         }
 
@@ -146,6 +148,7 @@ namespace Certify.Management.Servers
                     Description = "Querying the state of IIS failed. This is usually because IIS is not installed or is not fully configured."
                 });
             }
+
             return configChecks;
         }
 
@@ -319,6 +322,7 @@ namespace Certify.Management.Servers
                                 {
                                     System.Diagnostics.Debug.WriteLine("Exception reading IIS Site state value:" + site.Name + " :: " + exp.ToString());
                                 }
+
                                 result.Add(b);
                             }
                         }
@@ -466,6 +470,7 @@ namespace Certify.Management.Servers
                                             }
                                         }
                                     }
+
                                     if (bindingSpec.IsHTTPS)
                                     {
                                         if (isSNISupported)
@@ -504,6 +509,7 @@ namespace Certify.Management.Servers
                             iisManager.CommitChanges();
                         }
                     }
+
                     isCompleted = true;
                 }
                 catch (Exception exp)
@@ -526,6 +532,7 @@ namespace Certify.Management.Servers
                     }
                 }
             }
+
             return result;
         }
 
@@ -565,6 +572,7 @@ namespace Certify.Management.Servers
                             iisManager.CommitChanges();
                         }
                     }
+
                     isCompleted = true;
                 }
                 catch (Exception exp)
@@ -587,6 +595,7 @@ namespace Certify.Management.Servers
                     }
                 }
             }
+
             return result;
         }
 
@@ -614,6 +623,7 @@ namespace Certify.Management.Servers
                             site.Bindings.Add("*:" + port + ":" + d, "http");
                         }
                     }
+
                     iisManager.CommitChanges();
                 }
             }
@@ -670,6 +680,7 @@ namespace Certify.Management.Servers
                     output += ((byte)(b >> 4)).ToString("X");
                     output += ((byte)(b & 0xF)).ToString("X");
                 }
+
                 return output;
             }
             catch
@@ -793,6 +804,7 @@ namespace Certify.Management.Servers
                     }
                 }
             }
+
             return null;
         }
 
@@ -879,6 +891,7 @@ namespace Certify.Management.Servers
                         iisManager.Sites.Remove(siteToRemove);
 
                     }
+
                     iisManager.CommitChanges();
                 }
             }

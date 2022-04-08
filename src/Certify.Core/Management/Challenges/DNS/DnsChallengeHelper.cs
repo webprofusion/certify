@@ -217,7 +217,7 @@ namespace Certify.Core.Management.Challenges
 
                     result.Message = $"{dnsAPIProvider.ProviderTitle} :: {result.Message}";
 
-                    bool isAwaitingUser = false;
+                    var isAwaitingUser = false;
 
                     if (challengeConfig.ChallengeProvider.Contains(".Manual") || result.Message.Contains("[Action Required]"))
                     {

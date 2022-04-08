@@ -123,6 +123,7 @@ namespace Certify.Management
                             _log?.Information($"Failed to performed db backup to {backupFile}. Check file permissions and delete old file if there is a conflict. " + exp.ToString());
 
                         }
+
                         db.Close();
                     }
                 }
@@ -181,6 +182,7 @@ namespace Certify.Management
             {
                 _log?.Error("An error occurred during database maintenance. Check storage free space and disk IO. " + exp);
             }
+
             return Task.FromResult(true);
         }
 
@@ -202,6 +204,7 @@ namespace Certify.Management
                     {
                         await cmd.ExecuteNonQueryAsync();
                     }
+
                     db.Close();
                 }
             }
@@ -218,7 +221,7 @@ namespace Certify.Management
             // create database if it doesn't exist
             if (!File.Exists(_dbPath))
             {
-                await this.CreateManagedItemsSchema();
+                await CreateManagedItemsSchema();
             }
 
             // save all new/modified items into settings database
@@ -239,6 +242,7 @@ namespace Certify.Management
                             await cmd.ExecuteNonQueryAsync();
                         }
                     }
+
                     tran.Commit();
                 }
             }
@@ -338,6 +342,7 @@ namespace Certify.Management
 
                             managedCertificates.Add(managedCertificate);
                         }
+
                         reader.Close();
                     }
                 }
@@ -424,6 +429,7 @@ namespace Certify.Management
                         managedCertificate = JsonConvert.DeserializeObject<ManagedCertificate>((string)reader["json"]);
                         managedCertificate.IsChanged = false;
                     }
+
                     reader.Close();
                 }
             }
@@ -529,6 +535,7 @@ namespace Certify.Management
                                         current = JsonConvert.DeserializeObject<ManagedCertificate>((string)reader["json"]);
                                         current.IsChanged = false;
                                     }
+
                                     reader.Close();
                                 }
                             }
@@ -552,6 +559,7 @@ namespace Certify.Management
 
                             tran.Commit();
                         }
+
                         db.Close();
                     }
                 });
@@ -578,6 +586,7 @@ namespace Certify.Management
                         cmd.Parameters.Add(new SQLiteParameter("@id", site.Id));
                         await cmd.ExecuteNonQueryAsync();
                     }
+
                     tran.Commit();
                 }
             }

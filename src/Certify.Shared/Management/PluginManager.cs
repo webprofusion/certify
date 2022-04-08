@@ -106,8 +106,8 @@ namespace Certify.Management
 
         private T LoadPlugin<T>(string dllFileName, string pluginFolder = null)
         {
-            Type interfaceType = typeof(T);
-            string pluginPath = String.Empty;
+            var interfaceType = typeof(T);
+            var pluginPath = String.Empty;
 
             try
             {
@@ -286,6 +286,7 @@ namespace Certify.Management
                     {
                         PluginLoadResults.Add(new PluginLoadResult(assem.Name, $"Failed to load plugin: {assem.Name}", false));
                     }
+
                     return result;
                 }
                 catch (Exception exp)

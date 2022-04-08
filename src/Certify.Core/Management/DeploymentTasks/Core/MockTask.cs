@@ -79,6 +79,7 @@ namespace Certify.Providers.DeploymentTasks.Core
                     results.Add(new ActionResult($"Required parameter not supplied: { p.Name}", false));
                 }
             }
+
             return await Task.FromResult(results);
         }
     }

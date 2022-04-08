@@ -57,8 +57,10 @@ namespace Certify.Management
                                 cmd.Parameters.Add(new SQLiteParameter("@id", storageKey));
                                 await cmd.ExecuteNonQueryAsync();
                             }
+
                             tran.Commit();
                         }
+
                         db.Close();
                     }
                 }
@@ -229,6 +231,7 @@ namespace Certify.Management
                             }
                         }
                     }
+
                     db.Close();
                 }
 
@@ -274,9 +277,11 @@ namespace Certify.Management
                             protectedString = (string)reader["protectedvalue"];
                         }
                     }
+
                     db.Close();
                 }
             }
+
             try
             {
                 return Unprotect(protectedString, PROTECTIONENTROPY, DataProtectionScope.CurrentUser);
@@ -353,8 +358,10 @@ namespace Certify.Management
 
                     tran.Commit();
                 }
+
                 db.Close();
             }
+
             return credentialInfo;
         }
     }

@@ -27,8 +27,8 @@ namespace Certify.UI.Windows
 
             DataContext = this;
 
-            this.Width *= MainViewModel.UIScaleFactor;
-            this.Height *= MainViewModel.UIScaleFactor;
+            Width *= MainViewModel.UIScaleFactor;
+            Height *= MainViewModel.UIScaleFactor;
 
             if (Item.StorageKey != null)
             {

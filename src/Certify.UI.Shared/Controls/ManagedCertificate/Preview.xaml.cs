@@ -132,6 +132,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                     }
                 }
             }
+
             return sb.ToString();
         }
 

@@ -18,6 +18,7 @@ namespace Certify.CLI
                     return true;
                 }
             }
+
             return false;
         }
 
@@ -32,7 +33,7 @@ namespace Certify.CLI
             var email = args[1];
             var key = args[2];
 
-            var result = await this.Activate(email, key);
+            var result = await Activate(email, key);
 
             if (result.IsSuccess)
             {
@@ -101,7 +102,7 @@ namespace Certify.CLI
 
             var email = args[1];
 
-            var deactivated = await this.Deactivate(email);
+            var deactivated = await Deactivate(email);
 
             if (deactivated)
             {

@@ -44,6 +44,7 @@ namespace Certify.UI.Blazor.Core.Models.Services
                     }
                 }
             }
+
             return sb.ToString();
         }
     }

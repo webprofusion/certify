@@ -182,8 +182,8 @@ namespace Certify.Core.Management.Challenges
 
             if (!string.IsNullOrEmpty(providerType))
             {
-                List<IDnsProviderProviderPlugin> providerPlugins = PluginManager.CurrentInstance.DnsProviderProviders;
-                foreach (IDnsProviderProviderPlugin providerPlugin in providerPlugins)
+                var providerPlugins = PluginManager.CurrentInstance.DnsProviderProviders;
+                foreach (var providerPlugin in providerPlugins)
                 {
                     dnsAPIProvider = providerPlugin.GetProvider(providerPlugin.GetType(), providerType);
                     if (dnsAPIProvider != null)

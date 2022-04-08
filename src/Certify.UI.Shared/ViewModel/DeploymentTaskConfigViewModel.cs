@@ -49,8 +49,8 @@ namespace Certify.UI.ViewModel
             get
             {
 
-                Dictionary<string, string> list = new Dictionary<string, string>();
-                if (this.DeploymentProvider != null)
+                var list = new Dictionary<string, string>();
+                if (DeploymentProvider != null)
                 {
 
                     if (DeploymentProvider.ExternalCredentialType != null)
@@ -83,6 +83,7 @@ namespace Certify.UI.ViewModel
                         }
                     }
                 }
+
                 return list;
             }
         }
@@ -102,6 +103,7 @@ namespace Certify.UI.ViewModel
                     TaskTrigger = editAsPostRequestTask ? TaskTriggerType.ON_SUCCESS : TaskTriggerType.ANY_STATUS
                 };
             }
+
             SelectedItem = item;
 
         }

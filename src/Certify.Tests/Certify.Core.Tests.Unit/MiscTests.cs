@@ -46,7 +46,7 @@ namespace Certify.Core.Tests.Unit
             result = testValue.WithDefault("ok");
             Assert.AreEqual(result, "test");
 
-            Models.CertificateAuthority ca = new Models.CertificateAuthority();
+            var ca = new Models.CertificateAuthority();
             ca.Description = null;
             result = ca.Description.WithDefault("default");
             Assert.AreEqual(result, "default");

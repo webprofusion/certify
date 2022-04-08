@@ -15,10 +15,10 @@ namespace Certify.UI.Windows
         {
             InitializeComponent();
 
-            this.DataContext = AppViewModel;
+            DataContext = AppViewModel;
 
-            this.Width *= AppViewModel.UIScaleFactor;
-            this.Height *= AppViewModel.UIScaleFactor;
+            Width *= AppViewModel.UIScaleFactor;
+            Height *= AppViewModel.UIScaleFactor;
 
             DeploymentTaskEditor.SetEditItem(config, editAsPostRequestTask);
         }

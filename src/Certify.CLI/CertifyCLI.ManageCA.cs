@@ -16,6 +16,7 @@ namespace Certify.CLI
                 Console.WriteLine("Not enough arguments");
                 return;
             }
+
             var certificateAuthorityId = args[2];
             var email = args[3];
 

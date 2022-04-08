@@ -60,6 +60,7 @@ namespace Certify.Management
                 {
                     targetCerts.Add(await _itemManager.GetById(id));
                 }
+
                 managedCertificates = targetCerts;
 
             }
@@ -314,6 +315,7 @@ namespace Certify.Management
                         {
                             hoursWait = s.RenewalFailureCount;
                         }
+
                         var nextAttemptByDate = s.DateLastRenewalAttempt.Value.AddHours(hoursWait);
                         if (DateTime.Now < nextAttemptByDate)
                         {
@@ -322,6 +324,7 @@ namespace Certify.Management
                     }
                 }
             }
+
             return isRenewalRequired;
         }
 
@@ -417,6 +420,7 @@ namespace Certify.Management
                         preRequestTasks.Substeps.Add(r);
 
                     }
+
                     certRequestResult.Actions.Add(preRequestTasks);
 
                     if (results.Any(r => r.HasError))
@@ -558,6 +562,7 @@ namespace Certify.Management
                         postRequestTasks.Substeps.Add(r);
 
                     }
+
                     certRequestResult.Actions.Add(postRequestTasks);
 
                     // certificate may already be deployed to some extent so this counts a completed with warnings
@@ -962,7 +967,7 @@ namespace Certify.Management
                 ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RequestCertificate, managedCertificate));
 
                 // check item or settings for preferred chain option
-                string preferredChain = managedCertificate.RequestConfig.PreferredChain;
+                var preferredChain = managedCertificate.RequestConfig.PreferredChain;
                 if (string.IsNullOrEmpty(preferredChain))
                 {
                     var acc = await GetAccountDetailsForManagedItem(managedCertificate);
@@ -1343,7 +1348,7 @@ namespace Certify.Management
             {
                 if (!string.IsNullOrEmpty(managedCertificate.CertificatePath) && File.Exists(managedCertificate.CertificatePath))
                 {
-                    var result = await this.DeployCertificate(managedCertificate, progress, isPreviewOnly, includeDeploymentTasks);
+                    var result = await DeployCertificate(managedCertificate, progress, isPreviewOnly, includeDeploymentTasks);
 
                     results.Add(result);
                 }
@@ -1455,6 +1460,7 @@ namespace Certify.Management
                         postRequestTasks.Substeps.Add(r);
 
                     }
+
                     result.Actions.Add(postRequestTasks);
 
                     // certificate may already be deployed to some extent so this counts a completed with warnings

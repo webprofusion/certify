@@ -195,6 +195,7 @@ namespace Certify.Providers.DNS.Cloudflare
                     throw new Exception($"Could not get DNS records for zone {zoneId}. Result: {result.StatusCode} - {result.Content.ReadAsStringAsync().GetAwaiter().GetResult()}");
                 }
             }
+
             return records;
         }
 

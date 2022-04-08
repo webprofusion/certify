@@ -16,10 +16,10 @@ namespace Certify.UI.Windows
         {
             InitializeComponent();
 
-            this.DataContext = MainViewModel;
+            DataContext = MainViewModel;
 
-            this.Width *= MainViewModel.UIScaleFactor;
-            this.Height *= MainViewModel.UIScaleFactor;
+            Width *= MainViewModel.UIScaleFactor;
+            Height *= MainViewModel.UIScaleFactor;
 
             var _markdownPipelineBuilder = new Markdig.MarkdownPipelineBuilder();
             _markdownPipelineBuilder.Extensions.Add(new Markdig.Extensions.Tables.PipeTableExtension());
@@ -53,12 +53,12 @@ namespace Certify.UI.Windows
 
             // generate release notes
 
-            bool showAllChanges = false;
+            var showAllChanges = false;
 
             UpdateMessage.Text = _update.Message.Body;
             CurrentVersionInfo.Text = "Current installed version: " + _update.InstalledVersion.ToString();
 
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             sb.AppendLine("**Release Notes**\n");
 
             sb.AppendLine($"{_update.Message.ReleaseNotesURL}\n");

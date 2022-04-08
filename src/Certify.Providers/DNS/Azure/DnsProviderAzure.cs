@@ -114,11 +114,12 @@ namespace Certify.Providers.DNS.Azure
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
-                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                if (int.TryParse(parameters["propagationdelay"], out var customPropDelay))
                 {
                     _customPropagationDelay = customPropDelay;
                 }
             }
+
             return true;
         }
 
@@ -284,6 +285,7 @@ namespace Certify.Providers.DNS.Azure
             {
                 results.Add(new DnsZone { ZoneId = z.Name, Name = z.Name });
             }
+
             return results;
         }
     }

@@ -30,8 +30,8 @@ namespace Certify.UI.Windows
 
             DataContext = this;
 
-            this.Width *= MainViewModel.UIScaleFactor;
-            this.Height *= MainViewModel.UIScaleFactor;
+            Width *= MainViewModel.UIScaleFactor;
+            Height *= MainViewModel.UIScaleFactor;
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)

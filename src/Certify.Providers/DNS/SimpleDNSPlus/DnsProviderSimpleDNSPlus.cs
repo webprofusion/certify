@@ -282,12 +282,13 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
             {
                 _baseUri = "https://" + _authServer.Trim('/') + "/v2/";
             }
+
             _listZonesUri = _baseUri + "zones";
             _createRecordUri = _baseUri + "zones/{0}/records";
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
-                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                if (int.TryParse(parameters["propagationdelay"], out var customPropDelay))
                 {
                     _customPropagationDelay = customPropDelay;
                 }

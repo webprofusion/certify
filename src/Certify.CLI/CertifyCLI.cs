@@ -33,6 +33,7 @@ namespace Certify.CLI
                 System.Console.WriteLine(exp.ToString());
                 isAvailable = false;
             }
+
             return isAvailable;
         }
 

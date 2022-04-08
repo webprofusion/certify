@@ -19,16 +19,17 @@ namespace Certify.UI.Windows
         {
             InitializeComponent();
 
-            this.DataContext = MainViewModel;
+            DataContext = MainViewModel;
 
-            this.Width *= MainViewModel.UIScaleFactor;
-            this.Height *= MainViewModel.UIScaleFactor;
+            Width *= MainViewModel.UIScaleFactor;
+            Height *= MainViewModel.UIScaleFactor;
 
             if (feedbackMsg != null)
             {
                 FeedbackMessage = feedbackMsg;
                 Comment.Text = FeedbackMessage;
             }
+
             IsException = isException;
 
             if (IsException)
@@ -89,6 +90,7 @@ namespace Certify.UI.Windows
                 //failed
                 MessageBox.Show(SR.Send_Feedback_Error);
             }
+
             Submit.IsEnabled = true;
         }
     }

@@ -64,6 +64,7 @@ namespace Certify.UI.Controls.Settings
                     {
                         list.Add(feature);
                     }
+
                     appModel.Preferences.FeatureFlags = list.ToArray();
                 }
 
@@ -78,13 +79,13 @@ namespace Certify.UI.Controls.Settings
         {
             InitializeComponent();
 
-            this.DataContext = EditModel;
+            DataContext = EditModel;
 
         }
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            this.DataContext = EditModel;
+            DataContext = EditModel;
             EditModel.RaisePropertyChangedEvent(null);
         }
     }

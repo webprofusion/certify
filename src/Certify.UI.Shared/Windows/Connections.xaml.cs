@@ -17,8 +17,8 @@ namespace Certify.UI.Windows
         {
             InitializeComponent();
 
-            this.RefreshConnections();
-            this.DataContext = AppViewModel.Current;
+            RefreshConnections();
+            DataContext = AppViewModel.Current;
         }
 
         private void RefreshConnections()

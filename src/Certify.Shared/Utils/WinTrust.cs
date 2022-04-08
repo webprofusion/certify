@@ -124,7 +124,7 @@ namespace Security.WinTrust
                 ProvFlags |= WinTrustDataProvFlags.DisableMD2andMD4;
             }
 
-            WinTrustFileInfo wtfiData = _fileInfo;
+            var wtfiData = _fileInfo;
             FileInfoPtr = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(WinTrustFileInfo)));
             Marshal.StructureToPtr(wtfiData, FileInfoPtr, false);
         }
@@ -170,11 +170,11 @@ namespace Security.WinTrust
         // call WinTrust.WinVerifyTrust() to check embedded file signature
         public static bool VerifyEmbeddedSignature(string fileName)
         {
-            WinTrustFileInfo wtfi = new WinTrustFileInfo(fileName);
-            WinTrustData wtd = new WinTrustData(wtfi);
-            Guid guidAction = new Guid(WINTRUST_ACTION_GENERIC_VERIFY_V2);
-            WinVerifyTrustResult result = WinVerifyTrust(INVALID_HANDLE_VALUE, guidAction, wtd);
-            bool ret = (result == WinVerifyTrustResult.Success);
+            var wtfi = new WinTrustFileInfo(fileName);
+            var wtd = new WinTrustData(wtfi);
+            var guidAction = new Guid(WINTRUST_ACTION_GENERIC_VERIFY_V2);
+            var result = WinVerifyTrust(INVALID_HANDLE_VALUE, guidAction, wtd);
+            var ret = (result == WinVerifyTrustResult.Success);
             wtfi.Dispose();
             wtd.Dispose();
             return ret;

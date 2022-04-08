@@ -51,6 +51,7 @@ namespace Certify.UI.Utils
                     }
                 }
             }
+
             Mouse.OverrideCursor = Cursors.Arrow;
             return updateCheck;
         }

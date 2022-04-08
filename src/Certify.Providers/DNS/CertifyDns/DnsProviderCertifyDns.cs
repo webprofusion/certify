@@ -69,7 +69,7 @@ namespace Certify.Providers.DNS.CertifyDns
 
         public DnsProviderCertifyDns() : base()
         {
-            this.EnableExtensions = true;
+            EnableExtensions = true;
 
             _settingsPath = EnvironmentUtil.GetAppDataFolder();
 
@@ -296,7 +296,7 @@ namespace Certify.Providers.DNS.CertifyDns
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
-                if (int.TryParse(parameters["propagationdelay"], out int customPropDelay))
+                if (int.TryParse(parameters["propagationdelay"], out var customPropDelay))
                 {
                     _customPropagationDelay = customPropDelay;
                 }

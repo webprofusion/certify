@@ -49,6 +49,7 @@ namespace Certify.UI.Utils
                 {
                     return new SolidColorBrush(System.Windows.Media.Colors.Red);
                 }
+
                 if (value.ToString() == RequestState.Success.ToString())
                 {
                     return new SolidColorBrush(System.Windows.Media.Colors.Green);

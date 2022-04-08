@@ -34,6 +34,7 @@ namespace Certify.Models
             {
                 System.IO.Directory.CreateDirectory(path);
             }
+
             return path;
         }
     }

@@ -61,8 +61,8 @@ namespace Certify.CLI
 
             var countSiteIdsFixed = 0;
             var countBindingRedeployments = 0;
-            Stopwatch totalTime = Stopwatch.StartNew();
-            Stopwatch itemTiming = Stopwatch.StartNew();
+            var totalTime = Stopwatch.StartNew();
+            var itemTiming = Stopwatch.StartNew();
 
             foreach (var site in managedCertificates)
             {
@@ -308,6 +308,7 @@ namespace Certify.CLI
                             System.Console.WriteLine("Failed to complete pending authz for  " + url);
 
                         }
+
                         await Task.Delay(250);
                     }
                 }

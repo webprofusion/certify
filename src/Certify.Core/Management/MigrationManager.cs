@@ -220,6 +220,7 @@ namespace Certify.Core.Management
                     }
                 }
             }
+
             return scriptsAndContent;
         }
 
@@ -265,16 +266,18 @@ namespace Certify.Core.Management
                         {
                             var decryptedBytes = new byte[source.Length];
 
-                            int totalRead = 0;
+                            var totalRead = 0;
                             while (totalRead < source.Length)
                             {
-                                int bytesRead = cryptoStream.Read(decryptedBytes, totalRead, source.Length - totalRead);
+                                var bytesRead = cryptoStream.Read(decryptedBytes, totalRead, source.Length - totalRead);
                                 if (bytesRead == 0)
                                 {
                                     break;
                                 }
+
                                 totalRead += bytesRead;
                             }
+
                             memoryStream.Close();
                             cryptoStream.Close();
 
@@ -409,9 +412,9 @@ namespace Certify.Core.Management
                 {
 
                     // check if item is auto deployment or single site, if single site warn if we don't have an exact match (convert to Auto)
-                    DeploymentOption deploymentMode = c.RequestConfig.DeploymentSiteOption;
-                    bool hasUnmatchedTargets = false;
-                    bool siteIdChanged = false;
+                    var deploymentMode = c.RequestConfig.DeploymentSiteOption;
+                    var hasUnmatchedTargets = false;
+                    var siteIdChanged = false;
 
                     var warningMsg = "";
                     if (deploymentMode == DeploymentOption.SingleSite)
@@ -525,7 +528,7 @@ namespace Certify.Core.Management
                 if (cert != null)
                 {
 
-                    bool isVerified = cert.Verify();
+                    var isVerified = cert.Verify();
 
                     if (!System.IO.File.Exists(c.Filename))
                     {

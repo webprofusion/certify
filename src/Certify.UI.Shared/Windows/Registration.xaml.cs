@@ -23,10 +23,10 @@ namespace Certify.UI.Windows
         {
             InitializeComponent();
 
-            this.DataContext = EditModel;
+            DataContext = EditModel;
 
-            this.Width *= EditModel.MainViewModel.UIScaleFactor;
-            this.Height *= EditModel.MainViewModel.UIScaleFactor;
+            Width *= EditModel.MainViewModel.UIScaleFactor;
+            Height *= EditModel.MainViewModel.UIScaleFactor;
         }
 
         private async void ValidateKey_Click(object sender, RoutedEventArgs e)

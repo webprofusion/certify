@@ -50,6 +50,7 @@ namespace Certify.Core.Tests
             {
                 await iisManager.DeleteSite(testSiteName);
             }
+
             var site = await iisManager.CreateSite(testSiteName, testSiteDomain, _primaryWebRoot, "DefaultAppPool");
             _siteId = site.Id.ToString();
             Assert.IsTrue(await iisManager.SiteExists(testSiteName));
@@ -260,6 +261,7 @@ namespace Certify.Core.Tests
                 {
                     domains.Add(Guid.NewGuid().ToString() + ".toomany.com");
                 }
+
                 await iisManager.AddSiteBindings(site.SiteId, domains);
             }
             finally

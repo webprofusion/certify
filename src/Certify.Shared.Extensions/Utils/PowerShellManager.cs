@@ -48,6 +48,7 @@ namespace Certify.Management
                 {
                     throw new ArgumentException($"File '{scriptFile}' does not exist.");
                 }
+
                 if (scriptInfo.Extension.ToLower() != ".ps1")
                 {
                     throw new ArgumentException($"File '{scriptFile}' is not a powershell script.");
@@ -160,6 +161,7 @@ namespace Certify.Management
                     return filePath;
                 }
             }
+
             return null;
         }
 
@@ -228,10 +230,11 @@ namespace Certify.Management
                 scriptProcessInfo.Domain = domain;
 
                 var sPwd = new SecureString();
-                foreach (char c in pwd)
+                foreach (var c in pwd)
                 {
                     sPwd.AppendChar(c);
                 }
+
                 sPwd.MakeReadOnly();
 
                 scriptProcessInfo.Password = sPwd;
@@ -356,6 +359,7 @@ namespace Certify.Management
                             val = false;
                         }
                     }
+
                     shell.AddParameter(a.Key, val);
                 }
             }
@@ -411,7 +415,7 @@ namespace Certify.Management
                 var currentWait = 0;
                 var pollSeconds = 5;
 
-                bool timeoutOccurred = false;
+                var timeoutOccurred = false;
 
                 while (!timeoutOccurred && !async.AsyncWaitHandle.WaitOne(pollSeconds * 1000, false))
                 {
@@ -454,6 +458,7 @@ namespace Certify.Management
                         output.AppendLine("Error: " + e);
                     }
                 }
+
                 return new ActionResult(output.ToString().TrimEnd('\n'), !errors.Any());
             }
             catch (ParseException ex)

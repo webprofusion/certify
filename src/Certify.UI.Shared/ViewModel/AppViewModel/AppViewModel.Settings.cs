@@ -127,7 +127,7 @@ namespace Certify.UI.ViewModel
             await _prefLock.WaitAsync(500);
             try
             {
-                await this._certifyClient.SetPreferences(Preferences);
+                await _certifyClient.SetPreferences(Preferences);
             }
             catch
             {

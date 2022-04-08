@@ -35,7 +35,7 @@ namespace Certify.UI.Windows
         {
             InitializeComponent();
 
-            this.DataContext = Model;
+            DataContext = Model;
         }
 
         private async void Import_Click(object sender, RoutedEventArgs e)
@@ -48,7 +48,7 @@ namespace Certify.UI.Windows
             dialog.DefaultExt = "json";
             dialog.Filter = "Json files (*.json)|*.json|All files (*.*)|*.*";
 
-            bool isPreview = true;
+            var isPreview = true;
 
             // prompt user for save file location and perform export to json file
 
@@ -84,7 +84,7 @@ namespace Certify.UI.Windows
                 MainViewModel.ShowNotification("Import completed OK", Shared.NotificationType.Success);
             }
 
-            this.PrepareImportPreview(Model.Package, results, isPreview ? "Import Preview" : "Import Results");
+            PrepareImportPreview(Model.Package, results, isPreview ? "Import Preview" : "Import Results");
 
             if (results.All(r => r.HasError == false))
             {
@@ -113,7 +113,7 @@ namespace Certify.UI.Windows
         private void PrepareImportPreview(ImportExportPackage package, List<ActionStep> steps, string title)
         {
             Markdig.MarkdownPipeline _markdownPipeline;
-            string _css = "";
+            var _css = "";
 
             var _markdownPipelineBuilder = new Markdig.MarkdownPipelineBuilder();
             _markdownPipelineBuilder.Extensions.Add(new Markdig.Extensions.Tables.PipeTableExtension());
@@ -134,6 +134,7 @@ namespace Certify.UI.Windows
             {
 
             }
+
             var intro = $"Importing from source: {package.SourceName}, exported {package.ExportDate.ToLongDateString()}, app version {package.SystemVersion.ToString().AsNullWhenBlank() ?? "(unknown)"}";
             var markdown = GetStepsAsMarkdown(steps, title, intro);
 
@@ -230,6 +231,7 @@ namespace Certify.UI.Windows
                     }
                 }
             }
+
             return sb.ToString();
         }
 

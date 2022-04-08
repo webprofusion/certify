@@ -137,12 +137,12 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void SelectCustomCSR_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
+            var openFileDialog = new OpenFileDialog();
             if (openFileDialog.ShowDialog() == true)
             {
                 var csrContent = File.ReadAllText(openFileDialog.FileName);
 
-                bool isInvalid = false;
+                var isInvalid = false;
                 if (csrContent.Contains("CERTIFICATE REQUEST"))
                 {
                     // PEM encoded CSR
@@ -162,6 +162,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                         {
                             domainOptions.Add(new Models.DomainOption { Domain = d, IsManualEntry = true, IsPrimaryDomain = (d == domains[0]), IsSelected = true });
                         }
+
                         ItemViewModel.SelectedItem.DomainOptions = domainOptions;
                         ItemViewModel.SelectedItem.RequestConfig.PrimaryDomain = domainOptions.First(o => o.IsPrimaryDomain).Domain;
                         ItemViewModel.SelectedItem.RequestConfig.SubjectAlternativeNames = domainOptions.Select(d => d.Domain).ToArray();
@@ -185,7 +186,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void SelectCustomPrivateKey_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
+            var openFileDialog = new OpenFileDialog();
             if (openFileDialog.ShowDialog() == true)
             {
 
@@ -248,7 +249,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             if (cred.Item != null && cred.Item.StorageKey != null)
             {
-                this.CertPasswordCredential.SelectedValue = credential.StorageKey;
+                CertPasswordCredential.SelectedValue = credential.StorageKey;
             }
         }
 
@@ -256,17 +257,16 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             // FIXME: combobox binding misbehaves so force it here
             var currentCredentialId = ItemViewModel.SelectedItem?.CertificatePasswordCredentialId;
-            this.CertPasswordCredential.ItemsSource = ItemViewModel.StoredPasswords;
-            this.CertPasswordCredential.SelectedValue = currentCredentialId;
+            CertPasswordCredential.ItemsSource = ItemViewModel.StoredPasswords;
+            CertPasswordCredential.SelectedValue = currentCredentialId;
         }
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            this.DataContext = this.ItemViewModel;
-            this.ItemViewModel.RaisePropertyChangedEvent(null);
+            DataContext = ItemViewModel;
+            ItemViewModel.RaisePropertyChangedEvent(null);
 
-            this.RefreshPfxCredentials();
-
+            RefreshPfxCredentials();
         }
     }
 }

@@ -40,10 +40,10 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             InitializeComponent();
 
-            this.DataContext = ViewModel;
+            DataContext = ViewModel;
 
-            this._appViewModel.PropertyChanged -= AppViewModel_PropertyChanged;
-            this._appViewModel.PropertyChanged += AppViewModel_PropertyChanged;
+            _appViewModel.PropertyChanged -= AppViewModel_PropertyChanged;
+            _appViewModel.PropertyChanged += AppViewModel_PropertyChanged;
         }
 
         private void AppViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -76,7 +76,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 PanelWarning.Visibility = ViewModel.Warning == 0 ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
                 PanelAwaitingUser.Visibility = ViewModel.AwaitingUser == 0 ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
 
-                this.Visibility = System.Windows.Visibility.Visible;
+                Visibility = System.Windows.Visibility.Visible;
             }
             else
             {
@@ -88,7 +88,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 ViewModel.TotalDomains = 0;
 
-                this.Visibility = System.Windows.Visibility.Collapsed;
+                Visibility = System.Windows.Visibility.Collapsed;
             }
         }
 

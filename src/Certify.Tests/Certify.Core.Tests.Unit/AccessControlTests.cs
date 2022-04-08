@@ -16,7 +16,7 @@ namespace Certify.Core.Tests.Unit
 
         public Task<T> Load<T>(string id)
         {
-            if (_store.TryGetValue(id, out object value))
+            if (_store.TryGetValue(id, out var value))
             {
                 return Task.FromResult((T)value);
             }

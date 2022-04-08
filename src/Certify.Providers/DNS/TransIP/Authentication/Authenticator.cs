@@ -43,6 +43,7 @@ namespace Certify.Providers.DNS.TransIP.Authentication
             {
                 duration = DEFAULT_LOGIN_DURATION;
             }
+
             var temp = Convert.ToInt32(Math.Ceiling(duration));
             return temp;
         }
@@ -58,6 +59,7 @@ namespace Certify.Providers.DNS.TransIP.Authentication
                     ResetToken();
                     return new ActionResult<string> { IsSuccess = false, Message = token.Message };
                 }
+
                 _token = token.Result;
             }
 

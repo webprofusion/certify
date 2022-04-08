@@ -166,6 +166,7 @@ namespace Certify.Service.Controllers
             {
                 sourceFilePath = System.IO.Path.GetFileName(sourceFilePath);
             }
+
             var output = $"API [{sourceFilePath}/{callerName}] {msg}";
 
             Console.ForegroundColor = ConsoleColor.Yellow;

@@ -270,6 +270,7 @@ namespace Certify.Core.Management
                                 {
                                     sslPort = b.Port;
                                 }
+
                                 if (!unassignedIPs.Contains(b.IP))
                                 {
                                     targetIPAddress = b.IP;

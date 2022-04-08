@@ -353,6 +353,7 @@ namespace Certify.Management
                 {
                     _progressResults.Remove(existing);
                 }
+
                 _progressResults.Add(state);
             }
         }

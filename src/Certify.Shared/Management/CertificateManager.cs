@@ -356,6 +356,7 @@ namespace Certify.Management
 
                 store.Close();
             }
+
             return list;
         }
 
@@ -376,6 +377,7 @@ namespace Certify.Management
 
                 store.Close();
             }
+
             return cert;
         }
 
@@ -396,6 +398,7 @@ namespace Certify.Management
 
                 store.Close();
             }
+
             return cert;
         }
 
@@ -409,6 +412,7 @@ namespace Certify.Management
 
                 store.Close();
             }
+
             return certificate;
         }
 
@@ -615,6 +619,7 @@ namespace Certify.Management
                             log?.Error("Could not remove cert:" + oldCert.FriendlyName + " " + exp.ToString());
                         }
                     }
+
                     store.Close();
                 }
             }
@@ -672,6 +677,7 @@ namespace Certify.Management
                 {
                     store.Remove(c);
                 }
+
                 store.Close();
             }
 
@@ -688,6 +694,7 @@ namespace Certify.Management
                             store.Add(c);
                         }
                     }
+
                     store.Close();
                 }
 

@@ -110,6 +110,7 @@ namespace Certify.Management
                         throw;
                     }
                 }
+
                 return true; // success!
             }
             catch (Exception ex)

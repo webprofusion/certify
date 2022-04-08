@@ -45,6 +45,7 @@ namespace Certify.UI.ViewModel
                 {
                     value = ManagedCertificates.FirstOrDefault(s => s.Id == value.Id);
                 }
+
                 _selectedItem = value;
             }
         }
@@ -169,9 +170,11 @@ namespace Certify.UI.ViewModel
                             _managedCertCacheSemaphore.Release();
                         }
                     }
+
                     return deletedOK;
                 }
             }
+
             return false;
         }
 

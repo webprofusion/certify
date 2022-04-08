@@ -166,6 +166,7 @@ namespace Certify.Core.Management.Challenges
                         stream.Flush();
                         stream.Close();
                     }
+
                     server.Response.Close();
                     Stop();
                     return;

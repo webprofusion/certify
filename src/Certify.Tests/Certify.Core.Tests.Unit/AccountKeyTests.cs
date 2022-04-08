@@ -55,6 +55,7 @@ namespace Certify.Core.Tests.Unit
 
                     newKey = KeyFactory.FromPem(pem);
                 }
+
                 attempts++;
             }
         }

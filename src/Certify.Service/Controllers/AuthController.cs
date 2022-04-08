@@ -28,7 +28,7 @@ namespace Certify.Service
 
             // user is using windows authentication, return an initial secret auth token. TODO: user must be able to invalidate existing auth key
             var encryptedBytes = System.Security.Cryptography.ProtectedData.Protect(
-                    System.Text.Encoding.UTF8.GetBytes(this.ActionContext.RequestContext.Principal.Identity.Name),
+                    System.Text.Encoding.UTF8.GetBytes(ActionContext.RequestContext.Principal.Identity.Name),
                     System.Text.Encoding.UTF8.GetBytes("authtoken"), System.Security.Cryptography.DataProtectionScope.LocalMachine
                     );
 

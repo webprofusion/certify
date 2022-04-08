@@ -80,6 +80,7 @@ namespace Certify.Client
                                     (sender, certificate, chain, sslPolicyErrors) => { return true; };
                             }
                         }
+
                         return message;
                     };
                 })

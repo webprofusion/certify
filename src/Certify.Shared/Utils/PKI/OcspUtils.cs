@@ -99,6 +99,7 @@ namespace Certify.Shared.Utils
                             cStatus = CertificateStatusType.Unknown;
                         }
                     }
+
                     break;
                 case OcspRespStatus.Unauthorized:
                     cStatus = CertificateStatusType.Unknown;

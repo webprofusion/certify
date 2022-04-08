@@ -45,7 +45,7 @@ namespace Certify.UI.Windows
             InitializeComponent();
             DataContext = _appViewModel;
 
-            this.Activate();
+            Activate();
         }
 
         private async Task NewCertificate(ManagedCertificate original = null)
@@ -114,7 +114,7 @@ namespace Certify.UI.Windows
 
         private async void Button_NewCertificate(object sender, RoutedEventArgs e)
         {
-            await this.NewCertificate();
+            await NewCertificate();
 
         }
 
@@ -158,8 +158,8 @@ namespace Certify.UI.Windows
                 try
                 {
                     // only apply saved left pos if it's not off-screen
-                    double virtScreenWidth = System.Windows.SystemParameters.VirtualScreenWidth;
-                    double virtScreenHeight = System.Windows.SystemParameters.VirtualScreenHeight;
+                    var virtScreenWidth = System.Windows.SystemParameters.VirtualScreenWidth;
+                    var virtScreenHeight = System.Windows.SystemParameters.VirtualScreenHeight;
 
                     if (uiSettings.Width < virtScreenWidth)
                     {
@@ -299,6 +299,7 @@ namespace Certify.UI.Windows
                 {
                     _appViewModel.GetApplication().Shutdown();
                 }
+
                 return;
             }
 
@@ -370,7 +371,7 @@ namespace Certify.UI.Windows
 
             if (_appViewModel.UpdateCheckResult != null)
             {
-                this.PerformUpdateConfirmation(_appViewModel.UpdateCheckResult);
+                PerformUpdateConfirmation(_appViewModel.UpdateCheckResult);
             }
         }
 
@@ -448,7 +449,7 @@ namespace Certify.UI.Windows
         {
             await Application.Current.Dispatcher.InvokeAsync(async delegate
             {
-                await this.NewCertificate(original);
+                await NewCertificate(original);
             });
         }
     }

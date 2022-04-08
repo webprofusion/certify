@@ -95,7 +95,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             var task = (sender as DockPanel).DataContext as DeploymentTaskConfig;
 
             // Package the data.
-            DataObject data = new DataObject();
+            var data = new DataObject();
             data.SetData(DataFormats.StringFormat, task.Id);
 
             // Inititate the drag-and-drop operation.
@@ -113,7 +113,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             if (e.Data.GetDataPresent(DataFormats.StringFormat))
             {
-                string context = "PostRequest";
+                var context = "PostRequest";
 
                 var droppedTaskId = (string)e.Data.GetData(DataFormats.StringFormat);
 
@@ -152,6 +152,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 e.Effects = DragDropEffects.Move;
 
             }
+
             e.Handled = true;
         }
     }

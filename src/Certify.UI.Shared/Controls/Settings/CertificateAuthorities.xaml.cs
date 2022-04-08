@@ -23,7 +23,7 @@ namespace Certify.UI.Controls.Settings
         public CertificateAuthorities()
         {
             InitializeComponent();
-            this.DataContext = EditModel;
+            DataContext = EditModel;
         }
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e) => LoadSettings();
@@ -41,11 +41,11 @@ namespace Certify.UI.Controls.Settings
             EditModel.MainViewModel.RefreshCertificateAuthorityList();
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
-            this.AccountList.ItemsSource = EditModel.MainViewModel.AccountDetails;
+            AccountList.ItemsSource = EditModel.MainViewModel.AccountDetails;
 
             EnableAutomaticCAFailover.IsChecked = EditModel.Prefs.EnableAutomaticCAFailover;
 
-            this.CertificateAuthorityList.ItemsSource = EditModel.MainViewModel.CertificateAuthorities.Where(c => c.IsEnabled == true);
+            CertificateAuthorityList.ItemsSource = EditModel.MainViewModel.CertificateAuthorities.Where(c => c.IsEnabled == true);
 
             CertificateAuthorityList.SelectedValue = EditModel.Prefs.DefaultCertificateAuthority;
 

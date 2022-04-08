@@ -106,7 +106,7 @@ namespace Certify.UI.Windows
                 else
                 {
                     // add new
-                    CertificateAuthority ca = new CertificateAuthority
+                    var ca = new CertificateAuthority
                     {
                         Id = Guid.NewGuid().ToString().ToLower(),
                         IsCustom = true,

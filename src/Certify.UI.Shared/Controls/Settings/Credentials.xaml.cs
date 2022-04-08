@@ -23,7 +23,7 @@ namespace Certify.UI.Controls.Settings
         public Credentials()
         {
             InitializeComponent();
-            this.DataContext = EditModel;
+            DataContext = EditModel;
 
         }
 

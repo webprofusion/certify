@@ -216,7 +216,7 @@ namespace Certify.Management
                 results.AddRange(serverCheck.ConvertAll(x => new StatusMessage { IsOK = !x.HasError, HasWarning = x.HasWarning, Message = x.Description }));
             }
 
-            bool httpChallengeServerActive = false;
+            var httpChallengeServerActive = false;
             if (managedCertificate.GetChallengeConfig(null).ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
             {
                 if (CoreAppSettings.Current.EnableHttpChallengeServer)
@@ -437,6 +437,7 @@ namespace Certify.Management
                             return true;
                         }
                     }
+
                     return false;
                 }
                 catch
@@ -530,6 +531,7 @@ namespace Certify.Management
                     return true;
                 }
             }
+
             return true;
         }
     }
