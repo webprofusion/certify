@@ -1,4 +1,10 @@
-﻿Running Manually:
+﻿Certify Service Worker (Cross Platform)
+-----------------
+Development workflow
+
+
+
+Running Manually:
 
 dotnet ./Certify.Service.Worker.dll
 
