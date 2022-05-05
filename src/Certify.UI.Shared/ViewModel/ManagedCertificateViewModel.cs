@@ -512,11 +512,10 @@ namespace Certify.UI.ViewModel
                 item.Id = Guid.NewGuid().ToString();
 
                 item.ItemType = ManagedCertificateType.SSL_ACME;
-
-                // optionally append webserver site ID (if used)
+                
+                // optionally set webserver site ID (if used)
                 if (SelectedWebSite != null && !string.IsNullOrEmpty(SelectedWebSite.Id))
                 {
-                    item.Id += ":" + SelectedWebSite.Id;
                     item.GroupId = SelectedWebSite.Id;
                 }
             }
