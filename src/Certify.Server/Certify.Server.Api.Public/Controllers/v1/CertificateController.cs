@@ -130,7 +130,7 @@ namespace Certify.Server.API.Controllers
 
             var list = managedCerts.Select(i => new ManagedCertificateSummary
             {
-                Id = WebUtility.UrlEncode(i.Id),
+                Id = i.Id,
                 Title = i.Name,
                 PrimaryIdentifier = new Identifier { Type = "dns", Value = i.RequestConfig.PrimaryDomain },
                 Identifiers = i.RequestConfig.SubjectAlternativeNames.Select(s => new Identifier { Type = "dns", Value = s }),
