@@ -49,10 +49,14 @@
                     IsSelected="true">
                     <!--  Certificate Authority Preference  -->
                     <DockPanel Margin="16,0,8,8" DockPanel.Dock="Top">
-                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Certificate Authority</TextBlock>
-                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">
-                            Certificate Authorities are the organisations who can issue trusted certificates. You need to register an account under Settings for each (ACME) Certificate Authority you wish to use.
-                        </TextBlock>
+                        <TextBlock
+                            DockPanel.Dock="Top"
+                            Style="{StaticResource Subheading}"
+                            Text="{x:Static Resources:SR.ManagedCertificateSettings_CertificateAuthority_Title}" />
+                        <TextBlock
+                            DockPanel.Dock="Top"
+                            Style="{StaticResource Instructions}"
+                            Text="{x:Static Resources:SR.ManagedCertificateSettings_CertificateAuthority_Intro}" />
 
                         <StackPanel
                             Margin="0,16,0,0"

@@ -686,4 +686,10 @@
   <data name="ManagedCertificates_Tasks_PrerequestIntro" xml:space="preserve">
     <value>You can optionally add any number of tasks to run before the certificate request begins:</value>
   </data>
+  <data name="ManagedCertificateSettings_CertificateAuthority_Title" xml:space="preserve">
+    <value>Certificate Authority</value>
+  </data>
+  <data name="ManagedCertificateSettings_CertificateAuthority_Intro" xml:space="preserve">
+    <value>Certificate Authorities are the organisations who can issue trusted certificates. You need to register an account under Settings for each (ACME) Certificate Authority you wish to use.                 </value>
+  </data>
 </root>

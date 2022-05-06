@@ -709,6 +709,24 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Certificate Authorities are the organisations who can issue trusted certificates. You need to register an account under Settings for each (ACME) Certificate Authority you wish to use.                 .
+        /// </summary>
+        public static string ManagedCertificateSettings_CertificateAuthority_Intro {
+            get {
+                return ResourceManager.GetString("ManagedCertificateSettings_CertificateAuthority_Intro", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Certificate Authority.
+        /// </summary>
+        public static string ManagedCertificateSettings_CertificateAuthority_Title {
+            get {
+                return ResourceManager.GetString("ManagedCertificateSettings_CertificateAuthority_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The certificate file for this item has not been created yet or the file has been deleted..
         /// </summary>
         public static string ManagedCertificateSettings_CertificateNotReady {
