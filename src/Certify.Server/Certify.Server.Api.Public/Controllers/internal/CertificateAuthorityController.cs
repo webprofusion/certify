@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Client;
-using Certify.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -15,10 +14,10 @@ namespace Certify.Server.API.Controllers
     /// </summary>
     [ApiController]
     [Route("internal/v1/[controller]")]
-    public class PreviewController : ControllerBase
+    public class CertificateAuthorityController : ControllerBase
     {
 
-        private readonly ILogger<PreviewController> _logger;
+        private readonly ILogger<CertificateAuthorityController> _logger;
 
         private readonly ICertifyInternalApiClient _client;
 
@@ -27,24 +26,23 @@ namespace Certify.Server.API.Controllers
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="client"></param>
-        public PreviewController(ILogger<PreviewController> logger, ICertifyInternalApiClient client)
+        public CertificateAuthorityController(ILogger<CertificateAuthorityController> logger, ICertifyInternalApiClient client)
         {
             _logger = logger;
             _client = client;
         }
 
         /// <summary>
-        /// Get preview of steps for certificate order and deployment
+        /// Get list of known certificate authorities
         /// </summary>
-        /// <param name="item"></param>
         /// <returns></returns>
-        [HttpPost]
+        [HttpGet]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ActionStep>))]
-        public async Task<IActionResult> GetPreview([FromBody] ManagedCertificate item)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Models.CertificateAuthority>))]
+        public async Task<IActionResult> GetCertificateAuthorities()
         {
-            var previewSteps = await _client.PreviewActions(item);
-            return new OkObjectResult(previewSteps);
+            var list = await _client.GetCertificateAuthorities();
+            return new OkObjectResult(list);
         }
     }
 }

@@ -17,7 +17,7 @@ namespace Certify.Server.API.Controllers
     public class ChallengeProviderController : ControllerBase
     {
 
-        private readonly ILogger<SystemController> _logger;
+        private readonly ILogger<ChallengeProviderController> _logger;
 
         private readonly ICertifyInternalApiClient _client;
 
@@ -26,7 +26,7 @@ namespace Certify.Server.API.Controllers
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="client"></param>
-        public ChallengeProviderController(ILogger<SystemController> logger, ICertifyInternalApiClient client)
+        public ChallengeProviderController(ILogger<ChallengeProviderController> logger, ICertifyInternalApiClient client)
         {
             _logger = logger;
             _client = client;

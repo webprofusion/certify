@@ -17,7 +17,7 @@ namespace Certify.Server.API.Controllers
     public class DeploymentTaskController : ControllerBase
     {
 
-        private readonly ILogger<SystemController> _logger;
+        private readonly ILogger<DeploymentTaskController> _logger;
 
         private readonly ICertifyInternalApiClient _client;
 
@@ -26,7 +26,7 @@ namespace Certify.Server.API.Controllers
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="client"></param>
-        public DeploymentTaskController(ILogger<SystemController> logger, ICertifyInternalApiClient client)
+        public DeploymentTaskController(ILogger<DeploymentTaskController> logger, ICertifyInternalApiClient client)
         {
             _logger = logger;
             _client = client;

@@ -19,7 +19,7 @@ namespace Certify.Server.API.Controllers
     public class TargetController : ControllerBase
     {
 
-        private readonly ILogger<SystemController> _logger;
+        private readonly ILogger<TargetController> _logger;
 
         private readonly ICertifyInternalApiClient _client;
 
@@ -28,7 +28,7 @@ namespace Certify.Server.API.Controllers
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="client"></param>
-        public TargetController(ILogger<SystemController> logger, ICertifyInternalApiClient client)
+        public TargetController(ILogger<TargetController> logger, ICertifyInternalApiClient client)
         {
             _logger = logger;
             _client = client;

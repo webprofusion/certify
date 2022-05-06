@@ -17,7 +17,7 @@ namespace Certify.Server.API.Controllers
     public class StoredCredentialController : ControllerBase
     {
 
-        private readonly ILogger<SystemController> _logger;
+        private readonly ILogger<StoredCredentialController> _logger;
 
         private readonly ICertifyInternalApiClient _client;
 
@@ -26,7 +26,7 @@ namespace Certify.Server.API.Controllers
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="client"></param>
-        public StoredCredentialController(ILogger<SystemController> logger, ICertifyInternalApiClient client)
+        public StoredCredentialController(ILogger<StoredCredentialController> logger, ICertifyInternalApiClient client)
         {
             _logger = logger;
             _client = client;
