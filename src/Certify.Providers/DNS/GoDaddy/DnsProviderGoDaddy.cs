@@ -42,8 +42,9 @@ namespace Certify.Providers.DNS.GoDaddy
         private HttpClient _client;
         private string _authKey;
         private string _authSecret;
+        private const int _maxZonesPerPage = 1000;
         private const string _baseUri = "https://api.godaddy.com/v1/";
-        private const string _listZonesUri = _baseUri + "domains?limit=1000";
+        private const string _listZonesUri = _baseUri + "domains?limit={0}&marker={1}";
         private const string _createRecordUri = _baseUri + "domains/{0}/records";
         private const string _listRecordsUri = _baseUri + "domains/{0}/records/{1}";
         private const string _deleteRecordUri = _baseUri + "domains/{0}/records/{1}/{2}";
@@ -268,24 +269,32 @@ namespace Certify.Providers.DNS.GoDaddy
         {
             var zones = new List<DnsZone>();
 
-            var request = CreateRequest(HttpMethod.Get, $"{_listZonesUri}");
+            var marker = "";
+            var isFullPage = true;
 
-            var result = await _client.SendAsync(request);
-
-            if (result.IsSuccessStatusCode)
+            while (isFullPage)
             {
-                var content = await result.Content.ReadAsStringAsync();
-                var zonesResult = JsonConvert.DeserializeObject<IEnumerable<Zone>>(content).ToList();
+                var request = CreateRequest(HttpMethod.Get, string.Format(_listZonesUri, _maxZonesPerPage, marker));
 
-                foreach (var zone in zonesResult)
+                var result = await _client.SendAsync(request);
+
+                if (result.IsSuccessStatusCode)
                 {
-                    // DomainId is not used by the GoDaddy API, so we use the domain as the ID
-                    zones.Add(new DnsZone { ZoneId = zone.Domain, Name = zone.Domain });
+                    var content = await result.Content.ReadAsStringAsync();
+                    var zonesResult = JsonConvert.DeserializeObject<IEnumerable<Zone>>(content).ToList();
+                    isFullPage = zonesResult.Count == _maxZonesPerPage;
+                    marker = zonesResult[zonesResult.Count - 1].Domain;
+
+                    foreach (var zone in zonesResult)
+                    {
+                        // DomainId is not used by the GoDaddy API, so we use the domain as the ID
+                        zones.Add(new DnsZone { ZoneId = zone.Domain, Name = zone.Domain });
+                    }
                 }
-            }
-            else
-            {
-                return new List<DnsZone>();
+                else
+                {
+                    isFullPage = false;
+                }
             }
 
             return zones;
