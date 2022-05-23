@@ -138,7 +138,7 @@ namespace Certify.Server.API.Controllers
                 Comments = i.Comments,
                 Status = i.LastRenewalStatus?.ToString() ?? "",
                 HasCertificate = !string.IsNullOrEmpty(i.CertificatePath)
-            });
+            }).OrderBy(a => a.Title);
 
             return new OkObjectResult(list);
         }
