@@ -18,13 +18,13 @@
 
 
   <ItemGroup>
-    <PackageReference Include="SimpleImpersonation" Version="3.0.0" />
+    <PackageReference Include="SimpleImpersonation" Version="4.2.0" />
     <PackageReference Include="System.Management.Automation" Version="7.2.1" Condition="'$(TargetFramework)' != 'net462' and '$(TargetFramework)' != 'netstandard2.0'" />
 
 		
 		<!--package references used by other plugins, included here as a workaround to hook them into the app build-->
 		<PackageReference Include="AWSSDK.Route53">
-			<Version>3.7.2.46</Version>
+			<Version>3.7.2.56</Version>
 		</PackageReference>
 		<PackageReference Include="Azure.Identity">
 			<Version>1.6.0</Version>
