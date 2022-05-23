@@ -414,7 +414,7 @@ namespace Certify.Management
 
                     foreach (var r in results)
                     {
-                        // LogMessage(managedCertificate.Id, $"{r.Title} :: {r.Description}", (r.HasError || r.HasWarning) ? LogItemType.CertficateRequestAttentionRequired : LogItemType.GeneralInfo);
+                        // LogMessage(managedCertificate.Id, $"{r.Title} :: {r.Description}", (r.HasError || r.HasWarning) ? LogItemType.CertificateRequestAttentionRequired : LogItemType.GeneralInfo);
 
                         r.Category = "Pre-Request Tasks";
                         preRequestTasks.Substeps.Add(r);
@@ -523,7 +523,7 @@ namespace Certify.Management
 
                     certRequestResult.Message = string.Format(Certify.Locales.CoreSR.CertifyManager_RequestFailed, managedCertificate.Name, exp.Message, exp);
 
-                    LogMessage(managedCertificate.Id, certRequestResult.Message, LogItemType.CertficateRequestFailed);
+                    LogMessage(managedCertificate.Id, certRequestResult.Message, LogItemType.CertificateRequestFailed);
 
                     ReportProgress(progress, new RequestProgressState(RequestState.Error, certRequestResult.Message, managedCertificate));
 
@@ -556,7 +556,7 @@ namespace Certify.Management
 
                     foreach (var r in results)
                     {
-                        LogMessage(managedCertificate.Id, $"{r.Title} :: {r.Description}", (r.HasError || r.HasWarning) ? LogItemType.CertficateRequestAttentionRequired : LogItemType.GeneralInfo);
+                        LogMessage(managedCertificate.Id, $"{r.Title} :: {r.Description}", (r.HasError || r.HasWarning) ? LogItemType.CertificateRequestAttentionRequired : LogItemType.GeneralInfo);
 
                         r.Category = "Post-Request Tasks";
                         postRequestTasks.Substeps.Add(r);
@@ -679,7 +679,7 @@ namespace Certify.Management
 
                     ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result });
                     await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
-                    LogMessage(managedCertificate.Id, result.Message, LogItemType.CertficateRequestFailed);
+                    LogMessage(managedCertificate.Id, result.Message, LogItemType.CertificateRequestFailed);
 
                     return result;
                 }
@@ -748,7 +748,7 @@ namespace Certify.Management
 
                     ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result });
                     await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
-                    LogMessage(managedCertificate.Id, result.Message, LogItemType.CertficateRequestFailed);
+                    LogMessage(managedCertificate.Id, result.Message, LogItemType.CertificateRequestFailed);
 
                     return result;
                 }
@@ -1107,7 +1107,7 @@ namespace Certify.Management
                     result.Message = string.Format(CoreSR.CertifyManager_LetsEncryptServiceTimeout, certRequestResult.ErrorMessage ?? "");
 
                     await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
-                    LogMessage(managedCertificate.Id, result.Message, LogItemType.CertficateRequestFailed);
+                    LogMessage(managedCertificate.Id, result.Message, LogItemType.CertificateRequestFailed);
                     ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate));
                 }
             }
@@ -1120,7 +1120,7 @@ namespace Certify.Management
 
                 await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
 
-                LogMessage(managedCertificate.Id, result.Message, LogItemType.CertficateRequestFailed);
+                LogMessage(managedCertificate.Id, result.Message, LogItemType.CertificateRequestFailed);
 
                 ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate));
             }
@@ -1286,7 +1286,7 @@ namespace Certify.Management
                                 msg += ":: " + authorization.AttemptedChallenge.ChallengeResultMsg;
                             }
 
-                            LogMessage(managedCertificate.Id, msg, LogItemType.CertficateRequestFailed);
+                            LogMessage(managedCertificate.Id, msg, LogItemType.CertificateRequestFailed);
                             result.Message = msg;
 
                             switch (challengeConfig.ChallengeType)
@@ -1454,7 +1454,7 @@ namespace Certify.Management
 
                     foreach (var r in results)
                     {
-                        LogMessage(managedCertificate.Id, $"{r.Title} :: {r.Description}", (r.HasError || r.HasWarning) ? LogItemType.CertficateRequestAttentionRequired : LogItemType.GeneralInfo);
+                        LogMessage(managedCertificate.Id, $"{r.Title} :: {r.Description}", (r.HasError || r.HasWarning) ? LogItemType.CertificateRequestAttentionRequired : LogItemType.GeneralInfo);
 
                         r.Category = "Post-Request Tasks";
                         postRequestTasks.Substeps.Add(r);

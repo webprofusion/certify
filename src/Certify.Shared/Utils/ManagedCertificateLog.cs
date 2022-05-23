@@ -13,8 +13,8 @@ namespace Certify.Models
         GeneralError = 20,
         CertificateRequestStarted = 50,
         CertificateRequestSuccessful = 100,
-        CertficateRequestFailed = 101,
-        CertficateRequestAttentionRequired = 110
+        CertificateRequestFailed = 101,
+        CertificateRequestAttentionRequired = 110
     }
 
     public class ManagedCertificateLogItem
@@ -92,7 +92,7 @@ namespace Certify.Models
             if (log != null)
             {
 
-                if (logItem.LogItemType == LogItemType.CertficateRequestFailed)
+                if (logItem.LogItemType == LogItemType.CertificateRequestFailed)
                 {
                     log.Error(logItem.Message);
                 }
