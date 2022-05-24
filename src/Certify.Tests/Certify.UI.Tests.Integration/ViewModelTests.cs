@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Certify.Client;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Shared.Validation;
 using Certify.UI.ViewModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -97,7 +98,7 @@ namespace Certify.UI.Tests.Integration
             result = model.Validate(applyAutoConfiguration: true);
 
             Assert.IsFalse(result.IsValid, result.Message);
-            Assert.AreEqual(ManagedCertificateViewModel.ValidationErrorCodes.REQUIRED_NAME.ToString(), result.ErrorCode);
+            Assert.AreEqual(ValidationErrorCodes.REQUIRED_NAME.ToString(), result.ErrorCode);
 
             // ensure item with no identifiers is invalid
             model.SelectedItem = new ManagedCertificate();
@@ -105,7 +106,7 @@ namespace Certify.UI.Tests.Integration
             result = model.Validate(applyAutoConfiguration: true);
 
             Assert.IsFalse(result.IsValid, result.Message);
-            Assert.AreEqual(ManagedCertificateViewModel.ValidationErrorCodes.REQUIRED_PRIMARY_IDENTIFIER.ToString(), result.ErrorCode);
+            Assert.AreEqual(ValidationErrorCodes.REQUIRED_PRIMARY_IDENTIFIER.ToString(), result.ErrorCode);
 
             // ensure item with no selected identifiers (but present) is invalid
             model.SelectedItem = new ManagedCertificate
@@ -118,7 +119,7 @@ namespace Certify.UI.Tests.Integration
             result = model.Validate(applyAutoConfiguration: true);
 
             Assert.IsFalse(result.IsValid, result.Message);
-            Assert.AreEqual(ManagedCertificateViewModel.ValidationErrorCodes.REQUIRED_PRIMARY_IDENTIFIER.ToString(), result.ErrorCode);
+            Assert.AreEqual(ValidationErrorCodes.REQUIRED_PRIMARY_IDENTIFIER.ToString(), result.ErrorCode);
 
             // ensure item with local host name is invalid
             model.SelectedItem = new ManagedCertificate
@@ -131,7 +132,7 @@ namespace Certify.UI.Tests.Integration
             result = model.Validate(applyAutoConfiguration: true);
 
             Assert.IsFalse(result.IsValid, result.Message);
-            Assert.AreEqual(ManagedCertificateViewModel.ValidationErrorCodes.INVALID_HOSTNAME.ToString(), result.ErrorCode);
+            Assert.AreEqual(ValidationErrorCodes.INVALID_HOSTNAME.ToString(), result.ErrorCode);
 
             // ensure item with wildcard cannot use http validation
             model.SelectedItem = new ManagedCertificate
@@ -144,7 +145,7 @@ namespace Certify.UI.Tests.Integration
             result = model.Validate(applyAutoConfiguration: true);
 
             Assert.IsFalse(result.IsValid, result.Message);
-            Assert.AreEqual(ManagedCertificateViewModel.ValidationErrorCodes.CHALLENGE_TYPE_INVALID.ToString(), result.ErrorCode);
+            Assert.AreEqual(ValidationErrorCodes.CHALLENGE_TYPE_INVALID.ToString(), result.ErrorCode);
 
             // ensure item with multiple auth config can only have one blank domain match rule
             model.SelectedItem = new ManagedCertificate
@@ -164,7 +165,7 @@ namespace Certify.UI.Tests.Integration
             result = model.Validate(applyAutoConfiguration: true);
 
             Assert.IsFalse(result.IsValid, result.Message);
-            Assert.AreEqual(ManagedCertificateViewModel.ValidationErrorCodes.CHALLENGE_TYPE_INVALID.ToString(), result.ErrorCode);
+            Assert.AreEqual(ValidationErrorCodes.CHALLENGE_TYPE_INVALID.ToString(), result.ErrorCode);
 
             // ensure item with dns challenge type must have challenge provider set
             model.SelectedItem = new ManagedCertificate
@@ -183,7 +184,7 @@ namespace Certify.UI.Tests.Integration
             result = model.Validate(applyAutoConfiguration: true);
 
             Assert.IsFalse(result.IsValid, result.Message);
-            Assert.AreEqual(ManagedCertificateViewModel.ValidationErrorCodes.CHALLENGE_TYPE_INVALID.ToString(), result.ErrorCode);
+            Assert.AreEqual(ValidationErrorCodes.CHALLENGE_TYPE_INVALID.ToString(), result.ErrorCode);
 
             // ensure item with challenge type required parameters has param set
             model.SelectedItem = new ManagedCertificate
@@ -210,7 +211,7 @@ namespace Certify.UI.Tests.Integration
             result = model.Validate(applyAutoConfiguration: true);
 
             Assert.IsFalse(result.IsValid, result.Message);
-            Assert.AreEqual(ManagedCertificateViewModel.ValidationErrorCodes.REQUIRED_CHALLENGE_CONFIG_PARAM.ToString(), result.ErrorCode);
+            Assert.AreEqual(ValidationErrorCodes.REQUIRED_CHALLENGE_CONFIG_PARAM.ToString(), result.ErrorCode);
 
             // ensure item cannot select over 100 domains 
             model.SelectedItem = new ManagedCertificate
@@ -228,7 +229,7 @@ namespace Certify.UI.Tests.Integration
             result = model.Validate(applyAutoConfiguration: true);
 
             Assert.IsFalse(result.IsValid, result.Message);
-            Assert.AreEqual(ManagedCertificateViewModel.ValidationErrorCodes.SAN_LIMIT.ToString(), result.ErrorCode);
+            Assert.AreEqual(ValidationErrorCodes.SAN_LIMIT.ToString(), result.ErrorCode);
 
         }
 

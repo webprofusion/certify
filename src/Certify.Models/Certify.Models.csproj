@@ -31,4 +31,7 @@
 	<ItemGroup>
 		<Folder Include="Shared\Validation\" />
 	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />
+	</ItemGroup>
 </Project>

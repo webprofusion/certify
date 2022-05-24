@@ -23,17 +23,6 @@ namespace Certify.UI.ViewModel
 
         private Certify.UI.ViewModel.AppViewModel _appViewModel => ViewModel.AppViewModel.Current;
 
-        public enum ValidationErrorCodes
-        {
-            REQUIRED_PRIMARY_IDENTIFIER,
-            CHALLENGE_TYPE_INVALID,
-            REQUIRED_NAME,
-            INVALID_HOSTNAME,
-            REQUIRED_CHALLENGE_CONFIG_PARAM,
-            SAN_LIMIT,
-            NONE
-        }
-
         public ManagedCertificateViewModel()
         {
             _appViewModel.PropertyChanged += _appViewModel_PropertyChanged;
@@ -293,28 +282,6 @@ namespace Certify.UI.ViewModel
             get; set;
         }
 
-        public DomainOption PrimarySubjectDomain
-        {
-            get => SelectedItem?.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain);
-            set
-            {
-                foreach (var d in SelectedItem.DomainOptions)
-                {
-                    if (d.Domain == value.Domain)
-                    {
-                        d.IsPrimaryDomain = true;
-                        d.IsSelected = true;
-                    }
-                    else
-                    {
-                        d.IsPrimaryDomain = false;
-                    }
-                }
-
-                SelectedItem.IsChanged = true;
-            }
-        }
-
         public int? DaysRemaining
         {
             get
@@ -457,234 +424,32 @@ namespace Certify.UI.ViewModel
             return true;
         }
 
-        /// <summary>
-        /// Check the currently selected options and auto set where we can, transpose selected identifier options to update the final request configuration
-        /// </summary>
-        /// <returns></returns>
-        public void ApplyAutoConfiguration()
+        public ValidationResult Validate(bool applyAutoConfiguration)
         {
-            var item = SelectedItem;
-            var config = item.RequestConfig;
 
-            // if no primary identifier is selected then we need to attempt to default to one
-            if (!item.DomainOptions.Any(d => d.IsPrimaryDomain) && item.DomainOptions.Any(d => d.IsSelected))
+            var caId = Preferences.DefaultCertificateAuthority.WithDefault(StandardCertAuthorities.LETS_ENCRYPT);
+            if (SelectedItem.CertificateAuthorityId != null)
             {
-                var o = item.DomainOptions.FirstOrDefault(d => d.IsSelected == true);
-                if (o != null)
-                {
-                    o.IsPrimaryDomain = true;
-                }
+                caId = SelectedItem.CertificateAuthorityId;
             }
 
-            // requests with a primary domain need to set the primary domain in the request config
-            var primaryDomain = item.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain == true && d.Type == "dns");
+            var preferredCA = AppViewModel.Current.CertificateAuthorities.FirstOrDefault(c => c.Id == caId);
 
-            if (primaryDomain != null)
+            var result = CertificateEditorService.Validate(SelectedItem, SelectedWebSite, preferredCA, applyAutoConfiguration);
+
+            // auto selected name edit mode if vaidation of name fails
+            IsNameEditMode = false;
+
+            if (result.ErrorCode == ValidationErrorCodes.REQUIRED_NAME.ToString())
             {
-                // update request config primary identifier
-                if (config.PrimaryDomain != primaryDomain.Domain)
-                {
-                    config.PrimaryDomain = primaryDomain.Domain.Trim();
-                }
-            }
-
-            //apply remaining selected domains as subject alternative names
-            var sanList =
-                item.DomainOptions.Where(dm => dm.IsSelected && dm.Type == "dns")
-                .Select(i => i.Domain)
-                .ToArray();
-
-            if (config.SubjectAlternativeNames == null ||
-                !sanList.SequenceEqual(config.SubjectAlternativeNames))
-            {
-                config.SubjectAlternativeNames = sanList;
-            }
-
-            // update our list of selected subject ip addresses, if any
-            if (!config.SubjectIPAddresses.SequenceEqual(item.DomainOptions.Where(i => i.IsSelected && i.Type == "ip").Select(s => s.Domain).ToArray()))
-            {
-                config.SubjectIPAddresses = item.DomainOptions.Where(i => i.IsSelected && i.Type == "ip").Select(s => s.Domain).ToArray();
-            }
-
-            //determine if this site has an existing entry in Managed Certificates, if so use that, otherwise start a new one
-            if (SelectedItem.Id == null)
-            {
-                item.Id = Guid.NewGuid().ToString();
-
-                item.ItemType = ManagedCertificateType.SSL_ACME;
-
-                // optionally set webserver site ID (if used)
-                if (SelectedWebSite != null && !string.IsNullOrEmpty(SelectedWebSite.Id))
-                {
-                    item.GroupId = SelectedWebSite.Id;
-                }
-            }
-
-            if (SelectedItem.RequestConfig.Challenges == null)
-            {
-                SelectedItem.RequestConfig.Challenges = new System.Collections.ObjectModel.ObservableCollection<CertRequestChallengeConfig>();
-            }
-
-            if (SelectedItem.RequestConfig.PerformAutomatedCertBinding)
-            {
-                SelectedItem.RequestConfig.BindingIPAddress = null;
-                SelectedItem.RequestConfig.BindingPort = null;
-                SelectedItem.RequestConfig.BindingUseSNI = null;
+                IsNameEditMode = true;
             }
             else
             {
-                //always select Use SNI unless it's specifically set to false
-                if (SelectedItem.RequestConfig.BindingUseSNI == null)
-                {
-                    SelectedItem.RequestConfig.BindingUseSNI = true;
-                }
+                IsNameEditMode = false;
             }
-        }
 
-        public ValidationResult Validate(bool applyAutoConfiguration)
-        {
-            try
-            {
-                if (applyAutoConfiguration)
-                {
-                    ApplyAutoConfiguration();
-                }
-
-                if (string.IsNullOrEmpty(SelectedItem.Name))
-                {
-                    IsNameEditMode = true;
-                    return new ValidationResult(false, SR.ManagedCertificateSettings_NameRequired, ValidationErrorCodes.REQUIRED_NAME.ToString());
-                }
-                else
-                {
-                    IsNameEditMode = false;
-                }
-
-                // a primary subject domain must be set
-                if (PrimarySubjectDomain == null)
-                {
-                    // if we still can't decide on the primary domain ask user to define it
-                    return new ValidationResult(
-                        false,
-                        SR.ManagedCertificateSettings_NeedPrimaryDomain,
-                        ValidationErrorCodes.REQUIRED_PRIMARY_IDENTIFIER.ToString()
-                    );
-                }
-
-                var caId = Preferences.DefaultCertificateAuthority.WithDefault(StandardCertAuthorities.LETS_ENCRYPT);
-                if (SelectedItem.CertificateAuthorityId != null)
-                {
-                    caId = SelectedItem.CertificateAuthorityId;
-                }
-
-                var ca = AppViewModel.Current.CertificateAuthorities.FirstOrDefault(c => c.Id == caId);
-
-                if (!(ca != null && ca.AllowInternalHostnames))
-                {
-                    // validate hostnames
-                    if (SelectedItem.DomainOptions.Any(d => d.IsSelected && d.Type == "dns" && (!d.Domain.Contains(".") || d.Domain.ToLower().EndsWith(".local"))))
-                    {
-                        // one or more selected domains does not include a label seperator (is an internal host name) or end in .local
-
-                        return new ValidationResult(
-                            false,
-                            "One or more domains specified are internal hostnames. Certificates for internal host names are not supported by the Certificate Authority.",
-                            ValidationErrorCodes.INVALID_HOSTNAME.ToString()
-                        );
-                    }
-                }
-
-                // if title still set to the default, automatically use the primary domain instead
-                if (SelectedItem.Name == SR.ManagedCertificateSettings_DefaultTitle)
-                {
-                    SelectedItem.Name = PrimarySubjectDomain.Domain;
-                }
-
-                // certificates cannot request wildcards unless they also use DNS validation
-                if (
-                    SelectedItem.DomainOptions.Any(d => d.IsSelected && d.Domain.StartsWith("*."))
-                    &&
-                    !SelectedItem.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
-                    )
-                {
-                    return new ValidationResult(
-                        false,
-                        "Wildcard domains cannot use http-01 validation for domain authorization. Use dns-01 instead.",
-                        ValidationErrorCodes.CHALLENGE_TYPE_INVALID.ToString()
-                    );
-                }
-
-                // TLS-SNI-01 (is now not supported)
-                if (SelectedItem.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
-                {
-                    return new ValidationResult(
-                        false,
-                        "The tls-sni-01 challenge type is no longer available. You need to switch to either http-01 or dns-01.",
-                        ValidationErrorCodes.CHALLENGE_TYPE_INVALID.ToString()
-                    );
-                }
-
-                if (SelectedItem.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS && string.IsNullOrEmpty(c.ChallengeProvider)))
-                {
-                    return new ValidationResult(
-                        false,
-                        "The dns-01 challenge type requires a DNS Update Method selection.",
-                        ValidationErrorCodes.CHALLENGE_TYPE_INVALID.ToString()
-                    );
-                }
-
-                if (SelectedItem.RequestConfig.Challenges.Count(c => string.IsNullOrEmpty(c.DomainMatch)) > 1)
-                {
-                    return new ValidationResult(
-                       false,
-                       "Only one authorization configuration can be used which matches any domain (domain match blank). Specify domain(s) to match or remove additional configuration. ",
-                       ValidationErrorCodes.CHALLENGE_TYPE_INVALID.ToString()
-                    );
-
-                    // TODO: error if any selected domains will not be matched
-                }
-
-                // validate settings for authorization config non-optional parameters
-                foreach (var c in SelectedItem.RequestConfig.Challenges)
-                {
-                    if (c.Parameters != null && c.Parameters.Any())
-                    {
-                        //validate parameters
-                        foreach (var p in c.Parameters)
-                        {
-                            if (p.IsRequired && string.IsNullOrEmpty(p.Value))
-                            {
-                                return new ValidationResult(
-                                   false,
-                                   $"Challenge configuration parameter required: {p.Name}",
-                                   ValidationErrorCodes.REQUIRED_CHALLENGE_CONFIG_PARAM.ToString()
-                                );
-                            }
-                        }
-                    }
-                }
-
-                // check certificate will not exceed 100 name limit. TODO: make this dynamic per selected CA
-                var numSelectedDomains = SelectedItem.DomainOptions.Count(d => d.IsSelected);
-
-                if (numSelectedDomains > 100)
-                {
-                    return new ValidationResult(
-                                 false,
-                                 $"Certificates cannot include more than 100 names. You will need to remove names or split your certificate into 2 or more managed certificates.",
-                                 ValidationErrorCodes.SAN_LIMIT.ToString()
-                              );
-                }
-
-                // no problems found
-                return new ValidationResult(true, "OK", ValidationErrorCodes.NONE.ToString());
-            }
-            catch (Exception exp)
-            {
-
-                // unexpected error while checking
-                return new ValidationResult(false, exp.ToString());
-            }
+            return result;
         }
 
         public async Task PopulateManagedCertificateSettings(string siteId)
@@ -692,7 +457,7 @@ namespace Certify.UI.ViewModel
             ValidationError = null;
             var domainOptions = await GetDomainOptionsFromSite(siteId);
 
-            var result = CertificateDomainsService.PopulateFromSiteInfo(SelectedItem, SelectedWebSite, domainOptions);
+            var result = CertificateEditorService.PopulateFromSiteInfo(SelectedItem, SelectedWebSite, domainOptions);
 
             if (!result.IsSuccess)
             {
@@ -709,91 +474,29 @@ namespace Certify.UI.ViewModel
         public bool UpdateDomainOptions(string domains)
         {
             var item = SelectedItem;
-            var wildcardAdded = false;
+            var result = CertificateEditorService.AddDomainOptionsFromString(item, domains);
 
-            // parse text input to add as manual domain options
+            RaiseSelectedItemChanges();
 
-            if (!string.IsNullOrEmpty(domains))
+            if (result.wildcardAdded && !SelectedItem.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS))
             {
-                var domainList = domains.Split(",; ".ToCharArray());
-                var invalidDomains = "";
-                foreach (var d in domainList)
+                // wildcard added but no DNS challenges exist yet
+                MessageBox.Show("You have added a wildcard domain, you will also need to configure a corresponding DNS challenge under Authorization. ");
+            }
+
+            if (result.wildcardAdded)
+            {
+                //if a wildcard was added but the non-wildcard domain has not yet been added, offer to add it
+                var wildcardOnlyDomains = result.domainList.Where(d => d.StartsWith("*.") && !item.DomainOptions.Any(o => o.Domain == d.Replace("*.", "")));
+                if (wildcardOnlyDomains.Any())
                 {
-                    if (!string.IsNullOrEmpty(d.Trim()))
+                    var msg = $"You had added wildcard domains without the corresponding non-wildcard version: {string.Join(",", wildcardOnlyDomains)}. Would you like to add the non-wildcard versions as well?";
+                    if (MessageBox.Show(msg, "Add non-wildcard equivalent domains?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                     {
-                        var domain = d.ToLower().Trim();
-                        if (!item.DomainOptions.Any(o => o.Domain == domain))
-                        {
-                            var option = new DomainOption
-                            {
-                                Domain = domain,
-                                IsManualEntry = true,
-                                IsSelected = true
-                            };
 
-                            if (Uri.CheckHostName(domain) == UriHostNameType.Dns || (domain.StartsWith("*.") && Uri.CheckHostName(domain.Replace("*.", "")) == UriHostNameType.Dns))
-                            {
-                                // preselect first item as primary domain
-                                if (item.DomainOptions.Count == 0)
-                                {
-                                    option.IsPrimaryDomain = true;
-                                }
-
-                                item.DomainOptions.Add(option);
-
-                                if (option.Domain.StartsWith("*."))
-                                {
-                                    wildcardAdded = true;
-                                }
-                            }
-                            else if (Uri.CheckHostName(domain) == UriHostNameType.IPv4 || Uri.CheckHostName(domain) == UriHostNameType.IPv6)
-                            {
-                                option.Type = "ip";
-                                // add an IP address instead of a domain
-                                if (item.DomainOptions.Count == 0)
-                                {
-                                    option.IsPrimaryDomain = true;
-                                }
-
-                                item.DomainOptions.Add(option);
-                            }
-                            else
-                            {
-                                invalidDomains += domain + "\n";
-                            }
-                        }
-                    }
-                }
-
-                RaiseSelectedItemChanges();
-
-                /*
-                if (!string.IsNullOrEmpty(invalidDomains))
-                {
-                    MessageBox.Show("Invalid domains: " + invalidDomains);
-                    return false;
-                }*/
-
-                if (wildcardAdded && !SelectedItem.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS))
-                {
-                    // wildcard added but no DNS challenges exist yet
-                    MessageBox.Show("You have added a wildcard domain, you will also need to configure a corresponding DNS challenge under Authorization. ");
-                }
-
-                if (wildcardAdded)
-                {
-                    //if a wildcard was added but the non-wildcard domain has not yet been added, offer to add it
-                    var wildcardOnlyDomains = domainList.Where(d => d.StartsWith("*.") && !item.DomainOptions.Any(o => o.Domain == d.Replace("*.", "")));
-                    if (wildcardOnlyDomains.Any())
-                    {
-                        var msg = $"You had added wildcard domains without the corresponding non-wildcard version: {string.Join(",", wildcardOnlyDomains)}. Would you like to add the non-wildcard versions as well?";
-                        if (MessageBox.Show(msg, "Add non-wildcard equivalent domains?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-                        {
-
-                            var addedDomains = string.Join(";", wildcardOnlyDomains);
-                            addedDomains = addedDomains.Replace("*.", "");
-                            UpdateDomainOptions(addedDomains);
-                        }
+                        var addedDomains = string.Join(";", wildcardOnlyDomains);
+                        addedDomains = addedDomains.Replace("*.", "");
+                        UpdateDomainOptions(addedDomains);
                     }
                 }
             }
