@@ -62,7 +62,7 @@ namespace Certify.Management
                 var ca = certificateAuthorities.FirstOrDefault(c => c.Id == item.CertificateAuthorityId);
 
                 certDescription.AppendLine(
-                    $"A new certificate will be requested from the *{ ca?.Title.AsNullWhenBlank() ?? " Default"}* certificate authority for the following domains:"
+                    $"A new certificate will be requested from the *{ ca?.Title.AsNullWhenBlank() ?? "Default"}* certificate authority for the following domains:"
                     );
 
                 certDescription.AppendLine($"\n**{item.RequestConfig.PrimaryDomain}** (Primary Domain)");
