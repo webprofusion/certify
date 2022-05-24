@@ -19,7 +19,7 @@ namespace Certify.CLI
 
                     var task = managedCert.PostRequestTasks.FirstOrDefault(t => t.Id.ToLowerInvariant().Trim() == taskId.ToLowerInvariant().Trim());
 
-                    Console.WriteLine($"Performing deployment task [{task.TaskName}] for managed certificate [{managedCert.Name}]..");
+                    Console.WriteLine($"Performing deployment task [{task?.TaskName}] for managed certificate [{managedCert.Name}]..");
 
                     if (task != null)
                     {

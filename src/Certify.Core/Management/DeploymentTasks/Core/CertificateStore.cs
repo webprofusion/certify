@@ -68,7 +68,7 @@ namespace Certify.Providers.DeploymentTasks.Core
 
             var certPwd = "";
 
-            if (!string.IsNullOrWhiteSpace(managedCert.CertificatePasswordCredentialId))
+            if (!string.IsNullOrWhiteSpace(managedCert?.CertificatePasswordCredentialId))
             {
                 var cred = await execParams.CredentialsManager.GetUnlockedCredentialsDictionary(managedCert.CertificatePasswordCredentialId);
                 if (cred != null)

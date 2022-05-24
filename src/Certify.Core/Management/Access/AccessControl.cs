@@ -124,7 +124,7 @@ namespace Certify.Core.Management.Access
             principles.Add(principle);
             await _store.Save<List<SecurityPrinciple>>("principles", principles);
 
-            _log?.Information($"User {contextUserId} added security principle [{principle.Id}] {principle.Username}");
+            _log?.Information($"User {contextUserId} added security principle [{principle?.Id}] {principle?.Username}");
             return true;
         }
 
@@ -148,7 +148,7 @@ namespace Certify.Core.Management.Access
             principles.Add(principle);
             await _store.Save<List<SecurityPrinciple>>("principles", principles);
 
-            _log?.Information($"User {contextUserId} updated security principle [{principle.Id}] {principle.Username}");
+            _log?.Information($"User {contextUserId} updated security principle [{principle?.Id}] {principle?.Username}");
             return true;
         }
 

@@ -53,7 +53,7 @@ namespace Certify.Providers.DeploymentTasks.Core
 
                 if (!execParams.IsPreviewOnly)
                 {
-                    var webHookResult = await Certify.Shared.Utils.Webhook.SendRequest(webhookConfig, managedCert, managedCert.LastRenewalStatus != RequestState.Error);
+                    var webHookResult = await Certify.Shared.Utils.Webhook.SendRequest(webhookConfig, managedCert, managedCert?.LastRenewalStatus != RequestState.Error);
 
                     var msg = $"Webhook invoked: Url: {webhookConfig.Url}, Success: {webHookResult.Success}, StatusCode: {webHookResult.StatusCode}";
 

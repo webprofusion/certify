@@ -311,7 +311,7 @@ namespace Certify.Management
                         if (!string.IsNullOrEmpty(email))
                         {
                             var registerResult = await provider.AddNewAccountAndAcceptTOS(_serviceLog, email, null, null, null);
-                            if (registerResult.IsSuccess)
+                            if (registerResult?.IsSuccess ?? false)
                             {
                                 var newId = Guid.NewGuid().ToString();
                                 acc = registerResult.Result;
