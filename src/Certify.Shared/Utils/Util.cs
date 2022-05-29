@@ -301,14 +301,7 @@ namespace Certify.Management
                 }
             }
 
-            if (hashVerified && (!performCertValidation || (performCertValidation && signatureVerified)))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return hashVerified && (!performCertValidation || (performCertValidation && signatureVerified));
         }
 
         public static string GetUserLocalAppDataFolder()

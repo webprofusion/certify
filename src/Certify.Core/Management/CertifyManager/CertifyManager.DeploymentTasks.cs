@@ -33,7 +33,7 @@ namespace Certify.Management
         public async Task<DeploymentProviderDefinition> GetDeploymentProviderDefinition(string id, DeploymentTaskConfig config = null)
         {
             var provider = DeploymentTaskProviderFactory.Create(id, _pluginManager.DeploymentTaskProviders);
-            return await Task.FromResult(provider.GetDefinition());
+            return await Task.FromResult(provider?.GetDefinition());
         }
 
         /// <summary>
@@ -233,7 +233,7 @@ namespace Certify.Management
 
                 if (shouldRunCurrentTask)
                 {
-                    log.Information($"Task [{task.TaskConfig.TaskName}] :: {taskTriggerReason}");
+                    log?.Information($"Task [{task.TaskConfig.TaskName}] :: {taskTriggerReason}");
                     task.TaskConfig.DateLastExecuted = DateTime.Now;
 
                     taskResults = await task.Execute(log, _credentialsManager, result, CancellationToken.None, new DeploymentContext { PowershellExecutionPolicy = _serverConfig.PowershellExecutionPolicy }, isPreviewOnly: isPreviewOnly);
@@ -359,7 +359,7 @@ namespace Certify.Management
 
             try
             {
-                var execParams = new DeploymentTaskExecutionParams(null, _credentialsManager, managedCertificate, taskConfig, credentials, true, provider.GetDefinition(), CancellationToken.None, new DeploymentContext { PowershellExecutionPolicy = _serverConfig.PowershellExecutionPolicy });
+                var execParams = new DeploymentTaskExecutionParams(null, _credentialsManager, managedCertificate, taskConfig, credentials, true, provider?.GetDefinition(), CancellationToken.None, new DeploymentContext { PowershellExecutionPolicy = _serverConfig.PowershellExecutionPolicy });
                 var validationResult = await provider.Validate(execParams);
                 return validationResult;
             }

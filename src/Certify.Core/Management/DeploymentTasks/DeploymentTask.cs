@@ -52,7 +52,7 @@ namespace Certify.Providers.DeploymentTasks
                 catch (Exception exp)
                 {
                     return new List<ActionResult>{
-                        new ActionResult { IsSuccess = false, Message = $"{TaskConfig.TaskName} ({TaskProvider.GetDefinition()?.Title }) :: Task Failed with Exception :: {exp?.ToString()}" }
+                        new ActionResult { IsSuccess = false, Message = $"{TaskConfig.TaskName} ({TaskProvider.GetDefinition()?.Title }) :: Task Failed with Exception :: {exp}" }
                     };
                 }
             }

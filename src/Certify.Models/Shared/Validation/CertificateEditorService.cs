@@ -155,7 +155,7 @@ namespace Certify.Models.Shared.Validation
             }
         }
 
-        public static DomainOption GetPrimarySubjectDomain(ManagedCertificate item)
+        public static DomainOption? GetPrimarySubjectDomain(ManagedCertificate item)
         {
             return item?.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain);
         }

@@ -74,7 +74,7 @@ namespace Certify.Shared.Utils
 
                 HttpRequestMessage message;
 
-                var url = ParseValues(config.Url, item.RequestConfig, forSuccess, true);
+                var url = ParseValues(config.Url, item?.RequestConfig, forSuccess, true);
 
                 switch (config.Method)
                 {

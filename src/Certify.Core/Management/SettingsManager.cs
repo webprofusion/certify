@@ -160,6 +160,7 @@ namespace Certify.Management
     public class SettingsManager
     {
         private const string COREAPPSETTINGSFILE = "appsettings.json";
+        private static Object settingsLocker = new Object();
 
         public static bool FromPreferences(Models.Preferences prefs)
         {
@@ -243,7 +244,7 @@ namespace Certify.Management
             var appDataPath = EnvironmentUtil.GetAppDataFolder();
             var json = Newtonsoft.Json.JsonConvert.SerializeObject(CoreAppSettings.Current, Newtonsoft.Json.Formatting.Indented);
 
-            lock (COREAPPSETTINGSFILE)
+            lock (settingsLocker)
             {
                 System.IO.File.WriteAllText(Path.Combine(appDataPath, COREAPPSETTINGSFILE), json);
             }
@@ -303,7 +304,7 @@ namespace Certify.Management
                     //ensure permissions
 
                     //load content
-                    lock (COREAPPSETTINGSFILE)
+                    lock (settingsLocker)
                     {
                         var configData = System.IO.File.ReadAllText(path);
                         CoreAppSettings.Current = Newtonsoft.Json.JsonConvert.DeserializeObject<CoreAppSettings>(configData);

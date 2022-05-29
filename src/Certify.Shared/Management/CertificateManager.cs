@@ -560,7 +560,7 @@ namespace Certify.Management
                         if (
                             (excludedThumbprints == null && cleanupMode == Models.CertificateCleanupMode.AfterExpiry)
                             ||
-                            (excludedThumbprints.Any() && !excludedThumbprints.Any(e => e.ToLower() == c.Thumbprint.ToLower()))
+                            (excludedThumbprints != null && excludedThumbprints.Any() && !excludedThumbprints.Any(e => e.ToLower() == c.Thumbprint.ToLower()))
                             )
                         {
                             if (cleanupMode == Models.CertificateCleanupMode.AfterExpiry)

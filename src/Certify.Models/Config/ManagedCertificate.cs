@@ -524,10 +524,7 @@ namespace Certify.Models
                             // if match wildcards to root is enabled and is a root domain match
                             if (string.Equals(domain, hostname, StringComparison.OrdinalIgnoreCase) && matchWildcardsToRootDomain)
                             {
-                                if (matchWildcardsToRootDomain)
-                                {
-                                    isMatch = true;
-                                }
+                                isMatch = true;
                             }
                             else
                             {
