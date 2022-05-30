@@ -8,6 +8,8 @@ using Certify.Shared.Core.Management;
 using Certify.SharedUtils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -53,6 +55,14 @@ namespace Certify.Server.API
                 });
 
             services.AddRouting(r => r.LowercaseUrls = true);
+
+            services.AddSignalR();
+
+            services.AddResponseCompression(opts =>
+            {
+                opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+                    new[] { "application/octet-stream", "application/json" });
+            });
 
 #if DEBUG
             // Register the Swagger generator, defining 1 or more Swagger documents
@@ -113,7 +123,29 @@ namespace Certify.Server.API
             var connections = ServerConnectionManager.GetServerConnections(null, defaultConnectionConfig);
             var serverConnection = connections.FirstOrDefault(c => c.IsDefault == true);
 
-            services.AddSingleton(typeof(Certify.Client.ICertifyInternalApiClient), new Client.CertifyApiClient(configManager, serverConnection));
+            var internalServiceClient = new Client.CertifyServiceClient(configManager, serverConnection);
+
+            internalServiceClient.ConnectStatusStreamAsync();
+            internalServiceClient.OnMessageFromService += InternalServiceClient_OnMessageFromService;
+            internalServiceClient.OnRequestProgressStateUpdated += InternalServiceClient_OnRequestProgressStateUpdated;
+            internalServiceClient.OnManagedCertificateUpdated += InternalServiceClient_OnManagedCertificateUpdated;
+
+            services.AddSingleton(typeof(Certify.Client.ICertifyInternalApiClient), internalServiceClient);
+        }
+
+        private StatusHubReporting _statusReporting;
+
+        private void InternalServiceClient_OnManagedCertificateUpdated(Models.ManagedCertificate obj) {
+            System.Diagnostics.Debug.WriteLine("Public API: got ManagedCertUpdate msg to forward:" + obj.ToString());
+
+            _statusReporting.ReportManagedCertificateUpdated(obj);
+        }
+        private void InternalServiceClient_OnRequestProgressStateUpdated(Models.RequestProgressState obj) {
+            System.Diagnostics.Debug.WriteLine("Public API: got Progress Message to forward:" + obj.ToString());
+            _statusReporting.ReportRequestProgress(obj);
+        }
+        private void InternalServiceClient_OnMessageFromService(string arg1, string arg2) {
+            System.Diagnostics.Debug.WriteLine($"Public API: got message to forward: {arg1} {arg2}"); ;
         }
 
         /// <summary>
@@ -121,13 +153,17 @@ namespace Certify.Server.API
         /// </summary>
         /// <param name="app"></param>
         /// <param name="env"></param>
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHubContext<StatusHub> statusHubContext)
         {
+
+            // setup signlar message forwarding, message received from internal service will be resent to our connected clients via our own SignalR hub
+            _statusReporting = new StatusHubReporting(statusHubContext);
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            
             app.UseHttpsRedirection();
 
             app.UseRouting();
@@ -146,6 +182,7 @@ namespace Certify.Server.API
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<StatusHub>("/api/status");
             });
 
 #if DEBUG
