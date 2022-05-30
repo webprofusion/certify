@@ -204,6 +204,18 @@ namespace Certify.Models
         /// </summary>
         public bool DeploymentBindingReplacePrevious { get; set; }
 
+        /*
+        /// <summary>
+        /// Host or server where this item is based, usually localhost if managing the local server
+        /// </summary>
+        public string? DeploymentTargetHost { get; set; }
+        */
+
+        /// <summary>
+        /// Service type to deploy to on target host (e.g. IIS, nginx, Apache)
+        /// </summary>
+        public string? DeploymentTargetType { get; set; }
+
         /// <summary>
         /// Optional list of challenge configs, used when challenge requires credentials, optionally
         /// varying per domain

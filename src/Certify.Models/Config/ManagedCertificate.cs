@@ -73,11 +73,6 @@ namespace Certify.Models
         public bool IncludeInAutoRenew { get; set; }
 
         /// <summary>
-        /// Host or server where this item is based, usually localhost if managing the local server
-        /// </summary>
-        public string? TargetHost { get; set; }
-
-        /// <summary>
         /// List of configured domains this managed site will include (primary subject or SAN)
         /// </summary>
         public ObservableCollection<DomainOption> DomainOptions { get; set; }
@@ -466,7 +461,7 @@ namespace Certify.Models
             }
             else
             {
-                managedCert.Name = $"{ managedCert.Name.WithDefault("")} (Copy)";
+                managedCert.Name = $"{managedCert.Name.WithDefault("")} (Copy)";
             }
 
             if (managedCert.PreRequestTasks != null)

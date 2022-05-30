@@ -783,9 +783,25 @@ namespace Certify.Management
             return await CompleteCertificateRequestProcessing(log, managedCertificate, progress, pendingOrder);
         }
 
+        /// <summary>
+        /// For the given managed certificate get the applicable target server provider
+        /// </summary>
+        /// <param name="managedCertificate"></param>
+        /// <returns></returns>
         private ITargetWebServer GetTargetServerProvider(ManagedCertificate managedCertificate)
         {
-            return _serverProviders.First();
+            var serverType = managedCertificate.RequestConfig.DeploymentTargetType ?? "iis";
+
+            var sp = _serverProviders.FirstOrDefault(s => s.GetServerTypeInfo().ServerType.ToString().ToLower() == serverType);
+
+            if (sp == null)
+            {
+                return _serverProviders.First();
+            }
+            else
+            {
+                return sp;
+            }
         }
 
         /// <summary>
