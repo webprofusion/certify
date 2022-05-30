@@ -173,7 +173,7 @@ namespace Certify.Core.Tests.Unit
 
                 timer.Stop();
 
-                System.Diagnostics.Debug.WriteLine($"Created {numItems} in { timer.ElapsedMilliseconds}ms avg:{ timer.ElapsedMilliseconds / numItems}ms");
+                System.Diagnostics.Debug.WriteLine($"Created {numItems} in {timer.ElapsedMilliseconds}ms avg:{timer.ElapsedMilliseconds / numItems}ms");
 
             }
             catch (Exception)

@@ -514,7 +514,7 @@ namespace Certify.UI.ViewModel
 
             var list = await _appViewModel.GetServerSiteDomains(TargetServerType, siteId);
 
-            // discard no-specific host wildcards for cert domain options
+            // discard non-specific host wildcards for cert domain options
             list.RemoveAll(d => d.Domain?.Trim() == "*");
 
             return list;

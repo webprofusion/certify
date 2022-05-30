@@ -264,10 +264,7 @@
                         </DockPanel>
                     </DockPanel>
 
-                    <DockPanel
-                        
-                        Margin="8,0,8,8"
-                        Visibility="{Binding SelectedItem.RequestConfig.CustomCSR, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
+                    <DockPanel Margin="8,0,8,8" Visibility="{Binding SelectedItem.RequestConfig.CustomCSR, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
                         <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">
                             You have set a Custom Certificate Signing Request (CSR) which will include the following domains. To specify different domains you need to update your CSR or remove it, see the Advanced tab.
                         </TextBlock>

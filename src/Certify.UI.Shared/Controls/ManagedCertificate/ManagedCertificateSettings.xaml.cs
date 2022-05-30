@@ -183,9 +183,9 @@ namespace Certify.UI.Controls.ManagedCertificate
                 var result = await AppViewModel.BeginCertificateRequest(ItemViewModel.SelectedItem.Id);
                 if (result != null)
                 {
-                    if (result.IsSuccess == false && result.Result is Exception)
+                    if (result.IsSuccess == false && result.Result is Exception exception)
                     {
-                        var msg = ((Exception)result.Result)?.ToString();
+                        var msg = exception?.ToString();
                         Log?.Error($"RequestCertificate: {msg}");
                     }
                 }

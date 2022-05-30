@@ -611,7 +611,7 @@ namespace Certify.Management
 
                             removedCerts.Add($"{oldCert.FriendlyName} : {oldCert.Thumbprint}");
 
-                            log?.Information($"Removing old cert: { oldCert.FriendlyName} : { oldCert.Thumbprint}");
+                            log?.Information($"Removing old cert: {oldCert.FriendlyName} : {oldCert.Thumbprint}");
                         }
                         catch (Exception exp)
                         {
