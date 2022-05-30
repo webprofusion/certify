@@ -56,7 +56,9 @@ namespace Certify.Server.API
 
             services.AddRouting(r => r.LowercaseUrls = true);
 
-            services.AddSignalR();
+            services
+                .AddSignalR()
+                .AddMessagePackProtocol();
 
             services.AddResponseCompression(opts =>
             {
@@ -182,7 +184,7 @@ namespace Certify.Server.API
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapHub<StatusHub>("/api/status");
+                endpoints.MapHub<StatusHub>("/api/internal/status");
             });
 
 #if DEBUG

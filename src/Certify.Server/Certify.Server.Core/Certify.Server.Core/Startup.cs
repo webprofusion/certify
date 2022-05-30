@@ -24,7 +24,9 @@ namespace Certify.Server.Core
         {
             services.AddControllers();
 
-            services.AddSignalR().AddMessagePackProtocol();
+            services
+                .AddSignalR()
+                .AddMessagePackProtocol();
 
             services.AddCors(options =>
             {
