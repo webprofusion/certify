@@ -55,7 +55,7 @@
 		</PackageReference>
 
 		<PackageReference Include="SSH.NET">
-			<Version>2020.0.1</Version>
+			<Version>2020.0.2</Version>
 		</PackageReference>
 		<PackageReference Include="System.Diagnostics.DiagnosticSource">
 			<Version>6.0.0</Version>
