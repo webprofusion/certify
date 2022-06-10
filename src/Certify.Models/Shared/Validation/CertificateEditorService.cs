@@ -98,7 +98,7 @@ namespace Certify.Models.Shared.Validation
                 // update request config primary identifier
                 if (config.PrimaryDomain != primaryDomain.Domain)
                 {
-                    config.PrimaryDomain = primaryDomain.Domain.Trim();
+                    config.PrimaryDomain = primaryDomain?.Domain?.Trim();
                 }
             }
 
@@ -183,7 +183,7 @@ namespace Certify.Models.Shared.Validation
                     if (!string.IsNullOrEmpty(d.Trim()))
                     {
                         var domain = d.ToLower().Trim();
-                        if (!item.DomainOptions.Any(o => o.Domain == domain))
+                        if (domain != null && !item.DomainOptions.Any(o => o.Domain == domain))
                         {
                             var option = new DomainOption
                             {
@@ -202,7 +202,7 @@ namespace Certify.Models.Shared.Validation
 
                                 item.DomainOptions.Add(option);
 
-                                if (option.Domain.StartsWith("*."))
+                                if (option.Domain.StartsWith("*.", StringComparison.InvariantCultureIgnoreCase))
                                 {
                                     wildcardAdded = true;
                                 }
@@ -259,7 +259,7 @@ namespace Certify.Models.Shared.Validation
                 if (!(preferredCA != null && preferredCA.AllowInternalHostnames))
                 {
                     // validate hostnames
-                    if (item.DomainOptions.Any(d => d.IsSelected && d.Type == "dns" && (!d.Domain.Contains(".") || d.Domain.ToLower().EndsWith(".local"))))
+                    if (item.DomainOptions?.Any(d => d.IsSelected && d.Type == "dns" && (!d.Domain.Contains(".") || d.Domain.ToLower().EndsWith(".local", StringComparison.InvariantCultureIgnoreCase))) == true)
                     {
                         // one or more selected domains does not include a label separator (is an internal host name) or end in .local
 
@@ -274,12 +274,12 @@ namespace Certify.Models.Shared.Validation
                 // if title still set to the default, automatically use the primary domain instead
                 if (item.Name == SR.ManagedCertificateSettings_DefaultTitle)
                 {
-                    item.Name = GetPrimarySubjectDomain(item).Domain;
+                    item.Name = GetPrimarySubjectDomain(item)?.Domain;
                 }
 
                 // certificates cannot request wildcards unless they also use DNS validation
                 if (
-                    item.DomainOptions.Any(d => d.IsSelected && d.Domain.StartsWith("*."))
+                    item.DomainOptions?.Any(d => d.IsSelected && d.Domain.StartsWith("*.", StringComparison.InvariantCultureIgnoreCase)) == true
                     &&
                     !item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                     )
@@ -322,6 +322,16 @@ namespace Certify.Models.Shared.Validation
                 }
 
                 // validate settings for authorization config non-optional parameters
+
+                if (item.RequestConfig.Challenges?.Any() != true)
+                {
+                    return new ValidationResult(
+                                   false,
+                                   $"One or more challenge configurations required",
+                                   ValidationErrorCodes.REQUIRED_CHALLENGE_CONFIG_PARAM.ToString()
+                                );
+                }
+
                 foreach (var c in item.RequestConfig.Challenges)
                 {
                     if (c.Parameters != null && c.Parameters.Any())
