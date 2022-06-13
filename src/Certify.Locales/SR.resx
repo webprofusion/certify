@@ -690,6 +690,6 @@
     <value>Certificate Authority</value>
   </data>
   <data name="ManagedCertificateSettings_CertificateAuthority_Intro" xml:space="preserve">
-    <value>Certificate Authorities are the organisations who can issue trusted certificates. You need to register an account under Settings for each (ACME) Certificate Authority you wish to use.                 </value>
+    <value>Certificate Authorities are the organisations who can issue trusted certificates. You need to register an account under Settings for each (ACME) Certificate Authority you wish to use.</value>
   </data>
 </root>

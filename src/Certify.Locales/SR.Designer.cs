@@ -709,7 +709,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Certificate Authorities are the organisations who can issue trusted certificates. You need to register an account under Settings for each (ACME) Certificate Authority you wish to use.                 .
+        ///   Looks up a localized string similar to Certificate Authorities are the organisations who can issue trusted certificates. You need to register an account under Settings for each (ACME) Certificate Authority you wish to use..
         /// </summary>
         public static string ManagedCertificateSettings_CertificateAuthority_Intro {
             get {
