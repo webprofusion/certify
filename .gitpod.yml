@@ -1,0 +1,6 @@
+image: gitpod/workspace-dotnet-vnc
+
+# Ports to expose on workspace startup
+ports:
+  - port: 9695
+    onOpen: open-preview
