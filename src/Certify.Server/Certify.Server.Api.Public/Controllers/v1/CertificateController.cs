@@ -112,6 +112,37 @@ namespace Certify.Server.API.Controllers
 
         }
 
+
+        /// <summary>
+        /// Download text log for the given managed certificate
+        /// </summary>
+        /// <param name="managedCertId"></param>
+        /// <param name="maxLines"></param>
+        /// <returns>Log file in text format</returns>
+        [HttpGet]
+        [Route("{managedCertId}/log/text")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+        public async Task<IActionResult> DownloadLogAsText(string managedCertId, int maxLines = 1000)
+        {
+            var managedCert = await _client.GetManagedCertificate(managedCertId);
+
+            if (managedCert == null)
+            {
+                return new NotFoundResult();
+            }
+
+            if (maxLines > 1000)
+            {
+                maxLines = 1000;
+            }
+
+            var log = await _client.GetItemLog(managedCertId, maxLines);
+
+            return new OkObjectResult(string.Join("\n",log));
+
+        }
+
         /// <summary>
         /// Get all managed certificates matching criteria
         /// </summary>
@@ -218,11 +249,31 @@ namespace Certify.Server.API.Controllers
         [Route("renew")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
-        [SwaggerOperation(OperationId = nameof(BeginOrder))]
+        [SwaggerOperation(OperationId = nameof(PerformRenewal))]
         public async Task<IActionResult> PerformRenewal(Models.RenewalSettings settings)
         {
 
             var results = await _client.BeginAutoRenewal(settings);
+            if (results != null)
+            {
+                return new OkObjectResult(results);
+            }
+            else
+            {
+                return new BadRequestResult();
+            }
+        }
+
+
+        [HttpPost]
+        [Route("test")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Models.StatusMessage>))]
+        [SwaggerOperation(OperationId = nameof(PerformConfigurationTest))]
+        public async Task<IActionResult> PerformConfigurationTest(Models.ManagedCertificate item)
+        {
+
+            var results = await _client.TestChallengeConfiguration(item);
             if (results != null)
             {
                 return new OkObjectResult(results);
