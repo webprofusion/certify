@@ -126,7 +126,7 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public StandardServerTypes TargetServerType { get; set; } = StandardServerTypes.Nginx;
+        public StandardServerTypes TargetServerType { get; set; } = StandardServerTypes.IIS;  // TODO: should be dynamic based on server we are connected to
 
         [DependsOn(nameof(SelectedItem))]
         public bool HasSelectedItemDomainOptions
