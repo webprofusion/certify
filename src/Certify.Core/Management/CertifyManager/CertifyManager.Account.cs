@@ -213,6 +213,8 @@ namespace Certify.Management
                     // store new account details as credentials
                     existingAccount.Email = reg.EmailAddress;
                     existingAccount.AccountKey = updatedAccount.Result.AccountKey;
+                    existingAccount.PreferredChain = reg.PreferredChain;
+                    
                     await StoreAccountAsCredential(existingAccount);
                 }
 
