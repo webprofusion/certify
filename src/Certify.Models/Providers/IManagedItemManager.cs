@@ -2,9 +2,9 @@
 using System.Threading.Tasks;
 using Certify.Models;
 
-namespace Certify.Management
+namespace Certify.Providers
 {
-    public interface IItemManager
+    public interface IManagedItemStore
     {
         Task DeleteAll();
         Task StoreAll(IEnumerable<ManagedCertificate> list);
@@ -16,6 +16,6 @@ namespace Certify.Management
 
         Task PerformMaintenance();
 
-        bool IsInitialised();
+        Task<bool> IsInitialised();
     }
 }

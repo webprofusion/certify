@@ -13,6 +13,7 @@ using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
+using Certify.Providers;
 
 namespace Certify.Core.Management
 {
@@ -22,11 +23,11 @@ namespace Certify.Core.Management
     public class MigrationManager
     {
         private const string EncryptionScheme = "Default";
-        private IItemManager _itemManager;
+        private IManagedItemStore _itemManager;
         private ICredentialsManager _credentialsManager;
         private List<ITargetWebServer> _targetServers;
 
-        public MigrationManager(IItemManager itemManager, ICredentialsManager credentialsManager, List<ITargetWebServer> targetServers)
+        public MigrationManager(IManagedItemStore itemManager, ICredentialsManager credentialsManager, List<ITargetWebServer> targetServers)
         {
             _itemManager = itemManager;
             _credentialsManager = credentialsManager;

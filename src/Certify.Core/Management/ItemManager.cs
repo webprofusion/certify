@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Providers;
+using Certify.Providers;
 using Newtonsoft.Json;
 using Polly;
 using Polly.Retry;
@@ -17,7 +18,7 @@ namespace Certify.Management
     /// <summary>
     /// ItemManager is the storage service implem,entation (SQLLite) for Managed Certificate information
     /// </summary>
-    public class ItemManager : IItemManager
+    public class ItemManager : IManagedItemStore
     {
         public const string ITEMMANAGERCONFIG = "manageditems";
 
@@ -78,10 +79,11 @@ namespace Certify.Management
             }
         }
 
-        public bool IsInitialised()
+        public Task<bool> IsInitialised()
         {
-            return _initialised;
+            return Task.FromResult(_initialised);
         }
+
         private void PerformDBBackup()
         {
             try
@@ -92,12 +94,12 @@ namespace Certify.Management
                     {
                         db.Open();
 
-                        var backupFile = $"{ _dbPath }.bak";
+                        var backupFile = $"{_dbPath}.bak";
 
                         // archive previous backup if it looks valid
                         if (File.Exists(backupFile) && new System.IO.FileInfo(backupFile).Length > 1024)
                         {
-                            File.Copy($"{ _dbPath }.bak", $"{ _dbPath }.bak.old", true);
+                            File.Copy($"{_dbPath}.bak", $"{_dbPath}.bak.old", true);
                         }
 
                         // remove previous backup (invalid backups can be corrupt and cause subsequent backups to fail)
@@ -109,7 +111,7 @@ namespace Certify.Management
                         // create new backup
                         try
                         {
-                            using (var backupDB = new SQLiteConnection($"Data Source ={ backupFile}"))
+                            using (var backupDB = new SQLiteConnection($"Data Source ={backupFile}"))
                             {
                                 backupDB.Open();
                                 db.BackupDatabase(backupDB, "main", "main", -1, null, 1000);
