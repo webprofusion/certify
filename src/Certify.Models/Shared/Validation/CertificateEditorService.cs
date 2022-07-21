@@ -30,7 +30,7 @@ namespace Certify.Models.Shared.Validation
         public static ActionResult<ManagedCertificate> PopulateFromSiteInfo(ManagedCertificate managedCertificate, SiteInfo selectedTargetSite, IEnumerable<DomainOption> domainOptions)
         {
             // 
-            if (selectedTargetSite != null)
+            if (selectedTargetSite != null && managedCertificate != null)
             {
                 if (managedCertificate.GroupId != selectedTargetSite.Id)
                 {

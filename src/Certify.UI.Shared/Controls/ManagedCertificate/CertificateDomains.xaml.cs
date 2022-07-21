@@ -80,7 +80,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private async void Website_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (ItemViewModel.SelectedWebSite != null)
+            if (ItemViewModel.SelectedWebSite != null && ItemViewModel.SelectedItem != null)
             {
                 var siteId = ItemViewModel.SelectedWebSite.Id;
 
