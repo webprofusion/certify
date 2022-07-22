@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -984,13 +984,20 @@ namespace Certify.Management
 
                 // check item or settings for preferred chain option
                 var preferredChain = managedCertificate.RequestConfig.PreferredChain;
-                if (string.IsNullOrEmpty(preferredChain))
+                var acc = await GetAccountDetailsForManagedItem(managedCertificate);
+
+                if (string.IsNullOrEmpty(preferredChain) && !string.IsNullOrEmpty(acc?.PreferredChain))
                 {
-                    var acc = await GetAccountDetailsForManagedItem(managedCertificate);
-                    if (acc != null && !string.IsNullOrEmpty(acc.PreferredChain))
-                    {
-                        preferredChain = acc.PreferredChain;
-                    }
+                    preferredChain = acc.PreferredChain;
+                }
+
+                // if no other preferred chain set, check if this CA config has a default, if so use that if we are in production mode for the account
+                var currentCaId = GetCurrentCAId(managedCertificate);
+                _certificateAuthorities.TryGetValue(currentCaId, out var certAuthority);
+
+                if (!string.IsNullOrEmpty(certAuthority?.DefaultPreferredChain) && acc?.IsStagingAccount != true)
+                {
+                    preferredChain = certAuthority.DefaultPreferredChain;
                 }
 
                 var pfxPwd = await GetPfxPassword(managedCertificate);

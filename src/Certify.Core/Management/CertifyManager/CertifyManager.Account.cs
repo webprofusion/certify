@@ -40,17 +40,8 @@ namespace Certify.Management
                 }
             }
 
-            // determine the current current contact
-            var currentCA = CoreAppSettings.Current.DefaultCertificateAuthority ?? StandardCertAuthorities.LETS_ENCRYPT;
-
-            if (item != null)
-            {
-                if (!string.IsNullOrEmpty(item.CertificateAuthorityId))
-                {
-                    currentCA = item.CertificateAuthorityId;
-                }
-            }
-
+            var currentCA = GetCurrentCAId(item);
+           
             // get current account details for this CA (depending on whether this managed certificate uses staging mode or not)
             var matchingAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == currentCA && a.IsStagingAccount == item.UseStagingMode);
 
@@ -61,6 +52,23 @@ namespace Certify.Management
             }
 
             return matchingAccount;
+        }
+
+        private string GetCurrentCAId(ManagedCertificate item)
+        {
+            // determine the current CA which is either the app default, the global CA pref, or specific to this managed cert
+
+            var currentCA = CoreAppSettings.Current.DefaultCertificateAuthority ?? StandardCertAuthorities.LETS_ENCRYPT;
+
+            if (item != null)
+            {
+                if (!string.IsNullOrEmpty(item.CertificateAuthorityId))
+                {
+                    currentCA = item.CertificateAuthorityId;
+                }
+            }
+
+            return currentCA;
         }
 
         /// <summary>

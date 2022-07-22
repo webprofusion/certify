@@ -85,6 +85,7 @@ namespace Certify.Models
         public string StatusUrl { get; set; } = string.Empty;
         public string ProductionAPIEndpoint { get; set; } = string.Empty;
         public string StagingAPIEndpoint { get; set; } = string.Empty;
+        public string DefaultPreferredChain { get; set; } = string.Empty;
 
         public bool IsEnabled { get; set; }
         public bool IsCustom { get; set; } = true;
