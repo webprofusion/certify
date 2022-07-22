@@ -90,5 +90,8 @@ namespace Certify.Management
         Task<string[]> GetItemLog(string id, int limit = 1000);
 
         Task<string[]> GetLog(string logType, int limit = 10000);
+
+        ICredentialsManager GetCredentialsManager();
+        IManagedItemStore GetManagedItemStore();
     }
 }

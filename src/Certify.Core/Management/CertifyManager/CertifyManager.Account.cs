@@ -265,7 +265,7 @@ namespace Certify.Management
             {
                 _serviceLog?.Information($"Deleting account {storageKey}: " + account.AccountURI);
 
-                var resultOk = await _credentialsManager.Delete(storageKey);
+                var resultOk = await _credentialsManager.Delete(_itemManager, storageKey);
                 return new ActionResult("RemoveAccount", resultOk);
             }
             else

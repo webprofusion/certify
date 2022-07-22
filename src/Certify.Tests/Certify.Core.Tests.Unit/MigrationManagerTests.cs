@@ -16,7 +16,7 @@ namespace Certify.Core.Tests.Unit
         public async Task TestPerformExport()
         {
             // setup
-            var migrationManager = new MigrationManager(new ItemManager(), new CredentialsManager(), new List<Models.Providers.ITargetWebServer> { new ServerProviderMock() });
+            var migrationManager = new MigrationManager(new SQLiteItemManager(), new SQLiteCredentialsManager(), new List<Models.Providers.ITargetWebServer> { new ServerProviderMock() });
 
             // export
             var export = await migrationManager.PerformExport(new ManagedCertificateFilter { }, new ExportSettings { EncryptionSecret = "secret" }, isPreview: false);
@@ -38,7 +38,7 @@ namespace Certify.Core.Tests.Unit
         public void TestDecryptEncrypt()
         {
             // setup
-            var migrationManager = new MigrationManager(new ItemManager(), new CredentialsManager(), new List<Models.Providers.ITargetWebServer> { new ServerProviderMock() });
+            var migrationManager = new MigrationManager(new SQLiteItemManager(), new SQLiteCredentialsManager(), new List<Models.Providers.ITargetWebServer> { new ServerProviderMock() });
 
             // encrypt
 
@@ -59,7 +59,7 @@ namespace Certify.Core.Tests.Unit
         public async Task TestDecryptExportedCerts()
         {
             // setup
-            var migrationManager = new MigrationManager(new ItemManager(), new CredentialsManager(), new List<Models.Providers.ITargetWebServer> { new ServerProviderMock() });
+            var migrationManager = new MigrationManager(new SQLiteItemManager(), new SQLiteCredentialsManager(), new List<Models.Providers.ITargetWebServer> { new ServerProviderMock() });
 
             // export
             var export = await migrationManager.PerformExport(new ManagedCertificateFilter { }, new ExportSettings { EncryptionSecret = "secret" }, isPreview: false);

@@ -24,7 +24,7 @@ namespace Certify.Management
         /// <summary>
         /// Storage service for managed certificates
         /// </summary>
-        private IItemManager _itemManager = null;
+        private IManagedItemStore _itemManager = null;
 
         /// <summary>
 		/// Server targets for this service (e.g. local IIS, nginx etc)
@@ -117,23 +117,6 @@ namespace Certify.Management
             InitLogging(_serverConfig);
 
             Util.SetSupportedTLSVersions();
-            try
-            {
-                _itemManager = new ItemManager(null, _serviceLog);
-
-                if (!_itemManager.IsInitialised())
-                {
-                    _serviceLog.Error($"Item Manager failed to initialise properly. Check service logs for more information.");
-                }
-            }
-            catch (Exception exp)
-            {
-                _serviceLog.Error($"Failed to open or upgrade the managed items database. Check service has required file access permissions. :: {exp}");
-            }
-
-            _credentialsManager = new CredentialsManager(useWindowsNativeFeatures);
-
-            _progressResults = new ObservableCollection<RequestProgressState>();
 
             _pluginManager = new PluginManager();
             _pluginManager.EnableExternalPlugins = CoreAppSettings.Current.IncludeExternalPlugins;
@@ -158,6 +141,35 @@ namespace Certify.Management
             var iisServerProvider = new Servers.ServerProviderIIS();
             iisServerProvider.Init(_serviceLog);
             _serverProviders.Add(iisServerProvider);
+
+            try
+            {
+                if (_serverConfig.ConfigDataStoreType == "sqlite" || string.IsNullOrEmpty(_serverConfig.ConfigDataStoreType))
+                {
+                    _itemManager = new SQLiteItemManager(_serverConfig.ConfigDataStoreConnectionString, _serviceLog);
+                }
+                else if (_serverConfig.ConfigDataStoreType == "postgres")
+                {
+                    _itemManager = new Datastore.Postgres.PostgresItemManager(_serverConfig.ConfigDataStoreConnectionString, _serviceLog);
+                }
+                else if (_serverConfig.ConfigDataStoreType == "sqlserver")
+                {
+                    _itemManager = new Datastore.SQLServer.SQLServerItemManager(_serverConfig.ConfigDataStoreConnectionString, _serviceLog);
+                }
+
+                if (!_itemManager.IsInitialised().Result)
+                {
+                    _serviceLog.Error($"Item Manager failed to initialise properly. Check service logs for more information.");
+                }
+            }
+            catch (Exception exp)
+            {
+                _serviceLog.Error($"Failed to open or upgrade the managed items database. Check service has required file access permissions. :: {exp}");
+            }
+
+            _credentialsManager = new SQLiteCredentialsManager(useWindowsNativeFeatures);
+
+            _progressResults = new ObservableCollection<RequestProgressState>();
 
             LoadCertificateAuthorities();
 
@@ -390,7 +402,7 @@ namespace Certify.Management
         private void LogMessage(string managedItemId, string msg, LogItemType logType = LogItemType.GeneralInfo) => ManagedCertificateLog.AppendLog(managedItemId, new ManagedCertificateLogItem
         {
             EventDate = DateTime.UtcNow,
-            LogItemType = LogItemType.GeneralInfo,
+            LogItemType = logType,
             Message = msg
         }, _loggingLevelSwitch);
 
@@ -841,5 +853,8 @@ namespace Certify.Management
                 return new string[] { "" };
             }
         }
+
+        public ICredentialsManager GetCredentialsManager() => _credentialsManager;
+        public IManagedItemStore GetManagedItemStore() => _itemManager;
     }
 }

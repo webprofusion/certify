@@ -12,12 +12,21 @@ namespace Certify.Service
     [Route("api/credentials")]
     public class CredentialsController : Controllers.ControllerBase
     {
-        private CredentialsManager credentialsManager = new CredentialsManager(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+      
+        private ICertifyManager _certifyManager;
+        private ICredentialsManager _credentialsManager;
+
+        public CredentialsController(Management.ICertifyManager manager)
+        {
+            _certifyManager = manager;
+
+            _credentialsManager = _certifyManager.GetCredentialsManager();
+        }
 
         [HttpGet, Route("")]
         public async Task<List<StoredCredential>> GetCredentials()
         {
-            return await credentialsManager.GetCredentials();
+            return await _credentialsManager.GetCredentials();
         }
 
         [HttpPost, Route("")]
@@ -25,7 +34,7 @@ namespace Certify.Service
         {
             DebugLog();
 
-            return await credentialsManager.Update(credential);
+            return await _credentialsManager.Update(credential);
         }
 
         [HttpDelete, Route("{storageKey}")]
@@ -33,7 +42,7 @@ namespace Certify.Service
         {
             DebugLog();
 
-            return await credentialsManager.Delete(storageKey);
+            return await _credentialsManager.Delete(_certifyManager.GetManagedItemStore(),storageKey);
         }
 
         [HttpPost, Route("{storageKey}/test")]
@@ -41,7 +50,7 @@ namespace Certify.Service
         {
             DebugLog();
 
-            return await credentialsManager.TestCredentials(storageKey);
+            return await _credentialsManager.TestCredentials(storageKey);
         }
     }
 }

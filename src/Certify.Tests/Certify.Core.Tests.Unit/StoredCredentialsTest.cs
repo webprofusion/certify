@@ -22,7 +22,7 @@ namespace Certify.Core.Tests.Unit
                 StorageKey = Guid.NewGuid().ToString(),
                 Secret = testSecret
             };
-            var credentialsManager = new CredentialsManager();
+            var credentialsManager = new SQLiteCredentialsManager();
             credentialsManager.StorageSubfolder = "Tests\\credentials";
             var result = await credentialsManager.Update(test);
 
@@ -52,7 +52,7 @@ namespace Certify.Core.Tests.Unit
                 Secret = Newtonsoft.Json.JsonConvert.SerializeObject(secrets)
             };
 
-            var credentialsManager = new CredentialsManager();
+            var credentialsManager = new SQLiteCredentialsManager();
             credentialsManager.StorageSubfolder = "Tests\\credentials";
             var result = await credentialsManager.Update(test);
 
