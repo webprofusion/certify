@@ -94,7 +94,8 @@
                                 Margin="0,8,8,0"
                                 DockPanel.Dock="Left"
                                 Style="{StaticResource Instructions}"
-                                Text="{Binding Email}" />
+                                Text="{Binding Email}"
+                                ToolTip="{Binding AccountURI}" />
 
                             <Button
                                 Margin="0,0,8,0"
