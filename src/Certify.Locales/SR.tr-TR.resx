@@ -121,7 +121,7 @@
     <value>Kayıt</value>
   </data>
   <data name="RegistrationEmailAddress" xml:space="preserve">
-    <value>Kayıtlı E-posta Adresi</value>
+    <value>Kayıt E-posta Adresi</value>
   </data>
   <data name="LicenseKey" xml:space="preserve">
     <value>Lisans anahtarı</value>
