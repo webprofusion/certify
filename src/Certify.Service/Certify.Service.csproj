@@ -68,7 +68,7 @@
     <PackageReference Include="Serilog.Sinks.ListOfString" Version="4.1.4.3" /> 
     <PackageReference Include="Swashbuckle.Core" Version="5.6.0" /> 
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="6.0.0" /> 
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.21.0" /> 
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.22.0" /> 
     <PackageReference Include="System.ValueTuple" Version="4.5.0" /> 
     <PackageReference Include="Topshelf" Version="4.3.0" /> 
     <PackageReference Include="Topshelf.Serilog" Version="4.3.0" /> 
