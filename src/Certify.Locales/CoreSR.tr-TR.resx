@@ -127,14 +127,14 @@
     <value>Bitiş</value>
   </data>
   <data name="CertifyManager_DomainValidationFailed" xml:space="preserve">
-    <value>Alan doğrulaması başarısız oldu: {0}
+    <value>Alan adı doğrulaması başarısız oldu: {0}
 {1}</value>
   </data>
   <data name="CertifyManager_DomainValidationCompleted" xml:space="preserve">
-    <value>Alan doğrulaması tamamlandı: {0}</value>
+    <value>Alan adı doğrulaması tamamlandı: {0}</value>
   </data>
   <data name="CertifyManager_DomainValidationSkipVerifed" xml:space="preserve">
-    <value>Alan zaten geçerli yetkilendirmeye sahip, doğrulama atlanıyor: {0}</value>
+    <value>Alan adı zaten geçerli yetkilendirmeye sahip, doğrulama atlanıyor: {0}</value>
   </data>
   <data name="CertifyManager_RequestCertificate" xml:space="preserve">
     <value>Sertifika Yetkilisi Aracılığıyla Sertifika İsteme</value>
@@ -158,7 +158,7 @@
     <value>ACME CA hizmeti, izin verilen süre içinde geçerli bir sertifika vermedi. {0}</value>
   </data>
   <data name="CertifyManager_ValidationForChallengeNotSuccess" xml:space="preserve">
-    <value>Gerekli zorlukların doğrulanması başarıyla tamamlanmadı. {0}</value>
+    <value>Gerekli taleplerin doğrulanması başarıyla tamamlanmadı. {0}</value>
   </data>
   <data name="CertifyManager_RequestFailed" xml:space="preserve">
     <value>{0}: İstek başarısız oldu - {1} {2}</value>
@@ -170,7 +170,7 @@
     <value>Yapılandırma Testlerini Gerçekleştirme</value>
   </data>
   <data name="CertifyManager_RegisteringAndValidatingX0" xml:space="preserve">
-    <value>{0} Kaydetme ve Doğrulama</value>
+    <value>Kaydetme ve Doğrulama {0}</value>
   </data>
   <data name="CertifyManager_FailedPrerequisiteCheck" xml:space="preserve">
     <value>Başarısız önkoşul yapılandırma kontrolleri ({0})</value>
@@ -181,8 +181,8 @@ Siteniz için http bağlantılarınız olup olmadığını kontrol edin ve devam
   </data>
   <data name="CertifyManager_AutomateConfigurationCheckFailed_SNI" xml:space="preserve">
     <value>Otomatik yapılandırma kontrolleri başarısız oldu. Yetkilendirmeler tamamlanamayacak.
-Siteniz için https SNI bağlarınız olup olmadığını kontrol edin
-(ör: '0123456789ABCDEF0123456789ABCDEF.0123456789ABCDEF0123456789ABCDEF.acme.invalid') devam etmeden önce.</value>
+Devam etmeden önce siteniz için https SNI bağlamalarınız olup olmadığını kontrol edin
+(ör: '0123456789ABCDEF0123456789ABCDEF.0123456789ABCDEF0123456789ABCDEF.acme.invalid').</value>
   </data>
   <data name="CertifyManager_ReqestValidationFromLetsEncrypt" xml:space="preserve">
     <value>Doğrulama İsteme: {0}</value>
@@ -197,7 +197,7 @@ Siteniz için https SNI bağlarınız olup olmadığını kontrol edin
     <value>Site durduruldu (veya mevcut değil), alan doğrulaması gerçekleştirilemediğinden yenileme atlandı.</value>
   </data>
   <data name="CertifyManager_RegisterDomainIdentity" xml:space="preserve">
-    <value>İstenen alan adları için başlangıç ​​sertifikası siparişi</value>
+    <value>İstenen alan adları için sertifika talep ediliyor</value>
   </data>
   <data name="CertifyManager_RenewalOnHold" xml:space="preserve">
     <value>Önceki yenilemeler başarısız oldu: {0}. Yenileme 48 saat içinde denenecektir.</value>
