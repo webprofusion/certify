@@ -3,6 +3,8 @@ namespace Certify.Models
 {
     public class ManagedCertificateFilter
     {
+        public static readonly ManagedCertificateFilter ALL = new() { MaxResults = -1 };
+
         // optional filter on Id 
         public string Id { get; set; }
 

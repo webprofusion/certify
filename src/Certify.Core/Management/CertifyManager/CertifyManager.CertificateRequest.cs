@@ -66,7 +66,7 @@ namespace Certify.Management
             }
             else
             {
-                managedCertificates = await _itemManager.GetAll(
+                managedCertificates = await _itemManager.Find(
                     new ManagedCertificateFilter
                     {
                         IncludeOnlyNextAutoRenew = (settings.Mode == RenewalMode.Auto)

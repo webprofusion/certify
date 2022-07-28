@@ -11,7 +11,7 @@ namespace Certify.Providers
         Task Delete(ManagedCertificate site);
         Task DeleteByName(string nameStartsWith);
         Task<ManagedCertificate> GetById(string siteId);
-        Task<List<ManagedCertificate>> GetAll(ManagedCertificateFilter filter = null);
+        Task<List<ManagedCertificate>> Find(ManagedCertificateFilter filter);
         Task<ManagedCertificate> Update(ManagedCertificate managedCertificate);
 
         Task PerformMaintenance();

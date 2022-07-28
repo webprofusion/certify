@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -22,9 +22,9 @@ namespace Certify.Management
         /// </summary>
         /// <param name="filter"></param>
         /// <returns></returns>
-        public async Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter = null)
+        public async Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter)
         {
-            var list = await _itemManager.GetAll(filter);
+            var list = await _itemManager.Find(filter);
 
             if (filter?.IncludeExternal == true)
             {
@@ -358,7 +358,7 @@ namespace Certify.Management
         private async Task PerformManagedCertificateMigrations()
         {
 
-            IEnumerable<ManagedCertificate> list = await GetManagedCertificates();
+            IEnumerable<ManagedCertificate> list = await GetManagedCertificates(ManagedCertificateFilter.ALL);
 
             list = list.Where(i => !string.IsNullOrEmpty(i.RequestConfig.WebhookUrl) || !string.IsNullOrEmpty(i.RequestConfig.PreRequestPowerShellScript) || !string.IsNullOrEmpty(i.RequestConfig.PostRequestPowerShellScript)
             || i.PostRequestTasks?.Any(t => t.TaskTypeId == StandardTaskTypes.POWERSHELL && t.Parameters?.Any(p => p.Key == "url") == true) == true);
