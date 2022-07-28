@@ -145,7 +145,7 @@ Bu yazılım, aşağıdaki Açık Kaynak yazılımlarını (veya önemli bölüm
     <comment>Do not translate</comment>
   </data>
   <data name="BetaWarning" xml:space="preserve">
-    <value>Uyarı: Bu yazılım, test etme ve geri bildirim amaçlı bir yayın öncesi sürümüdür. Hata beklemelisin. Önemli web siteleri için bu yazılıma güvenmeyin.</value>
+    <value>Uyarı: Bu yazılım, test etme ve geri bildirim amaçlı bir yayın öncesi sürümüdür. Hatalar gerçekleşebilir. Önemli web siteleri için bu yazılıma güvenmeyin.</value>
   </data>
   <data name="AIInstrumentationKey" xml:space="preserve">
     <value>63154103-66ba-4636-8c6b-7081084daa0e</value>
