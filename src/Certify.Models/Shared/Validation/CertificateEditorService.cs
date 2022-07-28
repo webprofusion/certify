@@ -67,7 +67,7 @@ namespace Certify.Models.Shared.Validation
                 }
             }
 
-            return new ActionResult<ManagedCertificate>("OK", true, managedCertificate);
+            return new ActionResult<ManagedCertificate>("OK", true, result: managedCertificate);
 
         }
 
@@ -104,8 +104,8 @@ namespace Certify.Models.Shared.Validation
 
             //apply remaining selected domains as subject alternative names
             var sanList =
-                item.DomainOptions.Where(dm => dm.IsSelected && dm.Type == "dns")
-                .Select(i => i.Domain)
+                item.DomainOptions.Where(dm => dm.IsSelected && dm.Type == "dns" && dm.Domain != null)
+                .Select(i => i.Domain ?? string.Empty)
                 .ToArray();
 
             if (config.SubjectAlternativeNames == null ||
@@ -117,7 +117,10 @@ namespace Certify.Models.Shared.Validation
             // update our list of selected subject ip addresses, if any
             if (!config.SubjectIPAddresses.SequenceEqual(item.DomainOptions.Where(i => i.IsSelected && i.Type == "ip").Select(s => s.Domain).ToArray()))
             {
-                config.SubjectIPAddresses = item.DomainOptions.Where(i => i.IsSelected && i.Type == "ip").Select(s => s.Domain).ToArray();
+
+                config.SubjectIPAddresses = item.DomainOptions.Where(i => i.IsSelected && i.Type == "ip" && i.Domain != null)
+                                                              .Select(s => s.Domain ?? string.Empty)
+                                                              .ToArray();
             }
 
             //determine if this site has an existing entry in Managed Certificates, if so use that, otherwise start a new one
@@ -192,7 +195,7 @@ namespace Certify.Models.Shared.Validation
                                 IsSelected = true
                             };
 
-                            if (Uri.CheckHostName(domain) == UriHostNameType.Dns || (domain.StartsWith("*.") && Uri.CheckHostName(domain.Replace("*.", "")) == UriHostNameType.Dns))
+                            if (Uri.CheckHostName(domain) == UriHostNameType.Dns || (domain.StartsWith("*.", StringComparison.InvariantCultureIgnoreCase) && Uri.CheckHostName(domain.Replace("*.", "")) == UriHostNameType.Dns))
                             {
                                 // preselect first item as primary domain
                                 if (item.DomainOptions.Count == 0)
@@ -259,7 +262,7 @@ namespace Certify.Models.Shared.Validation
                 if (!(preferredCA != null && preferredCA.AllowInternalHostnames))
                 {
                     // validate hostnames
-                    if (item.DomainOptions?.Any(d => d.IsSelected && d.Type == "dns" && (!d.Domain.Contains(".") || d.Domain.ToLower().EndsWith(".local", StringComparison.InvariantCultureIgnoreCase))) == true)
+                    if (item.DomainOptions?.Any(d => d.IsSelected && d.Type == "dns" && d.Domain != null && (!d.Domain.Contains(".") || d.Domain.ToLower().EndsWith(".local", StringComparison.InvariantCultureIgnoreCase))) == true)
                     {
                         // one or more selected domains does not include a label separator (is an internal host name) or end in .local
 
@@ -279,7 +282,7 @@ namespace Certify.Models.Shared.Validation
 
                 // certificates cannot request wildcards unless they also use DNS validation
                 if (
-                    item.DomainOptions?.Any(d => d.IsSelected && d.Domain.StartsWith("*.", StringComparison.InvariantCultureIgnoreCase)) == true
+                    item.DomainOptions?.Any(d => d.IsSelected && d.Domain != null && d.Domain.StartsWith("*.", StringComparison.InvariantCultureIgnoreCase)) == true
                     &&
                     !item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                     )

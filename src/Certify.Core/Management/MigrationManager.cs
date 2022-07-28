@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -60,7 +60,7 @@ namespace Certify.Core.Management
 
             // deployment tasks with local script or path references will need to copy the scripts separately. Need a summary of items to copy.
 
-            var managedCerts = await _itemManager.GetAll(filter);
+            var managedCerts = await _itemManager.Find(filter);
 
             export.Content = new ImportExportContent
             {

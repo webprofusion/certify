@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -684,7 +684,7 @@ namespace Certify.Management
                     var excludedCertThumprints = new List<string>();
 
                     // excluded thumbprints are all certs currently tracked as managed certs
-                    var managedCerts = await GetManagedCertificates();
+                    var managedCerts = await GetManagedCertificates(ManagedCertificateFilter.ALL);
 
                     foreach (var c in managedCerts)
                     {

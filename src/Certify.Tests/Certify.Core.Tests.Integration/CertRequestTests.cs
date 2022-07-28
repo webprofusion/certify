@@ -115,7 +115,7 @@ namespace Certify.Core.Tests
             Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");
 
             //check details of cert, subject alternative name should include domain and expiry must be great than 89 days in the future
-            var managedCertificates = await certifyManager.GetManagedCertificates();
+            var managedCertificates = await certifyManager.GetManagedCertificates(new ManagedCertificateFilter { MaxResults = 10 });
             var managedCertificate = managedCertificates.FirstOrDefault(m => m.Id == dummyManagedCertificate.Id);
 
             //emsure we have a new managed site
@@ -392,7 +392,7 @@ namespace Certify.Core.Tests
             Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");
 
             //check details of cert, subject alternative name should include domain and expiry must be great than 89 days in the future
-            var managedCertificates = await certifyManager.GetManagedCertificates();
+            var managedCertificates = await certifyManager.GetManagedCertificates(new ManagedCertificateFilter { MaxResults = 10 });
             var managedCertificate = managedCertificates.FirstOrDefault(m => m.Id == dummyManagedCertificate.Id);
 
             //emsure we have a new managed site
@@ -559,7 +559,7 @@ namespace Certify.Core.Tests
                 Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");
 
                 //check details of cert, subject alternative name should include domain and expiry must be great than 89 days in the future
-                var managedCertificates = await certifyManager.GetManagedCertificates();
+                var managedCertificates = await certifyManager.GetManagedCertificates(new ManagedCertificateFilter { MaxResults = 10 });
                 managedCertificate = managedCertificates.FirstOrDefault(m => m.Id == managedCertificate.Id);
 
                 //emsure we have a new managed site

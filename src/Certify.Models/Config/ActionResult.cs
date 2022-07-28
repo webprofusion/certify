@@ -35,7 +35,7 @@
             Message = msg;
             IsSuccess = isSuccess;
         }
-        public ActionResult(string msg, bool isSuccess, T result)
+        public ActionResult(string msg, bool isSuccess, T? result)
         {
             Message = msg;
             IsSuccess = isSuccess;
